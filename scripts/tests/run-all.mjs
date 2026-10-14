@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'cta', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 const args = process.argv.slice(2), full = args.includes('--full');

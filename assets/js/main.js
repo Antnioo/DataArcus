@@ -85,6 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
         easing: 'ease-out-cubic',
         disable: prefersReducedMotion
       });
+      // AOS measures where each element sits once. When the page changes height (a filter or the search hides
+      // cards, a section opens, a form shows its result), it measures again, so an element it has not revealed yet
+      // never stays invisible in view (the owner, 14 Oct 2026: the blog's filters showed an empty page).
+      if ('ResizeObserver' in window) {
+        let refresh;
+        new ResizeObserver(() => { clearTimeout(refresh); refresh = setTimeout(() => AOS.refresh(), 100); }).observe(document.body);
+      }
     }
   } else {
     document.querySelectorAll('[data-aos]').forEach((el) => el.removeAttribute('data-aos'));
@@ -403,7 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = card.querySelector('h3').textContent.toLowerCase();
         // the excerpt paragraph, not the first .text-white-50 (that is the date line, so every month name matched)
         const excerpt = (card.querySelector('p') || { textContent: '' }).textContent.toLowerCase();
-        const badge = card.querySelector('.badge').textContent.toLowerCase();
+        // the card's topic label (searching "dax" or "ramadan" finds its cards)
+        const badge = (card.querySelector('.topic-badge') || { textContent: '' }).textContent.toLowerCase();
 
         const matchesFilter = activeFilter === 'all' || categories.includes(activeFilter);
         const matchesSearch = !searchTerm ||

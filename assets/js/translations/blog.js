@@ -35,14 +35,23 @@ window.blogTranslations = {
     // Filters / Search
     filters: {
       all: "All",
-      powerbi: "Power BI",
-      dataengineering: "Data Engineering",
-      strategy: "Strategy",
-      projectanalytics: "Project Analytics"
+      gulf: "Gulf & Ramadan",
+      ai: "Copilot & AI",
+      design: "Report design",
+      modelling: "Modelling & DAX",
+      strategy: "Strategy"
+    },
+    // the topic on each card: the same words as its filter, in capitals
+    topics: {
+      gulf: "GULF & RAMADAN",
+      ai: "COPILOT & AI",
+      design: "REPORT DESIGN",
+      modelling: "MODELLING & DAX",
+      strategy: "STRATEGY"
     },
     blog: {
       sectionTitle: "Latest from the Playbook",
-      sectionSubtitle: "Curated tutorials and strategies that help e-commerce teams move from raw Shopify & Meta Ads data to trusted, profitable insights.",
+      sectionSubtitle: "Practical Power BI guides from real work: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
       searchPlaceholder: "Search playbooks…",
       noResultsTitle: "No posts found",
       noResultsSubtext: "Try adjusting your search terms or filters."
@@ -175,14 +184,22 @@ window.blogTranslations = {
     // Filters / Search (AR)
     filters: {
       all: "الكل",
-      powerbi: "Power BI",
-      dataengineering: "هندسة البيانات",
-      strategy: "استراتيجية",
-      projectanalytics: "تحليلات المشاريع"
+      gulf: "الخليج ورمضان",
+      ai: "Copilot والذكاء الاصطناعي",
+      design: "تصميم التقارير",
+      modelling: "النمذجة و DAX",
+      strategy: "استراتيجية"
+    },
+    topics: {
+      gulf: "الخليج ورمضان",
+      ai: "Copilot والذكاء الاصطناعي",
+      design: "تصميم التقارير",
+      modelling: "النمذجة و DAX",
+      strategy: "استراتيجية"
     },
     blog: {
       sectionTitle: "أحدث الأدلة الإرشادية",
-      sectionSubtitle: "شروحات واستراتيجيات تساعد فرق التجارة الإلكترونية على الانتقال من بيانات Shopify و Meta Ads الأولية إلى رؤى موثوقة ومربحة.",
+      sectionSubtitle: "أدلة Power BI عملية من عمل حقيقي: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
       searchPlaceholder: "ابحث في الأدلة…",
       noResultsTitle: "لم يتم العثور على مقالات",
       noResultsSubtext: "حاول تعديل كلمات البحث أو الفلاتر."
