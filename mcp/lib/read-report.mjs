@@ -6,6 +6,7 @@
 // instruction-like text is withheld, with its length), names have their invisible characters written as code points,
 // and filter values, slicer selections and bookmark states are never read into an answer. No network, no data.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { decode, inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
 import { meaningInReport, VT } from './visual-meaning.mjs';
@@ -90,6 +91,19 @@ export const readText = (f) => { const b = readBytes(f); return (b[0] === 0xef &
 // the report folder of a path: a .pbip file (its .Report beside it), a .Report folder, or a folder holding definition/
 // or exactly one .Report folder
 // tool: the caller's name, for its own messages (R9: the reading block names no tool of its own)
+// A report's contents in one sha256 (the follow-up review of rc.15, B-02): every file of its .Report folder, by its path
+// and its bytes, read the reading block's way (no links, capped), plus its .pbip. A plan that writes from a report
+// (the native copy, the Arabic twin) pins this; the write computes it again and refuses a report changed since the go.
+// A report that can't be read gives 'unreadable' (the write's own reading then says why).
+export function reportPrint(p) {
+  try {
+    const loc = locate(p, 'this tool'), h = crypto.createHash('sha256'), dir = loc.reportDir;
+    for (const rel of strictFiles(dir, { files: 20000 }).slice().sort()) h.update(rel + '\0').update(crypto.createHash('sha256').update(readBytes(path.join(dir, ...rel.split('/')))).digest('hex') + '\n');
+    const full = inside(p); if (isFile(full) && /\.pbip$/i.test(full)) h.update('pbip\0').update(readBytes(full));
+    return h.digest('hex');
+  } catch (e) { return 'unreadable'; }
+}
+
 export function locate(p, tool) {
   const who = tool || 'this tool';
   const full = inside(p);

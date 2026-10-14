@@ -9,6 +9,10 @@
 // The outside review of rc.14 (14 Oct, same file):
 //   A-02: the report's look and options (name, title, theme, logo, colours, options) are pinned with the plan and shown
 //         in it: a write with another value is refused, a write that leaves one out gets the plan's
+// The follow-up review of rc.15 (14 Oct, same file):
+//   B-01: font, rtl, focus and tables are pinned too; B-03: an option left out of create_report takes the plan's value
+//         (no schema default in between); B-02: the files a report is made from (theme, logo, backgrounds, a native
+//         copy's or a twin's source report) are pinned by their contents: changed after the go, the write is refused
 // And the night audit of 13 Oct (same file):
 //   AUD-034: a preset named like an object's own property (__proto__, constructor, toString) is repaired, not a crash
 //   AUD-035: a Windows device name (CON, NUL, COM1, LPT1 ...) never becomes a theme file or a report's .pbip / .Report
@@ -68,9 +72,10 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
   }
   for (const [what, file] of [['.platform', path.join(T, 'Twin Sales.Report', '.platform')], ['the .pbip', path.join(T, 'Twin Sales.pbip')]]) {
     const keep = fs.readFileSync(file);
+    // (the file can't be read from before the plan: since B-02 a change after the go is refused for that reason first)
+    fs.writeFileSync(file, '{ not json');
     const pl = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', labels: { 'page:p1overview': 'نظرة عامة' } }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid, userReply: 'go' });
-    fs.writeFileSync(file, '{ not json');
     const w = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', planId: pid });
     chk(() => w.err && /could not be read/.test(w.t) && !fs.existsSync(path.join(T, 'Twin Sales AR.Report')) && !fs.existsSync(path.join(T, 'Twin Sales AR.pbip')),
       () => `R-02. the twin refuses an original whose ${what} can't be read, nothing written: ${short(w)}`);
@@ -100,6 +105,46 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     await ask('approve_plan', { planId: pid2, userReply: 'go' });
     const th = await ask('create_report', { path: 'rg', planId: pid2, design: pl2.j && pl2.j.design, name: 'Theme Test', theme: 'some-theme.json' });
     chk(() => th.err && /Nothing was written/.test(th.t) && /(name|theme)/.test(th.t), () => `A-02. a theme or name the plan did not show is refused: ${short(th)}`);
+  }
+
+  // ---------- B-01, B-03, B-02 ----------
+  {
+    const plan = async (args) => { const pl = await ask('plan_layout', Object.assign({ path: 'rg', layout: 'exec' }, args)), id = pl.j && pl.j.plan && pl.j.plan.planId; await ask('approve_plan', { planId: id, userReply: 'go' }); return { id, design: pl.j && pl.j.design, pl }; };
+    // B-03: secondPage false in the plan, left out of the write: one page written, not refused
+    const p3 = await plan({ name: 'Defaults Test', secondPage: false });
+    const w3 = await ask('create_report', { path: 'rg', planId: p3.id, design: p3.design });
+    const pages3 = !w3.err ? JSON.parse(fs.readFileSync(path.join(ROOT, 'rg', 'Defaults Test.Report', 'definition', 'pages', 'pages.json'), 'utf8')).pageOrder.length : -1;
+    chk(() => !w3.err && pages3 >= 1 && (w3.j.pages || []).length === 1, () => `B-03. an option left out takes the plan's value (one page): ${short(w3)}`);
+    // B-01: a font the plan did not show is refused, named
+    const p1 = await plan({ name: 'Font Test' });
+    const w1 = await ask('create_report', { path: 'rg', planId: p1.id, design: p1.design, font: 'Arial' });
+    chk(() => w1.err && /Nothing was written/.test(w1.t) && /font/.test(w1.t), () => `B-01. a font other than the plan's is refused: ${short(w1)}`);
+    const w1b = await ask('create_report', { path: 'rg', planId: p1.id, design: p1.design, tables: ['Sales'] });
+    chk(() => w1b.err && /tables/.test(w1b.t), () => `B-01. tables other than the plan's are refused: ${short(w1b)}`);
+    // B-02: a theme file changed after the go
+    const tf = path.join(ROOT, 'rg', 'approved-theme.json');
+    fs.writeFileSync(tf, JSON.stringify({ name: 'Approved', dataColors: ['#0F766E', '#B91C1C'] }));
+    const p2 = await plan({ name: 'Theme Print', theme: 'rg/approved-theme.json' });
+    fs.writeFileSync(tf, JSON.stringify({ name: 'Swapped', dataColors: ['#FF00FF', '#00FF00'] }));
+    const w2 = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
+    chk(() => w2.err && /Nothing was written/.test(w2.t) && /files/.test(w2.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. a theme file changed after the go is refused: ${short(w2)}`);
+    fs.writeFileSync(tf, JSON.stringify({ name: 'Approved', dataColors: ['#0F766E', '#B91C1C'] }));
+    const w2b = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
+    chk(() => !w2b.err && fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. the same contents as approved are written: ${short(w2b)}`);
+  }
+  {
+    // B-02: the twin's original changed after the go
+    const TT = path.join(ROOT, 'rtwin2');
+    fs.cpSync(path.join(HERE, 'fixtures/twin-project'), TT, { recursive: true });
+    const pl = await ask('create_arabic_twin', { path: 'rtwin2/Twin Sales.pbip', labels: { 'page:p1overview': 'نظرة عامة' } }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    const pj = path.join(TT, 'Twin Sales.Report', 'definition', 'pages', 'p2details', 'page.json'), keep = fs.readFileSync(pj, 'utf8');
+    fs.writeFileSync(pj, JSON.stringify(Object.assign(JSON.parse(keep), { displayName: 'Changed after the go' }), null, 2));
+    const w = await ask('create_arabic_twin', { path: 'rtwin2/Twin Sales.pbip', planId: pid });
+    chk(() => w.err && /changed after the plan was approved/.test(w.t) && !fs.existsSync(path.join(TT, 'Twin Sales AR.Report')), () => `B-02. a twin's original changed after the go is refused: ${short(w)}`);
+    fs.writeFileSync(pj, keep);
+    const w2 = await ask('create_arabic_twin', { path: 'rtwin2/Twin Sales.pbip', planId: pid });
+    chk(() => !w2.err && fs.existsSync(path.join(TT, 'Twin Sales AR.Report')), () => `B-02. the original as approved: the twin is written: ${short(w2)}`);
   }
 
   // ---------- AUD-034: inherited property names are not presets ----------
