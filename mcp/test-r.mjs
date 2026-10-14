@@ -35,7 +35,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
   // ---------- R-01: pinned inputs, none passed: refused ----------
   {
     const P = await freshImport('lib/plans.mjs');
-    const id = P.propose('theme', null, ['a theme file'], { pins: { generate_theme: { brand: '#0F766E' } } }); P.approve(id, 'go');
+    const id = P.propose('theme', null, ['a theme file'], { pins: { generate_theme: { brand: '#0F766E' } } }); P.approve(id, 'user-in-browser');
     let err = ''; try { P.gate('generate_theme', id, null); } catch (e) { err = e.message; }
     chk(() => /Nothing was written/.test(err) && /no inputs/.test(err), () => `R-01. a write that passes no inputs to a pinned plan is refused: ${err}`);
     let ok = ''; try { P.gate('generate_theme', id, null, { brand: '#0F766E' }); } catch (e) { ok = e.message; }
@@ -75,7 +75,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     // (the file can't be read from before the plan: since B-02 a change after the go is refused for that reason first)
     fs.writeFileSync(file, '{ not json');
     const pl = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', labels: { 'page:p1overview': 'نظرة عامة' } }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    await ask('approve_plan', { planId: pid });
     const w = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', planId: pid });
     chk(() => w.err && /could not be read/.test(w.t) && !fs.existsSync(path.join(T, 'Twin Sales AR.Report')) && !fs.existsSync(path.join(T, 'Twin Sales AR.pbip')),
       () => `R-02. the twin refuses an original whose ${what} can't be read, nothing written: ${short(w)}`);
@@ -93,7 +93,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { path: 'rg', layout: 'exec', name: 'Look Test', title: 'Approved title', secondPage: false, smoothLines: true });
     const pid = pl.j && pl.j.plan && pl.j.plan.planId, look = pl.j && pl.j.plan && pl.j.plan.reportLook;
     chk(() => pid && look && look.title === 'Approved title' && look.name === 'Look Test' && look.secondPage === false && /approved/.test(look.sayInPlan), () => `A-02. the plan shows the report's look: ${short(pl)}`);
-    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    await ask('approve_plan', { planId: pid });
     const design = pl.j && pl.j.design;
     const other = await ask('create_report', { path: 'rg', planId: pid, design, name: 'Look Test', title: 'Another title', secondPage: false, smoothLines: true });
     chk(() => other.err && /Nothing was written/.test(other.t) && /title/.test(other.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. a title other than the approved one is refused: ${short(other)}`);
@@ -102,14 +102,14 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const ok = await ask('create_report', { path: 'rg', planId: pid, design, secondPage: false, smoothLines: true });
     chk(() => !ok.err && fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. left out, the plan's name and title are written: ${short(ok)}`);
     const pl2 = await ask('plan_layout', { path: 'rg', layout: 'exec' }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
-    await ask('approve_plan', { planId: pid2, userReply: 'go' });
+    await ask('approve_plan', { planId: pid2 });
     const th = await ask('create_report', { path: 'rg', planId: pid2, design: pl2.j && pl2.j.design, name: 'Theme Test', theme: 'some-theme.json' });
     chk(() => th.err && /Nothing was written/.test(th.t) && /(name|theme)/.test(th.t), () => `A-02. a theme or name the plan did not show is refused: ${short(th)}`);
   }
 
   // ---------- B-01, B-03, B-02 ----------
   {
-    const plan = async (args) => { const pl = await ask('plan_layout', Object.assign({ path: 'rg', layout: 'exec' }, args)), id = pl.j && pl.j.plan && pl.j.plan.planId; await ask('approve_plan', { planId: id, userReply: 'go' }); return { id, design: pl.j && pl.j.design, pl }; };
+    const plan = async (args) => { const pl = await ask('plan_layout', Object.assign({ path: 'rg', layout: 'exec' }, args)), id = pl.j && pl.j.plan && pl.j.plan.planId; await ask('approve_plan', { planId: id }); return { id, design: pl.j && pl.j.design, pl }; };
     // B-03: secondPage false in the plan, left out of the write: one page written, not refused
     const p3 = await plan({ name: 'Defaults Test', secondPage: false });
     const w3 = await ask('create_report', { path: 'rg', planId: p3.id, design: p3.design });
@@ -137,7 +137,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const TT = path.join(ROOT, 'rtwin2');
     fs.cpSync(path.join(HERE, 'fixtures/twin-project'), TT, { recursive: true });
     const pl = await ask('create_arabic_twin', { path: 'rtwin2/Twin Sales.pbip', labels: { 'page:p1overview': 'نظرة عامة' } }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    await ask('approve_plan', { planId: pid });
     const pj = path.join(TT, 'Twin Sales.Report', 'definition', 'pages', 'p2details', 'page.json'), keep = fs.readFileSync(pj, 'utf8');
     fs.writeFileSync(pj, JSON.stringify(Object.assign(JSON.parse(keep), { displayName: 'Changed after the go' }), null, 2));
     const w = await ask('create_arabic_twin', { path: 'rtwin2/Twin Sales.pbip', planId: pid });

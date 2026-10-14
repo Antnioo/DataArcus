@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // End-to-end test of the DataArcus MCP server: starts it over stdio like an agent would and calls every tool.
 // Runs on copies of the fixtures in a temporary folder, so nothing in the repo changes.
 import fs from 'node:fs';
@@ -30,6 +31,7 @@ import { v029twin } from './test-0.3.0-twin.mjs';
 import { audit6 } from './test-audit6.mjs';
 import { zgate } from './test-z.mjs';
 import { rgate } from './test-r.mjs';
+import { approvalWindow } from './test-approval.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
@@ -4081,7 +4083,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const th = await call2('generate_theme', { name: 'R17' }); out.push(th);
     const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop', name: 'R17', secondPage: false }); out.push(pl);
     // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
-    await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId, userReply: 'go' });
+    await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId });
     out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));
     out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
     out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
@@ -4560,6 +4562,8 @@ await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getI
 await zgate({ call: rawCall, check, ROOT, fs });
 // ---------- the outside review of rc.12 (R-01, R-02, R-04): test-r.mjs, which also runs alone ----------
 await rgate({ call: rawCall, check, ROOT, fs });
+// ---------- A-01, DataArcus's own approval window (the owner's decision of 14 Oct): test-approval.mjs, which also runs alone ----------
+await approvalWindow({ check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

@@ -1,0 +1,189 @@
+// DataArcus's own approval window (A-01 of the outside review of rc.14; the owner's rc.16 test in Claude Desktop: the
+// app has no MCP elicitation, so approve_plan answered approvedBy "assistant-reported", the assistant's word for the
+// person's go). The owner's decision of 14 Oct: the person approves a plan by a click in a page of their own browser,
+// which DataArcus opens on their machine; the assistant's reply approves nothing.
+// How it holds: the page is served on 127.0.0.1 only, at a link with a one-time secret that is given to the browser
+// and never to the assistant (no tool answer holds it); a click is taken only from that page itself (the Host and Origin
+// are checked, so another site or a rebound name can't send it); the page shows what the plan writes, every model name
+// as plain text. What it can't do: another program on the person's computer (one that controls their browser or mouse,
+// or another tool of the AI app that runs commands or reads the browser's history) could click it too.
+import http from 'node:http';
+import crypto from 'node:crypto';
+import { spawn } from 'node:child_process';
+
+const windows = new Map();          // planId -> { secret, plan, show, decided: null | 'approve' | 'decline', waiters, opened, seen }
+const bySecret = new Map();         // secret -> planId
+let server = null, port = 0, starting = null;
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cut = (s, n) => { const t = String(s); return t.length > n ? t.slice(0, n) + '…' : t; };
+
+/** The program that opens the page: the system's default browser, or DATAARCUS_BROWSER (a program's path, or a JSON
+ *  array of a program and its first arguments; the tests use it for a browser of their own). */
+function browserCommand(url) {
+  const own = process.env.DATAARCUS_BROWSER;
+  if (own) {
+    let cmd = own, args = [];
+    if (/^\s*\[/.test(own)) { const v = JSON.parse(own); if (!Array.isArray(v) || !v.length || v.some((x) => typeof x !== 'string')) throw new Error('DATAARCUS_BROWSER must be a program\'s path or a JSON array of strings'); [cmd, ...args] = v; }
+    return [cmd, args.concat(url)];
+  }
+  // (no shell: the link goes to the program as one argument, never through cmd's parsing of & and ^)
+  if (process.platform === 'win32') return ['rundll32.exe', ['url.dll,FileProtocolHandler', url]];
+  if (process.platform === 'darwin') return ['open', [url]];
+  return ['xdg-open', [url]];
+}
+function launch(url) {
+  return new Promise((resolve) => {
+    let child;
+    try { const [cmd, args] = browserCommand(url); child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true }); }
+    catch (e) { resolve(String(e && e.message || e)); return; }
+    let done = false; const end = (v) => { if (!done) { done = true; resolve(v); } };
+    child.once('error', (e) => end(String(e && e.message || e)));
+    child.once('spawn', () => { child.unref(); end(null); });
+  });
+}
+
+const STYLE = `:root{color-scheme:light dark;--bg:#f4f6fa;--card:#fff;--ink:#14213d;--soft:#5b6478;--line:#dde3ee;--accent:#0f7c90;--accent-ink:#fff;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1424;--card:#16203a;--ink:#e8edf7;--soft:#a7b1c8;--line:#2a3756;--accent:#33c3d8;--accent-ink:#06202a;--warn:#f0c060}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 48px}h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px;color:var(--soft);text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}.lead{color:var(--soft);margin:0 0 16px}
+table{width:100%;border-collapse:collapse}td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}tr:first-child td{border-top:0}td.k{width:34%;color:var(--soft)}
+ul{margin:0;padding-inline-start:20px}li{overflow-wrap:anywhere}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}form{margin:0}
+button{font:inherit;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.note{color:var(--soft);font-size:13px;margin-top:18px}.warn{color:var(--warn)}
+.done{font-size:18px;font-weight:600}`;
+
+function page(title, body) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
+}
+const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td dir="auto">${Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${esc(x)}</li>`).join('')}</ul>` : esc(v)}</td></tr>`).join('')}</table></div>`;
+
+function askPage(w) {
+  const s = w.show;
+  const sections = s.sections.filter((x) => x.rows.length).map((x) => `<h2>${esc(x.heading)}</h2>${rows(x.rows)}`).join('');
+  return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
+<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">Nothing is overwritten or deleted.</p></div>
+${sections}
+<div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
+<form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
+<p class="note">Plan ${esc(w.plan.id)}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.</p>`);
+}
+const donePage = (w) => page(w.decided === 'approve' ? 'Approved' : 'Not approved', w.decided === 'approve'
+  ? `<p class="done">Approved.</p><p>Go back to Claude: it can now write the files of plan ${esc(w.plan.id)}. You can close this tab.</p>`
+  : `<p class="done">Not approved.</p><p>Nothing will be written for plan ${esc(w.plan.id)}. Tell Claude what to change. You can close this tab.</p>`);
+const gonePage = () => page('Not available', '<p class="done">This approval link is no longer valid.</p><p>It was used, or its plan expired or was made in another session of DataArcus. Ask Claude to make the plan again.</p>');
+
+function headers(res, code, type) {
+  res.writeHead(code, { 'Content-Type': type || 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin',
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
+}
+
+function onRequest(req, res, decide) {
+  const here = `127.0.0.1:${port}`;
+  // (DNS rebinding: a page of another name that resolves to 127.0.0.1 sends its own Host)
+  if (req.headers.host !== here) { headers(res, 421, 'text/plain; charset=utf-8'); res.end('Wrong host'); return; }
+  const m = /^\/approve\/([A-Za-z0-9_-]{20,64})$/.exec((req.url || '').split('?')[0]);
+  const id = m && bySecret.get(m[1]), w = id && windows.get(id);
+  if (!w || (w.expires && Date.now() > w.expires)) { headers(res, 404); res.end(gonePage()); return; }
+  if (req.method === 'GET') { w.seen = true; headers(res, 200); res.end(w.decided ? donePage(w) : askPage(w)); return; }
+  if (req.method !== 'POST') { headers(res, 405, 'text/plain; charset=utf-8'); res.end('Method not allowed'); return; }
+  // (a click comes only from the page itself: its Origin, or, when a browser sends none or "null", Sec-Fetch-Site
+  // same-origin, which a web page can't set. The referrer policy is same-origin, not no-referrer: with no-referrer
+  // Chromium sends Origin "null" on the form's POST, found by a real click in Chromium, 14 Oct)
+  const origin = req.headers.origin, site = req.headers['sec-fetch-site'];
+  if (!(origin === 'http://' + here || ((!origin || origin === 'null') && site === 'same-origin'))) { headers(res, 403, 'text/plain; charset=utf-8'); res.end('Refused: the click must come from the DataArcus page itself.'); return; }
+  let body = '';
+  req.setEncoding('utf8');
+  req.on('data', (c) => { body += c; if (body.length > 1000) req.destroy(); });
+  req.on('end', () => {
+    const d = new URLSearchParams(body).get('decision');
+    if (!w.decided && (d === 'approve' || d === 'decline')) decide(w, d);
+    headers(res, w.decided ? 200 : 400); res.end(w.decided ? donePage(w) : gonePage());
+  });
+}
+
+async function listen(decide) {
+  if (server) return;
+  if (!starting) starting = new Promise((resolve, reject) => {
+    const s = http.createServer((req, res) => { try { onRequest(req, res, decide); } catch (e) { try { headers(res, 500, 'text/plain; charset=utf-8'); res.end('Error'); } catch (x) { /* closed */ } } });
+    s.once('error', (e) => { starting = null; reject(e); });
+    s.listen(0, '127.0.0.1', () => { server = s; port = s.address().port; s.unref(); resolve(); });
+  });
+  await starting;
+}
+
+/** Opens (or, with reopen, opens again) the approval window of a plan. plan: { id, kind, writes }; show: { title,
+ *  sections: [{ heading, rows: [[label, value | [values]]] }] }; expires: when the plan expires (ms); onDecide(id,
+ *  decision): called once, on the click. Returns { opened: true } or { opened: false, why }. */
+export async function open(plan, show, expires, onDecide, reopen) {
+  await listen((w, d) => { w.decided = d; try { onDecide(w.plan.id, d); } catch (e) { w.decided = null; return; } w.waiters.splice(0).forEach((f) => f(d)); });
+  let w = windows.get(plan.id);
+  if (w && w.decided) return { opened: false, why: 'decided' };
+  if (!w) {
+    const secret = crypto.randomBytes(24).toString('base64url');
+    w = { secret, plan: { id: plan.id, kind: plan.kind, writes: plan.writes.slice() }, show, expires, decided: null, waiters: [], opened: false, seen: false };
+    windows.set(plan.id, w); bySecret.set(secret, plan.id);
+  } else if (w.opened && !reopen) return { opened: true, again: false };
+  const why = await launch(`http://127.0.0.1:${port}/approve/${w.secret}`);
+  if (why) return { opened: false, why };
+  w.opened = true;
+  return { opened: true, again: !!reopen };
+}
+
+/** Waits up to ms for the click on a plan's window: 'approve', 'decline', or null (no click yet). */
+export function wait(id, ms) {
+  const w = windows.get(id);
+  if (!w) return Promise.resolve(null);
+  if (w.decided) return Promise.resolve(w.decided);
+  return new Promise((resolve) => {
+    const f = (d) => { clearTimeout(t); resolve(d); };
+    const t = setTimeout(() => { const i = w.waiters.indexOf(f); if (i >= 0) w.waiters.splice(i, 1); resolve(null); }, Math.max(0, ms));
+    w.waiters.push(f);
+  });
+}
+
+/** What the window of a plan knows: null (none), or { opened, seen, decided }. */
+export function state(id) { const w = windows.get(id); return w ? { opened: w.opened, seen: w.seen, decided: w.decided } : null; }
+
+/** Forgets a plan's window (its link answers "no longer valid" from then on). */
+export function close(id) { const w = windows.get(id); if (w) { bySecret.delete(w.secret); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
+
+/** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
+ *  click approves). kind: the plan's kind; data: the plan's data (its pins, the twin's labels). */
+export function summary(kind, data) {
+  const d = data || {}, pins = d.pins || {}, sections = [];
+  const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : cut(JSON.stringify(v), 600));
+  if (kind === 'report') {
+    const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
+    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null };
+    sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
+      ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
+    if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)]) });
+    const F = p.fields || {}, FL = { kpis: 'KPI cards', measure: 'Charts\' measure', timeAxis: 'Trend axis', category: 'Bar chart by', category2: 'Column chart by', table: 'Table', slicers: 'Slicers' };
+    const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => [FL[k], Array.isArray(F[k]) ? F[k].map(String) : String(F[k])]);
+    sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
+    if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
+    if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
+    // (the options by their names in the report's words; a bar colour left out is the default the plan says)
+    const LK = { theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
+    const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
+    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null).map((k) => [LK[k], k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : val(p[k])]);
+    if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
+    sections.push({ heading: 'Look and options', rows: look });
+    const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
+    if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
+    if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
+    return Object.assign(T, { sections });
+  }
+  if (kind === 'twin') {
+    const labels = Object.entries(d.labels || {});
+    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic month column', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)]] });
+    sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [k, String(v)]) });
+    return { title: 'Arabic twin of a report', sections };
+  }
+  const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
+  const own = Object.values(pins)[0] || {};
+  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, val(v)]) });
+  return { title: titles[kind] || 'Plan', sections };
+}

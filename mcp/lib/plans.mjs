@@ -2,8 +2,10 @@
 // before any write, though the write tools were set to "Needs approval"). The tools can't rely on the AI app asking, so
 // no tool writes a file without a plan id that was proposed by a tool and then approved with approve_plan.
 // The plans live in this server process only: a restart forgets them, and an unknown id is refused like an expired one.
-// What this can and can't do: it forces a plan step and an explicit approval call with the user's reply; it can't prove
-// that a person typed that reply (an AI app could call approve_plan on its own). The instructions forbid that.
+// Who approves (A-01, the owner's decision of 14 Oct, after his rc.16 test in Claude Desktop showed no elicitation): the
+// person, by a click in DataArcus's own approval window in their browser (approval-window.mjs), or in the app's own
+// prompt when the app supports MCP elicitation. The assistant's reply approves nothing: the tools can't check who
+// typed it.
 import crypto from 'node:crypto';
 
 // how long a plan id is good for: 2 hours from its proposal, never extended (an approval does not restart it: Z-02).
@@ -23,21 +25,13 @@ export const ALLOWS = {
 };
 const plans = new Map();
 const now = () => Date.now();
-// The assistant-reported approval (Z-02, the outside review: "I said no" and "Wait, don't go yet" were approvals): a
-// reply is a go only when it says go AND holds no word of no, not yet, wait or stop ANYWHERE, in English or Arabic.
-// "no problem" is the one known phrase with a "no" in it that is not a no: it is set aside, so "No problem, go ahead" is a
-// go, while "no problem" alone holds no go word and is refused (the outside review of rc.14, A-03). When unsure, refused.
-const NOT_GO = /\b(no|nope|not|nah|don'?t|dont|wait|stop|hold|cancel|later|never|before|until|unless|but|maybe|hmm)\b|n't\b|(^|[\s،,.!؟?؛:])(لا|لأ|ليس|مو|مش|لسه|بعدين|لاحقا|لاحقًا|لكن|بس|ربما)(?=$|[\s،,.!؟?؛:])|انتظر|توقف|تمهل|الغ|ألغ/i;
-const SAYS_GO = /\b(go|yes|yep|yeah|ok|okay|approved?|proceed|sure|confirm(ed)?)\b|موافق|نعم|أيوه|ايوه|تمام|ابدأ|ابدا|اكتب|نفذ|نفّذ|اعتمد/i;
-const saysGo = (r) => { const t = String(r).replace(/\bno\s+problem\b/gi, ' '); return SAYS_GO.test(t) && !NOT_GO.test(t); };
-
-const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, the report\'s name and title, theme, logo, colours and options, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id and their reply in their own words, then call this tool again with planId.';
+const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, the report\'s name and title, theme, logo, colours and options, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id: it opens DataArcus\'s approval window in their browser, and only their click on Approve there approves the plan. Then call this tool again with planId.';
 
 /** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: the model's key (its folder's real path)
  *  or null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
 export function propose(kind, model, writes, data) {
   const id = 'plan-' + crypto.randomBytes(6).toString('hex');
-  plans.set(id, { id, kind, model: model || null, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null, reply: null });
+  plans.set(id, { id, kind, model: model || null, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null });
   return id;
 }
 const alive = (p) => p && now() - p.created <= TTL;
@@ -56,24 +50,27 @@ export function pending(id) {
   return { id: p.id, kind: p.kind, writes: p.writes.slice(), status: p.status };
 }
 
-/** approve_plan: marks a proposed plan approved. by: 'user-in-app' (the person said yes in the app's own prompt, MCP
- *  elicitation) or 'assistant-reported' (the assistant passed the reply it says the person gave: the tools can't check
- *  that a person typed it). Throws with what to do when it can't. (Audit 6, A6-3) */
-export function approve(id, reply, by) {
+/** Marks a proposed plan approved. by: 'user-in-browser' (the person clicked Approve in DataArcus's own approval window)
+ *  or 'user-in-app' (the person said yes in the app's own prompt, MCP elicitation). Nothing else approves. Throws with
+ *  what to do when it can't. (Audit 6, A6-3; A-01) */
+export function approve(id, by) {
   const p = plans.get(String((pending(id), id)));
   if (p.status === 'approved') throw new Error(`Not approved again: plan ${p.id} is already approved (an approval is given once, and a plan is good for ${Math.round(TTL / 60000)} minutes from its proposal). Use it, or make a new plan.`);
-  const who = by === 'user-in-app' ? 'user-in-app' : 'assistant-reported';
-  const r = String(reply == null ? '' : reply).trim();
-  if (who === 'assistant-reported') {
-    if (!r) throw new Error('Not approved: userReply is empty, and this app can\'t ask the person itself. Pass the user\'s own reply to the plan, in their words.');
-    if (!saysGo(r)) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
-  }
-  p.status = 'approved'; p.approvedAt = now(); p.reply = (r || 'approved in the app').slice(0, 200); p.approvedBy = who;
-  return { planId: p.id, status: 'approved', approvedBy: who, kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
-    note: 'Approved. Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '. ' + (who === 'user-in-app'
-      ? 'The person approved it in the app\'s own prompt, which showed what will be written.'
-      : 'This app can\'t show DataArcus\'s own approval prompt, so the approval rests on the reply you passed: the tools can\'t check that a person typed it. Approve a plan only after the user said go to the plan you showed.') };
+  if (by !== 'user-in-browser' && by !== 'user-in-app') throw new Error('Not approved: only the person approves a plan, by a click on Approve in DataArcus\'s approval window (or in the app\'s own prompt).');
+  p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by;
+  return approval(p.id);
 }
+
+/** The answer for an approved plan (approve_plan's), or null when the plan is not approved. */
+export function approval(id) {
+  const p = plans.get(String(id));
+  if (!p || p.status !== 'approved') return null;
+  return { planId: p.id, status: 'approved', approvedBy: p.approvedBy, kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.max(0, Math.round((p.created + TTL - now()) / 60000)),
+    note: 'Approved by the person, ' + (p.approvedBy === 'user-in-browser' ? 'with a click on Approve in DataArcus\'s approval window, which showed the plan and what will be written.' : 'in the app\'s own prompt, which showed what will be written.') + ' Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '.' };
+}
+
+/** What the approval window shows of a plan (read only): { id, kind, writes, data, expires }, or null. */
+export function planOf(id) { const p = plans.get(String(id)); return p && alive(p) ? { id: p.id, kind: p.kind, writes: p.writes.slice(), data: p.data, expires: p.created + TTL } : null; }
 
 // Audit 6, A6-1 and A6-5: a plan pins what the write may use (data.pins[tool], stored at the proposal); the write's own
 // inputs are compared with it, key by key, and any difference is refused with the keys named. canon: one JSON form
@@ -98,7 +95,7 @@ export function gate(tool, id, model, pin) {
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
-  if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet. ${SHOW}`);
+  if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet (the person approves it with a click on Approve in DataArcus's approval window, which approve_plan opens in their browser). ${SHOW}`);
   if (p.used && p.used[tool]) throw new Error(`Nothing was written: plan ${p.id} was already used for ${tool} (a plan writes once). For another write, make a new plan, show it to the user and wait for their go.`);
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);

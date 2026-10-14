@@ -77,10 +77,10 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
   {
     const notYet = await ask('create_arabic_twin', { path: 'twin/Twin Sales.pbip', planId: pid });
     chk(() => notYet.err && /not approved yet/.test(notYet.t) && sameAsBefore() && !fs.existsSync(TWIN), () => `T2. not approved: refused, nothing written: ${short(notYet)}`);
-    const theme = (await ask('generate_theme', { brand: '#0F766E' })).j.plan.planId; await ask('approve_plan', { planId: theme, userReply: 'go' });
+    const theme = (await ask('generate_theme', { brand: '#0F766E' })).j.plan.planId; await ask('approve_plan', { planId: theme });
     const wrongKind = await ask('create_arabic_twin', { path: 'twin/Twin Sales.pbip', planId: theme });
     chk(() => wrongKind.err && /theme plan/.test(wrongKind.t) && !fs.existsSync(TWIN), () => `T2. a theme plan does not allow the twin: ${short(wrongKind)}`);
-    await ask('approve_plan', { planId: pid, userReply: 'yes, build it' });
+    await ask('approve_plan', { planId: pid });
     const otherLabels = await ask('create_arabic_twin', { path: 'twin/Twin Sales.pbip', planId: pid, labels: { 'page:p1overview': 'شيء آخر' } });
     chk(() => otherLabels.err && /labels/.test(otherLabels.t) && /Nothing was written/.test(otherLabels.t) && !fs.existsSync(TWIN), () => `T2. labels other than the approved ones: refused: ${short(otherLabels)}`);
     // the twin plan allows only the twin
@@ -246,7 +246,7 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   // write it
   const lab = evilTitle ? { [evilTitle.id]: 'الهامش' } : {};
   const pl = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, labels: lab }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-  await ask('approve_plan', { planId: pid, userReply: 'go' });
+  await ask('approve_plan', { planId: pid });
   const w = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', planId: pid });
   const TW = path.join(P2, 'Twin Sales AR.Report/definition/pages/p2details/visuals'), TW1 = path.join(P2, 'Twin Sales AR.Report/definition/pages/p1overview/visuals');
   const v = (dir, n) => { try { return rd(path.join(dir, n, 'visual.json')); } catch (e) { return null; } };
@@ -268,7 +268,7 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
     const P3 = setup('twin3'), before = fs.readdirSync(P3).sort();
     const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'EIO:5' })   // (audit 6, A6-4: the one writer's test switch);
     const p3 = await s.call('create_arabic_twin', { path: 'twin3/Twin Sales.pbip' }), id3 = p3.j && p3.j.plan && p3.j.plan.planId;
-    await s.call('approve_plan', { planId: id3, userReply: 'go' });
+    await s.call('approve_plan', { planId: id3 });
     const f = await s.call('create_arabic_twin', { path: 'twin3/Twin Sales.pbip', planId: id3 });
     await s.close();
     const after = fs.readdirSync(P3).sort();
@@ -361,7 +361,7 @@ export async function v029twin({ call, check, ROOT, fs = fs0 }) {
   chk(() => (j.cannot || []).some((c) => /data bars/.test(c.what)), () => 'T-4. data bars inside a table or matrix are said to keep their direction');
   // the write: the picture page left to right, time reversed on the continuous axis, the padding swapped
   const pl = await call('create_arabic_twin', { path: 'tw1/Twin Sales.pbip' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-  await call('approve_plan', { planId: pid, userReply: 'go' });
+  await call('approve_plan', { planId: pid });
   const w = await call('create_arabic_twin', { path: 'tw1/Twin Sales.pbip', planId: pid });
   const V = (r, pg, n) => { try { return rd(path.join(P1, r + '.Report/definition/pages', pg, 'visuals', n, 'visual.json')); } catch (e) { return null; } };
   chk(() => !w.err && V('Twin Sales AR', 'p2details', 'tblProducts').position.x === V('Twin Sales', 'p2details', 'tblProducts').position.x && V('Twin Sales AR', 'p1overview', 'colRegion').position.x === 640, () => `T-1. the picture page is copied left to right; the other pages mirrored: ${short(w)}`);
@@ -380,7 +380,7 @@ export async function v029twin({ call, check, ROOT, fs = fs0 }) {
   // mirrorPicturePages: the user's choice to mirror such a page anyway
   const P2 = setup('tw1b'); void P2;
   const pl2 = await call('create_arabic_twin', { path: 'tw1b/Twin Sales.pbip', mirrorPicturePages: true }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
-  await call('approve_plan', { planId: pid2, userReply: 'go' });
+  await call('approve_plan', { planId: pid2 });
   const w2 = await call('create_arabic_twin', { path: 'tw1b/Twin Sales.pbip', mirrorPicturePages: true, planId: pid2 });
   chk(() => !w2.err && rd(path.join(ROOT, 'tw1b/Twin Sales AR.Report/definition/pages/p2details/visuals/tblProducts/visual.json')).position.x === 960, () => `T-1. mirrorPicturePages: the picture page mirrored as asked: ${short(w2)}`);
 }

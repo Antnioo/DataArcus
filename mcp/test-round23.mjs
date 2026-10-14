@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // Round 23 (the owner's go, 8 Oct 2026: "i wanna fix the word total as well"): the Arabic table's total row says
 // «الإجمالي», by way 4 of the sitting of 7-8 Oct (measured in Desktop 2.158.1304, DESKTOP-TESTS.md): the name column
 // first in the file at width 0 (hidden), then the numbers, and at the right a report-level text measure that gives the
