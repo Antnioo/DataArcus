@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // points gained by fixing one check: the real change on the score curve, not the raw penalty
     const gain = (f) => (window.MHEngine && window.MHEngine.scoreFrom ? window.MHEngine.scoreFrom(R.findings, new Set(Array.from(ignored).concat(f.id))).overall - sc.overall : 0);
     root.innerHTML =
-      '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(R.meta.fileName) + '</b> · ' + L('checked in ', 'تم الفحص في ') + (R.meta.ms / 1000).toFixed(1) + L(' s', ' ث') + '</span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
+      '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(R.meta.fileName) + '</b> · ' + L('checked in ', 'تم الفحص في ') + (R.meta.ms < 100 ? L('under 0.1 s', 'أقل من 0.1 ث') : (R.meta.ms / 1000).toFixed(1) + L(' s', ' ث')) + '</span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
       '<div class="row g-4">' +
       '<div class="col-lg-4"><div class="mh-panel mh-scorecard text-center">' + ring(sc.overall, 170) +
       (prev ? (() => { const dlt = sc.overall - prev.s; return '<div class="mh-delta ' + (dlt > 0 ? 'up' : dlt < 0 ? 'down' : '') + '">' + (dlt > 0 ? '▲ +' + dlt : dlt < 0 ? '▼ ' + dlt : '=') + ' ' + L('since your last check (' + prev.d + ')', 'منذ آخر فحص (' + prev.d + ')') + '</div>'; })() : '') +
