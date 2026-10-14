@@ -6,21 +6,21 @@ window.blogTranslations = {
     },
     // Meta (for inclusion in blog.html if needed)
     meta: {
-      title: "Power BI and E-commerce Analytics Blog - DataArcus",
-      description: "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
-      keywords: "e-commerce analytics blog, Power BI for e-commerce, Shopify analytics, MENA e-commerce, customer lifetime value, DataArcus blog",
+      title: "The Power BI Playbook: Guides for Gulf Teams - DataArcus",
+      description: "Practical Power BI guides from real work for teams in the Gulf: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
+      keywords: "Power BI blog, Power BI Gulf, Hijri calendar Power BI, Ramadan sales Power BI, Copilot Power BI, Power BI report design, DAX, Power BI licensing, DataArcus blog",
       author: "DataArcus",
       "og:type": "website",
-      "og:title": "Power BI and E-commerce Analytics Blog - DataArcus",
-      "og:description": "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
+      "og:title": "The Power BI Playbook: Guides for Gulf Teams - DataArcus",
+      "og:description": "Practical Power BI guides from real work for teams in the Gulf: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
       "og:url": "https://dataarcus.com/blog.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/blog.jpg",
       "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "Power BI and E-commerce Analytics Blog - DataArcus",
-      "twitter:description": "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
+      "twitter:title": "The Power BI Playbook: Guides for Gulf Teams - DataArcus",
+      "twitter:description": "Practical Power BI guides from real work for teams in the Gulf: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
       "twitter:image": "https://dataarcus.com/assets/img/og/blog.jpg",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       canonical: "https://dataarcus.com/blog.html",
@@ -28,8 +28,8 @@ window.blogTranslations = {
     
     // Header
     header: {
-      title: "The E-commerce Analytics Playbook",
-      subtitle: "Practical, engineering-first guides for MENA e-commerce leaders on Power BI, data modeling, and growth strategy, written by someone who builds them every day."
+      title: "The Power BI Playbook",
+      subtitle: "Practical Power BI guides from real work for teams in the Gulf: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing."
     },
 
     // Filters / Search
@@ -51,7 +51,7 @@ window.blogTranslations = {
     },
     blog: {
       sectionTitle: "Latest from the Playbook",
-      sectionSubtitle: "Practical Power BI guides from real work: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
+      sectionSubtitle: "Newest first. Pick a topic or search.",
       searchPlaceholder: "Search playbooks…",
       noResultsTitle: "No posts found",
       noResultsSubtext: "Try adjusting your search terms or filters."
@@ -142,9 +142,9 @@ window.blogTranslations = {
 
     // Subscribe / CTA
     subscribe: {
-      title: "Get the Next E-commerce Playbook",
+      title: "Get the Next Power BI Guide",
       badge: "NO SPAM",
-      copy: "A monthly, high-signal playbook on Power BI engineering and growth strategy for e-commerce leaders. No fluff-just what works.",
+      copy: "New guides as they come out: Power BI for teams in the Gulf, from real work. No fluff, just what works.",
       button: "Subscribe for Free"
     }
   },
@@ -155,21 +155,21 @@ window.blogTranslations = {
     },
     // Meta (AR)
     meta: {
-      title: "مدونة Power BI وتحليلات التجارة الإلكترونية - داتا أركوس",
-      description: "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات: تتبّع القيمة الدائمة للعميل وحسّن عائد التسويق والمزيد.",
-      keywords: "مدونة تحليلات التجارة الإلكترونية, Power BI للتجارة الإلكترونية, تحليلات Shopify, التجارة الإلكترونية في الشرق الأوسط, القيمة الدائمة للعميل, مدونة DataArcus",
+      title: "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      description: "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
+      keywords: "مدونة Power BI, Power BI الخليج, التقويم الهجري في Power BI, مبيعات رمضان في Power BI, Copilot في Power BI, تصميم تقارير Power BI, DAX, تراخيص Power BI, مدونة DataArcus",
       author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "مدونة Power BI وتحليلات التجارة الإلكترونية - داتا أركوس",
-      "og:description": "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات: تتبّع القيمة الدائمة للعميل وحسّن عائد التسويق والمزيد.",
+      "og:title": "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      "og:description": "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
       "og:url": "https://dataarcus.com/blog.html",
       "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/og/blog.jpg",
       "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مدونة Power BI وتحليلات التجارة الإلكترونية - داتا أركوس",
-      "twitter:description": "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات: تتبّع القيمة الدائمة للعميل وحسّن عائد التسويق والمزيد.",
+      "twitter:title": "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      "twitter:description": "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
       "twitter:image": "https://dataarcus.com/assets/img/og/blog.jpg",
       "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/blog.html",
@@ -177,8 +177,8 @@ window.blogTranslations = {
 
     // Header (AR)
     header: {
-      title: "دليل تحليلات التجارة الإلكترونية",
-      subtitle: "أدلة عملية ذات أساس هندسي لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية النمو، يكتبها من يبنيها كل يوم."
+      title: "دليل Power BI",
+      subtitle: "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص."
     },
 
     // Filters / Search (AR)
@@ -199,7 +199,7 @@ window.blogTranslations = {
     },
     blog: {
       sectionTitle: "أحدث الأدلة الإرشادية",
-      sectionSubtitle: "أدلة Power BI عملية من عمل حقيقي: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
+      sectionSubtitle: "الأحدث أولاً. اختر موضوعًا أو ابحث.",
       searchPlaceholder: "ابحث في الأدلة…",
       noResultsTitle: "لم يتم العثور على مقالات",
       noResultsSubtext: "حاول تعديل كلمات البحث أو الفلاتر."
@@ -290,9 +290,9 @@ window.blogTranslations = {
 
     // Subscribe / CTA (AR)
     subscribe: {
-      title: "احصل على الدليل القادم لمتجرك",
+      title: "احصل على دليل Power BI القادم",
       badge: "لا رسائل مزعجة",
-      copy: "دليل شهري عالي القيمة حول هندسة Power BI واستراتيجية النمو لقادة التجارة الإلكترونية. لا حشو-فقط ما هو فعال.",
+      copy: "أدلة جديدة عند صدورها: Power BI لفرق الخليج، من عمل حقيقي. لا حشو، فقط ما ينفع.",
       button: "اشترك مجانًا"
     }
   }

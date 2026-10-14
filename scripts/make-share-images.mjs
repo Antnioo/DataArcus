@@ -179,7 +179,7 @@ const AUDIT = `<div class="card" style="padding:16px 22px">${pill('7 checks on y
 
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
-  ['blog', 'Blog · Power BI & e-commerce', 'Power BI and E‑commerce Analytics Blog', { sub: 'Practical guides with real models, real DAX and real numbers.' }, BLOG, '500px 1fr'],
+  ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
   ['clv', 'E-commerce · Power BI', 'Customer Lifetime Value: The Metric That Defines Growth', { sub: 'Why CLV, not revenue, is the north-star KPI, and how to track it in Power BI.', size: 46 }, CLV, '520px 1fr'],
   ['etl-vs-power-query', 'E-commerce data strategy', 'ETL vs Power Query: Where Should Your Data Work Happen?', { size: 46, sub: 'Scale and governance, or speed and analyst autonomy.' }, ETL, '480px 1fr'],
   ['evm', 'Project governance · Power BI', 'Beyond Traffic Lights: How EVM Predicts Project Risk', { size: 46, sub: 'Two numbers that forecast delays and overruns.' }, EVM, '480px 1fr'],
