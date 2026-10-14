@@ -88,7 +88,7 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
   {
     fs.writeFileSync(path.join(ROOT, 'zg', 'real-theme.json'), JSON.stringify({ name: 'x', dataColors: ['#112233'] }));
     try { fs.symlinkSync(path.join(ROOT, 'zg', 'real-theme.json'), path.join(ROOT, 'zg', 'link-theme.json')); } catch (e) { /* no links here */ }
-    const pl = await call('plan_layout', { path: 'zg', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    const pl = await call('plan_layout', { path: 'zg', name: 'Z link theme', theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await call('approve_plan', { planId: pid, userReply: 'go' });
     const x = await call('create_report', { path: 'zg', name: 'Z link theme', planId: pid, theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] });
     chk(() => x.err && /link/.test(x.t) && /Nothing was written/.test(x.t), () => `Z-03. a theme behind a link is refused: ${short(x)}`);
