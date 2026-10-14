@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
@@ -249,6 +249,8 @@ function scriptName(dir, base, text) {
 }
 export function writeTwin(a, plan) {
   const d = plan.data || {};
+  // (B-02) the original as it was when the plan was approved: changed since, nothing is written
+  if (d.source && reportPrint(a.path) !== d.source) throw new Error('Nothing was written: the original report changed after the plan was approved. Make the plan again (call this tool without planId), show it to the user and wait for their go.');
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
   const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages });
