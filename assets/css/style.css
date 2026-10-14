@@ -1133,6 +1133,28 @@ html[dir="rtl"] .navbar-brand {
   text-transform: uppercase;
 }
 
+/* A blog card's topic: one colour per topic, the same on every card (the owner, 14 Oct 2026). Cards write
+   class="topic-badge" data-topic="<topic>"; the topics and their colours live only here. Dark text on each: 7:1 or more. */
+.topic-badge {
+  align-self: flex-start;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.35em 0.65em;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--dk);
+  background: var(--accent);
+}
+.topic-badge[data-topic="gulf"] { background: #fdcb6e; }
+.topic-badge[data-topic="ai"] { background: #a29bfe; }
+.topic-badge[data-topic="design"] { background: #fd79a8; }
+.topic-badge[data-topic="modelling"] { background: var(--accent); }
+.topic-badge[data-topic="strategy"] { background: #55efc4; }
+
 .blog-card time {
   font-size: 0.9rem;
 }
@@ -1147,6 +1169,21 @@ html[dir="rtl"] .navbar-brand {
 .blog-card p {
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* The label above a page's title ("Private beta", "Free tool · No sign-up", an article's topic): one look on every
+   page, the beta page's cyan (the owner, 14 Oct 2026: fix it at the root). Pages write class="page-badge" and nothing
+   else on it; its colour, size and spacing live only here. Dark text on the accent reads at about 11:1. */
+.page-badge {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.35em 0.65em;
+  border-radius: 0.375rem;
+  background: var(--accent);
+  color: var(--dk);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 /* Bootstrap's bg-info badge has white text on cyan (1.95:1); dark text reads at about 10:1 */
