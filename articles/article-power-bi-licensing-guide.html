@@ -65,7 +65,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="../assets/css/style.min.css?v=20261009i" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261014e" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" as="style" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -215,20 +215,24 @@
             </article>
 
             <div class="text-center block">
-              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+              <div class="glass-card cta" data-aos="fade-up">
                 <h3 class="h4 mb-3" data-i18n="exploreMore.title">Run your own numbers</h3>
                 <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Enter your creators and viewers and see the cheapest license that fits, with the F64 break-even point.</p>
-                <a href="../tools/power-bi-licensing-cost-calculator.html" class="btn btn-accent m-1"><i class="bi bi-cash-coin me-2"></i><span data-i18n="exploreMore.button1">Open the Licensing Calculator</span></a>
+                <div class="cta-actions">
+                  <a href="../tools/power-bi-licensing-cost-calculator.html" class="btn btn-accent"><i class="bi bi-cash-coin me-2"></i><span data-i18n="exploreMore.button1">Open the Licensing Calculator</span></a>
+                </div>
               </div>
             </div>
 
             <div class="text-center">
               <hr class="divider">
-              <h3 class="h4 mb-3" data-i18n="finalCta.title">Licenses are the small part of the bill</h3>
-              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">A model that answers the right questions is where the value is. We can size your setup and build it.</p>
-              <a href="/#contact" class="btn btn-accent btn-lg">
-                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span>
-              </a>
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Licenses are the small part of the bill</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">A model that answers the right questions is where the value is. We can size your setup and build it.</p>
+                <div class="cta-actions">
+                  <a href="/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span></a>
+                </div>
+              </div>
             </div>
 
           </div>
