@@ -6,6 +6,9 @@
 //         is, nor replaced by a default)
 //   R-04: every name the tools write (create_report's and plan_layout's displayNames, the twin's labels) is refused
 //         with an invisible format sign (a direction override or isolate, a zero-width space); Arabic and its joiners pass
+// The outside review of rc.14 (14 Oct, same file):
+//   A-02: the report's look and options (name, title, theme, logo, colours, options) are pinned with the plan and shown
+//         in it: a write with another value is refused, a write that leaves one out gets the plan's
 // And the night audit of 13 Oct (same file):
 //   AUD-034: a preset named like an object's own property (__proto__, constructor, toString) is repaired, not a crash
 //   AUD-035: a Windows device name (CON, NUL, COM1, LPT1 ...) never becomes a theme file or a report's .pbip / .Report
@@ -78,6 +81,25 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const f = path.join(T, 'broken.json'); fs.writeFileSync(f, '{');
     let err = ''; try { mustJson(f, 'report.json'); } catch (e) { err = e.message; }
     chk(() => /Nothing was written/.test(err) && /report\.json/.test(err), () => `R-02. the native copy's reader refuses an unreadable file: ${err}`);
+  }
+
+  // ---------- A-02: what the plan shows of the report's look is what is written ----------
+  {
+    const pl = await ask('plan_layout', { path: 'rg', layout: 'exec', name: 'Look Test', title: 'Approved title', secondPage: false, smoothLines: true });
+    const pid = pl.j && pl.j.plan && pl.j.plan.planId, look = pl.j && pl.j.plan && pl.j.plan.reportLook;
+    chk(() => pid && look && look.title === 'Approved title' && look.name === 'Look Test' && look.secondPage === false && /approved/.test(look.sayInPlan), () => `A-02. the plan shows the report's look: ${short(pl)}`);
+    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    const design = pl.j && pl.j.design;
+    const other = await ask('create_report', { path: 'rg', planId: pid, design, name: 'Look Test', title: 'Another title', secondPage: false, smoothLines: true });
+    chk(() => other.err && /Nothing was written/.test(other.t) && /title/.test(other.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. a title other than the approved one is refused: ${short(other)}`);
+    const opt = await ask('create_report', { path: 'rg', planId: pid, design, secondPage: true });
+    chk(() => opt.err && /secondPage/.test(opt.t), () => `A-02. an option other than the approved one is refused: ${short(opt)}`);
+    const ok = await ask('create_report', { path: 'rg', planId: pid, design, secondPage: false, smoothLines: true });
+    chk(() => !ok.err && fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. left out, the plan's name and title are written: ${short(ok)}`);
+    const pl2 = await ask('plan_layout', { path: 'rg', layout: 'exec' }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
+    await ask('approve_plan', { planId: pid2, userReply: 'go' });
+    const th = await ask('create_report', { path: 'rg', planId: pid2, design: pl2.j && pl2.j.design, name: 'Theme Test', theme: 'some-theme.json' });
+    chk(() => th.err && /Nothing was written/.test(th.t) && /(name|theme)/.test(th.t), () => `A-02. a theme or name the plan did not show is refused: ${short(th)}`);
   }
 
   // ---------- AUD-034: inherited property names are not presets ----------

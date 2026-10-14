@@ -73,7 +73,8 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     const none = await run('no id', undefined, 'g', /approved plan id[\s\S]*plan_layout[\s\S]*approve_plan/);
     chk(() => /Nothing was written/.test(none.t), () => `G4. the refusal must say nothing was written: ${short(none)}`);
     await run('unknown', 'plan-0123456789ab', 'g', /unknown[\s\S]*Show the user the plan/);
-    const pl = await ask('plan_layout', { path: 'g', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    // (A-02: the plan holds the report's name and options as the write gives them)
+    const pl = await ask('plan_layout', { path: 'g', layout: 'exec', lang: 'en', name: 'Gate ok', noDataMessage: false, secondPage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     chk(() => pl.j.plan.status === 'proposed' && /^plan-/.test(pid), () => `G4. plan_layout with the model must give a proposed plan id: ${short(pl)}`);
     await run('not approved', pid, 'g', /not approved yet/);
     await run('theme plan', themePlan, 'g', /theme plan/);
@@ -142,7 +143,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     }
     chk(() => E.secondLayout(Object.assign({}, base, { preset: 'exec', filters: true, fpos: 'start' })).fpos === 'start', () => 'C1. "start" stays "start"');
     // the report: filters at the end (right in English) on both pages
-    const pl = await ask('plan_layout', { path: 'g', layout: 'exec', filters: 'end', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    const pl = await ask('plan_layout', { path: 'g', layout: 'exec', filters: 'end', lang: 'en', name: 'Rail end', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid, userReply: 'go' });
     const x = await ask('create_report', { path: 'g', name: 'Rail end', design: pl.j && pl.j.design, planId: pid, noDataMessage: false });
     const dir = x.err ? null : path.join(ROOT, 'g', x.j.report, 'definition', 'pages');
