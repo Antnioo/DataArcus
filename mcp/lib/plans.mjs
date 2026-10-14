@@ -110,7 +110,9 @@ export function gate(tool, id, model, pin) {
   // writer that forgot them is refused, not waved through)
   if (want && pin === undefined) throw new Error(`Nothing was written: ${tool} passed no inputs to compare with the approved plan ${p.id}. ${SHOW}`);
   if (want) {
-    const off = differences(want, pin);
+    const off = differences(want, pin), changed = off.filter((x) => /^files\b/.test(x));
+    // (B-02: a file the report is made from, or its source report, changed since the go: said as such)
+    if (changed.length && changed.length === off.length) throw new Error(`Nothing was written: a file the plan was made from changed since the plan was approved (plan ${p.id}: ${changed.map((x) => x.replace(/^files ?\(?|\)$/g, '') || 'a file').join(', ')}). Make the plan again, show it to the user and wait for their go.`);
     if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ from the approved plan ${p.id} in ${off.join('; ')}. The user approved that plan, so only its inputs are written: pass the approved ones, or make a new plan with these, show it and wait for the user's go.`);
   }
   return p;
