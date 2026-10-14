@@ -205,7 +205,7 @@ export async function v029c({ call, check, ROOT, meta }) {
   model('pl1');
   const planFields = { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month-Year]', category: 'Sales[Product]', category2: 'Sales[Region]', table: ['Sales[Issue]', 'Sales[Total Sales]', 'Sales[Orders]'] };
   const before2 = fs.readdirSync(path.join(ROOT, 'pl1'));
-  const pl = await ask('plan_layout', { layout: 'exec', filters: 'end', path: 'pl1', planFields });
+  const pl = await ask('plan_layout', { layout: 'exec', filters: 'end', path: 'pl1', planFields, name: 'Planned' });  // (A-02: the name is approved with the plan)
   const dl = pl.j && pl.j.designLint;
   chk(() => dl && dl.page && Array.isArray(dl.findings) && dl.modelRead === true && typeof dl.sayFirst === 'string' && dl.findings.every((f) => f.rule && f.severity && typeof f.guess === 'boolean' && f.why && f.fix && f.page.n === 1),
     () => `L2. plan_layout's answer has designLint for the planned page: ${short(pl)}`);

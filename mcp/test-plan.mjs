@@ -15,7 +15,9 @@ export function withPlans(call) {
       // (audit 6, A6-1 and A6-2: a report plan pins the write's inputs and is used once, so every write gets its own plan
       // from plan_layout with the same inputs, as an agent must; a plan that plan_layout refuses (planProblems) falls back
       // to the model's plain plan, so create_report's own refusals stay tested)
-      const pin = Object.fromEntries(['design', 'layout', 'kpis', 'filters', 'header', 'page', 'dir', 'lang', 'focus', 'tables', 'displayNames', 'pages', 'pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards']
+      const pin = Object.fromEntries(['design', 'layout', 'kpis', 'filters', 'header', 'page', 'dir', 'lang', 'focus', 'tables', 'displayNames', 'pages', 'pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards',
+        // (A-02) the report's look and options, pinned with the plan too
+        'name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines']
         .filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
       let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}));
       if (!(pl.j && pl.j.plan && pl.j.plan.planId)) pl = await call('plan_layout', { path: args.path });

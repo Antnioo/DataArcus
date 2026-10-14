@@ -96,7 +96,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
 
   // ---------- G5: the approved plan's fields are the report's ----------
   {
-    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' } }, raw), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, name: 'I same', noDataMessage: false, secondPage: false }, raw), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid, userReply: 'go' }, raw);
     const other = await ask('create_report', { path: 'i-hr', name: 'I other', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Leavers]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
     chk(() => other.err && /approved plan/.test(other.t) && /kpis/.test(other.t), () => `G5: create_report with fields other than the approved plan's must be refused, naming them: ${short(other)}`);
