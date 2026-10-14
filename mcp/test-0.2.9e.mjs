@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9 audit fixes, part 2, LAYER reading (the reviewer's routine "B6: rest of audit 1", 11 Oct 2026; the owner wants
 // every audit finding fixed before the beta): A1-2, A1-4, A1-5, A1-6, A1-8, A1-9, A1-10, A1-14 and the reading items of
 // the audit's "seen, not in scope" (the website's model.bim size cap, byName's folder read), written red first.

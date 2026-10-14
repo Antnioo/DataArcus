@@ -472,7 +472,7 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const id = pl.j && pl.j.plan && pl.j.plan.planId;
   const no = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
   chk(() => no.err && /not approved/.test(no.t) && !fs.existsSync(path.join(P, 'Twin Sales native.Report')), () => `C5: before the user's go, nothing is written: ${short(no)}`);
-  await ask('approve_plan', { planId: id, userReply: 'go' });
+  await ask('approve_plan', { planId: id });
   const other = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.pbip' });
   chk(() => other.err && /differ/.test(other.t), () => `C6: another customVisualsFrom than the approved one is refused: ${short(other)}`);
   const made = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
@@ -501,7 +501,7 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   // N9 (rc.4, round 9): a plan made with display names writes with the call that leaves them out (the plan's own are used);
   // the same names passed back write too; other names are refused
   { const DN = { 'Sales[Product]': 'Product line' }, clean = () => { fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true }); };
-    const planned = async () => { clean(); const x = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN }), i = x.j && x.j.plan && x.j.plan.planId; await ask('approve_plan', { planId: i, userReply: 'go' }); return i; };
+    const planned = async () => { clean(); const x = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN }), i = x.j && x.j.plan && x.j.plan.planId; await ask('approve_plan', { planId: i }); return i; };
     const i1 = await planned();
     const diff = await ask('create_report', { path: 'cvt', planId: i1, customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: { 'Sales[Product]': 'Item' } });
     chk(() => diff.err && /differ/.test(diff.t) && /displayNames/.test(diff.t) && !fs.existsSync(ND), () => `N9: other display names than the approved ones are refused: ${short(diff)}`);
@@ -513,7 +513,7 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   // a report changed after the plan: refused
   fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true });
   const pl2 = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' }), id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
-  await ask('approve_plan', { planId: id2, userReply: 'go' });
+  await ask('approve_plan', { planId: id2 });
   const f = path.join(PG, 'cvFacet/visual.json'), j = J(f); j.visual.query.queryState.Values1.projections.push(mea('Sales', 'Orders')); W(f, j);
   const changed = await ask('create_report', { path: 'cvt', planId: id2, customVisualsFrom: 'cvt/Twin Sales.Report' });
   chk(() => changed.err && /changed since the plan/.test(changed.t) && !fs.existsSync(ND), () => `C12: the report changed after the plan: nothing written: ${short(changed)}`);

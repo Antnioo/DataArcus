@@ -44,9 +44,11 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    Say that the bars of the bar and column charts fade by their value (`plan_layout`'s `chartColors.sayInPlan`), and
    say first what `plan_layout` puts first (`formats`, `arabicNames`, `displayNames`: readable names it proposes for database-style field names, used only when the user approves them) when it was given the model.
    Never call `create_report` in the same turn as the request: the user's "go" comes first. After the go, call
-   `approve_plan` with the `planId` and the user's reply in their own words; never approve on your own. When the app
-   supports it, DataArcus then asks the person itself in the app's prompt (`approvedBy: "user-in-app"`); a no there
-   refuses: ask what to change. Otherwise the approval is marked `assistant-reported`. No tool writes
+   `approve_plan` with the `planId`; never on your own. DataArcus then opens its approval window in the user's browser
+   with the plan and its files: only the user's click on Approve approves (`approvedBy: "user-in-browser"`; the app's
+   own prompt instead when it supports elicitation, `"user-in-app"`). If it answers `status: "waiting"`, tell the user to
+   click Approve there and call `approve_plan` again when they say they did (`reopen: true` if they closed it). "Not
+   now" refuses: ask what to change. No tool writes
    a file without an approved `planId` (the theme file, the report, fix scripts, the Gulf calendar script).
 6. **Build.** `create_report` with the `planId`, the design (and the same layout choices) and the approved plan's fields in
    `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
@@ -109,7 +111,7 @@ When the user wants an Arabic (right-to-left) version of a report they already h
    (`timeRightToLeft`), and the Arabic month column (`arabicMonth`: a TMDL script next to the project that the user
    applies in TMDL view; DataArcus never applies it).
 4. Call the tool again with the approved texts as `labels` (`{ id: text }`): its plan id is for exactly those texts.
-   Show the final plan, wait for "go", `approve_plan` with the user's reply, then the tool with `planId`.
+   Show the final plan, wait for "go", `approve_plan` (the user clicks Approve in its window), then the tool with `planId`.
 5. Tell the user what was written, everything under `cannot`, and how to apply the month script; offer `check_report`
    on the twin. The original report is never changed.
 

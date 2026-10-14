@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9 integration, the gate block's root fixes (the reviewer's routine of 11 Oct 07:36 UTC; the cross-review
 // mcp/work/0.2.9-crossreview.md, findings G1-G13, R5 and the duplicates the gate block owns). Written red first.
 // The owner's rule of 11 Oct: build in blocks, fix at the root inside one block, nothing tuned to his two portfolio
@@ -97,7 +98,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   // ---------- G5: the approved plan's fields are the report's ----------
   {
     const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, name: 'I same', noDataMessage: false, secondPage: false }, raw), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await ask('approve_plan', { planId: pid, userReply: 'go' }, raw);
+    await ask('approve_plan', { planId: pid }, raw);
     const other = await ask('create_report', { path: 'i-hr', name: 'I other', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Leavers]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
     chk(() => other.err && /approved plan/.test(other.t) && /kpis/.test(other.t), () => `G5: create_report with fields other than the approved plan's must be refused, naming them: ${short(other)}`);
     const same = await ask('create_report', { path: 'i-hr', name: 'I same', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);

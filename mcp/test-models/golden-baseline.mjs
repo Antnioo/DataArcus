@@ -1,3 +1,4 @@
+import '../test-env.mjs';
 // The tool-level part of the golden tasks 1 to 11 (mcp/GOLDEN-TASKS.md): for each, the tool calls an agent is expected to
 // make, run over stdio like an agent would, on copies of the input models in a temporary folder (nothing in the repo
 // changes). Checks: the expected pages and visuals, nothing overwritten, Microsoft's validator, the measured size rules

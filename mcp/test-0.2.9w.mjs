@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9, the report writer's block (the reviewer's routine of 11 Oct, cloud builder 11; audit 3's A3-7 to A3-12 on the
 // writer's side, and the audit's "seen, not in scope" items that sit in the writer). Written red first, item by item.
 // The owner's rule of 11 Oct: build in blocks, fix at the root inside one block, nothing tuned to his two portfolio
