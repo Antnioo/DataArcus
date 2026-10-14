@@ -389,6 +389,51 @@ body {
   overflow: hidden;
 }
 
+/* Calls to action: one look on every page (the owner, 14 Oct 2026: fix it at the root). A page marks the box
+   "glass-card cta" and the row of buttons "cta-actions"; the box's padding, the buttons' size and the gap between them
+   live only here, so a change here changes every page at once. No btn-lg or spacing classes on these buttons. */
+.cta {
+  display: inline-block;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .cta { padding: 3rem; }
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cta-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* the same 1px border on every button (invisible on the filled one), so a row with an outlined button is not
+   taller than a row without one */
+.cta-actions .btn { border-width: 1px; border-style: solid; }
+.cta-actions .btn-accent { border-color: transparent; }
+
+/* every icon the same height, whatever its shape, so every button is the same height */
+.cta-actions .btn > i { line-height: 1; }
+
+/* phones: one button per line, the full width of the box, so a long label still fits on one line where it can */
+@media (max-width: 575.98px) {
+  .cta-actions .btn { flex: 1 1 100%; }
+}
+
+/* in a page's header (the beta page) the row starts where the text starts: left, or right in Arabic */
+.article-header .cta-actions { justify-content: flex-start; }
+
 .glass-card::before {
   content: '';
   position: absolute;
