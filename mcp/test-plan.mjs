@@ -17,7 +17,9 @@ export function withPlans(call) {
       // to the model's plain plan, so create_report's own refusals stay tested)
       const pin = Object.fromEntries(['design', 'layout', 'kpis', 'filters', 'header', 'page', 'dir', 'lang', 'focus', 'tables', 'displayNames', 'pages', 'pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards',
         // (A-02) the report's look and options, pinned with the plan too
-        'name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines']
+        'name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines',
+        // (B-01) and font, rtl
+        'font', 'rtl']
         .filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
       let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}));
       if (!(pl.j && pl.j.plan && pl.j.plan.planId)) pl = await call('plan_layout', { path: args.path });
