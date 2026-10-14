@@ -24,6 +24,8 @@ window.betaPageTranslations = {
         "title": "DataArcus for Power BI",
         "subtitle": "An AI agent in Claude Desktop reads your Power BI project (PBIP, with its TMDL model) and writes a complete new report (PBIR) next to it, in English or in Arabic, right to left.",
         "button": "Ask to join",
+        "how": "See how it works",
+        "facts": "Free during the beta. Windows, with Power BI Desktop and Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "how": {
@@ -101,6 +103,8 @@ window.betaPageTranslations = {
         "title": "DataArcus لـ Power BI",
         "subtitle": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI الخاص بك (PBIP مع نموذج TMDL) ويكتب بجانبه تقريرًا جديدًا كاملًا (PBIR)، بالإنجليزية أو بالعربية من اليمين إلى اليسار.",
         "button": "اطلب الانضمام",
+        "how": "شاهد كيف يعمل",
+        "facts": "مجاني خلال النسخة التجريبية. يعمل على Windows مع Power BI Desktop و Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "how": {
