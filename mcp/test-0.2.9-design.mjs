@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9, the design engine block (the audit mcp/work/audit-2-design-engine.md on fix/0.2.9-checks, findings A2-1 to
 // A2-12 except A2-3, and the audit's "Seen, not in scope" items of this block). Written red first.
 // The owner's rule of 11 Oct: build in blocks, fix at the root inside one block, nothing tuned to his two portfolio

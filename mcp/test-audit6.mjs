@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // Audit 6 (the MCP tools block; the owner's go on fixing every 0.2.9 finding, 11 Oct 2026), written red first, one
 // part per finding. test.mjs runs it with its own client (import { audit6 }); run alone it starts the server itself:
 //   node test-audit6.mjs
@@ -38,12 +39,12 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
   model(fs, ROOT, 'a6');
 
-  // ---------- A6-3: the person approves in the app (elicitation); without it the reply is the assistant's report ----------
+  // ---------- A6-3: the person approves in the app (elicitation); without it, in DataArcus's approval window (A-01) ----------
   {
     // the app supports elicitation, the person declines: refused, and the prompt showed what would be written
     const no = await elicitClient(ROOT, () => ({ action: 'decline' }));
     const p1 = await no.call('generate_theme', { brand: '#0F766E' }), id1 = p1.j && p1.j.plan && p1.j.plan.planId;
-    const r1 = await no.call('approve_plan', { planId: id1, userReply: 'go' });
+    const r1 = await no.call('approve_plan', { planId: id1 });
     const shown = no.seen[0] || {};
     chk(() => r1.err && /declined|did not approve/i.test(r1.t) && /Not approved/.test(r1.t), () => `A6-3. the person declines in the app: refused, whatever the reply says: ${short(r1)}`);
     chk(() => /theme file/i.test(shown.message || '') && shown.requestedSchema && shown.requestedSchema.properties && shown.requestedSchema.properties.approve, () => `A6-3. the prompt shows what will be written (writesAfterGo) and asks yes or no: ${JSON.stringify(shown).slice(0, 300)}`);
@@ -60,19 +61,18 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     await yes.close();
     const unt = await elicitClient(ROOT, () => ({ action: 'accept', content: { approve: false } }));
     const p4 = await unt.call('generate_theme', { brand: '#0F766E' }), id4 = p4.j && p4.j.plan && p4.j.plan.planId;
-    const r4 = await unt.call('approve_plan', { planId: id4, userReply: 'go' });
+    const r4 = await unt.call('approve_plan', { planId: id4 });
     chk(() => r4.err && /Not approved/.test(r4.t), () => `A6-3. "accept" with approve false is not an approval: ${short(r4)}`);
     await unt.close();
     void id3;
-    // no elicitation in the app: the reply path, marked as the assistant's report
+    // no elicitation in the app (A-01): DataArcus's approval window, where only the person's click approves (the tests'
+    // browser clicks Approve); what the assistant passes approves nothing (test-approval.mjs has the window's own checks)
     const p5 = await call('generate_theme', { brand: '#0F766E' }), id5 = p5.j && p5.j.plan && p5.j.plan.planId;
-    const r5 = await call('approve_plan', { planId: id5, userReply: 'go' });
-    chk(() => !r5.err && r5.j.status === 'approved' && r5.j.approvedBy === 'assistant-reported' && /can't|cannot/.test(r5.j.note), () => `A6-3. no elicitation: approved from the reply, approvedBy assistant-reported, said honestly: ${short(r5)}`);
-    const r6 = await call('approve_plan', { planId: (await call('generate_theme', { brand: '#0F766E' })).j.plan.planId });
-    chk(() => r6.err && /userReply/.test(r6.t), () => `A6-3. no elicitation and no reply: refused: ${short(r6)}`);
+    const r5 = await call('approve_plan', { planId: id5 });
+    chk(() => !r5.err && r5.j.status === 'approved' && r5.j.approvedBy === 'user-in-browser' && /click on Approve/.test(r5.j.note), () => `A6-3. no elicitation: approved by the click in the window, approvedBy user-in-browser: ${short(r5)}`);
     // the docs say no more than the code does
     const readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8'), privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8');
-    chk(() => /elicitation/i.test(readme) && /assistant-reported/.test(readme) && /elicitation/i.test(privacy) && /assistant-reported/.test(privacy), () => 'A6-3. README and PRIVACY say how approval works (elicitation, or assistant-reported)');
+    chk(() => [readme, privacy].every((d) => /approval window/i.test(d) && /user-in-browser/.test(d) && /elicitation/i.test(d) && !/assistant-reported/.test(d)), () => 'A6-3 (A-01). README and PRIVACY say how approval works (the approval window, user-in-browser; the app\'s prompt with elicitation) and no longer offer an assistant-reported approval');
   }
 
   // ---------- A6-1 + A6-5: the plan pins what the write may use; any other input is refused, named, nothing written ----------
@@ -84,7 +84,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
       // (A-02: the report's name and options are pinned with the plan too)
       name: 'A6 pinned', noDataMessage: false, secondPage: false };
     const pl = await call('plan_layout', base), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await call('approve_plan', { planId: pid, userReply: 'go' });
+    await call('approve_plan', { planId: pid });
     const cr = { path: 'a6', name: 'A6 pinned', planId: pid, design: pl.j && pl.j.design, lang: 'en', fields: base.planFields, pageFilters: base.pageFilters, displayNames: base.displayNames, text: base.text, noDataMessage: false, secondPage: false };
     const svg = { w: 100, h: 20, values: [{ id: 'v', label: 'S', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 0, w: 100, h: 20, fill: '#0f766e' }] };
     const variants = {
@@ -106,16 +106,16 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     // A6-5: the calendar, the scripts and the theme plans pin their inputs too
     const c0 = { path: 'a6', firstYear: 2020, lastYear: 2021, asOf: '2026-10-11' };
     const cp = await call('add_gulf_calendar', c0), cid = cp.j && cp.j.plan && cp.j.plan.planId;
-    await call('approve_plan', { planId: cid, userReply: 'go' });
+    await call('approve_plan', { planId: cid });
     const before = files(), wide = await call('add_gulf_calendar', Object.assign({}, c0, { firstYear: 1990, lastYear: 2049, name: 'Other Calendar', planId: cid }));
     chk(() => wide.err && /Nothing was written/.test(wide.t) && /firstYear/.test(wide.t) && /lastYear/.test(wide.t) && /name/.test(wide.t) && files() === before, () => `A6-5. add_gulf_calendar with other years and name than approved: refused, named: ${short(wide)}`);
     const tp = await call('generate_theme', { brand: '#0F766E', name: 'A6 Theme' }), tid = tp.j && tp.j.plan && tp.j.plan.planId;
-    await call('approve_plan', { planId: tid, userReply: 'go' });
+    await call('approve_plan', { planId: tid });
     const t2 = await call('generate_theme', { brand: '#B91C1C', name: 'A6 Theme', folder: 'a6', planId: tid });
     chk(() => t2.err && /Nothing was written/.test(t2.t) && /brand/.test(t2.t) && /folder/.test(t2.t), () => `A6-5. generate_theme with another brand and folder than approved: refused, named: ${short(t2)}`);
     const hp = await call('check_model_health', { path: 'a6' }), hid = hp.j && hp.j.plan && hp.j.plan.planId;
     if (hid) {
-      await call('approve_plan', { planId: hid, userReply: 'go' });
+      await call('approve_plan', { planId: hid });
       const h2 = await call('check_model_health', { path: 'a6', weekStart: 'monday', planId: hid });
       chk(() => h2.err && /Nothing was written/.test(h2.t) && /weekStart/.test(h2.t), () => `A6-5. check_model_health's scripts with other inputs than approved: refused, named: ${short(h2)}`);
     } else chk(() => true, () => '');
@@ -124,20 +124,20 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   // ---------- A6-2: a plan is used once per tool; the same id a second time is refused ----------
   {
     const pl = await call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 once', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await call('approve_plan', { planId: pid, userReply: 'go' });
+    await call('approve_plan', { planId: pid });
     const one = await call('create_report', { path: 'a6', name: 'A6 once', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
     const before = files(), two = await call('create_report', { path: 'a6', name: 'A6 twice', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
     chk(() => !one.err && two.err && /already used/.test(two.t) && /Nothing was written/.test(two.t) && files() === before, () => `A6-2. one approved plan writes one report; the second write is refused: ${short(one)} / ${short(two)}`);
     // (Z-01, the outside review: a report plan no longer allows a theme file; a theme plan writes its file once)
     const tp = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme' }), tpid = tp.j && tp.j.plan && tp.j.plan.planId;
-    await call('approve_plan', { planId: tpid, userReply: 'go' });
+    await call('approve_plan', { planId: tpid });
     const th = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: tpid });
     chk(() => !th.err && th.j.path, () => `A6-2. a theme plan writes its theme file once: ${short(th)}`);
     const th2 = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: tpid });
     chk(() => th2.err && /already used/.test(th2.t), () => `A6-2. the theme file a second time: refused: ${short(th2)}`);
     const c0 = { path: 'a6', firstYear: 2020, lastYear: 2021, asOf: '2026-10-11', name: 'Once Calendar' };
     const cp = await call('add_gulf_calendar', c0), cid = cp.j && cp.j.plan && cp.j.plan.planId;
-    await call('approve_plan', { planId: cid, userReply: 'go' });
+    await call('approve_plan', { planId: cid });
     const c1 = await call('add_gulf_calendar', Object.assign({ planId: cid }, c0)), c2 = await call('add_gulf_calendar', Object.assign({ planId: cid }, c0));
     chk(() => !c1.err && c2.err && /already used/.test(c2.t), () => `A6-2. a calendar plan writes its script once: ${short(c1)} / ${short(c2)}`);
   }
@@ -148,12 +148,12 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     const before = top();
     const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'ENOSPC:5' });
     const pl = await s.call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 Half', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await s.call('approve_plan', { planId: pid, userReply: 'go' });
+    await s.call('approve_plan', { planId: pid });
     const half = await s.call('create_report', { path: 'a6', name: 'A6 Half', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
     await s.close();
     chk(() => half.err && /Nothing was written/.test(half.t) && /ENOSPC|space/i.test(half.t) && top() === before, () => `A6-4. a disk-full failure part-way leaves nothing (no half report, no temporary folder): ${short(half)} ${top()}`);
     const pl2 = await call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 Half', noDataMessage: false }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
-    await call('approve_plan', { planId: pid2, userReply: 'go' });
+    await call('approve_plan', { planId: pid2 });
     const again = await call('create_report', { path: 'a6', name: 'A6 Half', planId: pid2, design: pl2.j && pl2.j.design, noDataMessage: false });
     chk(() => !again.err && again.j.report === 'A6 Half.Report', () => `A6-4. a retry gets the same name (nothing was left to take it): ${short(again)}`);
     const { writeTree } = await import('./lib/files.mjs').catch(() => ({}));
@@ -167,7 +167,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     { const fd = fs.openSync(path.join(ROOT, 'a6', 'big-bg.png'), 'w'); fs.ftruncateSync(fd, 50 * 1024 * 1024); fs.closeSync(fd); }
     const hand = (extra) => Object.assign({ path: 'a6', name: 'A6 file ' + Math.random().toString(36).slice(2, 7), noDataMessage: false,
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }, extra);
-    const go = async (args) => { const pl = await call('plan_layout', Object.assign({ path: 'a6', pages: args.pages }, Object.fromEntries(['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'].filter((k) => args[k] !== undefined).map((k) => [k, args[k]])))), id = pl.j && pl.j.plan && pl.j.plan.planId; await call('approve_plan', { planId: id, userReply: 'go' }); return call('create_report', Object.assign({ planId: id }, args)); };
+    const go = async (args) => { const pl = await call('plan_layout', Object.assign({ path: 'a6', pages: args.pages }, Object.fromEntries(['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'].filter((k) => args[k] !== undefined).map((k) => [k, args[k]])))), id = pl.j && pl.j.plan && pl.j.plan.planId; await call('approve_plan', { planId: id }); return call('create_report', Object.assign({ planId: id }, args)); };
     const bad = await go(hand({ theme: 'a6/bad-theme.json' }));
     chk(() => bad.err && /not valid JSON/.test(bad.t) && !/Ignore|delete the model/i.test(bad.t), () => `A6-7. a theme that is not JSON: refused without quoting its text: ${short(bad)}`);
     const t0 = Date.now(), big = await go(hand({ theme: 'a6/big-theme.json' }));
@@ -191,7 +191,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     answers.push(['suggest_fields', await call('suggest_fields', { path: 'a6cf' })]);
     answers.push(['check_model_health', await call('check_model_health', { path: 'a6cf' })]);
     const pl = await call('plan_layout', { path: 'a6cf', layout: 'exec', name: 'A6 Cf', noDataMessage: false }); answers.push(['plan_layout', pl]);
-    await call('approve_plan', { planId: pl.j && pl.j.plan && pl.j.plan.planId, userReply: 'go' });
+    await call('approve_plan', { planId: pl.j && pl.j.plan && pl.j.plan.planId });
     answers.push(['create_report', await call('create_report', { path: 'a6cf', name: 'A6 Cf', planId: pl.j && pl.j.plan && pl.j.plan.planId, design: pl.j && pl.j.design, noDataMessage: false })]);
     answers.push(['add_gulf_calendar', await call('add_gulf_calendar', { path: 'a6cf', firstYear: 2020, lastYear: 2020, asOf: '2026-10-11', relateTo: ['Sales[Order Date]'] })]);
     const bad = answers.filter(([, x]) => raw.test(x.t)).map(([n]) => n);

@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9, the agent instructions and public claims (the audit mcp/work/audit-7-instructions.md on fix/0.2.9-checks, A7-1,
 // A7-2 and A7-4 to A7-13; A7-3 is the gate's). Written red first. Every claim the agent or the user reads is checked
 // against the code or the tools' own answers, never against a number copied here.

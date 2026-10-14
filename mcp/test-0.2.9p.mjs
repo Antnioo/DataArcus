@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9 audit fixes, the field picker's block (the owner: every audit finding fixed before the beta; builder 7's
 // audits mcp/work/audit-3-picker-writer.md and audit-6-mcp-tools.md on fix/0.2.9-checks). Written red first, in
 // batches, one commit per item. Ordinary names (retail, HR, French), none of the portfolio's.

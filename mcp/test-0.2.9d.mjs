@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9 audit fixes, LAYER reading (the reviewer's routine of 11 Oct, with the owner's "fix all of them now"): builder 7's
 // audit of the model-reading block (A1-1, A1-3, A1-7, A1-12, A1-13) and the cross-review's reader findings (R1, R3,
 // R4, R6, R7, R9), written red first. Each block names its item.

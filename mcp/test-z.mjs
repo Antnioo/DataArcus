@@ -27,37 +27,37 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
   // ---------- Z-01: a plan kind that allows a tool but pins nothing for it fails closed; a report plan writes no theme file ----------
   {
     const pl = await call('plan_layout', { path: 'zg', layout: 'exec' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await call('approve_plan', { planId: pid, userReply: 'go' });
+    await call('approve_plan', { planId: pid });
     const before = all(), t = await call('generate_theme', { brand: '#B91C1C', name: 'Any Inputs', folder: 'zg', planId: pid });
     chk(() => t.err && /Nothing was written/.test(t.t) && all() === before, () => `Z-01. a report plan writes no theme file (any inputs): ${short(t)}`);
     const np = await call('plan_layout', { layout: 'exec' });
     chk(() => !np.err && !(np.j.plan && np.j.plan.planId) && /generate_theme/.test(JSON.stringify(np.j.plan || np.j.noPlan || '')), () => `Z-01. plan_layout without the model gives no plan id and says how to get a theme file: ${short(np)}`);
     const P = await freshImport('lib/plans.mjs');
-    const id = P.propose('theme', null, ['a theme file']); P.approve(id, 'go');
+    const id = P.propose('theme', null, ['a theme file']); P.approve(id, 'user-in-browser');
     let err = ''; try { P.gate('generate_theme', id, null, { brand: '#000000' }); } catch (e) { err = e.message; }
     chk(() => /Nothing was written/.test(err) && /pin/i.test(err), () => `Z-01. a plan with no pinned inputs for the tool is refused (fails closed): ${err}`);
-    const tid = P.propose('twin', 'm', ['a twin'], { labels: {} }); P.approve(tid, 'go');
+    const tid = P.propose('twin', 'm', ['a twin'], { labels: {} }); P.approve(tid, 'user-in-browser');
     let terr = ''; try { P.gate('create_arabic_twin', tid, 'm'); } catch (e) { terr = e.message; }
     chk(() => terr === '', () => `Z-01. the twin (its write uses only the plan's data) still passes: ${terr}`);
   }
 
-  // ---------- Z-02: (a) a reply with any no/not/wait word is never a go; (b) approved once, and the life counts from the proposal ----------
+  // ---------- Z-02: (a) a typed reply never approves (A-01: only the person, by the window's click or the app's prompt); (b) approved once, and the life counts from the proposal ----------
   {
     const P = await freshImport('lib/plans.mjs');
     const go = ['go', 'Go ahead', 'yes', 'yes, build it', 'OK', 'okay, go', 'approved', 'proceed', 'sure', 'No problem, go ahead', 'Yes please go', 'موافق', 'نعم', 'تمام', 'ابدأ', 'نعم، اكتب التقرير'];
     const no = ['no', 'I said no', "Wait, don't go yet", 'not yet', 'stop', 'hold on', 'cancel it', 'go later', 'yes but not now', "don't go", 'do not go', 'go? no', 'hmm', 'لا', 'لا تكتب', 'انتظر', 'توقف', 'ليس الآن', 'مش دلوقتي', 'مو الحين', 'نعم لكن انتظر', 'لا، ابدأ لاحقا'];
     const wrong = [];
-    for (const r of go) { const id = P.propose('theme', null, ['x']); try { P.approve(id, r); } catch (e) { wrong.push('refused: ' + r); } }
-    for (const r of no) { const id = P.propose('theme', null, ['x']); try { P.approve(id, r); wrong.push('approved: ' + r); } catch (e) { if (!/does not say go/.test(e.message)) wrong.push('other message: ' + r); } }
-    chk(() => !wrong.length && go.length + no.length >= 20, () => `Z-02a. replies (${go.length} go, ${no.length} not): ${wrong.join('; ')}`);
-    const id = P.propose('theme', null, ['x']); P.approve(id, 'go');
-    let again = ''; try { P.approve(id, 'go'); } catch (e) { again = e.message; }
+    // (A-01: before, the go replies approved; now no typed reply does, go or not: Plans.approve takes only who clicked)
+    for (const r of go.concat(no, ['assistant-reported'])) { const id = P.propose('theme', null, ['x']); try { P.approve(id, r); wrong.push('approved: ' + r); } catch (e) { if (!/only the person approves/.test(e.message)) wrong.push('other message: ' + r); } }
+    chk(() => !wrong.length && go.length + no.length >= 20, () => `Z-02a. typed replies (${go.length} go, ${no.length} not) approve nothing: ${wrong.join('; ')}`);
+    const id = P.propose('theme', null, ['x']); P.approve(id, 'user-in-browser');
+    let again = ''; try { P.approve(id, 'user-in-browser'); } catch (e) { again = e.message; }
     chk(() => /already approved/.test(again), () => `Z-02b. a second approval is refused: ${again}`);
     process.env.DATAARCUS_PLAN_TTL_MS = '400';
     const S = await freshImport('lib/plans.mjs');
     delete process.env.DATAARCUS_PLAN_TTL_MS;
     const sid = S.propose('theme', null, ['x'], { pins: { generate_theme: {} } });
-    await new Promise((r) => setTimeout(r, 250)); S.approve(sid, 'go');
+    await new Promise((r) => setTimeout(r, 250)); S.approve(sid, 'user-in-browser');
     await new Promise((r) => setTimeout(r, 250));
     let exp = ''; try { S.gate('generate_theme', sid, null, {}); } catch (e) { exp = e.message; }
     chk(() => /expired/.test(exp), () => `Z-02b. a plan's life counts from its proposal, never extended by the approval: ${exp || 'still alive'}`);
@@ -89,7 +89,7 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
     fs.writeFileSync(path.join(ROOT, 'zg', 'real-theme.json'), JSON.stringify({ name: 'x', dataColors: ['#112233'] }));
     try { fs.symlinkSync(path.join(ROOT, 'zg', 'real-theme.json'), path.join(ROOT, 'zg', 'link-theme.json')); } catch (e) { /* no links here */ }
     const pl = await call('plan_layout', { path: 'zg', name: 'Z link theme', theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await call('approve_plan', { planId: pid, userReply: 'go' });
+    await call('approve_plan', { planId: pid });
     const x = await call('create_report', { path: 'zg', name: 'Z link theme', planId: pid, theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] });
     chk(() => x.err && /link/.test(x.t) && /Nothing was written/.test(x.t), () => `Z-03. a theme behind a link is refused: ${short(x)}`);
     const files = fs.readFileSync(path.join(HERE, 'lib/files.mjs'), 'utf8');

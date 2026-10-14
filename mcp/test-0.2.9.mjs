@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // 0.2.9 part 1 (the owner's go on the 0.2.9 plan, 11 Oct 2026), written red first:
 //  1. the gate inside the tools (P-1: the owner's Claude Desktop showed no approval prompt, and files were written
 //     before any plan): no tool writes a file without a plan id that was approved with approve_plan;
@@ -44,7 +45,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   // ---------- 1. the gate ----------
   // G1. approve_plan exists and refuses an id it never gave
   {
-    const x = await ask('approve_plan', { planId: 'plan-000000000000', userReply: 'go' });
+    const x = await ask('approve_plan', { planId: 'plan-000000000000' });
     chk(() => x.err && /no plan "plan-000000000000"/.test(x.t), () => `G1. approve_plan must refuse an unknown plan id: ${short(x)}`);
   }
   // G2. generate_theme without a plan id returns the theme's design and writes nothing
@@ -55,12 +56,11 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     chk(() => !x.err && x.j.design && x.j.design.data && !x.j.path && !added(before, after).length, () => `G2. generate_theme without planId must return the design and write nothing: added ${JSON.stringify(added(before, after))} ${short(x)}`);
     chk(() => x.j.plan.status === 'proposed' && /^plan-/.test(themePlan) && /approve_plan/.test(x.j.plan.sayFirst), () => `G2. generate_theme without planId must propose a plan id: ${short(x)}`);
   }
-  // G3. a reply that says no is not an approval; the user's go is, and then the theme file is written
+  // G3. (A-01) the person approves with a click on Approve in DataArcus's approval window (the tests' browser clicks it):
+  //     approvedBy user-in-browser, and then the theme file is written. A typed reply approves nothing: test-approval.mjs
   {
-    const no = await ask('approve_plan', { planId: themePlan, userReply: 'no, make it darker first' });
-    chk(() => no.err && /does not say go/.test(no.t), () => `G3. a "no" must not approve: ${short(no)}`);
-    const ok = await ask('approve_plan', { planId: themePlan, userReply: 'go' });
-    chk(() => !ok.err && ok.j.status === 'approved' && ok.j.allows.includes('generate_theme'), () => `G3. approve_plan with "go" must approve: ${short(ok)}`);
+    const ok = await ask('approve_plan', { planId: themePlan });
+    chk(() => !ok.err && ok.j.status === 'approved' && ok.j.approvedBy === 'user-in-browser' && ok.j.allows.includes('generate_theme'), () => `G3. the click on Approve in the window must approve: ${short(ok)}`);
     const before = all(), x = await ask('generate_theme', { brand: '#0F766E', name: 'Gate Theme', planId: themePlan }), after = all();
     chk(() => !x.err && x.j.path && added(before, after).length === 1 && /\.json$/.test(added(before, after)[0]), () => `G3. generate_theme with the approved plan must write the theme file: added ${JSON.stringify(added(before, after))} ${short(x)}`);
   }
@@ -78,7 +78,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     chk(() => pl.j.plan.status === 'proposed' && /^plan-/.test(pid), () => `G4. plan_layout with the model must give a proposed plan id: ${short(pl)}`);
     await run('not approved', pid, 'g', /not approved yet/);
     await run('theme plan', themePlan, 'g', /theme plan/);
-    await ask('approve_plan', { planId: pid, userReply: 'Go ahead' });
+    await ask('approve_plan', { planId: pid, });
     await run('other model', pid, 'g2', /another model/);
     const before = all(), x = await ask('create_report', { path: 'g', name: 'Gate ok', design: pl.j.design, planId: pid, noDataMessage: false, secondPage: false }), after = all();
     chk(() => !x.err && x.j.report && added(before, after).some((f) => /Gate ok\.Report\/definition\/report\.json$/.test(f)), () => `G4. create_report with the approved plan must write the report: ${short(x)}`);
@@ -97,7 +97,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     const before = all(), x = await ask('check_model_health', { path: 'g3' }), after = all();
     const pid = x.j && x.j.plan && x.j.plan.planId;
     chk(() => !x.err && x.j.findings && !added(before, after).length && !/fixScriptFile/.test(JSON.stringify(x.j.fixes || {})) && /^plan-/.test(pid), () => `G6. check_model_health without planId must write no script and propose a plan: added ${JSON.stringify(added(before, after))} ${short(x)}`);
-    await ask('approve_plan', { planId: pid, userReply: 'yes write the scripts' });
+    await ask('approve_plan', { planId: pid });
     const b2 = all(), y = await ask('check_model_health', { path: 'g3', planId: pid }), a2 = all();
     chk(() => !y.err && added(b2, a2).some((f) => /\.tmdl$/.test(f)) && /fixScriptFile/.test(JSON.stringify(y.j.fixes || {})), () => `G6. check_model_health with the approved plan must write its scripts: ${JSON.stringify(added(b2, a2))} ${short(y)}`);
   }
@@ -106,7 +106,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     const before = all(), x = await ask('add_gulf_calendar', { path: 'g2', firstYear: 2024, lastYear: 2025, asOf: '2026-10-11' }), after = all();
     const pid = x.j && x.j.plan && x.j.plan.planId;
     chk(() => !x.err && !added(before, after).length && !x.j.scriptFile && x.j.table && /^plan-/.test(pid), () => `G7. add_gulf_calendar without planId must write nothing and propose a plan: added ${JSON.stringify(added(before, after))} ${short(x)}`);
-    await ask('approve_plan', { planId: pid, userReply: 'ok' });
+    await ask('approve_plan', { planId: pid });
     const b2 = all(), y = await ask('add_gulf_calendar', { path: 'g2', firstYear: 2024, lastYear: 2025, asOf: '2026-10-11', planId: pid }), a2 = all();
     chk(() => !y.err && y.j.scriptFile && added(b2, a2).length === 1, () => `G7. add_gulf_calendar with the approved plan must write its script: ${JSON.stringify(added(b2, a2))} ${short(y)}`);
   }
@@ -144,7 +144,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     chk(() => E.secondLayout(Object.assign({}, base, { preset: 'exec', filters: true, fpos: 'start' })).fpos === 'start', () => 'C1. "start" stays "start"');
     // the report: filters at the end (right in English) on both pages
     const pl = await ask('plan_layout', { path: 'g', layout: 'exec', filters: 'end', lang: 'en', name: 'Rail end', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await ask('approve_plan', { planId: pid, userReply: 'go' });
+    await ask('approve_plan', { planId: pid });
     const x = await ask('create_report', { path: 'g', name: 'Rail end', design: pl.j && pl.j.design, planId: pid, noDataMessage: false });
     const dir = x.err ? null : path.join(ROOT, 'g', x.j.report, 'definition', 'pages');
     const order = dir ? JSON.parse(fs.readFileSync(path.join(dir, 'pages.json'), 'utf8')).pageOrder : [];
@@ -179,7 +179,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   {
     const s = await serverClient(ROOT, { DATAARCUS_PLAN_TTL_MS: '1500' });
     const pl = await s.call('plan_layout', { path: 'g', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await s.call('approve_plan', { planId: pid, userReply: 'go' });
+    await s.call('approve_plan', { planId: pid });
     await new Promise((r) => setTimeout(r, 2000));
     const before = all(), x = await s.call('create_report', { path: 'g', name: 'Too late', design: pl.j && pl.j.design, planId: pid, noDataMessage: false }), after = all();
     chk(() => x.err && /expired/.test(x.t) && !added(before, after).length, () => `G9. an expired plan must be refused and nothing written: ${short(x)}`);

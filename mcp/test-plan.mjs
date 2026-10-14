@@ -5,7 +5,7 @@
 // call: (name, args) => { err, t, j }. A call that passes its own planId (or planId: null to send none) is left alone.
 const WRITERS = new Set(['create_report', 'generate_theme', 'check_model_health', 'add_gulf_calendar']);
 export function withPlans(call) {
-  const approve = async (planId) => { const r = await call('approve_plan', { planId, userReply: 'go' }); return r.err ? null : planId; };
+  const approve = async (planId) => { const r = await call('approve_plan', { planId }); return r.err ? null : planId; };
   return async (name, args) => {
     if (!WRITERS.has(name) || !args || 'planId' in args) {
       if (args && 'planId' in args && args.planId === null) { const a = Object.assign({}, args); delete a.planId; return call(name, a); }
