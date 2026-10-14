@@ -127,7 +127,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const p2 = await plan({ name: 'Theme Print', theme: 'rg/approved-theme.json' });
     fs.writeFileSync(tf, JSON.stringify({ name: 'Swapped', dataColors: ['#FF00FF', '#00FF00'] }));
     const w2 = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
-    chk(() => w2.err && /Nothing was written/.test(w2.t) && /files/.test(w2.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. a theme file changed after the go is refused: ${short(w2)}`);
+    chk(() => w2.err && /Nothing was written/.test(w2.t) && /changed since the plan/.test(w2.t) && /theme/.test(w2.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. a theme file changed after the go is refused: ${short(w2)}`);
     fs.writeFileSync(tf, JSON.stringify({ name: 'Approved', dataColors: ['#0F766E', '#B91C1C'] }));
     const w2b = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
     chk(() => !w2b.err && fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. the same contents as approved are written: ${short(w2b)}`);
