@@ -14,8 +14,13 @@ data in your tables.
 
 ## 1. The MCP runs on your machine and sends nothing itself
 - It is a Node.js program your AI app starts on your computer. It talks only to that app, over standard input and
-  output (stdio). It opens no network connection and has no server, account, telemetry or analytics of its own.
-  (Checked: no network call in `mcp/server.mjs`, `mcp/lib/` or the engines it loads. The `https://` addresses in the
+  output (stdio). It connects to nothing outside your computer and has no account, telemetry or analytics of its own.
+  One local page: while a plan waits for your approval, it serves its approval window to your own browser at
+  `http://127.0.0.1:<port>` (your computer only: nothing outside it can reach that address; the page loads nothing from
+  the internet and sends your click only to DataArcus). Each link is for one plan, takes one click, and stops working
+  when the plan expires (2 hours) or the app closes.
+  (Checked: no network call in `mcp/server.mjs`, `mcp/lib/` or the engines it loads; the packaging's smoke test runs it
+  with every outgoing connection and name lookup refused, and any listen but on 127.0.0.1 refused. The `https://` addresses in the
   report files it writes are Microsoft's schema names, which Power BI reads; nothing is downloaded from them.
   `check_report` reads report files on your computer and runs Microsoft's report validator offline, in the same
   process: the schemas the validator would download are read from Microsoft's copies bundled in `mcp/schemas/`.)
