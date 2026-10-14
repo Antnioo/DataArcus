@@ -25,12 +25,13 @@ const plans = new Map();
 const now = () => Date.now();
 // The assistant-reported approval (Z-02, the outside review: "I said no" and "Wait, don't go yet" were approvals): a
 // reply is a go only when it says go AND holds no word of no, not yet, wait or stop ANYWHERE, in English or Arabic.
-// "no problem" is the one known go phrase with a "no" in it. When unsure, it is refused.
+// "no problem" is the one known phrase with a "no" in it that is not a no: it is set aside, so "No problem, go ahead" is a
+// go, while "no problem" alone holds no go word and is refused (the outside review of rc.14, A-03). When unsure, refused.
 const NOT_GO = /\b(no|nope|not|nah|don'?t|dont|wait|stop|hold|cancel|later|never|before|until|unless|but|maybe|hmm)\b|n't\b|(^|[\s،,.!؟?؛:])(لا|لأ|ليس|مو|مش|لسه|بعدين|لاحقا|لاحقًا|لكن|بس|ربما)(?=$|[\s،,.!؟?؛:])|انتظر|توقف|تمهل|الغ|ألغ/i;
 const SAYS_GO = /\b(go|yes|yep|yeah|ok|okay|approved?|proceed|sure|confirm(ed)?)\b|موافق|نعم|أيوه|ايوه|تمام|ابدأ|ابدا|اكتب|نفذ|نفّذ|اعتمد/i;
 const saysGo = (r) => { const t = String(r).replace(/\bno\s+problem\b/gi, ' '); return SAYS_GO.test(t) && !NOT_GO.test(t); };
 
-const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, theme colours, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id and their reply in their own words, then call this tool again with planId.';
+const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, the report\'s name and title, theme, logo, colours and options, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id and their reply in their own words, then call this tool again with planId.';
 
 /** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: the model's key (its folder's real path)
  *  or null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */

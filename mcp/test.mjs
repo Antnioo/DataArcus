@@ -4079,7 +4079,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     out.push(await call2('read_model', { path: 'Shop' }), await call2('read_model', { path: 'Nope' }), await call2('read_model', { path: '../outside' }), await call2('read_model', { path: wroot + '/../x' }));
     out.push(await call2('suggest_fields', { path: 'Shop', kpis: 2 }), await call2('check_model_health', { path: 'Shop' }), await call2('check_model_health', { path: 'Shop/Shop.SemanticModel' }));
     const th = await call2('generate_theme', { name: 'R17' }); out.push(th);
-    const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop' }); out.push(pl);
+    const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop', name: 'R17', secondPage: false }); out.push(pl);
     // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
     await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId, userReply: 'go' });
     out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));

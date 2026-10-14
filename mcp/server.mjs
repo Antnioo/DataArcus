@@ -587,11 +587,19 @@ const CREATE_REPORT_INPUTS = {
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
 // language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores
 // it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
-// (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
-const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'];
+// (The outside review of rc.14, A-02: the report's look and options are pinned too: its name and title, the theme file,
+// the logo, the colours and every report option. plan_layout takes them with create_report's own definitions and shows
+// them in the plan, so nothing the user approved can change between the go and the write.)
+// REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
+// value is used (one with a default, such as secondPage, is compared as given)
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'];
+const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
 // (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
 // its pin differ from create_report's)
 const resolvedDesign = (a) => (a.pages || a.customVisualsFrom != null ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
+// what the plan shows of the report's look and options (A-02): every value it pins, files by their names only
+const lookOf = (a) => Object.assign(Object.fromEntries(REPORT_LOOK.filter((k) => a[k] !== undefined).map((k) => [k, (k === 'theme' || k === 'logo') ? path.basename(String(a[k])) : a[k]])),
+  { sayInPlan: 'Show these with the plan (the report\'s name and title, theme, logo, colours and options): they are approved with it, and create_report writes them as they are; a value left out here is the default. To change one after the go, make a new plan.' });
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
@@ -604,6 +612,8 @@ server.registerTool('create_report', {
   // passed are still compared with the plan, and refused)
   // (design round 8's S6 does this below for a new report; the native copy returns before it)
   if (a.displayNames === undefined && a.planId != null) { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn !== undefined) a = Object.assign({}, a, { displayNames: pn }); }
+  // (A-02) the same for the report's look and options the plan holds: left out, the plan's value is written
+  if (a.planId != null) { const fill = {}; REPORT_LOOK.forEach((k) => { if (a[k] === undefined) { const v = Plans.pinned(a.planId, 'create_report', k); if (v !== undefined) fill[k] = v; } }); if (Object.keys(fill).length) a = Object.assign({}, a, fill); }
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
@@ -1136,7 +1146,7 @@ server.registerTool('read_report', {
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
-  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Show the user the plan, wait for go, call approve_plan, then create_report with planId (the same planId also allows generate_theme\'s file). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames gives an Arabic display name for each field without one (from a fixed list of report words) and lists the rest for you to propose: show every suggestion beside the model\'s name for the user to approve or edit before create_report, and pass only the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
+  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Give here, too, the report\'s name, title, theme, logo, colours and options as create_report will write them: they are approved with the plan (reportLook in the answer; show them), and create_report writes only those. Show the user the plan, wait for go, call approve_plan, then create_report with planId (a separate theme file has its own plan: generate_theme proposes it). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames gives an Arabic display name for each field without one (from a fixed list of report words) and lists the rest for you to propose: show every suggestion beside the model\'s name for the user to approve or edit before create_report, and pass only the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
   inputSchema: {
     design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
     layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
@@ -1155,7 +1165,9 @@ server.registerTool('plan_layout', {
     themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
-    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom
+    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
+    // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
+    ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
   }, annotations: READS
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
@@ -1247,7 +1259,7 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(planNames ? Object.assign({}, a, { displayNames: planNames }) : a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), planned ? { fields: planned } : {}) }
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(planNames ? Object.assign({}, a, { displayNames: planNames }) : a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(a) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
