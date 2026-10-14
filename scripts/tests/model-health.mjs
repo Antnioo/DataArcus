@@ -193,6 +193,23 @@ export default async function ({ browser, url }) {
   }
 
   {
+    // the check time: a check under 0.1 s reads "under 0.1 s", never "0.0 s" (as if nothing ran). The worker's clock
+    // is stopped, so the check takes 0 ms on any machine
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.ctx.route(/model-health-worker\.min\.js/, async (rt) => { const r = await rt.fetch(); await rt.fulfill({ response: r, body: 'Date.now = () => 1e12;\n' + await r.text() }); });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.click('#mhSample');
+      await v.pg.waitForSelector('.mh-filebar', { timeout: 20000 });
+      const bar = await v.pg.$eval('.mh-filebar span', (s) => s.textContent.trim());
+      const want = lang === 'en' ? 'checked in under 0.1 s' : 'تم الفحص في أقل من 0.1 ث';
+      check(bar.endsWith(want) && !/0\.0/.test(bar), `check time (${lang}): "${bar}", expected it to end with "${want}"`);
+      if (v.errs.length) problems.push(`check time (${lang}): ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  {
     // score history keeps the 30 most recently checked files: re-checking a file keeps it, a new file drops the oldest
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
