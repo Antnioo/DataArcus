@@ -46,6 +46,25 @@ intelligence needs no mark; 9 HARDCODED_PATH skips a {{NAME}} placeholder; 10 FI
   date as the only column and no relationship, the exact date-picker shape of class 8; they get a Year column, its
   expected tables unchanged.
 
+### Health Check 2, Phase 1b+, the report (`603ccb4` expected and red checks, `c268ef5` the build; pushed, not merged, no PR)
+- **Tests:** `model-health` 15 of 138 red on `af172b9` -> 140 of 140 (one page check added with the build: the Arabic
+  and English variable advice on the sample's [New Customers], red on the old .min.js, green after). Every Phase 1
+  check still green. `check-min`, `test-site-config` PASS; root `npm test` alone all 18 PASS; `cd mcp && npm test` 739
+  checks and golden 11 PASS.
+- **Sample:** 56 and 26 issues before and after; "Measures without a format string" 7 -> 6 ([Sales Color], info,
+  0 points); FILTER_TABLE stays 4, [New Customers] with the variable advice.
+- **Choices:** class 3 skips a hidden measure unless the report is read and a visual uses it (no report: skipped, as
+  BPA's scope); class 5: the 20-measure floor counts visible measures too; the penalty share of NO_FOLDERS still
+  divides by all measures (scoring untouched); class 8: a picker is a table whose ONLY column is a date (or untyped)
+  with no relationship, the narrowest reading; class 9: any string literal containing {{NAME}}; class 10: a value
+  inside RELATED() is a row lookup, not "another table" (keeps the column advice); the per-item advice is the item's
+  `detail` (English, so the CSV, the documentation and the MCP carry it) plus `variant: 'VAR'` for the page's
+  language. The text does not call it "Microsoft's pattern" (the cited page doesn't show it).
+- **Kept flagged:** [Top Product] (FIRSTNONBLANK(TOPN(...)) of a text column: unclear, kept); IF with a number and a
+  text result; RELATED-only calculated columns (a merge in Power Query can do it).
+- **Seen, not in scope:** the engine's ?v= stamp is still 20261015h1 (changed since af172b9 but never deployed; main
+  compares fine); `isText` does not follow measure references ([Title] = [Other text measure] stays flagged).
+
 ### Health Check 2 phase 1, the report (cloud builder, Linux; `fe40ba7` plan and red checks, `af172b9` the build; pushed, not merged, no PR)
 - **Tests:** `model-health` 53 of 121 red on `33ea82d` (the constant denominator and USERELATIONSHIP checks green
   already, as the reviewer found) -> 123 of 123 (2 more source checks: 37 rules now). `test-site-config` PASS,
