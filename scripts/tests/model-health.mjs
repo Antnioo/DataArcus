@@ -175,6 +175,107 @@ export default async function ({ browser, url }) {
     check(legacy['Sales[Gone In Bookmark]'] === 'bookmark "Old view"' && legacy['Sales[Gone In Filter]'] === 'report filter', `a broken field in a bookmark (older report format): ${JSON.stringify(legacy)}`);
   }
 
+  // ---- Health Check 2, phase 1 ("trust", 15 Oct 2026): every rule names its source, and Microsoft's documented
+  //      exceptions are not findings ----
+  {
+    // every rule carries a source: Microsoft Learn (a learn.microsoft.com page), a Best Practice Analyzer rule of
+    // Microsoft's (its id, the rules folder), or our own rule (no link, a reason); what it says in English and Arabic
+    const BPA = 'https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules';
+    const ar = /[؀-ۿ]/;
+    for (const [id, R] of Object.entries(E.RULES)) {
+      const s = R.source || {};
+      const ok = ['microsoft', 'bpa', 'dataarcus'].includes(s.kind) && s.title && s.says && s.says.en && ar.test(s.says.ar || '') &&
+        (s.kind === 'microsoft' ? /^https:\/\/learn\.microsoft\.com\/[a-z]/.test(s.url || '') : s.kind === 'bpa' ? s.url === BPA && /^[A-Z0-9_()/-]+$/.test(s.title) : s.url == null);
+      check(ok, `source of ${id}: ${JSON.stringify(s)}`);
+    }
+    check(!!E.RULES.FILTER_MEASURE && !!E.RULES.BIDI_BRIDGE, `the new rules FILTER_MEASURE and BIDI_BRIDGE: ${!!E.RULES.FILTER_MEASURE}, ${!!E.RULES.BIDI_BRIDGE}`);
+  }
+
+  {
+    // relationships: one-to-one must be bi-directional (Microsoft: it can't be configured otherwise); a many-to-many
+    // dimension bridge needs one bi-directional relationship; a fact table filtering both ways is still flagged
+    const t = (name, cols, extra) => Object.assign({ name, columns: cols.map(([n, ty]) => ({ name: n, dataType: ty || 'int64', sourceColumn: n })), partitions: mpart(name) }, extra || {});
+    const rel = (f, fc, to, tc, x) => Object.assign({ name: f + fc + to, fromTable: f, fromColumn: fc, toTable: to, toColumn: tc }, x || {});
+    const ids = (m) => { const r = E.analyze(m, null); return Object.fromEntries(r.findings.map((f) => [f.id, f.items.map((i) => i.obj)])); };
+    const one = ids({ model: { tables: [t('Employee', [['EmployeeID'], ['Name', 'string']]), t('Employee Salary', [['EmployeeID'], ['Salary', 'decimal']])],
+      relationships: [rel('Employee Salary', 'EmployeeID', 'Employee', 'EmployeeID', { fromCardinality: 'one', toCardinality: 'one', crossFilteringBehavior: 'bothDirections' })] } });
+    check(!one.BIDI && !one.BIDI_BRIDGE, `one-to-one: flagged ${JSON.stringify(one.BIDI || one.BIDI_BRIDGE)}, expected no finding`);
+    // Microsoft's bank example: Account, Customer, the AccountCustomer bridge (identifier columns only), Transaction
+    const bank = (bridgeCols) => ({ model: { tables: [t('Account', [['AccountID'], ['Account', 'string']]), t('Customer', [['CustomerID'], ['Customer', 'string']]),
+      t('AccountCustomer', bridgeCols), t('Transaction', [['AccountID'], ['Date', 'dateTime'], ['Amount', 'decimal']])],
+    relationships: [rel('AccountCustomer', 'AccountID', 'Account', 'AccountID', { crossFilteringBehavior: 'bothDirections' }), rel('AccountCustomer', 'CustomerID', 'Customer', 'CustomerID'),
+      rel('Transaction', 'AccountID', 'Account', 'AccountID')] } });
+    const br = ids(bank([['AccountID'], ['CustomerID']]));
+    check(!br.BIDI && JSON.stringify(br.BIDI_BRIDGE) === JSON.stringify(['AccountCustomer[AccountID] ↔ Account[AccountID]']), `bridge: BIDI ${JSON.stringify(br.BIDI)}, BIDI_BRIDGE ${JSON.stringify(br.BIDI_BRIDGE)}, expected the bridge wording only`);
+    check(/many-to-many bridge/.test(E.RULES.BIDI_BRIDGE ? E.RULES.BIDI_BRIDGE.en[2] : '') && /if so,? it is needed/i.test(E.RULES.BIDI_BRIDGE ? E.RULES.BIDI_BRIDGE.en[2] : ''), 'bridge: the advice says to check it is the many-to-many bridge, and that it is needed then');
+    // a fact table on the many side of several relationships is not a bridge: it has other columns (Microsoft's
+    // dimension-to-dimension case advises CROSSFILTER in a measure instead), so it keeps today's finding
+    const fact = ids({ model: { tables: [t('Product', [['ProductKey'], ['Color', 'string']]), t('Customer', [['CustomerKey'], ['Country', 'string']]), t('Sales', [['ProductKey'], ['CustomerKey'], ['Quantity']])],
+      relationships: [rel('Sales', 'ProductKey', 'Product', 'ProductKey', { crossFilteringBehavior: 'bothDirections' }), rel('Sales', 'CustomerKey', 'Customer', 'CustomerKey')] } });
+    check(JSON.stringify(fact.BIDI) === JSON.stringify(['Sales[ProductKey] ↔ Product[ProductKey]']) && !fact.BIDI_BRIDGE, `fact table filtering both ways: BIDI ${JSON.stringify(fact.BIDI)}, BIDI_BRIDGE ${JSON.stringify(fact.BIDI_BRIDGE)}`);
+  }
+
+  {
+    // FILTER inside CALCULATE: a column predicate can be a Boolean filter (FILTER_TABLE); a predicate with a measure
+    // can't (Microsoft: a Boolean filter cannot reference a measure), so it needs FILTER, over a column (FILTER_MEASURE);
+    // FILTER over VALUES of a column is Microsoft's own advice (no finding)
+    const ms = { M1: 'CALCULATE([Total], FILTER(Sales, Sales[Channel] = "Online"))', M2: 'CALCULATE([Total], FILTER(VALUES(Sales[Month]), [Profit] > 0))',
+      M3: 'CALCULATE([Total], FILTER(Sales, [Profit] > 0))', M4: 'CALCULATE([Total], FILTER(ALL(Sales), [Profit] > 0))' };
+    const m = { model: { tables: [{ name: 'Sales', columns: [{ name: 'Channel', dataType: 'string', sourceColumn: 'Channel' }, { name: 'Month', dataType: 'string', sourceColumn: 'Month' }, { name: 'Amount', dataType: 'decimal', sourceColumn: 'Amount' }, { name: 'Cost', dataType: 'decimal', sourceColumn: 'Cost' }],
+      partitions: mpart('Sales'), measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])' }, { name: 'Profit', expression: '[Total] - SUM(Sales[Cost])' }].concat(Object.entries(ms).map(([name, expression]) => ({ name, expression }))) }] } };
+    const r = E.analyze(m, null), of = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).map((i) => i.obj);
+    check(JSON.stringify(of('FILTER_TABLE')) === '["[M1]"]', `FILTER_TABLE flags ${JSON.stringify(of('FILTER_TABLE'))}, expected only [M1] (the column predicate)`);
+    check(JSON.stringify(of('FILTER_MEASURE')) === '["[M3]","[M4]"]', `FILTER_MEASURE flags ${JSON.stringify(of('FILTER_MEASURE'))}, expected [M3] and [M4] (a measure in the predicate, over a whole table)`);
+    check(/VALUES\(/.test(E.RULES.FILTER_MEASURE ? E.RULES.FILTER_MEASURE.en[2] : '') && /VALUES\(/.test(E.RULES.FILTER_MEASURE ? E.RULES.FILTER_MEASURE.ar[2] : ''), 'FILTER_MEASURE: the advice (English and Arabic) is FILTER over VALUES of the column');
+  }
+
+  {
+    // Microsoft's other documented exceptions: "/" by a constant is the right choice (no DIVISION); a role-playing date
+    // whose inactive relationship a measure turns on with USERELATIONSHIP is in use (no INACTIVE_UNUSED)
+    const m = (withUse) => ({ model: { tables: [{ name: 'Sales', columns: [{ name: 'OrderDate', dataType: 'dateTime', sourceColumn: 'OrderDate' }, { name: 'ShipDate', dataType: 'dateTime', sourceColumn: 'ShipDate' }, { name: 'Amount', dataType: 'decimal', sourceColumn: 'Amount' }],
+      partitions: mpart('Sales'), measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])' }, { name: 'Total K', expression: '[Total] / 1000' }, { name: 'Per Month', expression: 'SUM ( Sales[Amount] ) / 12.5' }]
+        .concat(withUse ? [{ name: 'Shipped', expression: "CALCULATE([Total], USERELATIONSHIP(Sales[ShipDate], 'Date'[Date]))" }] : []) },
+    { name: 'Date', columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }], partitions: mpart('Date') }],
+    relationships: [{ name: 'o', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Date', toColumn: 'Date' }, { name: 's', fromTable: 'Sales', fromColumn: 'ShipDate', toTable: 'Date', toColumn: 'Date', isActive: false }] } });
+    const ids = (x) => E.analyze(x, null).findings.map((f) => f.id);
+    check(!ids(m(true)).includes('DIVISION'), 'a constant denominator ([Total] / 1000, SUM(...) / 12.5) is flagged DIVISION');
+    check(!ids(m(true)).includes('INACTIVE_UNUSED'), 'a role-playing date activated with USERELATIONSHIP is flagged INACTIVE_UNUSED');
+    check(ids(m(false)).includes('INACTIVE_UNUSED'), 'the same inactive relationship without the USERELATIONSHIP measure is not flagged');
+  }
+
+  {
+    // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.click('#mhSample');
+      await v.pg.waitForSelector('.mh-issue', { timeout: 20000 });
+      const src = await v.pg.evaluate(() => Object.fromEntries([...document.querySelectorAll('.mh-issue')].map((d) => { const s = d.querySelector('.mh-src'); const a = s && s.querySelector('a');
+        return [d.dataset.rule, s ? { text: s.textContent.replace(/\s+/g, ' ').trim(), href: a ? a.href : null, rel: a ? a.rel : null, target: a ? a.target : null } : null]; })));
+      const want = lang === 'en' ? { ms: 'Microsoft guidance', bpa: 'Microsoft Best Practice Analyzer', own: 'DataArcus rule' } : { ms: 'إرشادات Microsoft', bpa: 'Best Practice Analyzer', own: 'قاعدة من DataArcus' };
+      const b = src.BIDI, d = src.DOUBLE, n = src.NAMING;
+      check(b && b.text.includes(want.ms) && /^https:\/\/learn\.microsoft\.com\//.test(b.href) && /noopener/.test(b.rel) && b.target === '_blank', `source on the page (${lang}), BIDI: ${JSON.stringify(b)}`);
+      check(d && d.text.includes(want.bpa) && d.text.includes('AVOID_FLOATING_POINT_DATA_TYPES') && /BestPracticeRules$/.test(d.href), `source on the page (${lang}), DOUBLE: ${JSON.stringify(d)}`);
+      check(n && n.text.includes(want.own) && !n.href && n.text.length > want.own.length + 10, `source on the page (${lang}), NAMING: ${JSON.stringify(n)}`);
+      check(Object.values(src).every(Boolean), `source on the page (${lang}): findings without one: ${Object.keys(src).filter((k) => !src[k]).join(', ')}`);
+      if (lang === 'en') {
+        const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#mhCsv')]);
+        const csv = fs.readFileSync(await dl.path(), 'utf8').replace(/^﻿/, '').split('\r\n');
+        check(csv[0] === '"Severity","Category","Rule","Object","Detail","Source"' && csv.some((l) => l.includes('Relationships that filter in both directions') && l.endsWith('"https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering"'))
+          && csv.some((l) => l.includes('Mixed table naming styles') && l.endsWith('"DataArcus rule"')), `findings CSV: no Source column: ${csv.slice(0, 2).join(' / ')}`);
+        await v.pg.click('[data-tab=docs]');
+        const [dh] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="html"]')]);
+        const html = fs.readFileSync(await dh.path(), 'utf8');
+        check(/<th>Source<\/th>/.test(html) && html.includes('href="https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering"') && html.includes('BPA AVOID_FLOATING_POINT_DATA_TYPES'), 'HTML documentation: no source per finding');
+        const [dm] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="md"]')]);
+        const md = fs.readFileSync(await dm.path(), 'utf8');
+        check(md.includes('| Severity | Finding | Count | How to fix | Source |') && md.includes('[Microsoft guidance](https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering)') && md.includes('DataArcus rule'), 'Markdown documentation: no source per finding');
+      }
+      if (v.errs.length) problems.push(`source on the page (${lang}): ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
   {
     // "Fix these first": the points on each button are what the score really gains when that check is fixed
     const v = await visitor(browser, { viewport: [1440, 900] });

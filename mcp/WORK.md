@@ -4,6 +4,27 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Health Check 2, phase 1 "trust" (15 Oct, cloud builder; website engine only; branch `fix/health-check-p1` from main `33ea82d`; not merged, no PR)
+The owner's go (15 Oct): steps 1a, 1b, 1c only; Phase 2 not started. Out of scope: `assets/js/model-health-tmdl.js` and
+everything in `mcp/` (the 0.2.9 release gate changes them; the MCP takes this engine change after 0.2.9 ships).
+- **1a, a source on every rule** (`RULES[id].source = { kind: microsoft | bpa | dataarcus, url, title, says: { en, ar } }`,
+  `says` our own one-sentence paraphrase; a 'dataarcus' rule has no url and its reason in `says`). Each URL opened
+  (curl, 15 Oct) before it is cited. Shown on each finding in the page (English and Arabic), a Source column in the
+  findings CSV, a line in the HTML and Markdown documentation.
+- **1b, the two defects** (engine block): BIDI never flags one-to-one; a bi-directional relationship on a dimension
+  bridge (the many side of 2+ one-to-many relationships, no measures, only key columns: Microsoft's "factless" bridge)
+  goes to a new info rule BIDI_BRIDGE ("check that this is the many-to-many bridge Microsoft describes; if so it is
+  needed", no penalty). FILTER split: FILTER_TABLE (column predicate, advice unchanged) and new FILTER_MEASURE (the
+  predicate references a measure: FILTER over VALUES(the column you need)).
+- **1c, Microsoft's exceptions as negative tests** (`scripts/tests/model-health.mjs`): one-to-one, bridge, FILTER with a
+  measure, FILTER(VALUES(col), [m] > 0), a constant denominator, a role-playing date with USERELATIONSHIP.
+- **Expected (written before the build):** one-to-one no BIDI; bridge the bridge wording (BIDI_BRIDGE); M1 (column
+  predicate) FILTER_TABLE; M3 (measure predicate) FILTER_MEASURE only; M2 (FILTER over VALUES) nothing; every rule has a
+  source, shown in English and Arabic. The site's sample (`assets/data/model-health-sample.pbit`): **56, 26 issues before
+  and after** (its BIDI are a fact table and a many-to-many, its 4 FILTERs are column predicates). `model-health` suite:
+  new checks red on `33ea82d` (53 of 121: every source, the new rules, one-to-one, bridge, the FILTER split, the page,
+  CSV and documentation), the constant denominator and USERELATIONSHIP checks green already; all green after.
+  `node scripts/test-site-config.mjs`, then root `npm test` alone: all PASS. `cd mcp && npm test`: still all PASS.
 ## A-01: DataArcus's own approval window (14 Oct, cloud reviewer; branch `fix/0.2.9-approval-window` from the gate `42640c0` = rc.16; not merged)
 Why: the owner's rc.16 test in Claude Desktop answered `approvedBy: "assistant-reported"` (the app has no MCP elicitation:
 no DataArcus prompt appeared; Claude even passed a reply in its own words). The outside review's A-01 said: disable that
