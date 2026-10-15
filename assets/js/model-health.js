@@ -33,6 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const SEVL = { high: ['High', 'عالية'], medium: ['Medium', 'متوسطة'], low: ['Low', 'منخفضة'], info: ['Info', 'معلومة'] };
   const grade = (s) => (s >= 85 ? [L('Excellent', 'ممتاز'), '#22c55e'] : s >= 70 ? [L('Good', 'جيد'), '#84cc16'] : s >= 50 ? [L('Needs work', 'يحتاج تحسين'), '#f59e0b'] : [L('At risk', 'في خطر'), '#ef4444']);
   const rt = (id) => { const r = RULES()[id]; return r ? (isAr() ? r.ar : r.en) : [id, '', '']; };
+  // where a rule comes from (the engine's RULES[id].source): Microsoft Learn, a Best Practice Analyzer rule, or our own
+  const srcOf = (id) => (RULES()[id] || {}).source || null;
+  const BPA_L = ['Microsoft Best Practice Analyzer rule', 'قاعدة Best Practice Analyzer من Microsoft'];
+  const srcHtml = (id) => {
+    const s = srcOf(id); if (!s) return '';
+    const says = esc(isAr() ? s.says.ar : s.says.en), ext = ' target="_blank" rel="noopener noreferrer"';
+    const bpa = (rule) => '<a href="' + esc(window.MHEngine.BPA_URL) + '"' + ext + '>' + L(BPA_L[0], BPA_L[1]) + '</a> ' + bdi(rule);
+    const head = s.kind === 'microsoft' ? '<a href="' + esc(s.url) + '"' + ext + ' title="' + esc(s.title) + '">' + L('Microsoft guidance', 'إرشادات Microsoft') + '</a>'
+      : s.kind === 'bpa' ? bpa(s.title) : '<b>' + L('DataArcus rule', 'قاعدة من DataArcus') + '</b>';
+    return '<p class="mh-src"><i class="bi ' + (s.kind === 'dataarcus' ? 'bi-person-check' : 'bi-book') + '"></i> ' + head + ': ' + says + (s.bpa ? ' (' + bpa(s.bpa) + ')' : '') + '</p>';
+  };
+  // the same in English, for the CSV and the documentation: [label, url]
+  const srcEn = (id) => { const s = srcOf(id); return !s ? ['', ''] : s.kind === 'microsoft' ? ['Microsoft guidance', s.url] : s.kind === 'bpa' ? ['BPA ' + s.title, s.url] : ['DataArcus rule', '']; };
 
   // ---------- file input ----------
   function pick(file) {
@@ -48,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261011r'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261015g10'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -185,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const extra = kind === 'quick' ? '<button type="button" class="tg-btn2 btn-sm mt-1 mb-2" data-gofix><i class="bi bi-list-check"></i> ' + L('Open the fix plan', 'افتح خطة الإصلاح') + '</button>'
           : kind === 'expert' ? '<div class="mh-expert"><i class="bi bi-person-gear"></i><div><b>' + L('Want this fixed for you?', 'تريد من يصلحها لك؟') + '</b><span>' + L('This one needs design decisions and testing, not just a script. DataArcus reviews and fixes models like this.', 'هذه تحتاج قرارات تصميم واختبار وليس مجرد سكربت. DataArcus تراجع وتصلح نماذج كهذه.') + '</span></div><a href="/#contact" class="btn btn-accent btn-sm" data-expert="' + f.id + '">' + L('Book a free call', 'احجز مكالمة مجانية') + '</a></div>' : '';
         return '<details class="mh-issue' + (ign ? ' ignored' : '') + '" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b>' + badge + '<span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
-          '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' + extra +
+          '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' + srcHtml(f.id) + extra +
           '<div class="mh-cat"><i class="bi ' + CAT[f.cat].icon + '"></i> ' + L(CAT[f.cat].en, CAT[f.cat].ar) + (f.share != null ? ' · ' + L(f.share + '% of objects', f.share + '% من العناصر') : '') + '<button type="button" class="mh-ign" data-ign="' + f.id + '">' + (ign ? '<i class="bi bi-eye"></i> ' + L('Count it again', 'احسبه مرة أخرى') : '<i class="bi bi-eye-slash"></i> ' + L('Ignore this check', 'تجاهل هذا الفحص')) + '</button></div>' + itemList(f.items) + '</div></details>';
       }).join('') : '<div class="mh-panel mh-note">' + L('No issues in this group. Nice work.', 'لا توجد مشاكل في هذه المجموعة. عمل ممتاز.') + '</div>');
     el.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { filt.cat = b.dataset.cat; tIssues(); });
@@ -200,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     el.querySelectorAll('[data-more]').forEach((b) => b.onclick = () => { const d = b.closest('.mh-issue'); const f = R.findings.find((x) => x.id === d.dataset.rule); b.previousElementSibling.outerHTML = itemList(f.items, 100000).replace(/<button[\s\S]*$/, ''); b.remove(); });
     $('mhCsv').onclick = () => {
-      const rows = [['Severity', 'Category', 'Rule', 'Object', 'Detail']];
-      R.findings.forEach((f) => f.items.forEach((i) => rows.push([f.sev, CAT[f.cat].en, RULES()[f.id].en[0], i.obj, i.detail || ''])));
+      const rows = [['Severity', 'Category', 'Rule', 'Object', 'Detail', 'Source']];
+      R.findings.forEach((f) => { const [sl, su] = srcEn(f.id); f.items.forEach((i) => rows.push([f.sev, CAT[f.cat].en, RULES()[f.id].en[0], i.obj, i.detail || '', su && sl === 'Microsoft guidance' ? su : sl])); });
       download('model-health-findings.csv', '﻿' + rows.map((r) => r.map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\r\n'), 'text/csv');
       track('mh_download', { kind: 'csv' });
     };
@@ -236,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Fix plan: safe order, quick-fixes script, cleanup scripts, expert items ----------
   const QUICK = new Set(['DATE_NOT_MARKED', 'MONTH_SORT', 'SUMMARIZE_KEYS', 'FK_VISIBLE', 'UNUSED_COL', 'UNUSED_MEASURE']);
-  const EXPERT = new Set(['FILTER_TABLE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
+  const EXPERT = new Set(['FILTER_TABLE', 'FILTER_MEASURE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
   const unusedData = () => {
     const cols = [];
     R.tables.filter((t) => !t.auto).forEach((t) => { const u = t.columns.filter((c) => c.used === false); if (u.length) cols.push({ t, u }); });
@@ -561,7 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div class="grid"><div class="card"><b>' + sc.overall + '/100</b><span>Health score</span></div><div class="card"><b>' + sc.perf + '</b><span>Performance</span></div><div class="card"><b>' + sc.maint + '</b><span>Maintainability</span></div><div class="card"><b>' + sc.bp + '</b><span>Best practice</span></div>' +
       '<div class="card"><b>' + s.tables + '</b><span>Tables</span></div><div class="card"><b>' + s.columns + '</b><span>Columns</span></div><div class="card"><b>' + s.measures + '</b><span>Measures</span></div><div class="card"><b>' + s.relationships + '</b><span>Relationships</span></div>' + (s.pages != null ? '<div class="card"><b>' + s.pages + '</b><span>Report pages</span></div><div class="card"><b>' + s.visuals + '</b><span>Visuals</span></div>' : '') + '</div>' +
       (s.sources.length ? '<p><b>Data sources:</b> ' + s.sources.map((x) => h(x.name) + ' (' + x.count + ')').join(', ') + '</p>' : '') +
-      '<h2>Health check findings</h2><table><tr><th>Severity</th><th>Area</th><th>Finding</th><th>Count</th><th>How to fix</th></tr>' + R.findings.map((f) => '<tr><td><span class="sev ' + f.sev + '">' + f.sev + '</span></td><td>' + CAT[f.cat].en + '</td><td>' + h(RULES()[f.id].en[0]) + '</td><td>' + f.items.length + '</td><td>' + h(RULES()[f.id].en[2]) + '</td></tr>').join('') + '</table>' +
+      '<h2>Health check findings</h2><table><tr><th>Severity</th><th>Area</th><th>Finding</th><th>Count</th><th>How to fix</th><th>Source</th></tr>' + R.findings.map((f) => { const [sl, su] = srcEn(f.id);
+        return '<tr><td><span class="sev ' + f.sev + '">' + f.sev + '</span></td><td>' + CAT[f.cat].en + '</td><td>' + h(RULES()[f.id].en[0]) + '</td><td>' + f.items.length + '</td><td>' + h(RULES()[f.id].en[2]) + '</td><td>' + (su ? '<a href="' + h(su) + '">' + h(sl) + '</a>' : h(sl) + ': ' + h(srcOf(f.id).says.en)) + '</td></tr>'; }).join('') + '</table>' +
       R.findings.map((f) => '<h3>' + h(RULES()[f.id].en[0]) + ' (' + f.items.length + ')</h3><div>' + f.items.map((i) => '<code>' + h(i.obj) + '</code>' + (i.detail ? ' <span class="no">' + h(i.detail) + '</span>' : '')).join(', ') + '</div>').join('') +
       '<h2>Tables</h2><table><tr><th>Table</th><th>Type</th><th>Columns</th><th>Measures</th><th>Description</th></tr>' + R.tables.filter((t) => !t.auto).map((t) => '<tr><td><b>' + h(t.name) + '</b>' + (t.hidden ? ' <span class="no">(hidden)</span>' : '') + '</td><td>' + (t.isCalcTable ? 'DAX' : h(t.mode)) + '</td><td>' + t.columns.length + '</td><td>' + t.measures + '</td><td>' + h(t.description) + '</td></tr>').join('') + '</table>' +
       R.tables.filter((t) => !t.auto).map((t) => '<h3>' + h(t.name) + '</h3><table><tr><th>Column</th><th>Type</th><th>Kind</th><th>Used</th><th>Notes</th></tr>' + t.columns.map((c) => '<tr><td>' + h(c.name) + '</td><td>' + h(c.dataType) + '</td><td>' + (c.kind === 'calculated' ? 'Calculated' : 'Data') + (c.hidden ? ', hidden' : '') + '</td><td>' + (c.used == null ? '' : c.used ? 'Yes' : '<span class="no">No</span>') + '</td><td>' + (c.sortBy ? 'Sorted by ' + h(c.sortBy) + '. ' : '') + h(c.description) + (c.expr ? '<pre>' + h(c.expr.trim()) + '</pre>' : '') + '</td></tr>').join('') + '</table>' + (t.calcExpr ? '<pre>' + h(t.calcExpr.trim()) + '</pre>' : '')).join('') +
@@ -579,8 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
     lines.push('**Health score: ' + sc.overall + '/100** (Performance ' + sc.perf + ', Maintainability ' + sc.maint + ', Best practice ' + sc.bp + ')', '');
     if (s.sources.length) lines.push('**Data sources:** ' + s.sources.map((x) => x.name + ' (' + x.count + ')').join(', '), '');
     lines.push('| Tables | Columns | Measures | Relationships |' + (s.pages != null ? ' Pages | Visuals |' : ''), '|---|---|---|---|' + (s.pages != null ? '---|---|' : ''), '| ' + [s.tables, s.columns, s.measures, s.relationships].join(' | ') + ' |' + (s.pages != null ? ' ' + s.pages + ' | ' + s.visuals + ' |' : ''), '');
-    lines.push('## Findings', '', '| Severity | Finding | Count | How to fix |', '|---|---|---|---|');
-    R.findings.forEach((f) => lines.push('| ' + f.sev + ' | ' + cell(RULES()[f.id].en[0]) + ' | ' + f.items.length + ' | ' + cell(RULES()[f.id].en[2]) + ' |'));
+    lines.push('## Findings', '', '| Severity | Finding | Count | How to fix | Source |', '|---|---|---|---|---|');
+    R.findings.forEach((f) => { const [sl, su] = srcEn(f.id); lines.push('| ' + f.sev + ' | ' + cell(RULES()[f.id].en[0]) + ' | ' + f.items.length + ' | ' + cell(RULES()[f.id].en[2]) + ' | ' + (su ? '[' + sl + '](' + su + ')' : sl) + ' |'); });
     lines.push('');
     R.findings.forEach((f) => {
       lines.push('### ' + RULES()[f.id].en[0] + ' (' + f.items.length + ')', '');
