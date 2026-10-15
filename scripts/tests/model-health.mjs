@@ -105,7 +105,9 @@ export default async function ({ browser, url }) {
 
   {
     // calendar tables named in Arabic are found like English ones
-    const cal = (name) => ({ name, columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }], partitions: mpart(name) });
+    // (a Year column since 15 Oct: a table whose only column is a date and that has no relationship is a date picker,
+    // not a calendar, Phase 1b+ class 8)
+    const cal = (name) => ({ name, columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }, { name: 'Year', dataType: 'int64', sourceColumn: 'Year' }], partitions: mpart(name) });
     const m = { model: { tables: [sales(), cal('تقويم'), cal('التقويم'), cal('Calendar'), cal('تقويمات قديمة'), cal('Calendar2')] } };
     const found = ((E.analyze(m, null).findings.find((f) => f.id === 'DATE_NOT_MARKED') || {}).items || []).map((i) => i.obj).sort();
     check(JSON.stringify(found) === JSON.stringify(['Calendar', 'التقويم', 'تقويم'].sort()), `calendar tables: found ${JSON.stringify(found)}`);
@@ -239,6 +241,130 @@ export default async function ({ browser, url }) {
     check(!ids(m(true)).includes('DIVISION'), 'a constant denominator ([Total] / 1000, SUM(...) / 12.5) is flagged DIVISION');
     check(!ids(m(true)).includes('INACTIVE_UNUSED'), 'a role-playing date activated with USERELATIONSHIP is flagged INACTIVE_UNUSED');
     check(ids(m(false)).includes('INACTIVE_UNUSED'), 'the same inactive relationship without the USERELATIONSHIP measure is not flagged');
+  }
+
+  // ---- Phase 1b+ (15 Oct 2026): the false positives a benchmark on public models found, one class per check,
+  //      each with a control that must stay flagged ----
+  {
+    const col = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const tbl = (name, cols, extra) => Object.assign({ name, columns: cols, partitions: mpart(name) }, extra || {});
+    const items = (r, id) => ((r.findings.find((f) => f.id === id) || {}).items || []).map((i) => i.obj);
+    const ms = (name, expression, x) => Object.assign({ name, expression }, x || {});
+
+    // 1. BIDI on an inactive relationship: it filters nothing until USERELATIONSHIP turns it on; INACTIVE_UNUSED reports it
+    {
+      const m = { model: { tables: [tbl('Sales', [col('ProductKey'), col('AltKey'), col('Qty')]), tbl('Product', [col('ProductKey'), col('Color', 'string')])],
+        relationships: [{ name: 'a', fromTable: 'Sales', fromColumn: 'ProductKey', toTable: 'Product', toColumn: 'ProductKey', crossFilteringBehavior: 'bothDirections' },
+          { name: 'b', fromTable: 'Sales', fromColumn: 'AltKey', toTable: 'Product', toColumn: 'ProductKey', crossFilteringBehavior: 'bothDirections', isActive: false }] } };
+      const r = E.analyze(m, null);
+      check(JSON.stringify(items(r, 'BIDI')) === '["Sales[ProductKey] ↔ Product[ProductKey]"]' && JSON.stringify(items(r, 'INACTIVE_UNUSED')) === '["Sales[AltKey] → Product[ProductKey]"]',
+        `1b+ class 1, BIDI on an inactive relationship: BIDI ${JSON.stringify(items(r, 'BIDI'))}, INACTIVE_UNUSED ${JSON.stringify(items(r, 'INACTIVE_UNUSED'))}`);
+    }
+
+    // 2. NO_FORMAT on a measure that returns text (a number format can't apply); unclear results keep the finding
+    {
+      const text = { T1: '"Sales report"', T2: '"https://example.com/r?id=" & [Total]', T3: 'VAR v = [Total]\nVAR svg = "data:image/svg+xml;utf8,<svg></svg>"\nRETURN svg',
+        T4: 'IF([Total] >= 0, "#16a34a", "#dc2626")', T5: 'SELECTEDVALUE(Product[Name])', T6: 'FORMAT([Total], "0.0")', T7: 'CONCATENATEX(Product, Product[Name], ", ")',
+        T8: 'UNICHAR(9650)', T9: 'MAX(Product[Name])', T10: 'VAR x = 1 RETURN CONCATENATE("v", "1.2")', T11: 'SWITCH(TRUE(), [Total] > 0, "Up", "Down")' };
+      const kept = { N1: 'SUM(Sales[Amount])', N2: 'SELECTEDVALUE(Sales[Amount])', N3: 'IF([Total] > 0, 1, "none")', N4: 'VAR t = "a" RETURN [Total]', N5: 'MAX(Sales[Amount])' };
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('Total', 'SUM(Sales[Amount])', { formatString: '#,0' })]
+        .concat(Object.entries(Object.assign({}, text, kept)).map(([n, e]) => ms(n, e))) }), tbl('Product', [col('Name', 'string')])] } };
+      const got = items(E.analyze(m, null), 'NO_FORMAT').sort();
+      check(JSON.stringify(got) === JSON.stringify(Object.keys(kept).map((k) => `[${k}]`).sort()), `1b+ class 2, NO_FORMAT on text measures: flags ${JSON.stringify(got)}, expected only ${Object.keys(kept)}`);
+    }
+
+    // 3. NO_FORMAT on a hidden measure (or one in a hidden table) that no visual uses (BPA's rule is for visible
+    //    measures); a hidden measure a visual uses keeps it
+    {
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('V', 'SUM(Sales[Amount])'), ms('H1', 'SUM(Sales[Amount]) * 2', { isHidden: true }), ms('H2', 'SUM(Sales[Amount]) * 3', { isHidden: true })] }),
+        tbl('Helpers', [col('X')], { isHidden: true, measures: [ms('H3', 'SUM(Sales[Amount]) * 4')] })] } };
+      const got = items(E.analyze(m, report([['Measure', 'Sales', 'V'], ['Measure', 'Sales', 'H2']])), 'NO_FORMAT').sort();
+      check(JSON.stringify(got) === '["[H2]","[V]"]', `1b+ class 3, NO_FORMAT on hidden measures: flags ${JSON.stringify(got)}, expected [H2] (hidden, in a visual) and [V]`);
+    }
+
+    // 4. NO_DESC on a hidden measure (the reason is the field-list tooltip; BPA's rule is for visible objects), and
+    //    the share is of visible measures
+    {
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('A', 'SUM(Sales[Amount])'), ms('B', 'SUM(Sales[Amount]) * 2'), ms('C', 'SUM(Sales[Amount]) * 3', { description: 'Three times' }),
+        ms('H', 'SUM(Sales[Amount]) * 4', { isHidden: true })] })] } };
+      const got = items(E.analyze(m, null), 'NO_DESC').sort();
+      check(JSON.stringify(got) === '["[A]","[B]"]', `1b+ class 4, NO_DESC on a hidden measure: flags ${JSON.stringify(got)}, expected [A] and [B]`);
+      // 2 of 4 visible lack one (50%, not over half), however many hidden ones do: no finding
+      const m2 = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: ['A', 'B', 'C', 'D'].map((n, i) => ms(n, `SUM(Sales[Amount]) * ${i + 1}`, i < 2 ? { description: 'x' } : {}))
+        .concat(['H1', 'H2', 'H3'].map((n, i) => ms(n, `SUM(Sales[Amount]) * ${i + 10}`, { isHidden: true }))) })] } };
+      check(!items(E.analyze(m2, null), 'NO_DESC').length, `1b+ class 4, NO_DESC share of visible measures: flags ${JSON.stringify(items(E.analyze(m2, null), 'NO_DESC'))}`);
+    }
+
+    // 5. NO_FOLDERS on a hidden measure; the 20-measure floor and the 30% share count visible measures only
+    {
+      const many = (vis, visNoFolder, hidden) => ({ model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures:
+        Array.from({ length: vis }, (_, i) => ms('V' + i, `SUM(Sales[Amount]) * ${i + 1}`, i < visNoFolder ? {} : { displayFolder: 'Sales' }))
+          .concat(Array.from({ length: hidden }, (_, i) => ms('H' + i, `SUM(Sales[Amount]) * ${i + 100}`, { isHidden: true }))) })] } });
+      const a = items(E.analyze(many(20, 7, 3), null), 'NO_FOLDERS');
+      check(a.length === 7 && a.every((x) => /^\[V/.test(x)), `1b+ class 5, NO_FOLDERS: flags ${JSON.stringify(a)}, expected the 7 visible measures only`);
+      check(!items(E.analyze(many(20, 5, 10), null), 'NO_FOLDERS').length, '1b+ class 5, NO_FOLDERS: 5 of 20 visible without a folder (25%) is flagged because of 10 hidden ones');
+      check(!items(E.analyze(many(15, 10, 10), null), 'NO_FOLDERS').length, '1b+ class 5, NO_FOLDERS: 15 visible measures (under 20) is flagged because of 10 hidden ones');
+    }
+
+    // 6. CALC_COLS on a column Microsoft says belongs in DAX (parent-child paths, a measure, context transition,
+    //    RANKX or EARLIER, an aggregate over another table); plain row arithmetic and RELATED keep the finding
+    {
+      const cc = (name, expression) => ({ name, expression, type: 'calculated', dataType: 'int64' });
+      const m = { model: { tables: [
+        tbl('Employee', [col('ID'), col('Parent'), cc('Path', 'PATH(Employee[ID], Employee[Parent])'), cc('Level 2', 'PATHITEM(Employee[Path], 2, INTEGER)'), cc('Depth', 'PATHLENGTH(Employee[Path])'), cc('Under 7', 'PATHCONTAINS(Employee[Path], 7)')]),
+        tbl('Sales', [col('Key'), col('ProductKey'), col('Amount', 'decimal'), cc('M', '[Total]'), cc('C', 'CALCULATE(SUM(Returns[Qty]))'), cc('R', 'RANKX(ALL(Sales), Sales[Amount])'),
+          cc('E', 'COUNTROWS(FILTER(Sales, Sales[Amount] > EARLIER(Sales[Amount])))'), cc('A1', 'SUMX(RELATEDTABLE(Returns), Returns[Qty])'), cc('A2', 'SUMX(FILTER(Returns, Returns[Key] = Sales[Key]), Returns[Qty])'),
+          cc('A3', 'COUNTROWS(FILTER(ALL(Returns), Returns[Key] = Sales[Key]))'),
+          cc('K1', 'Sales[Amount] * 2'), cc('K2', 'RELATED(Product[Color])'), cc('K3', 'IF(Sales[Amount] > 100, "Big", "Small")')], { measures: [ms('Total', 'SUM(Sales[Amount])', { formatString: '0' })] }),
+        tbl('Returns', [col('Key'), col('Qty')]), tbl('Product', [col('ProductKey'), col('Color', 'string')])],
+      relationships: [{ name: 'r', fromTable: 'Returns', fromColumn: 'Key', toTable: 'Sales', toColumn: 'Key' }, { name: 'p', fromTable: 'Sales', fromColumn: 'ProductKey', toTable: 'Product', toColumn: 'ProductKey' }] } };
+      const got = items(E.analyze(m, null), 'CALC_COLS').sort();
+      check(JSON.stringify(got) === '["Sales[K1]","Sales[K2]","Sales[K3]"]', `1b+ class 6, CALC_COLS: flags ${JSON.stringify(got)}, expected only Sales[K1], Sales[K2], Sales[K3]`);
+    }
+
+    // 7. DUP_MEASURE: the same text in two home tables sums two different columns; the same qualified DAX is a duplicate
+    {
+      const m = { model: { tables: [tbl('Internet', [col('SalesAmount', 'decimal')], { measures: [ms('Internet Total', 'SUM([SalesAmount])'), ms('Same A', 'SUM(Internet[SalesAmount]) * 1.05')] }),
+        tbl('Reseller', [col('SalesAmount', 'decimal')], { measures: [ms('Reseller Total', 'SUM([SalesAmount])'), ms('Same B', 'SUM(Internet[SalesAmount]) * 1.05')] })] } };
+      const got = items(E.analyze(m, null), 'DUP_MEASURE');
+      check(JSON.stringify(got) === '["[Same A] = [Same B]"]', `1b+ class 7, DUP_MEASURE: flags ${JSON.stringify(got)}, expected only [Same A] = [Same B]`);
+    }
+
+    // 8. DATE_NOT_MARKED on a date picker (a table whose only column is a date, with no relationship); a calendar
+    //    with a relationship, or with other columns, keeps it; the text says calendar-based time intelligence needs no mark
+    {
+      const d = (name, cols) => tbl(name, cols || [col('Date', 'dateTime')]);
+      const m = { model: { tables: [tbl('Sales', [col('OrderDate', 'dateTime'), col('Qty')]), d('Date Picker'), d('Dates'), d('Calendar'), d('Date', [col('Date', 'dateTime'), col('Year')])],
+        relationships: [{ name: 'c', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Calendar', toColumn: 'Date' }] } };
+      const got = items(E.analyze(m, null), 'DATE_NOT_MARKED').sort();
+      check(JSON.stringify(got) === '["Calendar","Date"]', `1b+ class 8, DATE_NOT_MARKED on date pickers: flags ${JSON.stringify(got)}, expected Calendar (related) and Date (has a Year column)`);
+      check(/calendar-based time intelligence/i.test(E.RULES.DATE_NOT_MARKED.en[1]) && /Calendar-based time intelligence|calendar-based/i.test(E.RULES.DATE_NOT_MARKED.ar[1]),
+        `1b+ class 8, DATE_NOT_MARKED's text says calendar-based time intelligence needs no mark: ${E.RULES.DATE_NOT_MARKED.en[1]}`);
+    }
+
+    // 9. HARDCODED_PATH on a template placeholder ({{NAME}}); a literal server keeps it
+    {
+      const q = (name, e) => tbl(name, [col('A')], { partitions: [{ name, source: { type: 'm', expression: e } }] });
+      const m = { model: { tables: [q('T1', 'let Source = Sql.Database("{{SERVER}}", "{{DATABASE}}") in Source'), q('T2', 'let Source = Sql.Database("{{Server}}.database.windows.net", "Sales") in Source'),
+        q('T3', 'let Source = Csv.Document(File.Contents("{{DATA_FOLDER}}\\\\sales.csv")) in Source'), q('K1', 'let Source = Sql.Database("contoso-sql01.database.windows.net", "DW") in Source'),
+        q('K2', 'let Source = Csv.Document(File.Contents("C:\\\\Users\\\\me\\\\sales.csv")) in Source')] } };
+      const got = items(E.analyze(m, null), 'HARDCODED_PATH').sort();
+      check(JSON.stringify(got) === '["K1","K2"]', `1b+ class 9, HARDCODED_PATH on placeholders: flags ${JSON.stringify(got)}, expected only K1 and K2`);
+    }
+
+    // 10. FILTER over a table whose predicate compares with another table or an aggregate: still FILTER_TABLE, with
+    //     its own advice (put the value in a variable first, then a Boolean column filter works)
+    {
+      const m = { model: { tables: [tbl('Customer', [col('Key'), col('Since', 'dateTime'), col('City', 'string')], { measures: [ms('Total', 'COUNTROWS(Customer)'),
+        ms('New', "CALCULATE([Total], FILTER(Customer, Customer[Since] >= MIN('Calendar'[Date])))"), ms('Big', 'CALCULATE([Total], FILTER(Customer, Customer[Key] > MAXX(ALL(Customer), Customer[Key]) / 2))'),
+        ms('Dubai', 'CALCULATE([Total], FILTER(Customer, Customer[City] = "Dubai"))')] }), tbl('Calendar', [col('Date', 'dateTime')])] } };
+      const r = E.analyze(m, null), f = r.findings.find((x) => x.id === 'FILTER_TABLE') || { items: [] };
+      const by = Object.fromEntries(f.items.map((i) => [i.obj, i]));
+      check(f.items.length === 3 && by['[New]'] && by['[New]'].variant === 'VAR' && by['[Big]'] && by['[Big]'].variant === 'VAR' && by['[Dubai]'] && !by['[Dubai]'].variant,
+        `1b+ class 10, FILTER_TABLE advice per item: ${JSON.stringify(f.items)}`);
+      const v = (E.RULES.FILTER_TABLE.variants || {}).VAR || {};
+      check(/VAR /.test(v.en || '') && /VAR /.test(v.ar || '') && /[\u0600-\u06FF]/.test(v.ar || '') && by['[New]'] && by['[New]'].detail === v.en, `1b+ class 10, the variable advice (English and Arabic, and as the item's detail): ${JSON.stringify(v)}`);
+    }
   }
 
   {
