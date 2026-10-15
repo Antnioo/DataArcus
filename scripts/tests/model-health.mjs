@@ -107,7 +107,9 @@ export default async function ({ browser, url }) {
 
   {
     // calendar tables named in Arabic are found like English ones
-    const cal = (name) => ({ name, columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }], partitions: mpart(name) });
+    // (a Year column since 15 Oct: a table whose only column is a date and that has no relationship is a date picker,
+    // not a calendar, Phase 1b+ class 8)
+    const cal = (name) => ({ name, columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }, { name: 'Year', dataType: 'int64', sourceColumn: 'Year' }], partitions: mpart(name) });
     const m = { model: { tables: [sales(), cal('تقويم'), cal('التقويم'), cal('Calendar'), cal('تقويمات قديمة'), cal('Calendar2')] } };
     const found = ((E.analyze(m, null).findings.find((f) => f.id === 'DATE_NOT_MARKED') || {}).items || []).map((i) => i.obj).sort();
     check(JSON.stringify(found) === JSON.stringify(['Calendar', 'التقويم', 'تقويم'].sort()), `calendar tables: found ${JSON.stringify(found)}`);
@@ -173,6 +175,234 @@ export default async function ({ browser, url }) {
     const legacy = detail({ format: 'legacy', files: [{ path: 'Report/Layout', json: { sections: [{ name: 's1', displayName: 'Page 1', visualContainers: [] }], filters: JSON.stringify([{ expression: gone('Gone In Filter') }]),
       config: JSON.stringify({ version: '5.1', bookmarks: [{ displayName: 'Group', name: 'g', children: [bm('Old view')] }] }) } }] });
     check(legacy['Sales[Gone In Bookmark]'] === 'bookmark "Old view"' && legacy['Sales[Gone In Filter]'] === 'report filter', `a broken field in a bookmark (older report format): ${JSON.stringify(legacy)}`);
+  }
+
+  // ---- Health Check 2, phase 1 ("trust", 15 Oct 2026): every rule names its source, and Microsoft's documented
+  //      exceptions are not findings ----
+  {
+    // every rule carries a source: Microsoft Learn (a learn.microsoft.com page), a Best Practice Analyzer rule of
+    // Microsoft's (its id, the rules folder), or our own rule (no link, a reason); what it says in English and Arabic
+    const BPA = 'https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules';
+    const ar = /[؀-ۿ]/;
+    for (const [id, R] of Object.entries(E.RULES)) {
+      const s = R.source || {};
+      const ok = ['microsoft', 'bpa', 'dataarcus'].includes(s.kind) && s.title && s.says && s.says.en && ar.test(s.says.ar || '') &&
+        (s.kind === 'microsoft' ? /^https:\/\/learn\.microsoft\.com\/[a-z]/.test(s.url || '') : s.kind === 'bpa' ? s.url === BPA && /^[A-Z0-9_()/-]+$/.test(s.title) : s.url == null);
+      check(ok, `source of ${id}: ${JSON.stringify(s)}`);
+    }
+    check(!!E.RULES.FILTER_MEASURE && !!E.RULES.BIDI_BRIDGE, `the new rules FILTER_MEASURE and BIDI_BRIDGE: ${!!E.RULES.FILTER_MEASURE}, ${!!E.RULES.BIDI_BRIDGE}`);
+  }
+
+  {
+    // relationships: one-to-one must be bi-directional (Microsoft: it can't be configured otherwise); a many-to-many
+    // dimension bridge needs one bi-directional relationship; a fact table filtering both ways is still flagged
+    const t = (name, cols, extra) => Object.assign({ name, columns: cols.map(([n, ty]) => ({ name: n, dataType: ty || 'int64', sourceColumn: n })), partitions: mpart(name) }, extra || {});
+    const rel = (f, fc, to, tc, x) => Object.assign({ name: f + fc + to, fromTable: f, fromColumn: fc, toTable: to, toColumn: tc }, x || {});
+    const ids = (m) => { const r = E.analyze(m, null); return Object.fromEntries(r.findings.map((f) => [f.id, f.items.map((i) => i.obj)])); };
+    const one = ids({ model: { tables: [t('Employee', [['EmployeeID'], ['Name', 'string']]), t('Employee Salary', [['EmployeeID'], ['Salary', 'decimal']])],
+      relationships: [rel('Employee Salary', 'EmployeeID', 'Employee', 'EmployeeID', { fromCardinality: 'one', toCardinality: 'one', crossFilteringBehavior: 'bothDirections' })] } });
+    check(!one.BIDI && !one.BIDI_BRIDGE, `one-to-one: flagged ${JSON.stringify(one.BIDI || one.BIDI_BRIDGE)}, expected no finding`);
+    // Microsoft's bank example: Account, Customer, the AccountCustomer bridge (identifier columns only), Transaction
+    const bank = (bridgeCols) => ({ model: { tables: [t('Account', [['AccountID'], ['Account', 'string']]), t('Customer', [['CustomerID'], ['Customer', 'string']]),
+      t('AccountCustomer', bridgeCols), t('Transaction', [['AccountID'], ['Date', 'dateTime'], ['Amount', 'decimal']])],
+    relationships: [rel('AccountCustomer', 'AccountID', 'Account', 'AccountID', { crossFilteringBehavior: 'bothDirections' }), rel('AccountCustomer', 'CustomerID', 'Customer', 'CustomerID'),
+      rel('Transaction', 'AccountID', 'Account', 'AccountID')] } });
+    const br = ids(bank([['AccountID'], ['CustomerID']]));
+    check(!br.BIDI && JSON.stringify(br.BIDI_BRIDGE) === JSON.stringify(['AccountCustomer[AccountID] ↔ Account[AccountID]']), `bridge: BIDI ${JSON.stringify(br.BIDI)}, BIDI_BRIDGE ${JSON.stringify(br.BIDI_BRIDGE)}, expected the bridge wording only`);
+    check(/many-to-many bridge/.test(E.RULES.BIDI_BRIDGE ? E.RULES.BIDI_BRIDGE.en[2] : '') && /if so,? it is needed/i.test(E.RULES.BIDI_BRIDGE ? E.RULES.BIDI_BRIDGE.en[2] : ''), 'bridge: the advice says to check it is the many-to-many bridge, and that it is needed then');
+    // a fact table on the many side of several relationships is not a bridge: it has other columns (Microsoft's
+    // dimension-to-dimension case advises CROSSFILTER in a measure instead), so it keeps today's finding
+    const fact = ids({ model: { tables: [t('Product', [['ProductKey'], ['Color', 'string']]), t('Customer', [['CustomerKey'], ['Country', 'string']]), t('Sales', [['ProductKey'], ['CustomerKey'], ['Quantity']])],
+      relationships: [rel('Sales', 'ProductKey', 'Product', 'ProductKey', { crossFilteringBehavior: 'bothDirections' }), rel('Sales', 'CustomerKey', 'Customer', 'CustomerKey')] } });
+    check(JSON.stringify(fact.BIDI) === JSON.stringify(['Sales[ProductKey] ↔ Product[ProductKey]']) && !fact.BIDI_BRIDGE, `fact table filtering both ways: BIDI ${JSON.stringify(fact.BIDI)}, BIDI_BRIDGE ${JSON.stringify(fact.BIDI_BRIDGE)}`);
+  }
+
+  {
+    // FILTER inside CALCULATE: a column predicate can be a Boolean filter (FILTER_TABLE); a predicate with a measure
+    // can't (Microsoft: a Boolean filter cannot reference a measure), so it needs FILTER, over a column (FILTER_MEASURE);
+    // FILTER over VALUES of a column is Microsoft's own advice (no finding)
+    const ms = { M1: 'CALCULATE([Total], FILTER(Sales, Sales[Channel] = "Online"))', M2: 'CALCULATE([Total], FILTER(VALUES(Sales[Month]), [Profit] > 0))',
+      M3: 'CALCULATE([Total], FILTER(Sales, [Profit] > 0))', M4: 'CALCULATE([Total], FILTER(ALL(Sales), [Profit] > 0))' };
+    const m = { model: { tables: [{ name: 'Sales', columns: [{ name: 'Channel', dataType: 'string', sourceColumn: 'Channel' }, { name: 'Month', dataType: 'string', sourceColumn: 'Month' }, { name: 'Amount', dataType: 'decimal', sourceColumn: 'Amount' }, { name: 'Cost', dataType: 'decimal', sourceColumn: 'Cost' }],
+      partitions: mpart('Sales'), measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])' }, { name: 'Profit', expression: '[Total] - SUM(Sales[Cost])' }].concat(Object.entries(ms).map(([name, expression]) => ({ name, expression }))) }] } };
+    const r = E.analyze(m, null), of = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).map((i) => i.obj);
+    check(JSON.stringify(of('FILTER_TABLE')) === '["[M1]"]', `FILTER_TABLE flags ${JSON.stringify(of('FILTER_TABLE'))}, expected only [M1] (the column predicate)`);
+    check(JSON.stringify(of('FILTER_MEASURE')) === '["[M3]","[M4]"]', `FILTER_MEASURE flags ${JSON.stringify(of('FILTER_MEASURE'))}, expected [M3] and [M4] (a measure in the predicate, over a whole table)`);
+    check(/VALUES\(/.test(E.RULES.FILTER_MEASURE ? E.RULES.FILTER_MEASURE.en[2] : '') && /VALUES\(/.test(E.RULES.FILTER_MEASURE ? E.RULES.FILTER_MEASURE.ar[2] : ''), 'FILTER_MEASURE: the advice (English and Arabic) is FILTER over VALUES of the column');
+  }
+
+  {
+    // Microsoft's other documented exceptions: "/" by a constant is the right choice (no DIVISION); a role-playing date
+    // whose inactive relationship a measure turns on with USERELATIONSHIP is in use (no INACTIVE_UNUSED)
+    const m = (withUse) => ({ model: { tables: [{ name: 'Sales', columns: [{ name: 'OrderDate', dataType: 'dateTime', sourceColumn: 'OrderDate' }, { name: 'ShipDate', dataType: 'dateTime', sourceColumn: 'ShipDate' }, { name: 'Amount', dataType: 'decimal', sourceColumn: 'Amount' }],
+      partitions: mpart('Sales'), measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])' }, { name: 'Total K', expression: '[Total] / 1000' }, { name: 'Per Month', expression: 'SUM ( Sales[Amount] ) / 12.5' }]
+        .concat(withUse ? [{ name: 'Shipped', expression: "CALCULATE([Total], USERELATIONSHIP(Sales[ShipDate], 'Date'[Date]))" }] : []) },
+    { name: 'Date', columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }], partitions: mpart('Date') }],
+    relationships: [{ name: 'o', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Date', toColumn: 'Date' }, { name: 's', fromTable: 'Sales', fromColumn: 'ShipDate', toTable: 'Date', toColumn: 'Date', isActive: false }] } });
+    const ids = (x) => E.analyze(x, null).findings.map((f) => f.id);
+    check(!ids(m(true)).includes('DIVISION'), 'a constant denominator ([Total] / 1000, SUM(...) / 12.5) is flagged DIVISION');
+    check(!ids(m(true)).includes('INACTIVE_UNUSED'), 'a role-playing date activated with USERELATIONSHIP is flagged INACTIVE_UNUSED');
+    check(ids(m(false)).includes('INACTIVE_UNUSED'), 'the same inactive relationship without the USERELATIONSHIP measure is not flagged');
+  }
+
+  // ---- Phase 1b+ (15 Oct 2026): the false positives a benchmark on public models found, one class per check,
+  //      each with a control that must stay flagged ----
+  {
+    const col = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const tbl = (name, cols, extra) => Object.assign({ name, columns: cols, partitions: mpart(name) }, extra || {});
+    const items = (r, id) => ((r.findings.find((f) => f.id === id) || {}).items || []).map((i) => i.obj);
+    const ms = (name, expression, x) => Object.assign({ name, expression }, x || {});
+
+    // 1. BIDI on an inactive relationship: it filters nothing until USERELATIONSHIP turns it on; INACTIVE_UNUSED reports it
+    {
+      const m = { model: { tables: [tbl('Sales', [col('ProductKey'), col('AltKey'), col('Qty')]), tbl('Product', [col('ProductKey'), col('Color', 'string')])],
+        relationships: [{ name: 'a', fromTable: 'Sales', fromColumn: 'ProductKey', toTable: 'Product', toColumn: 'ProductKey', crossFilteringBehavior: 'bothDirections' },
+          { name: 'b', fromTable: 'Sales', fromColumn: 'AltKey', toTable: 'Product', toColumn: 'ProductKey', crossFilteringBehavior: 'bothDirections', isActive: false }] } };
+      const r = E.analyze(m, null);
+      check(JSON.stringify(items(r, 'BIDI')) === '["Sales[ProductKey] ↔ Product[ProductKey]"]' && JSON.stringify(items(r, 'INACTIVE_UNUSED')) === '["Sales[AltKey] → Product[ProductKey]"]',
+        `1b+ class 1, BIDI on an inactive relationship: BIDI ${JSON.stringify(items(r, 'BIDI'))}, INACTIVE_UNUSED ${JSON.stringify(items(r, 'INACTIVE_UNUSED'))}`);
+    }
+
+    // 2. NO_FORMAT on a measure that returns text (a number format can't apply); unclear results keep the finding
+    {
+      const text = { T1: '"Sales report"', T2: '"https://example.com/r?id=" & [Total]', T3: 'VAR v = [Total]\nVAR svg = "data:image/svg+xml;utf8,<svg></svg>"\nRETURN svg',
+        T4: 'IF([Total] >= 0, "#16a34a", "#dc2626")', T5: 'SELECTEDVALUE(Product[Name])', T6: 'FORMAT([Total], "0.0")', T7: 'CONCATENATEX(Product, Product[Name], ", ")',
+        T8: 'UNICHAR(9650)', T9: 'MAX(Product[Name])', T10: 'VAR x = 1 RETURN CONCATENATE("v", "1.2")', T11: 'SWITCH(TRUE(), [Total] > 0, "Up", "Down")' };
+      const kept = { N1: 'SUM(Sales[Amount])', N2: 'SELECTEDVALUE(Sales[Amount])', N3: 'IF([Total] > 0, 1, "none")', N4: 'VAR t = "a" RETURN [Total]', N5: 'MAX(Sales[Amount])' };
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('Total', 'SUM(Sales[Amount])', { formatString: '#,0' })]
+        .concat(Object.entries(Object.assign({}, text, kept)).map(([n, e]) => ms(n, e))) }), tbl('Product', [col('Name', 'string')])] } };
+      const got = items(E.analyze(m, null), 'NO_FORMAT').sort();
+      check(JSON.stringify(got) === JSON.stringify(Object.keys(kept).map((k) => `[${k}]`).sort()), `1b+ class 2, NO_FORMAT on text measures: flags ${JSON.stringify(got)}, expected only ${Object.keys(kept)}`);
+    }
+
+    // 3. NO_FORMAT on a hidden measure (or one in a hidden table) that no visual uses (BPA's rule is for visible
+    //    measures); a hidden measure a visual uses keeps it
+    {
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('V', 'SUM(Sales[Amount])'), ms('H1', 'SUM(Sales[Amount]) * 2', { isHidden: true }), ms('H2', 'SUM(Sales[Amount]) * 3', { isHidden: true })] }),
+        tbl('Helpers', [col('X')], { isHidden: true, measures: [ms('H3', 'SUM(Sales[Amount]) * 4')] })] } };
+      const got = items(E.analyze(m, report([['Measure', 'Sales', 'V'], ['Measure', 'Sales', 'H2']])), 'NO_FORMAT').sort();
+      check(JSON.stringify(got) === '["[H2]","[V]"]', `1b+ class 3, NO_FORMAT on hidden measures: flags ${JSON.stringify(got)}, expected [H2] (hidden, in a visual) and [V]`);
+    }
+
+    // 4. NO_DESC on a hidden measure (the reason is the field-list tooltip; BPA's rule is for visible objects), and
+    //    the share is of visible measures
+    {
+      const m = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: [ms('A', 'SUM(Sales[Amount])'), ms('B', 'SUM(Sales[Amount]) * 2'), ms('C', 'SUM(Sales[Amount]) * 3', { description: 'Three times' }),
+        ms('H', 'SUM(Sales[Amount]) * 4', { isHidden: true })] })] } };
+      const got = items(E.analyze(m, null), 'NO_DESC').sort();
+      check(JSON.stringify(got) === '["[A]","[B]"]', `1b+ class 4, NO_DESC on a hidden measure: flags ${JSON.stringify(got)}, expected [A] and [B]`);
+      // 2 of 4 visible lack one (50%, not over half), however many hidden ones do: no finding
+      const m2 = { model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures: ['A', 'B', 'C', 'D'].map((n, i) => ms(n, `SUM(Sales[Amount]) * ${i + 1}`, i < 2 ? { description: 'x' } : {}))
+        .concat(['H1', 'H2', 'H3'].map((n, i) => ms(n, `SUM(Sales[Amount]) * ${i + 10}`, { isHidden: true }))) })] } };
+      check(!items(E.analyze(m2, null), 'NO_DESC').length, `1b+ class 4, NO_DESC share of visible measures: flags ${JSON.stringify(items(E.analyze(m2, null), 'NO_DESC'))}`);
+    }
+
+    // 5. NO_FOLDERS on a hidden measure; the 20-measure floor and the 30% share count visible measures only
+    {
+      const many = (vis, visNoFolder, hidden) => ({ model: { tables: [tbl('Sales', [col('Amount', 'decimal')], { measures:
+        Array.from({ length: vis }, (_, i) => ms('V' + i, `SUM(Sales[Amount]) * ${i + 1}`, i < visNoFolder ? {} : { displayFolder: 'Sales' }))
+          .concat(Array.from({ length: hidden }, (_, i) => ms('H' + i, `SUM(Sales[Amount]) * ${i + 100}`, { isHidden: true }))) })] } });
+      const a = items(E.analyze(many(20, 7, 3), null), 'NO_FOLDERS');
+      check(a.length === 7 && a.every((x) => /^\[V/.test(x)), `1b+ class 5, NO_FOLDERS: flags ${JSON.stringify(a)}, expected the 7 visible measures only`);
+      check(!items(E.analyze(many(20, 5, 10), null), 'NO_FOLDERS').length, '1b+ class 5, NO_FOLDERS: 5 of 20 visible without a folder (25%) is flagged because of 10 hidden ones');
+      check(!items(E.analyze(many(15, 10, 10), null), 'NO_FOLDERS').length, '1b+ class 5, NO_FOLDERS: 15 visible measures (under 20) is flagged because of 10 hidden ones');
+    }
+
+    // 6. CALC_COLS on a column Microsoft says belongs in DAX (parent-child paths, a measure, context transition,
+    //    RANKX or EARLIER, an aggregate over another table); plain row arithmetic and RELATED keep the finding
+    {
+      const cc = (name, expression) => ({ name, expression, type: 'calculated', dataType: 'int64' });
+      const m = { model: { tables: [
+        tbl('Employee', [col('ID'), col('Parent'), cc('Path', 'PATH(Employee[ID], Employee[Parent])'), cc('Level 2', 'PATHITEM(Employee[Path], 2, INTEGER)'), cc('Depth', 'PATHLENGTH(Employee[Path])'), cc('Under 7', 'PATHCONTAINS(Employee[Path], 7)')]),
+        tbl('Sales', [col('Key'), col('ProductKey'), col('Amount', 'decimal'), cc('M', '[Total]'), cc('C', 'CALCULATE(SUM(Returns[Qty]))'), cc('R', 'RANKX(ALL(Sales), Sales[Amount])'),
+          cc('E', 'COUNTROWS(FILTER(Sales, Sales[Amount] > EARLIER(Sales[Amount])))'), cc('A1', 'SUMX(RELATEDTABLE(Returns), Returns[Qty])'), cc('A2', 'SUMX(FILTER(Returns, Returns[Key] = Sales[Key]), Returns[Qty])'),
+          cc('A3', 'COUNTROWS(FILTER(ALL(Returns), Returns[Key] = Sales[Key]))'),
+          cc('K1', 'Sales[Amount] * 2'), cc('K2', 'RELATED(Product[Color])'), cc('K3', 'IF(Sales[Amount] > 100, "Big", "Small")')], { measures: [ms('Total', 'SUM(Sales[Amount])', { formatString: '0' })] }),
+        tbl('Returns', [col('Key'), col('Qty')]), tbl('Product', [col('ProductKey'), col('Color', 'string')])],
+      relationships: [{ name: 'r', fromTable: 'Returns', fromColumn: 'Key', toTable: 'Sales', toColumn: 'Key' }, { name: 'p', fromTable: 'Sales', fromColumn: 'ProductKey', toTable: 'Product', toColumn: 'ProductKey' }] } };
+      const got = items(E.analyze(m, null), 'CALC_COLS').sort();
+      check(JSON.stringify(got) === '["Sales[K1]","Sales[K2]","Sales[K3]"]', `1b+ class 6, CALC_COLS: flags ${JSON.stringify(got)}, expected only Sales[K1], Sales[K2], Sales[K3]`);
+    }
+
+    // 7. DUP_MEASURE: the same text in two home tables sums two different columns; the same qualified DAX is a duplicate
+    {
+      const m = { model: { tables: [tbl('Internet', [col('SalesAmount', 'decimal')], { measures: [ms('Internet Total', 'SUM([SalesAmount])'), ms('Same A', 'SUM(Internet[SalesAmount]) * 1.05')] }),
+        tbl('Reseller', [col('SalesAmount', 'decimal')], { measures: [ms('Reseller Total', 'SUM([SalesAmount])'), ms('Same B', 'SUM(Internet[SalesAmount]) * 1.05')] })] } };
+      const got = items(E.analyze(m, null), 'DUP_MEASURE');
+      check(JSON.stringify(got) === '["[Same A] = [Same B]"]', `1b+ class 7, DUP_MEASURE: flags ${JSON.stringify(got)}, expected only [Same A] = [Same B]`);
+    }
+
+    // 8. DATE_NOT_MARKED on a date picker (a table whose only column is a date, with no relationship); a calendar
+    //    with a relationship, or with other columns, keeps it; the text says calendar-based time intelligence needs no mark
+    {
+      const d = (name, cols) => tbl(name, cols || [col('Date', 'dateTime')]);
+      const m = { model: { tables: [tbl('Sales', [col('OrderDate', 'dateTime'), col('Qty')]), d('Date Picker'), d('Dates'), d('Calendar'), d('Date', [col('Date', 'dateTime'), col('Year')])],
+        relationships: [{ name: 'c', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Calendar', toColumn: 'Date' }] } };
+      const got = items(E.analyze(m, null), 'DATE_NOT_MARKED').sort();
+      check(JSON.stringify(got) === '["Calendar","Date"]', `1b+ class 8, DATE_NOT_MARKED on date pickers: flags ${JSON.stringify(got)}, expected Calendar (related) and Date (has a Year column)`);
+      check(/calendar-based time intelligence/i.test(E.RULES.DATE_NOT_MARKED.en[1]) && /Calendar-based time intelligence|calendar-based/i.test(E.RULES.DATE_NOT_MARKED.ar[1]),
+        `1b+ class 8, DATE_NOT_MARKED's text says calendar-based time intelligence needs no mark: ${E.RULES.DATE_NOT_MARKED.en[1]}`);
+    }
+
+    // 9. HARDCODED_PATH on a template placeholder ({{NAME}}); a literal server keeps it
+    {
+      const q = (name, e) => tbl(name, [col('A')], { partitions: [{ name, source: { type: 'm', expression: e } }] });
+      const m = { model: { tables: [q('T1', 'let Source = Sql.Database("{{SERVER}}", "{{DATABASE}}") in Source'), q('T2', 'let Source = Sql.Database("{{Server}}.database.windows.net", "Sales") in Source'),
+        q('T3', 'let Source = Csv.Document(File.Contents("{{DATA_FOLDER}}\\\\sales.csv")) in Source'), q('K1', 'let Source = Sql.Database("contoso-sql01.database.windows.net", "DW") in Source'),
+        q('K2', 'let Source = Csv.Document(File.Contents("C:\\\\Users\\\\me\\\\sales.csv")) in Source')] } };
+      const got = items(E.analyze(m, null), 'HARDCODED_PATH').sort();
+      check(JSON.stringify(got) === '["K1","K2"]', `1b+ class 9, HARDCODED_PATH on placeholders: flags ${JSON.stringify(got)}, expected only K1 and K2`);
+    }
+
+    // 10. FILTER over a table whose predicate compares with another table or an aggregate: still FILTER_TABLE, with
+    //     its own advice (put the value in a variable first, then a Boolean column filter works)
+    {
+      const m = { model: { tables: [tbl('Customer', [col('Key'), col('Since', 'dateTime'), col('City', 'string')], { measures: [ms('Total', 'COUNTROWS(Customer)'),
+        ms('New', "CALCULATE([Total], FILTER(Customer, Customer[Since] >= MIN('Calendar'[Date])))"), ms('Big', 'CALCULATE([Total], FILTER(Customer, Customer[Key] > MAXX(ALL(Customer), Customer[Key]) / 2))'),
+        ms('Dubai', 'CALCULATE([Total], FILTER(Customer, Customer[City] = "Dubai"))')] }), tbl('Calendar', [col('Date', 'dateTime')])] } };
+      const r = E.analyze(m, null), f = r.findings.find((x) => x.id === 'FILTER_TABLE') || { items: [] };
+      const by = Object.fromEntries(f.items.map((i) => [i.obj, i]));
+      check(f.items.length === 3 && by['[New]'] && by['[New]'].variant === 'VAR' && by['[Big]'] && by['[Big]'].variant === 'VAR' && by['[Dubai]'] && !by['[Dubai]'].variant,
+        `1b+ class 10, FILTER_TABLE advice per item: ${JSON.stringify(f.items)}`);
+      const v = (E.RULES.FILTER_TABLE.variants || {}).VAR || {};
+      check(/VAR /.test(v.en || '') && /VAR /.test(v.ar || '') && /[\u0600-\u06FF]/.test(v.ar || '') && by['[New]'] && by['[New]'].detail === v.en, `1b+ class 10, the variable advice (English and Arabic, and as the item's detail): ${JSON.stringify(v)}`);
+    }
+  }
+
+  {
+    // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.click('#mhSample');
+      await v.pg.waitForSelector('.mh-issue', { timeout: 20000 });
+      const src = await v.pg.evaluate(() => Object.fromEntries([...document.querySelectorAll('.mh-issue')].map((d) => { const s = d.querySelector('.mh-src'); const a = s && s.querySelector('a');
+        return [d.dataset.rule, s ? { text: s.textContent.replace(/\s+/g, ' ').trim(), href: a ? a.href : null, rel: a ? a.rel : null, target: a ? a.target : null } : null]; })));
+      const want = lang === 'en' ? { ms: 'Microsoft guidance', bpa: 'Microsoft Best Practice Analyzer', own: 'DataArcus rule' } : { ms: 'إرشادات Microsoft', bpa: 'Best Practice Analyzer', own: 'قاعدة من DataArcus' };
+      const b = src.BIDI, d = src.DOUBLE, n = src.NAMING;
+      check(b && b.text.includes(want.ms) && /^https:\/\/learn\.microsoft\.com\//.test(b.href) && /noopener/.test(b.rel) && b.target === '_blank', `source on the page (${lang}), BIDI: ${JSON.stringify(b)}`);
+      check(d && d.text.includes(want.bpa) && d.text.includes('AVOID_FLOATING_POINT_DATA_TYPES') && /BestPracticeRules$/.test(d.href), `source on the page (${lang}), DOUBLE: ${JSON.stringify(d)}`);
+      check(n && n.text.includes(want.own) && !n.href && n.text.length > want.own.length + 10, `source on the page (${lang}), NAMING: ${JSON.stringify(n)}`);
+      check(Object.values(src).every(Boolean), `source on the page (${lang}): findings without one: ${Object.keys(src).filter((k) => !src[k]).join(', ')}`);
+      // 1b+ class 10: the sample's [New Customers] compares with the calendar, so its item gives the variable advice in the page's language
+      const nc = await v.pg.evaluate(() => { const li = [...document.querySelectorAll('[data-rule="FILTER_TABLE"] .mh-items li')].find((x) => x.querySelector('code').textContent === '[New Customers]'); return li ? li.textContent : ''; });
+      check(/VAR d = MIN/.test(nc) && (lang === 'en' ? /variable/.test(nc) : /متغير/.test(nc)), `FILTER_TABLE's variable advice on the page (${lang}): "${nc}"`);
+      if (lang === 'en') {
+        const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#mhCsv')]);
+        const csv = fs.readFileSync(await dl.path(), 'utf8').replace(/^﻿/, '').split('\r\n');
+        check(csv[0] === '"Severity","Category","Rule","Object","Detail","Source"' && csv.some((l) => l.includes('Relationships that filter in both directions') && l.endsWith('"https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering"'))
+          && csv.some((l) => l.includes('Mixed table naming styles') && l.endsWith('"DataArcus rule"')), `findings CSV: no Source column: ${csv.slice(0, 2).join(' / ')}`);
+        await v.pg.click('[data-tab=docs]');
+        const [dh] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="html"]')]);
+        const html = fs.readFileSync(await dh.path(), 'utf8');
+        check(/<th>Source<\/th>/.test(html) && html.includes('href="https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering"') && html.includes('BPA AVOID_FLOATING_POINT_DATA_TYPES'), 'HTML documentation: no source per finding');
+        const [dm] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="md"]')]);
+        const md = fs.readFileSync(await dm.path(), 'utf8');
+        check(md.includes('| Severity | Finding | Count | How to fix | Source |') && md.includes('[Microsoft guidance](https://learn.microsoft.com/power-bi/guidance/relationships-bidirectional-filtering)') && md.includes('DataArcus rule'), 'Markdown documentation: no source per finding');
+      }
+      if (v.errs.length) problems.push(`source on the page (${lang}): ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
   }
 
   {

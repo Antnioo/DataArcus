@@ -385,7 +385,11 @@
       ar: ['أعمدة محسوبة على جداول مستوردة', 'الأعمدة المحسوبة تُحسب بعد التحميل وتنضغط أسوأ من أعمدة Power Query وتبطئ التحديث.', 'انقل البسيطة منها (IF، نصوص، تواريخ) إلى Power Query أو المصدر، وأبقِ أعمدة DAX فقط عندما تحتاج بيانات النموذج مثل RELATED.'] },
     FILTER_TABLE: { cat: 'perf', sev: 'medium',
       en: ['FILTER over a whole table inside CALCULATE', 'FILTER(Table, ...) as a CALCULATE filter scans every row of the table. A column filter is much faster.', 'Filter the column instead: CALCULATE([Sales], Table[Column] = "X"), or KEEPFILTERS(Table[Column] = "X").'],
-      ar: ['FILTER على جدول كامل داخل CALCULATE', 'استخدام FILTER(Table, ...) كفلتر داخل CALCULATE يمر على كل صفوف الجدول، وفلترة العمود أسرع بكثير.', 'فلتر العمود بدلًا من الجدول: CALCULATE([Sales], Table[Column] = "X") أو KEEPFILTERS(...).'] },
+      ar: ['FILTER على جدول كامل داخل CALCULATE', 'استخدام FILTER(Table, ...) كفلتر داخل CALCULATE يمر على كل صفوف الجدول، وفلترة العمود أسرع بكثير.', 'فلتر العمود بدلًا من الجدول: CALCULATE([Sales], Table[Column] = "X") أو KEEPFILTERS(...).'],
+      // advice for one item: the predicate compares with another table or an aggregate, which a Boolean filter can't take as written
+      variants: { VAR: {
+        en: 'Compares with another table or an aggregate, which a Boolean filter can\'t take as written: put that value in a variable first, then filter the column: VAR d = MIN(\'Calendar\'[Date]) RETURN CALCULATE([Sales], Table[Column] >= d).',
+        ar: 'يقارن بجدول آخر أو بقيمة مجمّعة، وفلتر Boolean لا يقبل ذلك كما هو مكتوب: ضع القيمة في متغير أولًا ثم فلتر العمود: VAR d = MIN(\'Calendar\'[Date]) RETURN CALCULATE([Sales], Table[Column] >= d).' } } },
     IFERROR: { cat: 'perf', sev: 'low',
       en: ['IFERROR or ISERROR in measures', 'Error handling forces the engine to evaluate the expression row by row and hides real problems.', 'Use DIVIDE for division, and handle blanks with IF or COALESCE.'],
       ar: ['استخدام IFERROR أو ISERROR في المقاييس', 'التعامل مع الأخطاء يجبر المحرك على الحساب صفًا بصف ويخفي المشاكل الحقيقية.', 'استخدم DIVIDE للقسمة، وتعامل مع القيم الفارغة بـ IF أو COALESCE.'] },
@@ -396,8 +400,8 @@
       en: ['Inactive relationships nobody uses', 'An inactive relationship only matters when a measure turns it on with USERELATIONSHIP. No measure does for these.', 'Delete them, or add the measure that was meant to use them.'],
       ar: ['علاقات غير نشطة لا يستخدمها أحد', 'العلاقة غير النشطة لها فائدة فقط عندما يفعّلها مقياس بـ USERELATIONSHIP، ولا يوجد مقياس يفعل ذلك هنا.', 'احذفها، أو أضف المقياس الذي كان يُفترض أن يستخدمها.'] },
     DATE_NOT_MARKED: { cat: 'bp', sev: 'medium',
-      en: ['Calendar table not marked as a date table', 'Time intelligence works more reliably when the calendar is marked as a date table, and marking it avoids auto date tables for it.', 'Table tools > Mark as date table, and choose the date column.'],
-      ar: ['جدول التقويم غير معلَّم كجدول تاريخ', 'دوال الوقت تعمل بشكل أدق عندما يُعلَّم التقويم كجدول تاريخ.', 'من Table tools اختر Mark as date table وحدد عمود التاريخ.'] },
+      en: ['Calendar table not marked as a date table', 'The classic time intelligence functions need the calendar marked as a date table, and marking it removes its auto date table. Calendar-based time intelligence doesn\'t need the mark.', 'Table tools > Mark as date table, and choose the date column.'],
+      ar: ['جدول التقويم غير معلَّم كجدول تاريخ', 'دوال time intelligence الكلاسيكية تحتاج أن يُعلَّم التقويم كجدول تاريخ، وتعليمه يحذف جدول التاريخ التلقائي له. أما time intelligence المبني على التقويم (calendar-based) فلا يحتاج هذا التعليم.', 'من Table tools اختر Mark as date table وحدد عمود التاريخ.'] },
     CALENDARAUTO: { cat: 'perf', sev: 'low',
       en: ['CALENDARAUTO in a calendar table', 'CALENDARAUTO scans every date column in the model, so one wrong date (like 1900 or 2099) stretches the calendar and slows refresh.', 'Use CALENDAR with explicit start and end dates based on your fact tables.'],
       ar: ['استخدام CALENDARAUTO في جدول التقويم', 'CALENDARAUTO يفحص كل أعمدة التاريخ، فتاريخ خاطئ واحد (مثل 1900) يمد التقويم ويبطئ التحديث.', 'استخدم CALENDAR بتاريخ بداية ونهاية واضحين من جداول الحقائق.'] },
@@ -463,8 +467,107 @@
       ar: ['USERELATIONSHIP على علاقة نشطة بالفعل', 'USERELATIONSHIP يغيّر شيئًا فقط مع العلاقات غير النشطة، وعلى علاقة نشطة لا يفعل شيئًا ويربك من يقرأ المقياس لاحقًا.', 'احذف USERELATIONSHIP أو تحقق إن كانت العلاقة المقصودة علاقة أخرى غير نشطة.'] },
     STRING_KEYS: { cat: 'perf', sev: 'info',
       en: ['Text columns used as relationship keys', 'Relationships on whole numbers are smaller and faster than on text.', 'Where the source allows, relate on an integer key.'],
-      ar: ['أعمدة نصية كمفاتيح علاقات', 'العلاقات على أرقام صحيحة أصغر وأسرع من العلاقات على النصوص.', 'استخدم مفتاحًا رقميًا صحيحًا للعلاقة حيثما أمكن.'] }
+      ar: ['أعمدة نصية كمفاتيح علاقات', 'العلاقات على أرقام صحيحة أصغر وأسرع من العلاقات على النصوص.', 'استخدم مفتاحًا رقميًا صحيحًا للعلاقة حيثما أمكن.'] },
+    BIDI_BRIDGE: { cat: 'perf', sev: 'info',
+      en: ['Both-direction relationship on a bridge table', 'This table holds only keys and sits on the many side of two or more relationships: the shape of a many-to-many bridge. Microsoft\'s bridge pattern needs one relationship that filters in both directions, so filters reach the fact table.', 'Check that this is the many-to-many bridge Microsoft describes; if so, it is needed: keep one both-direction relationship on the bridge and set any others to Single.'],
+      ar: ['علاقة تفلتر في الاتجاهين على جدول bridge', 'هذا الجدول فيه مفاتيح فقط ويقع في جهة many من علاقتين أو أكثر، وهذا شكل جدول bridge لعلاقة many-to-many. نمط Microsoft لهذا الجدول يحتاج علاقة واحدة تفلتر في الاتجاهين حتى تصل الفلاتر إلى جدول الحقائق.', 'تحقق أن هذا جدول bridge لعلاقة many-to-many كما تصفه Microsoft؛ إن كان كذلك فالعلاقة لازمة: أبقِ علاقة واحدة في الاتجاهين على هذا الجدول واجعل الباقي Single.'] },
+    FILTER_MEASURE: { cat: 'perf', sev: 'medium',
+      en: ['FILTER over a whole table to test a measure', 'FILTER(Table, [Measure] > 0) as a CALCULATE filter evaluates the measure for every row of the table. A measure can\'t go in a Boolean filter, so FILTER is right here, but over the one column you need, not the whole table.', 'Use FILTER over VALUES(the column you need), not the whole table: CALCULATE([Sales], FILTER(VALUES(Table[Column]), [Measure] > 0)). Use ALL(Table[Column]) instead of VALUES to ignore that column\'s filters.'],
+      ar: ['FILTER على جدول كامل لاختبار مقياس', 'استخدام FILTER(Table, [Measure] > 0) كفلتر داخل CALCULATE يحسب المقياس لكل صف في الجدول. المقياس لا يصلح في فلتر Boolean، لذلك FILTER صحيح هنا، لكن على العمود الذي تحتاجه فقط لا على الجدول كله.', 'استخدم FILTER على VALUES(العمود الذي تحتاجه) لا على الجدول كله: CALCULATE([Sales], FILTER(VALUES(Table[Column]), [Measure] > 0)). استخدم ALL(Table[Column]) بدل VALUES لتجاهل فلاتر هذا العمود.'] }
   };
+
+  // Where each rule comes from (checked on 15 Oct 2026; each page opened before it was cited). kind: 'microsoft'
+  // (a Microsoft Learn page), 'bpa' (a rule of Microsoft's Best Practice Analyzer, by its id), 'dataarcus' (our own
+  // rule: no link, the reason in says). says: what the source states, in our own words, English and Arabic.
+  const ML = 'https://learn.microsoft.com/';
+  const BPA_URL = 'https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules';
+  const srcMs = (path, title, en, ar, bpa) => Object.assign({ kind: 'microsoft', url: ML + path, title, says: { en, ar } }, bpa ? { bpa } : {});
+  const srcBpa = (id, en, ar) => ({ kind: 'bpa', url: BPA_URL, title: id, says: { en, ar } });
+  const srcOwn = (en, ar) => ({ kind: 'dataarcus', title: 'DataArcus', says: { en, ar } });
+  const SOURCES = {
+    AUTODATE: srcMs('power-bi/guidance/auto-date-time', 'Auto date/time guidance in Power BI Desktop',
+      'Microsoft advises turning Auto date/time off when it is not needed and using one date table of your own.',
+      'تنصح Microsoft بإيقاف Auto date/time عندما لا تحتاجه واستخدام جدول تاريخ واحد خاص بك.'),
+    UNUSED_COL: srcMs('power-bi/guidance/import-modeling-data-reduction#remove-unnecessary-columns', 'Data reduction techniques for Import modeling: Remove unnecessary columns',
+      'Microsoft says a column that serves no report and no model structure can usually be removed.',
+      'تقول Microsoft إن العمود الذي لا يخدم التقرير ولا بنية النموذج يمكن حذفه غالبًا.'),
+    UNUSED_TABLE: srcMs('power-bi/guidance/import-modeling-data-reduction#disable-power-query-query-load', 'Data reduction techniques for Import modeling: Disable Power Query query load',
+      'Microsoft says a query that only feeds other queries should not be loaded to the model.',
+      'تقول Microsoft إن الاستعلام الذي يخدم استعلامات أخرى فقط لا يجب تحميله إلى النموذج.'),
+    CALC_COLS: srcMs('power-bi/guidance/import-modeling-data-reduction#preference-for-custom-columns', 'Data reduction techniques for Import modeling: Preference for custom columns',
+      'Microsoft says calculated columns compress less well and are built after the tables load, so it prefers Power Query columns where possible.',
+      'تقول Microsoft إن الأعمدة المحسوبة تنضغط أقل وتُبنى بعد تحميل الجداول، لذلك تفضّل أعمدة Power Query حيثما أمكن.'),
+    STRING_KEYS: srcMs('power-bi/guidance/import-modeling-data-reduction#optimize-column-data-types', 'Data reduction techniques for Import modeling: Optimize column data types',
+      'Microsoft says numeric columns store best and text needs hash encoding; its Best Practice Analyzer asks for integer relationship columns.',
+      'تقول Microsoft إن الأعمدة الرقمية تُخزَّن بأفضل شكل وإن النصوص تحتاج hash encoding، وقاعدة Best Practice Analyzer تطلب أعمدة علاقات من نوع integer.',
+      'RELATIONSHIP_COLUMNS_SHOULD_BE_OF_INTEGER_DATA_TYPE'),
+    BIDI: srcMs('power-bi/guidance/relationships-bidirectional-filtering', 'Bi-directional relationship guidance',
+      'Microsoft recommends few both-direction relationships and CROSSFILTER inside the measure that needs it; one-to-one relationships and many-to-many bridges are its exceptions.',
+      'تنصح Microsoft بتقليل العلاقات في الاتجاهين واستخدام CROSSFILTER داخل المقياس الذي يحتاجه، وتستثني علاقات one-to-one وجداول bridge لعلاقات many-to-many.'),
+    BIDI_BRIDGE: srcMs('power-bi/guidance/relationships-many-to-many#relate-many-to-many-dimensions', 'Many-to-many relationship guidance: Relate many-to-many dimensions',
+      'Microsoft relates two dimensions through a bridge table with one-to-many relationships, one of them filtering in both directions.',
+      'تربط Microsoft بُعدين عبر جدول bridge بعلاقات one-to-many، واحدة منها تفلتر في الاتجاهين.'),
+    M2M: srcMs('power-bi/guidance/relationships-many-to-many', 'Many-to-many relationship guidance',
+      'Microsoft advises against relating dimensions directly with many-to-many cardinality and uses a bridge table instead.',
+      'لا تنصح Microsoft بربط جداول الأبعاد مباشرة بعلاقة many-to-many، وتستخدم جدول bridge بدلًا من ذلك.'),
+    INACTIVE_UNUSED: srcMs('power-bi/guidance/relationships-active-inactive', 'Active vs inactive relationship guidance',
+      'Microsoft says an inactive relationship filters only while a DAX expression turns it on; its Best Practice Analyzer flags inactive relationships no USERELATIONSHIP uses.',
+      'تقول Microsoft إن العلاقة غير النشطة لا تفلتر إلا عندما يفعّلها تعبير DAX، وقاعدة Best Practice Analyzer تنبّه إلى العلاقات غير النشطة التي لا يستخدمها USERELATIONSHIP.',
+      'INACTIVE_RELATIONSHIPS_THAT_ARE_NEVER_ACTIVATED'),
+    USEREL_ACTIVE: srcMs('dax/userelationship-function-dax', 'USERELATIONSHIP function (DAX)',
+      'Microsoft says USERELATIONSHIP makes the named relationship the one used during the calculation, whether or not it is active.',
+      'تقول Microsoft إن USERELATIONSHIP يجعل العلاقة المذكورة هي المستخدمة أثناء الحساب، سواء كانت نشطة أم لا.'),
+    FILTER_TABLE: srcMs('dax/best-practices/dax-avoid-avoid-filter-as-filter-argument', 'Avoid using FILTER as a filter argument in DAX',
+      'Microsoft recommends Boolean filter arguments, with KEEPFILTERS where needed, over FILTER of a table, whenever the filter allows it.',
+      'تنصح Microsoft بفلاتر Boolean، مع KEEPFILTERS عند الحاجة، بدل FILTER على جدول كلما سمح الفلتر بذلك.',
+      'FILTER_COLUMN_VALUES'),
+    FILTER_MEASURE: srcMs('dax/best-practices/dax-avoid-avoid-filter-as-filter-argument', 'Avoid using FILTER as a filter argument in DAX',
+      'Microsoft says a Boolean filter cannot reference a measure, so FILTER is needed there, and its example filters VALUES of one column; its Best Practice Analyzer says filter by columns, not tables.',
+      'تقول Microsoft إن فلتر Boolean لا يمكن أن يشير إلى مقياس، لذلك يلزم FILTER هنا، ومثالها يفلتر VALUES لعمود واحد، وقاعدة Best Practice Analyzer تقول: فلتر بالأعمدة لا بالجداول.',
+      'FILTER_MEASURE_VALUES_BY_COLUMNS'),
+    IFERROR: srcMs('dax/best-practices/dax-error-functions', 'Appropriate use of error functions in DAX',
+      'Microsoft advises avoiding ISERROR and IFERROR, which can slow calculations, and using IF tests or DIVIDE instead.',
+      'تنصح Microsoft بتجنب ISERROR وIFERROR لأنهما قد يبطئان الحساب، وباستخدام IF أو DIVIDE بدلًا منهما.'),
+    DIVISION: srcMs('dax/best-practices/dax-divide-function-operator', 'DIVIDE function vs divide operator (/) in DAX',
+      'Microsoft recommends DIVIDE when the denominator could be zero or blank, and the "/" operator when it is a constant.',
+      'تنصح Microsoft بـ DIVIDE عندما قد يكون المقام صفرًا أو فارغًا، وبالعامل "/" عندما يكون المقام ثابتًا.'),
+    QUALIFIED_MEASURE: srcMs('dax/best-practices/dax-column-measure-references', 'Column and measure references in DAX',
+      'Microsoft recommends never writing the table name before a measure reference.',
+      'تنصح Microsoft بعدم كتابة اسم الجدول قبل الإشارة إلى مقياس أبدًا.'),
+    UNQUALIFIED_COLUMN: srcMs('dax/best-practices/dax-column-measure-references', 'Column and measure references in DAX',
+      'Microsoft recommends always writing the table name before a column reference.',
+      'تنصح Microsoft بكتابة اسم الجدول دائمًا قبل الإشارة إلى عمود.'),
+    NO_RLS: srcMs('fabric/security/service-admin-row-level-security', 'Row-level security (RLS) with Power BI',
+      'Microsoft describes RLS as the way to restrict which rows each user of a semantic model can see, through roles.',
+      'تصف Microsoft أمان RLS بأنه طريقة تحديد الصفوف التي يراها كل مستخدم للنموذج الدلالي، عبر الأدوار.'),
+    DATE_NOT_MARKED: srcMs('power-bi/transform-model/desktop-date-tables', 'Set and use date tables in Power BI Desktop',
+      'Microsoft says the classic time intelligence functions need the calendar marked as a date table, and marking it removes the automatic date table.',
+      'تقول Microsoft إن دوال time intelligence الكلاسيكية تحتاج أن يُعلَّم التقويم كجدول تاريخ، وإن تعليمه يحذف جدول التاريخ التلقائي.'),
+    TABLE_BUFFER: srcMs('powerquery-m/table-buffer', 'Table.Buffer (Power Query M)',
+      'Microsoft says Table.Buffer may or may not speed a query up, can slow it down, and stops folding after it.',
+      'تقول Microsoft إن Table.Buffer قد يسرّع الاستعلام أو لا، وقد يبطئه، ويوقف query folding بعده.'),
+    CALENDARAUTO: srcMs('dax/calendarauto-function-dax', 'CALENDARAUTO function (DAX)',
+      'Microsoft says CALENDARAUTO takes its range from the earliest and the latest date in the model\'s columns.',
+      'تقول Microsoft إن CALENDARAUTO يأخذ مداه من أقدم وأحدث تاريخ في أعمدة النموذج.'),
+    DOUBLE: srcBpa('AVOID_FLOATING_POINT_DATA_TYPES', 'Microsoft\'s Best Practice Analyzer advises against the Double type, which can give rounding errors.', 'تنصح قاعدة Best Practice Analyzer من Microsoft بتجنب نوع Double لأنه قد يعطي أخطاء تقريب.'),
+    UNUSED_MEASURE: srcBpa('UNNECESSARY_MEASURES', 'Microsoft\'s Best Practice Analyzer asks to remove hidden measures that no DAX expression references.', 'تطلب قاعدة Best Practice Analyzer من Microsoft حذف المقاييس المخفية التي لا يشير إليها أي تعبير DAX.'),
+    FK_VISIBLE: srcBpa('HIDE_FOREIGN_KEYS', 'Microsoft\'s Best Practice Analyzer says the key columns on the many side of a relationship should always be hidden.', 'تقول قاعدة Best Practice Analyzer من Microsoft إن أعمدة المفاتيح في جهة many من العلاقة يجب إخفاؤها دائمًا.'),
+    SUMMARIZE_KEYS: srcBpa('NUMERIC_COLUMN_SUMMARIZE_BY', 'Microsoft\'s Best Practice Analyzer asks to set numeric columns to not summarize, to avoid accidental sums.', 'تطلب قاعدة Best Practice Analyzer من Microsoft ضبط الأعمدة الرقمية على عدم التجميع لتجنب الجمع بالخطأ.'),
+    NO_FORMAT: srcBpa('PROVIDE_FORMAT_STRING_FOR_MEASURES', 'Microsoft\'s Best Practice Analyzer asks for a format string on every visible measure.', 'تطلب قاعدة Best Practice Analyzer من Microsoft تنسيقًا لكل مقياس ظاهر.'),
+    NO_DESC: srcBpa('OBJECTS_WITH_NO_DESCRIPTION', 'Microsoft\'s Best Practice Analyzer asks for a description on visible objects, shown when you hover them in the field list.', 'تطلب قاعدة Best Practice Analyzer من Microsoft وصفًا للعناصر الظاهرة، ويظهر عند المرور عليها في قائمة الحقول.'),
+    DUP_MEASURE: srcBpa('AVOID_DUPLICATE_MEASURES', 'Microsoft\'s Best Practice Analyzer says two measures should not have the same DAX.', 'تقول قاعدة Best Practice Analyzer من Microsoft إن مقياسين لا يجب أن تكون لهما نفس صيغة DAX.'),
+    TRAILING_SPACE: srcBpa('OBJECTS_SHOULD_NOT_START_OR_END_WITH_A_SPACE', 'Microsoft\'s Best Practice Analyzer says names should not start or end with a space.', 'تقول قاعدة Best Practice Analyzer من Microsoft إن الأسماء لا يجب أن تبدأ أو تنتهي بمسافة.'),
+    MONTH_SORT: srcBpa('MONTH_(AS_A_STRING)_MUST_BE_SORTED', 'Microsoft\'s Best Practice Analyzer says text month columns need a sort column, or they sort alphabetically.', 'تقول قاعدة Best Practice Analyzer من Microsoft إن أعمدة الشهور النصية تحتاج عمود ترتيب وإلا تترتب أبجديًا.'),
+    PCT_FORMAT: srcOwn('A measure named as a rate or percent whose format is not a percentage (Microsoft\'s PERCENTAGE_FORMATTING rule checks a different thing).', 'مقياس اسمه يدل على نسبة وتنسيقه ليس نسبة مئوية (قاعدة PERCENTAGE_FORMATTING من Microsoft تفحص شيئًا آخر).'),
+    NO_FOLDERS: srcOwn('With 20 or more measures, a flat list is hard to browse; display folders keep it in order.', 'مع 20 مقياسًا أو أكثر تصعب القائمة المسطحة، ومجلدات العرض ترتّبها.'),
+    LONG_MEASURE: srcOwn('Past 60 lines a measure is hard to review; the limit is our choice.', 'بعد 60 سطرًا تصعب مراجعة المقياس، والحد اختيارنا.'),
+    DEEP_CHAIN: srcOwn('8 or more levels of measures on measures make a change hard to trace; the limit is our choice.', '8 مستويات أو أكثر من مقاييس فوق مقاييس تجعل تتبع التعديل صعبًا، والحد اختيارنا.'),
+    NAMING: srcOwn('One naming style for tables makes a model easier to read.', 'نمط واحد لأسماء الجداول يجعل النموذج أسهل للقراءة.'),
+    HARDCODED_PATH: srcOwn('A fixed path or server in a query breaks when someone else refreshes or the model moves between test and production.', 'المسار أو الخادم الثابت في الاستعلام ينكسر عند التحديث من شخص آخر أو عند نقل النموذج بين الاختبار والإنتاج.'),
+    LONG_M: srcOwn('Past 40 steps a query is hard to debug; the limit is our choice.', 'بعد 40 خطوة يصعب تتبع الاستعلام، والحد اختيارنا.'),
+    BROKEN_REF: srcOwn('A visual or filter that names a field the model no longer has shows an error to report users.', 'الـ visual أو الفلتر الذي يذكر حقلًا لم يعد في النموذج يظهر خطأ لمستخدمي التقرير.')
+  };
+  Object.keys(SOURCES).forEach((id) => { RULES[id].source = SOURCES[id]; });
 
   // ---------- 6. analysis ----------
   function analyze(modelJson, report) {
@@ -606,7 +709,23 @@
     M.tables.forEach((t) => t.measures.forEach((ms) => allMeasures.push(ms)));
 
     // ---- relationships ----
-    add('BIDI', M.relationships.filter((r) => r.cross === 'bothDirections').map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` })));
+    // Microsoft's exceptions (Bi-directional relationship guidance): a one-to-one relationship is always both ways (it
+    // can't be set otherwise), never a finding; a many-to-many dimension bridge needs one both-way relationship. A
+    // bridge here: the many side of two or more one-to-many relationships, no measures, and only key columns (Microsoft's
+    // "factless" bridge). A fact table has other columns, so it keeps BIDI (Microsoft: CROSSFILTER in the measure).
+    const oneToMany = (r) => r.fromCard === 'many' && r.toCard === 'one';
+    const isBridge = (name) => {
+      const t = IX.tables.get(lc(name)), rels = M.relationships.filter((r) => oneToMany(r) && lc(r.fromTable) === lc(name));
+      if (!t || t.measures.length || rels.length < 2) return false;
+      const keys = new Set(rels.map((r) => lc(r.fromColumn)));
+      return t.columns.filter((c) => c.kind !== 'rowNumber').every((c) => keys.has(lc(c.name)));
+    };
+    // an inactive relationship filters nothing until USERELATIONSHIP turns it on (INACTIVE_UNUSED reports it if nothing does)
+    const bidi = M.relationships.filter((r) => r.cross === 'bothDirections' && r.active && !(r.fromCard === 'one' && r.toCard === 'one'));
+    const bridgeBidi = bidi.filter((r) => oneToMany(r) && isBridge(r.fromTable));
+    const relObj = (r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` });
+    add('BIDI', bidi.filter((r) => !bridgeBidi.includes(r)).map(relObj));
+    add('BIDI_BRIDGE', bridgeBidi.map(relObj));
     add('M2M', M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'many').map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` })));
     const daxSources = [];
     M.tables.forEach((t) => {
@@ -669,6 +788,79 @@
     }
 
     // ---- columns ----
+    // ---- DAX shape helpers ----
+    const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
+    const isOp = (x, v) => x && x.t === 'op' && x.v === v;
+    const call = (tk, i) => tk[i] && tk[i].t === 'id' && isOp(tk[i + 1], '(');
+    const closeOf = (tk, i) => { for (let d = 0, j = i; j < tk.length; j++) { if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')') && !--d) return j; } return tk.length; };
+    const argsOf = (tk, i) => { // the arguments of the call whose "(" is at i
+      const out = [[]], end = closeOf(tk, i);
+      for (let j = i + 1, d = 0; j < end; j++) {
+        if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+        if (!d && isOp(tk[j], ',')) out.push([]); else out[out.length - 1].push(tk[j]);
+      }
+      return out;
+    };
+    // a measure reference: [Name] that is a measure and not a column of the qualifying (or home) table
+    const measureRef = (tk, j, home) => {
+      const x = tk[j], p = tk[j - 1];
+      if (x.t !== 'br' || !IX.measures.has(lc(x.v))) return false;
+      if (isTbl(p)) return !IX.columns.has(lc(p.v) + '|' + lc(x.v));
+      return !(home && IX.columns.has(lc(home) + '|' + lc(x.v)));
+    };
+    // Does a measure return text, so a number format can't apply? From the DAX: the result (after VAR ... RETURN) is a
+    // string, an "&", CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE / MAX / MIN of a text column, a variable holding
+    // one of these, or an IF / SWITCH whose results are all text. Anything unclear is not text (the finding stays).
+    const isBlankCall = (r) => r.length === 3 && r[0].t === 'id' && /^BLANK$/i.test(r[0].v) && isOp(r[1], '(') && isOp(r[2], ')');
+    const isText = (tk, vars, n) => {
+      if (n > 12 || !tk.length) return false;
+      while (tk.length > 2 && isOp(tk[0], '(') && closeOf(tk, 0) === tk.length - 1) tk = tk.slice(1, -1);
+      if (tk[0].t === 'id' && /^VAR$/i.test(tk[0].v)) {
+        const v2 = Object.assign({}, vars);
+        for (let j = 0, d = 0, name = null, start = 0; j < tk.length; j++) {
+          if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+          if (d || tk[j].t !== 'id' || !/^(VAR|RETURN)$/i.test(tk[j].v)) continue;
+          if (name != null) v2[name] = tk.slice(start, j);
+          if (/^RETURN$/i.test(tk[j].v)) return isText(tk.slice(j + 1), v2, n + 1);
+          name = tk[j + 1] ? lc(tk[j + 1].v) : ''; start = j + 3; j += 2;
+        }
+        return false;
+      }
+      for (let j = 0, d = 0; j < tk.length; j++) {
+        if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+        else if (!d && isOp(tk[j], '&') && !isOp(tk[j + 1], '&') && !isOp(tk[j - 1], '&')) return true; // "&", not "&&"
+      }
+      if (tk.length === 1) return tk[0].t === 'str' || (tk[0].t === 'id' && !!vars[lc(tk[0].v)] && isText(vars[lc(tk[0].v)], vars, n + 1));
+      if (!call(tk, 0) || closeOf(tk, 1) !== tk.length - 1) return false;
+      const fn = tk[0].v.toUpperCase(), args = argsOf(tk, 1);
+      const allText = (res) => { res = res.filter((r) => !isBlankCall(r)); return res.length > 0 && res.every((r) => isText(r, vars, n + 1)); };
+      if (/^(CONCATENATE|CONCATENATEX|FORMAT|UNICHAR)$/.test(fn)) return true;
+      if (/^(SELECTEDVALUE|MAX|MIN)$/.test(fn)) {
+        const a = args[0], c = a && a.length === 2 && isTbl(a[0]) && a[1].t === 'br' && IX.columns.get(lc(a[0].v) + '|' + lc(a[1].v));
+        return !!c && c.col.dataType === 'string' && args.length <= (fn === 'SELECTEDVALUE' ? 2 : 1);
+      }
+      if (fn === 'IF') return args.length >= 2 && allText(args.slice(1));
+      if (fn === 'SWITCH') { const rest = args.slice(1), res = []; for (let k = 1; k < rest.length; k += 2) res.push(rest[k]); if (rest.length % 2) res.push(rest[rest.length - 1]); return allText(res); }
+      return false;
+    };
+    const returnsText = (expr) => isText(tokenizeDax(expr), {}, 0);
+    // A calculated column Microsoft says belongs in DAX ("when the formula involves evaluating measures, or it requires
+    // specific modeling functionality only supported in DAX functions"): parent-child paths, a measure, context
+    // transition, RANKX, EARLIER, or an aggregate over another table. RELATED alone is a lookup a merge can do.
+    const AGG_FN = /^(SUMX|AVERAGEX|COUNTX|COUNTAX|MINX|MAXX|PRODUCTX|CONCATENATEX|COUNTROWS|FILTER|SUMMARIZE|ADDCOLUMNS|TOPN|SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|DISTINCTCOUNT|COUNTBLANK)$/i;
+    const daxOnlyColumn = (expr, home) => {
+      const tk = tokenizeDax(expr);
+      for (let i = 0; i < tk.length; i++) {
+        if (call(tk, i) && /^(PATH|PATHITEM|PATHITEMREVERSE|PATHLENGTH|PATHCONTAINS|CALCULATE|CALCULATETABLE|RANKX|EARLIER|EARLIEST|RELATEDTABLE)$/i.test(tk[i].v)) return true;
+        if (call(tk, i) && AGG_FN.test(tk[i].v)) {
+          let a = tk[i + 2];
+          if (call(tk, i + 2) && /^(ALL|ALLNOBLANKROW|VALUES|DISTINCT)$/i.test(a.v)) a = tk[i + 4];
+          if (isTbl(a) && lc(a.v) !== lc(home)) return true;
+        }
+        if (measureRef(tk, i, home)) return true;
+      }
+      return false;
+    };
     const doubles = [], calcCols = [], fkVisible = [], sumKeys = [], monthSort = [];
     const manySide = new Set(M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'one').map((r) => lc(r.fromTable) + '|' + lc(r.fromColumn)));
     const isUnused = (t, c) => rep && !used.has(K.c(t.name, c.name));
@@ -678,7 +870,7 @@
         if (c.kind === 'rowNumber') return;
         if (c.dataType === 'double' && !c.hidden) doubles.push({ obj: `${t.name}[${c.name}]` });
         if (untyped(c) && !c.hidden) skip('DOUBLE', `${t.name}[${c.name}]`);
-        if (c.kind === 'calculated' && importFromSource) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
+        if (c.kind === 'calculated' && importFromSource && !daxOnlyColumn(c.expr, t.name)) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
         if (isUnused(t, c)) return; // already reported as unused, do not count it twice
         if (!c.hidden && manySide.has(lc(t.name) + '|' + lc(c.name))) fkVisible.push({ obj: `${t.name}[${c.name}]` });
         const cn = c.name.trim();
@@ -703,18 +895,40 @@
       // not \b: in JavaScript it only knows ASCII letters, so it never matches after an Arabic word
       /^(dim[_ ]?)?(calendar|dates?|date\s*table|(ال)?تقويم)(?![\p{L}\p{N}_])/iu.test(t.name.trim()) ||
       (dateParts(t) >= 2 && t.columns.some((c) => isDate(c) && relDateTargets.has(lc(t.name) + '|' + lc(c.name)))));
-    const calendars = userTables.filter(calendarBy((c) => c.dataType === 'dateTime'));
+    // a date picker (a disconnected start or end date for a slicer) is not a calendar: its only column is a date and no relationship touches it
+    const isPicker = (t) => { const cols = t.columns.filter((c) => c.kind !== 'rowNumber'); return cols.length === 1 && (cols[0].dataType === 'dateTime' || untyped(cols[0])) && !M.relationships.some((r) => lc(r.fromTable) === lc(t.name) || lc(r.toTable) === lc(t.name)); };
+    const calendars = userTables.filter((t) => !isPicker(t)).filter(calendarBy((c) => c.dataType === 'dateTime'));
     add('DATE_NOT_MARKED', calendars.filter((t) => lc(t.dataCategory) !== 'time').map((t) => ({ obj: t.name })));
     // would be a calendar if a column of unknown type were a date
-    userTables.filter((t) => !calendars.includes(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
+    userTables.filter((t) => !calendars.includes(t) && !isPicker(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
 
     // ---- DAX patterns ----
-    const filterTable = [], iferr = [], division = [], noFmt = [], pctFmt = [], noFolder = [], noDesc = [], longMs = [], deep = [], qualM = [], unqualC = [];
-    // FILTER(<table>, ...) or FILTER(ALL(<table>), ...) used directly as a filter argument of CALCULATE / CALCULATETABLE
-    const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
+    const filterTable = [], filterMeasure = [], iferr = [], division = [], noFmt = [], pctFmt = [], noFolder = [], noDesc = [], longMs = [], deep = [], qualM = [], unqualC = [];
+    // FILTER(<table>, ...) or FILTER(ALL(<table>), ...) used directly as a filter argument of CALCULATE / CALCULATETABLE.
+    // Returns which kinds it found: 'table' (the predicate tests columns: a Boolean filter can do it) and 'measure' (the
+    // predicate references a measure: a Boolean filter can't, so FILTER is right, over a column; Microsoft's own advice).
+    // What the FILTER predicate starting at token j (up to FILTER's closing parenthesis) tests: 'measure' (it references
+    // a measure), 'var' (it compares with another table's column or an aggregate, which a Boolean filter can't take as
+    // written; a value inside RELATED is a row lookup, not that), or 'table' (columns of the filtered table only).
+    const PRED_AGG = /^(MIN|MAX|SUM|AVERAGE|COUNT|COUNTA|COUNTROWS|DISTINCTCOUNT|MINX|MAXX|SUMX|AVERAGEX|COUNTX|MINA|MAXA|FIRSTDATE|LASTDATE|CALCULATE)$/i;
+    const predKind = (tk, j, filtered) => {
+      let kind = 'table';
+      for (let depth = 0; j < tk.length; j++) {
+        const x = tk[j];
+        if (call(tk, j) && /^RELATED$/i.test(x.v)) { j = closeOf(tk, j + 1); continue; }
+        if (call(tk, j) && PRED_AGG.test(x.v)) kind = 'var';
+        if (isOp(x, '(')) depth++;
+        else if (isOp(x, ')')) { if (!depth) return kind; depth--; }
+        else if (x.t === 'br') {
+          if (measureRef(tk, j, null)) return 'measure';
+          if (isTbl(tk[j - 1]) && lc(tk[j - 1].v) !== lc(filtered)) kind = 'var';
+        }
+      }
+      return kind;
+    };
     const filterOverTable = (src) => {
-      const tk = tokenizeDax(src), stack = [];
+      const tk = tokenizeDax(src), stack = [], kinds = new Set();
       for (let i = 0; i < tk.length; i++) {
         const t = tk[i];
         if (t.t === 'op' && t.v === '(') { stack.push({ fn: tk[i - 1] && tk[i - 1].t === 'id' ? tk[i - 1].v.toUpperCase() : '', argStart: true }); continue; }
@@ -723,24 +937,34 @@
         const top = stack[stack.length - 1];
         if (top && top.argStart && /^CALCULATE(TABLE)?$/.test(top.fn) && t.t === 'id' && t.v.toUpperCase() === 'FILTER' && tk[i + 1] && tk[i + 1].v === '(') {
           const a = tk[i + 2];
-          if (isTbl(a) && tk[i + 3] && tk[i + 3].v === ',') return true;
-          if (a && a.t === 'id' && /^(ALL|ALLNOBLANKROW)$/i.test(a.v) && tk[i + 3] && tk[i + 3].v === '(' && isTbl(tk[i + 4]) && tk[i + 5] && tk[i + 5].v === ')') return true;
+          let pred = -1, filtered = '';
+          if (isTbl(a) && tk[i + 3] && tk[i + 3].v === ',') { pred = i + 4; filtered = a.v; }
+          else if (a && a.t === 'id' && /^(ALL|ALLNOBLANKROW)$/i.test(a.v) && tk[i + 3] && tk[i + 3].v === '(' && isTbl(tk[i + 4]) && tk[i + 5] && tk[i + 5].v === ')') { pred = i + 7; filtered = tk[i + 4].v; }
+          if (pred >= 0) kinds.add(predKind(tk, pred, filtered));
         }
         if (top && t.t !== 'op') top.argStart = false;
       }
-      return false;
+      return kinds;
     };
+    const msHidden = (ms) => ms.hidden || !!(IX.tables.get(lc(ms.table)) || {}).hidden;
     allMeasures.forEach((ms) => {
       const code = daxCode(ms.expr);
       const name = `[${ms.name}]`;
-      if (/\bCALCULATE(TABLE)?\b/i.test(code) && /\bFILTER\b/i.test(code) && filterOverTable(ms.expr)) filterTable.push({ obj: name });
+      if (/\bCALCULATE(TABLE)?\b/i.test(code) && /\bFILTER\b/i.test(code)) {
+        const kinds = filterOverTable(ms.expr);
+        if (kinds.has('var')) filterTable.push({ obj: name, detail: RULES.FILTER_TABLE.variants.VAR.en, variant: 'VAR' });
+        else if (kinds.has('table')) filterTable.push({ obj: name });
+        if (kinds.has('measure')) filterMeasure.push({ obj: name });
+      }
       if (/\b(IFERROR|ISERROR)\s*\(/i.test(code)) iferr.push({ obj: name });
       // "/" followed by something that is not a plain number
       if (/\/\s*(?![\d.\s]+(?:[)\s,]|$))[\[\w'(]/.test(code)) division.push({ obj: name });
-      if (!ms.formatString && !ms.fsExpr) noFmt.push({ obj: name });
+      // a measure returning text takes no number format; a hidden one no visual shows is not seen (BPA's rule is for visible measures)
+      if (!ms.formatString && !ms.fsExpr && !returnsText(ms.expr) && !(msHidden(ms) && !vis.measures.has(lc(ms.name)))) noFmt.push({ obj: name });
       if (/(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|hourly|exchange|run rate|\bper\b|▲|▼)/i.test(ms.name) && ms.formatString && !/[%@]|pp|percent/i.test(ms.formatString) && !ms.fsExpr) pctFmt.push({ obj: name, detail: ms.formatString });
-      if (!ms.displayFolder) noFolder.push({ obj: name });
-      if (!ms.description) noDesc.push({ obj: name });
+      // folders and descriptions are for the field list: hidden measures are not in it
+      if (!ms.displayFolder && !msHidden(ms)) noFolder.push({ obj: name });
+      if (!ms.description && !msHidden(ms)) noDesc.push({ obj: name });
       const lines = ms.expr.split('\n').length;
       if (lines > 60) longMs.push({ obj: name, detail: lines + ' lines' });
       const dd = depth(K.m(ms.name), new Set());
@@ -749,16 +973,23 @@
       if (st && st.qualifiedMeasures.length) qualM.push({ obj: name, detail: uniq(st.qualifiedMeasures).slice(0, 3).join(', ') });
       if (st && st.unqualifiedColumns.length) unqualC.push({ obj: name, detail: uniq(st.unqualifiedColumns).slice(0, 3).join(', ') });
     });
-    add('FILTER_TABLE', filterTable); add('IFERROR', iferr); add('DIVISION', division);
+    add('FILTER_TABLE', filterTable); add('FILTER_MEASURE', filterMeasure); add('IFERROR', iferr); add('DIVISION', division);
     add('NO_FORMAT', noFmt); add('PCT_FORMAT', pctFmt);
-    if (allMeasures.length >= 20 && noFolder.length / allMeasures.length > 0.3) add('NO_FOLDERS', noFolder);
-    if (allMeasures.length && noDesc.length / allMeasures.length > 0.5) add('NO_DESC', noDesc);
+    const shown = allMeasures.filter((ms) => !msHidden(ms)).length; // visible measures, in the share and the floor
+    if (shown >= 20 && noFolder.length / shown > 0.3) add('NO_FOLDERS', noFolder);
+    if (shown && noDesc.length / shown > 0.5) add('NO_DESC', noDesc);
     add('LONG_MEASURE', longMs); add('DEEP_CHAIN', deep);
     add('QUALIFIED_MEASURE', qualM); add('UNQUALIFIED_COLUMN', unqualC);
 
     // identical DAX
     const byExpr = new Map();
-    allMeasures.forEach((ms) => { const k = tokenizeDax(ms.expr).map((t) => t.t + ':' + t.v).join('\u0001').toLowerCase(); if (k.length < 24) return; if (!byExpr.has(k)) byExpr.set(k, []); byExpr.get(k).push(ms.name); });
+    allMeasures.forEach((ms) => {
+      const tk = tokenizeDax(ms.expr), k0 = tk.map((t) => t.t + ':' + t.v).join('\u0001').toLowerCase();
+      if (k0.length < 24) return;
+      // an unqualified column is its home table's: SUM([SalesAmount]) in two tables sums two different columns
+      const k = tk.map((t, i) => (t.t === 'br' && !isTbl(tk[i - 1]) && !IX.measures.has(lc(t.v)) && IX.columns.has(lc(ms.table) + '|' + lc(t.v)) ? 'br:' + ms.table + '|' + t.v : t.t + ':' + t.v)).join('\u0001').toLowerCase();
+      if (!byExpr.has(k)) byExpr.set(k, []); byExpr.get(k).push(ms.name);
+    });
     const dups = [];
     byExpr.forEach((names) => { if (names.length > 1) dups.push({ obj: names.map((n) => `[${n}]`).join(' = ') }); });
     add('DUP_MEASURE', dups);
@@ -786,11 +1017,13 @@
     const sources = new Map();
     mQueries.forEach((q) => {
       const e = q.expr;
+      // a template placeholder ({{NAME}}) is filled in per deployment, not a fixed server or path
+      const eLit = e.replace(/"(?:[^"]|"")*\{\{\s*[\w.-]+\s*\}\}(?:[^"]|"")*"/g, '""');
       const isParam = /IsParameterQuery\s*=\s*true/i.test(e);
       const isEntitySource = q.isExpr && (M.entityExprs.has(lc(q.name)) || /^DatabaseQuery$/i.test(q.name));
-      const literalDb = /\b(Sql\.Databases?|Oracle\.Database|MySQL\.Database|PostgreSQL\.Database|Snowflake\.Databases|AnalysisServices\.Databases?|Teradata\.Database|Sybase\.Database|IbmDb2\.Database|SapHana\.Database)\s*\(\s*"[^"]+"/.test(e);
+      const literalDb = /\b(Sql\.Databases?|Oracle\.Database|MySQL\.Database|PostgreSQL\.Database|Snowflake\.Databases|AnalysisServices\.Databases?|Teradata\.Database|Sybase\.Database|IbmDb2\.Database|SapHana\.Database)\s*\(\s*"[^"]+"/.test(eLit);
       if (!isParam && !isEntitySource && literalDb) hard.push({ obj: q.name });
-      else if (!isParam && !isEntitySource && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(e)) hard.push({ obj: q.name });
+      else if (!isParam && !isEntitySource && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(eLit)) hard.push({ obj: q.name });
       if (/Table\.Buffer\s*\(/.test(e)) buffer.push({ obj: q.name });
       const steps = (e.match(/^\s*(#"[^"]+"|[A-Za-z_]\w*)\s*=/gm) || []).length;
       if (steps > 40) longM.push({ obj: q.name, detail: steps + ' steps' });
@@ -803,9 +1036,9 @@
     const catScore = { perf: 100, maint: 100, bp: 100 };
     // Rules that apply to many objects are judged by the share of objects affected, so a large model is not punished for being large.
     const SCOPE = {
-      measures: ['FILTER_TABLE', 'IFERROR', 'DIVISION', 'NO_FORMAT', 'PCT_FORMAT', 'UNUSED_MEASURE', 'QUALIFIED_MEASURE', 'UNQUALIFIED_COLUMN', 'LONG_MEASURE', 'DEEP_CHAIN', 'NO_DESC', 'NO_FOLDERS', 'DUP_MEASURE'],
+      measures: ['FILTER_TABLE', 'FILTER_MEASURE', 'IFERROR', 'DIVISION', 'NO_FORMAT', 'PCT_FORMAT', 'UNUSED_MEASURE', 'QUALIFIED_MEASURE', 'UNQUALIFIED_COLUMN', 'LONG_MEASURE', 'DEEP_CHAIN', 'NO_DESC', 'NO_FOLDERS', 'DUP_MEASURE'],
       columns: ['UNUSED_COL', 'DOUBLE', 'CALC_COLS', 'FK_VISIBLE', 'SUMMARIZE_KEYS', 'TRAILING_SPACE'],
-      rels: ['BIDI', 'M2M', 'INACTIVE_UNUSED', 'STRING_KEYS', 'USEREL_ACTIVE'],
+      rels: ['BIDI', 'BIDI_BRIDGE', 'M2M', 'INACTIVE_UNUSED', 'STRING_KEYS', 'USEREL_ACTIVE'],
       queries: ['HARDCODED_PATH', 'TABLE_BUFFER', 'LONG_M']
     };
     const denom = {
@@ -915,7 +1148,7 @@
     return out;
   }
 
-  const api = { analyze, scoreFrom, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES };
+  const api = { analyze, scoreFrom, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES, BPA_URL };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHEngine = api;
 })(typeof self !== 'undefined' ? self : this);
