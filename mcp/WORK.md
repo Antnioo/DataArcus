@@ -4,6 +4,93 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Health Check 2, phase 1 "trust" (15 Oct, cloud builder; website engine only; branch `fix/health-check-p1` from main `33ea82d`; not merged, no PR)
+The owner's go (15 Oct): steps 1a, 1b, 1c only; Phase 2 not started. Out of scope: `assets/js/model-health-tmdl.js` and
+everything in `mcp/` (the 0.2.9 release gate changes them; the MCP takes this engine change after 0.2.9 ships).
+- **1a, a source on every rule** (`RULES[id].source = { kind: microsoft | bpa | dataarcus, url, title, says: { en, ar } }`,
+  `says` our own one-sentence paraphrase; a 'dataarcus' rule has no url and its reason in `says`). Each URL opened
+  (curl, 15 Oct) before it is cited. Shown on each finding in the page (English and Arabic), a Source column in the
+  findings CSV, a line in the HTML and Markdown documentation.
+- **1b, the two defects** (engine block): BIDI never flags one-to-one; a bi-directional relationship on a dimension
+  bridge (the many side of 2+ one-to-many relationships, no measures, only key columns: Microsoft's "factless" bridge)
+  goes to a new info rule BIDI_BRIDGE ("check that this is the many-to-many bridge Microsoft describes; if so it is
+  needed", no penalty). FILTER split: FILTER_TABLE (column predicate, advice unchanged) and new FILTER_MEASURE (the
+  predicate references a measure: FILTER over VALUES(the column you need)).
+- **1c, Microsoft's exceptions as negative tests** (`scripts/tests/model-health.mjs`): one-to-one, bridge, FILTER with a
+  measure, FILTER(VALUES(col), [m] > 0), a constant denominator, a role-playing date with USERELATIONSHIP.
+- **Expected (written before the build):** one-to-one no BIDI; bridge the bridge wording (BIDI_BRIDGE); M1 (column
+  predicate) FILTER_TABLE; M3 (measure predicate) FILTER_MEASURE only; M2 (FILTER over VALUES) nothing; every rule has a
+  source, shown in English and Arabic. The site's sample (`assets/data/model-health-sample.pbit`): **56, 26 issues before
+  and after** (its BIDI are a fact table and a many-to-many, its 4 FILTERs are column predicates). `model-health` suite:
+  new checks red on `33ea82d` (53 of 121: every source, the new rules, one-to-one, bridge, the FILTER split, the page,
+  CSV and documentation), the constant denominator and USERELATIONSHIP checks green already; all green after.
+  `node scripts/test-site-config.mjs`, then root `npm test` alone: all PASS. `cd mcp && npm test`: still all PASS.
+
+### Health Check 2, Phase 1b+: the benchmark's false positives (15 Oct; the reviewer's scheduled task, the owner's "fix now"; same branch)
+A benchmark on 23 public models (main `33ea82d`) labelled 5,703 items, 126 false; the one-to-one fix covers 11. The
+other classes, one check each with a control that must stay flagged (`scripts/tests/model-health.mjs`, "Phase 1b+"):
+1 BIDI skips an inactive relationship (INACTIVE_UNUSED reports it); 2 NO_FORMAT skips a measure whose result is text
+(a string, &, CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE/MAX/MIN of a text column, an IF/SWITCH whose results are
+all text, a VAR ... RETURN of one of these; unclear keeps it); 3 NO_FORMAT skips a hidden measure (or hidden table)
+that no visual uses; 4 NO_DESC and 5 NO_FOLDERS skip hidden measures, their share (and NO_FOLDERS' 20-measure floor)
+count visible measures only; 6 CALC_COLS skips PATH*, a measure, CALCULATE(TABLE), RANKX, EARLIER(EST), RELATEDTABLE
+or an aggregate over another table; 7 DUP_MEASURE resolves unqualified columns to the home table; 8 DATE_NOT_MARKED
+skips a table whose only column is a date and that has no relationship, and its text says calendar-based time
+intelligence needs no mark; 9 HARDCODED_PATH skips a {{NAME}} placeholder; 10 FILTER_TABLE keeps the item but gives a
+"put the value in a variable first" advice when the predicate compares with another table or an aggregate.
+- **Expected (before the build):** the 15 new checks red on `af172b9` (measured: 15 of 138), all green after; every
+  Phase 1 check still green; the sample 56 and 26 issues unchanged (NO_FORMAT loses [Sales Color], info, 0 points;
+  [New Customers] gets the variable advice, FILTER_TABLE stays 4); root `npm test` alone all PASS; `cd mcp && npm test`
+  PASS.
+- **Changed fixture (flagged for the reviewer):** the old "calendar tables named in Arabic" check built calendars with a
+  date as the only column and no relationship, the exact date-picker shape of class 8; they get a Year column, its
+  expected tables unchanged.
+
+### Health Check 2, Phase 1b+, the report (`603ccb4` expected and red checks, `c268ef5` the build; pushed, not merged, no PR)
+- **Tests:** `model-health` 15 of 138 red on `af172b9` -> 140 of 140 (one page check added with the build: the Arabic
+  and English variable advice on the sample's [New Customers], red on the old .min.js, green after). Every Phase 1
+  check still green. `check-min`, `test-site-config` PASS; root `npm test` alone all 18 PASS; `cd mcp && npm test` 739
+  checks and golden 11 PASS.
+- **Sample:** 56 and 26 issues before and after; "Measures without a format string" 7 -> 6 ([Sales Color], info,
+  0 points); FILTER_TABLE stays 4, [New Customers] with the variable advice.
+- **Choices:** class 3 skips a hidden measure unless the report is read and a visual uses it (no report: skipped, as
+  BPA's scope); class 5: the 20-measure floor counts visible measures too; the penalty share of NO_FOLDERS still
+  divides by all measures (scoring untouched); class 8: a picker is a table whose ONLY column is a date (or untyped)
+  with no relationship, the narrowest reading; class 9: any string literal containing {{NAME}}; class 10: a value
+  inside RELATED() is a row lookup, not "another table" (keeps the column advice); the per-item advice is the item's
+  `detail` (English, so the CSV, the documentation and the MCP carry it) plus `variant: 'VAR'` for the page's
+  language. The text does not call it "Microsoft's pattern" (the cited page doesn't show it).
+- **Kept flagged:** [Top Product] (FIRSTNONBLANK(TOPN(...)) of a text column: unclear, kept); IF with a number and a
+  text result; RELATED-only calculated columns (a merge in Power Query can do it).
+- **Seen, not in scope:** the engine's ?v= stamp is still 20261015h1 (changed since af172b9 but never deployed; main
+  compares fine); `isText` does not follow measure references ([Title] = [Other text measure] stays flagged).
+
+### Health Check 2 phase 1, the report (cloud builder, Linux; `fe40ba7` plan and red checks, `af172b9` the build; pushed, not merged, no PR)
+- **Tests:** `model-health` 53 of 121 red on `33ea82d` (the constant denominator and USERELATIONSHIP checks green
+  already, as the reviewer found) -> 123 of 123 (2 more source checks: 37 rules now). `test-site-config` PASS,
+  `check-min` PASS, root `npm test` alone: all 18 PASS. `cd mcp && npm test`: 739 checks PASS, golden PASS (no mcp
+  test names BIDI or FILTER_TABLE counts).
+- **Sample:** 56, 26 issues before and after, every count identical (BIDI 2, FILTER_TABLE 4, unused columns 27).
+- **Choices:** the bridge goes to a separate info rule BIDI_BRIDGE (no penalty), because the advice is per rule and
+  a needed relationship should not cost points. The bridge test is stricter than the brief's: "the many side of 2+
+  one-to-many relationships, one both ways" also matches a fact table (the sample's Sales), so a bridge must also
+  have no measures and only key columns (Microsoft: a bridge with only identifier columns is a "factless" table;
+  for a fact table Microsoft advises CROSSFILTER in the measure, which BIDI already says).
+- **Sources changed from the proposed mapping:** PCT_FORMAT is 'dataarcus' (BPA PERCENTAGE_FORMATTING checks the exact
+  format of measures already in %, not rate measures without %); NO_RLS cites
+  fabric/security/service-admin-row-level-security (rls-guidance is about tuning RLS, not why to have it);
+  USEREL_ACTIVE cites dax/userelationship-function-dax; TABLE_BUFFER (powerquery-m/table-buffer) and CALENDARAUTO
+  (dax/calendarauto-function-dax) are Microsoft-sourced. UNUSED_MEASURE's BPA rule covers hidden measures only
+  (cited with that wording). The BPA folder page returns 403 through this container's proxy; the rule ids were
+  verified in raw BPARules.json at the same path.
+- **Also touched (stamp cascade):** the worker's engine stamp changed, so theme-generator.js's worker link,
+  its .min.js and its stamp on the 2 Theme Generator pages were bumped (`?v=20261015h1`), no logic change.
+- **Seen, not in scope:** the sample's [New Customers] FILTER(Customer, Customer[Customer Since] >= MIN('Calendar'[Date]))
+  is flagged FILTER_TABLE with the Boolean advice, but a Boolean filter can't reference two tables (Microsoft's own
+  restriction), so that advice doesn't apply to it as written; DATE_NOT_MARKED's text doesn't mention that
+  calendar-based time intelligence doesn't need the mark (Microsoft's page says so); the Gulf calendar check
+  (gulf-health.js) has no source field (it is not in RULES and not shown on the website; for the MCP after 0.2.9).
+
 ## Home page part A (9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/round-23-total`, restarted from main
 `4984d8b` (the beta page merged).
