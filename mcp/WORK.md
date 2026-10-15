@@ -26,6 +26,16 @@ everything in `mcp/` (the 0.2.9 release gate changes them; the MCP takes this en
   CSV and documentation), the constant denominator and USERELATIONSHIP checks green already; all green after.
   `node scripts/test-site-config.mjs`, then root `npm test` alone: all PASS. `cd mcp && npm test`: still all PASS.
 
+### Health Check 2, Phase 1b++: the last NO_FORMAT text measures (15 Oct; the reviewer's scheduled task; branch `fix/health-check-p1c` from main `bb93023`; not merged, no PR)
+The benchmark's corrected labels: 66 false items still flagged on `c268ef5`, all NO_FORMAT. Patterns: (1) EXTERNALMEASURE
+declared STRING; (2) CALCULATE / CALCULATETABLE of MIN / MAX / SELECTEDVALUE of a text column; (3) an IF whose results
+are all text, nested deeper. Controls stay flagged: EXTERNALMEASURE DOUBLE / INTEGER, CALCULATE(MAX(Sales[Amount])),
+an IF with a number result, IF returning a numeric measure.
+- **Expected (before the build):** 3 checks red on `bb93023` (measured: X1; C1-C3 and [Admin Name]; I3, an IF returning a
+  measure that returns text), green after; the literal nested IF (I1) and VAR + SWITCH (I2) are already green on
+  `bb93023`, so the benchmark's IF item is likely a returned text measure (I3's shape), followed now. Sample 56 / 26
+  issues unchanged; root `npm test` alone all PASS; `cd mcp && npm test` PASS.
+
 ### Health Check 2, Phase 1b+: the benchmark's false positives (15 Oct; the reviewer's scheduled task, the owner's "fix now"; same branch)
 A benchmark on 23 public models (main `33ea82d`) labelled 5,703 items, 126 false; the one-to-one fix covers 11. The
 other classes, one check each with a control that must stay flagged (`scripts/tests/model-health.mjs`, "Phase 1b+"):
