@@ -770,6 +770,19 @@ an IF with a number result, IF returning a numeric measure.
   `bb93023`, so the benchmark's IF item is likely a returned text measure (I3's shape), followed now. Sample 56 / 26
   issues unchanged; root `npm test` alone all PASS; `cd mcp && npm test` PASS.
 
+### Health Check 2, Phase 1b++, the report (`54aafff` expected and red checks, `c3724c7` the build; pushed, not merged, no PR)
+- **Tests:** `model-health` 3 of 144 red on `bb93023` -> 144 of 144; controls (EXTERNALMEASURE DOUBLE / INTEGER,
+  CALCULATE(MAX(Sales[Amount])), an IF with a number result, an IF returning a numeric measure) stay flagged.
+  `check-min`, `test-site-config` PASS; root `npm test` alone all 18 PASS; `cd mcp && npm test` 739 and golden 11 PASS.
+- **Sample:** 56 and 26 issues, identical to 1b+ (NO_FORMAT stays 6).
+- **Rule change:** the text detector reads EXTERNALMEASURE(..., STRING, ...), CALCULATE / CALCULATETABLE by its first
+  argument (its value), and a returned measure reference (unqualified or Table[Measure]) by that measure's own DAX.
+- **Note:** the literal nested IF and IF / SWITCH in VAR ... RETURN already passed on `bb93023` (checks I1, I2), so the
+  benchmark's [First Workspace Admin (User)] is most likely an IF returning a text measure (I3) or a CALCULATE of a text
+  column: please confirm with the corpus.
+- **Stamps:** `?v=20261015h2` for the engine, the worker, the page and theme-generator's worker link (and its .min.js).
+- **Seen, not in scope:** none new.
+
 ### Health Check 2, Phase 1b+: the benchmark's false positives (15 Oct; the reviewer's scheduled task, the owner's "fix now"; same branch)
 A benchmark on 23 public models (main `33ea82d`) labelled 5,703 items, 126 false; the one-to-one fix covers 11. The
 other classes, one check each with a control that must stay flagged (`scripts/tests/model-health.mjs`, "Phase 1b+"):
