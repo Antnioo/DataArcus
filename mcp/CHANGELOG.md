@@ -11,6 +11,10 @@ Not released until it passes the Power BI Desktop proof and the owner's own use.
   your computer only, with the plan and every file it writes, and only your click on Approve approves it (or your yes
   in the app's own prompt, when the app supports one). What the AI types in the chat approves nothing. Plans have
   limits (cards, slicers, table fields) and expire.
+- **Model Health Check, the same engine as the website's:** every finding names its source (a Microsoft Learn page, a
+  Microsoft Best Practice Analyzer rule, or a DataArcus rule with its reason), and the checks respect Microsoft's
+  documented exceptions (one-to-one relationships, FILTER with a measure, text measures, hidden measures, columns that
+  need DAX). Measured on 23 public models: about 140 wrong findings removed, none of the right ones lost.
 - **New tools:** `approve_plan`, `read_report` (reads an existing report's pages, visuals and fields), and
   `create_arabic_twin` (an Arabic copy of an existing report, mirrored right to left). 11 tools in all.
 - **Reports:** month axes in calendar order with the last 12 months, table column widths, bar labels that fit, no

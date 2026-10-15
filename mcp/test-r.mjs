@@ -63,6 +63,17 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     chk(() => !ok.err && ok.j.plan && /^plan-/.test(ok.j.plan.planId), () => `R-04. the same plan with a plain Arabic name is made: ${short(ok)}`);
   }
 
+  // ---------- HC2 (the owner, 15 Oct: the website and the MCP run the same engine): check_model_health names each
+  //            finding's source, as the website does (a Microsoft Learn page, a Microsoft BPA rule, or a DataArcus rule)
+  {
+    const req = createRequire(import.meta.url), H = req('../assets/js/model-health-engine.js');
+    const h = await ask('check_model_health', { path: 'rg' }), fs0 = (h.j && h.j.findings) || [];
+    const ok = (f) => { const want = (H.RULES[f.id] || {}).source || {}; const s = f.source || {};
+      return s.kind === want.kind && ['microsoft', 'bpa', 'dataarcus'].includes(s.kind) && (s.kind === 'dataarcus' ? !s.url : /^https:\/\//.test(s.url || '')) && !!s.says; };
+    chk(() => !h.err && fs0.length > 0 && fs0.every(ok), () => `HC2. every check_model_health finding carries its rule's source (kind, url unless a DataArcus rule, says): ${short(h)}`);
+    chk(() => Object.keys(H.RULES).every((id) => H.RULES[id].source && H.RULES[id].source.kind), () => 'HC2. the engine the MCP loads has a source on every rule (the same file as the website\'s)');
+  }
+
   // ---------- R-04 (the twin's labels) and R-02 (an unreadable .platform or .pbip) ----------
   const T = path.join(ROOT, 'rtwin');
   fs.cpSync(path.join(HERE, 'fixtures/twin-project'), T, { recursive: true });
