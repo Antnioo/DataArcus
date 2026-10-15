@@ -760,6 +760,32 @@ their themes and backgrounds, numbers unchanged otherwise), in part 2.
   client that asks before tools would ask there too).
 - Open from before: O-2..O-7, O-9, O-10, O-13..O-16 (0.2.9 items 3-5, 7-14).
 
+### Health Check 2 phase 1, the report (cloud builder, Linux; `fe40ba7` plan and red checks, `af172b9` the build; pushed, not merged, no PR)
+- **Tests:** `model-health` 53 of 121 red on `33ea82d` (the constant denominator and USERELATIONSHIP checks green
+  already, as the reviewer found) -> 123 of 123 (2 more source checks: 37 rules now). `test-site-config` PASS,
+  `check-min` PASS, root `npm test` alone: all 18 PASS. `cd mcp && npm test`: 739 checks PASS, golden PASS (no mcp
+  test names BIDI or FILTER_TABLE counts).
+- **Sample:** 56, 26 issues before and after, every count identical (BIDI 2, FILTER_TABLE 4, unused columns 27).
+- **Choices:** the bridge goes to a separate info rule BIDI_BRIDGE (no penalty), because the advice is per rule and
+  a needed relationship should not cost points. The bridge test is stricter than the brief's: "the many side of 2+
+  one-to-many relationships, one both ways" also matches a fact table (the sample's Sales), so a bridge must also
+  have no measures and only key columns (Microsoft: a bridge with only identifier columns is a "factless" table;
+  for a fact table Microsoft advises CROSSFILTER in the measure, which BIDI already says).
+- **Sources changed from the proposed mapping:** PCT_FORMAT is 'dataarcus' (BPA PERCENTAGE_FORMATTING checks the exact
+  format of measures already in %, not rate measures without %); NO_RLS cites
+  fabric/security/service-admin-row-level-security (rls-guidance is about tuning RLS, not why to have it);
+  USEREL_ACTIVE cites dax/userelationship-function-dax; TABLE_BUFFER (powerquery-m/table-buffer) and CALENDARAUTO
+  (dax/calendarauto-function-dax) are Microsoft-sourced. UNUSED_MEASURE's BPA rule covers hidden measures only
+  (cited with that wording). The BPA folder page returns 403 through this container's proxy; the rule ids were
+  verified in raw BPARules.json at the same path.
+- **Also touched (stamp cascade):** the worker's engine stamp changed, so theme-generator.js's worker link,
+  its .min.js and its stamp on the 2 Theme Generator pages were bumped (`?v=20261015h1`), no logic change.
+- **Seen, not in scope:** the sample's [New Customers] FILTER(Customer, Customer[Customer Since] >= MIN('Calendar'[Date]))
+  is flagged FILTER_TABLE with the Boolean advice, but a Boolean filter can't reference two tables (Microsoft's own
+  restriction), so that advice doesn't apply to it as written; DATE_NOT_MARKED's text doesn't mention that
+  calendar-based time intelligence doesn't need the mark (Microsoft's page says so); the Gulf calendar check
+  (gulf-health.js) has no source field (it is not in RULES and not shown on the website; for the MCP after 0.2.9).
+
 ## Home page part A (9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/round-23-total`, restarted from main
 `4984d8b` (the beta page merged).
