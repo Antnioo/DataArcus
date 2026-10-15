@@ -385,7 +385,11 @@
       ar: ['أعمدة محسوبة على جداول مستوردة', 'الأعمدة المحسوبة تُحسب بعد التحميل وتنضغط أسوأ من أعمدة Power Query وتبطئ التحديث.', 'انقل البسيطة منها (IF، نصوص، تواريخ) إلى Power Query أو المصدر، وأبقِ أعمدة DAX فقط عندما تحتاج بيانات النموذج مثل RELATED.'] },
     FILTER_TABLE: { cat: 'perf', sev: 'medium',
       en: ['FILTER over a whole table inside CALCULATE', 'FILTER(Table, ...) as a CALCULATE filter scans every row of the table. A column filter is much faster.', 'Filter the column instead: CALCULATE([Sales], Table[Column] = "X"), or KEEPFILTERS(Table[Column] = "X").'],
-      ar: ['FILTER على جدول كامل داخل CALCULATE', 'استخدام FILTER(Table, ...) كفلتر داخل CALCULATE يمر على كل صفوف الجدول، وفلترة العمود أسرع بكثير.', 'فلتر العمود بدلًا من الجدول: CALCULATE([Sales], Table[Column] = "X") أو KEEPFILTERS(...).'] },
+      ar: ['FILTER على جدول كامل داخل CALCULATE', 'استخدام FILTER(Table, ...) كفلتر داخل CALCULATE يمر على كل صفوف الجدول، وفلترة العمود أسرع بكثير.', 'فلتر العمود بدلًا من الجدول: CALCULATE([Sales], Table[Column] = "X") أو KEEPFILTERS(...).'],
+      // advice for one item: the predicate compares with another table or an aggregate, which a Boolean filter can't take as written
+      variants: { VAR: {
+        en: 'Compares with another table or an aggregate, which a Boolean filter can\'t take as written: put that value in a variable first, then filter the column: VAR d = MIN(\'Calendar\'[Date]) RETURN CALCULATE([Sales], Table[Column] >= d).',
+        ar: 'يقارن بجدول آخر أو بقيمة مجمّعة، وفلتر Boolean لا يقبل ذلك كما هو مكتوب: ضع القيمة في متغير أولًا ثم فلتر العمود: VAR d = MIN(\'Calendar\'[Date]) RETURN CALCULATE([Sales], Table[Column] >= d).' } } },
     IFERROR: { cat: 'perf', sev: 'low',
       en: ['IFERROR or ISERROR in measures', 'Error handling forces the engine to evaluate the expression row by row and hides real problems.', 'Use DIVIDE for division, and handle blanks with IF or COALESCE.'],
       ar: ['استخدام IFERROR أو ISERROR في المقاييس', 'التعامل مع الأخطاء يجبر المحرك على الحساب صفًا بصف ويخفي المشاكل الحقيقية.', 'استخدم DIVIDE للقسمة، وتعامل مع القيم الفارغة بـ IF أو COALESCE.'] },
@@ -396,8 +400,8 @@
       en: ['Inactive relationships nobody uses', 'An inactive relationship only matters when a measure turns it on with USERELATIONSHIP. No measure does for these.', 'Delete them, or add the measure that was meant to use them.'],
       ar: ['علاقات غير نشطة لا يستخدمها أحد', 'العلاقة غير النشطة لها فائدة فقط عندما يفعّلها مقياس بـ USERELATIONSHIP، ولا يوجد مقياس يفعل ذلك هنا.', 'احذفها، أو أضف المقياس الذي كان يُفترض أن يستخدمها.'] },
     DATE_NOT_MARKED: { cat: 'bp', sev: 'medium',
-      en: ['Calendar table not marked as a date table', 'Time intelligence works more reliably when the calendar is marked as a date table, and marking it avoids auto date tables for it.', 'Table tools > Mark as date table, and choose the date column.'],
-      ar: ['جدول التقويم غير معلَّم كجدول تاريخ', 'دوال الوقت تعمل بشكل أدق عندما يُعلَّم التقويم كجدول تاريخ.', 'من Table tools اختر Mark as date table وحدد عمود التاريخ.'] },
+      en: ['Calendar table not marked as a date table', 'The classic time intelligence functions need the calendar marked as a date table, and marking it removes its auto date table. Calendar-based time intelligence doesn\'t need the mark.', 'Table tools > Mark as date table, and choose the date column.'],
+      ar: ['جدول التقويم غير معلَّم كجدول تاريخ', 'دوال time intelligence الكلاسيكية تحتاج أن يُعلَّم التقويم كجدول تاريخ، وتعليمه يحذف جدول التاريخ التلقائي له. أما time intelligence المبني على التقويم (calendar-based) فلا يحتاج هذا التعليم.', 'من Table tools اختر Mark as date table وحدد عمود التاريخ.'] },
     CALENDARAUTO: { cat: 'perf', sev: 'low',
       en: ['CALENDARAUTO in a calendar table', 'CALENDARAUTO scans every date column in the model, so one wrong date (like 1900 or 2099) stretches the calendar and slows refresh.', 'Use CALENDAR with explicit start and end dates based on your fact tables.'],
       ar: ['استخدام CALENDARAUTO في جدول التقويم', 'CALENDARAUTO يفحص كل أعمدة التاريخ، فتاريخ خاطئ واحد (مثل 1900) يمد التقويم ويبطئ التحديث.', 'استخدم CALENDAR بتاريخ بداية ونهاية واضحين من جداول الحقائق.'] },
@@ -716,7 +720,8 @@
       const keys = new Set(rels.map((r) => lc(r.fromColumn)));
       return t.columns.filter((c) => c.kind !== 'rowNumber').every((c) => keys.has(lc(c.name)));
     };
-    const bidi = M.relationships.filter((r) => r.cross === 'bothDirections' && !(r.fromCard === 'one' && r.toCard === 'one'));
+    // an inactive relationship filters nothing until USERELATIONSHIP turns it on (INACTIVE_UNUSED reports it if nothing does)
+    const bidi = M.relationships.filter((r) => r.cross === 'bothDirections' && r.active && !(r.fromCard === 'one' && r.toCard === 'one'));
     const bridgeBidi = bidi.filter((r) => oneToMany(r) && isBridge(r.fromTable));
     const relObj = (r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` });
     add('BIDI', bidi.filter((r) => !bridgeBidi.includes(r)).map(relObj));
@@ -783,6 +788,79 @@
     }
 
     // ---- columns ----
+    // ---- DAX shape helpers ----
+    const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
+    const isOp = (x, v) => x && x.t === 'op' && x.v === v;
+    const call = (tk, i) => tk[i] && tk[i].t === 'id' && isOp(tk[i + 1], '(');
+    const closeOf = (tk, i) => { for (let d = 0, j = i; j < tk.length; j++) { if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')') && !--d) return j; } return tk.length; };
+    const argsOf = (tk, i) => { // the arguments of the call whose "(" is at i
+      const out = [[]], end = closeOf(tk, i);
+      for (let j = i + 1, d = 0; j < end; j++) {
+        if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+        if (!d && isOp(tk[j], ',')) out.push([]); else out[out.length - 1].push(tk[j]);
+      }
+      return out;
+    };
+    // a measure reference: [Name] that is a measure and not a column of the qualifying (or home) table
+    const measureRef = (tk, j, home) => {
+      const x = tk[j], p = tk[j - 1];
+      if (x.t !== 'br' || !IX.measures.has(lc(x.v))) return false;
+      if (isTbl(p)) return !IX.columns.has(lc(p.v) + '|' + lc(x.v));
+      return !(home && IX.columns.has(lc(home) + '|' + lc(x.v)));
+    };
+    // Does a measure return text, so a number format can't apply? From the DAX: the result (after VAR ... RETURN) is a
+    // string, an "&", CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE / MAX / MIN of a text column, a variable holding
+    // one of these, or an IF / SWITCH whose results are all text. Anything unclear is not text (the finding stays).
+    const isBlankCall = (r) => r.length === 3 && r[0].t === 'id' && /^BLANK$/i.test(r[0].v) && isOp(r[1], '(') && isOp(r[2], ')');
+    const isText = (tk, vars, n) => {
+      if (n > 12 || !tk.length) return false;
+      while (tk.length > 2 && isOp(tk[0], '(') && closeOf(tk, 0) === tk.length - 1) tk = tk.slice(1, -1);
+      if (tk[0].t === 'id' && /^VAR$/i.test(tk[0].v)) {
+        const v2 = Object.assign({}, vars);
+        for (let j = 0, d = 0, name = null, start = 0; j < tk.length; j++) {
+          if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+          if (d || tk[j].t !== 'id' || !/^(VAR|RETURN)$/i.test(tk[j].v)) continue;
+          if (name != null) v2[name] = tk.slice(start, j);
+          if (/^RETURN$/i.test(tk[j].v)) return isText(tk.slice(j + 1), v2, n + 1);
+          name = tk[j + 1] ? lc(tk[j + 1].v) : ''; start = j + 3; j += 2;
+        }
+        return false;
+      }
+      for (let j = 0, d = 0; j < tk.length; j++) {
+        if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
+        else if (!d && isOp(tk[j], '&') && !isOp(tk[j + 1], '&') && !isOp(tk[j - 1], '&')) return true; // "&", not "&&"
+      }
+      if (tk.length === 1) return tk[0].t === 'str' || (tk[0].t === 'id' && !!vars[lc(tk[0].v)] && isText(vars[lc(tk[0].v)], vars, n + 1));
+      if (!call(tk, 0) || closeOf(tk, 1) !== tk.length - 1) return false;
+      const fn = tk[0].v.toUpperCase(), args = argsOf(tk, 1);
+      const allText = (res) => { res = res.filter((r) => !isBlankCall(r)); return res.length > 0 && res.every((r) => isText(r, vars, n + 1)); };
+      if (/^(CONCATENATE|CONCATENATEX|FORMAT|UNICHAR)$/.test(fn)) return true;
+      if (/^(SELECTEDVALUE|MAX|MIN)$/.test(fn)) {
+        const a = args[0], c = a && a.length === 2 && isTbl(a[0]) && a[1].t === 'br' && IX.columns.get(lc(a[0].v) + '|' + lc(a[1].v));
+        return !!c && c.col.dataType === 'string' && args.length <= (fn === 'SELECTEDVALUE' ? 2 : 1);
+      }
+      if (fn === 'IF') return args.length >= 2 && allText(args.slice(1));
+      if (fn === 'SWITCH') { const rest = args.slice(1), res = []; for (let k = 1; k < rest.length; k += 2) res.push(rest[k]); if (rest.length % 2) res.push(rest[rest.length - 1]); return allText(res); }
+      return false;
+    };
+    const returnsText = (expr) => isText(tokenizeDax(expr), {}, 0);
+    // A calculated column Microsoft says belongs in DAX ("when the formula involves evaluating measures, or it requires
+    // specific modeling functionality only supported in DAX functions"): parent-child paths, a measure, context
+    // transition, RANKX, EARLIER, or an aggregate over another table. RELATED alone is a lookup a merge can do.
+    const AGG_FN = /^(SUMX|AVERAGEX|COUNTX|COUNTAX|MINX|MAXX|PRODUCTX|CONCATENATEX|COUNTROWS|FILTER|SUMMARIZE|ADDCOLUMNS|TOPN|SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|DISTINCTCOUNT|COUNTBLANK)$/i;
+    const daxOnlyColumn = (expr, home) => {
+      const tk = tokenizeDax(expr);
+      for (let i = 0; i < tk.length; i++) {
+        if (call(tk, i) && /^(PATH|PATHITEM|PATHITEMREVERSE|PATHLENGTH|PATHCONTAINS|CALCULATE|CALCULATETABLE|RANKX|EARLIER|EARLIEST|RELATEDTABLE)$/i.test(tk[i].v)) return true;
+        if (call(tk, i) && AGG_FN.test(tk[i].v)) {
+          let a = tk[i + 2];
+          if (call(tk, i + 2) && /^(ALL|ALLNOBLANKROW|VALUES|DISTINCT)$/i.test(a.v)) a = tk[i + 4];
+          if (isTbl(a) && lc(a.v) !== lc(home)) return true;
+        }
+        if (measureRef(tk, i, home)) return true;
+      }
+      return false;
+    };
     const doubles = [], calcCols = [], fkVisible = [], sumKeys = [], monthSort = [];
     const manySide = new Set(M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'one').map((r) => lc(r.fromTable) + '|' + lc(r.fromColumn)));
     const isUnused = (t, c) => rep && !used.has(K.c(t.name, c.name));
@@ -792,7 +870,7 @@
         if (c.kind === 'rowNumber') return;
         if (c.dataType === 'double' && !c.hidden) doubles.push({ obj: `${t.name}[${c.name}]` });
         if (untyped(c) && !c.hidden) skip('DOUBLE', `${t.name}[${c.name}]`);
-        if (c.kind === 'calculated' && importFromSource) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
+        if (c.kind === 'calculated' && importFromSource && !daxOnlyColumn(c.expr, t.name)) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
         if (isUnused(t, c)) return; // already reported as unused, do not count it twice
         if (!c.hidden && manySide.has(lc(t.name) + '|' + lc(c.name))) fkVisible.push({ obj: `${t.name}[${c.name}]` });
         const cn = c.name.trim();
@@ -817,10 +895,12 @@
       // not \b: in JavaScript it only knows ASCII letters, so it never matches after an Arabic word
       /^(dim[_ ]?)?(calendar|dates?|date\s*table|(ال)?تقويم)(?![\p{L}\p{N}_])/iu.test(t.name.trim()) ||
       (dateParts(t) >= 2 && t.columns.some((c) => isDate(c) && relDateTargets.has(lc(t.name) + '|' + lc(c.name)))));
-    const calendars = userTables.filter(calendarBy((c) => c.dataType === 'dateTime'));
+    // a date picker (a disconnected start or end date for a slicer) is not a calendar: its only column is a date and no relationship touches it
+    const isPicker = (t) => { const cols = t.columns.filter((c) => c.kind !== 'rowNumber'); return cols.length === 1 && (cols[0].dataType === 'dateTime' || untyped(cols[0])) && !M.relationships.some((r) => lc(r.fromTable) === lc(t.name) || lc(r.toTable) === lc(t.name)); };
+    const calendars = userTables.filter((t) => !isPicker(t)).filter(calendarBy((c) => c.dataType === 'dateTime'));
     add('DATE_NOT_MARKED', calendars.filter((t) => lc(t.dataCategory) !== 'time').map((t) => ({ obj: t.name })));
     // would be a calendar if a column of unknown type were a date
-    userTables.filter((t) => !calendars.includes(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
+    userTables.filter((t) => !calendars.includes(t) && !isPicker(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
 
     // ---- DAX patterns ----
@@ -828,19 +908,24 @@
     // FILTER(<table>, ...) or FILTER(ALL(<table>), ...) used directly as a filter argument of CALCULATE / CALCULATETABLE.
     // Returns which kinds it found: 'table' (the predicate tests columns: a Boolean filter can do it) and 'measure' (the
     // predicate references a measure: a Boolean filter can't, so FILTER is right, over a column; Microsoft's own advice).
-    const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
-    // does the FILTER predicate starting at token j (up to FILTER's closing parenthesis) reference a measure?
-    const predMeasure = (tk, j) => {
+    // What the FILTER predicate starting at token j (up to FILTER's closing parenthesis) tests: 'measure' (it references
+    // a measure), 'var' (it compares with another table's column or an aggregate, which a Boolean filter can't take as
+    // written; a value inside RELATED is a row lookup, not that), or 'table' (columns of the filtered table only).
+    const PRED_AGG = /^(MIN|MAX|SUM|AVERAGE|COUNT|COUNTA|COUNTROWS|DISTINCTCOUNT|MINX|MAXX|SUMX|AVERAGEX|COUNTX|MINA|MAXA|FIRSTDATE|LASTDATE|CALCULATE)$/i;
+    const predKind = (tk, j, filtered) => {
+      let kind = 'table';
       for (let depth = 0; j < tk.length; j++) {
         const x = tk[j];
-        if (x.t === 'op' && x.v === '(') depth++;
-        else if (x.t === 'op' && x.v === ')') { if (!depth) return false; depth--; }
+        if (call(tk, j) && /^RELATED$/i.test(x.v)) { j = closeOf(tk, j + 1); continue; }
+        if (call(tk, j) && PRED_AGG.test(x.v)) kind = 'var';
+        if (isOp(x, '(')) depth++;
+        else if (isOp(x, ')')) { if (!depth) return kind; depth--; }
         else if (x.t === 'br') {
-          const p = tk[j - 1], qual = isTbl(p);
-          if (IX.measures.has(lc(x.v)) && !(qual && IX.columns.has(lc(p.v) + '|' + lc(x.v)))) return true;
+          if (measureRef(tk, j, null)) return 'measure';
+          if (isTbl(tk[j - 1]) && lc(tk[j - 1].v) !== lc(filtered)) kind = 'var';
         }
       }
-      return false;
+      return kind;
     };
     const filterOverTable = (src) => {
       const tk = tokenizeDax(src), stack = [], kinds = new Set();
@@ -852,30 +937,34 @@
         const top = stack[stack.length - 1];
         if (top && top.argStart && /^CALCULATE(TABLE)?$/.test(top.fn) && t.t === 'id' && t.v.toUpperCase() === 'FILTER' && tk[i + 1] && tk[i + 1].v === '(') {
           const a = tk[i + 2];
-          let pred = -1;
-          if (isTbl(a) && tk[i + 3] && tk[i + 3].v === ',') pred = i + 4;
-          else if (a && a.t === 'id' && /^(ALL|ALLNOBLANKROW)$/i.test(a.v) && tk[i + 3] && tk[i + 3].v === '(' && isTbl(tk[i + 4]) && tk[i + 5] && tk[i + 5].v === ')') pred = i + 7;
-          if (pred >= 0) kinds.add(predMeasure(tk, pred) ? 'measure' : 'table');
+          let pred = -1, filtered = '';
+          if (isTbl(a) && tk[i + 3] && tk[i + 3].v === ',') { pred = i + 4; filtered = a.v; }
+          else if (a && a.t === 'id' && /^(ALL|ALLNOBLANKROW)$/i.test(a.v) && tk[i + 3] && tk[i + 3].v === '(' && isTbl(tk[i + 4]) && tk[i + 5] && tk[i + 5].v === ')') { pred = i + 7; filtered = tk[i + 4].v; }
+          if (pred >= 0) kinds.add(predKind(tk, pred, filtered));
         }
         if (top && t.t !== 'op') top.argStart = false;
       }
       return kinds;
     };
+    const msHidden = (ms) => ms.hidden || !!(IX.tables.get(lc(ms.table)) || {}).hidden;
     allMeasures.forEach((ms) => {
       const code = daxCode(ms.expr);
       const name = `[${ms.name}]`;
       if (/\bCALCULATE(TABLE)?\b/i.test(code) && /\bFILTER\b/i.test(code)) {
         const kinds = filterOverTable(ms.expr);
-        if (kinds.has('table')) filterTable.push({ obj: name });
+        if (kinds.has('var')) filterTable.push({ obj: name, detail: RULES.FILTER_TABLE.variants.VAR.en, variant: 'VAR' });
+        else if (kinds.has('table')) filterTable.push({ obj: name });
         if (kinds.has('measure')) filterMeasure.push({ obj: name });
       }
       if (/\b(IFERROR|ISERROR)\s*\(/i.test(code)) iferr.push({ obj: name });
       // "/" followed by something that is not a plain number
       if (/\/\s*(?![\d.\s]+(?:[)\s,]|$))[\[\w'(]/.test(code)) division.push({ obj: name });
-      if (!ms.formatString && !ms.fsExpr) noFmt.push({ obj: name });
+      // a measure returning text takes no number format; a hidden one no visual shows is not seen (BPA's rule is for visible measures)
+      if (!ms.formatString && !ms.fsExpr && !returnsText(ms.expr) && !(msHidden(ms) && !vis.measures.has(lc(ms.name)))) noFmt.push({ obj: name });
       if (/(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|hourly|exchange|run rate|\bper\b|▲|▼)/i.test(ms.name) && ms.formatString && !/[%@]|pp|percent/i.test(ms.formatString) && !ms.fsExpr) pctFmt.push({ obj: name, detail: ms.formatString });
-      if (!ms.displayFolder) noFolder.push({ obj: name });
-      if (!ms.description) noDesc.push({ obj: name });
+      // folders and descriptions are for the field list: hidden measures are not in it
+      if (!ms.displayFolder && !msHidden(ms)) noFolder.push({ obj: name });
+      if (!ms.description && !msHidden(ms)) noDesc.push({ obj: name });
       const lines = ms.expr.split('\n').length;
       if (lines > 60) longMs.push({ obj: name, detail: lines + ' lines' });
       const dd = depth(K.m(ms.name), new Set());
@@ -886,14 +975,21 @@
     });
     add('FILTER_TABLE', filterTable); add('FILTER_MEASURE', filterMeasure); add('IFERROR', iferr); add('DIVISION', division);
     add('NO_FORMAT', noFmt); add('PCT_FORMAT', pctFmt);
-    if (allMeasures.length >= 20 && noFolder.length / allMeasures.length > 0.3) add('NO_FOLDERS', noFolder);
-    if (allMeasures.length && noDesc.length / allMeasures.length > 0.5) add('NO_DESC', noDesc);
+    const shown = allMeasures.filter((ms) => !msHidden(ms)).length; // visible measures, in the share and the floor
+    if (shown >= 20 && noFolder.length / shown > 0.3) add('NO_FOLDERS', noFolder);
+    if (shown && noDesc.length / shown > 0.5) add('NO_DESC', noDesc);
     add('LONG_MEASURE', longMs); add('DEEP_CHAIN', deep);
     add('QUALIFIED_MEASURE', qualM); add('UNQUALIFIED_COLUMN', unqualC);
 
     // identical DAX
     const byExpr = new Map();
-    allMeasures.forEach((ms) => { const k = tokenizeDax(ms.expr).map((t) => t.t + ':' + t.v).join('\u0001').toLowerCase(); if (k.length < 24) return; if (!byExpr.has(k)) byExpr.set(k, []); byExpr.get(k).push(ms.name); });
+    allMeasures.forEach((ms) => {
+      const tk = tokenizeDax(ms.expr), k0 = tk.map((t) => t.t + ':' + t.v).join('\u0001').toLowerCase();
+      if (k0.length < 24) return;
+      // an unqualified column is its home table's: SUM([SalesAmount]) in two tables sums two different columns
+      const k = tk.map((t, i) => (t.t === 'br' && !isTbl(tk[i - 1]) && !IX.measures.has(lc(t.v)) && IX.columns.has(lc(ms.table) + '|' + lc(t.v)) ? 'br:' + ms.table + '|' + t.v : t.t + ':' + t.v)).join('\u0001').toLowerCase();
+      if (!byExpr.has(k)) byExpr.set(k, []); byExpr.get(k).push(ms.name);
+    });
     const dups = [];
     byExpr.forEach((names) => { if (names.length > 1) dups.push({ obj: names.map((n) => `[${n}]`).join(' = ') }); });
     add('DUP_MEASURE', dups);
@@ -921,11 +1017,13 @@
     const sources = new Map();
     mQueries.forEach((q) => {
       const e = q.expr;
+      // a template placeholder ({{NAME}}) is filled in per deployment, not a fixed server or path
+      const eLit = e.replace(/"(?:[^"]|"")*\{\{\s*[\w.-]+\s*\}\}(?:[^"]|"")*"/g, '""');
       const isParam = /IsParameterQuery\s*=\s*true/i.test(e);
       const isEntitySource = q.isExpr && (M.entityExprs.has(lc(q.name)) || /^DatabaseQuery$/i.test(q.name));
-      const literalDb = /\b(Sql\.Databases?|Oracle\.Database|MySQL\.Database|PostgreSQL\.Database|Snowflake\.Databases|AnalysisServices\.Databases?|Teradata\.Database|Sybase\.Database|IbmDb2\.Database|SapHana\.Database)\s*\(\s*"[^"]+"/.test(e);
+      const literalDb = /\b(Sql\.Databases?|Oracle\.Database|MySQL\.Database|PostgreSQL\.Database|Snowflake\.Databases|AnalysisServices\.Databases?|Teradata\.Database|Sybase\.Database|IbmDb2\.Database|SapHana\.Database)\s*\(\s*"[^"]+"/.test(eLit);
       if (!isParam && !isEntitySource && literalDb) hard.push({ obj: q.name });
-      else if (!isParam && !isEntitySource && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(e)) hard.push({ obj: q.name });
+      else if (!isParam && !isEntitySource && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(eLit)) hard.push({ obj: q.name });
       if (/Table\.Buffer\s*\(/.test(e)) buffer.push({ obj: q.name });
       const steps = (e.match(/^\s*(#"[^"]+"|[A-Za-z_]\w*)\s*=/gm) || []).length;
       if (steps > 40) longM.push({ obj: q.name, detail: steps + ' steps' });

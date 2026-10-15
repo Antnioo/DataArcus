@@ -384,6 +384,9 @@ export default async function ({ browser, url }) {
       check(d && d.text.includes(want.bpa) && d.text.includes('AVOID_FLOATING_POINT_DATA_TYPES') && /BestPracticeRules$/.test(d.href), `source on the page (${lang}), DOUBLE: ${JSON.stringify(d)}`);
       check(n && n.text.includes(want.own) && !n.href && n.text.length > want.own.length + 10, `source on the page (${lang}), NAMING: ${JSON.stringify(n)}`);
       check(Object.values(src).every(Boolean), `source on the page (${lang}): findings without one: ${Object.keys(src).filter((k) => !src[k]).join(', ')}`);
+      // 1b+ class 10: the sample's [New Customers] compares with the calendar, so its item gives the variable advice in the page's language
+      const nc = await v.pg.evaluate(() => { const li = [...document.querySelectorAll('[data-rule="FILTER_TABLE"] .mh-items li')].find((x) => x.querySelector('code').textContent === '[New Customers]'); return li ? li.textContent : ''; });
+      check(/VAR d = MIN/.test(nc) && (lang === 'en' ? /variable/.test(nc) : /متغير/.test(nc)), `FILTER_TABLE's variable advice on the page (${lang}): "${nc}"`);
       if (lang === 'en') {
         const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#mhCsv')]);
         const csv = fs.readFileSync(await dl.path(), 'utf8').replace(/^﻿/, '').split('\r\n');
