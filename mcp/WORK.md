@@ -760,6 +760,26 @@ their themes and backgrounds, numbers unchanged otherwise), in part 2.
   client that asks before tools would ask there too).
 - Open from before: O-2..O-7, O-9, O-10, O-13..O-16 (0.2.9 items 3-5, 7-14).
 
+### Health Check 2, Phase 1b+: the benchmark's false positives (15 Oct; the reviewer's scheduled task, the owner's "fix now"; same branch)
+A benchmark on 23 public models (main `33ea82d`) labelled 5,703 items, 126 false; the one-to-one fix covers 11. The
+other classes, one check each with a control that must stay flagged (`scripts/tests/model-health.mjs`, "Phase 1b+"):
+1 BIDI skips an inactive relationship (INACTIVE_UNUSED reports it); 2 NO_FORMAT skips a measure whose result is text
+(a string, &, CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE/MAX/MIN of a text column, an IF/SWITCH whose results are
+all text, a VAR ... RETURN of one of these; unclear keeps it); 3 NO_FORMAT skips a hidden measure (or hidden table)
+that no visual uses; 4 NO_DESC and 5 NO_FOLDERS skip hidden measures, their share (and NO_FOLDERS' 20-measure floor)
+count visible measures only; 6 CALC_COLS skips PATH*, a measure, CALCULATE(TABLE), RANKX, EARLIER(EST), RELATEDTABLE
+or an aggregate over another table; 7 DUP_MEASURE resolves unqualified columns to the home table; 8 DATE_NOT_MARKED
+skips a table whose only column is a date and that has no relationship, and its text says calendar-based time
+intelligence needs no mark; 9 HARDCODED_PATH skips a {{NAME}} placeholder; 10 FILTER_TABLE keeps the item but gives a
+"put the value in a variable first" advice when the predicate compares with another table or an aggregate.
+- **Expected (before the build):** the 15 new checks red on `af172b9` (measured: 15 of 138), all green after; every
+  Phase 1 check still green; the sample 56 and 26 issues unchanged (NO_FORMAT loses [Sales Color], info, 0 points;
+  [New Customers] gets the variable advice, FILTER_TABLE stays 4); root `npm test` alone all PASS; `cd mcp && npm test`
+  PASS.
+- **Changed fixture (flagged for the reviewer):** the old "calendar tables named in Arabic" check built calendars with a
+  date as the only column and no relationship, the exact date-picker shape of class 8; they get a Year column, its
+  expected tables unchanged.
+
 ### Health Check 2 phase 1, the report (cloud builder, Linux; `fe40ba7` plan and red checks, `af172b9` the build; pushed, not merged, no PR)
 - **Tests:** `model-health` 53 of 121 red on `33ea82d` (the constant denominator and USERELATIONSHIP checks green
   already, as the reviewer found) -> 123 of 123 (2 more source checks: 37 rules now). `test-site-config` PASS,
