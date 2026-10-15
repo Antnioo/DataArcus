@@ -510,7 +510,9 @@ server.registerTool('check_model_health', {
     // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
     columnTypes: typed,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
-      return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], count: f.items.length, items: f.items.slice(0, maxItems) }; }),
+      // (HC2, the owner's 15 Oct: the website and the MCP run the same engine) the rule's source, as the website shows it
+      const src = rule.source ? Object.assign({ kind: rule.source.kind }, rule.source.url ? { url: rule.source.url } : {}, rule.source.title ? { rule: rule.source.title } : {}, { says: (rule.source.says || {}).en }) : undefined;
+      return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], source: src, count: f.items.length, items: f.items.slice(0, maxItems) }; }),
     // checks that need a column type the files don't give (columns of DAX tables in a TMDL project): listed, not guessed
     skipped: r.skipped.length ? {
       why: 'The TMDL files give no data type for these columns: Power BI works out the types of a DAX table\'s columns from its DAX, and only the open model knows them. The checks below need the type, so they were not run for these objects and are not in the score.',
