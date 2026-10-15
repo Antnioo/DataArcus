@@ -178,9 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ({ issues: tIssues, fix: tFix, unused: tUnused, measures: tMeasures, tables: tTables, rels: tRels, docs: tDocs })[tab]();
   }
 
+  // an item's own advice (a rule's variants, such as FILTER_TABLE's VAR), in the page's language; else its detail
+  const variantText = (v) => { const r = Object.values(RULES()).find((x) => x.variants && x.variants[v]); return r ? (isAr() ? r.variants[v].ar : r.variants[v].en) : ''; };
   const itemList = (items, limit) => {
     const lim = limit || 25;
-    return '<ul class="mh-items">' + items.slice(0, lim).map((i) => '<li><code>' + esc(i.obj) + '</code>' + (i.detail ? ' <small>' + esc(i.detail) + '</small>' : '') + '</li>').join('') + '</ul>' +
+    return '<ul class="mh-items">' + items.slice(0, lim).map((i) => { const d = (i.variant && variantText(i.variant)) || i.detail;
+      // DAX inside the advice keeps its left-to-right order in Arabic
+      const k = d ? d.indexOf('VAR ') : -1, html = k < 0 ? esc(d) : esc(d.slice(0, k)) + bdi(d.slice(k).replace(/\.$/, '')) + (/\.$/.test(d) ? '.' : '');
+      return '<li><code>' + esc(i.obj) + '</code>' + (d ? ' <small>' + html + '</small>' : '') + '</li>'; }).join('') + '</ul>' +
       (items.length > lim ? '<button type="button" class="mh-more" data-more>' + L('Show all ' + num(items.length), 'عرض الكل (' + num(items.length) + ')') + '</button>' : '');
   };
 
