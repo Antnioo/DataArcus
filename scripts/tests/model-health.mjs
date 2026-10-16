@@ -369,6 +369,32 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // ---- Phase 1b++ (15 Oct 2026): the last text-returning measures the benchmark found under NO_FORMAT ----
+  {
+    const text = {
+      // 1. a composite model's remote measure, typed as text in its own declaration
+      X1: 'EXTERNALMEASURE("Name", STRING, "DirectQuery to AS - Model")',
+      // 2. CALCULATE of MIN / MAX / SELECTEDVALUE of a text column
+      C1: 'CALCULATE(MIN(Cap[displayName]), Cap[displayName] <> "")', C2: 'CALCULATE(SELECTEDVALUE(Cap[displayName]))', C3: 'CALCULATE ( MAX ( Cap[displayName] ), ALL ( Cap ) )',
+      // 3. IF / SWITCH nested deeper, inside VAR ... RETURN, or returning a measure that returns text
+      I1: 'IF([Total] > 0, IF([Total] > 10, "big", IF([Total] > 5, "mid", "small")), "none")',
+      I2: 'VAR n = [Total]\nRETURN IF(n > 0, SWITCH(TRUE(), n > 10, "big", n > 5, "mid", "small"), "none")',
+      I3: 'IF(ISBLANK([Admin Name]), "None", [Admin Name])', 'Admin Name': 'CALCULATE(MIN(Cap[displayName]), ALL(Cap))'
+    };
+    const kept = { XN: 'EXTERNALMEASURE("Amount", DOUBLE, "DirectQuery to AS - Model")', XI: 'EXTERNALMEASURE("Count", INTEGER, "DirectQuery to AS - Model")',
+      CN: 'CALCULATE(MAX(Sales[Amount]), ALL(Sales))', IN: 'IF([Total] > 0, IF([Total] > 10, "big", 1), "none")', IM: 'IF(ISBLANK([Total]), "None", [Total])' };
+    const m = { model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal', sourceColumn: 'Amount' }], partitions: mpart('Sales'),
+      measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])', formatString: '#,0' }].concat(Object.entries(Object.assign({}, text, kept)).map(([name, expression]) => ({ name, expression }))) },
+    { name: 'Cap', columns: [{ name: 'displayName', dataType: 'string', sourceColumn: 'displayName' }], partitions: mpart('Cap') }] } };
+    const got = ((E.analyze(m, null).findings.find((f) => f.id === 'NO_FORMAT') || {}).items || []).map((i) => i.obj).sort();
+    const groups = { 'EXTERNALMEASURE declared STRING': ['X1'], 'CALCULATE of MIN/MAX/SELECTEDVALUE of a text column': ['C1', 'C2', 'C3', 'Admin Name'],
+      'nested IF/SWITCH, VAR ... RETURN, a text measure returned': ['I1', 'I2', 'I3'], 'controls (numeric or mixed: stay flagged)': [] };
+    for (const [what, names] of Object.entries(groups)) {
+      const wrong = names.length ? names.filter((n) => got.includes(`[${n}]`)) : Object.keys(kept).filter((n) => !got.includes(`[${n}]`));
+      check(!wrong.length, `1b++ NO_FORMAT, ${what}: ${names.length ? 'still flagged' : 'no longer flagged'} ${JSON.stringify(wrong)}`);
+    }
+  }
+
   {
     // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
     for (const lang of ['en', 'ar']) {
