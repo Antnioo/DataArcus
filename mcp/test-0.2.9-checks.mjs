@@ -14,6 +14,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+// the validator version is set once, in mcp/package.json; the texts name the installed one (16 Oct 2026)
+const VALIDATOR_PIN = JSON.parse(fs0.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).dependencies['@microsoft/powerbi-report-authoring-cli'];
 
 // call: the helper that gets approved plans (test-plan.mjs)
 export async function v029checks({ call, check, ROOT, fs = fs0 }) {
@@ -109,9 +111,10 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     const round = await ask('check_report', { path: `${dir}/Round.pbip` }), rdf = (round.j && round.j.findings) || [];
     const unk = (fs2) => fs2.filter((f) => f.rule === 'PBIR_FORMATTING_OBJECT_UNKNOWN');
     chk(() => nSl >= 1 && !round.err && unk(rdf).length === nSl && round.j.validator.errors === nSl, () => `P2a. the fixture reproduces the validator's error once per slicer (${nSl}), its own count kept: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
-    chk(() => unk(rdf).every((f) => f.severity === 'note' && f.impact === 'desktopOpens' && f.known && /Power BI Desktop 2\.158 draws it/.test(f.known.what) && /validator 0\.4\.0 does not list it yet/.test(f.known.what)
+    chk(() => unk(rdf).every((f) => f.severity === 'note' && f.impact === 'desktopOpens' && f.known && /Power BI Desktop 2\.158 draws it/.test(f.known.what) && f.known.what.includes(`validator ${VALIDATOR_PIN} does not list it yet`) && round.j.validator.version === VALIDATOR_PIN
+      && [...`${f.known.what} ${round.j.impact.summary}`.matchAll(/validator (\d+\.\d+\.\d+)/g)].every((m) => m[1] === VALIDATOR_PIN)
       && /DESKTOP-TESTS\.md/.test(f.known.evidence) && /2026-10-12/.test(f.known.evidence) && /^Microsoft validator [^:]+: PBIR_FORMATTING_OBJECT_UNKNOWN$/.test(f.source)),
-      () => `P2b. each is a known note (Desktop 2.158 draws it, validator 0.4.0 does not list it yet) with its evidence, the code and source verbatim: ${JSON.stringify(unk(rdf))}`);
+      () => `P2b. each is a known note (Desktop 2.158 draws it, the installed validator ${VALIDATOR_PIN} does not list it yet; no other version named) with its evidence, the code and source verbatim: ${JSON.stringify(unk(rdf))}`);
     chk(() => round.j.counts.errors === 0 && round.j.validator.known === nSl && round.j.impact.kinds.canBreak.count === 0 && !/can break/i.test(round.j.impact.summary),
       () => `P2c. the report has no error: counts.errors 0, validator.known ${nSl}, nothing can break it: ${JSON.stringify([round.j.counts, round.j.validator, round.j.impact.summary])}`);
     chk(() => /not broken/.test(round.j.impact.summary) && /known/i.test(round.j.impact.summary) && /2\.158/.test(round.j.impact.summary) && !/\b0 errors?\b/.test(round.j.impact.summary),
