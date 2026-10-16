@@ -144,7 +144,9 @@ export const VALIDATOR_GAPS = [{
     borderIndividualCorners: (p) => litOf(p) === 'false' || litOf(p) === false,
     borderColor: (p) => !!(p && p.solid && /^'#(?:[0-9a-f]{3}|[0-9a-f]{6})'$/i.test(String(litOf(p.solid.color))))
   },
-  what: 'known: Power BI Desktop 2.158 draws it; Microsoft\'s validator 0.4.0 does not list it yet (a dropdown slicer\'s rounded box: dropdown.borderRadius, borderIndividualCorners, borderColor). Not an error.',
+  // the validator named is the one installed (mcp/package.json pins it): an entry matches only when that very version
+  // reported the code, so "does not list it yet" is true of it by construction
+  what: `known: Power BI Desktop 2.158 draws it; Microsoft's validator ${VALIDATOR_VERSION} does not list it yet (a dropdown slicer's rounded box: dropdown.borderRadius, borderIndividualCorners, borderColor). Not an error.`,
   evidence: 'scripts/tests/DESKTOP-TESTS.md, 2026-10-12, Desktop 2.158, "A dropdown slicer\'s rounded box"'
 }];
 // code: the validator's code; object: its item's path (the object's name); visualJson: the visual.json it names
@@ -184,7 +186,7 @@ export function impactSummary(n, ctx) {
   if (n.canBreak) return `${n.canBreak} ${s(n.canBreak, 'finding', 'findings')} can break the report in Power BI Desktop: fix ${s(n.canBreak, 'it', 'these')} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${s(n.desktopOpens, 'is', 'are')} only what strict validation or Fabric would refuse${notJudged ? '' : `; Desktop opens the report with ${s(n.desktopOpens, 'it', 'them')}`}.` : '') + (notJudged ? ' ' + notJudged : '');
   if (notJudged) return notJudged + strict + rules;
   // (polish round P2) only the validator's known gaps (notes, no error): Desktop draws them
-  const knownLine = K ? ` ${K} known ${s(K, 'note', 'notes')}: what Power BI Desktop 2.158 draws and Microsoft's validator 0.4.0 does not list yet (each finding's known); nothing to fix.` : '';
+  const knownLine = K ? ` ${K} known ${s(K, 'note', 'notes')}: what Power BI Desktop 2.158 draws and Microsoft's validator ${VALIDATOR_VERSION} does not list yet (each finding's known); nothing to fix.` : '';
   if (K && !n.desktopOpens) return 'The report opens in Power BI Desktop: it is not broken.' + knownLine + rules;
   if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + knownLine + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
   if (n.dataarcusRule) return `Nothing found that breaks the report in Power BI Desktop or that Fabric would refuse; ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.`;
