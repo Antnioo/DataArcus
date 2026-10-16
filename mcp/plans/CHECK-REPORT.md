@@ -132,6 +132,25 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
 - `notChecked` says what the tool could not judge and why (examples: a font we never measured, a custom visual, a
   PBIR-Legacy report). Rule 5 of the owner (report honestly) applied to a tool.
 
+**Finding shape (0.2.9, audit 4's A4-7, written 11 Oct 2026).** Every finding, whatever made it:
+`{ id, origin, rule, severity, file, page, visual, what, fix, source, impact }`.
+- `origin`: `validator` (Microsoft's validator), `schema` (the bundled JSON schemas), `rule` (DataArcus's measured
+  rules, `assets/js/report-rules.js`) or `instruction` (report text that reads like an instruction). It is set where
+  the finding is made; `impact` is read from it, never from the `source` text.
+- `severity`: `error`, `warning` or `note`, one scale for every origin.
+- `impact`: `desktopOpens` (only validator codes seen on a working report, in the files where they were seen),
+  `canBreak` (any other validator code, any schema error) or `dataarcusRule`. The answer's `impact` gives a summary
+  and one sentence per kind; "opens in Power BI Desktop" is said only when the validator ran offline and every file
+  was read (A4-3).
+- `known` (polish round P2, 12 Oct 2026; validator findings only): `{ what, evidence }` when the finding is exactly a
+  gap of the validator's catalog that Power BI Desktop was seen to draw (`VALIDATOR_GAPS`: today the dropdown slicer's
+  `dropdown.borderRadius`, `borderIndividualCorners`, `borderColor`). Such a finding is a `note` with impact
+  `desktopOpens`, its code and source verbatim; `validator.errors` stays the validator's own count and
+  `validator.known` counts these. Anything else unknown stays the validator's error.
+- The design lint's findings (the answer's `lint.findings`) keep their own `severity` (`high`, `medium`, `note`) and
+  `why`, and carry the same `origin` (`lint`), `impact` (`dataarcusRule`), `source`, and `level` on the common scale
+  (`warning` for high and medium, `note`).
+
 ## 2. Microsoft's validator: how it could ship or run
 **Facts** (npm registry and the package's own files, read 2026-10-04):
 

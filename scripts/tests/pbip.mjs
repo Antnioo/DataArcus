@@ -32,7 +32,7 @@ const refs = (files) => Object.entries(files).filter(([n]) => n.endsWith('/visua
   const out = [];
   JSON.stringify(JSON.parse(b.toString('utf8')), (k, v) => {
     // (round 22: a report-level measure, Schema 'extension', is the report's own, e.g. the "No data" text of a chart: not a field of the model)
-    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && !(v.Column || v.Measure).Expression.SourceRef.Schema) { const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
+    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && !(v.Column || v.Measure).Expression.SourceRef.Schema && !(v.Column || v.Measure).Expression.SourceRef.Source) {   /* (0.2.9 part 2: a visual filter's condition names its From's aliases, SourceRef.Source, not model fields) */ const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
     return v;
   });
   return out;
@@ -114,7 +114,9 @@ export default async function ({ browser, url }) {
         { name: 'c', fromTable: 'Shipments', fromColumn: 'Hub Key', toTable: 'Carrier', toColumn: 'Carrier Key', isActive: false }] } };
     const tmdl = "relationship a1\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Hub.'Hub Key'\n\nrelationship b2\n\tfromColumn: Deliveries.'Carrier Key'\n\ttoColumn: Carrier.'Carrier Key'\n\nrelationship c3\n\tisActive: false\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Carrier.'Carrier Key'\n";
     const want = JSON.stringify([{ fromTable: 'Shipments', toTable: 'Hub' }, { fromTable: 'Deliveries', toTable: 'Carrier' }]);
-    const a = DB.relsOfTmsl ? DB.relsOfTmsl(bim) : null, b = DB.relsOfTmsl ? DB.relsOfTmsl({ relationships: E.analyze(bim).relationships }) : null, c = DB.relsOfTmdl ? DB.relsOfTmdl(tmdl) : null;
+    // (the audit's A1-8: relationships.tmdl is read by tmdl-model.js, the one TMDL reader, then as any model's JSON)
+    const Tmdl = require('../../assets/js/tmdl-model.js'), fromTmdl = (text) => DB.relsOfTmsl(Tmdl.fromFiles([{ path: 'definition/relationships.tmdl', text }]));
+    const a = DB.relsOfTmsl ? DB.relsOfTmsl(bim) : null, b = DB.relsOfTmsl ? DB.relsOfTmsl({ relationships: E.analyze(bim).relationships }) : null, c = fromTmdl(tmdl);
     check(JSON.stringify(a) === want && JSON.stringify(b) === want && JSON.stringify(c) === want, `relationships read from the model.bim, the .pbit and relationships.tmdl: ${JSON.stringify([a, b, c])}`);
     const tables = DB.fromTmsl(bim), pick = DB.suggest(tables, 2, { relationships: a || [], modelTables: tables });
     check(pick.cats.bar && pick.cats.bar.c === 'Hub Zone' && !pick.table.some((f) => f && f.m === 'Delivered Qty'), `the picker with the relationships: charts by a reached category, the table without the unrelated measure: ${JSON.stringify([pick.cats.bar, pick.table])}`);
@@ -123,7 +125,7 @@ export default async function ({ browser, url }) {
     const again = DB.build(Object.assign({}, pick.choices, { kpis: pick.choices.kpis.slice(), slicers: pick.choices.slicers.slice() }));
     check(!again.table.some((f) => f && f.m === 'Delivered Qty') && again.table.some((f) => f && f.m === 'Shipments Amount'), `a picker change keeps the unrelated measure out of the table: ${JSON.stringify(again.table)}`);
     // (the review's 3: a relationship that filters both ways is followed both ways, read from TMSL and TMDL)
-    const both = DB.relsOfTmdl("relationship z\n\tcrossFilteringBehavior: bothDirections\n\tfromColumn: Hub.'Hub Key'\n\ttoColumn: Deliveries.'Hub Key'\n"), bothJ = DB.relsOfTmsl({ relationships: [{ fromTable: 'Hub', toTable: 'Deliveries', crossFilteringBehavior: 'bothDirections' }] });
+    const both = fromTmdl("relationship z\n\tcrossFilteringBehavior: bothDirections\n\tfromColumn: Hub.'Hub Key'\n\ttoColumn: Deliveries.'Hub Key'\n"), bothJ = DB.relsOfTmsl({ relationships: [{ fromTable: 'Hub', toTable: 'Deliveries', crossFilteringBehavior: 'bothDirections' }] });
     check(JSON.stringify(both) === JSON.stringify([{ fromTable: 'Hub', toTable: 'Deliveries', both: true }]) && JSON.stringify(bothJ) === JSON.stringify(both), `both-directions relationships read: ${JSON.stringify([both, bothJ])}`);
     // (round 23 part 8, the review's 2: the website's own designed pages hand a line chart's slot to the visual beside
     // it too when the model gives no time axis, as the MCP's do: the shared writer does it)
@@ -138,7 +140,7 @@ export default async function ({ browser, url }) {
       check(line && !vs.some((v) => v.visual.visualType === 'lineChart') && covers && (r.leftOut || []).some((x) => x.kind === 'line' && x.gave), `the website's page gives the line chart's room to its neighbour: ${JSON.stringify(vs.map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${JSON.stringify(r.leftOut)}`);
     }
     const tg = fs.readFileSync(path.join(HERE, '../../assets/js/theme-generator.js'), 'utf8');
-    check(/relationships: e\.relationships/.test(tg) && /relsOfTmdl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
+    check(/relationships: e\.relationships/.test(tg) && /relsOfTmsl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
   }
 
   // 9. File and folder names from any design name: whole characters only (an emoji is never cut in half)
@@ -246,7 +248,10 @@ export default async function ({ browser, url }) {
       if (a.bad.length) bad.link.push(`${c.id}: ${a.bad.length} of ${a.charts} charts, ${a.bad[0]}`);
       // (round 1: the sample has a month, so two tooltip pages: the monthly trend, and the bar chart by category for the
       // charts that are themselves by month; of the page's charts at least one is linked to the trend)
-      if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || !a.trend) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
+      // (0.2.9 design block, A2-1: a page under 800 wide is the single-focus layout on the website too, one line chart by
+      // month and no chart by category, so no chart can link to the trend there; the MCP's reports were already so)
+      const byCategory = E.projectPages(c.state.layout, c.lang, { second: true }).some((p) => p.slots.some((s) => ['bar', 'column', 'donut'].includes(s.kind)));
+      if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || (byCategory && !a.trend)) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
       if (tb.bad.length) bad.table.push(`${c.id}: ${tb.bad.length} of ${tb.columns} columns, ${tb.bad[0]}`);
       // (round 23: an Arabic table's total row says «الإجمالي»: the name column hidden first, the row-label measure last)
       const rl = rowLabelProblems(b.files, rtl);
@@ -284,9 +289,10 @@ export default async function ({ browser, url }) {
     {
       const b = build(std('1920x1080'), 'en', { second: true, panel: false });
       const a = tooltipProblems(b.files), tb = tableProblems(b.files, false), cd = cardStyleProblems(b.files, false, b.insets), cardsBad = new Set(cd.bad.map((x) => x.split(':')[0])).size;
-      check(a.charts === 4 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (4 charts expected)`);
+      // (design round 9, S7: page 2's last row is the table beside a bar chart: 5 charts, 4 of them not by month)
+      check(a.charts === 5 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (5 charts expected)`);
       // round 1: the bar chart and the two column charts show the monthly trend on hover, the line chart (by month) the bar chart by category
-      check(a.trend === 3, `default report: ${a.trend} of 4 charts linked to the monthly trend tooltip (3 expected: all but the line chart)`);
+      check(a.trend === 4, `default report: ${a.trend} of 5 charts linked to the monthly trend tooltip (4 expected: all but the line chart)`);
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
       check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
       // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
@@ -374,7 +380,8 @@ export default async function ({ browser, url }) {
     .map((v) => { const va = (((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}, on = (x) => !!x && x.expr && x.expr.Literal && x.expr.Literal.Value === 'true';
       return { type: v.visual.visualType, mirrored: v.visual.visualType === 'clusteredBarChart' ? on(va.invertAxis) : on(va.switchAxisPosition) }; });
   const picker = async (pg) => {
-    await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0, null, { timeout: 15000 });
+    // (round 9: the picker is read once the model is read and its picks are shown, never while "Reading the model…")
+    await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0 && !/Reading the model|جارٍ قراءة النموذج/.test((document.getElementById('pbipOwnMsg') || {}).textContent || ''), null, { timeout: 15000 });
     return pg.$$eval('#pbipMap select', (ss) => ss.map((s) => (s.value ? s.options[s.selectedIndex].text.replace(/[\u2068\u2069]/g, '') : '')));
   };
 

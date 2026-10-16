@@ -18,16 +18,42 @@
   // The fonts and chart choices the generator offers (its <select> lists; a test keeps both the same)
   const FONTS = ['Segoe UI', 'Segoe UI Semibold', 'DIN', 'Arial', 'Calibri', 'Tahoma', 'Verdana', 'Georgia'];
   const CHART_OPTIONS = { labels: ['auto', 'on', 'off'], grid: ['auto', 'dotted', 'off'], legend: ['auto', 'Top', 'TopCenter', 'Bottom', 'Right', 'off'], axis: ['auto', 'off'], table: ['auto', 'minimal', 'banded'] };
+  // The fonts text sizes were measured in, in Power BI Desktop (the header and rail heights of minOf, the table's need
+  // of TABLE_NEED, the writer's text widths): Segoe UI and Tahoma only. The others are offered; a wider one (Verdana)
+  // may need more room than measured until the laptop proof "A2-11" in DESKTOP-TESTS.md (0.2.9, the audit's A2-11)
+  const MEASURED_FONTS = ['Segoe UI', 'Tahoma'];
   // Every font in the list is built into Power BI, but only these have Arabic letters
   const AR_FONTS = ['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma'];
   // The theme's name when none is given (the name box shows it to new visitors): the theme JSON and every file use it,
   // so an empty or blank name gives one name everywhere. A name with text is kept exactly as typed.
   const DEFAULT_NAME = 'My Brand Theme';
+  // The longest theme name, as the name box takes it (maxlength 60) and generate_theme: repairState cuts a longer one
+  // (0.2.9, the audit's A2-12: a 5,000-character name reached the theme, the file names and the tools' answers)
+  const NAME_MAX = 60;
   const themeName = (name) => (name && String(name).trim() ? name : DEFAULT_NAME);
 
   // ---------- color math ----------
   // #1a2b3c, 1a2b3c or the short #abc form, spaces around allowed; anything else is not a color (null)
   const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; if (/^#[0-9a-fA-F]{3}$/.test(v)) v = '#' + [...v.slice(1)].map((c) => c + c).join(''); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
+  // A design's colours as the engine draws and writes them: each a hex colour, else the default design's (fresh); never
+  // a caller's text (0.2.9, the audit's A2-7: an unrepaired ui.background reached the background SVG the website sets
+  // as innerHTML). d: the design
+  const colours = (d) => {
+    const D = PRESETS.DataArcus, u = d && d.ui && typeof d.ui === 'object' ? d.ui : {}, data = d && Array.isArray(d.data) && d.data.length ? d.data : D.data;
+    const ok = (v, f) => (typeof v === 'string' && clampHex(v)) || f;
+    return { ui: Object.fromEntries(Object.keys(D.ui).map((k) => [k, ok(u[k], D.ui[k])])), data: data.map((c, i) => ok(c, D.data[i % D.data.length])) };
+  };
+  // The colours a theme derives from its page colours (0.2.9, the audit's A2-10: they were mixed in five places, so a
+  // change to one was missed in the preview or the contrast check): secondary text (labels), tertiary text, the dotted
+  // gridline and the theme's neutral background, the table's lines, the light background, the header band, the filter
+  // rail and the panels' edge (lighter on a light page). ui: the design's ui
+  const roles = (ui) => {
+    const u = colours({ ui }).ui, light = lum(u.background) > 0.45;
+    return { secondary: mix(u.text, u.card, 0.35), tertiary: mix(u.text, u.card, 0.6), gridline: mix(u.text, u.card, 0.8), grid: mix(u.text, u.card, 0.85),
+      backgroundLight: mix(u.card, u.background, 0.5), band: mix(u.card, u.background, 0.25), rail: mix(u.card, u.background, 0.35), edge: mix(u.text, u.card, light ? 0.86 : 0.9), light };
+  };
+  // The colours a KPI bar or the header line can take (the page's choices)
+  const BAR_COLORS = ['accent', 'good', 'neutral', 'data'];
   const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const rgbToHex = (r) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
   const mix = (a, b, t) => { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); };
@@ -45,6 +71,42 @@
     const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
     return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]);
   };
+  // (polish round P1, RESCORE-5: adventureworks' lead 1.6:1 and property's 1.8:1 on their cards: thin lines and flat
+  // bars) a colour under min:1 on the card, its hue and saturation kept, stepped to the first lightness at min:1
+  // (darker on a light card, lighter on a dark one); moved here from the MCP so the writer chooses with it too
+  const toContrast = (c, card, min) => {
+    if (contrast(c, card) >= min) return c;
+    const [h, sat, l0] = hexToHsl(c), darker = lum(card) > 0.45;
+    for (let i = 1; i <= 100; i++) { const l = darker ? l0 - i / 100 : l0 + i / 100; if (l < 0 || l > 1) break; const x = hslToHex(h, sat, l); if (contrast(x, card) >= min) return x; }
+    return c;
+  };
+  // Status hues (P1, RESCORE-5; shared with the MCP since P3): red under 15 or 345 and over, amber 35 to 55, green 90 to
+  // 150 degrees, at saturation 0.35 and over (a grey or a muted colour is never a status colour); null otherwise
+  const STATUS_HUES = { bad: (h) => h < 15 || h >= 345, neutral: (h) => h >= 35 && h <= 55, good: (h) => h >= 90 && h <= 150 };
+  const statusHue = (c) => { const x = clampHex(c || ''); if (!x) return null; const [h, sat] = hexToHsl(x); return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null; };
+  // The second chart's colour (P1+, the laptop's LAB-POLISH section 5; P3, RESCORE-6 N26: complaints and ecommerce got
+  // #E63946, inspection its own status red): the palette's next colour that is not a status colour (a red, amber or green
+  // hue, or one of st's good/neutral/bad), stands at least 30 degrees of hue from the lead (a grey, saturation under 0.15,
+  // has no hue to tell apart) and 3:1 on the card; with none at 3:1, the first such hue taken to 3:1 (toContrast); with
+  // none in the palette, the first calm colour (CALM, below) that passes, taken to 3:1. st: { good, neutral, bad }
+  const secondColour = (data, card, st) => {
+    const lead = clampHex((data || [])[0] || ''); if (!lead || !clampHex(card || '')) return null;
+    const own = ['good', 'neutral', 'bad'].map((k) => clampHex(((st || {})[k]) || '')).filter(Boolean);
+    const [h0, s0] = hexToHsl(lead), far = (c) => { const [h, sat] = hexToHsl(c); if (sat < 0.15) return false; if (s0 < 0.15) return true; const d = Math.abs(h - h0) % 360; return Math.min(d, 360 - d) >= 30; };
+    const ok = (c) => c && far(c) && !statusHue(c) && !own.includes(c);
+    const rest = data.slice(1).map((c) => clampHex(c || '')).filter(ok);
+    const pick = rest.find((c) => contrast(c, card) >= 3) || rest[0] || CALM.find(ok);
+    return pick ? toContrast(pick, card, 3) : null;
+  };
+  // The ends of a bar's fade by value (P3, RESCORE-6 N25: a darkened lead faded the other way, the largest bars brown):
+  // the strong end is the chart's colour exactly, never past it; the weak end the lightest tint of it towards the card
+  // that still stands 3:1 there, or, where none does (the colour itself near 3:1), a soft tint halfway (soft: true); a
+  // colour under 3:1 itself does not fade (null: every bar keeps it, round 13's rule)
+  const fadeEnds = (base, card) => {
+    const b = clampHex(base || ''), k = clampHex(card || ''); if (!b || !k || contrast(b, k) < 3) return null;
+    for (let n = 12; n >= 3; n--) { const low = mix(b, k, n / 20); if (contrast(low, k) >= 3 && contrast(low, k) < contrast(b, k)) return { low, high: b }; }
+    return { low: mix(b, k, 0.45), high: b, soft: true };
+  };
   const generate = (base, mode) => {
     const [h, s0, l0] = hexToHsl(base); const s = Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
     const plans = {
@@ -56,6 +118,22 @@
     // The 0.15 floor is never reached today: the base lightness is held at 0.4-0.55 and no step above goes down more
     // than 0.2, so the darkest colour is 0.2. It stays as a safety limit in case the steps change.
     return plans[mode].map(([dh, dl]) => hslToHex(h + dh, s, Math.min(0.85, Math.max(0.15, l + dl))));
+  };
+  // A calm palette beside a brand colour (0.2.9, the reviewer of 11 Oct: the analogous harmony gave loud colours beside
+  // the owner's brand; moved here from the MCP by the cross-review's G7, so the website and the MCP give the same one):
+  // the brand exactly, then up to 7 calm colours told apart by hue (one within 25 degrees of the brand's is skipped), each
+  // mixed towards the text colour until it stands 3:1 on the visuals' background (card)
+  const CALM = ['#2f6e9e', '#b86e00', '#1f7a70', '#6a4c93', '#b5452f', '#56636f', '#5e7f3a', '#8e5b2e', '#a23b72', '#3d7ea6'];
+  const calmPalette = (brand, card, text) => {
+    const near = (a, b) => { const [h1, s1] = hexToHsl(a), [h2, s2] = hexToHsl(b), d = Math.abs(h1 - h2) % 360; return s1 > 0.15 && s2 > 0.15 && Math.min(d, 360 - d) < 25; };
+    const out = [];
+    for (const c0 of CALM) {
+      if (out.length === 7) break;
+      if (near(c0, brand)) continue;
+      let c = c0; for (let t = 0.1; contrast(c, card) < 3 && t <= 1; t += 0.1) c = mix(c0, text, t);
+      if (!out.includes(c) && c !== brand) out.push(c);
+    }
+    return [brand].concat(out).slice(0, 8);
   };
 
   // ---------- page layout: a full background with a place for every visual ----------
@@ -82,20 +160,26 @@
   const toPage = (v, c) => Math.round(v * page(c).s);
   // a box in page units: its edges are rounded, not its size, so equal margins and gaps stay equal after rounding
   const boxOf = (s, c) => { const x = toPage(s.x, c), y = toPage(s.y, c); return { x, y, w: toPage(s.x + s.w, c) - x, h: toPage(s.y + s.h, c) - y }; };
-  const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
+  // Labels keyed by language, with an English fallback (0.2.9, the audit's A2-9: every label was an [en, ar] pair, so a
+  // third language meant editing each one). T makes one; label(x, lang) reads one in a language (an older [en, ar] pair
+  // is read too).
+  const T = (en, ar) => ({ en, ar });
+  const baseLang = (lang) => String(lang || '').toLowerCase().split(/[-_]/)[0];
+  const label = (x, lang) => (Array.isArray(x) ? (baseLang(lang) === 'ar' ? x[1] : x[0]) : x && typeof x === 'object' ? (x[baseLang(lang)] != null ? x[baseLang(lang)] : x.en) : x);
+  const KINDS = { kpi: T('Card', 'بطاقة'), line: T('Line chart', 'مخطط خطي'), bar: T('Bar chart', 'مخطط شريطي'), column: T('Column chart', 'مخطط أعمدة'), donut: T('Donut chart', 'مخطط دائري'), table: T('Table or matrix', 'جدول أو مصفوفة'), text: T('Text box or narrative', 'مربع نص أو سرد'), slicer: T('Slicers', 'مقسمات (Slicers)'), title: T('Text box (page title)', 'مربع نص (عنوان الصفحة)'), logo: T('Image (logo)', 'صورة (الشعار)') };
   const LAYOUTS = {
-    exec: { name: ['Executive summary', 'ملخص تنفيذي'], kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
-      rows: [[[2, 'line', ['Main trend', 'الاتجاه الرئيسي']], [1, 'bar', ['Breakdown', 'التوزيع']]], [[1, 'column', ['Comparison', 'المقارنة']], [1, 'table', ['Detail', 'التفاصيل']]]],
-      why: [['Key numbers first, where the eye starts', 'الأرقام الأهم أولًا حيث تبدأ العين'], ['One screen, no scrolling', 'شاشة واحدة بدون تمرير'], ['8 visuals at most', '8 عناصر كحد أقصى']] },
-    analysis: { name: ['Analysis', 'تحليل'], kpis: 3, kpiH: 84, filters: true, flex: [1, 1.25],
-      rows: [[[1, 'column', ['Main chart', 'المخطط الرئيسي']]], [[1, 'table', ['Detail table', 'جدول التفاصيل']]]],
-      why: [['All filters in one place', 'كل الفلاتر في مكان واحد'], ['Overview on top, detail below', 'النظرة العامة في الأعلى والتفاصيل في الأسفل'], ['A wide table that is easy to read', 'جدول عريض سهل القراءة']] },
-    ops: { name: ['Operations monitor', 'مراقبة العمليات'], kpis: 6, kpiH: 84, filters: false, flex: [1, 1],
-      rows: [[[1, 'line', ['Trend', 'الاتجاه']], [1, 'bar', ['Ranking', 'الترتيب']], [1, 'donut', ['Mix', 'التركيبة']]], [[1, 'column', ['Volume', 'الحجم']], [1, 'bar', ['Exceptions', 'الاستثناءات']], [1, 'table', ['Watch list', 'قائمة المتابعة']]]],
-      why: [['Equal tiles for equal importance', 'مربعات متساوية لأهمية متساوية'], ['Dense but on one grid', 'كثيف لكن على شبكة واحدة'], ['Made for a daily check or a wall screen', 'مصمم للمتابعة اليومية أو شاشة العرض']] },
-    focus: { name: ['Single focus', 'رسالة واحدة'], kpis: 3, kpiH: 96, filters: false, flex: [1],
-      rows: [[[2.2, 'line', ['Hero chart', 'المخطط الرئيسي']], [1, 'text', ['What it means', 'ماذا يعني']]]],
-      why: [['One message per page', 'رسالة واحدة لكل صفحة'], ['A short text explains the chart', 'نص قصير يشرح المخطط'], ['Generous white space', 'مساحة بيضاء مريحة']] }
+    exec: { name: T('Executive summary', 'ملخص تنفيذي'), kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
+      rows: [[[2, 'line', T('Main trend', 'الاتجاه الرئيسي')], [1, 'bar', T('Breakdown', 'التوزيع')]], [[1, 'column', T('Comparison', 'المقارنة')], [1, 'table', T('Detail', 'التفاصيل')]]],
+      why: [T('Key numbers first, where the eye starts', 'الأرقام الأهم أولًا حيث تبدأ العين'), T('One screen, no scrolling', 'شاشة واحدة بدون تمرير'), T('8 visuals at most', '8 عناصر كحد أقصى')] },
+    analysis: { name: T('Analysis', 'تحليل'), kpis: 3, kpiH: 84, filters: true, flex: [1, 1.25],
+      rows: [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')]]],
+      why: [T('All filters in one place', 'كل الفلاتر في مكان واحد'), T('Overview on top, detail below', 'النظرة العامة في الأعلى والتفاصيل في الأسفل'), T('A wide table that is easy to read', 'جدول عريض سهل القراءة')] },
+    ops: { name: T('Operations monitor', 'مراقبة العمليات'), kpis: 6, kpiH: 84, filters: false, flex: [1, 1],
+      rows: [[[1, 'line', T('Trend', 'الاتجاه')], [1, 'bar', T('Ranking', 'الترتيب')], [1, 'donut', T('Mix', 'التركيبة')]], [[1, 'column', T('Volume', 'الحجم')], [1, 'bar', T('Exceptions', 'الاستثناءات')], [1, 'table', T('Watch list', 'قائمة المتابعة')]]],
+      why: [T('Equal tiles for equal importance', 'مربعات متساوية لأهمية متساوية'), T('Dense but on one grid', 'كثيف لكن على شبكة واحدة'), T('Made for a daily check or a wall screen', 'مصمم للمتابعة اليومية أو شاشة العرض')] },
+    focus: { name: T('Single focus', 'رسالة واحدة'), kpis: 3, kpiH: 96, filters: false, flex: [1],
+      rows: [[[2.2, 'line', T('Hero chart', 'المخطط الرئيسي')], [1, 'text', T('What it means', 'ماذا يعني')]]],
+      why: [T('One message per page', 'رسالة واحدة لكل صفحة'), T('A short text explains the chart', 'نص قصير يشرح المخطط'), T('Generous white space', 'مساحة بيضاء مريحة')] }
   };
   // v2: corners 0/8/16, and the KPI accent bar became a choice of side (from the old on/off accentBar)
   const upgrade = (l) => {
@@ -108,8 +192,37 @@
     if (l && l.v < 3) { if (!l.page) l.page = '1280x720'; l.v = 3; }
     return l;
   };
-  // Reading direction: the layout's own, or the page's language when none is chosen
-  const rtl = (c, lang) => (c.dir ? c.dir === 'rtl' : lang === 'ar');
+  // Reading direction: the layout's own, or the page's language when none is chosen: a language written right to left
+  // (0.2.9, A2-9: a set, not only Arabic; a region like ar-AE counts as its language)
+  const RTL_LANGS = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ku', 'ps', 'sd', 'ug', 'ur', 'yi'];
+  const rtl = (c, lang) => (c.dir ? c.dir === 'rtl' : RTL_LANGS.includes(baseLang(lang)));
+
+  // Small pages (0.2.9, the audit's A2-1: the rule moved here from the MCP's design.mjs, so the website and the MCP lay
+  // out the same page). Under 800 wide the executive layout's four charts and table do not fit (cut card values,
+  // "Wednes...", a scrolling table), so such a page takes the single-focus layout, without a second page, and the
+  // single-focus KPI cards are one step taller (116 on the 720 grid; the layout's own is 96) unless the design sets its
+  // own height. Measured at ONE size only: 640 x 360 (golden task 5, Desktop 2.158.1304, DESKTOP-TESTS.md "2026-10-07";
+  // rounds 19 and 22). Nothing was measured between 640 and 800: the laptop proof "A2-1" in DESKTOP-TESTS.md checks
+  // 700-800 wide before these values are trusted there.
+  const SMALL_PAGE = { w: 800, kpiH: 116, measured: 'one size only: 640 x 360 (golden task 5, Power BI Desktop 2.158.1304, 2026-10-07); 700-800 wide not measured yet (laptop proof A2-1)' };
+  // null, or how a small page's layout is changed: { w (the page width), from, to }
+  const smallPage = (c) => { const w = page(c).w; return w < SMALL_PAGE.w && c.preset === 'exec' ? { w, from: 'exec', to: 'focus' } : null; };
+  const isSmall = (c) => page(c).w < SMALL_PAGE.w;
+  // the layout a page really gets: on a small page the executive layout becomes the single-focus one, its filters and
+  // its size sliders back to that layout's defaults (as choosing a layout does)
+  const fitLayout = (c) => (smallPage(c) ? Object.assign({}, c, { preset: 'focus', filters: LAYOUTS.focus.filters, kpiH: null, mainW: null, split: null }) : c);
+
+  // A table beside a chart on a narrow page (narrower than 3:2 on the design grid) takes a wider share of its row
+  // (wideTable, on by default; a design that says false keeps equal shares), by its need (0.2.9, the audit's A2-5: one
+  // default, here; the share from the table's fields). Measured once, in Power BI Desktop 2.158 on the night of 6-7 Oct
+  // 2026 (mcp/WORK.md, "Block C" item 3; the owner's answer 3a): a table of a day column and three measures (4 fields)
+  // needs 463 in Segoe UI and 483 in Tahoma at 8pt, and half of a 960 x 720 page's row is 458; the table took 1.5 times
+  // its neighbour's weight (three fifths), which Desktop showed whole (golden task 4, DESKTOP-TESTS.md 2026-10-07). Its
+  // need grows with its fields (about 121 a field in the wider font), so each field past 4 adds a quarter of that weight,
+  // up to 3 (the chart beside keeps a quarter of the row); fewer fields keep 1.5. Past 4 fields this is a GUESS until
+  // the laptop proof "A2-5" in DESKTOP-TESTS.md measures 5 and 6 fields.
+  const TABLE_NEED = { fields: 4, weight: 1.5, max: 3, measured: '4 fields (a day column and three measures) need 463 in Segoe UI and 483 in Tahoma at 8pt; half of a 960 x 720 row is 458 (Power BI Desktop 2.158, 6-7 Oct 2026, mcp/WORK.md Block C 3); 5 or more fields not measured (laptop proof A2-5)' };
+  const tableWeight = (n) => Math.min(TABLE_NEED.max, TABLE_NEED.weight * Math.max(TABLE_NEED.fields, Math.floor(+n) || TABLE_NEED.fields) / TABLE_NEED.fields);
 
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
   const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70], radius: [0, 24], kpiBarW: [2, 8], headLineW: [2, 8] };
@@ -128,13 +241,55 @@
     return [Math.min(r[1], Math.max(r[0], minOf(k, c))), r[1]];
   };
   const clampTo = (k, v, PW, c) => Math.max(rangeOf(k, PW, c)[0], Math.min(rangeOf(k, PW, c)[1], Math.round(+v)));
+  // A layout for a model with no time axis (0.2.9, the laptop's sweep of rc.1, D16: the line chart's room went to the bar
+  // chart beside it, four bars across the whole page): its line chart is left out and its row re-formed. A row left with
+  // one category chart takes the next row's category chart beside it (exec: the bar and column charts share the first
+  // row, the table has the second); a line chart alone with a text box (the single focus) becomes a bar chart. The
+  // writer's fitSlots does nothing more then (no line slot to give away).
+  const CATEGORY_KINDS = ['bar', 'column', 'donut'];
+  // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
+  // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
+  // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
+  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/CLAUDE.md): 22.2 a row at the theme's 10pt,
+  //    45 above the first row, 8 under the last and 38 for the value axis;
+  //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
+  //    of about 8 characters at 10pt) after 60 for the value axis, at most 12 (12 month names fit, round 1, measured)
+  const CATEGORY_FIT = { bar: 'measured: 22.2 a row at 10pt, 45 above, 8 below, 38 for the value axis (Desktop 2.158, 6-7 Oct 2026)',
+    column: 'GUESS until the laptop proof S5: about 64 a column after 60 for the value axis, at most 12 (12 month names fit, round 1)' };
+  const categoryFit = (kind, w, h) => (kind === 'bar' ? Math.max(1, Math.floor((h - 45 - 8 - 38) / 22.2))
+    : kind === 'column' ? Math.max(3, Math.min(12, Math.floor((w - 60) / 64))) : null);
+  const noTimeOf = (P) => {
+    const alone = (r) => r.some((col) => col[1] === 'line') && !r.some((col) => col[1] !== 'line' && col[1] !== 'text');
+    const rows = P.rows.map((r) => (alone(r) ? r.map((col) => (col[1] === 'line' ? [col[0], 'bar', T('Main breakdown', 'التوزيع الرئيسي')] : col)) : r.filter((col) => col[1] !== 'line')))
+      .map((r) => r.map((col) => col.slice()));
+    for (let i = 0; i < rows.length - 1; i++) if (rows[i].length === 1 && CATEGORY_KINDS.includes(rows[i][0][1])) {
+      const j = rows[i + 1].findIndex((col) => CATEGORY_KINDS.includes(col[1]));
+      if (j >= 0 && rows[i + 1].length > 1) { rows[i][0][0] = 1; rows[i].push(Object.assign(rows[i + 1].splice(j, 1)[0], { 0: 1 })); }
+    }
+    const keep = rows.map((r, i) => (r.length ? i : -1)).filter((i) => i >= 0);
+    return Object.assign({}, P, { rows: keep.map((i) => rows[i]), flex: keep.map((i) => P.flex[i] != null ? P.flex[i] : 1) });
+  };
+  // the layout's rows as this page gets them (c.noTime: projectPages' opts.noTime, carried by the page's layout)
+  // (design round 9, the re-score's S7 on all 9 reports: page 2's side rail shrank to its dropdowns and the page stayed
+  // empty under it, and its full-width table, of rows no one can count before the data, left half its panel empty) the
+  // details page keeps the filter side the user asked for (the owner's O-1) and its rail kept to its contents (#18);
+  // its rows are the main chart, then the table beside a bar chart, so a short table leaves half a row, not half a
+  // page, and fitSlots reflows the rows beside and under a shortened rail
+  const DETAIL_ROWS = [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')], [1, 'bar', T('Breakdown', 'التوزيع')]]];
+  // (the owner's decision, 12 Oct, after the laptop's LAYOUT-SWEEP-RC6: the executive and single-focus layouts ship as
+  // tested; the operations monitor, analysis as the first page and a page under 1920 wide with filters on top ship as
+  // preview, said in the plan in one plain line; nothing else changes)
+  const LAYOUT_PREVIEW = T('Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones.',
+    'معاينة: ما زال هذا التخطيط قيد الضبط على لوحات معلومات حقيقية، وتخطيطا «ملخص تنفيذي» و«رسالة واحدة» هما المختبران.');
+  const isPreview = (c) => c.preset === 'ops' || c.preset === 'analysis' || (!!c.filters && c.fpos === 'top' && page(c).w < 1920);
+  const layoutOf = (c) => { const L = c.detail ? Object.assign({}, LAYOUTS[c.preset], { rows: DETAIL_ROWS }) : LAYOUTS[c.preset]; return c.noTime ? noTimeOf(L) : L; };
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
   function sizes(c, PW) {
-    const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
+    const P = layoutOf(c), n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
     const w0 = P.rows[0].reduce((a, col) => a + col[0], 0);
     return { hh: n('hh', HH), logoW: n('logoW', 150), fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', fw: n('fw', 196), fh: n('fh', 72),
-      kpiH: n('kpiH', P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
+      kpiH: n('kpiH', c.preset === 'focus' && isSmall(c) ? SMALL_PAGE.kpiH : P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
   }
 
   // The slots of a layout, on the 720-tall design grid (boxOf turns one into page units). lang: the page's language,
@@ -142,44 +297,44 @@
   // opt.logoRatio (width / height of an attached logo, see imageSize): the logo slot keeps the designed height and takes
   // the logo's own width (no minimum; at most the logo width range's 360), its far edge where it is; the title and the
   // page buttons get the room that is left. Without it the slot is the designed logo width, as before.
+  // opt.tableFields (the number of fields the report's table shows): its share of a narrow row (TABLE_NEED); 4 when not given.
+  // A small page gets its own layout first (fitLayout, see SMALL_PAGE).
+  // opt.noTime (the report's model has no time axis): the layout made for it (noTimeOf); the same as c.noTime.
   function computeSlots(c, lang, opt) {
+    c = fitLayout(c);
+    if (opt && opt.noTime && !c.noTime) c = Object.assign({}, c, { noTime: true });
     const PW = pw(c), PH = 720;
-    const P = LAYOUTS[c.preset], z = sizes(c, PW), slots = [];
+    const P = layoutOf(c), z = sizes(c, PW), slots = [];
     let top = c.header ? z.hh + 14 : M;
     if (c.header) {
       const th = z.hh - 24, ratio = opt && +opt.logoRatio > 0 ? +opt.logoRatio : 0;
       const logoW = ratio ? Math.max(1, Math.min(RANGE.logoW[1], Math.round(th * ratio))) : z.logoW, lx = PW - M - 8 - logoW;
-      slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
-      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: lx, y: 12, w: logoW, h: th });
+      slots.push({ kind: 'title', role: T('Page title', 'عنوان الصفحة'), x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
+      slots.push({ kind: 'logo', role: T('Logo', 'الشعار'), x: lx, y: 12, w: logoW, h: th });
     }
     let x0 = M, cw = PW - 2 * M;
-    if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
+    if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: T('Filters', 'الفلاتر'), x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
     else if (c.filters) {
       const fx = z.fpos === 'end' ? PW - M - z.fw : M;
-      slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: fx, y: top, w: z.fw, h: PH - M - top, rail: true });
+      slots.push({ kind: 'slicer', role: T('Filters', 'الفلاتر'), x: fx, y: top, w: z.fw, h: PH - M - top, rail: true });
       cw = PW - 2 * M - z.fw - G; if (z.fpos !== 'end') x0 = M + z.fw + G;
     }
     // the first chart row: the main chart takes its share, the others split the rest by their weights
     const first = P.rows[0].map((col, i) => col.slice());
     if (hasMain(P)) { const rest = first.slice(1).reduce((a, col) => a + col[0], 0); first[0][0] = rest * z.mainW / (100 - z.mainW); }
     const flex = hasSplit(P) ? [z.split, 100 - z.split] : P.flex.slice();
-    // KPI cards: the layout's count, or fewer when the report has fewer measures to show (kpiCards, set by the MCP:
-    // 0 leaves the KPI row out and the charts take its room). The website's designs have no kpiCards.
-    const nK = c.kpiCards != null && +c.kpiCards >= 0 ? Math.min(c.kpis, Math.floor(+c.kpiCards)) : c.kpis;
+    // KPI cards: the layout's count, 0-6 (0.2.9, the audit's A2-4: one value; the MCP's kpiCards is gone): 0 leaves the
+    // KPI row out and the charts take its room
+    const nK = Math.max(0, Math.min(6, Math.floor(+c.kpis) || 0));
     const flexSum = flex.reduce((a, b) => a + b, 0), free = nK ? PH - M - top - G * P.rows.length - z.kpiH : PH - M - top - G * (P.rows.length - 1);
     // no chart row shorter than 90: move the split back if needed
     if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
-    // (the owner, 6 Oct 2026) One card where the row was planned for more (a model with one measure: kpiCards 1): the
-    // card takes a quarter of the row at the reading start, not the whole row (quarter). Two or three cards of four
-    // still share the row.
-    // (the owner, 6 Oct 2026) For the MCP's reports (wideTable, set by the MCP: the website's designs never have it, as
-    // kpiCards): on a 4:3 page (narrower than 3:2 on the design grid) a table beside a chart takes the
-    // wider share of its row, 3 to 2: measured, a table of a day column and three measures needs 463 at 8pt in Segoe UI
-    // and 483 in Tahoma, and half of a 960 x 720 page's row is 458.
-    // (round 20, the owner's (b), 7 Oct 2026: the website follows the MCP: on by default; a design that says false keeps
-    // equal shares)
-    const narrow = c.wideTable !== false && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
-    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1 && c.kpis > 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
+    // (the owner, 6 Oct 2026) One card (a model with one measure) takes a quarter of the row at the reading start, not
+    // the whole row (quarter). Two or three cards still share the row.
+    // (the owner, 6 Oct 2026; round 20: the website and the MCP alike) on a narrow page a table beside a chart takes the
+    // wider share of its row, by its need (TABLE_NEED); a design that says wideTable false keeps equal shares
+    const narrow = c.wideTable !== false && PW < 1080, tw = tableWeight(opt && opt.tableFields), share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * tw, col[1], col[2]] : col)) : cols);
+    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', T(`KPI ${i + 1}`, `مؤشر ${i + 1}`)]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;
     rows.forEach((r, ri) => {
@@ -194,6 +349,12 @@
     });
     // Arabic reports read from the right: mirror the whole page so KPI 1 and the title start there
     if (rtl(c, lang)) slots.forEach((s) => { s.x = PW - s.x - s.w; });
+    // each slot carries its index among the slots of its kind (KPI 1 is 0), so nothing reads it from the role's text
+    // (0.2.9, the audit's A2-6: the KPI bar's data colour came from parsing "KPI n")
+    const seen = {};
+    slots.forEach((s) => { s.index = seen[s.kind] = s.kind in seen ? seen[s.kind] + 1 : 0; });
+    // (S5) the categories a bar or column chart's slot can show: its Top N
+    slots.forEach((s) => { const n = categoryFit(s.kind, s.w, s.h); if (n) s.topN = n; });
     return slots;
   }
   // An image's size in pixels, read from its bytes (a Uint8Array): PNG (the IHDR chunk) or JPG (the frame header);
@@ -243,7 +404,9 @@
   // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
   // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
   // Power BI rejects the whole theme when one font size is outside 8-60 (tested in Desktop), so very big or small pages stop there
-  const fs = (n, l) => Math.min(60, Math.max(8, Math.round(n * page(l).s * 2) / 2));
+  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60
+  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
+  const fs = (n, l) => sizeAt(n, page(l).h);
   const textSizes = (d) => {
     const l = d.layout, f = (n) => fs(n, l);
     const merge = (t, extra) => ({ [t]: { '*': Object.assign({ border: borderStyle(d.ui, l), dropShadow: shadowStyle(l) }, extra) } });
@@ -254,6 +417,25 @@
       merge('slicer', { header: [{ textSize: f(10) }], items: [{ textSize: f(10) }] }),
       merge('card', { labels: [{ fontSize: f(28) }], categoryLabels: [{ fontSize: f(10) }] }),
       merge('multiRowCard', { cardTitle: [{ fontSize: f(12) }], dataLabels: [{ fontSize: f(18) }], categoryLabels: [{ fontSize: f(10) }] }));
+  };
+  // The visual text sizes textSizes writes, each its base on the 720 grid: a theme is the engine's when every one of
+  // them is its base at one page height (0.2.9, the tools audit's A6-10: the MCP server copied these sizes and the
+  // rounding to find a theme's page; an engine change would have broken it without a word)
+  const TEXT_BASES = [['tableEx', 'values', 'fontSize', 10], ['slicer', 'header', 'textSize', 10], ['card', 'labels', 'fontSize', 28], ['multiRowCard', 'cardTitle', 'fontSize', 12], ['multiRowCard', 'dataLabels', 'fontSize', 18], ['pivotTable', 'rowHeaders', 'fontSize', 10]];
+  // The page height a theme's text sizes were made for: { h } (the middle of the heights that give all its sizes), or
+  // null for a theme the engine did not make (its sizes are its author's)
+  const themeScaleOf = (theme) => {
+    const vs = (theme && theme.visualStyles) || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
+    const got = TEXT_BASES.map(([v, k, prop]) => at(v, k, prop));
+    if (!(got[0] > 0)) return null;
+    const fits = (h) => TEXT_BASES.every(([, , , n], i) => got[i] === sizeAt(n, h));
+    const hs = []; for (let h = 200; h <= 4400; h++) if (fits(h)) hs.push(h);
+    return hs.length ? { h: hs[Math.floor(hs.length / 2)] } : null;
+  };
+  // A copy of a theme with every text size times r, in half points within 8-60 (the theme given is not changed)
+  const scaleTheme = (theme, r) => {
+    const walk = (o) => (Array.isArray(o) ? o.map(walk) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, (k === 'fontSize' || k === 'textSize') && typeof v === 'number' ? Math.min(60, Math.max(8, Math.round(v * r * 2) / 2)) : walk(v)])) : o);
+    return walk(theme);
   };
   // Chart style: theme-wide defaults, written only to the visual types whose theme schema (2.157) has that
   // setting, because Power BI rejects the whole theme when one property is unknown. "auto" writes nothing.
@@ -269,8 +451,15 @@
       v[card] = [Object.assign((v[card] || [{}])[0], props)];
     });
     if (c.labels !== 'auto') add(AXIS_CHARTS, 'labels', { show: c.labels === 'on' });
+    // (polish round P1, the owner's go, 12 Oct; B-72: axes and gridlines in Power BI's own default grey under a coloured
+    // theme) the axis labels take the secondary grey mixed from the theme's own text colour (roles); the gridlines get
+    // theirs from the report writer's quiet grid (text mixed 0.85 towards the card), which a gridline colour in the
+    // theme would switch off, so none is written here unless a grid is asked (below). Only with a chart style chosen:
+    // "Power BI default" (every setting auto) writes no chart settings, as the website promises
+    if (Object.keys(CHART_DEFAULTS).some((k) => c[k] !== 'auto')) { const R = roles(u); add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: R.secondary } } });
+      add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', { labelColor: { solid: { color: R.secondary } } }); }
     if (c.grid !== 'auto') {
-      const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: mix(u.text, u.card, 0.8) } } };
+      const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: roles(u).gridline } } };
       add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', g);
       // waterfall has no category gridlines in the schema; Power BI draws none there anyway
       if (c.grid === 'off') add(AXIS_CHARTS.concat('scatterChart').filter((t) => t !== 'waterfallChart'), 'categoryAxis', { gridlineShow: false });
@@ -282,7 +471,7 @@
       : { show: true, position: c.legend });
     if (c.axis === 'off') ['valueAxis', 'categoryAxis'].forEach((a) => add(AXIS_CHARTS.concat('scatterChart'), a, { showAxisTitle: false }));
     if (c.table !== 'auto') {
-      const line = { solid: { color: mix(u.text, u.card, 0.85) } };
+      const line = { solid: { color: roles(u).grid } };
       add(['tableEx', 'pivotTable'], 'grid', { gridVertical: false, gridHorizontal: c.table === 'minimal', gridHorizontalColor: line });
       add(['tableEx', 'pivotTable'], 'values', { backColorPrimary: { solid: { color: u.card } }, backColorSecondary: { solid: { color: c.table === 'banded' ? mix(u.card, u.accent, 0.08) : u.card } } });
     }
@@ -298,8 +487,8 @@
   };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
-  const buildTheme = (d, lang) => {
-    const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
+  const buildTheme = (d0, lang) => {
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, R = roles(u), sec = R.secondary, ter = R.tertiary, f = d.font;
     return {
       name: themeName(d.name),
       dataColors: d.data,
@@ -307,8 +496,8 @@
       foregroundNeutralSecondary: sec,
       foregroundNeutralTertiary: ter,
       background: u.card,
-      backgroundLight: mix(u.card, u.background, 0.5),
-      backgroundNeutral: mix(u.text, u.card, 0.8),
+      backgroundLight: R.backgroundLight,
+      backgroundNeutral: R.gridline,
       tableAccent: u.accent,
       good: u.good, neutral: u.neutral, bad: u.bad,
       maximum: u.good, center: u.neutral, minimum: u.bad,
@@ -342,7 +531,7 @@
   // WCAG contrast of the theme's main pairs (4.5:1 for text, 3:1 for the first data colour, which carries the main
   // series), and the data colours that almost disappear on the visual background (below 1.6:1). d: the design
   const contrastChecks = (d) => {
-    const u = d.ui, sec = mix(u.text, u.card, 0.35);
+    const u = colours(d).ui, sec = roles(u).secondary;
     const checks = [
       ['textOnVisuals', contrast(u.text, u.card), 4.5],
       ['labelsOnVisuals', contrast(sec, u.card), 4.5],
@@ -356,7 +545,10 @@
   // ---------- the background drawing ----------
   // accent bars: side, thickness and color (Advanced options)
   const barW = (k, c) => clampTo(k, c[k] == null ? (k === 'kpiBarW' ? 4 : 3) : c[k]);
-  const barColor = (d, k, i) => { const v = d.layout[k], u = d.ui; return v === 'data' ? d.data[i % d.data.length] : (u[v] || u.accent); };
+  // (0.2.9, the audit's A2-7: the engine never trusts its caller to have run repairState: a colour key is looked up as
+  // the design's own key only, and every colour drawn or written is a hex colour, else the default's)
+  const barColor = (d, k, i) => { const v = d.layout[k], { ui: u, data } = colours(d), n = Number.isInteger(i) && i >= 0 ? i : 0;
+    return v === 'data' ? data[n % data.length] : (BAR_COLORS.includes(v) && v !== 'data' && Object.prototype.hasOwnProperty.call(u, v) ? u[v] : u.accent); };
   const c0 = (c) => (c.kpiBar === 'start' ? barW('kpiBarW', c) + 8 : 0); // KPI text sits after a side bar
   // Where a KPI card's title can start beside the side accent bar, in page units from the card's reading-start edge: the
   // bar's far edge (it is drawn 10 in, see bgSvg) plus round(5k), k = page height / 1080 (measured in Power BI Desktop
@@ -367,23 +559,24 @@
   // The PNG matches the table to the pixel. In Power BI, with Image fit: Stretch, each panel lands exactly under
   // its visual (checked with calibration backgrounds on 1920 × 1080 and 1280 × 720 pages).
   // opt: { w, h } the image size, preview (the page's layout preview), overlay(slots) the preview's own marks
-  function bgSvg(d, slots, opt, lang) {
-    const u = d.ui, c = d.layout, right = rtl(c, lang), light = lum(u.background) > 0.45, PW = pw(c), PH = 720;
-    const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
+  function bgSvg(d0, slots, opt, lang) {
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, c = d.layout, right = rtl(c, lang), R = roles(u), light = R.light, PW = pw(c), PH = 720;
+    const edge = R.edge, rail = R.rail, r = +c.radius;
     let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
     if (c.header) {
       const hh = sizes(c, PW).hh;
-      s += `<rect width="${PW}" height="${hh}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
+      s += `<rect width="${PW}" height="${hh}" fill="${R.band}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
         + (c.headLine === 'none' ? '' : (() => { const t = barW('headLineW', c), col = barColor(d, 'headLineC', 0);
           return c.headLine === 'full' ? `<rect class="hl" y="${hh - t}" width="${PW}" height="${t}" fill="${col}"/>`
             : `<rect class="hl" x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 6 - t}" width="40" height="${t}" rx="${t / 2}" fill="${col}"/>`; })());
     }
-    let clips = '';
+    let clips = '', k = -1;
     slots.forEach((p, i) => {
       if (p.kind === 'title' || p.kind === 'logo') return;
       s += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}" fill="${p.rail ? rail : u.card}"${c.shadow ? ' filter="url(#sh)"' : ''}${light || !c.shadow ? ` stroke="${edge}" stroke-width="1"` : ''}/>`;
+      if (p.kind === 'kpi') k++;
       if (p.kind !== 'kpi' || !c.kpiBar || c.kpiBar === 'none') return;
-      const t = barW('kpiBarW', c), col = barColor(d, 'kpiBarC', +p.role[0].split(' ')[1] - 1);
+      const t = barW('kpiBarW', c), col = barColor(d, 'kpiBarC', Number.isInteger(p.index) ? p.index : k);
       if (c.kpiBar === 'start') s += `<rect class="kb" x="${right ? p.x + p.w - 10 - t : p.x + 10}" y="${p.y + 16}" width="${t}" height="${p.h - 32}" rx="${t / 2}" fill="${col}"/>`;
       else { // a strip along the top or bottom edge, clipped to the card's corners
         clips += `<clipPath id="kc${i}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}"/></clipPath>`;
@@ -407,11 +600,17 @@
       logo: 'الشعار', logoHere: 'شعارك', textHere: 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.', by: 'حسب', newDesign: 'تصميم جديد',
       tooltipPage: 'تلميح', tooltipHere: 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.' }
   };
+  // The report's labels in a language, English when it has none of its own
+  const texts = (lang) => REPORT_TEXTS[baseLang(lang)] || REPORT_TEXTS.en;
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
-  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
+  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c), s.topN ? { topN: s.topN } : {}));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
-  // overview, or an executive overview after an analysis page
-  const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
+  // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
+  // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
+  // A first page with fewer KPI cards than its layout plans (a report with fewer measures) keeps the second page at that
+  // count (0.2.9, A2-4: this was the MCP's kpiCards, which capped every page).
+  const secondLayout = (c) => { const to = c.preset === 'analysis' ? 'exec' : 'analysis', own = LAYOUTS[to].kpis, k = +c.kpis < LAYOUTS[c.preset].kpis ? Math.min(own, +c.kpis) : own;
+    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', detail: true }, { kpiH: null, mainW: null, split: null }); };
   // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
   // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
   const slidePanel = (cc, lang) => {
@@ -421,58 +620,223 @@
     const r = { x: rtl(cc, lang) ? M : PW - M - w, y: top, w, h: PH - M - top };
     return { layout: open, panel: boxOf(r, cc) };
   };
+  // ---------- the slots a report really gets (0.2.9, audit 2's A2-3) ----------
+  // The report writer used to move the engine's slots itself after plan_layout had given them (absorb, dropLines, its
+  // header growth and its rail fit), and the website's background replayed only part of it. One pure rule here instead,
+  // which the writer, plan_layout and the background all call; the writer measures (its page tabs, its slicers and Reset)
+  // and passes the numbers. Units: the slots' own (page units for a report, the 720 grid for the background), the
+  // options' lengths in the same units.
+  // Round 23 (the owner's "nothing critical left"; the reviewer's part 7 review, 2): a slot whose visual cannot be written
+  // gives its room to the visual beside it (the same row and height, else the same column and width), as a text box
+  // without its sentence does. absorb(out, t): out the slots left, t the one that goes; nothing beside it: the room stays
+  // empty. Touching slots of a dropped kind are merged first (within SLOT_GAP), so two side by side leave no blank band.
+  const OWN_SLOTS = ['title', 'logo', 'text'];
+  const nearSlot = (list, t) => list.slice().sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
+  function absorb(out, t) {
+    const row = nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1), t);
+    const colm = row ? null : nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1), t);
+    if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); return out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
+    if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
+    return out;
+  }
+  const SLOT_GAP = 40;
+  const REFLOW_KEEP = 0.5;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too) a chart beside the rail keeps this share of its height at least when the page reflows
+  const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
+    || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
+  // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
+  //  dropKinds: the kinds whose visual cannot be written (a line chart on a model with no time axis)
+  //  headerRows: how much the header grows for its extra row of page tabs (Round 12, the owner's go on round 11's
+  //    recommendation 2): the title and logo grow (textH keeps their first height), every other slot moves down, and
+  //    those that reach the page's bottom (the last row, the filter rail) give that height up
+  //  railItems: { n, minH, maxH, resetH, pad, gap } (Round 12, #18; seen in Desktop 2.158, round 11: three dropdowns at the
+  //    top of the rail, Reset at its very bottom and 300 page units of empty panel between them): a rail (a slicer slot
+  //    higher than wide) is only as high as its n dropdowns (each minH to maxH) and its Reset (resetH), pad around them
+  //    and gap after each; it stays a column, stack (round 23, the laptop's S1); the slots wholly below it take its
+  //    column (0.2.9, the laptop's sweep S7)
+  function fitSlots(slots, opt) {
+    const o = opt || {}, kinds = o.dropKinds || [];
+    let out = slots.slice(), dropped = [];
+    kinds.forEach((kind) => {
+      const gone = out.filter((x) => x.kind === kind), boxes = gone.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }));
+      for (let merged = true; merged;) {
+        merged = false;
+        for (let i = 0; i < boxes.length && !merged; i++) for (let j = i + 1; j < boxes.length && !merged; j++) if (slotsTouch(boxes[i], boxes[j])) {
+          const a = boxes[i], b = boxes[j], x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+          boxes.splice(j, 1); boxes[i] = { x: x0, y: y0, w: Math.max(a.x + a.w, b.x + b.w) - x0, h: Math.max(a.y + a.h, b.y + b.h) - y0 }; merged = true;
+        }
+      }
+      out = out.filter((x) => x.kind !== kind);
+      boxes.forEach((t) => { out = absorb(out, t); });
+      dropped = dropped.concat(gone);
+    });
+    const extra = +o.headerRows || 0;
+    if (extra) {
+      const head = (x) => x.kind === 'title' || x.kind === 'logo', bottom = Math.max(...out.filter((x) => !head(x)).map((x) => x.y + x.h));
+      out = out.map((x) => (head(x) ? Object.assign({}, x, { h: x.h + extra, textH: x.h }) : Object.assign({}, x, { y: x.y + extra }, x.y + x.h >= bottom - 1 ? { h: x.h - extra } : {})));
+    }
+    const R = o.railItems;
+    if (R) out = out.map((s) => {
+      if (s.kind !== 'slicer' || s.w > s.h) return s;
+      const n = Math.max(1, R.n), sh = Math.max(R.minH, Math.min(R.maxH, (s.h - 2 * R.pad - R.resetH - R.gap * n) / n));
+      return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * R.pad + n * sh + R.gap * n + R.resetH)), stack: true });
+    });
+    // (the laptop's sweep of rc.1, S7: under the shortened rail the page stayed empty to its bottom) a slot wholly below
+    // the rail's new bottom, beside the rail (within SLOT_GAP), takes the rail's column: the row reaches the page's edge
+    const rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    // (design round 8, the re-score's S7: on page 2 the rail shrank beside a chart that runs lower, and the visual under
+    // both starts after that chart, so the page stayed empty under the rail) the content reflows, the rail kept to its
+    // contents (the owner's round-12 rule #18): the slots beside the rail that run past its bottom end there, and the
+    // slots under them and under the rail move up by as much, keeping their bottoms (they grow). Only where every chart
+    // beside keeps half its height at least (REFLOW_KEEP); otherwise the page is left as it is.
+    if (rail) {
+      const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
+        && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
+      const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
+      if (cut > 0 && beside.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
+        const under = (s) => s.y >= B + cut && s.x < Math.max(...beside.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...beside.map((q) => q.x).concat(rail.x));
+        out = out.map((s) => (beside.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
+      } else if (beside.length === 1 && !out.some((q) => q !== beside[0] && q !== rail && !OWN_SLOTS.includes(q.kind) && q.kind !== 'kpi' && q.y < beside[0].y + beside[0].h && q.y + q.h > beside[0].y)) {
+        // (only a chart alone in its row: moving one chart of a row would break the row's line)
+        // (design round 9, S7 with one or two dropdowns: the chart beside would keep too little of its height) the one
+        // chart beside starts under the rail, a row's gap below it, and takes the rail's column: where it keeps its share
+        const s0 = beside[0], next = out.filter((q) => q.y >= s0.y + s0.h && q.x < s0.x + s0.w && q.x + q.w > s0.x).map((q) => q.y - (s0.y + s0.h)), g = next.length ? Math.min(...next) : SLOT_GAP / 2;
+        const y = B + g, h = s0.y + s0.h - y, x0 = Math.min(s0.x, rail.x), x1 = Math.max(s0.x + s0.w, rail.x + rail.w);
+        if (h >= REFLOW_KEEP * s0.h) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
+      }
+    }
+    if (rail) out = out.map((s) => {
+      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
+      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
+      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
+      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
+      return s;
+    });
+    return { slots: out, dropped };
+  }
+  // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is
+  // 1 / page(c).s): the lengths scaled, the kinds and the count kept
+  const fitScale = (opt, k) => { const o = opt || {}, R = o.railItems;
+    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
+
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
-  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots) }.
+  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see
+  // computeSlots), noTime (the model has no time axis: the layout made for it, see noTimeOf), maxKpis (the most KPI cards
+  // the report can fill, its measures: every page has at most that many) }.
+  // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
-  const projectPages = (c, lang, opts) => {
-    const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {};
-    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
+  const projectPages = (given, lang, opts) => {
+    const nm = (x) => label(x, lang), o = opts || {}, c = fitLayout(given);
+    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? T('Overview', 'نظرة عامة') : T('Details', 'التفاصيل')) }] : []);
+    const cap = (l) => (o.maxKpis != null && +o.maxKpis >= 0 && +o.maxKpis < +l.kpis ? Object.assign({}, l, { kpis: Math.floor(+o.maxKpis) }) : l);
     return specs.map((sp) => {
-      const sl = o.panel ? slidePanel(sp.c, lang) : null, layout = sl ? sl.layout : sp.c, p = page(layout);
-      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio }), panel: sl ? sl.panel : null };
+      const c1 = o.noTime ? Object.assign({}, cap(sp.c), { noTime: true }) : cap(sp.c);   // (D16: the page's layout carries it, so its background is drawn the same)
+      const sl = o.panel ? slidePanel(c1, lang) : null, layout = sl ? sl.layout : c1, p = page(layout);
+      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio, tableFields: o.tableFields }), panel: sl ? sl.panel : null };
     });
   };
 
   // ---------- saved designs ----------
+  // The design's written schema (0.2.9, the audit's A2-7: it lived only in the MCP server's key lists). Every key the
+  // engine reads, what it means and the values it takes; repairState checks each one. DESIGN_KEYS and LAYOUT_KEYS are
+  // its keys (the MCP names any other key of a given design as ignored).
+  const SCHEMA = {
+    preset: { about: 'the preset the colours came from, or null', values: Object.keys(PRESETS).concat([null]) },
+    name: { about: 'the theme name (the theme JSON and the file names); at most NAME_MAX (60) characters', type: 'text' },
+    font: { about: 'the font of every text', values: FONTS },
+    data: { about: 'the 8 data colours', type: '8 hex colours' },
+    ui: { about: 'the page colours: background, card (the visuals), text, accent, good, neutral, bad', type: 'hex colours' },
+    chart: { about: 'chart style defaults; auto writes nothing', values: CHART_OPTIONS },
+    layout: {
+      v: { about: 'the saved layout\'s version (3)', type: 'number' },
+      page: { about: 'the page size', values: Object.keys(PAGES).concat('custom') },
+      pageW: { about: 'a custom page\'s width (640-3840; fitted to 4:3-2.4:1)', type: 'number' },
+      pageH: { about: 'a custom page\'s height (360-2160)', type: 'number' },
+      preset: { about: 'the layout', values: Object.keys(LAYOUTS) },
+      kpis: { about: 'the KPI cards in the top row (0 leaves the row out)', values: [0, 1, 2, 3, 4, 5, 6] },
+      filters: { about: 'a filter panel', type: 'boolean' },
+      fpos: { about: 'where the filter panel sits (start and end follow the reading direction)', values: ['start', 'end', 'top'] },
+      dir: { about: 'the reading direction; empty: the language decides', values: ['', 'ltr', 'rtl'] },
+      radius: { about: 'the corners, on the 720 grid', range: [0, 24] },
+      shadow: { about: 'soft shadows', type: 'boolean' },
+      header: { about: 'a header band with the title and the logo', type: 'boolean' },
+      samples: { about: 'sample visuals in the preview (the website only)', type: 'boolean' },
+      transparent: { about: 'transparent visuals over panels drawn in the background image', type: 'boolean' },
+      wideTable: { about: 'on a narrow page a table takes the wider share of its row (default on)', type: 'boolean' },
+      kpiBar: { about: 'the KPI cards\' accent bar', values: ['start', 'top', 'bottom', 'none'] },
+      kpiBarC: { about: 'the KPI bar\'s colour (default accent)', values: BAR_COLORS },
+      kpiBarW: { about: 'the KPI bar\'s thickness', range: RANGE.kpiBarW },
+      headLine: { about: 'the line under the header', values: ['short', 'full', 'none'] },
+      headLineC: { about: 'the header line\'s colour (default accent)', values: BAR_COLORS },
+      headLineW: { about: 'the header line\'s thickness', range: RANGE.headLineW },
+      hh: { about: 'the header\'s height', range: RANGE.hh },
+      logoW: { about: 'the logo\'s width', range: RANGE.logoW },
+      fw: { about: 'the side filter panel\'s width', range: RANGE.fw },
+      fh: { about: 'the top filter strip\'s height', range: RANGE.fh },
+      kpiH: { about: 'the KPI row\'s height', range: RANGE.kpiH },
+      mainW: { about: 'the main chart\'s share of its row, in %', range: RANGE.mainW },
+      split: { about: 'the first chart row\'s share of the chart rows, in %', range: RANGE.split }
+    }
+  };
+  const DESIGN_KEYS = Object.keys(SCHEMA), LAYOUT_KEYS = Object.keys(SCHEMA.layout);
+  // keys of older saved designs the repair still reads (accentBar: v1; kpiCards: the MCP before 0.2.9)
+  const OLD_LAYOUT_KEYS = ['accentBar', 'kpiCards'];
   const fresh = () => ({ preset: 'DataArcus', name: DEFAULT_NAME, font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
   // A saved design (or none) made safe to use, the way the generator repairs it on load: an old or hand-edited save may
   // be partial, so each value that is not valid falls back to its default, and older layouts are upgraded.
   // Changes the design in place and returns it (or a fresh one when there is nothing usable).
-  function repairState(state) {
+  // report (optional): called with { field, given, used, why } for each value that was not used as given (0.2.9, the
+  // audit's A2-4/A2-7: nothing is reset without a word; the MCP lists them, the website repairs quietly as before).
+  function repairState(state, report) {
+    const say = (field, given, used, why) => { if (report) report({ field, given, used, why }); };
     if (!state || typeof state !== 'object' || !Array.isArray(state.data) || state.data.length !== 8) state = fresh();
     {
       const d = fresh(), hex = (v) => (typeof v === 'string' ? clampHex(v) : null), ui = state.ui && typeof state.ui === 'object' ? state.ui : {};
-      state.data = state.data.map((c, i) => hex(c) || d.data[i]);
-      state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => [k, hex(ui[k]) || d.ui[k]]));
-      if (typeof state.name !== 'string') state.name = d.name;
-      if (!FONTS.some((f) => f === state.font)) state.font = d.font;
-      if (state.preset != null && !PRESETS[state.preset]) state.preset = null;
+      state.data = state.data.map((c, i) => { const h = hex(c); if (!h) say(`data[${i}]`, c, d.data[i], 'not a hex colour'); return h || d.data[i]; });
+      state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => { const h = hex(ui[k]); if (!h && ui[k] != null) say('ui.' + k, ui[k], d.ui[k], 'not a hex colour'); return [k, h || d.ui[k]]; }));
+      if (typeof state.name !== 'string') { if (state.name != null) say('name', state.name, d.name, 'not a text'); state.name = d.name; }
+      if ([...state.name].length > NAME_MAX) { const cut = [...state.name].slice(0, NAME_MAX).join(''); say('name', `${[...state.name].length} characters`, cut, `a theme name is ${NAME_MAX} characters at most`); state.name = cut; }
+      if (!FONTS.some((f) => f === state.font)) { if (state.font != null) say('font', state.font, d.font, `use one of ${FONTS.join(', ')}`); state.font = d.font; }
+      if (state.preset != null && !Object.prototype.hasOwnProperty.call(PRESETS, state.preset)) { say('preset', state.preset, null, `not a preset; use one of ${Object.keys(PRESETS).join(', ')}`); state.preset = null; }
     }
     // saved chart choices: only the ones the page offers
-    if (state.chart) state.chart = Object.fromEntries(Object.keys(CHART_OPTIONS).filter((k) => CHART_OPTIONS[k].some((o) => o === state.chart[k])).map((k) => [k, state.chart[k]]));
+    if (state.chart) {
+      if (typeof state.chart === 'object') Object.keys(state.chart).filter((k) => !(CHART_OPTIONS[k] || []).some((o) => o === state.chart[k])).forEach((k) => say('chart.' + k, state.chart[k], null, CHART_OPTIONS[k] ? `use one of ${CHART_OPTIONS[k].join(', ')}` : `not a chart setting; use ${Object.keys(CHART_OPTIONS).join(', ')}`));
+      state.chart = Object.fromEntries(Object.keys(CHART_OPTIONS).filter((k) => CHART_OPTIONS[k].some((o) => o === state.chart[k])).map((k) => [k, state.chart[k]]));
+    }
     state.layout = Object.assign({ v: 3, page: '1920x1080', preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
-    if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
+    if (!LAYOUTS[state.layout.preset]) { say('layout.preset', state.layout.preset, 'exec', `use one of ${Object.keys(LAYOUTS).join(', ')}`); state.layout.preset = 'exec'; }
     // saved layout values outside the choices the page offers fall back to the defaults
     {
-      const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) l[k] = d; };
-      one('kpis', [3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
-      if (!(+l.radius >= 0 && +l.radius <= 24)) l.radius = 8;
+      const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) { say('layout.' + k, l[k], d, `use one of ${list.map((x) => JSON.stringify(x)).join(', ')}`); l[k] = d; } };
+      // an older MCP design's kpiCards (fewer cards than the layout's kpis) is its kpis now
+      if ('kpiCards' in l) { const n = Math.floor(+l.kpiCards); if (l.kpiCards != null && n >= 0 && n < +l.kpis) l.kpis = n; say('layout.kpiCards', l.kpiCards, null, `not a layout key any more: kpis (0-6) is the number of KPI cards; kpis ${l.kpis} used`); delete l.kpiCards; }
+      one('kpis', [0, 1, 2, 3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
+      if (!(+l.radius >= 0 && +l.radius <= 24)) { say('layout.radius', l.radius, 8, 'corners are 0 to 24'); l.radius = 8; }
       one('kpiBar', ['start', 'top', 'bottom', 'none'], 'start'); one('headLine', ['short', 'full', 'none'], 'short');
-      if (!PAGES[l.page] && l.page !== 'custom') l.page = '1920x1080';
-      ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') l[k] = k !== 'filters' && k !== 'transparent'; });
-      ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) delete l[k]; });
+      if (!PAGES[l.page] && l.page !== 'custom') { say('layout.page', l.page, '1920x1080', `use ${Object.keys(PAGES).join(', ')} or custom`); l.page = '1920x1080'; }
+      ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') { const d = k !== 'filters' && k !== 'transparent'; say('layout.' + k, l[k], d, 'true or false'); l[k] = d; } });
+      ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) { say('layout.' + k, l[k], null, 'not a number; the default is used'); delete l[k]; } });
+      // the optional choices (0.2.9, the audit's A2-7: every layout key is checked, not only the ones the page offers):
+      // a value outside its choices is dropped (its default is used) and said
+      const opt = (k, ok, why) => { if (l[k] !== undefined && !ok(l[k])) { say('layout.' + k, l[k], null, why); delete l[k]; } };
+      opt('kpiBarC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`); opt('headLineC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`);
+      opt('fpos', (v) => ['start', 'end', 'top'].includes(v), 'use start, end or top');
+      opt('wideTable', (v) => typeof v === 'boolean', 'true or false');
     }
     return state;
   }
   // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped;
   // a name of only symbols leaves nothing, so its files are power-bi-theme
-  const fileBase = (name) => themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
+  // (night audit AUD-035) a Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9) is no file name on Windows, even
+  // with an extension ("con.json" is the device CON): it gets "_" after it. pbip-export.js's report names do the same
+  const fileBase = (name) => (themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme')
+    .replace(/^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3])$/i, '$1_');
 
   const api = {
-    PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
-    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette,
+    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
+    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

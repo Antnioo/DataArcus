@@ -6,6 +6,33 @@
  * (c) DataArcus. All rights reserved.
  */
 (function (root) {
+  // the one field-meaning rule (assets/js/field-meaning.js, shared with the health check: the block audit's A1-11, 11 Oct)
+  const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
+  /**
+   * The field shape the picker gives out (builder 7's audit A3-9, 11 Oct: one documented contract):
+   * @typedef {Object} Field
+   * @property {string} t        the table
+   * @property {string} [c]      a column's name (a column field)
+   * @property {string} [m]      a measure's name (a measure field)
+   * @property {string} [type]   a column's type as the model gives it (string, int64, double, dateTime, unknown...)
+   * @property {boolean} [num]   a column the model types as a number
+   * @property {{t: string, c: string}} [sortBy]  the number column that puts a month or day name in order (the model has none)
+   * @property {boolean} [ordered] the model sorts the column itself (its sort-by column)
+   * @property {{t: string, c: string}} [dateOf]  the date a month label is ordered and limited by (a date table's)
+   * @property {boolean} [time]  a time category (A3-8): a date table's column, one sorted by a number, or a date
+   * @property {{kind: string, rows: ?number, family: string}} [cal]  a calendar category (A3-7)
+   * @property {boolean} [pct]   a measure shown as a percent; pctFormat its format
+   * @property {string} [pctFormat]
+   * @property {string} [wholeFormat] a measure shown as its whole number, in this format
+   * @property {number} [agg]    a column a visual counts or sums (0 Sum, 2 DistinctCount, 5 Count); name its label
+   * What the picker knows beyond that shape (a measure's DAX, a column's language, place and twin, an amount, a TMDL
+   * measure under construction) is kept in META, a side table no copy of a field keeps or loses: never a hidden property.
+   */
+  const META = new WeakMap(), REACH = new WeakMap();
+  const meta = (o) => { let r = META.get(o); if (!r) { r = {}; META.set(o, r); } return r; };
+  const metaOf = (o) => (o && typeof o === 'object' && META.get(o)) || {};
+  // a measure's DAX: the reader's (META), or the expression the object carries (a model.bim measure, a caller's)
+  const exprOf = (o) => { if (!o) return ''; const e = metaOf(o).expr; if (e != null) return e; const x = o.expr != null ? o.expr : o.expression; return Array.isArray(x) ? x.join('\n') : x == null ? '' : String(x); };
   // ---------- reading the model ----------
   const decodeText = (u8) => {
     if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
@@ -13,70 +40,39 @@
     if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
     return new TextDecoder('utf-8').decode(u8);
   };
-  // TMDL names: plain, or in single quotes with '' for a quote; a name ends at " =" or the end of the line
-  function tmdlName(rest) {
-    rest = rest.trim();
-    if (rest[0] === "'") {
-      let out = '', i = 1;
-      for (; i < rest.length; i++) {
-        if (rest[i] === "'") { if (rest[i + 1] === "'") { out += "'"; i++; } else break; } else out += rest[i];
-      }
-      return out;
-    }
-    return rest.replace(/\s*=.*$/, '').trim();
-  }
-  // Only what the field picker needs: tables, their columns (type, hidden, category) and measures (hidden, format).
-  // Expressions are skipped, fenced (```) or not, since they sit deeper than the properties.
-  function parseTmdl(text) {
-    const tables = [];
-    let table = null, cur = null, fence = false;
-    text.split(/\r?\n/).forEach((raw) => {
-      const line = raw.replace(/^( {4})+/, (s) => '\t'.repeat(s.length / 4));
-      const trimmed = line.trim();
-      if (fence) { if (trimmed === '```') fence = false; else if (cur && cur.isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; } return; }
-      if (/=\s*```\s*$/.test(trimmed)) fence = true;
-      if (!trimmed || trimmed.startsWith('///')) return;
-      const depth = line.match(/^\t*/)[0].length;
-      if (depth === 0) {
-        const m = trimmed.match(/^table\s+(.+)$/);
-        table = m ? { name: tmdlName(m[1]), hidden: false, date: false, columns: [], measures: [] } : null;
-        if (table) tables.push(table);
-        cur = null;
-      } else if (depth === 1 && table) {
-        const m = trimmed.match(/^(column|measure)\s+(.+)$/);
-        if (m) {
-          // a column with no dataType line (columns of DAX tables in a project Desktop saved) is 'unknown', never
-          // guessed as text: guessing made numbers and dates look like categories (a chart "by Amount")
-          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false, divides: divides(m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '')) };
-          if (m[1] === 'measure') { Object.defineProperty(cur, 'isMeasure', { value: true }); addExpr(cur, m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '').replace(/```\s*$/, '')); }
-          table[m[1] === 'column' ? 'columns' : 'measures'].push(cur);
-        } else {
-          cur = null;
-          if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) table.hidden = true;
-          if (/^dataCategory\s*:\s*Time$/i.test(trimmed)) table.date = true;
-        }
-      } else if (depth === 2 && cur) {
-        const p = trimmed.match(/^(dataType|dataCategory|formatString)\s*:\s*(.*)$/);
-        if (p) cur[p[1]] = p[2].trim();
-        else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
-        else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
-        else if (cur.isMeasure && !/^[A-Za-z]+\s*(:|=|$)/.test(trimmed)) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-      } else if (depth > 2 && cur && cur.isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-    });
-    return tables;
-  }
+  // (the audit's A1-8: one TMDL parse for the website and the MCP: a TMDL folder is read by tmdl-model.js into the
+  // model's JSON, as a model.bim is, and the picker's fields and relationships come from that JSON; this file has no
+  // TMDL parser of its own any more)
+  const Tmdl = () => (typeof module !== 'undefined' && module.exports ? require('./tmdl-model.js') : root.TmdlModel);
   // a measure's expression, kept (up to 4,000 characters) only for what the picker reads from it: whether it counts and
   // whether it returns text (never sent anywhere: the field picker and the report writer read it on the user's machine)
-  const addExpr = (m, line) => { const t = String(line || '').trim(); if (!t) return; const e = m.expr ? m.expr + '\n' + t : t; Object.defineProperty(m, 'expr', { value: e.slice(0, 4000), writable: true, configurable: true }); };
+  const addExpr = (m, line) => { const t = String(line || '').trim(); if (!t) return; const prev = metaOf(m).expr; meta(m).expr = (prev ? prev + '\n' + t : t).slice(0, 4000); };
   // model.bim / DataModelSchema (TMSL JSON) into the same shape
   function fromTmsl(json) {
     const m = (json && json.model) || json || {};
-    return (m.tables || []).filter((t) => t && t.name != null).map((t) => ({
+    return markCalendars((m.tables || []).filter((t) => t && t.name != null).map((t) => tableExprCols(t, {
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
-        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {})),
-      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = { name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }; addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
-    }));
+        // (A1-6: a column with no type is unknown, as in TMDL: never guessed as text)
+        .map((c) => { const o = Object.assign({ name: String(c.name), dataType: c.dataType || 'unknown', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.displayFolder ? { displayFolder: String(c.displayFolder) } : {}, c.formatString != null ? { formatString: String(c.formatString) } : {}, c.summarizeBy ? { summarizeBy: String(c.summarizeBy) } : {});
+          if (c.expression != null) meta(o).expr = String(Array.isArray(c.expression) ? c.expression.join('\n') : c.expression).slice(0, 4000);   // (a calculated column's DAX: D11, two values)
+          if (c.isKey === true || String(c.isKey) === 'true') meta(o).key = true;   // (round 8, N1: the model's own key column)
+          return o; }),
+      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = Object.assign({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }, x.displayFolder ? { displayFolder: String(x.displayFolder) } : {}, x.formatStringDefinition ? { formatStringDefinition: true } : {}); addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
+    })), m);
+  }
+  // (round 10, RESCORE-3's D11: a calculated table's columns made by ADDCOLUMNS or SELECTCOLUMNS ("Week Type", IF (...)):
+  // each column without its own expression takes its pair's, so a two-word IF there marks it two-valued)
+  function tableExprCols(t, out) {
+    const src = (t.partitions || []).map((p) => p && p.source && p.source.expression).concat([t.expression]).find((e) => e != null);
+    const e = String(Array.isArray(src) ? src.join('\n') : src || '').trim(), m0 = e.match(/^(ADDCOLUMNS|SELECTCOLUMNS)\s*\(([\s\S]*)\)$/i);
+    // (round 11, RESCORE-4's N18: a table built with CALENDAR or CALENDARAUTO is a calendar by its shape, whatever its name)
+    if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) meta(out).calendarShape = true;   // (the picker's note: the model's answers are unchanged)
+    if (!m0) return out;
+    const a = argsOf(m0[2]);
+    for (let i = 1; i + 1 < a.length; i += 2) { const nm = a[i].match(/^"((?:[^"]|"")*)"$/); if (!nm) continue;
+      const c = out.columns.find((x) => x.name === nm[1].replace(/""/g, '"')); if (c && metaOf(c).expr == null) meta(c).expr = a[i + 1].slice(0, 4000); }
+    return out;
   }
   // Round 23 (the owner's "nothing critical left": the website's picker had no relationships, so a download could show
   // the same total on every bar): the active relationships a model carries, { fromTable, toTable }, as the MCP gives
@@ -84,19 +80,13 @@
   // from a project's definition/relationships.tmdl (isActive: false left out; a column is Table.Column, either quoted).
   const relsOfTmsl = (json) => { const m = (json && json.model) || json || {};
     return (m.relationships || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false && String(r.isActive) !== 'false' && r.active !== false).map((r) => Object.assign({ fromTable: String(r.fromTable), toTable: String(r.toTable) }, /^bothDirections$/i.test(r.crossFilteringBehavior || r.cross || '') ? { both: true } : {})); };   // (part 5: both: filters both ways)
-  function relsOfTmdl(text) {
-    const out = [], tableOf = (v) => { const m = String(v).trim().match(/^('(?:[^']|'')*'|[^.]+)\./); return m ? tmdlName(m[1]) : null; };
-    String(text || '').split(/\r?\n(?=relationship\s)/).forEach((block) => {
-      if (!/^relationship\s/.test(block.trim())) return;
-      const get = (k) => { const m = block.match(new RegExp('^\\s+' + k + '\\s*:\\s*(.+)$', 'm')); return m ? m[1].trim() : null; };
-      const from = tableOf(get('fromColumn') || ''), to = tableOf(get('toColumn') || '');
-      if (from && to && !/^false$/i.test(get('isActive') || '')) out.push(Object.assign({ fromTable: from, toTable: to }, /^bothDirections$/i.test(get('crossFilteringBehavior') || '') ? { both: true } : {}));
-    });
-    return out;
-  }
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 
+  // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too): a file over them is refused
+  // before it is read (the audit of the reading block, "seen": the website read a model.bim of any size)
+  const MB = 1024 * 1024, LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB };
+  const tooBig = () => new Error('TOO_BIG');
   // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
   // A model is known by its whole path, not its name: a copy with the same name in a subfolder (a backup) is another
   // model, and the one nearest the top of the chosen folder is used.
@@ -110,14 +100,16 @@
     const path = models[0], folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
     const bim = inside.find((f) => /\/model\.bim$/i.test(f.webkitRelativePath || f.name));
     let tables, relationships = [];
+    if (bim && (bim.size || 0) > LIMITS.model) throw tooBig();
     if (bim) { const j = JSON.parse(decodeText(new Uint8Array(await bim.arrayBuffer()))); tables = fromTmsl(j); relationships = relsOfTmsl(j); }
     else {
-      const rf = inside.find((f) => /\/definition\/relationships\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (rf) relationships = relsOfTmdl(decodeText(new Uint8Array(await rf.arrayBuffer())));
-      const tmdl = inside.filter((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (!tmdl.length) throw new Error('NO_MODEL');
-      tables = [];
-      for (const f of tmdl) tables.push(...parseTmdl(decodeText(new Uint8Array(await f.arrayBuffer()))));
+      const tmdl = inside.filter((f) => /\/definition\/.+\.tmdl$/i.test(f.webkitRelativePath || f.name));
+      if (!tmdl.some((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name))) throw new Error('NO_MODEL');
+      if (tmdl.some((f) => (f.size || 0) > LIMITS.entry) || tmdl.reduce((n, f) => n + (f.size || 0), 0) > LIMITS.total) throw tooBig();
+      const parts = [];
+      for (const f of tmdl) parts.push({ path: rel(f).slice(path.length + 1), text: decodeText(new Uint8Array(await f.arrayBuffer())) });
+      const j = Tmdl().fromFiles(parts);
+      tables = fromTmsl(j); relationships = relsOfTmsl(j);
     }
     // the reports already next to the model (X.Report folders, X.pbip files), so the new one never takes their name
     const dir = path.includes('/') ? path.replace(/\/[^/]*$/, '') + '/' : '', reports = new Set();
@@ -130,6 +122,7 @@
   // A model.bim, or a .pbit (unzipped by the Model Health Check's worker, which already reads them)
   function fromFile(file, workerUrl) {
     if (/\.pbix$/i.test(file.name)) return Promise.reject(new Error('PBIX'));
+    if ((file.size || 0) > (/\.pbit$/i.test(file.name) ? LIMITS.file : LIMITS.model)) return Promise.reject(tooBig());
     return file.arrayBuffer().then((buf) => {
       const u8 = new Uint8Array(buf);
       if (!(u8[0] === 0x50 && u8[1] === 0x4b)) { const j = JSON.parse(decodeText(u8)); return { tables: clean(fromTmsl(j)), relationships: relsOfTmsl(j) }; }
@@ -150,39 +143,153 @@
   // A percentage: a % in the format or the name, or a name that says ratio or rate. "Margin" and "share" are money
   // as often as a percentage ("Total Margin" = SUM): they count only when the measure has no format and its DAX
   // divides (DIVIDE or /). x: { name, formatString, divides }
-  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
-  const divides = (expr) => DIVIDES.test(Array.isArray(expr) ? expr.join('\n') : String(expr == null ? '' : expr));
+  const divides = FM.divides;
   // (round 12, the owner's ask, 6 Oct 2026: "vs", "growth" and "change" count too, on the same terms as margin and share)
-  const PCT = (x) => /%/.test(x.formatString || '') || /%|ratio|rate|نسبة/i.test(x.name) || (/margin|share|\bvs\b|growth|change|هامش|نمو/i.test(x.name) && !x.formatString && !!x.divides);
+  // (the block audit's A1-11, 11 Oct: the format string decides first: a number format without % is no percent; a name
+  // alone counts only by whole words and never for a NOT_PCT name: "Corporate Revenue", "Generated Leads", "Exchange
+  // Rate" are no percents. The rule is field-meaning.js's, shared with the health check)
+  const PCT = (x) => FM.formatHasPercent(x.formatString) || (!(x.formatString && FM.isNumberFormat(x.formatString)) && FM.percentFromName(x.name, { divides: !!x.divides, format: x.formatString, soft: 'noFormat' }));
   // Round 12 (#26; seen in Desktop 2.158, golden task 8: a KPI card showed "Yes"): a measure that shows text, never a
   // number: a format of quoted words only ("Yes";"Yes";"No"), Yes/No, True/False, On/Off, a date format; or DAX that
   // returns text (a string at the top, FORMAT, CONCATENATE, text joined with &, an IF or SWITCH whose results are
   // strings). It is never put on a KPI card.
-  const TEXT_FMT = (f) => { if (!f) return false; if (/^\s*(yes\/no|true\/false|on\/off)\s*$/i.test(f)) return true; if (/^\s*(general( number)?|currency|fixed|standard|percent|scientific)\s*$/i.test(f)) return false;
-    const bare = String(f).replace(/"[^"]*"/g, '').replace(/\\./g, ''); return !/[0#%]/.test(bare); };
-  const TEXT_EXPR = /^\s*"|^\s*(FORMAT|CONCATENATEX?|UNICHAR|UPPER|LOWER|LEFT|RIGHT|MID|SUBSTITUTE|REPT|COMBINEVALUES)\s*\(|"\s*&|&\s*"|\b(IF|SWITCH)\s*\([\s\S]*,\s*"[^"]*"\s*\)\s*$/i;
-  const isText = (x) => TEXT_FMT(x.formatString) || TEXT_EXPR.test(x.expr || '');
+  const TEXT_FMT = FM.isTextFormat, TEXT_EXPR = FM.TEXT_EXPR;
+  const isText = (x) => TEXT_FMT(x.formatString) || TEXT_EXPR.test(exprOf(x));
   // a measure that counts (its DAX counts rows or values)
-  const COUNTS = /\b(COUNTROWS|DISTINCTCOUNT(NOBLANK)?|COUNTA?X?|COUNTBLANK)\s*\(/i;
+  const COUNTS = FM.COUNTS;
   // Round 12, the owner's ask (6 Oct 2026): a KPI card shows a percent as a percent without useless decimals (the
   // model's percent format where it has one decimal or none, otherwise "0.0%"), a measure whose format has no decimals
   // (or a count without a format) as its whole number with separators ("179", "101,914"), and the rest with automatic
-  // units and 2 decimals. Returns { pctFormat } or { wholeFormat } or {}.
-  const cardKind = (x) => {
+  // units and 2 decimals. The model's own format read alone: { pct, pctFormat } or { pct, wholeFormat } or { pct }.
+  const ownKind = (x) => {
     const f = String(x.formatString || '');
-    if (PCT(x)) { const d = (f.match(/\.([0#]+)\s*%/) || ['', ''])[1].length; return { pctFormat: /%/.test(f) && d <= 1 ? f : '0.0%' }; }
-    if (isText(x)) return {};
-    if (f && !/\.[0#]/.test(f) && /[0#]/.test(f)) return { wholeFormat: /^[#,0]+$/.test(f) ? '#,0' : f };
-    if (!f && COUNTS.test(x.expr || '')) return { wholeFormat: '#,0' };
-    return {};
+    if (PCT(x)) { const d = (f.match(/\.([0#]+)\s*%/) || ['', ''])[1].length; return { pct: true, pctFormat: /%/.test(f) && d <= 1 ? f : '0.0%' }; }
+    if (isText(x)) return { pct: false };
+    // 0.2.9 (O-2 of the owner's test of 0.2.8: "EUR 54,662,000" on a card where he wanted EUR 54.66M): an amount (a
+    // currency in its format, or a sum of money: a SUM with a money word in its name) keeps automatic units with 2
+    // decimals although its format has none; counts and other whole numbers stay whole
+    if (f && !/\.[0#]/.test(f) && /[0#]/.test(f)) return AMOUNT(x, f) ? { pct: false } : { pct: false, wholeFormat: /^[#,0]+$/.test(f) ? '#,0' : f };
+    if (!f && COUNTS.test(exprOf(x))) return { pct: false, wholeFormat: '#,0' };
+    return { pct: false };
   };
+  // A measure's card and table formats (builder 7's audit A3-3, 11 Oct: the server re-decided them after the picker by
+  // a second rule, so the website's download and the MCP's showed one measure two ways): the one format rule
+  // (field-meaning.js reportFormatOf) decides where it would change the model's format; the model's own format (ownKind)
+  // where the rule leaves it alone. tables: the model's (a sum of a whole-number column is a count).
+  // Returns { pct, pctFormat?, wholeFormat?, tableFormat?, fullFormat? }: tableFormat, a table column's format;
+  // fullFormat, the card's with kpiValues "full" (never a percent)
+  // (writer round 9, the laptop's N8, SHAPES-RC4: "-€0,050.87M": the model's "€#,##0,000;-€#,##0,000;€0" has fixed zero
+  // placeholders after a thousands comma; scaled to millions by the card's automatic units the number is padded to four
+  // digits. Radiation from the report writer's block, explained: such a card shows the number unscaled, in the model's
+  // format with the padding taken out (all but the last zero of each section's whole part made "#"), as a whole number's
+  // card does (Custom units and its format, measured D8); an ordinary "€#,0" keeps automatic units.)
+  const padded = (f) => String(f || '').split(';').some((sec) => { const m = sec.replace(/"[^"]*"|\\./g, '').match(/[#0,]+/); return !!m && /0,*[#0]/.test(m[0]); });
+  // (round 10, RESCORE-3 N11 + N13: the unscaled number, "-€50,866,000", was cut on a 6-card row and read in another style
+  // than the row's "€ 105.53M" cards) the card's own format scales to millions (the value's size isn't known when the
+  // report is written): each sign section keeps its symbols and text, its number becomes #,0,,.00"M" (Microsoft's rule: two
+  // commas just left of the decimal point divide by a million, model, visual and element level alike), so a text suffix
+  // follows the "M" with its space ("-50.87M AED"); a zero section (the third) stays as the model wrote it
+  const scaled = (f) => String(f).split(';').map((sec, i) => { if (i === 2) return sec; let done = false;
+    return sec.replace(/("[^"]*"|\\.)|([#0][#0,]*(?:\.[#0]+)?)/g, (all, q, run) => (q || done ? all : (done = true, '#,0,,.00"M"'))); }).join(';');
+  // (F4) a section's quoted text after its last digit placeholder, or before its first when that text is no currency
+  const glued = (f) => String(f || '').split(';').some((sec) => { const last = Math.max(sec.lastIndexOf('0'), sec.lastIndexOf('#')), first = sec.search(/[#0]/);
+    return (sec.match(/"[^"]*"/g) || []).some((q) => { const at = sec.indexOf(q); return /\S/.test(q.slice(1, -1)) && (at > last || (at < first && !hasCurrency(q))); }); });
+  const cardKind = (x, tables) => { const k = cardKind0(x, tables), f = x.formatString;
+    if (!k.pct && padded(f) && !(k.wholeFormat && !padded(k.wholeFormat))) k.wholeFormat = scaled(f);
+    // (writer round 9, the laptop's F4, N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units,
+    // the unit letter glued to the text; with Custom units and the model's own format it read right: a format with quoted
+    // text after the number (a suffix), or before it when it is no currency (the owner's O-2: "EUR" #,0 reads "EUR 54.66M"
+    // in automatic units, and so does a currency code or sign before the number), is shown unscaled in that format, as N8's)
+    // (round 10's review: a text suffix without padding is not forced to millions, "950 AED" would read "0.00M AED"; the
+    // card takes N8-LAB's setting B, automatic units with its decimals left unset, measured right: "-51K AED", "51K AED",
+    // the space kept, a small value whole)
+    else if (!k.pct && !k.wholeFormat && glued(f)) k.unitAuto = true;
+    return k; };
+  const cardKind0 = (x, tables) => {
+    const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);
+    if (r && /%/.test(r.format)) return { pct: true, pctFormat: r.format, tableFormat: r.format };
+    const own = ownKind(x);
+    // (writer round 8, RESCORE-1 D18, radiation from the report writer's block: "$4,344,705.7026" in a table, the model's own
+    // format where the rule leaves it alone: a table shows 2 decimals at most, the report's number rule, its currency and
+    // separators kept; the cards keep their own rule)
+    // (writer round 9, RESCORE-2 D18: "$2,484,247.5", "$1,395,881.25" and "$2,721,900" in one column from "$#,0.####", cut to
+    // "$#,0.##": optional digits are made fixed, so one column has one number of decimals, 2; a fixed 1 or 2 stays as it is)
+    const fs0 = String(x.formatString || ''), dec = (fs0.match(/\.[0#]+/g) || []);
+    const two = !own.pct && !/%/.test(fs0) && dec.some((d) => d.length > 3 || d.includes('#')) ? fs0.replace(/\.[0#]+/g, '.00') : null;
+    if (!r) return Object.assign(own, own.pctFormat && own.pctFormat !== x.formatString ? { tableFormat: own.pctFormat } : two ? { tableFormat: two } : {});
+    delete own.pctFormat; own.pct = false;
+    // (the second sweep, I8: an amount by its formula, a sum of a decimal column or a row's quantity x price, keeps
+    // automatic units on its card although the model gives it no format; a count or a whole quantity stays whole)
+    const amountByFormula = !String(x.formatString || '').trim() && !x.formatStringDefinition && sumOfDecimal(exprOf(x), tables || []);   // (no format at all: a format the model gives decides, round 12)
+    if (amountByFormula) delete own.wholeFormat;
+    return Object.assign(own, r.format === '#,0' && !amountByFormula ? { wholeFormat: '#,0' } : {}, { tableFormat: r.format, fullFormat: r.format });
+  };
+  // an amount for the card rule above, read from the format string: a currency in it, by its ISO 4217 code ("EUR" #,0,
+  // #,0 "INR") or a currency sign ($, €, £, ¥, ₹, the Gulf's د.إ and ر.س ...); a unit ("kg", "pcs") is no currency.
+  // (The cross-review's G2, 11 Oct: the first cut took any short quoted text for a currency.) Without a currency, a plain
+  // SUM whose name says money and whose format has no unit is an amount too: a weak tiebreak by the name, documented.
+  const hasCurrency = FM.hasCurrency, hasUnit = FM.hasUnit;
+  const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
+  const AMOUNT = (x, f) => !COUNTS.test(exprOf(x)) && (hasCurrency(f) || (!hasUnit(f) && MONEY.test(x.name || '') && /^\s*SUM\s*\(/i.test(exprOf(x))));
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
-  const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
+  // (builder 7's audit A3-5, 11 Oct: "Avg" and "Average" made "Average Order Value" a variant; an average is a base
+  // measure. A variant is a time-intelligence measure: by its name's whole words, or by its DAX (language-free))
+  const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|\d+D)\b/i;
+  const TIME_DAX = /\b(SAMEPERIODLASTYEAR|DATEADD|PARALLELPERIOD|PREVIOUS(DAY|MONTH|QUARTER|YEAR)|TOTAL(MTD|QTD|YTD)|DATES(MTD|QTD|YTD|INPERIOD|BETWEEN))\s*\(/i;
+  const isVariant = (m) => VARIANT.test(String(m.name)) || TIME_DAX.test(exprOf(m));
   // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
   // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
   const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
-  const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|الإيرادات|المبيعات|الأرباح|الطلبات/i;
-  const COUNTISH = /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i;
+  // 0.2.9 (O-7: an executive page got computed indicators where the user wanted the core counts and amounts; the
+  // cross-review's G1, 11 Oct: ranked by the measure's shape and format, not by a list of names): a plain count or sum
+  // of one column is a core number (+3), an amount in a currency +1; the name words (TIEBREAK_WORDS) only break ties (+0.5)
+  const CORE = /^\s*(SUM|COUNTROWS|COUNT|COUNTA|DISTINCTCOUNT(NOBLANK)?)\s*\([^()]*\)\s*$/i;
+  // (the rc's laptop proof, 11 Oct: picks by formula and format, never by names)
+  // D4: a what-if parameter's value is the slicer's selection, never a number of the model: SELECTEDVALUE, or
+  // IF(HASONEVALUE(...), VALUES(...)), at the top of the DAX
+  // S4: a measure that needs one period: blank over the whole date range, or guarded on one selected value
+  const NEEDS_PERIOD = /\b(PREVIOUS(DAY|MONTH|QUARTER|YEAR)|NEXT(DAY|MONTH|QUARTER|YEAR)|PARALLELPERIOD|HASONEVALUE|HASONEFILTER|ISFILTERED|ISINSCOPE)\s*\(/i;
+  const PARAM_DAX = /^\s*(SELECTEDVALUE\s*\(|IF\s*\(\s*HASONEVALUE\s*\()/i;
+  // D2: a helper (a Top N threshold, a rank) only serves another visual's filter or sort
+  const HELPER_DAX = /\b(RANKX|TOPN|RANK)\s*\(/i;
+  // D14: a share of the total, [X] divided by [X] with every filter removed, is 100 % on a card: never a card
+  // (round 8, N5: any value over itself under ALL, written with DIVIDE or "/": a measure, a SUM, any expression; spaces aside)
+  const SHARE_OF_ALL = { test: (e) => { const x = String(e || '').replace(/\s+/g, '');
+    return /DIVIDE\((.+?),CALCULATE\(\1,(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT)\(/i.test(x) || /^(.+?)\/CALCULATE\(\1,(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT)\(/i.test(x); } };
+  // N4 (round 8): the model's placeholder measure: no expression, BLANK (), or a constant (a number or a text): never a card
+  const PLACEHOLDER = { test: (e) => /^\s*(BLANK\s*\(\s*\)|-?\d+(\.\d+)?|"(?:[^"]|"")*")?\s*$/i.test(String(e || '')) };
+  // D5 + D13: an amount by its formula: a SUM of a decimal column, or a SUMX that multiplies (quantity x price); the
+  // money format (hasCurrency) says it too. Counts and sums of whole numbers are quantities, ranked after the amounts
+  const colTypeOf = (tables, t, c) => { const tb = (tables || []).find((x) => String(x.name).toLowerCase() === String(t).toLowerCase()), co = tb && (tb.columns || []).find((x) => String(x.name).toLowerCase() === String(c).toLowerCase()); return co ? String(co.dataType || '').toLowerCase() : null; };
+  const sumOfDecimal = (e, tables) => { const m = String(e).match(/^\s*SUM\s*\(\s*'?([^'\[\]()]+?)'?\s*\[\s*([^\]]+)\]\s*\)\s*$/i); if (m) return /^(double|decimal)$/.test(colTypeOf(tables, m[1].trim(), m[2].trim()) || '');
+    return ROW_PRODUCT.test(String(e)); };
+  // a row's quantity times its price: SUMX over one table that multiplies two of its columns (not a column by a constant,
+  // which is a computed indicator)
+  const ROW_PRODUCT = /^\s*SUMX\s*\(\s*'?([^'(),]+?)'?\s*,\s*'?\1'?\s*\[[^\]]+\]\s*\*\s*'?\1'?\s*\[[^\]]+\]\s*\)\s*$/i;
+  // D6 + D14: what a measure's value is, for "never two cards with the same value": the same DAX (spaces and case aside),
+  // an alias ([Other] alone, resolved in suggest), or a count of the same column (COUNT, COUNTA)
+  // (round 8, N5 + D6: a count of a table's rows, COUNTROWS or COUNT/COUNTA of one of its columns, is one value; so is a
+  // CALCULATE that only removes filters around another value: on a card of the whole page it shows the same number)
+  // (round 10: a measure's VARs put into its RETURN, so the shape rules read "VAR t = [Total] RETURN DIVIDE ( [A], t )" as
+  // DIVIDE ( [A], [Total] ); a VAR's text in parentheses unless it is one measure)
+  const inlineVars = (e0) => { const e = String(e0 || '').trim(), m = e.match(/^VAR\b([\s\S]*?)\bRETURN\b([\s\S]*)$/i); if (!m) return e;
+    const vars = []; String('VAR' + m[1]).replace(/\bVAR\s+([A-Za-z_][\w.]*)\s*=\s*([\s\S]*?)(?=\bVAR\b|$)/gi, (x, n, v) => { vars.push([n, v.trim()]); return x; });
+    let r = m[2].trim(); vars.slice().reverse().forEach(([n, v]) => { const val = /^\[[^\]]+\]$/.test(v) ? v : '(' + v + ')'; r = r.replace(new RegExp('(^|[^\\w\\[\'.])' + n.replace(/\./g, '\\.') + '(?![\\w\\]])', 'g'), (x, p1) => p1 + val); });
+    return r; };
+  // N10 (round 10): a chart helper that shows a value only where it equals its own MAX or MIN over ALL (...), else blank:
+  // "No data" on a card
+  const EXTREME = { test: (e) => { const x = inlineVars(e); return /\bIF\s*\(/i.test(x) && /\b(MAXX?|MINX?)\s*\(\s*(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT)\s*\(/i.test(x) && /[^<>!]=[^>]/.test(x.replace(/\bVAR\b[\s\S]*?=/gi, '')); } };
+  const argsOf = (x) => { const out = []; let d = 0, q = false, cur = ''; for (const ch of x) { if (ch === '"') q = !q; if (!q && ch === '(') d++; if (!q && ch === ')') d--;
+    if (!q && d === 0 && ch === ',') { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out.map((a) => a.trim()); };
+  const valueKey = (e) => { const x = String(e || '').trim(), alias = x.match(/^\[([^\]]+)\]$/); if (alias) return 'alias:' + alias[1].toLowerCase();
+    const rows = x.match(/^COUNTROWS\s*\(\s*'?([^'\[\]()]+?)'?\s*\)$/i) || x.match(/^COUNTROWS\s*\(\s*(?:ALL|ALLNOBLANKROW|ALLSELECTED)\s*\(\s*'?([^'\[\]()]+?)'?\s*\)\s*\)$/i) || x.match(/^(?:COUNT|COUNTA)\s*\(\s*'?([^'\[\]()]+?)'?\s*\[[^\]]+\]\s*\)$/i); if (rows) return 'rows:' + rows[1].replace(/\s+/g, ' ').trim().toLowerCase();
+    const calc = x.match(/^CALCULATE\s*\(([\s\S]*)\)$/i), a = calc && argsOf(calc[1]);
+    if (a && a[0] && a.slice(1).every((f) => /^(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i.test(f))) return valueKey(a[0]);
+    return 'dax:' + x.replace(/\s+/g, '').toLowerCase(); };
+  // The name words, one named tie-break (builder 7's audit A3-6, 11 Oct: the rank is the measure's shape first; these
+  // English and Arabic words only break ties between measures of the same shape, +0.5 each; a model in another
+  // language ranks by shape alone): money words and count words
+  const TIEBREAK_WORDS = { money: /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|budget|الإيرادات|المبيعات|الأرباح|الطلبات|الميزانية/i, count: /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i };
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
   // (round 23, the owner's "nothing critical left": "Order Id", "Invoice No" and "Customer Code" were chart categories:
   // an identifier's last word (id, key, code, guid, sk, no, num, number) is read without regard to case; the other words
@@ -191,7 +298,11 @@
   const NOT_CAT_ID = /(^|[\s_-])(id|key|code|guid|sk|no|num|number)s?$/i, NOT_CAT_CAMEL = /[a-z](Id|No|Code)$/;
   // (round 23 part 5, the review's 9: read without an Arabic mark, so "Order No (AR)" is an identifier too)
   const NOT_CAT = { test: (x0) => { const x = String(x0).replace(/\s*\((arabic|عربي|ar)\)\s*$/i, ''); return NOT_CAT_OLD.test(x) || NOT_CAT_ID.test(x) || NOT_CAT_CAMEL.test(x); } };
-  const DATE_TABLE = /date|calendar|time|period|تقويم|تاريخ/i;
+  // a calendar by its name (the block audit's A3-1, 11 Oct: tested without word boundaries, "Candidates", "Updates",
+  // "Mandates", "Overtime" and "Time Sheets" were calendars and lost their categories): only a name that ends with a
+  // calendar word (Date, Dates, Calendar: "Gulf Calendar", "Dim Date"), or is one (Time, Period), Arabic too
+  const CAL_NAME = /(^|\s)(dates?|calendar)(\s*table)?$|^(dim\s*)?(time|period|periods)$|(^|\s)(التقويم|تقويم|التاريخ)$/i;
+  const splitName = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
   // names that read as a number or a date, for columns whose type the files don't give
   const NUMBERISH = /amount|qty|quantity|price|cost|value|sales|revenue|total|count|number|units|profit|margin|rate|score|percent|%|offset|sort|المبلغ|الكمية|السعر|القيمة|المبيعات|العدد/i;
   const DATEISH = /date|time|stamp|تاريخ|وقت/i;
@@ -247,49 +358,168 @@
   const twinKey = (n) => String(n).replace(AR_MARK, '').replace(AR_SUFFIX, '').trim().toLowerCase();
   function pairTwins(columns) {
     const byTable = {};
-    columns.filter((c) => c.lang).forEach((c) => { (byTable[c.t] = byTable[c.t] || []).push(c); });
+    columns.filter((c) => metaOf(c).lang).forEach((c) => { (byTable[c.t] = byTable[c.t] || []).push(c); });
     Object.values(byTable).forEach((cs) => {
-      const ar = cs.filter((c) => c.lang === 'ar'), en = cs.filter((c) => c.lang === 'en'), free = (c) => !c.twin;
-      const tie = (a, e) => { if (a && e) { a.twin = e; e.twin = a; } };
+      const ar = cs.filter((c) => metaOf(c).lang === 'ar'), en = cs.filter((c) => metaOf(c).lang === 'en'), free = (c) => !metaOf(c).twin;
+      const tie = (a, e) => { if (a && e) { meta(a).twin = e; meta(e).twin = a; } };
       ar.forEach((a) => tie(a, en.find((e) => free(e) && twinKey(e.c) === twinKey(a.c))));
       ar.filter(free).forEach((a) => tie(a, en.find((e) => free(e) && a.cat && e.cat && a.cat === e.cat)));
       // (round 23 part 5, the review's 5: the column next to it only when the table's layout says which: every Arabic
       // column left without a twin has a free English one just before it, or every one just after, not both ways;
       // [Product, المدينة, City] could be either: no twin)
-      const at = (i) => en.find((e) => free(e) && e.i === i), left = ar.filter(free);
-      const fits = (dir) => left.length && left.every((a) => at(a.i + dir)) && new Set(left.map((a) => a.i + dir)).size === left.length;
+      const at = (i) => en.find((e) => free(e) && metaOf(e).i === i), left = ar.filter(free);
+      const fits = (dir) => left.length && left.every((a) => at(metaOf(a).i + dir)) && new Set(left.map((a) => metaOf(a).i + dir)).size === left.length;
       const before = fits(-1), after = fits(1);
-      if (before !== after) left.forEach((a) => tie(a, at(a.i + (before ? -1 : 1))));
+      if (before !== after) left.forEach((a) => tie(a, at(metaOf(a).i + (before ? -1 : 1))));
     });
   }
-  function catalog(tables) {
-    const shown = tables.filter((t) => !t.hidden);
-    const measures = [], columns = [];
+  // 0.2.9 (O-13: a "Month-Year" text column on the line chart ran Apr 2018, Apr 2019 ... A to Z): a month label (a text
+  // column with month or period in its name) whose table has a date column names it (dateOf), so the report can order
+  // the label by the month's first date and keep the last months; the model is not touched
+  // (the cross-review's G11, 11 Oct: "Payment Period" of a fact table took its Order Date: only a label of a date table,
+  // or a column whose own DAX is made from that date, is ordered by it)
+  // a calendar: marked (dataCategory Time), shaped like one (a relationship's one side on its date column: unique dates;
+  // the reader marks it, dateKey), or named like one by whole words
+  const isDateTable = (t) => !!(t && (t.date || metaOf(t).calendarShape || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
+  // the reader's part: a table whose date column is the one side of a relationship holds unique dates (metadata only)
+  function markCalendars(tables, json) {
+    const m = (json && json.model) || json || {};
+    (m.relationships || []).filter((r) => r && r.toTable && r.toColumn && r.isActive !== false && String(r.isActive) !== 'false').forEach((r) => {
+      const t = (tables || []).find((x) => x.name === String(r.toTable)), c = t && (t.columns || []).find((x) => x.name === String(r.toColumn));
+      if (c && /^date(time)?$/i.test(String(c.dataType || '')) && (!r.toCardinality || /^one$/i.test(r.toCardinality))) t.dateKey = true; });
+    // (round 8, N1: both ends of a relationship are key columns, an identifier, when the one side's table has a better text
+    // column to show (a code beside its name); a join on a readable name alone (Region to Region) stays a category. Round 9
+    // (SHAPES-RC4's N7): "better" is read in catalog: a people table whose other text columns are a picture, contact data
+    // and a glue column keeps its name, the join key, as the category)
+    const colOf = (tn, cn) => { const t = tn != null && (tables || []).find((x) => x.name === String(tn)); return t && cn != null ? [t, (t.columns || []).find((x) => x.name === String(cn))] : [t, null]; };
+    (m.relationships || []).forEach((r) => { if (!r) return; const [tt, tc] = colOf(r.toTable, r.toColumn), [, fc] = colOf(r.fromTable, r.fromColumn);
+      if (!tc) return; meta(tc).relKey = { table: tt, col: tc }; if (fc) meta(fc).relKey = { table: tt, col: tc }; });
+    return tables;
+  }
+  function dateColumnFor(columns, name, type, table) {
+    if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'string').toLowerCase())) return null;
+    const dates = (columns || []).filter((c) => /^date(time)?$/i.test(String(c.dataType || '')) && c.name !== name);
+    const self = (columns || []).find((c) => c.name === name), expr = String((self && self.expression) || '');
+    const made = dates.find((d) => expr && expr.toLowerCase().includes('[' + String(d.name).toLowerCase() + ']'));
+    if (made) return made;
+    if (table && !isDateTable(table)) return null;
+    return dates.find((c) => /^(date|التاريخ)$/i.test(c.name)) || dates[0] || null;
+  }
+  // a column as the picker gives it out ({ t, c, type, sortBy, ordered, dateOf }), the one field builder (the cross-review's
+  // G9: create_report's field check used to rebuild it): table as the readers give it, name the column's
+  function fieldOf(table, name) {
+    const cols = table.columns || [], c = cols.find((x) => x.name === name); if (!c) return null;
+    const type = String(c.dataType || 'string').toLowerCase(), sortBy = c.sortBy || c.sortByColumn || null;
+    const by = sortBy ? null : sortColumnFor(cols, c.name), dt = dateColumnFor(cols, c.name, type, table);
+    // (A3-3: tableFormat, the one format rule's for a table's column, where it would change the model's)
+    const r = FM.reportFormatOf(c, 'column', []), marks = timeMarks(table, c.name, type, !!(sortBy || by)), sh = shortOf(table, c.name, marks.cal);
+    // (design round 9, the re-score's D11 and D19: the writer reads the picker's two-valued and many-valued marks from
+    // the field itself, so a chart by "Yes/No" or by a product name is drawn for it; builder 5's marks, carried only)
+    return Object.assign({ t: table.name, c: c.name, type }, by ? { sortBy: { t: table.name, c: by.name } } : {}, sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: table.name, c: dt.name } } : {},
+      marks, r ? { tableFormat: r.format } : {}, sh ? { short: sh } : {}, twoValued(c, type) ? { two: true } : {}, manyValued(table, c) ? { wide: true } : {});
+  }
+  // (round 18, S3, the owner's yes on 6 Oct: a chart's day names slant on a column chart; builder 7's audit A3-2, 11 Oct:
+  // it was the server's, by the Gulf calendar's names "Day Name" and "Day Short"): a day-name column carries its
+  // calendar's short day name, found by shape: a column of the same table with a short word (Short, Abbr, ddd) that is a
+  // day name of the same family, sorted as the calendar sorts it. The writer uses it where the full names would slant.
+  const SHORT_WORD = /(^|[\s_-])(short|abbr|abbreviation)([\s_-]|$)|^ddd$/i;
+  function shortOf(table, name, cal) {
+    if (!cal || cal.kind !== 'day' || SHORT_WORD.test(name)) return null;
+    const cols = table.columns || [];
+    const s = cols.find((x) => x.name !== name && SHORT_WORD.test(x.name.replace(ARABIC_SUFFIX, '')) && nameLike(x.name) && sortKind(x.name) === 'day'
+      && (timeMarks(table, x.name, String(x.dataType || 'string').toLowerCase(), true).cal || {}).family === cal.family);
+    if (!s) return null;
+    const sortBy = s.sortBy || s.sortByColumn || null, by = sortBy ? null : sortColumnFor(cols, s.name);
+    return Object.assign({ t: table.name, c: s.name, type: 'string' }, sortBy ? { ordered: true } : by ? { sortBy: { t: table.name, c: by.name } } : {});
+  }
+  // (builder 7's audit A3-8, 11 Oct: the writer told a time category from its name's words, so "Day Type" and "Period
+  // Status" were taken as their opposite): the picker marks it from the model: a column of a date table, one the model or
+  // the picker sorts by a number, or a date. A3-7: a calendar category's kind (month, day, quarter), its known number of
+  // rows (12, 7, 4) and its names' family (english, arabic, hijri), so the writer measures the right names
+  // (integration round 4: a column whose whole name is a calendar name, a month, day or quarter name written in any case or
+  // with "_" (QuarterName, Month_Name), is time too, in any table; a name that only holds such a word, "Period Status",
+  // is not)
+  const CAL_WHOLE = /^(year\s*)?(quarter|qtr)(\s*(name|label))?$|^(fiscal\s*|calendar\s*)?year(\s*(name|label|number|no))?$/i;   // (round 10, N12: a year too)
+  const calendarName = (name) => { const n = splitName(name).replace(/\s+/g, ' '); return nameLike(n) || CAL_WHOLE.test(n); };
+  function timeMarks(table, name, type, sorted) {
+    const time = isDateTable(table) || sorted || /^date/.test(type) || ((type === 'string' || type === 'unknown') && calendarName(name));
+    const quarter = /quarter|الربع/i.test(name) && !/year|السنة|سنة/i.test(name);
+    const named = nameLike(name) || sorted, k = quarter ? 'quarter' : named ? sortKind(name) : null;
+    const cal = k ? { kind: k === 'yearMonth' ? 'month' : k, rows: k === 'quarter' ? 4 : k === 'day' ? 7 : k === 'month' ? 12 : null,
+      family: /hijri|هجري/i.test(name) ? 'hijri' : langOf(name) === 'ar' ? 'arabic' : 'english' } : null;
+    return Object.assign({ time }, cal && time ? { cal } : {});
+  }
+  // a measure as the picker gives it out ({ t, m, pct, variant, stale, text, pctFormat?, wholeFormat?, tableFormat?,
+  // fullFormat? }); its DAX and whether it is an amount in META. tables: the model's, for the format rule
+  function measureField(table, m, tables) {
+    const x = Object.assign({ t: table.name, m: m.name, variant: isVariant(m), stale: STALE.test(m.name), text: isText(m) }, cardKind(m, tables));
+    const e = exprOf(m), dynamic = !!m.formatStringDefinition;
+    Object.assign(meta(x), { expr: e, amount: !x.pct && !dynamic && (hasCurrency(m.formatString || '') || (!hasUnit(m.formatString || '') && sumOfDecimal(e, tables))), base: CORE.test(e) || ROW_PRODUCT.test(e), dynamic, currency: hasCurrency(m.formatString || ''),
+      notCard: PLACEHOLDER.test(e) ? 'placeholder' : PARAM_DAX.test(e) ? 'param' : HELPER_DAX.test(e) || EXTREME.test(e) ? 'helper' : SHARE_OF_ALL.test(e) ? 'share' : null, key: valueKey(e), unformatted: !String(m.formatString || '').trim() && !dynamic, divides: !!m.divides });
+    return x;
+  }
+  // the same by name, for a measure the user names (create_report's fields): null when the table has none of that name
+  const measureOf = (table, name, tables) => { const m = ((table && table.measures) || []).find((x) => x.name === name); return m ? measureField(table, m, tables || [table]) : null; };
+  // D9 + D10: a date with a time of day (by its format or its name's whole words) is a time stamp: one point per moment
+  const isStamp = (c, type) => /^date/.test(type) && (/(^|[^a-z])(time|timestamp|stamp|hour)([^a-z]|$)/i.test(splitName(c.name)) || /general date|am\/pm|[hHs]/.test(FM.unquoted(c.formatString || '')));
+  // D11: a column that can hold two values only: true/false, or a calculated column whose DAX returns one of two words
+  const twoValued = (c, type) => { if (type === 'boolean') return true; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : ''); if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return false;
+    // (round 8, D11: a SWITCH or nested IFs whose results are two texts hold two values too)
+    const words = new Set((e.match(/"(?:[^"]|"")*"/g) || []).map((x) => x.toLowerCase())); return words.size === 2; };
+  // S5: a column with many values: a lookup table's own name column (Product Name in Products), or a detail place
+  // (a city, an address, a postcode: by the model's data category, or its whole words)
+  const DETAIL_PLACE = /^(city|address|place|postalcode|postcode|zip|latitude|longitude|weburl)$/i;
+  const manyValued = (t, c) => { const tn = splitName(t.name).toLowerCase().replace(/s$/, ''), cn = splitName(c.name).toLowerCase();
+    return cn === tn + ' name' || cn === 'name' || DETAIL_PLACE.test(String(c.dataCategory || '')) || /(^|[\s_])(city|address|street|zip|postcode|postal code)([\s_]|$)/i.test(splitName(c.name)); };
+  // N1 (round 8): a text column of identifiers or contact details: the model's key column, a relationship's key, a web or
+  // image link or a barcode (its data category), or a calculated column that joins several columns or breaks lines (a
+  // free-text label: "name, e-mail, phone"); by metadata and formula, never by values
+  // (rc.4, N7: a picture or web address with no data category: by its name's whole words, "Img", "Photo URL",
+  // "product_image", "LogoLink"; "Pickup" or "Logout" hold the letters only)
+  const LINK_WORD = /^(img|imgs|image|images|photo|photos|picture|pictures|pic|pics|logo|logos|url|urls|uri|link|links|href|thumbnail|thumbnails|thumb|icon|icons|avatar)$/i;
+  const linkName = (n) => splitName(n).split(/\s+/).some((w) => LINK_WORD.test(w));
+  // (round 9, SHAPES-RC4: contact data by its name's whole words, in any case: "Phone", "Email", "E-mail", "Address", "Fax")
+  const CONTACT = /(^|\s)(e\s?mail|emails?|phones?|mobile|telephone|tel|fax|whatsapp|address(es)?)(\s|$)/i;
+  const idBase = (c) => !!(metaOf(c).key || /^(WebUrl|ImageUrl|Barcode)$/i.test(String(c.dataCategory || '')) || linkName(c.name) || CONTACT.test(splitName(c.name))
+    || /UNICHAR\s*\(\s*1[03]\s*\)/i.test(metaOf(c).expr || '') || (/&|\b(CONCATENATE|COMBINEVALUES)\s*\(/i.test(metaOf(c).expr || '') && ((metaOf(c).expr || '').match(/\[[^\]]+\]/g) || []).length >= 2));
+  // a relationship's key is an identifier when the one side's table has another text column that is a better label
+  const idLike = (c) => { if (idBase(c)) return true; const r = metaOf(c).relKey; if (!r || !r.table) return false;
+    return (r.table.columns || []).some((o) => o !== r.col && !o.isHidden && /^string$/i.test(String(o.dataType || '')) && !idBase(o)); };
+  function catalog(tables, modelTables) {
+    const shown = tables.filter((t) => !t.hidden), all = modelTables || tables;
+    const measures = [], columns = [], hiddenMeasures = [];
+    // (round 10, RESCORE-3's N5: a hidden measure is never a card, but a share over it is still a share: known to the rules)
+    tables.forEach((t) => (t.measures || []).filter((m) => m.isHidden || t.hidden).forEach((m) => hiddenMeasures.push(measureField(t, m, all))));
     shown.forEach((t) => {
-      t.measures.filter((m) => !m.isHidden).forEach((m) => measures.push(Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name), text: isText(m) }, cardKind(m))));
-      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const by = c.sortBy ? null : sortColumnFor(t.columns, c.name), type = String(c.dataType || 'string').toLowerCase();
+      t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = measureField(t, m, all);
+        measures.push(x); });
+      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const type = String(c.dataType || 'string').toLowerCase();
         // (round 12, #17: a month or day name the model itself sorts is ordered: a table sorts it by itself)
         // (round 23: lang and i, the column's place, for the language rule: text columns only; non-enumerable, so the
         // fields given out keep their shape)
-        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {}, c.sortBy && nameLike(c.name) ? { ordered: true } : {});
-        Object.defineProperties(col, { lang: { value: type === 'string' || type === 'unknown' ? langOf(c.name) : null, writable: true }, i: { value: i }, twin: { value: null, writable: true } });
+        const fo = fieldOf(t, c.name);
+        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: isDateTable(t), cat: c.dataCategory }, fo.sortBy ? { sortBy: fo.sortBy } : {}, fo.ordered ? { ordered: true } : {}, fo.dateOf ? { dateOf: fo.dateOf } : {}, { time: fo.time }, fo.cal ? { cal: fo.cal } : {});
+        // (A3-3: its table format in META too: build puts it on a table's field only)
+        Object.assign(meta(col), { lang: type === 'string' || type === 'unknown' ? langOf(c.name) : null, i, twin: null, tableFormat: fo.tableFormat || null, short: fo.short || null,
+          stamp: isStamp(c, type), two: twoValued(c, type), wide: manyValued(t, c), id: idLike(c),
+          numeric: /^(sum|average|min|max|count|distinctcount)$/i.test(String(c.summarizeBy || '')) || /^[#0,.\s]+%?$/.test(String(c.formatString || '').trim()) && /0/.test(String(c.formatString || '')) });
         columns.push(col); });
     });
-    columns.forEach((c) => { if (c.lang === 'en' && AR_SUFFIX.test(c.c)) { const base = c.c.replace(AR_SUFFIX, '').trim().toLowerCase(); if (columns.some((o) => o !== c && o.t === c.t && o.lang === 'en' && o.c.trim().toLowerCase() === base)) c.lang = 'ar'; } });
+    columns.forEach((c) => { if (metaOf(c).lang === 'en' && AR_SUFFIX.test(c.c)) { const base = c.c.replace(AR_SUFFIX, '').trim().toLowerCase(); if (columns.some((o) => o !== c && o.t === c.t && metaOf(o).lang === 'en' && o.c.trim().toLowerCase() === base)) meta(c).lang = 'ar'; } });
     pairTwins(columns);
-    return { measures, columns };
+    return { measures, columns, hiddenMeasures };
   }
   // the language rule on a list of candidates for one role (round 23). lang "en": no "ar" column while the list has
   // another (else the "ar" ones, told: fallback). lang "ar": each "en" column that has an "ar" twin gives its place to
   // the twin (an "en" column without one stays: its name is shown through an Arabic display name, never translated),
   // except in a date table, whose Arabic name columns the MCP swaps in itself (round 12b). No lang: as before.
   function byLang(list, lang, note) {
-    if (lang === 'en') { const ok = list.filter((c) => c.lang !== 'ar'); list.filter((c) => c.lang === 'ar').forEach((c) => (ok.length ? note.skipped : note.fallback).add(c)); return ok.length || !list.length ? ok : list; }
-    if (lang === 'ar') { const out = []; list.forEach((c) => { const x = c.lang === 'en' && c.twin && !c.dateTable ? c.twin : c; if (x !== c) note.skipped.add(c); if (!out.includes(x)) out.push(x); }); return out; }
+    if (lang === 'en') { const ok = list.filter((c) => metaOf(c).lang !== 'ar'); list.filter((c) => metaOf(c).lang === 'ar').forEach((c) => (ok.length ? note.skipped : note.fallback).add(c)); return ok.length || !list.length ? ok : list; }
+    if (lang === 'ar') { const out = []; list.forEach((c) => { const x = metaOf(c).lang === 'en' && metaOf(c).twin && !c.dateTable ? metaOf(c).twin : c; if (x !== c) note.skipped.add(c); if (!out.includes(x)) out.push(x); }); return out; }
     return list;
   }
   const langNote = (lang, note) => (lang && (note.skipped.size || note.fallback.size) ? { language: Object.assign({ lang },
-    note.skipped.size ? { skipped: [...note.skipped].map((c) => `${c.t}[${c.c}]`) } : {}, note.fallback.size ? { fallback: [...note.fallback].map((c) => `${c.t}[${c.c}]`) } : {}) } : {});
+    note.skipped.size ? { skipped: [...note.skipped].map((c) => fieldKey(c.t, c.c)) } : {}, note.fallback.size ? { fallback: [...note.fallback].map((c) => fieldKey(c.t, c.c)) } : {}) } : {});
   // the tables a measure reaches (round 22b): the tables its DAX names ('Sales'[Amount], Sales[Amount], COUNTROWS ( Sales ))
   // and those of the measures it calls ([Base Amount]), with its own table, then every table a relationship leads to from
   // them (many to one, from fromTable to toTable). The reviewer's second review (items 2, 3, 10): names are matched as
@@ -298,7 +528,7 @@
   const KEYWORDS = new Set(['var', 'return', 'true', 'false', 'in', 'not', 'and', 'or', 'evaluate', 'define', 'measure', 'order', 'by', 'asc', 'desc']);
   function reached(tables, main, rels) {
     const lc = (x) => String(x).toLowerCase(), byName = new Map(), byMeasure = new Map();
-    tables.forEach((t) => { byName.set(lc(t.name), t.name); (t.measures || []).forEach((m) => { if (!byMeasure.has(lc(m.name))) byMeasure.set(lc(m.name), m.expr || ''); }); });
+    tables.forEach((t) => { byName.set(lc(t.name), t.name); (t.measures || []).forEach((m) => { if (!byMeasure.has(lc(m.name))) byMeasure.set(lc(m.name), exprOf(m)); }); });
     const reads = (expr) => { const e = String(expr || '').replace(/"(?:[^"]|"")*"/g, '""').replace(/--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ' '), out = { tables: [], measures: [] };
       (e.match(/'(?:[^']|'')*'/g) || []).forEach((x) => { const n = byName.get(lc(x.slice(1, -1).replace(/''/g, "'"))); if (n) out.tables.push(n); });
       // (the reviewer's third review, items 1 and 2: a quoted table name stands as a word, so 'Sales'[Quantity] stays a
@@ -325,28 +555,66 @@
     if (!rels.length || !row || !all.length) return { table, notReached: [] };
     // (part 6, the re-review's 8: the tables each measure reaches are kept with the choices' reach, so a binding built
     // again from them (each picker change) does not walk the model again)
-    if (!opt.cache) Object.defineProperty(opt, 'cache', { value: new Map() });
-    const reachOf = (f) => { const k = f.t + '\u0000' + f.m; if (!opt.cache.has(k)) opt.cache.set(k, reached(all, f, rels)); return opt.cache.get(k); };
+    // (A3-9: the cache of each measure's reach is the picker's own, keyed by the caller's options object, never put on it)
+    let cache = REACH.get(opt); if (!cache) { cache = new Map(); REACH.set(opt, cache); }
+    const reachOf = (f) => { const k = f.t + '\u0000' + f.m; if (!cache.has(k)) cache.set(k, reached(all, f, rels)); return cache.get(k); };
     const notReached = table.filter((f) => f && f.m != null && !reachOf(f).has(row.t));
     return { table: table.filter((f) => !notReached.includes(f)), notReached: notReached.map((f) => ({ t: f.t, m: f.m, row: { t: row.t, c: row.c } })) };
   }
   function suggest(tables, nKpis, opt) {
-    const { measures, columns } = catalog(tables);
-    const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0);
+    const { measures, columns, hiddenMeasures } = catalog(tables, opt && opt.modelTables);
+    // (A3-6: a measure other measures build on, [Its Name] in their DAX, is a core number: a shape, in any language)
+    const usedBy = new Set(measures.filter((y) => measures.some((z) => z !== y && exprOf(z).includes('[' + y.m + ']'))).map((y) => y.m));
+    const score = (x) => (CORE.test(exprOf(x)) ? 3 : 0) + (metaOf(x).amount ? 1 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
+      + (usedBy.has(x.m) ? 1 : 0) + (TIEBREAK_WORDS.money.test(x.m) ? 0.5 : 0) + (TIEBREAK_WORDS.count.test(x.m) ? 0.5 : 0);   // (0.2.9, O-7, G1, A3-6: shape first, names a tiebreak)
     // (measures left behind, see STALE, come after every other one)
     // (a measure that shows text is never picked: round 12, #26)
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
     // its own or in none, as a measure left behind does)
     const L = opt && opt.lang, note = { skipped: new Set(), fallback: new Set() }, other = (x) => (L && langOf(x.m) && langOf(x.m) !== L ? 1 : 0);
-    const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || score(b) - score(a));
-    const main = ranked.find((x) => !x.pct) || ranked[0] || null;
+    // (the rc's laptop proof, 11 Oct, S4: a measure that needs one period to show a number says "No data" on a card of the
+    // whole page: PREVIOUSMONTH and the like, NEXT..., PARALLELPERIOD (blank over the whole date range), or a guard on a
+    // single selected value; directly or through the measures it calls, as reached() reads them. A PY or "last" measure
+    // still shows a number: it stays a variant, after every base measure)
+    const byName = new Map(hiddenMeasures.concat(measures).map((x) => [x.m.toLowerCase(), x])), refs = (x) => (exprOf(x).match(/(^|[^\w\]'])\[(?:[^\]]|\]\])+\]/g) || []).map((r) => byName.get(r.slice(r.indexOf('[') + 1, -1).replace(/\]\]/g, ']').toLowerCase())).filter(Boolean);
+    const walk = (test) => { const memo = new Map(), go = (x, seen) => { if (memo.has(x)) return memo.get(x); if (seen.has(x)) return false; seen.add(x); const v = test(x) || refs(x).some((y) => go(y, seen)); memo.set(x, v); return v; }; measures.forEach((x) => go(x, new Set())); return memo; };
+    const timeDep = walk((x) => x.variant), needsPeriod = walk((x) => NEEDS_PERIOD.test(exprOf(x)));
+    // (D6 + D14: an alias, [Other] alone, has its value: the same key)
+    const keyOf = (x, n) => { const k = metaOf(x).key; if (!/^alias:/.test(k) || (n || 0) > 20) return k; const y = byName.get(k.slice(6)); return y ? keyOf(y, (n || 0) + 1) : k; };
+    // (A3-5: every base measure before any time variant, then the shape score; the rc's proof, D5 + D13: a plain amount
+    // (a sum of money, a revenue) before a plain count or quantity, then the computed measures, amounts first (O-7: no
+    // computed indicator before the plain numbers); D17: a dynamic-format measure is no amount: its shown format is not known)
+    // (round 8, D5: a currency-formatted total is a core amount however it is computed: RELATED, a variable; not an
+    // average or a ratio, which divides)
+    const group = (x) => (metaOf(x).currency && !metaOf(x).divides ? 0 : (metaOf(x).base ? 0 : 2) + (metaOf(x).amount ? 0 : 1));
+    const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || (timeDep.get(a) ? 1 : 0) - (timeDep.get(b) ? 1 : 0)
+      || group(a) - group(b) || score(b) - score(a));
+    // a card shows one number for the whole page: never a period measure (S4: "No data" without its period), a what-if
+    // value (D4), a helper (D2) or a share of all (D14); never two cards with the same value (D6, D14)
+    // (rc.4, round 9, N5 + D14: one measure over another of the same value (the second its ALL form): 100 % on a card)
+    const selfShare = (x) => { const e = inlineVars(exprOf(x)), m = e.match(/^DIVIDE\s*\(\s*\[([^\]]+)\]\s*,\s*\[([^\]]+)\]\s*(,[\s\S]*)?\)$/i) || e.match(/^\[([^\]]+)\]\s*\/\s*\[([^\]]+)\]$/);
+      const a = m && byName.get(m[1].toLowerCase()), b = m && byName.get(m[2].toLowerCase()); return !!(a && b && a !== b && keyOf(a) === keyOf(b)); };
+    // (SHAPES-RC4, N5: a value widened to every row (COUNTROWS ( ALLSELECTED ( T ) ), CALCULATE ( x, ALL (...) )) beside the
+    // plain value is that value's denominator: never a card while the plain one is there)
+    const widened = (x) => { const e = exprOf(x).trim(), c = e.match(/^CALCULATE\s*\(([\s\S]*)\)$/i), a = c && argsOf(c[1]);
+      return /^COUNTROWS\s*\(\s*(ALL|ALLNOBLANKROW|ALLSELECTED)\s*\(/i.test(e) || !!(a && a.length > 1 && a.slice(1).every((f) => /^(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i.test(f))); };
+    const denominator = (x) => widened(x) && measures.some((y) => y !== x && !y.text && !widened(y) && keyOf(y) === keyOf(x));
+    // (round 11, RESCORE-4: "[All x] - [x]", a chart's dummy line, is 0 on a card: a value minus its own ALL form, either way)
+    const partKey = (p) => { const t = p.trim().replace(/^\(([\s\S]*)\)$/, '$1').trim(), r = t.match(/^\[([^\]]+)\]$/), y = r && byName.get(r[1].toLowerCase()); if (y) return keyOf(y);
+      const k = valueKey(t); return /^alias:/.test(k) && byName.get(k.slice(6)) ? keyOf(byName.get(k.slice(6))) : k; };
+    const selfDiff = (x) => { const e = inlineVars(exprOf(x)); let d = 0, q = false, at = -1, n = 0;
+      for (let i = 0; i < e.length; i++) { const ch = e[i]; if (ch === '"') q = !q; if (q) continue; if (ch === '(') d++; else if (ch === ')') d--; else if (ch === '-' && d === 0 && i > 0) { at = i; n++; } }
+      return n === 1 && partKey(e.slice(0, at)) === partKey(e.slice(at + 1)); };
+    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard && !selfShare(x) && !denominator(x) && !selfDiff(x);
+    const main = ranked.find((x) => !x.pct && cardable(x)) || ranked.find((x) => !x.pct && !metaOf(x).notCard) || ranked[0] || null;
     // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
     // when the cards outnumber the other measures
-    const current = ranked.filter((x) => !x.stale);
-    const kpis = current.filter((x) => !x.pct && !x.variant).slice(0, Math.max(0, nKpis - 1));
-    const ratio = current.find((x) => x.pct && !x.variant);
-    if (ratio && kpis.length < nKpis) kpis.push(ratio);
-    ranked.forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x)) kpis.push(x); });
+    const current = ranked.filter((x) => !x.stale && cardable(x)), keys = new Set(), fresh = (x) => { const k = keyOf(x); if (keys.has(k)) return false; keys.add(k); return true; };
+    const kpis = current.filter((x) => !x.pct && !timeDep.get(x) && fresh(x)).slice(0, Math.max(0, nKpis - 1));
+    keys.clear(); kpis.forEach((x) => keys.add(keyOf(x)));   // (fresh() saw every candidate; only the cards taken count)
+    const ratio = current.find((x) => x.pct && !timeDep.get(x) && !keys.has(keyOf(x)));
+    if (ratio && kpis.length < nKpis) { kpis.push(ratio); keys.add(keyOf(ratio)); }
+    ranked.filter((x) => cardable(x)).forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x) && !keys.has(keyOf(x))) { kpis.push(x); keys.add(keyOf(x)); } });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
     // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
     // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
@@ -355,25 +623,40 @@
     // its own table, and only reached categories are given out (catB falls back to catA). The reviewer's second review:
     // the measure is the plan's (opt.main) where it names one (item 4), and the time axis and the year slicer come from
     // a reached table too (item 5: two calendars, the measure related to one)
-    const rels = (opt && opt.relationships) || [], anchor = (opt && opt.main && opt.main.m != null ? opt.main : null) || main;
+    const P = (opt && opt.pinned) || {};
+    const rels = (opt && opt.relationships) || [], anchor = (opt && opt.main && opt.main.m != null ? opt.main : null) || (P.main && P.main.m != null ? P.main : null) || main;
     const reach = rels.length && anchor ? reached((opt && opt.modelTables) || tables, anchor, rels) : null, near = (c) => !reach || reach.has(c.t);
     // time axis: a month column from the date table, else its date column, else any date column
     const quiet = { skipped: new Set(), fallback: new Set() }, inDate = byLang(columns.filter((c) => c.dateTable && near(c)), L, quiet);   // (the calendar's own Arabic columns are not told)
-    let date = inDate.find((c) => /^(month[\s_-]*(name|year)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => /month|الشهر/i.test(c.c))
-      || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type) && near(c))
-      || byLang(columns.filter((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)), L, quiet)[0] || null;   // no date table: a month column anywhere
+    // (the rc's laptop proof, 11 Oct: S8, a month as a number is no axis: its name column, sorted by it, or the date; D9, a
+    // time stamp is never the axis: one point per moment)
+    // (the second sweep, T3: a column another column is sorted by is that one's number, also in a DAX calendar whose
+    // files give no types)
+    const sortTargets = new Set(); ((opt && opt.modelTables) || tables).concat(tables).forEach((t) => (t.columns || []).forEach((c) => { if (c.sortBy) sortTargets.add(t.name + '\u0000' + String(c.sortBy)); }));
+    const sortsOther = (c) => sortTargets.has(c.t + '\u0000' + c.c) || columns.some((o) => o !== c && o.t === c.t && o.sortBy && o.sortBy.c === c.c);
+    const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type) && !metaOf(c).numeric && !sortsOther(c),   /* (round 11: a summed month number is no month axis) */ dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
+    let date = inDate.find((c) => monthText(c) && /^(month[\s_-]*(name|year|label)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => monthText(c) && /month|الشهر/i.test(c.c))
+      || inDate.find(dayDate) || columns.find((c) => dayDate(c) && near(c))
+      || byLang(columns.filter((c) => monthText(c) && /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)), L, quiet)[0] || null;   // no date table: a month column anywhere
     // Round 12 (#16; seen in Desktop 2.158, round 11: "January" ... "December" slanted on the line chart): the time axis
     // takes the model's short month names ("Jan") where it has them, in the same order
     const SHORT_MONTH = /^(month\s*(short|abbr|abbreviation)|short\s*month|mmm)$/i;
     if (date && /month|الشهر/i.test(date.c) && !/date/.test(date.type)) { const sh = columns.find((c) => c.t === date.t && SHORT_MONTH.test(c.c.replace(FAMILY, '').trim()) && family(c.c) === family(date.c)); if (sh) date = sh; }
     const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
-    const textLike = (c) => c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c));
+    // (round 11, N18: a column the model sums or formats as a plain number is a number, whatever its type in the files)
+    const textLike = (c) => !metaOf(c).numeric && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c)));
     // (round 23: in the report's language; an Arabic twin keeps its English one's place)
     // (round 23 part 5, the review's 4: the reach first, then the language on what is reached, with its Arabic fallback;
     // before, an English column of an unrelated table took the place and then the reach left no category)
-    let cats = columns.filter((c) => !c.dateTable && textLike(c) && !NOT_CAT.test(c.c) && c !== date)
-      .sort((a, b) => (CAT.test(b.c) || (b.lang === 'ar' && b.twin && CAT.test(b.twin.c)) ? 1 : 0) - (CAT.test(a.c) || (a.lang === 'ar' && a.twin && CAT.test(a.twin.c)) ? 1 : 0));
+    // (the rc's laptop proof, 11 Oct: D11, a two-value category after every other; S5, one with many values (a lookup's own
+    // name, a city) after the others)
+    // (round 8, N1: an identifier or a contact-details label after every other, even a two-value one)
+    const catRank = (c) => (metaOf(c).id ? 3 : metaOf(c).two ? 2 : metaOf(c).wide ? 1 : 0);
+    // (round 10, RESCORE-3's N12: a time level (a year, a quarter, a month name) is the trend's, never a category: "Calls by
+    // Year" was one bar on a calculated calendar the files give no types)
+    let cats = columns.filter((c) => !c.dateTable && !c.time && (textLike(c) || c.type === 'boolean') && !NOT_CAT.test(c.c) && c !== date)
+      .sort((a, b) => catRank(a) - catRank(b) || (CAT.test(b.c) || (metaOf(b).lang === 'ar' && metaOf(b).twin && CAT.test(metaOf(b).twin.c)) ? 1 : 0) - (CAT.test(a.c) || (metaOf(a).lang === 'ar' && metaOf(a).twin && CAT.test(metaOf(a).twin.c)) ? 1 : 0));
     // Round 22 (golden task 10 in Desktop 2.158.1304, 7 Oct 2026: the same total for every Carrier Group, the lookup's
     // table was related to another fact table only): with the model's relationships (opt.relationships, each
     // { fromTable, toTable }; the MCP gives them, the website's picker has none and is unchanged) a category of the
@@ -385,26 +668,85 @@
     if (reach) cats = cats.filter((c) => reach.has(c.t));
     cats = byLang(cats, L, note);
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    // (round 11, RESCORE-4's N18: never its numbers: a summed or "0"-formatted column is no part; when even these are
+    // missing the charts that need a category are left out and the answer says so: noCategory)
     if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)))).filter(Boolean);
-    const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
-    const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
+    const noCategory = !cats.length;
+    // (the rc's laptop proof, D7: the column chart never by the bar chart's field, nor by a field of the same name in
+    // another table: the same chart twice; with no other category, a date table's part, else the bar chart's: its slot
+    // would stay empty)
+    const nm = (c) => String(c.c).toLowerCase(), catA = cats[0] || null, otherName = (c) => catA && c !== catA && nm(c) !== nm(catA);
+    const catB = catA ? (cats.find((c) => otherName(c) && c.t !== catA.t && catRank(c) <= catRank(catA)) || cats.find((c) => otherName(c) && catRank(c) < 2)
+      || (catA.dateTable ? DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] : null) || catA) : null;   /* (round 10, N12: never the quarter beside a real category; round 11, N18: no calendar part beside a real category at all) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
+    // (D8 + D10: never two slicers on fields of the same name, never on a time stamp)
+    const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i);
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
     // (a picker change, the website's own picks) keeps it: choices.reach)
-    const out = build(Object.assign({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] }, reach ? { reach: { relationships: rels, modelTables: (opt && opt.modelTables) || tables } } : {}));
+    // (builder 7's audit A3-2, 11 Oct: these rules were create_report's, by the Gulf calendar's own names, so the website's
+    // download of the same model had none of them; the caller now passes options and builds nothing itself)
+    // pinned: the fields the user names ({ kpis, main, date, catA, catB, slicers, table }, as fieldOf and measureOf give
+    // them), kept as named: the given slicers first, a slot left over keeps the picker's
+    const same = (x, y) => x && y && x.t === y.t && x.c === y.c;
+    let ch = Object.assign({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] }, opt && opt.kpiValues === 'full' ? { full: true } : {}, reach ? { reach: { relationships: rels, modelTables: (opt && opt.modelTables) || tables } } : {});
+    ['kpis', 'main', 'date', 'catA', 'catB', 'table'].forEach((k) => { if (P[k]) ch[k] = P[k]; });
+    if (P.slicers) { ch.slicers = P.slicers.concat(ch.slicers.filter((x) => x && !P.slicers.some((g) => same(g, x)))).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
+    // excludeColumns (round 12, #22; seen in Desktop 2.158, golden task 3: slicers showed "All" while a page filter had
+    // fixed them): no slicer on a column a page filter fixes; the next column the picker would take instead, and named
+    const ex = (opt && opt.excludeColumns) || [], fixed = (x) => x && ex.some((e) => same(e, x)), pool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i), excluded = [];
+    if (ex.length) { const keep = ch.slicers.filter((x) => x && !fixed(x)); ch.slicers.filter(fixed).forEach((x) => { if (!excluded.some((e) => same(e, x))) excluded.push({ t: x.t, c: x.c }); });
+      pool.forEach((x) => { if (keep.length < 3 && !fixed(x) && !keep.some((k) => same(k, x) || nm(k) === nm(x))) keep.push(x); });
+      ch.slicers = keep.concat([null, null, null]).slice(0, 3); }
+    // axisFor (round 12, #21; golden task 3: one Ramadan by month was a line of two points): with a page filter that keeps
+    // a flag true ("Is Festival", "Is Ramadan"), the time axis runs by the flag's own day column of the same table
+    // ("Festival Day": the flag's word and "day"), unless the plan named the axis
+    let axisBy = null;
+    if (!P.date) for (const fl of (opt && opt.axisFor) || []) {
+      if (!fl || !(fl.values || []).length || !fl.values.every((v) => v === true)) continue;
+      const tb = ((opt && opt.modelTables) || tables).concat(tables).find((x) => x.name === fl.t), word = String(fl.c).replace(/^\s*(is|flag)[\s_-]+/i, '').replace(/[\s_-]+flag\s*$/i, '').trim().toLowerCase();
+      const dc = tb && word && (tb.columns || []).find((c) => c.name !== fl.c && c.name.replace(/[\s_-]+/g, ' ').trim().toLowerCase() === word.replace(/[\s_-]+/g, ' ') + ' day');
+      if (dc) { ch.date = fieldOf(tb, dc.name); axisBy = { t: tb.name, c: dc.name, flag: { t: fl.t, c: fl.c } }; break; }
+    }
+    // lang "ar" (owner 2026-10-06, the MCP's until A3-2): the calendar's Arabic name columns in place of the English ones,
+    // wherever a field is bound (picked or pinned), with their own sort: a day or month name's Arabic twin, else the
+    // table's Arabic name of the same kind (a month name for "Month Short") and calendar (Hijri or not); a calendar name
+    // with neither is named (calendarNames), so the caller can say how to get one
+    const calendarNames = [], swaps = [];
+    const inAr = (x) => {
+      if (L !== 'ar' || !x || x.c == null || !x.cal || !/^(month|day)$/.test(x.cal.kind)) return x;
+      const c0 = columns.find((c) => c.t === x.t && c.c === x.c); if (!c0 || metaOf(c0).lang !== 'en') return x;
+      const hijri = (c) => (c.cal || {}).family === 'hijri';
+      const tw = (metaOf(c0).twin && metaOf(c0).twin.cal ? metaOf(c0).twin : null) || columns.find((c) => c.t === x.t && metaOf(c).lang === 'ar' && c.cal && c.cal.kind === x.cal.kind && hijri(c) === hijri(x));
+      if (!tw) { if (!calendarNames.some((e) => same(e, x))) calendarNames.push({ t: x.t, c: x.c }); return x; }
+      if (!swaps.some((w) => same(w.from, x))) swaps.push({ from: { t: x.t, c: x.c }, to: { t: tw.t, c: tw.c } });
+      return tw;
+    };
+    if (L === 'ar') { ['date', 'catA', 'catB'].forEach((k) => { ch[k] = inAr(ch[k]); }); ch.slicers = ch.slicers.map(inAr); if (ch.table) ch.table = ch.table.map(inAr); }
+    const out = build(ch);
     Object.assign(out, langNote(L, note));
+    if (noCategory && !P.catA && !P.catB) out.noCategory = 'The model has no text column outside its calendar to group by, so the charts by category are left out: say it in the plan (a calendar\'s year, month or day belongs on the trend).';
+    if (excluded.length) out.excluded = excluded;
+    if (axisBy) out.axisBy = axisBy;
+    if (calendarNames.length) out.calendarNames = calendarNames;
+    // (D17: a card whose format is set by DAX beside cards in a currency: told, so the plan can say it or pick another)
+    const cardsNow = (ch.kpis || []).filter(Boolean);
+    // (round 8: an amount with no format at all beside them too: its card shows no currency either)
+    const mixed = (x) => metaOf(x).dynamic || (metaOf(x).amount && metaOf(x).unformatted);
+    if (cardsNow.some(mixed) && cardsNow.some((x) => metaOf(x).currency)) out.formatsMixed = cardsNow.filter(mixed).map((x) => Object.assign({ t: x.t, m: x.m }, metaOf(x).dynamic ? {} : { unformatted: true }));
+    if (swaps.length) out.calendarSwaps = swaps;
     // (round 23: no time axis because the measure reaches no calendar of the model: said with the calendars' names)
     // (part 8, the review's 3: a date column of a table the measure does not reach, with no marked calendar, is named too:
     // kind 'date', "no date column is related to")
-    if (!date && reach) { const cal = [...new Set(columns.filter((c) => c.dateTable && !reach.has(c.t)).map((c) => c.t))], dt = [...new Set(columns.filter((c) => !c.dateTable && /date/.test(c.type) && !reach.has(c.t)).map((c) => c.t))];
+    if (!out.date && reach) { const cal = [...new Set(columns.filter((c) => c.dateTable && !reach.has(c.t)).map((c) => c.t))], dt = [...new Set(columns.filter((c) => !c.dateTable && /date/.test(c.type) && !reach.has(c.t)).map((c) => c.t))];
       if (cal.length) out.noRelatedCalendar = { measure: { t: anchor.t, m: anchor.m }, tables: cal.slice(0, 5), kind: 'calendar' };
       else if (dt.length) out.noRelatedCalendar = { measure: { t: anchor.t, m: anchor.m }, tables: dt.slice(0, 5), kind: 'date' }; }
-    if (!cats.length && unreached.length) out.noRelatedCategory = { measure: { t: anchor.t, m: anchor.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
-    // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
-    // a page filter makes pointless)
-    out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
+    if (!cats.length && unreached.length && !ch.catA && !ch.catB) out.noRelatedCategory = { measure: { t: anchor.t, m: anchor.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
+    // every column a slicer could take, in the order they are picked (round 12, #22)
+    out.slicerPool = pool;
     // the categories a page's charts can take, in the picker's order (round 16, design finding #18: the operations
-    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet
-    out.catPool = cats.slice(0, 8).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}));
+    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet;
+    // none when the plan names its categories (round 16: they are kept as given)
+    if (!P.catA && !P.catB) out.catPool = cats.slice(0, 8).map(inAr).filter((x, i, l) => l.indexOf(x) === i).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}, c.time != null ? { time: c.time } : {}, c.cal ? { cal: c.cal } : {}, metaOf(c).short ? { short: metaOf(c).short } : {}));
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;
@@ -439,15 +781,26 @@
     // a column the model types as a number says so (num), so a table can put it on the number side, like a measure
     // and a month or day name without a sort-by column says which number column puts it in order (sortBy)
     // (a measure keeps pct: its KPI card shows the model's own percent format, the owner's design choice 2, 5 Oct 2026)
-    const f = (x) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {})
-      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})) : null);
-    const kpis = (ch.kpis || []).map(f);
-    const main = f(ch.main), second = kpis.find((k) => k && main && k.m !== main.m) || main;
+    // (A3-3: a table's field carries the format rule's tableFormat; a card its fullFormat as cardFormat with kpiValues
+    // "full", ch.full; the server no longer re-decides either)
+    // (A3-2: role 'cat', a chart's category, carries its short day name; a column the visual counts or sums itself
+    // (counts: agg, its name) keeps them, so a model without measures is bound here too)
+    const tfOf = (x) => x.tableFormat || metaOf(x).tableFormat, shortOf = (x) => x.short || metaOf(x).short;
+    const f = (x, role) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}, x.unitAuto ? { unitAuto: true } : {},   /* (round 11, RESCORE-4: unitAuto was dropped here, so the written card kept its 2 decimals) */ role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {})
+      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') || x.num ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {}, x.time != null ? { time: x.time } : {}, x.cal ? { cal: x.cal } : {}, x.two || metaOf(x).two ? { two: true } : {}, x.wide || metaOf(x).wide ? { wide: true } : {},
+        x.agg != null ? Object.assign({ agg: x.agg }, x.name ? { name: x.name } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}) : {}, role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {}, role === 'cat' && shortOf(x) ? { short: shortOf(x) } : {})) : null);
+    const card = (x) => { const o = f(x); return o && ch.full && x.fullFormat ? Object.assign(o, { cardFormat: x.fullFormat }) : o; };
+    // the same field: a measure by its name (as before), a column by its table, name and aggregation
+    const same = (x, y) => (x.m != null || y.m != null ? x.m === y.m : x.t === y.t && x.c === y.c && x.agg === y.agg);
+    const kpis = (ch.kpis || []).map(card);
+    const main = f(ch.main), second = kpis.find((k) => k && main && !same(k, main)) || main;
     const ratio = (ch.kpis || []).find((k) => k && k.pct);
-    const A = f(ch.catA), Bc = f(ch.catB);
+    const A = f(ch.catA, 'cat'), Bc = f(ch.catB, 'cat');
     const uniq = (list) => list.filter((x, i) => x && list.findIndex((y) => y && JSON.stringify(y) === JSON.stringify(x)) === i);
     // (round 23 part 5, the review's 2: the table keeps only the measures that reach its rows, on every path)
-    const TB = reachTable(uniq([Bc || A, main, second, kpis[2]]), ch.reach);
+    // (A3-2: a table the user names, ch.table, is kept as named, through this same field builder)
+    const tf = (x) => f(x, 'table'), second0 = (ch.kpis || []).find((k) => k && ch.main && !same(k, ch.main)) || ch.main;
+    const TB = ch.table ? { table: ch.table.filter(Boolean).map(tf), notReached: [] } : reachTable(uniq([tf(ch.catB) || tf(ch.catA), tf(ch.main), tf(second0), tf((ch.kpis || [])[2])]), ch.reach);
     const out = {
       choices: ch,
       kpis, measure: main, date: f(ch.date),   // an empty KPI choice leaves that card empty
@@ -464,7 +817,7 @@
       // the second KPI of an unrelated fact table repeated one total on every bar)
       // (part 8, the review's 1: every chart that opens that tooltip filters it by its own category, the line chart by the
       // month: the measure reaches each of those tables, A's, B's and the time axis's)
-      tip: { card: main, cat: A, y: f((ch.kpis || []).find((k) => k && ch.main && k.m !== ch.main.m && !k.variant && !k.pct && (!ch.reach || [A, Bc, ch.date].filter(Boolean).every((c) => !reachTable([c, k], ch.reach).notReached.length)))) || main, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
+      tip: { card: card(ch.main), cat: f(ch.catA), y: f((ch.kpis || []).find((k) => k && ch.main && !same(k, ch.main) && !k.variant && !k.pct && (!ch.reach || [A, Bc, ch.date].filter(Boolean).every((c) => !reachTable([c, k], ch.reach).notReached.length)))) || main, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
     };
     if (TB.notReached.length) out.notReached = TB.notReached;
     return out;
@@ -521,11 +874,23 @@
   // is this measure a percentage? (name, format string, DAX)
   const isPercent = (name, formatString, expression) => PCT({ name: String(name), formatString, divides: divides(expression) });
   // a measure of the model (as the readers give it) for its card: { text, pctFormat | wholeFormat }
-  const measureCard = (m) => { const x = { name: String(m.name), formatString: m.formatString, divides: !!m.divides, expr: m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || '' }; return Object.assign({ text: isText(x), pct: PCT(x) }, cardKind(x)); };
+  const measureCard = (m, tables) => { const x = { name: String(m.name), formatString: m.formatString, formatStringDefinition: m.formatStringDefinition, divides: m.divides != null ? !!m.divides : divides(exprOf(m)), expression: exprOf(m) }; return Object.assign({ text: isText(x) }, cardKind(x, tables)); };
   // the twins of a model's text columns, { 'T[c]': 'T[twin]' } both ways (round 23: the MCP's note on named fields)
   // the language of each text column as the picker reads it, with the table's context ({ 'T[c]': 'ar' | 'en' })
-  const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.lang).forEach((c) => { out[`${c.t}[${c.c}]`] = c.lang; }); return out; };
-  const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.twin).forEach((c) => { out[`${c.t}[${c.c}]`] = `${c.twin.t}[${c.twin.c}]`; }); return out; };
-  const api = { langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  // (the audit's "seen, not in scope": a key "T[c]" was ambiguous for a name with "]"; fieldKey writes it as DAX does, "]]")
+  const fieldKey = (t, c) => String(t) + '[' + String(c).replace(/\]/g, ']]') + ']';
+  const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => metaOf(c).lang).forEach((c) => { out[fieldKey(c.t, c.c)] = metaOf(c).lang; }); return out; };
+  const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => metaOf(c).twin).forEach((c) => { const w = metaOf(c).twin; out[fieldKey(c.t, c.c)] = fieldKey(w.t, w.c); }); return out; };
+  // every field of a binding mapped by fn (a display name, a format), as copies: a field the binding shares (the bar's
+  // and the donut's category) stays shared, and the picker's own fields are never changed (A3-2: the server's named()
+  // used to set name on them in place)
+  const FIELD_KEYS = ['date', 'measure', 'kpis', 'cats', 'y', 'table', 'slicers', 'tip', 'catPool', 'slicerPool'];
+  function mapFields(bind, fn) {
+    if (!bind) return bind;
+    const done = new Map(), one = (x) => { if (!x || typeof x !== 'object') return x; if (!done.has(x)) done.set(x, fn(x)); return done.get(x); };
+    const each = (v) => (Array.isArray(v) ? v.map(one) : v && typeof v === 'object' && v.t == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, one(x)])) : one(v));
+    return Object.assign({}, bind, Object.fromEntries(FIELD_KEYS.filter((k) => bind[k] != null).map((k) => [k, each(bind[k])])));
+  }
+  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, isPercent, measureCard, nameLike, iso, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);

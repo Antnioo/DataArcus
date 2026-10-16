@@ -59,7 +59,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="../assets/css/style.min.css?v=20261014g" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261016r29" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -128,14 +128,17 @@
                 <li data-i18n-html="beta.how.s3"><strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model.</li>
               </ol>
 
-              <h2 class="mt-5 mb-3" data-i18n="beta.tools.title">The 8 tools</h2>
+              <h2 class="mt-5 mb-3" data-i18n="beta.tools.title">The 11 tools</h2>
               <ul class="list-unstyled">
                 <li class="mb-2"><code translate="no">read_model</code>: <span data-i18n="beta.tools.read_model">Reads the tables, the columns with their types, the measures with their formats and the date tables. Changes nothing.</span></li>
                 <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">Picks the measures and columns for each KPI card, chart, table and slicer.</span></li>
                 <li class="mb-2"><code translate="no">check_model_health</code>: <span data-i18n="beta.tools.check_model_health">The Model Health Check: a score and every finding, with fix scripts for you to review (never applied).</span></li>
                 <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">The exact position of every visual on the page, mirrored for right to left. Writes nothing.</span></li>
+                <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">Opens DataArcus's approval window in your browser, with the plan and every file it writes: only your click on Approve lets a tool write, and no tool writes a file without an approved plan.</span></li>
                 <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">A new report next to your model, every visual placed and bound to your fields.</span></li>
                 <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">Checks a report that already exists, offline: Microsoft's validator and the rules measured in Power BI Desktop. Changes nothing.</span></li>
+                <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">Reads a report you already have, one line per visual, before a redesign. Changes nothing.</span></li>
+                <li class="mb-2"><code translate="no">create_arabic_twin</code>: <span data-i18n="beta.tools.create_arabic_twin">An Arabic, right-to-left copy of an existing report, next to it, with Arabic texts you approve. The original is never changed.</span></li>
                 <li class="mb-2"><code translate="no">generate_theme</code>: <span data-i18n="beta.tools.generate_theme">A Power BI report theme, exactly as the DataArcus Theme Generator makes it.</span></li>
                 <li class="mb-2"><code translate="no">add_gulf_calendar</code>: <span data-i18n="beta.tools.add_gulf_calendar">A Gulf date table (Hijri, Ramadan, Eid and the country's weekend) as a script for you to check and apply.</span></li>
               </ul>
@@ -159,7 +162,7 @@
               <ul>
                 <li data-i18n="beta.safe.model">It never changes your model and never writes over a file: every report is new, next to your model.</li>
                 <li data-i18n="beta.safe.ask">It writes only inside the one folder you choose.</li>
-                <li data-i18n="beta.safe.validator">It checks the report offline with Microsoft's report validator.</li>
+                <li data-i18n="beta.safe.validator">Its check_report tool checks any report offline with Microsoft's report validator.</li>
                 <li data-i18n-html="beta.safe.data">It reads your model's structure (tables, columns, measures, formats), not your data. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>.</li>
               </ul>
 
@@ -267,11 +270,11 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/beta-page.min.js?v=20261014" defer></script>
+  <script src="../assets/js/translations/beta-page.min.js?v=20261016r29" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261009" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
-  <script src="../assets/js/main.min.js?v=20261014b" defer></script>
+  <script src="../assets/js/main.min.js?v=20261016r29" defer></script>
 </body>
 </html>

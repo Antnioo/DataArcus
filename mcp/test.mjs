@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // End-to-end test of the DataArcus MCP server: starts it over stdio like an agent would and calls every tool.
 // Runs on copies of the fixtures in a temporary folder, so nothing in the repo changes.
 import fs from 'node:fs';
@@ -11,6 +12,30 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { round22 } from './test-round22.mjs';
 import { round23 } from './test-round23.mjs';
+import { v029 } from './test-0.2.9.mjs';
+import { v029b } from './test-0.2.9b.mjs';
+import { v029i } from './test-0.2.9i.mjs';
+import { readableName } from './lib/display-names.mjs';
+import { v029w } from './test-0.2.9w.mjs';
+import { v029k } from './test-0.2.9k.mjs';
+import { v029p } from './test-0.2.9p.mjs';
+import { v029q } from './test-0.2.9q.mjs';
+import { v029r } from './test-0.2.9r.mjs';
+import { v029checks } from './test-0.2.9-checks.mjs';
+import { v029design } from './test-0.2.9-design.mjs';
+import { v029agent } from './test-0.2.9-agent.mjs';
+import { INSTRUCTIONS_MAX } from './lib/agent-text.mjs';
+import { v029visuals, v029visualsTools } from './test-0.2.9v.mjs';
+import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
+import { v029twin } from './test-0.3.0-twin.mjs';
+import { audit6 } from './test-audit6.mjs';
+import { zgate } from './test-z.mjs';
+import { rgate } from './test-r.mjs';
+import { approvalWindow } from './test-approval.mjs';
+import { v029a4 } from './test-0.2.9-a4.mjs';
+import { v029sweep } from './test-0.2.9-sweep.mjs';
+import { withPlans } from './test-plan.mjs';
+import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -58,16 +83,20 @@ const client = new Client({ name: 'test', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
 // every report the main client creates, validated once at the end (round 17, the outside review's G-13)
 const createdReports = new Set();
-const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; const j = r.isError ? null : JSON.parse(t);
+const rawCall = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; const j = r.isError ? null : JSON.parse(t);
   if (name === 'create_report' && j && j.report && j.open) createdReports.add(path.join(ROOT, path.dirname(j.open), j.report));
   return { err: !!r.isError, t, j }; };
+// (0.2.9, the gate: the older checks get their approved plan ids through approve_plan, as an agent must; test-plan.mjs)
+const call = withPlans(rawCall);
 const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex');
 // round 5: a fix script is in a new file in the working folder, never in the answer; the tests read the file
 const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
 // (check_report added 5 Oct 2026: 7 -> 8 tools)
-check(tools.join() === 'add_gulf_calendar,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+// (approve_plan added 11 Oct 2026, 0.2.9's gate: 8 -> 9 tools; read_report, 0.2.9 item 10, and create_arabic_twin, 0.3.0,
+// each added one: 11 since the three branches were merged for the laptop proof, 11 Oct)
+check(tools.join() === 'add_gulf_calendar,approve_plan,check_model_health,check_report,create_arabic_twin,create_report,generate_theme,plan_layout,read_model,read_report,suggest_fields', `tools: ${tools}`);
 // F-05 (5 Oct 2026, check_report for 0.2.7): every tool the server lists is in the README's table and PRIVACY.md's
 // table, the README's install line gives the count, and PRIVACY.md no longer calls check_report unreleased
 {
@@ -187,9 +216,11 @@ if (!r.err) {
   check(pbir.datasetReference.byPath.path === '../Health Test.SemanticModel', `pbir: ${JSON.stringify(pbir.datasetReference)}`);
   const model = JSON.parse(fs.readFileSync(bim, 'utf8')).model.tables;
   // (round 19: report-level measures, Schema "extension", are skipped below: they are the report's, not the model's)
+  // (0.2.9 part 2: so are the names inside a visual filter's condition, SourceRef.Source: an alias of its From, whose
+  // entities are the field's own)
   const has = (k, t, n) => model.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
   const refs = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
   walk(dir);
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
@@ -251,7 +282,9 @@ check(!r.err && r.j.repaired.some((x) => x.field === 'harmony'), `generate_theme
 // brand + each harmony: the engine's generate(), with the first colour as the table accent, as on the website
 for (const h of ['analogous', 'complementary', 'triadic', 'mono']) {
   r = await tryCall('generate_theme', { name: 'Brand ' + h, brand: '#0F4C5C', harmony: h });
-  check(!r.err && JSON.stringify(r.j.design.data) === JSON.stringify(E.generate('#0f4c5c', h)) && r.j.design.ui.accent === r.j.design.data[0], `generate_theme brand ${h}: ${r.t.slice(0, 150)}`);
+  // (0.2.9, O-11 of the owner's test of 0.2.8: the brand colour itself is the first data colour and the accent, exactly;
+  // the website's generate() kept it only between lightness 0.4 and 0.55. The other 7 are still the engine's generate())
+  check(!r.err && r.j.design.data[0] === '#0f4c5c' && JSON.stringify(r.j.design.data.slice(1)) === JSON.stringify(E.generate('#0f4c5c', h).slice(1)) && r.j.design.ui.accent === '#0f4c5c', `generate_theme brand ${h}: ${r.t.slice(0, 150)}`);
 }
 // font sizes stay within Power BI's 8-60 on the biggest and smallest pages
 for (const [w, h] of [[3840, 2160], [640, 360]]) {
@@ -277,15 +310,8 @@ let slotOk = 0; const slotBad = [];
 for (const c of DESIGNS) {
   r = await tryCall('plan_layout', { design: c.state, lang: c.lang });
   const rows = r.err ? null : r.j.slots.map((s) => [s.role, s.visual, s.x, s.y, s.w, s.h].map(String));
-  // (round 19, the owner's choice B: below 800 wide the MCP plans the single-focus layout instead of the executive one,
-  // and says so (smallPage); the website still shows the executive layout there, so that case is the plan's on purpose)
-  if (!r.err && r.j.smallPage && r.j.design.layout.preset === 'focus' && r.j.page.w < 800) { slotOk++; continue; }
-  // (night of 6-7 Oct, the owner's answer 3a: on a 4:3 page the MCP's plan gives the table the wider share of its row, three
-  // fifths; the website keeps equal shares there. So on such a page the row that holds the table is the plan's on
-  // purpose: every other slot must still be the website's, and the table must be wider than the website's.)
-  const tRow = rows && r.j.design.layout.wideTable && r.j.page.w / r.j.page.h < 1.5 ? (c.slots.find((s) => /^Table/.test(s[1])) || [])[3] : null;
-  const mine = rows && rows.find((s) => /^Table/.test(s[1])), theirs = c.slots.find((s) => /^Table/.test(s[1]));
-  if (tRow != null && rows.length === c.slots.length && rows.some((s) => s[3] === tRow && s !== mine) && JSON.stringify(rows.filter((s) => s[3] !== tRow)) === JSON.stringify(c.slots.filter((s) => s[3] !== tRow)) && +mine[4] > +theirs[4]) { slotOk++; continue; }
+  // (0.2.9 design block, A2-1 and A2-5: the small-page rule and the table's share are the design engine's now, the
+  // website's too, so every case must be the website's exactly; the two exceptions of rounds 19 and 6-7 Oct are gone)
   if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
   else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
 }
@@ -330,6 +356,9 @@ const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health 
 // (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
 const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
+const besideRail = (got, wp, s, v) => { const r = wp.slots.find((x) => x.rail), sl = got.visuals.filter((x) => x.type === 'slicer');
+  if (!r || !sl.length || s.y < Math.max(...sl.map((x) => x.y + x.h))) return false;
+  return v.x === Math.min(s.x, r.x) && v.x + v.w === Math.max(s.x + s.w, r.x + r.w); };
 const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
   const bad = [];
   want.forEach((wp, i) => {
@@ -339,7 +368,11 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       if (s.rail) { const sl = got.visuals.filter((v) => v.type === 'slicer'); if (!sl.length || sl.some((v) => v.x < s.x || v.y < s.y || v.x + v.w > s.x + s.w || v.y + v.h > s.y + s.h)) bad.push(`page ${i + 1}: slicers not inside the rail ${JSON.stringify(s)}`); }
       // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
       // header: the same x, width and bottom edge)
-      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h)))) bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
+      // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
+      // (0.2.9, the design block's S7: a slot wholly under the shortened filter rail takes the rail's column: the same row,
+      // one edge kept, wider)
+      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -352,7 +385,7 @@ if (!r.err) {
   // design's 3 and 4 with the extra ones empty)
   // (changed 6 Oct 2026, round 12, design finding #26: "Unused One" shows text, its format being "Yes";"Yes";"No", and
   // golden task 8 showed "Yes" on its card; a measure that shows text is never a card now, so this model has 1)
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: true, panel: false });
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false, maxKpis: 1 });   // (0.2.9 design block, A2-4: the report's measures cap the cards through the engine's maxKpis; the layout's kpiCards is gone)
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
@@ -365,7 +398,8 @@ if (!r.err) {
   check(rail1 && k1.x > rail1.x && k1.w > 300 && k1.w < 500 && k1.x + k1.w === rowEnd && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
-  check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
+  // (0.2.9 part 2, O-6: no «شعارك» placeholder in create_report's reports, so it is no longer among the Arabic labels)
+  check(all1.includes('إعادة ضبط الفلاتر') && !all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
   // the registered theme is the design's theme exactly, with nothing changed (its visuals are already solid) but its
   // name: inside a project the theme carries the name report.json references, its file name (Microsoft's theming
   // reference and validator; owner's decision 2026-10-01, round 0 change 7)
@@ -379,7 +413,7 @@ if (!r.err) {
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
   // (round 12, #26: 1 card, see above)
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: false, panel: true });
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true, maxKpis: 1 });   // (A2-4, as above)
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
@@ -444,8 +478,10 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(/"value":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}[^\]]*"selector":\{"id":"default"\}\}(\]|,\{"properties":\{"labelDisplayUnits"[^\]]*"customFormatString":\{"expr":\{"Literal":\{"Value":"'#,0'"\}\}\}[^\]]*\])/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
       'tooltip page: the card value must be 20 and both titles 10');
     // 3. logo placeholder: readable (at least 12pt in a 48-high header slot)
-    const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text)), size = logo && +((logo.text.match(/"fontSize":\s*"(\d+)pt"/) || [])[1]);
-    check(size >= 12, `logo placeholder: ${size}pt`);
+    // (0.2.9 part 2, O-6 of the owner's test of 0.2.8: create_report writes no placeholder; the website's template keeps it,
+    // its size checked in the header block below with the shared writer)
+    const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text));
+    check(!logo, 'logo placeholder: create_report must write none without a logo');
     // 4. fields: no number (Amount) or date (Sales[Date]) as a category, axis or slicer; the date table's named parts instead
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
     // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
@@ -469,9 +505,11 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
   //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
   // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
   const cols = (v) => shownOf(v).filter((x) => !(x.field.Aggregation && x.displayName === ' ')).map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
-  const grow = (v) => /growToFit/.test(JSON.stringify(v.objects || {})) && /autoSizeColumnWidth/.test(JSON.stringify(v.objects || {}));
+  // (0.2.9 part 2, O-14 of the owner's test of 0.2.8: grow-to-fit let a long text push the numbers out of view; now
+  // auto-size off and one width per column filling the table, measured in Desktop on the laptop, REPORT-FIXES-LAB)
+  const grow = (v) => !/growToFit/.test(JSON.stringify(v.objects || {})) && /"autoSizeColumnWidth":\{"expr":\{"Literal":\{"Value":"false"\}\}\}/.test(JSON.stringify(v.objects || {})) && v.query.queryState.Values.projections.every((p) => (v.objects.columnWidth || []).some((e) => e.selector.metadata === p.queryRef));
   const te = tables(en), ta = tables(ar);
-  check(te.length && ta.length && te.concat(ta).every(grow), `tables must grow to fit: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
+  check(te.length && ta.length && te.concat(ta).every(grow), `tables must have set widths, auto-size off: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
   // (changed 5 Oct 2026, the owner's design choice 5: the Arabic table keeps its text column first, so the total row's
   //  "Total" shows (Power BI writes it only in a first column of text), and the rest follow in the mirrored order.
   //  Before, the whole order was reversed and the category sat last, on the right.)
@@ -554,11 +592,9 @@ const cardProblems = (dir, rtl) => {
   // Microsoft's validator on a report folder: { errors, what } (warnings are not errors)
   const validate = (dir) => {
     const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-    const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' });
-    try {
-      const d = JSON.parse(p.stdout).data, diag = d.diagnostics || {};
-      return { errors: d.errorCount, what: Object.keys(diag).filter((k) => diag[k].severity === 'error').map((k) => `${k}: ${String(diag[k].items[0].message).split(': ')[0]}`).join('; ') };
-    } catch (e) { return { errors: -1, what: 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200) }; }
+    // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+    const r = validatorCounts(dir);
+    return r.ran ? { errors: r.errorCount, what: r.errors.map((e) => `${e.code}: ${e.message}`).join('; ') } : { errors: -1, what: 'the validator did not run: ' + r.why };
   };
   const t4 = await tryCall('generate_theme', { name: 'Round0', brand: '#0F4C5C', folder: 'themes/r0' });
   const made = {};
@@ -570,7 +606,8 @@ const cardProblems = (dir, rtl) => {
     const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl), sh = projectProblems(files);
     // the default two-page report: 4 charts (page 1 line, bar, column; page 2 column), 2 tables, 7 KPI cards and the two tooltip
     // cards (round 1: the bar and column charts show the monthly trend on hover, the line chart the bar chart by category)
-    check(a.charts === 4 && a.trend === 3 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts with a wrong tooltip link, ${a.trend} linked to the monthly trend (4 charts, 3 to the trend expected): ${a.bad.slice(0, 2).join('; ')}`);
+    // (design round 9, S7: page 2's last row is the table beside a bar chart: 5 charts, 4 of them not by month)
+    check(a.charts === 5 && a.trend === 4 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts with a wrong tooltip link, ${a.trend} linked to the monthly trend (5 charts, 4 to the trend expected): ${a.bad.slice(0, 2).join('; ')}`);
     check(t.pages === 2 && t.charts === 2 && t.trend === 1 && !t.bad.length, `${name}: tooltip pages: ${t.bad.slice(0, 2).join('; ') || `${t.pages} pages, ${t.charts} charts, ${t.trend} trend`}`);
     check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
     check(cd.cards === 9 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
@@ -598,7 +635,10 @@ const cardProblems = (dir, rtl) => {
     const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
     // (round 12, #17: the calendar order's helper column carries a blank displayName, its header; not a display name)
     // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; the row-label measure's header is its column's name, so it carries a displayName)
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (design round 8, S6: an English plan's default names are the readable forms of database-style names, named in the
+    // plan and pinned with it: a displayName here is only that, the field's own name made readable)
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return !rtl && f && p.displayName === readableName(f.Property); };
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -633,7 +673,8 @@ const cardProblems = (dir, rtl) => {
     // a solid design shows its panels: 13 visuals (7 KPI cards, 4 charts, 2 tables) are left to the theme, the group
     // around the KPI cards draws no band, and the header, slicers and buttons keep theirs off
     const pp = panelProblems(files);
-    check(pp.solid && pp.panels === 13 && !pp.bad.length, `${name}: panels: ${pp.panels} visuals left to the theme (13 expected), ${pp.bad.length} wrong: ${pp.bad.slice(0, 2).join('; ')}`);
+    // (design round 9, S7: page 2's bar chart beside its table: 14)
+    check(pp.solid && pp.panels === 14 && !pp.bad.length, `${name}: panels: ${pp.panels} visuals left to the theme (14 expected), ${pp.bad.length} wrong: ${pp.bad.slice(0, 2).join('; ')}`);
     check(/own panel/.test(String(res.j.panels)), `${name}: the result should say what the report shows: ${JSON.stringify(res.j.panels)}`);
     // Microsoft's validator (their report authoring CLI, a pinned dev dependency of these tests) finds no error in the
     // export; and the card visual's theme entry has no "radius": inside a theme the card's "border" is the card's own
@@ -682,7 +723,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const start = async (env, cwd) => {
     const c = new Client({ name: 'test-r3', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
     try { await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' })); } catch (err) { return { dead: String(err && err.message || err), call: async () => ({ err: true, t: 'the server did not start', j: null }), close: async () => {} }; }
-    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+    return { c, close: () => c.close(), call: withPlans(async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } }) };
   };
   const one = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const plan = await one('plan_layout', {}), design = plan.j && plan.j.design;
@@ -737,8 +778,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
     const s = await start({}, CWD);
     const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
-    // (8 tools since check_report, 5 Oct 2026)
-    check(!s.dead && listed.length === 8, `no DATAARCUS_ROOT: the server must start and list its 8 tools: ${s.dead || listed}`);
+    // (8 tools since check_report, 5 Oct 2026; 9 since approve_plan, 11 Oct 2026, 0.2.9's gate; 11 with read_report (0.2.9
+    // item 10) and create_arabic_twin (0.3.0), merged for the laptop proof on 11 Oct)
+    check(!s.dead && listed.length === 11, `no DATAARCUS_ROOT: the server must start and list its 11 tools: ${s.dead || listed}`);
     const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
     const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
     check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);
@@ -780,7 +822,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // (plan_layout left this list on 6 Oct 2026, the owner's ask "formats fixed at the source": with path it writes the
     // format script file next to the project)
     const ro = ['read_model', 'suggest_fields', 'check_report'].filter((n) => ann[n].readOnlyHint !== true);
-    check(ann.plan_layout.destructiveHint === false, 'plan_layout must only add files (destructiveHint false)');
+    // (0.2.9, the gate: plan_layout writes nothing again; create_report writes the format script after the user's go)
+    check(ann.plan_layout.readOnlyHint === true, 'plan_layout must only read (readOnlyHint true)');
     check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
     const wr = ['generate_theme', 'create_report', 'check_model_health'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
     check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
@@ -920,9 +963,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
   fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'plain'), { recursive: true });
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run'; } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
-  const LOGISTICS = ['Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Freight Costs[Freight Costs Units Share %]'];
+  // (the rc's laptop proof, D14: a share of all, DIVIDE([X], CALCULATE([X], ALL(...))), is 100 % on a card: the 4th card was
+  // 'Freight Costs[Freight Costs Units Share %]', now the next amount)
+  const LOGISTICS = ['Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Returns[Returns Total Amount]'];
 
   // 1. read_model: a large model gets a summary; named tables come in full; small models answer as before
   const big = await ask('read_model', { path: 'large' }), s = big.j || {};
@@ -933,7 +979,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const allFacts = big.j && big.j.tablesWithMeasures ? await ask('read_model', { path: 'large', tables: big.j.tablesWithMeasures.map((t) => t.table) }) : { err: true, t: 'no summary' };
   chk(() => !allFacts.err && allFacts.t.length <= 40000 && allFacts.j.tables.length > 10 && allFacts.j.tables.length < 65 && allFacts.j.notShown.length === 65 - allFacts.j.tables.length && /40,000/.test(String(allFacts.j.note)), () => `read_model with more tables than fit must stop at a table and name the rest: ${allFacts.err ? allFacts.t.slice(0, 200) : allFacts.t.length + ' characters, ' + allFacts.j.tables.length + ' tables, notShown ' + (allFacts.j.notShown || []).length}`);
   // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length, with the path separator in source as /: Windows writes it as a backslash)
-  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '7d20d9242374:4518' };
+  // (sample.pbit moved 11 Oct 2026, the audit of the reading block's A1-5: a .pbit's three hidden automatic date tables,
+  // LocalDateTable_*, were listed on the file route while the folder route left them out; one result now leaves them
+  // out on every route. Before: '7d20d9242374:4518'; the other nine tables unchanged)
+  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '2063aaafa581:4008' };
   const small = {};
   for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
   chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);
@@ -1003,8 +1052,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const mq = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
     fs.mkdirSync(path.join(ROOT, 'margin-project/Margin.SemanticModel'), { recursive: true });
     fs.writeFileSync(path.join(ROOT, 'margin-project/Margin.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
-      { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double'), col('Margin', 'double')], partitions: mq('Sales'),
-        measures: [{ name: 'Total Margin', expression: 'SUM ( Sales[Margin] )' }, { name: 'Net Margin', expression: 'SUM ( Sales[Margin] )', formatString: '#,0' }, { name: 'Gross Margin', expression: 'DIVIDE ( SUM ( Sales[Margin] ), SUM ( Sales[Amount] ) )' },
+      { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double'), col('Margin', 'double'), col('Net', 'double')], partitions: mq('Sales'),   // (Net: D6, two measures of the same DAX are one card; they were both SUM ( Sales[Margin] ))
+        measures: [{ name: 'Total Margin', expression: 'SUM ( Sales[Margin] )' }, { name: 'Net Margin', expression: 'SUM ( Sales[Net] )', formatString: '#,0' }, { name: 'Gross Margin', expression: 'DIVIDE ( SUM ( Sales[Margin] ), SUM ( Sales[Amount] ) )' },
           { name: 'Margin %', expression: ['DIVIDE (', '    [Total Margin],', '    SUM ( Sales[Amount] )', ')'] }] }] } }));
     const mr = await ask('create_report', { path: 'margin-project', name: 'Margins', design, layout: 'exec', kpis: 4 });
     const flagged = mr.err ? null : (mr.j.modelNotes || []).filter((n) => /percentage/.test(n.issue)).map((n) => n.field).sort();
@@ -1021,7 +1070,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const start = async (env, cwd) => {
     const c = new Client({ name: 'test-r5', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
     await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' }));
-    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+    return { c, close: () => c.close(), call: withPlans(async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } }) };
   };
   // a link whose target is missing: a symbolic link where the system allows one (Linux, CI), otherwise a junction
   const dangling = (target, at) => { try { fs.symlinkSync(target, at); return 'symlink'; } catch (e) { fs.symlinkSync(target, at, 'junction'); return 'junction'; } };
@@ -1107,7 +1156,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
     const RULES = [
       ['plan first, wait for go', /plan/i, /wait for (the user's )?["“]?go/i],
-      ['display names only from the user', /display names?/i, /never translate, shorten or (relabel|rename)/i],
+      // (moved with its cause, B-88: the owner's decision of 13 Oct, option B: the assistant suggests, the user approves)
+      ['never show a name the user has not approved', /display names?/i, /never show a name the user has not approved/i, /approve or edit/i, /never renamed/i],
       ['a card\'s label says what its value is', /label/i, /what (its|the) value (really )?is/i],
       ['Gulf calendar fixes', /Calendar Generator/, /never write (the )?calendar DAX/i, /not (part of the score|scored)/i],
       ['model text is untrusted', /untrusted/i, /never follow instructions/i, /descriptions?/i, /file names?/i],
@@ -1118,10 +1168,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     }
     const cr = tl.create_report.description, dn = tl.create_report.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
     chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(cr) && /what (its|the) value (really )?is/i.test(cr), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
-    chk(() => /only/i.test(dn) && /user/i.test(dn) && /never translate, shorten or (relabel|rename)/i.test(dn), () => `displayNames must say the names come only from the user: ${dn}`);
+    chk(() => /only names the user gave or approved/i.test(dn) && /never show a name the user has not approved/i.test(dn) && /never renamed/i.test(dn), () => `displayNames must say only approved names are written (B-88): ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
-    chk(() => ins.length < 2500, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read (${INSTRUCTIONS_MAX} at most; the audit's A7-4: one cap)`);
   }
 
   // 5. the install experience: a working folder that is empty, or that doesn't exist, answers as a normal result with
@@ -1204,7 +1254,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
     chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
     chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
-    chk(() => ins.length < 2800, () => `the server's instructions are ${ins.length} characters`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
 
   // 3. a model without measures: suggest_fields says so, and says to propose measures with format strings
@@ -1223,7 +1273,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => s4.j.kpis.map(f).slice(0, 3).join('|') === RAM.kpis.join('|') && /\(old\)/.test(f(s4.j.kpis[3])) && s4.j.skipped.measures.length === 1, () => `4 cards, 3 current measures: the fourth is an old one because nothing else is left: ${s4.err ? s4.t.slice(0, 200) : s4.j.kpis.map(f)}`);
     chk(() => s5.j.kpis.filter(Boolean).length === 5 && !s5.j.skipped, () => `5 cards, 5 measures: all used, nothing skipped: ${s5.err ? s5.t.slice(0, 200) : JSON.stringify(s5.j.skipped)}`);
     fs.writeFileSync(path.join(ROOT, 'stale.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }, { name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
-      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name) => ({ name, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' })) }] } }));
+      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name, i) => ({ name, expression: 'SUM ( Sales[Amount] ) * ' + (i + 1), formatString: '#,0' })) }] } }));   // (D6: each its own DAX; the same DAX is one card)
     const st = await ask('suggest_fields', { path: 'stale.bim', kpis: 3 });
     chk(() => st.j.kpis.map((k) => k.m).sort().join() === 'Contest Wins,Latest Orders,Oldham Sales' && st.j.skipped.measures.length === 4 && st.j.measure.m !== 'Sales Test',
       () => `whole words only (Oldham, Latest, Contest are not old or test): ${st.err ? st.t.slice(0, 200) : st.j.kpis.map((k) => k.m) + ' skipped ' + JSON.stringify(st.j.skipped)}`);
@@ -1372,7 +1422,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 2. AUD-016: read_model's summary of a large model has a ceiling, whatever the number of tables with measures
   {
     const make = (n, dir) => { const d = path.join(ROOT, dir, 'Big.SemanticModel/definition/tables'); fs.mkdirSync(d, { recursive: true });
-      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = 1\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
+      // (picker round 8, N4: a constant measure (= 1) is the model's placeholder and no card, so these stand-ins count rows)
+      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = COUNTROWS ( 'Table number ${i}' ) + ${k}\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
     make(500, 'm500'); make(3000, 'm3000');
     const a = await ask('read_model', { path: 'm500' }), b = await ask('read_model', { path: 'm3000' });
     chk(() => !a.err && a.j.summary === true && a.t.length < 40000, () => `read_model on 500 tables with measures: ${a.err ? a.t.slice(0, 200) : a.t.length + ' characters'}`);
@@ -1415,7 +1466,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   // every page.json of a written report: { tooltip, filters }
   const pagesOf = (dir) => { const def = path.join(dir, 'definition', 'pages');
     return fs.readdirSync(def).filter((n) => fs.existsSync(path.join(def, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(def, n, 'page.json'), 'utf8')))
@@ -1502,7 +1554,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   // every page of a written report: { name, tooltip, filters, visuals }
@@ -1769,9 +1822,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const en = await ask('check_report', { path: 'cr-project/CR Gold EN.pbip' }), ar = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
     // the validator's version is the one mcp/package.json pins (one place; the pin moves with the dependency update)
     const VALIDATOR_PIN = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')).dependencies['@microsoft/powerbi-report-authoring-cli'];
-    const ok = (a) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && a.j.validator.errors === 0 && a.j.validator.version === VALIDATOR_PIN && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
+    const ok = (a, dir) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && checkReportClean(a.j, dir) && a.j.validator.version === VALIDATOR_PIN && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
       && a.j.report.pages >= 2 && a.j.report.visuals > 20 && a.j.report.schemaVersions.page && !a.j.findings.some((f) => f.severity === 'error') && measured(a).filter((f) => f.severity !== 'note').length === 0 && Array.isArray(a.j.notChecked) && a.j.counts && typeof a.j.truncated === 'boolean';
-    chk(() => ok(en) && ok(ar) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
+    chk(() => ok(en, RP('CR Gold EN')) && ok(ar, RP('CR Gold AR')) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
       () => `our golden reports must pass check_report (validator offline 0 errors, schemas 0, no measured finding) and stay unchanged: EN ${short(en)} | AR ${short(ar)} ${JSON.stringify(ar.j && measured(ar)).slice(0, 400)}`);
     // the findings' shape: every finding has its rule, severity, file inside the report, source and a fix in words
     chk(() => [en, ar].every((a) => a.j.findings.every((f) => f.rule && ['error', 'warning', 'note'].includes(f.severity) && f.source && f.fix && f.what && (f.file == null || (!path.isAbsolute(f.file) && !/\.\./.test(f.file))))),
@@ -1869,7 +1922,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     let o = null; try { o = JSON.parse(p.stdout.trim().split('\n').pop()); } catch (e) { o = null; }
     const inProc = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
     const src = fs.existsSync(path.join(HERE, 'lib', 'check-report.mjs')) ? fs.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8') : '';
-    chk(() => o && o.tries.length === 0 && o.validator.ran === true && o.validator.mode === 'offline' && o.validator.errors === 0 && o.validator.warnings === inProc.j.validator.warnings && o.schemas.errors === 0 && o.findings === inProc.j.findings.length && !/child_process|https?\.get|https?\.request|fetch\(/.test(src),
+    chk(() => o && o.tries.length === 0 && o.validator.ran === true && o.validator.mode === 'offline' && checkReportClean(o, RP('CR Gold AR')) && o.validator.warnings === inProc.j.validator.warnings && o.schemas.errors === 0 && o.findings === inProc.j.findings.length && !/child_process|https?\.get|https?\.request|fetch\(/.test(src),
       () => `check_report must run with the network blocked and Playwright unloadable, with the same answer: ${p.stdout.slice(-400)} ${p.stderr.slice(-600)}`);
   }
 
@@ -1971,7 +2024,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), N = (p) => parseFloat(L(p));
@@ -2388,7 +2442,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     // (changed 6 Oct 2026, round 12, the owner's ask: a percent card carries its percent format, "0.0%", and a measure
     // whose format has no decimals, "#,0", its whole number; the averages with decimals keep 2L. Before: the percent
     // card had no entry, and every other card 2L)
-    const avg = (v) => /Avg Price|Avg Order Value|متوسط قيمة الطلب/.test(JSON.stringify(v.visual.query || {}));
+    // (0.2.9 part 2, O-2 of the owner's test of 0.2.8: an amount, a SUM of money, keeps automatic units with 2 decimals
+    // although its format has none: the MCP's Total Sales; the website's sample sets its own formats and is unchanged)
+    const avg = (v) => /Avg Price|Avg Order Value|متوسط قيمة الطلب/.test(JSON.stringify(v.visual.query || {})) || (vsAmount.has(v) && /"Property":"Total Sales"/.test(JSON.stringify(v.visual.query || {})));
+    const vsAmount = new Set([].concat(enV, arV));
     [enV, arV, siteEn, siteAr].forEach((vs, i) => vs.filter((v) => type(v) === 'cardVisual' && v.visual.query && !isMessageCard(v)).forEach((v) => {
       const p = valueOf(v), code = v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : undefined;
       const ok = pct(v) ? code === "'0.0%'" && !('labelPrecision' in p) : avg(v) ? L(p.labelPrecision) === '2L' && code === undefined : code === "'#,0'" && !('labelPrecision' in p);
@@ -2498,16 +2555,23 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hiddenRefs = (t) => ((t.visual.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
     const isRowLabel = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
     for (const lang of ['en', 'ar']) {
-      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
+      // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column,
+      // so it is no longer narrow; filters on top (no side rail) on a 960 x 720 page keep the narrow table this check needs)
+      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'top', page: '960x720', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
-      const size = tableText(x, 'd5-project'), font = 'Segoe UI';
+      const size = t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : tableText(x, 'd5-project'), font = 'Segoe UI';
       // (round 23: an Arabic table's name column is hidden at width 0 and shown by its row-label measure, a text column
       // at the right that is not a picture: the hidden column takes no room, the row label the name column's)
       const hid = hiddenRefs(t), isPic = (p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema && !isRowLabel(p);
-      const other = ps.filter((p) => !isPic(p) && !hid.includes(p.queryRef)).reduce((a, p) => a + (Pb.columnRoom ? Pb.columnRoom(isRowLabel(p) ? ps.find((h) => hid.includes(h.queryRef)) : p, size, font) : Infinity), 0), pic = ps.filter(isPic).length;
-      if (other + pic * (W + 10) > t.at.w + 0.5 || W < 8 || W > 180 || H !== Math.max(8, Math.round(Math.max(24 * Math.min(1, W / 160), 20 * Math.min(1, W / 180))))) bad.push(`${lang}: ${ps.length} columns need ${(other + pic * (W + 10)).toFixed(0)} of ${t.at.w} with pictures ${W} x ${H}`);
+      // (changed in 0.2.9 rc1, item 2: a table's columns take cellRoom, their bold header or widest value plus the measured
+      // padding, the rule its fit and its column widths are written by, within its width less 36; the pictures follow it.
+      // The fields as the picker gives them: a column of text, a measure with no format)
+      const pdir = path.join(ROOT, 'd5-project', x.j.report, 'definition', 'pages'), pageH = Math.max(...fs.readdirSync(pdir).filter((n) => fs.existsSync(path.join(pdir, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(pdir, n, 'page.json'), 'utf8'))).filter((pj) => pj.type !== 'Tooltip').map((pj) => pj.height));
+      const cell = (p) => { const e = (p.field.Column || p.field.Measure).Expression.SourceRef.Entity, f = p.field.Column ? { t: e, c: p.field.Column.Property, type: 'string' } : { t: e, m: p.field.Measure.Property }; return Pb.cellRoom(f, size, font, pageH / 1080); };
+      const other = ps.filter((p) => !isPic(p) && !hid.includes(p.queryRef)).reduce((a, p) => a + (Pb.cellRoom ? cell(isRowLabel(p) ? ps.find((h) => hid.includes(h.queryRef)) : p) : Infinity), 0), pic = ps.filter(isPic).length;
+      if (other + pic * (W + 10) > t.at.w - 36 + 0.5 || W < 8 || W > 180 || H !== Math.max(8, Math.round(Math.max(24 * Math.min(1, W / 160), 20 * Math.min(1, W / 180))))) bad.push(`${lang}: ${ps.length} columns need ${(other + pic * (W + 10)).toFixed(0)} of ${t.at.w} with pictures ${W} x ${H}`);
       if (W < 180) capped.push(lang);
       if (!(x.j.svgMeasures || []).every((m) => m.imageWidth === W) || !(x.j.reportNotes || []).some((n) => /narrowed/.test(n) && new RegExp(String(W)).test(n))) bad.push(`${lang}: the answer must give the pictures' width and say they were narrowed: ${JSON.stringify(x.j.svgMeasures)}`);
     }
@@ -2523,7 +2587,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       for (const lang of ['en', 'ar']) {
         // (night of 6-7 Oct: since the owner's answer 3a a 4:3 page gives the table three fifths of its row; this check is about
         // a table too narrow for its fields, so its design keeps the half-width table: layout.wideTable false)
-        const narrowPlan = await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
+        // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column;
+        // the operations layout with filters on top (no side rail) keeps a table a third of its row (408 of a 1280 x 720
+        // page), too narrow for five fields at the theme's text, as this check needs)
+        const narrowPlan = await planOf({ layout: 'ops', kpis: 4, filters: 'top', page: '1280x720', lang }); narrowPlan.layout.wideTable = false;
         const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: narrowPlan, fields: { kpis: KPIS, table: FIVE } });
         if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
@@ -2544,7 +2611,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         }));
         // (round 12: told as a smaller text when that holds every field, as left-out fields otherwise)
         const smaller = (x.j.reportNotes || []).some((n) => /table text is \d+pt/.test(n));
-        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+        // (round 7: with the writer's measured table widths, the design's 408-wide table drops a field even at 8pt, so the
+        // smaller-text line and the left-out line are both told; the smaller-text line ("left out only where even 8pt
+        // doesn't hold it") is not a second left-out line)
+        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n) && !/table text is \d+pt/.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
       }
       const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
         pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
@@ -2782,7 +2852,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const P = 'r13-project';
   fs.mkdirSync(path.join(ROOT, P, 'R13 Test.SemanticModel'), { recursive: true });
   fs.writeFileSync(path.join(ROOT, P, 'R13 Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
@@ -2807,16 +2878,20 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   // The high end is the theme's first data colour (the bars' colour today); the low end is that colour mixed towards
   // the card, as far as it still stands 3:1 off the card (so the smallest bar never fades into its panel).
   const grad = (v) => { const e = dpOf(v)[0], fr = e.properties.fill.solid.color.expr.FillRule; return { input: JSON.stringify(fr.Input), y: JSON.stringify(v.visual.query.queryState.Y.projections[0].field), low: hexOf(fr.FillRule.linearGradient2.min), high: hexOf(fr.FillRule.linearGradient2.max), sel: JSON.stringify(e.selector), n: dpOf(v).length }; };
-  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase();
-    return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && g.high === d0 && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
+  // Polish round P1 (B-71, 12 Oct) and P1+ (LAB-POLISH section 5): the second bar or column chart of a page fades from a
+  // chosen second colour (E.secondColour), so a chart's high end is the first data colour or that one (the sweep checks
+  // which chart takes which)
+  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase(), d1 = String(E.secondColour(r.theme.dataColors, card)).toLowerCase();
+    return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && (g.high === d0 || g.high === d1) && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
       && r.vis.filter((v) => !isBar(v) || v.tooltipPage).every((v) => !dpOf(v)); };
   const tell = (r) => JSON.stringify(r.vis.filter(isBar).map((v) => [v.visual.visualType, v.tooltipPage, dpOf(v) ? grad(v) : null])).slice(0, 700);
   for (const [lang, preset] of [['en', 'Corporate'], ['en', 'Midnight'], ['ar', 'Corporate']]) {
     const th = await ask('generate_theme', { name: 'R13 ' + preset + ' ' + lang, preset, lang, folder: 'r13-themes' });
     const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end', lang })).j.design;
     // 1. a designed report: every bar and column chart of the report's pages fades by value; lines, donuts and the tooltip pages' charts do not
+    // (P1+: the first chart read may be a page's second, which fades from the second colour: chartColors.low is a chart's)
     const g = await ask('create_report', { path: P, name: `R13 Grad ${preset} ${lang}`, lang, design }), rg = read(g);
-    chk(() => good(rg, 2) && g.j.chartColors.mode === 'gradient' && g.j.chartColors.charts === rg.vis.filter((v) => isBar(v) && !v.tooltipPage).length && g.j.chartColors.low === grad(rg.vis.find((v) => isBar(v) && !v.tooltipPage)).low && errors(rg.dir) === '0',
+    chk(() => good(rg, 2) && g.j.chartColors.mode === 'gradient' && g.j.chartColors.charts === rg.vis.filter((v) => isBar(v) && !v.tooltipPage).length && rg.vis.some((v) => isBar(v) && !v.tooltipPage && grad(v).low === g.j.chartColors.low) && errors(rg.dir) === '0',
       () => `${preset} ${lang}: a designed report's bar and column charts must carry the gradient rule (the chart's measure, literal ends, 3:1 off the card), told in chartColors: ${tell(rg)} ${JSON.stringify(g.j && g.j.chartColors)} validator ${rg.dir && errors(rg.dir)} ${short(g)}`);
     // 2. chartColors "solid": nothing is written on any chart (the theme's one colour, as before round 13)
     const s = await ask('create_report', { path: P, name: `R13 Solid ${preset} ${lang}`, lang, design, chartColors: 'solid' }), rs = read(s);
@@ -2881,7 +2956,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     // 6. an Arabic designed report: every column, line and bar chart of its pages is mirrored, the gradient stays, and the tooltip pages' bars grow from the right too
     const ar = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror ar', lang: 'ar', design: arDesign }), ra = readM(ar);
     const pageCharts = (r) => r.vis.filter((v) => !v.tooltipPage && (upright(v) || lying(v)));
-    chk(() => pageCharts(ra).filter(upright).length >= 2 && pageCharts(ra).filter(lying).length >= 1 && pageCharts(ra).every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v)))
+    // (changed in writer round 9, D15: this layout's column chart by a text category is written as a bar chart, so one
+    // upright chart, the line, is left; every chart is still mirrored)
+    chk(() => pageCharts(ra).filter(upright).length >= 1 && pageCharts(ra).filter(lying).length >= 1 && pageCharts(ra).every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v)))
         && pageCharts(ra).filter((v) => vt(v) !== 'lineChart').every((v) => !!dpOf(v)) && ar.j.chartAxes.mode === 'mirrored' && ar.j.chartAxes.charts === pageCharts(ra).length && errors(ra.dir) === '0',
       () => `an Arabic report's column, line and bar charts must be mirrored (and keep the gradient), told in chartAxes: ${tellM(ra)} ${JSON.stringify(ar.j && ar.j.chartAxes)} validator ${ra.dir && errors(ra.dir)} ${short(ar)}`);
     chk(() => { const tips = ra.vis.filter((v) => v.tooltipPage && lying(v)); return tips.length >= 1 && tips.every((v) => mirroredBar(v) && P1(v, 'valueAxis').show.expr.Literal.Value === 'false' && !!P1(v, 'categoryAxis').fontSize && on(P1(v, 'labels').show)); },
@@ -3159,7 +3236,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vs = pageVisuals(ar, 'r12-ar').filter((v) => type(v) === 'slicer'), bad = [];
     const SL = ar.err ? 15 : +themeOf(ar, 'r12-ar').visualStyles.slicer['*'].header[0].textSize;
     vs.forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], ht = v.visual.objects.header[0].properties.text, shown = ht ? S(ht) : p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      if (tw(shown, SL, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, SL, true, 'Tahoma'))} of ${room}`);
+      // (changed in 0.2.9 rc1, PERF-COMPARE D3: a header takes a smaller text, down to 8pt, before it is shortened: measured at its written size)
+      const hs = v.visual.objects.header[0].properties.textSize, size = hs ? N(hs) : SL;
+      if (tw(shown, size, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, size, true, 'Tahoma'))} of ${room} at ${size}pt`);
       if (!altOf(v).startsWith(shown.replace(/…\u200f?$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
     chk(() => vs.length >= 2 && bad.length === 0, () => `#24: a slicer header must fit its slicer: ${bad.join(' | ')}`);
   }
@@ -3250,7 +3329,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   {
     const x = await ask('create_report', { path: 'r12-project', name: 'R12 Formats', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end' }), secondPage: false,
       fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Growth vs Last Year]'] } });
-    const want = { 'Total Sales': '#,0', Orders: '#,0', 'Avg Price': null, 'Margin %': '0.0%', 'Conversion Rate': '0.0%', 'Growth vs Last Year': '0.0%' }, bad = [];
+    // (0.2.9 part 2, O-2: Total Sales, a SUM of money, is an amount: automatic units with 2 decimals, no '#,0')
+    const want = { 'Total Sales': null, Orders: '#,0', 'Avg Price': null, 'Margin %': '0.0%', 'Conversion Rate': '0.0%', 'Growth vs Last Year': '0.0%' }, bad = [];
     pageVisuals(x, 'r12-project').filter(isKpi).forEach((v) => {
       const m = v.visual.query.queryState.Data.projections[0].field.Measure.Property, vs = v.visual.objects.value, d = valueOf(v), cust = vs.find((e) => e.selector && e.selector.metadata);
       const got = cust ? S(cust.properties.customFormatString) : null;
@@ -3324,7 +3404,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hand = await ask('create_report', { path: 'r12-project', name: 'R12 Hand AR', lang: 'ar', rtl: true, font: 'Tahoma', pages: [{ name: 'صفحة', width: 1280, height: 720,
       slots: [{ kind: 'title', x: 400, y: 12, w: 856, h: 40 }, { kind: 'logo', x: 24, y: 12, w: 160, h: 40 }, { kind: 'bar', x: 24, y: 70, w: 1232, h: 620 }] }] });
     const tips = hand.err ? [] : pagesOf(hand, 'r12-project').filter((p) => p.tooltip).map((p) => p.name);
-    chk(() => al(logo(ar2, 'r12-project')) === 'left' && al(logo(en, 'r12-project')) === 'right' && /شعارك/.test(JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects)) && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
+    // (0.2.9 part 2, O-6: create_report writes no placeholder at all, designed or hand-placed; its place is checked with the
+    // shared writer for the website's template above)
+    chk(() => !logo(ar2, 'r12-project') && !logo(en, 'r12-project') && !logo(hand, 'r12-project') && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
       () => `#30/#14/#13: the logo placeholder at the page's edge, Arabic texts on hand-placed pages: AR ${al(logo(ar2, 'r12-project'))} EN ${al(logo(en, 'r12-project'))} hand ${JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects).slice(0, 120)} tips ${JSON.stringify(tips)} ${short(hand)}`);
   }
   // the Arabic Reset: its arrow beside its text (seen in Desktop: at opposite ends): the icon placed at the reading
@@ -3457,8 +3539,11 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const size = t && t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : T;
     const shown = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Aggregation && p.displayName === ' ')) : [];
     // the room each column takes at a size (the writer's own rule, columnRoom), and how many fields fit at the theme's size
-    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { field: { Measure: {} }, nativeQueryRef: m[2] } : { field: { Column: {} }, nativeQueryRef: m[2] }; });
-      let used = 0, n = 0; for (const p of ps) { const r = Pb.columnRoom(p, sz, 'Segoe UI'); if (n < 2 || used + r <= t.at.w) { used += r; n++; } else break; } return n; };
+    // (changed in 0.2.9 rc1, item 2: the writer's rule is now cellRoom, the bold header or widest value plus the measured
+    // padding, within the table's width less 36, on the 960 x 720 page; a measure with its format in the model)
+    const FMT = { 'Total Sales': '#,0', Orders: '#,0', 'Avg Price': '#,0.00', 'Margin %': '0.00%', 'Total Sales Last Ramadan': '#,0' };
+    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { t: m[1], m: m[2], format: FMT[m[2]] } : { t: m[1], c: m[2], type: 'string' }; });
+      let used = 0, n = 0; for (const p of ps) { const r = Pb.cellRoom(p, sz, 'Segoe UI', 720 / 1080); if (n < 2 || used + r <= t.at.w - 36) { used += r; n++; } else break; } return n; };
     chk(() => !x.err && t && size < T && size >= 8 && shown.length > fitAt(T) && shown.length === fitAt(size) && N(t.visual.objects.columnHeaders[0].properties.fontSize) === size && /text/i.test(JSON.stringify(x.j.reportNotes || [])),
       () => `recommendation 5: a narrow table's text first, then its columns (${t && t.at.w} wide): ${size}pt (theme ${T}), ${shown.length} shown; ${t && fitAt(T)} fit at ${T}pt, ${t && fitAt(size)} at ${size}pt ${short(x)}`);
   }
@@ -3569,8 +3654,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     chk(() => !h.err && JSON.stringify(to(hf.fields)) === JSON.stringify(Object.fromEntries(Object.entries(want).sort())) && /formatString: 0\.0%/.test(sc) && /measure Orders = [\s\S]*?formatString: #,0\n/.test(sc) && !/Revenue/.test(sc),
       () => `check_model_health fixes.FORMATS: ${h.err ? h.t.slice(0, 300) : JSON.stringify(hf)}`);
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r12b-fmt', fields: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'] });
+    // (0.2.9, the gate: plan_layout names the health check's own file, which create_report writes after the user's go)
     chk(() => !pl.err && Object.keys(pl.j)[0] === 'formats' && JSON.stringify(to(pl.j.formats.fields)) === JSON.stringify({ 'Sales[Orders]': '#,0', 'Sales[Return Rate]': '0.0%' })
-        && pl.j.formats.fixScriptFile === hf.fixScriptFile && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
+        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile) && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
       () => `plan_layout with the model must say the formats first, with the health check's own file: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.formats)}`);
     const cr = await ask('create_report', { path: 'r12b-fmt', name: 'Fmt', design: (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design,
       fields: { kpis: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'], table: ['Sales[Order Date]', 'Sales[Orders]', 'Sales[Return Rate]', 'Sales[Qty]'] } });
@@ -3791,8 +3877,14 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const x = await ask('create_report', { path: 'r15', name: 'R15 brand', design: dz, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Region]', measure: 'Sales[Total Sales]' } });
     const rules = (x.err ? [] : visuals('r15', x.j.report)).filter((v) => v.visual && /Bar|Column/.test(v.visual.visualType)).map((v) => { const fr = (((((v.visual.objects || {}).dataPoint || [])[0] || {}).properties || {}).fill || {}).solid; const g = fr && fr.color && fr.color.expr && fr.color.expr.FillRule && fr.color.expr.FillRule.FillRule.linearGradient2; const v2 = (c) => String(c.Literal.Value).replace(/^'|'$/g, ''); return g ? { low: v2(g.min.color), high: v2(g.max.color) } : null; }).filter(Boolean);
     const card = dz.ui.card, text = dz.ui.text, cc = x.j && x.j.chartColors;
-    chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text)) && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
-      () => `a brand colour that cannot fade towards the card fades towards the text colour, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
+    // Moved in round P3 with its cause (RESCORE-6 N25, the reviewer: the fade's strong end is exactly the chart's colour,
+    // never past it): a brand colour too dark to fade at 3:1 on its card keeps its colour as the largest bar and fades to
+    // a soft tint towards the card (soft: true, told), no longer brighter towards the text colour; the second chart of
+    // the page fades from its own colour (chartColors.second) the same way
+    const sec = (cc && cc.second) || {};
+    chk(() => !x.err && rules.length >= 2 && rules.some((r) => r.high === '#0f6cbd') && rules.every((r) => r && ((r.low === sec.low && r.high === sec.high) || (r.high === '#0f6cbd' && r.low !== r.high && cr(r.low, card) < cr(r.high, card))))
+      && cc.mode === 'gradient' && !cc.reversed && cc.soft === true && /under 3:1/.test(cc.note),
+      () => `a brand colour that cannot fade at 3:1 keeps its colour as the strong end, with a soft tint, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
 
   // Round 13, recommendation 1: gradient bars stay on by default for designed pages (smallest -> largest), and the plan
@@ -3926,7 +4018,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const tabsOf = async (W, H, hh, names, lang) => {
       const rtl = lang === 'ar', tw = Math.round(W * 0.72), lw = Math.round(W * 0.12);
       const slots = [{ kind: 'title', x: rtl ? W - 24 - tw : 24, y: 12, w: tw, h: hh }, { kind: 'logo', x: rtl ? 24 : W - 24 - lw, y: 12, w: lw, h: hh }, { kind: 'kpi', title: 'K', x: 24, y: hh + 40, w: 300, h: 120 }];
-      const x = await ask('create_report', { path: 'r16-g', name: `R16 tabs ${W} ${hh} ${names.length} ${lang}`, lang, rtl, font: rtl ? 'Tahoma' : 'Segoe UI', title: rtl ? 'تقرير' : 'Report', fields: { kpis: ['Sales[Total Sales]'] },
+      // (0.2.9 part 2, O-6: no placeholder without a logo, so the room is measured from a real logo's image)
+      const x = await ask('create_report', { path: 'r16-g', name: `R16 tabs ${W} ${hh} ${names.length} ${lang}`, lang, rtl, logo: 'cr-project/logo.png', font: rtl ? 'Tahoma' : 'Segoe UI', title: rtl ? 'تقرير' : 'Report', fields: { kpis: ['Sales[Total Sales]'] },
         pages: names.map((n) => ({ name: n, width: W, height: H, slots })) });
       if (x.err) return { err: x.t.slice(0, 200) };
       const pagesDir = path.join(ROOT, 'r16-g', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(pagesDir, 'pages.json'), 'utf8')).pageOrder;
@@ -3936,7 +4029,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       const logo = slots[1], rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
       const fitText = btns.every((b) => b.w >= Px.textWidth(b.name, b.size, true, rtl ? 'Tahoma' : 'Segoe UI') + 10);
       // (positions inside the header group are relative to the group: the logo's own visual is in the same frame)
-      const lv = vs.find((v) => v.visual && /Your logo|شعارك/.test(JSON.stringify(v.visual.objects || {}))), lp = lv ? lv.position : null;
+      const lv = vs.find((v) => v.visual && v.visual.visualType === 'image'), lp = lv ? lv.position : null;
       const inRoom = !!lp && btns.every((b) => (rtl ? b.x >= lp.x + lp.width : b.x + b.w <= lp.x));
       const first = btns.find((b) => b.name === names[0]), row0 = btns.filter((b) => b.y === rows[0]);
       const firstAtStart = first && first.y === rows[0] && (rtl ? first.x === Math.max(...row0.map((b) => b.x)) : first.x === Math.min(...row0.map((b) => b.x)));
@@ -3967,6 +4060,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     model('r17-big', [sales]);
     const d = path.join(ROOT, 'r17-big', 'Big.Report', 'definition', 'pages', 'p1');
     fs.mkdirSync(d, { recursive: true });
+    // (0.2.9 item 13: only a report whose definition.pbir points at the model is read, so the fixture has one, as every
+    // report Desktop saves; the check itself is unchanged)
+    fs.writeFileSync(path.join(ROOT, 'r17-big', 'Big.Report', 'definition.pbir'), JSON.stringify({ version: '4.0', datasetReference: { byPath: { path: '../M.SemanticModel' } } }));
     for (let i = 0; i < 5; i++) { const fd = fs.openSync(path.join(d, `part${i}.json`), 'w'); fs.ftruncateSync(fd, 30 * 1024 * 1024); fs.closeSync(fd); }   // sparse: 150 MB on paper
     const r = await ask('read_model', { path: 'r17-big' });
     chk(() => r.err && /report/i.test(r.t) && /together/.test(r.t) && /128 MB/.test(r.t),
@@ -3987,8 +4083,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     out.push(await call2('read_model', { path: 'Shop' }), await call2('read_model', { path: 'Nope' }), await call2('read_model', { path: '../outside' }), await call2('read_model', { path: wroot + '/../x' }));
     out.push(await call2('suggest_fields', { path: 'Shop', kpis: 2 }), await call2('check_model_health', { path: 'Shop' }), await call2('check_model_health', { path: 'Shop/Shop.SemanticModel' }));
     const th = await call2('generate_theme', { name: 'R17' }); out.push(th);
-    const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop' }); out.push(pl);
-    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false }));
+    const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop', name: 'R17', secondPage: false }); out.push(pl);
+    // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
+    await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId });
+    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));
     out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
     out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
     await c2.close();
@@ -4033,7 +4131,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // G-13: every report created above still passes the validator: 0 errors each
 {
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const dirs = [...createdReports].filter((d) => fs.existsSync(path.join(d, 'definition')));
   const bad = dirs.map((d) => [path.relative(ROOT, d), errors(d)]).filter(([, e]) => String(e) !== '0');
   check(dirs.length > 50 && !bad.length, `every created report must validate with 0 errors (${dirs.length} reports): ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
@@ -4058,9 +4157,11 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const ops = async (dir) => ask('create_report', { path: dir, name: 'R18 ops', secondPage: false, design: (await ask('plan_layout', { layout: 'ops', kpis: 3, filters: 'top' })).j.design });
     const three = vis('r18-three', await ops('r18-three')), two = vis('r18-two', await ops('r18-two'));
     const pick = (vs) => ({ bars: vs.filter((v) => ty(v) === 'clusteredBarChart').sort((p, q) => p.position.y - q.position.y).map(catOf), donut: vs.filter((v) => ty(v) === 'donutChart').map(catOf), column: vs.filter((v) => ty(v) === 'clusteredColumnChart').map(catOf) });
-    chk(() => { const p = pick(three); return p.bars.length === 2 && new Set(p.bars.concat(p.donut)).size === 3 && p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars[1] === 'Sales.Product' && p.column.length === 1; },
+    // (changed in writer round 9, D15: the column chart, by a text category whose columns can't hold a 12-letter name, is
+    // written as a bar chart, its own category and title kept: a third bar; the two bar charts keep Region and Product)
+    chk(() => { const p = pick(three); return p.bars.length + p.column.length === 3 && p.bars.includes('Sales.Region') && p.bars.includes('Sales.Product') && p.donut[0] === 'Sales.Channel'; },
       () => `three text columns: the two bar charts and the donut must each take a different one (Region, Channel, Product): ${JSON.stringify(pick(three))}`);
-    chk(() => { const p = pick(two); return p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars.length === 2; }, () => `two text columns: bar by Region, donut by Channel, as before: ${JSON.stringify(pick(two))}`);
+    chk(() => { const p = pick(two); return p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars.length + p.column.length === 3; }, () => `two text columns: bar by Region, donut by Channel, as before: ${JSON.stringify(pick(two))}`);
   }
   // 2. (seen in Desktop: the Arabic slide-in panel's Filters button read "الفلاتر ☰" with the ☰ at the left of the word, the
   //    reading end.) In a right-to-left report the ☰ is written after the word, so the left-to-right button draws it at
@@ -4163,7 +4264,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     {
       const model = (dir, ms) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
         fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day of Week', 'int64'), col('Day Name', 'string'), col('Quarter', 'string'), col('Month Short', 'string'), col('Month Number', 'int64')] },
-          { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: ms.map((n) => ({ name: n, expression: /%/.test(n) ? 'DIVIDE ( SUM ( Sales[Amount] ), 2 )' : 'SUM ( Sales[Amount] )', formatString: /%/.test(n) ? '0.0%' : '#,0' })) }] } })); };
+          { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: ms.map((n, i) => ({ name: n, expression: /%/.test(n) ? 'DIVIDE ( SUM ( Sales[Amount] ), 2 )' : i ? 'SUM ( Sales[Amount] ) * ' + (i + 1) : 'SUM ( Sales[Amount] )', formatString: /%/.test(n) ? '0.0%' : '#,0' })) }] } })); };
+      // (D6: each measure has its own DAX, two of the same are one card: the 2nd is SUM * 2)
       const MS = ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'];
       model('n1-one', MS.slice(0, 1)); model('n1-two', MS.slice(0, 2)); model('n1-three', MS);
       const all = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
@@ -4210,7 +4312,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       if (x.err) return { err: x.t.slice(0, 300) };
       const vs = vis('r19-nodata', x), ext = (() => { try { return fs.readFileSync(path.join(ROOT, 'r19-nodata', x.j.report, 'definition', 'reportExtensions.json'), 'utf8'); } catch (e) { return ''; } })();
       const charts = vs.filter((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart', 'donutChart', 'tableEx'].includes(ty(v)));
-      const pos = (v) => v.position, under = (c) => vs.find((v) => v !== c && ty(v) === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('"Schema":"extension"') && pos(v).x === pos(c).x && pos(v).y === pos(c).y && pos(v).width === pos(c).width && pos(v).height === pos(c).height && pos(v).z < pos(c).z);
+      const pos = (v) => v.position, under = (c) => vs.find((v) => v !== c && ty(v) === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('"Schema":"extension"') && pos(v).x === pos(c).x && pos(v).y === pos(c).y && pos(v).width === pos(c).width && (pos(v).height === pos(c).height || (ty(c) === 'tableEx' && pos(v).height >= pos(c).height)) && pos(v).z < pos(c).z);   // (changed in writer round 8, S3 with the design's N6: the card is the table's panel at the slot's height; the table inside it ends on whole rows)
       const pairs = charts.map((c) => ({ c, m: under(c) }));
       const seeThrough = (c) => JSON.stringify((c.visual.visualContainerObjects || {}).background || '').includes('false');
       const tipOff = (m) => m && JSON.stringify((m.visual.visualContainerObjects || {}).visualTooltip || '').includes('false');
@@ -4223,7 +4325,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         // drew about 5 nearer its box's edge than the same chart without the option)
         // (the same night: a message card with a tabOrder was an unnamed Tab stop before its chart; without one it is none)
         noTab: pairs.filter((p) => p.m && !('tabOrder' in p.m.position) && p.c.position.tabOrder != null).length,
-        plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false')).length,
+        plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && (JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false') || (ty(p.c) === 'tableEx' && pos(p.m).height > pos(p.c).height))).length,   // (changed in writer round 9: the card behind a table on its whole rows is the table's panel, with the panel's shadow, the laptop's S3 resolution proven in Desktop on rc.4)
         boxes: charts.map((c) => { const o = Object.assign({}, c.visual.visualContainerObjects || {}); delete o.background; delete o.visualTooltip;   /* the tooltip page's id is each report's own */ return ty(c) + ' ' + pos(c).x + ',' + pos(c).y + ' ' + JSON.stringify(o); }).sort() }; };
     const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
     chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
@@ -4280,7 +4382,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   }
   // Round 19, item 10: a table takes the matrix's row rule (round 18): where seven rows and the total do not fit even with
   //     tight rows at the theme's size, the largest smaller text down to 8pt that holds them, on its values, headers and
-  //     total; the header keeps its grow-to-fit
+  //     total; the header keeps its grow-to-fit (0.2.9 part 2, O-14: no more: auto-size off and set widths)
   {
     const dir = 'r18-matrix';
     const x = await ask('create_report', { path: dir, name: 'R19 table rows', theme: `${dir}/theme-1.5.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
@@ -4289,7 +4391,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const t = vs.find((v) => v.visual && v.visual.visualType === 'tableEx'), o = (t && t.visual.objects) || {};
     const fz = (k) => { const e = (o[k] || [])[0]; return e && e.properties.fontSize ? parseFloat(e.properties.fontSize.expr.Literal.Value) : null; };
     const T = fz('values'), pitch = 1.415 * T * 4 / 3, need = 1.5 * 18 * 4 / 3 + pitch + 7 + 8 * pitch + 16;
-    chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('growToFit') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
+    chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('"autoSizeColumnWidth":{"expr":{"Literal":{"Value":"false"}}}') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
       () => `a 420 x 220 table of Day Name at 15pt must take a smaller text so seven rows and the total fit: values ${T}, headers ${fz('columnHeaders')}, total ${fz('total')}, need ${Math.round(need)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
 }
@@ -4332,7 +4434,13 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       if (x.err) return { err: x.t.slice(0, 200) };
       const def = path.join(ROOT, 'r20-plain', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
       return order.map((pg) => fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')))
-        .filter((v) => v.visual && /Chart$|^tableEx$/.test(v.visual.visualType)).map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0]; return t.properties && t.properties.text ? t.properties.text.expr.Literal.Value.replace(/^'|'$/g, '') : null; }).filter(Boolean)); };
+        // (design round 8, N2: a chart cut to its Top N takes its title from a report measure named "Title: <its title>")
+        .filter((v) => v.visual && /Chart$|^tableEx$/.test(v.visual.visualType)).map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0], e = t.properties && t.properties.text && t.properties.text.expr;
+          return !e ? null : e.Literal ? e.Literal.Value.replace(/^'|'$/g, '') : e.Measure ? plainTitle(def, e.Measure.Property) : null; }).filter(Boolean)); };
+    // (the plain title: the last text of the title measure's DAX, shown when the chart leaves no category out)
+    const plainTitle = (def, name) => { const f = path.join(def, '..', 'reportExtensions.json'), m = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((x) => x.measures).find((x) => x.name === name) : null;
+      const p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : [];   // (round 10: the plain title follows IF ( _s = _n, )
+      return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
     for (const lang of ['en', 'ar']) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
@@ -4416,6 +4524,48 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 await round22({ call, check, ROOT, fs });
 // ---------- round 23 (the Arabic table's "Total" word, way 4): its checks live in test-round23.mjs, which also runs alone ----------
 await round23({ call, check, ROOT, fs });
+// ---------- 0.2.9 part 1 (the gate, the plan's limits, the user's choices): test-0.2.9.mjs, which also runs alone ----------
+// (the raw call: the gate is tested without the helper that gets plans)
+await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- 0.2.9 part 2 (the report writer's fixes): test-0.2.9b.mjs, which also runs alone ----------
+await v029b({ call, check, ROOT, fs });
+// ---------- 0.2.9 integration, the gate block's root fixes (the cross-review): test-0.2.9i.mjs, which also runs alone ----------
+await v029i({ call, raw: rawCall, check, ROOT, fs });
+// ---------- 0.2.9, the report writer's block (audit 3's A3-7 to A3-12, writer side): test-0.2.9w.mjs, which also runs alone ----------
+v029w({ check });
+// ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
+await v029k({ call, check, ROOT, fs });
+// ---------- 0.2.9 audit fixes, the field picker's block (A3-2 ... A3-9, A6-15): test-0.2.9p.mjs, which also runs alone ----------
+await v029p({ call, check, ROOT, fs });
+// ---------- 0.2.9 picker fixes from the rc's laptop proof (S4, S5, S8, D2, D4-D14, D17): test-0.2.9q.mjs, which also runs alone ----------
+await v029q({ check });
+await v029r({ check });
+// ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
+await v029checks({ call, check, ROOT, fs });
+// ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------
+await v029visuals({ check });
+await v029visualsTools({ call: rawCall, check, ROOT, fs });
+// ---------- 0.2.9, the design engine block (the audit's A2-1 to A2-12): test-0.2.9-design.mjs, which also runs alone ----------
+await v029design({ call, check, ROOT, fs });
+// ---------- 0.2.9, the agent instructions and public claims (the audit's A7): test-0.2.9-agent.mjs, which also runs alone ----------
+await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
+await v029a4({ call, check, ROOT, fs });
+// ---------- 0.2.9, the design block's items of the laptop's sweep (S5/D19, S6, S7, D16): test-0.2.9-sweep.mjs, which also runs alone ----------
+await v029sweep({ call, check, ROOT, fs });
+// ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
+try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
+await v030twin({ call: rawCall, check, ROOT, fs });
+await v030audit({ call: rawCall, check, ROOT, fs });
+await v029twin({ call: rawCall, check, ROOT, fs });
+// ---------- audit 6 (the MCP tools block): test-audit6.mjs, which also runs alone ----------
+await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- the outside review of the 0.2.9 release candidate (Z-01..Z-07, the tools layer): test-z.mjs, which also runs alone ----------
+await zgate({ call: rawCall, check, ROOT, fs });
+// ---------- the outside review of rc.12 (R-01, R-02, R-04): test-r.mjs, which also runs alone ----------
+await rgate({ call: rawCall, check, ROOT, fs });
+// ---------- A-01, DataArcus's own approval window (the owner's decision of 14 Oct): test-approval.mjs, which also runs alone ----------
+await approvalWindow({ check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

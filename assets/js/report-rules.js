@@ -15,6 +15,10 @@
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const withId = (list, id) => entries(list).filter((e) => e && e.selector && e.selector.id === id).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const look = (list) => { const d = withId(list, 'default'); return Object.keys(d).length ? d : plain(list); };
+  // (A4-1, audit 4: a report's text never reaches a finding through a number or a key) a finite number or NaN; a
+  // formatting key or a setting's value is repeated only when it is a plain word
+  const n = (v) => (typeof v === 'number' ? v : typeof v === 'string' && /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? +v : NaN);
+  const word = (k) => /^[A-Za-z][A-Za-z0-9]{0,40}$/.test(String(k));
 
   // where each number comes from: DESKTOP-TESTS.md, the section's date, the Desktop version, the section's title
   const M = (date, desktop, section) => ({ file: 'scripts/tests/DESKTOP-TESTS.md', date, desktop, section });
@@ -28,7 +32,10 @@
     phone: M('2026-10-03', '2.158.1177', 'round 1 measurements: mobile.json positions and selectors'),
     pageWrap: M('2026-10-03', '2.158.1177', 'round 1 measurements: a page button puts a long name on two lines only when two lines fit its height'),
     round2: M('2026-10-03', '2.158.1177', 'round 2 measurements: a chart sorts by a field only when it is in the visual; the page navigator has no order setting'),
-    plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles')
+    plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles'),
+    tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)'),
+    round10: M('2026-10-04', '2.158.1177', 'round 10 (overnight): measurements before the code'),
+    textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font')
   };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
@@ -36,18 +43,25 @@
   // The measured numbers, in page units (a point size takes the same page units on any page, as measured). The one
   // copy: scripts/tests/report-check.mjs takes them from here (MEASURED).
   const BOX = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1));        // a text box: 10 + 1.8 x pt a line
-  const BTN_TEXT = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));    // a button's text, a line (English)
   const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
-  // a button with an icon: its text measured with the report writer's per-letter widths, + 10 (round 10, M3); the
-  // per-letter widths are pbip-export.js's (DAPbip in the browser), so the rule and the writer never disagree
-  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./pbip-export.js') : root.DAPbip).textWidth;
+  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3); the widths are
+  // text-measure.js's, the one copy the report writer uses too (audit 4's A4-5: the rules never load the writer)
+  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure).textWidth;
   const BTN_ICON_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
   const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
+  // (A4-6, audit 4) the lines a page button shows at a height: two only when two fit (SRC.pageWrap), one when one does
+  const PAGE_LINES = (h, t, font) => (h + 0.5 >= PAGE_TWO_LINES(t, font) ? 2 : h + 0.5 >= BTN_H(t) ? 1 : 0);
+  // a page button's one line, measured letter by letter + 10 (round 10, M3; round 1: "Executive summary" at 14pt cut
+  // at 160 wide and less, whole at about 174)
+  const PAGE_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
+  // a text box's text middle below its top, by the font (SRC.textMid: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt)
+  const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
   const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
-  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
+  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
 
@@ -69,10 +83,10 @@
       about: 'a text box\'s height holds its lines: 10 + 1.8 x pt a line, the lines wrapped at 0.55 em a character',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'textbox').forEach((x) => {
-          const paras = (plain(((x.json.visual || {}).objects || {}).general).paragraphs) || [];
+          const paras = entries(plain(((x.json.visual || {}).objects || {}).general).paragraphs);
           let lines = 0, top = 0, text = 0, fonts = [];
           paras.forEach((p) => {
-            const runs = p.textRuns || [], t = Math.max(0, ...runs.map((r) => parseFloat(((r.textStyle || {}).fontSize) || '') || R.textSize));
+            const runs = entries(p && p.textRuns), t = Math.max(0, ...runs.map((r) => parseFloat(((r.textStyle || {}).fontSize) || '') || R.textSize));
             const len = runs.reduce((a, r) => a + String(r.value || '').length, 0); text += len;
             runs.forEach((r) => fonts.push((r.textStyle || {}).fontFamily || R.font));
             top = Math.max(top, t);
@@ -108,8 +122,9 @@
       run(R, out) {
         R.visuals.filter((x) => /button|navigator/i.test(x.type)).forEach((x) => {
           const o = (x.json.visual || {}).objects || {};
-          const cards = Object.keys(o).filter((k) => entries(o[k]).some((e) => e && e.selector && STATES.includes(e.selector.id) && e.properties && 'show' in e.properties));
-          if (cards.length) out(x, `${cards.length} formatting card${cards.length === 1 ? '' : 's'} (${cards.join(', ')}) set "show" inside a state selector`, 'Move each "show" into its own entry without a selector, as Power BI Desktop saves it; inside a state it is ignored and the text, fill or outline stays hidden.');
+          const cards = Object.keys(o).filter((k) => entries(o[k]).some((e) => e && e.selector && STATES.includes(e.selector.id) && e.properties && typeof e.properties === 'object' && 'show' in e.properties));
+          const named = cards.filter(word), others = cards.length - named.length;
+          if (cards.length) out(x, `${cards.length} formatting card${cards.length === 1 ? '' : 's'} (${named.concat(others ? [`${others} not named`] : []).join(', ')}) set "show" inside a state selector`, 'Move each "show" into its own entry without a selector, as Power BI Desktop saves it; inside a state it is ignored and the text, fill or outline stays hidden.');
         });
       } },
     { id: 'SELECTOR_CARD', group: 'selectors', severity: 'warning', source: SRC.round0,
@@ -118,7 +133,7 @@
         R.visuals.filter((x) => x.type === 'cardVisual').forEach((x) => {
           const v = x.json.visual || {}, o = v.objects || {}, c = v.visualContainerObjects || {}, bad = [];
           ['padding', 'spacing'].forEach((k) => { if (entries(c[k]).some((e) => e && e.selector && e.selector.id === 'default')) bad.push(`the container's ${k} with "default"`); });
-          if (entries(o.fillCustom).some((e) => e && e.selector && e.selector.id === 'default' && e.properties && 'show' in e.properties)) bad.push('fillCustom "show" with "default"');
+          if (entries(o.fillCustom).some((e) => e && e.selector && e.selector.id === 'default' && e.properties && typeof e.properties === 'object' && 'show' in e.properties)) bad.push('fillCustom "show" with "default"');
           ['value', 'label', 'outline'].forEach((k) => { if (entries(o[k]).some((e) => e && !e.selector)) bad.push(`${k} without "default"`); });
           if (bad.length) out(x, `${bad.length} entr${bad.length === 1 ? 'y' : 'ies'} Desktop ignores: ${bad.join('; ')}`, 'Write the container\'s padding and spacing and fillCustom\'s "show" without a selector, and the card\'s value, label and outline with selector { id: "default" }.');
         });
@@ -143,12 +158,13 @@
       about: 'on the phone layout (mobile.json, where a grouped visual\'s position is a page position) no two boxes overlap and every box is inside the 323-wide canvas',
       run(R, out) {
         R.pages.forEach((pg) => {
-          const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup);
+          const pos = (x) => { const p = x.mobile.position, b = { x: n(p.x), y: n(p.y), width: n(p.width), height: n(p.height) }; return Object.values(b).every(Number.isFinite) ? b : null; };
+          const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup && pos(x));
           boxes.forEach((a, i) => {
-            const A = a.mobile.position;
+            const A = pos(a);
             if (A.x < -0.5 || A.x + A.width > 323.5) out(a, `the phone box is outside the 323-wide canvas (x ${A.x}, width ${A.width})`, 'Move or narrow it on the phone layout.', { file: a.mobileFile });
             boxes.slice(i + 1).forEach((b) => {
-              const B = b.mobile.position;
+              const B = pos(b);
               if (A.x < B.x + B.width - 0.5 && B.x < A.x + A.width - 0.5 && A.y < B.y + B.height - 0.5 && B.y < A.y + A.height - 0.5)
                 out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps another visual's phone box at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });
             });
@@ -156,23 +172,25 @@
         });
       } },
     { id: 'PAGE_BUTTON_WRAP', group: 'navigation', severity: 'warning', source: SRC.pageWrap,
-      about: 'a page button (an actionButton that goes to a page) puts a long name on two lines only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "..."; a line holds 0.45 em a character',
+      about: 'a page button (an actionButton that goes to a page) puts a long name on two lines only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "..."; a line is measured letter by letter, + 10 (round 10, M3; A4-6: the flat 0.45 em missed the cut at 150-160 wide)',
       run(R, out) {
         R.visuals.filter(isPageButton).forEach((x) => {
-          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, n = str(tx.text).length, font = str(tx.fontFamily) || R.font;
-          if (!n || BTN_TW(t, n) <= x.w + 0.5) return;
-          const two = Math.ceil(PAGE_TWO_LINES(t, font)), est = measuredFont(font) ? null : { estimate: true };
-          if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${Math.ceil(BTN_TW(t, n))} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${Math.ceil(BTN_TW(t, n))} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est);
-          else if (BTN_TW(t, Math.ceil(n / 2)) > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${Math.ceil(BTN_TW(t, Math.ceil(n / 2)))})`, `Make the button at least ${Math.ceil(BTN_TW(t, Math.ceil(n / 2)))} wide, or the name shorter.`, est);
+          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length, font = str(tx.fontFamily) || R.font;
+          const one = Math.ceil(PAGE_TW(text, t, font));
+          if (!n || one <= x.w + 0.5) return;
+          const two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10), est = measuredFont(font) ? null : { estimate: true };
+          if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${one} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${one} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est, SRC.round10);
+          else if (half > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${half})`, `Make the button at least ${half} wide, or the name shorter.`, est, SRC.round10);
         });
       } },
     { id: 'SORT_IN_VISUAL', group: 'sort', severity: 'warning', source: SRC.round2,
       about: 'a chart sorts by a field only when that field is in the visual (a sort by any other field is ignored)',
       run(R, out) {
         R.visuals.filter((x) => /Chart$|^(donutChart|funnel|treemap|map|pieChart)$/.test(x.type)).forEach((x) => {
-          const q = ((x.json.visual || {}).query) || {}, sorts = ((q.sortDefinition || {}).sort) || [];
+          // (F-C2, the fuzz test: a sort list or a projection list that is not a list is read as empty, never a crash)
+          const q = ((x.json.visual || {}).query) || {}, sorts = entries((q.sortDefinition || {}).sort).filter((t) => t && typeof t === 'object');
           if (!sorts.length) return;
-          const held = Object.values(q.queryState || {}).flatMap((r) => (r && r.projections) || []).map((p) => JSON.stringify(p.field));
+          const held = Object.values(q.queryState && typeof q.queryState === 'object' ? q.queryState : {}).flatMap((r) => entries(r && r.projections)).map((p) => JSON.stringify(p && p.field));
           const missing = sorts.filter((s) => !held.includes(JSON.stringify(s.field))).length;
           if (missing) out(x, `${missing} of its ${sorts.length} sort field${sorts.length === 1 ? ' is' : 's are'} not in the visual, so Desktop ignores ${missing === 1 ? 'it' : 'them'}`, 'Put the sort field in the visual (for a month or day name: Min of its number column in the Tooltips role), or sort by a field the chart shows.');
         });
@@ -182,16 +200,21 @@
       run(R, out) {
         R.pages.filter((p) => p.tooltip).forEach((pg) => pg.visuals.filter((x) => x.type === 'clusteredBarChart').forEach((x) => {
           const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h));
-          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}.`, axis ? { estimate: true } : null);
+          // (A4-12, audit 4: a Top N filter on the visual that keeps no more rows than fit leaves no scrollbar: nothing to say)
+          const top = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'TopN').map((g) => n((((((g.filter || {}).From || [])[0] || {}).Expression || {}).Subquery || { Query: {} }).Query.Top)).filter(Number.isFinite);
+          if (top.length && Math.min(...top) <= rows) return;
+          // the 22 a row was measured with 8pt category labels; another size makes the row count an estimate
+          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 8;
+          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}${other ? `; its labels are ${pt}pt, and the 22 a row was measured at 8pt` : ''}.`, axis || other ? { estimate: true } : null);
         }));
       } },
-    { id: 'RTL_MIRROR', group: 'rtl', lang: 'ar', severity: 'warning', source: SRC.round2,
+    { id: 'RTL_MIRROR', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.round2,
       about: 'Power BI does not mirror a right-to-left report: the page navigator has no order setting (the first page is always at the left: single page buttons instead), and a visual\'s title stays where its alignment puts it (left by default)',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'pageNavigator').forEach((x) => out(x, 'a page navigator in a right-to-left report: it always puts the first page at the left', 'Use single page buttons (actionButton with a PageNavigation link) placed from the right.'));
         R.visuals.forEach((x) => {
           const t = plain(((x.json.visual || {}).visualContainerObjects || {}).title);
-          if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) || 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
+          if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) ? (word(str(t.alignment)) ? str(t.alignment) : 'by a value that is not a plain word') : 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
         });
       } },
     { id: 'THEME_NAME', group: 'theme', severity: 'warning', source: SRC.round0,
@@ -205,22 +228,35 @@
 
   // R: { pages: [{ id, visuals: [x] }], visuals: [x], textSize, labelSize, slicerSize, font, theme: { file, ref, json },
   //      hasPlatform }, x: { name, type, file, mobileFile, json (visual.json), mobile (mobile.json or null), x, y, w, h }
-  // opts: { groups: [...] }. Returns { findings: [{ rule, severity, file, page, visual, what, fix, source }], ran: [ids] }
+  // opts: { groups: [...] }. Returns { findings: [{ origin: 'rule', rule, severity, file, page, visual, what, fix, source }], ran: [ids],
+  // failed: [{ rule, why }] }. (A4-2, audit 4: each rule runs on its own: one that cannot read the report is named in
+  // failed and its findings so far dropped; the others still run)
+  // (A4-1) every size and position the rules print is a number: a page's or a visual's that is not becomes 0
+  function normalize(R) {
+    const fin = (v) => { const x = n(v); return Number.isFinite(x) ? x : 0; };
+    (R.pages || []).forEach((p) => { p.w = fin(p.w); p.h = fin(p.h); });
+    (R.visuals || []).forEach((x) => { x.x = fin(x.x); x.y = fin(x.y); x.w = fin(x.w); x.h = fin(x.h); });
+    return R;
+  }
   function check(R, opts) {
-    const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [];
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+    normalize(R);
+    const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
+    // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
+    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.dir || r.dir === dir)).forEach((rule) => {
       ran.push(rule.id);
-      rule.run(R, (x, what, fix, extra, src) => {
+      const mine = [];
+      try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        findings.push({ rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
-      });
+      }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
-    return { findings, ran };
+    return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, check };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);

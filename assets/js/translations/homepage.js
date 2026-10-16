@@ -138,7 +138,7 @@ portfolio: {
         { title: "Languages: English and Arabic" },
         { title: "End-to-End Dashboard Builds" },
         { title: "Free Power BI & Fabric Tools Published" },
-        { title: "AI agent in private beta (8 tools)" }
+        { title: "AI agent in private beta (11 tools)" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
@@ -437,7 +437,7 @@ portfolio: {
         { title: "لغتان: العربية والإنجليزية" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
         { title: "أدوات Power BI و Fabric مجانية منشورة" },
-        { title: "وكيل ذكاء اصطناعي في نسخة تجريبية خاصة (8 أدوات)" }
+        { title: "وكيل ذكاء اصطناعي في نسخة تجريبية خاصة (11 أداة)" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
