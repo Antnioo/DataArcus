@@ -432,6 +432,38 @@ export default async function ({ browser, url }) {
   }
 
   {
+    // Published results follow the tool (16 Oct 2026: Health Check 2 moved Microsoft's COVID-19 sample from 84 to 85
+    // and every page kept saying 84). The page checks Microsoft's own file, as a visitor would; every place that
+    // publishes its result must say the same score, and the article's counts must match the findings
+    const file = fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/microsoft/COVID-19 US Tracking Sample.pbit'));
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.pg.setInputFiles('#mhFile', { name: 'COVID-19 US Tracking Sample.pbit', mimeType: 'application/octet-stream', buffer: file });
+    await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 });
+    const got = await v.pg.evaluate(() => {
+      const n = (rule) => { const c = document.querySelector(`.mh-issue[data-rule="${rule}"]`); return c ? +((c.querySelector('.mh-count') || {}).textContent || '0').replace(/\D/g, '') : 0; };
+      return { score: +document.querySelector('.mh-scorecard .mh-ring b').textContent, calc: n('CALC_COLS'), unused: n('UNUSED_COL') };
+    });
+    await v.ctx.close();
+    const SCORE = [
+      ['articles/article-power-bi-model-health-check.html', /Scored (\d+)/g], ['assets/js/translations/article-power-bi-model-health-check.js', /Scored (\d+)|النتيجة:? (\d+) من 100/g],
+      ['blog.html', /Scored (\d+)/g], ['assets/js/translations/blog.js', /Scored (\d+)|النتيجة:? (\d+) من 100/g],
+      ['assets/js/translations/homepage.js', /Sample\. It Scored (\d+)|Microsoft\. النتيجة:? (\d+) من 100/g],
+      ['go/health/index.html', /Scored (\d+)/g], ['go/health-page/index.html', /Scored (\d+)/g],
+      ['scripts/make-share-images.mjs', /ring\((\d+), |It Scored (\d+)/g]];
+    const said = [];
+    for (const [f, re] of SCORE) {
+      const all = [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(re)].map((m) => +(m[1] || m[2]));
+      check(all.length > 0, `published score: ${f} no longer states the sample's score (update this test's list with the page)`);
+      for (const x of all) if (x !== got.score) said.push(`${f} says ${x}`);
+    }
+    check(got.score > 0 && !said.length, `published score: the Health Check gives Microsoft's COVID-19 sample ${got.score}, but ${said.slice(0, 4).join('; ')}`);
+    const art = fs.readFileSync(path.join(ROOT, 'articles/article-power-bi-model-health-check.html'), 'utf8'), img = fs.readFileSync(path.join(ROOT, 'scripts/make-share-images.mjs'), 'utf8');
+    check(art.includes(`<strong>${got.calc} calculated columns on imported tables</strong>`) && img.includes(`['${got.calc}', 'calculated columns on imported tables']`), `published counts: the tool finds ${got.calc} calculated columns on imported tables; the article or the share image says otherwise`);
+    check(art.includes(`<strong>${got.unused} of 16 columns`) && img.includes(`(${got.unused} of 16)`), `published counts: the tool finds ${got.unused} unused columns; the article or the share image says otherwise`);
+  }
+
+  {
     // AUD-037 (night audit 15 Oct): at phone width nothing inside a finding card runs past the card, in English and
     // Arabic. A long word with no break (the BPA rule id INACTIVE_RELATIONSHIPS_THAT_ARE_NEVER_ACTIVATED, a long table or
     // measure name) wraps inside the card: the rule is on the card (.mh-issue), so every line in it is covered
