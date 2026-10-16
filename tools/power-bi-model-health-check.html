@@ -165,7 +165,7 @@
     .mh-tabs button small { color: #94a3b8; font-weight: 700; }
     .mh-tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
     .mh-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
-    .mh-issue { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; margin-bottom: 8px; }
+    .mh-issue { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; margin-bottom: 8px; overflow-wrap: anywhere; }   /* AUD-037: a long word (a BPA rule id, a long name) wraps inside its card */
     .mh-issue summary { display: flex; gap: 10px; align-items: center; padding: 12px 16px; cursor: pointer; list-style: none; color: var(--lt); }
     .mh-issue summary::-webkit-details-marker { display: none; }
     .mh-issue summary b { flex: 1; font-weight: 600; }
