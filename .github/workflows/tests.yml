@@ -80,7 +80,9 @@ jobs:
   # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).
   mcp-windows:
     runs-on: windows-latest
-    timeout-minutes: 25
+    # 40, like the website job: the suite takes 15-20 min on GitHub's Windows runners and one run on main hit the old
+    # limit of 25 (16 Oct, 273fd90: stopped at 25:08, shown as cancelled, no test failed)
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: mcp
