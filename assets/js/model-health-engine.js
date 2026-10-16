@@ -810,7 +810,9 @@
     };
     // Does a measure return text, so a number format can't apply? From the DAX: the result (after VAR ... RETURN) is a
     // string, an "&", CONCATENATE(X), FORMAT, UNICHAR, SELECTEDVALUE / MAX / MIN of a text column, a variable holding
-    // one of these, or an IF / SWITCH whose results are all text. Anything unclear is not text (the finding stays).
+    // one of these, an IF / SWITCH whose results are all text, CALCULATE(TABLE) of one of these, an EXTERNALMEASURE
+    // declared STRING (a composite model's remote measure), or a measure that returns text. Anything unclear is not
+    // text (the finding stays).
     const isBlankCall = (r) => r.length === 3 && r[0].t === 'id' && /^BLANK$/i.test(r[0].v) && isOp(r[1], '(') && isOp(r[2], ')');
     const isText = (tk, vars, n) => {
       if (n > 12 || !tk.length) return false;
@@ -830,11 +832,15 @@
         if (isOp(tk[j], '(')) d++; else if (isOp(tk[j], ')')) d--;
         else if (!d && isOp(tk[j], '&') && !isOp(tk[j + 1], '&') && !isOp(tk[j - 1], '&')) return true; // "&", not "&&"
       }
+      if (tk.length === 1 && measureRef(tk, 0, null)) return isText(tokenizeDax(IX.measures.get(lc(tk[0].v)).m.expr), {}, n + 1);
+      if (tk.length === 2 && isTbl(tk[0]) && measureRef(tk, 1, null)) return isText(tokenizeDax(IX.measures.get(lc(tk[1].v)).m.expr), {}, n + 1);
       if (tk.length === 1) return tk[0].t === 'str' || (tk[0].t === 'id' && !!vars[lc(tk[0].v)] && isText(vars[lc(tk[0].v)], vars, n + 1));
       if (!call(tk, 0) || closeOf(tk, 1) !== tk.length - 1) return false;
       const fn = tk[0].v.toUpperCase(), args = argsOf(tk, 1);
       const allText = (res) => { res = res.filter((r) => !isBlankCall(r)); return res.length > 0 && res.every((r) => isText(r, vars, n + 1)); };
       if (/^(CONCATENATE|CONCATENATEX|FORMAT|UNICHAR)$/.test(fn)) return true;
+      if (fn === 'EXTERNALMEASURE') return !!args[1] && args[1].length === 1 && args[1][0].t === 'id' && /^STRING$/i.test(args[1][0].v);
+      if (/^CALCULATE(TABLE)?$/.test(fn)) return isText(args[0], vars, n + 1); // its value is its expression's
       if (/^(SELECTEDVALUE|MAX|MIN)$/.test(fn)) {
         const a = args[0], c = a && a.length === 2 && isTbl(a[0]) && a[1].t === 'br' && IX.columns.get(lc(a[0].v) + '|' + lc(a[1].v));
         return !!c && c.col.dataType === 'string' && args.length <= (fn === 'SELECTEDVALUE' ? 2 : 1);
