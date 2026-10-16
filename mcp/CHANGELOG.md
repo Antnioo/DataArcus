@@ -7,6 +7,7 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.2.9 (release candidate, in testing)
 Not released until it passes the Power BI Desktop proof and the owner's own use.
 - **Microsoft's report validator 0.5.0** (was 0.4.0), used offline by `check_report`: our reports still pass with 0 errors and 0 warnings.
+- `check_report`'s known notes (the dropdown slicer's rounded box) name the validator that ran, read from the installed package; they still said 0.4.0.
 - **Approval inside the tools:** a report, theme, script, calendar or twin is written only after a plan is approved
   (new tool `approve_plan`). You approve it yourself: DataArcus opens its own approval window in your browser, on
   your computer only, with the plan and every file it writes, and only your click on Approve approves it (or your yes
