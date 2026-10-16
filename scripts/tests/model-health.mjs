@@ -445,15 +445,15 @@ export default async function ({ browser, url }) {
       return { score: +document.querySelector('.mh-scorecard .mh-ring b').textContent, calc: n('CALC_COLS'), unused: n('UNUSED_COL') };
     });
     await v.ctx.close();
-    const SCORE = [
-      ['articles/article-power-bi-model-health-check.html', /Scored (\d+)/g], ['assets/js/translations/article-power-bi-model-health-check.js', /Scored (\d+)|النتيجة:? (\d+) من 100/g],
-      ['blog.html', /Scored (\d+)/g], ['assets/js/translations/blog.js', /Scored (\d+)|النتيجة:? (\d+) من 100/g],
-      ['assets/js/translations/homepage.js', /Sample\. It Scored (\d+)|Microsoft\. النتيجة:? (\d+) من 100/g],
-      ['go/health/index.html', /Scored (\d+)/g], ['go/health-page/index.html', /Scored (\d+)/g],
-      ['scripts/make-share-images.mjs', /ring\((\d+), |It Scored (\d+)/g]];
+    // every form a score is published in: "Scored 85", "scored <strong>85 out of 100</strong>", "85 من 100", the
+    // share image's ring(85, ...): any casing (16 Oct: the intro's lowercase "scored 84" slipped past "Scored")
+    const RE = /scored (?:<strong>)?(\d+)|(\d+) out of 100|(\d+) من 100|ring\((\d+), /gi;
+    const SCORE = ['articles/article-power-bi-model-health-check.html', 'assets/js/translations/article-power-bi-model-health-check.js',
+      'blog.html', 'assets/js/translations/blog.js', 'assets/js/translations/homepage.js', 'go/health/index.html', 'go/health-page/index.html',
+      'scripts/make-share-images.mjs'].map((f) => [f, RE]);
     const said = [];
     for (const [f, re] of SCORE) {
-      const all = [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(re)].map((m) => +(m[1] || m[2]));
+      const all = [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(re)].map((m) => +(m[1] || m[2] || m[3] || m[4]));
       check(all.length > 0, `published score: ${f} no longer states the sample's score (update this test's list with the page)`);
       for (const x of all) if (x !== got.score) said.push(`${f} says ${x}`);
     }
