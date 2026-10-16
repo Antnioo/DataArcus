@@ -98,7 +98,7 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
     report folder needs a `.platform` file: Microsoft's validator (`powerbi-report-author validate`) checks both.
   - Inside a theme the card visual's `border` is the card's own border, which has no `radius` (the validator rejects
     it); Desktop draws the card's corners the same without it. `npm test` runs Microsoft's validator on two exports
-    (their report authoring CLI, a dev dependency pinned to 0.4.0, not shipped with the MCP).
+    (their report authoring CLI, pinned in `mcp/package.json`; 0.5.0 since 16 Oct 2026).
 - `visual.json` outranks the theme: a container `background`, `border` or `dropShadow` written there with
   `show: false` hides what a solid theme would draw. The report writer leaves those three out for the visuals that
   sit on a panel when the theme has solid visuals, and switches them off when the theme is transparent (the page's
