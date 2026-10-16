@@ -59,6 +59,17 @@ push, before the suites). It covers `_config.yml`, `CNAME`, `robots.txt`, `sitem
 `llms.txt` (every link exists) and every page's head (icon, manifest, theme colour; canonical and preview image for
 sitemap pages). A new page gets the same head lines and, if public, a sitemap entry and an `llms.txt` line.
 
+## One place for every version (owner's rule 2026-10-16)
+A version is set in one file and everything else reads it there; nothing is edited in many places.
+- The site's jsDelivr files (aos, bootstrap, bootstrap-icons): `package.json`, pinned exactly. After a bump: `npm ci`,
+  then `npm run pages:deps` (scripts/cdn.mjs writes every page's version, its integrity hash and its policy). The site
+  test fails when a page names another version or hash.
+- Microsoft's validator: `mcp/package.json`. The code reads the installed version (`VALIDATOR_VERSION` in
+  `mcp/lib/check-report.mjs`), the tests read the pin, and docs say "the version `mcp/package.json` pins", never the
+  number.
+- History keeps its numbers (CHANGELOG, WORK.md, dated measurements such as "Desktop 2.158 draws it"): they record
+  what was true then.
+
 ## Commit attribution (owner's decision 2026-10-01)
 End every commit message with exactly these two lines, never a model name or version:
 `Co-Authored-By: Claude <noreply@anthropic.com>` and the `Claude-Session: ...` link your environment gives you

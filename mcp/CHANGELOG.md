@@ -4,8 +4,9 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.2.9 (release candidate, in testing)
-Not released until it passes the Power BI Desktop proof and the owner's own use.
+## 0.2.9: in main since 2026-10-16 (rc.21); the package for testers after the owner's Power BI Desktop test
+The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
+rc.21 passes; until then testers keep 0.2.8.
 - **Microsoft's report validator 0.5.0** (was 0.4.0), used offline by `check_report`: our reports still pass with 0 errors and 0 warnings.
 - `check_report`'s known notes (the dropdown slicer's rounded box) name the validator that ran, read from the installed package; they still said 0.4.0.
 - **Approval inside the tools:** a report, theme, script, calendar or twin is written only after a plan is approved

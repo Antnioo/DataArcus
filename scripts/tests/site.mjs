@@ -197,6 +197,18 @@ export default async function ({ browser, url }) {
       }
     }
     check(!bad.size, `jsDelivr files without the right integrity: ${[...bad].slice(0, 4).join('; ')}${bad.size > 4 ? ` and ${bad.size - 4} more` : ''}`);
+
+    // (16 Oct 2026) package.json is the one place a jsDelivr version is set: every page names that version, and
+    // scripts/cdn.mjs writes the versions and hashes after a bump (npm run pages:deps), so no page is edited by hand
+    const { pin } = await import('../cdn.mjs');
+    const drift = new Set();
+    for (const p of pages()) { const html = fs.readFileSync(path.join(ROOT, p), 'utf8'), r = pin(html); if (r.html !== html || r.problems.length) drift.add(`${p}${r.problems.length ? ': ' + r.problems[0] : ''}`); }
+    check(!drift.size, `pages that do not follow package.json's jsDelivr versions (npm run pages:deps): ${[...drift].slice(0, 4).join('; ')}${drift.size > 4 ? ` and ${drift.size - 4} more` : ''}`);
+    // the writer itself: an old version with its old hash comes back at package.json's version with the file's hash
+    const PIN = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).devDependencies['bootstrap-icons'];
+    const old = '<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.0.0/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-old" crossorigin="anonymous">';
+    const w = pin(old).html;
+    check(w.includes(`bootstrap-icons@${PIN}/`) && w.includes(`integrity="${sri(path.join(ROOT, 'node_modules/bootstrap-icons/font/bootstrap-icons.css'))}"`), `scripts/cdn.mjs does not rewrite an old version and hash: ${w}`);
   }
 
   // Every page carries a Content Security Policy that allows exactly what it loads (audit AUD-011, 2026-10-04): the
