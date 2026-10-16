@@ -1820,7 +1820,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `check_report must be listed, read-only, with path, checks, lang, maxFindings: ${JSON.stringify(t && { a: t.annotations, p: Object.keys(t.inputSchema.properties || {}) })}`);
     const before = [hashOf(RP('CR Gold EN')), hashOf(RP('CR Gold AR'))];
     const en = await ask('check_report', { path: 'cr-project/CR Gold EN.pbip' }), ar = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
-    const ok = (a, dir) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && checkReportClean(a.j, dir) && /^0\.4\.0$/.test(a.j.validator.version) && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
+    // the validator's version is the one mcp/package.json pins (one place; the pin moves with the dependency update)
+    const VALIDATOR_PIN = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')).dependencies['@microsoft/powerbi-report-authoring-cli'];
+    const ok = (a, dir) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && checkReportClean(a.j, dir) && a.j.validator.version === VALIDATOR_PIN && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
       && a.j.report.pages >= 2 && a.j.report.visuals > 20 && a.j.report.schemaVersions.page && !a.j.findings.some((f) => f.severity === 'error') && measured(a).filter((f) => f.severity !== 'note').length === 0 && Array.isArray(a.j.notChecked) && a.j.counts && typeof a.j.truncated === 'boolean';
     chk(() => ok(en, RP('CR Gold EN')) && ok(ar, RP('CR Gold AR')) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
       () => `our golden reports must pass check_report (validator offline 0 errors, schemas 0, no measured finding) and stay unchanged: EN ${short(en)} | AR ${short(ar)} ${JSON.stringify(ar.j && measured(ar)).slice(0, 400)}`);
