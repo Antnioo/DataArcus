@@ -154,7 +154,7 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h5">5. A clean star schema, without ambiguous paths</h2>
               <p data-i18n-html="content.p7">Fact tables in the middle, dimension tables around them, one clear path between any two tables. Ambiguous or many-to-many relationships make a person hesitate, and they make the AI guess. Microsoft's guidance is the same as for any good model: follow star-schema design and avoid ambiguous relationships.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h6">6. Formats and sort orders, because the AI repeats them</h2>
-              <p data-i18n-html="content.p8">If a margin measure has no format, a card shows <code>0.34</code> for a margin of <code>33.8%</code> (0.3378): no percent sign, and two decimals that round the value. If month names have no sort-by column, a chart by month runs April, August, December. Copilot reads format strings from your model, and its tables use the model's formatting (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-semantic-models' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>), so the same 0.34 can reach whoever asked. The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> flags month and day names without a sort column and measures without a format.</p>
+              <p data-i18n-html="content.p8">If a margin measure has no format, a card shows <code>0.34</code> for a margin of <code>33.8%</code> (0.3378): no percent sign, and two decimals that round the value. If month names have no sort-by column, a chart by month runs April, August, December. Copilot reads format strings from your model, and its tables use the model's formatting (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-semantic-models' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>), so the same 0.34 can reach whoever asked. The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> flags month and day names without a sort column and measures without a format. A measure that returns text needs no format: see <a href='article-power-bi-best-practice-exceptions.html' class='text-accent'>five cases where a best-practice rule does not apply</a>.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h7">7. Use Prep data for AI</h2>
               <p data-i18n-html="content.p9">Power BI now has a <strong>Prep data for AI</strong> button (in preview): on the Home ribbon in Desktop, and on the semantic model's ribbon in the service (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). It has three parts:</p>
               <ul>
@@ -256,8 +256,8 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/article-power-bi-model-ai-ready.min.js?v=20261004a" defer></script>
-  <script src="../assets/js/lang-manager.min.js?v=20261009" defer></script>
+  <script src="../assets/js/translations/article-power-bi-model-ai-ready.min.js?v=20261017a" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261017a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>

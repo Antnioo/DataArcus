@@ -112,4 +112,5 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-09-29 | Power BI dashboard design by department: 7 report styles | Design | Theme Generator |
 | 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |
 | 2026-10-03 | A Gulf calendar in Power BI: Hijri dates, Ramadan, Eid and the right weekend | Gulf | Calendar generator, Measure Builder |
+| 2026-10-17 | Power BI best practices have exceptions: 5 we missed (the Health Check benchmark: 23 models, 206 wrong findings before, 1 after; Microsoft's own words, quotes checked on Microsoft Learn 16 Oct) | Craft | Model Health Check |
 | 2026-10-03 | Copilot readiness audit (a service page in `services/`, not a post; linked from the home page, the AI-ready article and the licensing guide) | Craft (AI-ready models) | Model Health Check |
