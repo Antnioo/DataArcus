@@ -7,6 +7,7 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.2.9 (release candidate, in testing)
 Work in progress on the integration branch; nothing here is released until it passes the block-by-block audit, the
 Power BI Desktop proof and the owner's own use.
+- **Microsoft's report validator 0.5.0** (was 0.4.0), used offline by `check_report`: our reports still pass with 0 errors and 0 warnings.
 - **Approval inside the tools:** a report, theme, script, calendar or twin is written only after a plan is approved
   (new tool `approve_plan`); plans have limits (cards, slicers, table fields) and expire.
 - **New tools:** `approve_plan`, `read_report` (reads an existing report's pages, visuals and fields), and

@@ -72,7 +72,7 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 |---|---|---|
 | Power BI Desktop | 2.157 (August 2026) and 2.158.1177 (the Microsoft Store version) | every Desktop check in `scripts/tests/DESKTOP-TESTS.md` |
 | Report format written | PBIR (enhanced report format): report 2.1.0, page 2.0.0, visualContainer 2.1.0, visualContainerMobileState 2.1.0, bookmark 1.4.0, definitionProperties 2.0.0 (`definition.pbir` version "4.0"), pbip 1.0.0 | `assets/js/pbip-export.js` |
-| Report validator | Microsoft's `powerbi-report-author` CLI 0.4.0: 0 errors on the MCP's exports | `mcp/test.mjs` |
+| Report validator | Microsoft's `powerbi-report-author` CLI (the version `mcp/package.json` pins; 0.5.0 since 16 Oct 2026): 0 errors on the MCP's exports | `mcp/test.mjs` |
 | Models read | TMDL projects (Desktop's default), `model.bim` projects and files, `.pbit` templates; not `.pbix` | `mcp/lib/model.mjs` |
 | Page sizes | 1920 x 1080 (default), 1280 x 720, 960 x 720, or any 640-3840 x 360-2160, shaped 4:3 to 2.4:1 (others fitted) | `assets/js/design-engine.js` |
 | Languages | English and Arabic (right to left) | |
