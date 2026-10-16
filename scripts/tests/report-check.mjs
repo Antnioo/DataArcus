@@ -27,7 +27,7 @@
 import { createRequire } from 'node:module';
 const { MEASURED } = createRequire(import.meta.url)('../../assets/js/report-rules.js');
 const BTW = MEASURED.BTN_ICON_TW;
-const BOX = (t) => MEASURED.BOX(t), BTN = (t) => MEASURED.BTN_TEXT(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
+const BOX = (t) => MEASURED.BOX(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
 const SLICER = MEASURED.SLICER, CH = MEASURED.CH;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
@@ -77,7 +77,8 @@ export function layoutProblems(files) {
       } else if (v.visualType === 'pageNavigator') {
         // a page button puts a long name on two lines only when two lines fit its height: 3.5 x pt in Segoe UI, 3.2 x pt
         // in Tahoma (measured in Desktop 2.158, DESKTOP-TESTS.md round 1); otherwise it cuts it with "..."
-        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor(h / (1.8 * t)));
+        // (A4-6, audit 4: the lines from the measured page-button rule, not 1.8 x pt a line, which Desktop disproved)
+        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = MEASURED.PAGE_LINES(h, t, str(look((v.objects || {}).text).fontFamily));
         const longest = Math.max(...pageNames.map((s) => s.length)), each = w / pageNames.length;
         if (!(lines >= 1) || CH(t) * Math.ceil(longest / Math.max(1, lines)) > each) sizes.push(`${id(x)}: page names at ${t}pt don't fit ${pageNames.length} buttons in ${w}x${h}`);
         const per = ['hover', 'selected'].map((k) => num(state((v.objects || {}).text, k).fontSize));
@@ -122,7 +123,7 @@ export function headerAndRail(files) {
 // middle is at or below the group's (the title at 0.42 x its box). Returns { boxes, bad }.
 // Round 6: the text's middle by the font's own measured number (the same measurement: Segoe UI 3 + 1.19 x pt, Tahoma
 // 1.12 x pt; 1.2 x pt for a font that was not measured), as the report writer now places it; before, 1.2 x pt for all.
-const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
+const TEXT_MID = MEASURED.TEXT_MID;
 export function headerProblems(files) {
   const bad = []; let boxes = 0;
   pagesOf(files).filter((p) => p.page.type !== 'Tooltip').forEach((p) => {
@@ -177,7 +178,7 @@ export function phoneTextProblems(files) {
       if (BOX(size) > h || (size > 8 && CH(size) * text.length > w)) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
     } else if (t === 'pageNavigator') {
       const sizes = ['default', 'hover', 'selected'].map((k) => { const a = num(state(mo.text, k).fontSize); return isNaN(a) ? num(state(o.text, k).fontSize) : a; }), size = sizes[0];
-      const lines = Math.min(2, Math.floor(h / (1.8 * size))), longest = Math.max(...pageNames.map((x) => x.length));
+      const lines = MEASURED.PAGE_LINES(h, size, str(state(mo.text, 'default').fontFamily) || str(state(o.text, 'default').fontFamily)), longest = Math.max(...pageNames.map((x) => x.length));
       if (sizes.some((x) => x !== size) || !(lines >= 1) || TW(size, Math.ceil(longest / Math.max(1, lines))) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
     } else if (t === 'slicer') {
       const a = num(plain(mo.header).textSize), b = num(plain(mo.items).textSize), size = Math.max(isNaN(a) ? slicerTheme || labelTheme : a, isNaN(b) ? slicerTheme || labelTheme : b);
@@ -212,7 +213,14 @@ const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', '
 // itself by that month field is linked to the other tooltip page (the bar chart by category; its own trend would be
 // one bar), and every other chart to the trend page. Returns { charts, trend (charts linked to the trend page), bad }.
 const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual.visualType));
-const isTrend = (p) => p.page.height === 410;
+// (0.2.9 part 2: or 314 high when kept to its last 6 months, TOOLTIP-FIX-LAB)
+// (the cross-review's G10, 11 Oct: found by its shape, not its name, so a renamed or translated measure is still found:
+// an Advanced visual filter on a report-level measure that keeps the rows where it is 1)
+const lastMonthsFilter = (f) => f.type === 'Advanced' && !!(f.field && f.field.Measure && f.field.Measure.Expression.SourceRef.Schema === 'extension')
+  && ((((f.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison && f.filter.Where[0].Condition.Comparison.ComparisonKind === 0 && ((f.filter.Where[0].Condition.Comparison.Right || {}).Literal || {}).Value === '1L';
+const sixMonths = (p) => p.visuals.some((v) => ((v.filterConfig || {}).filters || []).some(lastMonthsFilter));
+// (changed in 0.2.9 rc1, DETAIL-2 T6/T9: the pages are as high as the measured rows need, 22.2 a row + 45 + 8: the trend 420, was 410)
+const isTrend = (p) => p.page.height === 420 || (p.page.height === 314 && sixMonths(p));
 const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
   const pages = pagesOf(files), tipPages = pages.filter((p) => p.page.type === 'Tooltip'), tips = tipPages.map((p) => p.page.name), bad = [];
@@ -246,17 +254,27 @@ export function tooltipPageProblems(files) {
   const bad = []; let charts = 0, trend = 0;
   const tips = pagesOf(files).filter((p) => p.page.type === 'Tooltip');
   tips.forEach((p) => {
-    const isT = isTrend(p), wantH = isT ? 410 : 284;
+    // (0.2.9 part 2, TOOLTIP-FIX-LAB, measured in Desktop 2.158.1304: a trend kept to its last 6 months, newest first, is
+    // 40 + 27 a bar high: the page 320 x 314; a trend without a date column keeps its 12 rows on 320 x 410)
+    const six = sixMonths(p);
+    // (changed in 0.2.9 rc1, T6/T9: 6 bars need 187, 12 months 320, by the measured bar rows: the pages 287 and 420, were 284 and 410)
+    // (changed in writer round 8, RESCORE-1 T6: the Top 6 by the tooltip lab's 27 a bar + 40, + 8: the chart 210, the page 310; was 287)
+    const isT = isTrend(p), wantH = isT ? (six ? 314 : 420) : 310;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend`);
+    // (changed in writer round 8, RESCORE-1 T8: the Top 6 page 376 wide, room for a 31-letter name at 50%: the reviewer's yes)
+    const wantW = isT ? 320 : 376;
+    if (p.page.width !== wantW || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 376 x 310, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
-      const rows = Math.floor((v.position.height - 46) / 22);
+      // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
+      // (writer round 8: the Top 6 is counted by the tooltip lab's rule too, as the 6-month trend)
+      const rows = !isT || six ? MEASURED.TIP_ROWS_6(v.position.height) : MEASURED.TIP_ROWS(v.position.height);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
-      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? 12 : 6 };
+      // (changed in 0.2.9 rc1, T8: names cut at 40%; the share of a narrow bar chart, barNameShare, 50 at 296 wide)
+      const want = { type: 'clusteredBarChart', text: '8D', room: '50L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
       if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
     });
@@ -319,6 +337,13 @@ export function navProblems(files, rtl) {
 // (A sort by a field that is not in the visual is ignored; our charts show a report page tooltip, so the number is
 // never seen.) Every chart with a sortDefinition must be written that way. Returns { sorted: [{ page, type, category,
 // by }], bad }.
+// (A4-13, audit 4: the month sort measure found by its shape, never by its name: a report-level measure whose expression
+// is the MIN of one column and whose type is DateTime; a renamed or translated measure is still it)
+const isDateMin = (files, ms) => {
+  const ext = Object.keys(files).filter((p) => p.endsWith('/reportExtensions.json') || p === 'definition/reportExtensions.json').map((p) => { try { return JSON.parse(String(files[p])); } catch (e) { return null; } }).filter(Boolean);
+  const m = ext.flatMap((e) => (e.entities || []).filter((t) => t.name === ms.Expression.SourceRef.Entity).flatMap((t) => t.measures || [])).find((x) => x.name === ms.Property);
+  return !!m && /^\s*MIN\s*\(\s*('[^']+'|[A-Za-z_][\w ]*)?\[[^\]]+\]\s*\)\s*$/i.test(String(m.expression || '')) && /^datetime$/i.test(String(m.dataType || ''));
+};
 export function sortProblems(files) {
   const bad = [], sorted = [];
   pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.query).forEach((v) => {
@@ -345,6 +370,11 @@ export function sortProblems(files) {
     // Ascending where a column chart is mirrored)
     const yField = (((v.visual.query.queryState.Y || {}).projections || [{}])[0] || {}).field;
     if ((sd.sort || []).length === 1 && yField && JSON.stringify(s0.field) === JSON.stringify(yField) && ['clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType) && s0.direction === (mirrored ? 'Ascending' : 'Descending')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: 'measure' }); return; }
+    // (0.2.9 part 2, O-13 and the tooltip fix, measured in Desktop 2.158.1304, REPORT-FIXES-LAB and TOOLTIP-FIX-LAB: a month
+    // label is sorted by a report-level measure, the month's first date, held in the chart's Tooltips; the trend in time
+    // order (Descending where mirrored), the tooltip's last months newest first, Descending)
+    const ms = (s0.field || {}).Measure, held = ms && ms.Expression.SourceRef.Schema === 'extension' && tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field));
+    if ((sd.sort || []).length === 1 && held && isDateMin(files, ms) && (s0.direction === want || p.page.type === 'Tooltip')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: ms.Expression.SourceRef.Entity + '.' + ms.Property }); return; }
     if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
@@ -505,6 +535,10 @@ export function panelProblems(files) {
     // the bands (round 1): empty text boxes outside every group
     const emptyText = (v) => { const ps = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || []); return ps.every((x) => (x.textRuns || []).every((r) => !r.value)); };
     const bands = p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && !v.parentGroupName && emptyText(v)), used = new Set();
+    // (writer round 8, S3 with the design's N6, the reviewer's resolution of 12 Oct: a table that ends on its whole rows has
+    // its panel behind it at the slot's height, a band like the header's: at the table's x, y and width, at least as high,
+    // under it in the layer order)
+    p.visuals.filter((t) => t.visual && t.visual.visualType === 'tableEx').forEach((t) => bands.forEach((b) => { if (b.position.x === t.position.x && b.position.y === t.position.y && b.position.width === t.position.width && b.position.height >= t.position.height && b.position.z < t.position.z) used.add(b.name); }));
     // groups first, so each band is matched to its group before the bands themselves are looked at
     p.visuals.slice().sort((a, b) => (a.visualGroup ? 0 : 1) - (b.visualGroup ? 0 : 1)).forEach((v) => {
       const id = `${p.page.displayName}/${v.visual ? v.visual.visualType : 'group ' + v.visualGroup.displayName}`;
@@ -543,7 +577,12 @@ export function panelProblems(files) {
       // message card under it is see-through: it writes its background off, and only that (border and shadow stay the
       // theme's, so the panel is drawn as every other one)
       const over = solid && panel && p.visuals.some((m) => m !== v && isMessageCard(m) && m.parentGroupName === v.parentGroupName && m.position.x === v.position.x && m.position.width === v.position.width);
-      if (over) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== 'background' || !off(c, 'background')) bad.push(`${id}: over its "No data" card only the background is written, off (${has.join(', ') || 'nothing'} written)`); return; }
+      // (changed in writer round 9: a table on its whole rows inside its panel, the "No data" card or a band at the slot's
+      // height, has its own shadow off too, the panel's is drawn: the laptop's S3 resolution, proven in Desktop on rc.4)
+      const inPanel = v.visual.visualType === 'tableEx' && p.visuals.some((m) => m !== v && m.visual && /^(cardVisual|textbox)$/.test(m.visual.visualType) && m.parentGroupName === v.parentGroupName && m.position.x === v.position.x && m.position.y === v.position.y && m.position.width === v.position.width && m.position.height > v.position.height);
+      const want = inPanel ? 'background,dropShadow' : 'background';
+      if (inPanel && !over && solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== 'dropShadow' || !off(c, 'dropShadow')) bad.push(`${id}: in its panel only its shadow is written, off (${has.join(', ') || 'nothing'} written)`); return; }
+      if (over) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== want || !has.every((k) => off(c, k))) bad.push(`${id}: over its "No data" card only the background is written, off (${has.join(', ') || 'nothing'} written)`); return; }
       if (solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.length) bad.push(`${id}: ${has.join(', ')} written, the theme can't draw its panel`); }
       else { const on = KEYS.filter((k) => !off(c, k)); if (on.length) bad.push(`${id}: ${on.join(', ')} not switched off`); }
     });

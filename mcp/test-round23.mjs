@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // Round 23 (the owner's go, 8 Oct 2026: "i wanna fix the word total as well"): the Arabic table's total row says
 // «الإجمالي», by way 4 of the sitting of 7-8 Oct (measured in Desktop 2.158.1304, DESKTOP-TESTS.md): the name column
 // first in the file at width 0 (hidden), then the numbers, and at the right a report-level text measure that gives the
@@ -10,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { tableProblems, sortProblems, rowLabelProblems } from '../scripts/tests/report-check.mjs';
+import { checkReportClean } from './test-validator.mjs';
 
 export async function round23({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -41,7 +43,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const ps = t ? t.visual.query.queryState.Values.projections : [], last = ps[ps.length - 1] || {}, ch = ((t || { visual: {} }).visual.objects || {}).columnHeaders;
     chk(() => t && JSON.stringify(refs(t)) === JSON.stringify(['Sales.Region', 'Sales.Orders', 'Sales.Total Sales', 'Sales.Row label: Region'])
       && JSON.stringify(width0(t)) === '["Sales.Region"]' && last.field.Measure.Expression.SourceRef.Schema === 'extension' && last.field.Measure.Expression.SourceRef.Entity === 'Sales'
-      && last.displayName === 'Region' && ch[0].properties.autoSizeColumnWidth.expr.Literal.Value === 'true',
+      && last.displayName === 'Region' && ch[0].properties.autoSizeColumnWidth.expr.Literal.Value === 'false',   /* (0.2.9 part 2, O-14: auto-size off, a width per column; the name column keeps its 0) */
       () => `1. the Arabic table: Region first at width 0, the numbers, the row-label measure last with the column's name: ${t ? JSON.stringify(refs(t)) + ' width 0: ' + JSON.stringify(width0(t)) + ' last ' + JSON.stringify(last).slice(0, 300) : 'no table'} ${short(x)}`);
     const m = ms.find((e) => e.name === 'Row label: Region');
     chk(() => m && m.entity === 'Sales' && m.dataType === 'Text' && m.expression === LABEL('Sales', 'Region', ['Orders', 'Total Sales']), () => `1. the measure in reportExtensions.json: ${JSON.stringify(ms).slice(0, 500)}`);
@@ -49,7 +51,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     chk(() => tp.bad.length === 0 && rl.tables === 1 && rl.bad.length === 0, () => `1. the website's table checks accept it and prove it: ${JSON.stringify(tp.bad)} ${JSON.stringify(rl)}`);
     chk(() => /الإجمالي/.test(notes(x)) && /Row label: Region/.test(notes(x)) && /reportExtensions\.json/.test(notes(x)), () => `1. the notes tell the user (the word, the measure, how to remove it): ${notes(x).slice(0, 1500)}`);
     const cr = x.err ? x : await ask('check_report', { path: d + '/' + x.j.report, lang: 'ar' });
-    chk(() => !cr.err && cr.j.validator.errors === 0 && !cr.j.findings.some((f) => /width|hidden|Row label/i.test(f.what)) && cr.j.notChecked.some((n) => /row-label measure/.test(n.why)),
+    chk(() => !cr.err && checkReportClean(cr.j, path.join(ROOT, d, x.j.report)) && !cr.j.findings.some((f) => /width|hidden|Row label/i.test(f.what)) && cr.j.notChecked.some((n) => /row-label measure/.test(n.why)),
       () => `1. check_report: the validator clean, no finding on the pattern, which it names as intentional: ${cr.err ? cr.t.slice(0, 300) : JSON.stringify(cr.j.findings.map((f) => f.rule + ' ' + f.what)).slice(0, 600) + ' ' + JSON.stringify(cr.j.notChecked).slice(0, 600)}`);
   }
   // 2. Its header is the column's display name: the Arabic name when one is given
@@ -198,7 +200,10 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 1, filters: 'end', lang: 'en' }), lineSlot = pl.err ? null : pl.j.slots.find((sl) => sl.kind === 'line');
     const x = pl.err ? pl : await ask('create_report', { path: 'r23-nocal', name: 'R23 nocal', lang: 'en', design: pl.j.design, secondPage: false, noDataMessage: false });
     const lo = x.err ? [] : (x.j.leftOutVisuals || []), vs = x.err ? [] : visualsOf(x, 'r23-nocal');
-    const covers = lineSlot && vs.some((v) => /Chart$|tableEx/.test(v.visual.visualType) && v.position.x <= lineSlot.x + 1 && v.position.x + v.position.width >= lineSlot.x + lineSlot.w - 1 && Math.abs(v.position.y - lineSlot.y) <= 60);
+    // (0.2.9, the design block's D16: a model with no time axis gets the layout made for it, its charts by category
+    // sharing the line chart's row: the room is taken by that row's visuals together, not by one)
+    const row = lineSlot ? vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType) && Math.abs(v.position.y - lineSlot.y) <= 60) : [];
+    const covers = lineSlot && row.length && Math.min(...row.map((v) => v.position.x)) <= lineSlot.x + 1 && Math.max(...row.map((v) => v.position.x + v.position.width)) >= lineSlot.x + lineSlot.w - 1;
     chk(() => lineSlot && !vs.some((v) => v.visual.visualType === 'lineChart') && lo.some((l) => /no calendar is related to Sales/.test(l.why)) && covers,
       () => `6. no line chart, the true reason, its room taken: ${JSON.stringify(lo)} slot ${JSON.stringify(lineSlot)} ${JSON.stringify(vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${short(x)}`);
   }
@@ -272,7 +277,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // R7. Two line charts without a time axis: each slot goes to a visual beside it, and no line chart is left stretched
   {
-    const { dropLines } = await import('./lib/slots.mjs').catch(() => ({}));
+    // (0.2.9, A2-3: the rule is the design engine's fitSlots since; lib/slots.mjs is gone. The expectations are unchanged)
+    const { fitSlots } = await import('./lib/design.mjs').catch(() => ({})), dropLines = fitSlots && ((sl) => fitSlots(sl, { dropKinds: ['line'] }));
     const slots = [{ kind: 'line', x: 0, y: 0, w: 100, h: 50 }, { kind: 'line', x: 100, y: 0, w: 100, h: 50 }, { kind: 'bar', x: 200, y: 0, w: 100, h: 50 }];
     const out = dropLines ? dropLines(slots) : null;
     chk(() => out && !out.slots.some((x) => x.kind === 'line') && out.dropped.length === 2 && out.slots.find((x) => x.kind === 'bar').w === 300 && out.slots.find((x) => x.kind === 'bar').x === 0, () => `R7. both line slots go to the bar beside them: ${JSON.stringify(out)}`);
@@ -322,7 +328,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // F5. Two line charts side by side above a table as wide as both: the table takes their whole band (no blank band)
   {
-    const { dropLines } = await import('./lib/slots.mjs');
+    // (0.2.9, A2-3: the design engine's fitSlots, as R7)
+    const { fitSlots } = await import('./lib/design.mjs'), dropLines = (sl) => fitSlots(sl, { dropKinds: ['line'] });
     const out = dropLines([{ kind: 'line', x: 0, y: 0, w: 100, h: 50 }, { kind: 'line', x: 110, y: 0, w: 100, h: 50 }, { kind: 'table', x: 0, y: 60, w: 210, h: 50 }]);
     const t = out.slots.find((z) => z.kind === 'table');
     chk(() => t && t.y === 0 && t.h === 110 && t.w === 210 && !out.slots.some((z) => z.kind === 'line'), () => `F5. the table takes the two lines' band: ${JSON.stringify(out.slots)}`);
@@ -336,7 +343,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   // F7. One implementation of the room rule: the server's text slots use lib/slots.mjs's absorb (no copy of its own)
   {
     const srv = fs0.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs'), 'utf8');
-    chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use slots.mjs absorb for text slots, not its own copy');
+    chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use the one absorb (the design engine\'s since 0.2.9 A2-3) for text slots, not its own copy');
   }
 
   // ---- Round 23, part 7: the laptop's proof (ab28427), findings S1, W1, S2, each red first ----
@@ -381,7 +388,10 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 1, filters: 'end', lang: 'en' }), lineSlot = pl.err ? null : pl.j.slots.find((z) => z.kind === 'line');
     const x = pl.err ? pl : await ask('create_report', { path: 'r23-nodate', name: 'R23 nodate', lang: 'en', design: pl.j.design, secondPage: false, noDataMessage: false });
     const lo = x.err ? [] : (x.j.leftOutVisuals || []), vs = x.err ? [] : visualsOf(x, 'r23-nodate');
-    const covers = lineSlot && vs.some((v) => /Chart$|tableEx/.test(v.visual.visualType) && v.position.x <= lineSlot.x + 1 && v.position.x + v.position.width >= lineSlot.x + lineSlot.w - 1 && Math.abs(v.position.y - lineSlot.y) <= 60);
+    // (0.2.9, the design block's D16: a model with no time axis gets the layout made for it, its charts by category
+    // sharing the line chart's row: the room is taken by that row's visuals together, not by one)
+    const row = lineSlot ? vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType) && Math.abs(v.position.y - lineSlot.y) <= 60) : [];
+    const covers = lineSlot && row.length && Math.min(...row.map((v) => v.position.x)) <= lineSlot.x + 1 && Math.max(...row.map((v) => v.position.x + v.position.width)) >= lineSlot.x + lineSlot.w - 1;
     chk(() => lineSlot && !vs.some((v) => v.visual.visualType === 'lineChart') && lo.some((l) => /no month or date column/.test(l.why)) && covers,
       () => `S2. no date column: no line chart, its room taken: ${JSON.stringify(lo)} ${JSON.stringify(vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${short(x)}`);
   }
@@ -417,7 +427,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const ROOT = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-r23-')), problems = []; let checks = 0;
   const client = new Client({ name: 'test-r23', version: '1' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
-  const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; };
+  const { withPlans } = await import('./test-plan.mjs');
+  const call = withPlans(async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; });
   await round23({ call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
   await client.close(); fs0.rmSync(ROOT, { recursive: true, force: true });
   console.log(problems.length ? `FAIL  round23  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  round23  ${checks} checks`);

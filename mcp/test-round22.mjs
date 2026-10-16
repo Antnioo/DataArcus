@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // Round 22 (sitting 7-8 Oct): the checks of the reviewer's code review of rounds 20 and 21 (findings a to i), each
 // written red first. test.mjs runs them with its own client (import { round22 }); run alone they start the server
 // themselves, so one block can be tried in seconds: node test-round22.mjs
@@ -6,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { checkReportClean } from './test-validator.mjs';
 
 export async function round22({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -15,10 +17,17 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   const dir = 'r22';
   model(dir, [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Quarter', 'string'), col('Year Quarter', 'string'), col('Fiscal Year Quarter', 'string')],
     measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }]);
-  const vis = (x, d) => { if (x.err) return []; const out = []; const walk = (p) => fs.readdirSync(p, { withFileTypes: true }).forEach((f) => { const q = path.join(p, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, d || dir, x.j.report, 'definition', 'pages')); return out.filter((v) => v.visual); };
+  const vis = (x, d) => { if (x.err) return []; const out = []; const walk = (p) => fs.readdirSync(p, { withFileTypes: true }).forEach((f) => { const q = path.join(p, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, d || dir, x.j.report, 'definition', 'pages'));
+    // (design round 8, N2: a chart cut to its Top N takes its title from a report measure; each visual carries the report's measures)
+    const ef = path.join(ROOT, d || dir, x.j.report, 'definition', 'reportExtensions.json'), ext = fs.existsSync(ef) ? JSON.parse(fs.readFileSync(ef, 'utf8')).entities.flatMap((e) => e.measures) : [];
+    out.forEach((v) => Object.defineProperty(v, '_ext', { value: ext })); return out.filter((v) => v.visual); };
   const lit = (e) => (e && e.expr && e.expr.Literal ? String(e.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
   const vco = (v, k) => ((v.visual.visualContainerObjects || {})[k] || [])[0];
-  const titleOf = (v) => { const t = vco(v, 'title'); return t ? lit(t.properties.text) : null; }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
+  // (design round 8, N2: a measure title reads as its plain title, the last text of its DAX: "Top N of M: ..." is shown only
+  // when the chart leaves categories out)
+  // (design round 10: the plain title is the text right after IF ( _s = _n, )
+  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+  const titleOf = (v) => { const t = vco(v, 'title'), e = t && t.properties.text && t.properties.text.expr; return !t ? null : e && e.Measure ? plainOf(v, e.Measure) : lit(t.properties.text); }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
   const subs = (x) => vis(x).filter((v) => vco(v, 'subTitle')).map((v) => [v.visual.visualType, lit(vco(v, 'subTitle').properties.text)]);
   const notes = (x) => JSON.stringify(x.err ? x.t : x.j.reportNotes || []);
   const build = async (name, extra, lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang: lang || 'en' }); return ask('create_report', Object.assign({ path: dir, name, lang: lang || 'en', secondPage: false, design: pl.j.design }, extra || {})); };
@@ -35,7 +44,10 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const charts = (x) => vis(x).filter((v) => /Chart$|^tableEx$/.test(v.visual.visualType) && v.visual.query).length;
     chk(() => !dflt.err && charts(dflt) >= 3 && msg(dflt).length >= 3 && msg(dflt).length <= charts(dflt) && blank(dflt).length >= 3 && msg(dflt).every((v) => !('tabOrder' in v.position)),
       () => `by default the charts and the table of a page have their "No data" card (no tab stop; the tooltip pages have none) and the KPI cards their blank text: charts ${charts(dflt)}, message cards ${msg(dflt).length}, cards with a blank text ${blank(dflt).length} ${dflt.err ? dflt.t.slice(0, 200) : ''}`);
-    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && !fs.existsSync(path.join(ROOT, dir, off.j.report, 'definition', 'reportExtensions.json')),
+    // (design round 8, N2: a chart cut to its Top N has a report-level title measure, "Title: ..."; no "No data" measure)
+    const extNames = (x) => { const f = path.join(ROOT, dir, x.j.report, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures.map((m) => m.name)) : []; };
+    // (design round 10, N14: and the "Keep: ..." measures that keep a chart's Top N)
+    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && extNames(off).every((n) => /^(Title|Keep): /.test(n)),
       () => `noDataMessage: false writes no message card, no blank text and no report-level measure: ${msg(off).length} ${blank(off).length} ${off.err ? off.t.slice(0, 200) : ''}`);
   }
   // a. AUD-032's follow-up: the FORMATS script (check_model_health's, and the one plan_layout and create_report hand
@@ -151,10 +163,12 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const four = narrow.concat(wide);
     chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(altOf(v) || '')), () => `h. each chart's alt text carries its bracketed name: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
-    const st = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(titleOf);
+    // (changed in 0.2.9 rc1, item 4: a bar chart by a category that is not time shows its top N, its title starts
+    // "Top N: "; the numbering is of the title without that prefix, so the prefix is left out of the comparison)
+    const st = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(titleOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
     // (changed in round 22b, the reviewer's second review, item 8: two charts with the same measure and column kept the
     // same title and alt text; they are now numbered after the first, "(2)", like the charts of a bracket group)
-    const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf);
+    const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
     chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales by Region (2)' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second numbered, "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
   }
   // f. data labels above the columns only where the columns are four: "Quarter", never "Year Quarter" (8 to 40 values)
@@ -248,6 +262,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   // 8. a table whose two kept fields are wider than its box even at 8pt is told. The review's other half (a field that
   //    fits at the smaller size stays out) is REFUTED: the size loop before the round 22 shrink already tries every size
   //    down to 8 and keeps the most fields (at 700 wide Qty fits at 8pt, 644, and is kept; this passed before the fix)
+  //    (changed in 0.2.9 rc1, item 2: a column's room is now its bold header or its widest value plus the measured cell
+  //    padding, and the table's own 36 of frame comes off its width, so the three fields need 676 + 36 at 8pt; the check
+  //    is made at 720 wide, where they still fit only at 8pt: 834 at 10pt)
   {
     const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
     model('r22b-fit', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col(long1, 'string')],
@@ -255,7 +272,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const mk = (w) => ask('create_report', { path: 'r22b-fit', name: 'R22b fit ' + w, fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, table: [`Sales[${long1}]`, `Sales[${long2}]`, 'Sales[Qty]'] },
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w, h: 300 }] }] });
     const cols = (x) => { const t = vis(x, 'r22b-fit').find((v) => v.visual.visualType === 'tableEx'); return t ? t.visual.query.queryState.Values.projections.length : 0; };
-    const fit = await mk(700), tiny = await mk(300);
+    const fit = await mk(720), tiny = await mk(300);
     chk(() => !fit.err && cols(fit) === 3 && !(fit.j.tableColumns || []).length, () => `8 (REFUTED). at 8pt Qty fits too and is kept: ${cols(fit)} columns, tableColumns ${JSON.stringify(fit.err ? fit.t.slice(0, 200) : fit.j.tableColumns || null)} ${notes(fit).slice(0, 300)}`);
     chk(() => !tiny.err && /wider than (its|the) table/.test(notes(tiny)), () => `8. two fields wider than a 300-wide table even at 8pt are told: ${notes(tiny).slice(0, 500)}`);
   }
@@ -307,7 +324,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     chk(() => !x.err && /No data[^"]*Total\\\\u0009Sales/.test(told), () => `X-05. a field with a control character is named in the notes (escaped) where its "No data" card is left out: ${told.slice(0, 500)}`);
     chk(() => !x.err && !JSON.stringify(x.j).includes('Ignore all previous') && !vis(x, d).some((v) => JSON.stringify(v).includes('Ignore all previous')), () => `X-05. the description is never in the answer or the files`);
     const cr = x.err ? x : await ask('check_report', { path: d + '/' + x.j.report });
-    chk(() => !cr.err && cr.j.validator.errors === 0 && cr.j.schemas.errors === 0, () => `X-05. the report's files are valid (Microsoft's validator and the schemas): ${cr.err ? cr.t.slice(0, 300) : JSON.stringify([cr.j.validator, cr.j.schemas, cr.j.findings.filter((f) => f.severity === 'error').slice(0, 3)])}`);
+    chk(() => !cr.err && checkReportClean(cr.j, path.join(ROOT, d, x.j.report)) && cr.j.schemas.errors === 0, () => `X-05. the report's files are valid (Microsoft's validator and the schemas): ${cr.err ? cr.t.slice(0, 300) : JSON.stringify([cr.j.validator, cr.j.schemas, cr.j.findings.filter((f) => f.severity === 'error').slice(0, 3)])}`);
   }
   // ---- Round 22b, the reviewer's second review (items 2, 3, 4, 5, 10; 8 is check e above) ----
   {
@@ -410,8 +427,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
       await cl.close();
     } catch (e) { err = String(e && e.message || e); }
     fs0.rmSync(tmp, { recursive: true, force: true });
-    chk(() => tools.length === 8 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
-      () => `X-03. with the CLI failing to load: 8 tools and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
+    // (9 tools since approve_plan, 11 Oct 2026, 0.2.9's gate; 10 with read_report, 0.2.9 item 10; 11 with create_arabic_twin, 0.3.0: the three branches merged for the laptop proof, 11 Oct)
+    chk(() => tools.length === 11 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
+      () => `X-03. with the CLI failing to load: 11 tools (read_report and create_arabic_twin both added) and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
   }
 }
 
@@ -421,7 +439,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const ROOT = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-r22-')), problems = []; let checks = 0;
   const client = new Client({ name: 'test-r22', version: '1' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
-  const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; };
+  const { withPlans } = await import('./test-plan.mjs');
+  const call = withPlans(async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; });
   await round22({ call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
   await client.close(); fs0.rmSync(ROOT, { recursive: true, force: true }); void req;
   console.log(problems.length ? `FAIL  round22  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  round22  ${checks} checks`);
