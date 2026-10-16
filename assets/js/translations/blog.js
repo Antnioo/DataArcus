@@ -77,7 +77,7 @@ window.blogTranslations = {
       },
       modelHealth: {
         badge: "BEST PRACTICE",
-        title: "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 84.",
+        title: "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.",
         date: "September 25, 2026",
         excerpt: "Microsoft's public COVID-19 sample, checked in under a second: a quarter of its columns unused, two bookmarks pointing at a deleted column and auto date/time left on. What we found and how to check yours.",
         button: "Read Playbook"
@@ -225,7 +225,7 @@ window.blogTranslations = {
       },
       modelHealth: {
         badge: "أفضل الممارسات",
-        title: "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 84 من 100.",
+        title: "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 85 من 100.",
         date: "25 سبتمبر 2026",
         excerpt: "نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.",
         button: "اقرأ الدليل"
