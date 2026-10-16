@@ -432,6 +432,34 @@ export default async function ({ browser, url }) {
   }
 
   {
+    // AUD-037 (night audit 15 Oct): at phone width nothing inside a finding card runs past the card, in English and
+    // Arabic. A long word with no break (the BPA rule id INACTIVE_RELATIONSHIPS_THAT_ARE_NEVER_ACTIVATED, a long table or
+    // measure name) wraps inside the card: the rule is on the card (.mh-issue), so every line in it is covered
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [390, 844] });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.click('#mhSample');
+      await v.pg.waitForSelector('.mh-issue', { timeout: 20000 });
+      await v.pg.$$eval('.mh-issue', (ds) => ds.forEach((d) => { d.open = true; }));
+      const out = await v.pg.evaluate(() => {
+        const bad = [];
+        for (const card of document.querySelectorAll('.mh-issue')) {
+          const c = card.getBoundingClientRect();
+          for (const el of card.querySelectorAll('p, li, b, a, bdi, span, code, small')) {
+            if (el.closest('.mh-tscroll, pre')) continue;   // tables and code scroll inside their own box
+            const r = el.getBoundingClientRect();
+            if (r.width && (r.right > c.right + 1 || r.left < c.left - 1)) bad.push(`${(card.dataset.rule || '?')}: ${el.tagName.toLowerCase()} "${el.textContent.trim().slice(0, 40)}" ${Math.round(r.left)}-${Math.round(r.right)} in ${Math.round(c.left)}-${Math.round(c.right)}`);
+          }
+        }
+        return { bad, cards: document.querySelectorAll('.mh-issue').length, page: document.documentElement.scrollWidth };
+      });
+      check(out.cards > 10 && !out.bad.length && out.page <= 390, `AUD-037 ${lang} at 390 px: ${out.cards} cards, page ${out.page} px wide, past their card: ${out.bad.slice(0, 4).join('; ')}`);
+      if (v.errs.length) problems.push(`AUD-037 ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  {
     // "Fix these first": the points on each button are what the score really gains when that check is fixed
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
