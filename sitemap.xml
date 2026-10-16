@@ -163,8 +163,14 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dataarcus.com/articles/article-power-bi-best-practice-exceptions.html</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dataarcus.com/articles/article-power-bi-model-health-check.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

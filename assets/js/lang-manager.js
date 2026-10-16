@@ -117,6 +117,8 @@ class LanguageManager {
      return window.ramadanSalesTranslations;
     } else if (path.includes('article-power-bi-model-health-check')) {
      return window.modelHealthArticleTranslations;
+    } else if (path.includes('article-power-bi-best-practice-exceptions')) {
+     return window.bestPracticeExceptionsTranslations;
     } else if (path.includes('article-power-bi-report-redesign')) {
      return window.reportRedesignArticleTranslations;
     } else if (path.includes('article-power-bi-model-ai-ready')) {
