@@ -34,7 +34,7 @@ window.journeyAttributionTranslations = {
     content: {
       p1: "Ask three different reports \"how many leads did Campaign X actually convert?\" and you'll often get three different numbers. Nobody lied. Each report matched the same lead to a call, an outcome, and an invoice using slightly different logic.",
       p2: "This is the <strong>Attribution Gap</strong>: the same customer journey gets re-resolved independently every time a new measure needs to know \"what happened to this lead.\" Small differences in matching logic (a different date window, a different tie-breaker) compound into KPIs that quietly disagree with each other.",
-      p3: "This is the exact problem we solved while building <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, our anonymized sales CRM model. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.",
+      p3: "This is a problem every sales CRM model meets sooner or later. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.",
 
       h_sec1: "The Problem: Five Reports, Five Different Answers",
       p_sec1_1: "In a sales CRM, a single lead can touch dozens of records: multiple calls, several statuses, and maybe, eventually, an invoice. The natural instinct is to let every report answer its own question independently: the Sales report looks up the invoice, the Call report looks up the last call, the Qualification report looks up the latest status.",
@@ -49,14 +49,14 @@ window.journeyAttributionTranslations = {
       h_sec3: "Hydrate Many: Reusing the Resolution Everywhere",
       p_sec3_1: "Once a lead's journey is resolved, every other measure that needs to know something about that journey (status, terminal reason, invoice, agent, outcome) becomes a thin <strong>LOOKUPVALUE</strong> read off the Matched Journey Key, instead of its own independent matching logic.",
       p_sec3_2: "This has a second benefit beyond correctness: it turns 400+ measures into <strong>documentation</strong>. Reading a downstream measure's DAX tells you exactly which single source of truth it depends on, instead of hiding a re-derivation of matching logic inside every formula.",
-      p_sec3_3: "The result in DataArcus Pulse: leads, calls and call journeys that agree with each other on every page, from Executive Overview to Sales &amp; Attribution, because they all trace back to the same resolved key."
+      p_sec3_3: "The result: leads, calls and call journeys that agree with each other on every page of the report, because they all trace back to the same resolved key."
     },
 
     // Explore More & Final CTA
     exploreMore: {
-      title: "See the Pattern in a Live Model",
-      subtitle: "Explore DataArcus Pulse, the anonymized dashboard built on this exact attribution pattern.",
-      button: "View DataArcus Pulse"
+      title: "Explore Live Power BI Models",
+      subtitle: "Open the DataArcus showcases: interactive Power BI reports you can click through.",
+      button: "View the Showcases"
     },
     finalCta: {
       title: "Struggling With Numbers That Don't Agree?",
@@ -99,7 +99,7 @@ window.journeyAttributionTranslations = {
     content: {
       p1: "اسأل ثلاثة تقارير مختلفة \"كم عدد العملاء المحتملين الذين حوّلتهم الحملة X فعليًا؟\" وستحصل غالبًا على ثلاثة أرقام مختلفة. لم يكذب أحد. كل تقرير طابق نفس العميل المحتمل بمكالمة ونتيجة وفاتورة باستخدام منطق مختلف قليلاً.",
       p2: "هذه هي <strong>فجوة العزو</strong>: يُعاد حل رحلة العميل نفسها بشكل مستقل في كل مرة يحتاج فيها مقياس جديد لمعرفة \"ماذا حدث لهذا العميل المحتمل\". الفروقات الصغيرة في منطق المطابقة، مثل نافذة تاريخ مختلفة أو قاعدة ترجيح مختلفة، تتراكم لتنتج مؤشرات أداء تتعارض مع بعضها بصمت.",
-      p3: "هذه هي المشكلة بالضبط التي حللناها أثناء بناء <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج CRM للمبيعات المخفي الهوية. الحل هو نمط نسميه <strong>حلّ مرة واحدة، غذِّ كل مكان</strong>، وقد غيّر طريقة عمل كل مقياس تابع في النموذج.",
+      p3: "هذه مشكلة يواجهها كل نموذج CRM للمبيعات عاجلًا أو آجلًا. الحل هو نمط نسميه <strong>حلّ مرة واحدة، غذِّ كل مكان</strong>، وقد غيّر طريقة عمل كل مقياس تابع في النموذج.",
 
       h_sec1: "المشكلة: خمسة تقارير، خمس إجابات مختلفة",
       p_sec1_1: "في نظام CRM للمبيعات، يمكن لعميل محتمل واحد أن يلامس عشرات السجلات: مكالمات متعددة، عدة حالات، وربما في النهاية فاتورة. الغريزة الطبيعية هي ترك كل تقرير يجيب على سؤاله بشكل مستقل: تقرير المبيعات يبحث عن الفاتورة، تقرير المكالمات يبحث عن آخر مكالمة، تقرير التأهيل يبحث عن أحدث حالة.",
@@ -114,14 +114,14 @@ window.journeyAttributionTranslations = {
       h_sec3: "غذِّ كل مكان: إعادة استخدام الحل في كل مكان",
       p_sec3_1: "بمجرد حل رحلة العميل المحتمل، يصبح كل مقياس آخر يحتاج لمعرفة شيء عن تلك الرحلة (الحالة، سبب الإنهاء، الفاتورة، الوكيل، النتيجة) قراءة بسيطة عبر <strong>LOOKUPVALUE</strong> من مفتاح الرحلة المطابقة، بدلاً من منطق مطابقة مستقل خاص به.",
       p_sec3_2: "لهذا فائدة ثانية إلى جانب الدقة: إنه يحوّل أكثر من 400 مقياس إلى <strong>توثيق</strong>. قراءة كود DAX لمقياس تابع تخبرك بالضبط بمصدر الحقيقة الوحيد الذي يعتمد عليه، بدلاً من إخفاء إعادة اشتقاق منطق المطابقة داخل كل معادلة.",
-      p_sec3_3: "النتيجة في داتا أركوس بلس: عملاء محتملون ومكالمات ورحلات اتصال تتفق جميعها مع بعضها في كل صفحة، من النظرة التنفيذية العامة إلى المبيعات والعزو، لأنها جميعًا تعود إلى نفس المفتاح المحلول."
+      p_sec3_3: "النتيجة: عملاء محتملون ومكالمات ورحلات اتصال تتفق جميعها مع بعضها في كل صفحة من التقرير، لأنها جميعًا تعود إلى نفس المفتاح المحلول."
     },
 
     // Explore More & Final CTA
     exploreMore: {
-      title: "شاهد النمط في نموذج حي",
-      subtitle: "استكشف داتا أركوس بلس، لوحة التحكم المخفية الهوية المبنية على نمط العزو هذا بالضبط.",
-      button: "عرض داتا أركوس بلس"
+      title: "استكشف نماذج Power BI تفاعلية",
+      subtitle: "افتح نماذج حلول داتا أركوس: تقارير Power BI تفاعلية يمكنك تصفّحها.",
+      button: "عرض نماذج الحلول"
     },
     finalCta: {
       title: "أرقامك لا تتفق مع بعضها؟",

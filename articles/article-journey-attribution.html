@@ -141,7 +141,7 @@
             <article class="article-body">
               <p data-i18n-html="content.p1">Ask three different reports "how many leads did Campaign X actually convert?" and you'll often get three different numbers. Nobody lied. Each report matched the same lead to a call, an outcome, and an invoice using slightly different logic.</p>
               <p data-i18n-html="content.p2">This is the <strong>Attribution Gap</strong>: the same customer journey gets re-resolved independently every time a new measure needs to know "what happened to this lead." Small differences in matching logic (a different date window, a different tie-breaker) compound into KPIs that quietly disagree with each other.</p>
-              <p data-i18n-html="content.p3">This is the exact problem we solved while building <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, our anonymized sales CRM model. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.</p>
+              <p data-i18n-html="content.p3">This is a problem every sales CRM model meets sooner or later. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.</p>
 
               <h2 class="mt-5 mb-3" data-i18n="content.h_sec1">The Problem: Five Reports, Five Different Answers</h2>
               <p data-i18n-html="content.p_sec1_1">In a sales CRM, a single lead can touch dozens of records: multiple calls, several statuses, and maybe, eventually, an invoice. The natural instinct is to let every report answer its own question independently: the Sales report looks up the invoice, the Call report looks up the last call, the Qualification report looks up the latest status.</p>
@@ -156,15 +156,15 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h_sec3">Hydrate Many: Reusing the Resolution Everywhere</h2>
               <p data-i18n-html="content.p_sec3_1">Once a lead's journey is resolved, every other measure that needs to know something about that journey (status, terminal reason, invoice, agent, outcome) becomes a thin <strong>LOOKUPVALUE</strong> read off the Matched Journey Key, instead of its own independent matching logic.</p>
               <p data-i18n-html="content.p_sec3_2">This has a second benefit beyond correctness: it turns 400+ measures into <strong>documentation</strong>. Reading a downstream measure's DAX tells you exactly which single source of truth it depends on, instead of hiding a re-derivation of matching logic inside every formula.</p>
-              <p data-i18n-html="content.p_sec3_3">The result in DataArcus Pulse: leads, calls and call journeys that agree with each other on every page, from Executive Overview to Sales &amp; Attribution, because they all trace back to the same resolved key.</p>
+              <p data-i18n-html="content.p_sec3_3">The result: leads, calls and call journeys that agree with each other on every page of the report, because they all trace back to the same resolved key.</p>
             </article>
 
             <div class="text-center block">
               <div class="glass-card cta" data-aos="fade-up">
-                <h3 class="h4 mb-3" data-i18n="exploreMore.title">See the Pattern in a Live Model</h3>
-                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Explore DataArcus Pulse, the anonymized dashboard built on this exact attribution pattern.</p>
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Explore Live Power BI Models</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Open the DataArcus showcases: interactive Power BI reports you can click through.</p>
                 <div class="cta-actions">
-                  <a href="../dashboards/dataarcus-pulse.html" class="btn btn-accent"><i class="bi bi-bar-chart-fill me-2"></i><span data-i18n="exploreMore.button">View DataArcus Pulse</span></a>
+                  <a href="../portfolio.html" class="btn btn-accent"><i class="bi bi-bar-chart-fill me-2"></i><span data-i18n="exploreMore.button">View the Showcases</span></a>
                 </div>
               </div>
             </div>
@@ -241,7 +241,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/article-journey-attribution.min.js" defer></script>
+  <script src="../assets/js/translations/article-journey-attribution.min.js?v=20261017p" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261017a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

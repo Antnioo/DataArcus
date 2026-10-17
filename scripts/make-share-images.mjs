@@ -4,7 +4,7 @@
 // Run from the repo root:
 //   npm i --no-save playwright-core @fontsource/inter
 //   node scripts/make-share-images.mjs            (all images)
-//   node scripts/make-share-images.mjs pulse kpi  (only some)
+//   node scripts/make-share-images.mjs fintech kpi  (only some)
 // Uses Chrome/Chromium: set CHROME_PATH if it is not found automatically.
 import fs from 'fs';
 import path from 'path';
@@ -69,7 +69,6 @@ const DASH = [
   ['adventureworks', 'Retail · Power BI dashboard', 'AdventureWorks Sales & Operations', ['6 pages', 'Sales, customers, products', 'What-if analysis'], 'adventureworks-preview.jpg'],
   ['call-center', 'E-commerce · Power BI dashboard', 'E-commerce Customer Service', ['Agent performance', 'Resolution rates', 'Satisfaction'], 'call-center-preview.jpg'],
   ['cfpb', 'Finance · Power BI dashboard', 'U.S. Consumer Financial Complaints', ['4 pages', '7 years of data', 'Company accountability'], 'cfpb-preview.jpg'],
-  ['pulse', 'Sales CRM · Anonymized', 'DataArcus Pulse: Sales CRM', ['Leads to invoices', 'Journey resolution', 'Daily pacing'], 'pulse-preview.jpg'],
   ['er-health', 'Healthcare · Power BI dashboard', 'ER Health: Patient Flow Analytics', ['Patient flow', 'Wait times', 'Satisfaction'], 'er-health-preview.jpg'],
   ['fintech', 'Fintech · Power BI dashboard', 'Fintech Portfolio Risk Engine', ['72 projects', 'EVM risk signals', 'ZoomCharts'], 'fintech-preview.jpg'],
   ['maven-market', 'Retail · Power BI dashboard', 'Maven Market Retail Sales', ['Sales trends', 'Product performance', 'Customer behavior'], 'maven-market-preview.jpg'],
@@ -111,7 +110,7 @@ const shopMods = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14p
 
 // ---------- portfolio, blog and articles: a visual of what the page is about ----------
 const pill = (t, c) => `<span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${c || '#00d4ff'}">${esc(t)}</span>`;
-const mosaic = ['pulse', 'fintech', 'repeatiq', 'cfpb', 'call-center', 'adventureworks'].map((k) => `<div class="shot" style="border-radius:10px"><div class="vp" style="max-height:150px"><img src="${dataUrl('assets/img/portfolio/' + k + '-preview.jpg')}"></div></div>`);
+const mosaic = ['maven-market', 'fintech', 'repeatiq', 'cfpb', 'call-center', 'adventureworks'].map((k) => `<div class="shot" style="border-radius:10px"><div class="vp" style="max-height:150px"><img src="${dataUrl('assets/img/portfolio/' + k + '-preview.jpg')}"></div></div>`);
 const PORTFOLIO = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${mosaic.join('')}</div>`;
 const BLOG = [['Report design', 'One Design Doesn’t Fit All: 7 Power BI Report Styles'], ['Report design', 'Same Visuals, New Design: A Report Redesign in 5 Minutes'], ['Ramadan · DAX', 'Compare This Ramadan With Last Ramadan'], ['Licensing', 'Pro, PPU or Fabric: Which License Do You Need?']]
   .map(([t, n]) => `<div class="card" style="padding:16px 20px">${pill(t)}<div style="font-size:20px;font-weight:700;margin-top:4px;line-height:1.3">${esc(n)}</div></div>`).join('');
@@ -181,7 +180,7 @@ const AUDIT = `<div class="card" style="padding:16px 22px">${pill('7 checks on y
   <div class="card" style="padding:14px 20px;font-size:18px;font-weight:700;text-align:center">Plus the Model Health Check findings, each with its fix</div>`;
 
 const PAGES = [
-  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
+  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['7 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
   ['clv', 'E-commerce · Power BI', 'Customer Lifetime Value: The Metric That Defines Growth', { sub: 'Why CLV, not revenue, is the north-star KPI, and how to track it in Power BI.', size: 46 }, CLV, '520px 1fr'],
   ['etl-vs-power-query', 'E-commerce data strategy', 'ETL vs Power Query: Where Should Your Data Work Happen?', { size: 46, sub: 'Scale and governance, or speed and analyst autonomy.' }, ETL, '480px 1fr'],
@@ -200,8 +199,8 @@ const PAGES = [
 const JOBS = [
   ...DASH.map(([id, kicker, title, chips, shot]) => ({ id, html: page(textBlock({ kicker, title, chips }), screenshot('assets/img/portfolio/' + shot), '430px 1fr') })),
   ...TOOLS.map(([id, slug, title, chips, shot]) => ({ id, html: page(textBlock({ kicker: 'Free tool · No sign-up', title, chips, size: title.length > 26 ? 46 : 52 }), screenshot('assets/img/og/src/' + shot, 'dataarcus.com/tools/' + slug + '.html'), '430px 1fr') })),
-  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['8 showcase dashboards', '8 free tools', 'English & Arabic'] }),
-    `<div class="fan">${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/pulse-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
+  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['7 showcase dashboards', '8 free tools', 'English & Arabic'] }),
+    `<div class="fan">${screenshot('assets/img/portfolio/cfpb-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
   ...PAGES.map(([id, kicker, title, o, right, cols]) => ({ id, html: page(textBlock(Object.assign({ kicker, title }, o)), right, cols) })),
   { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI & Fabric Tools', sub: 'Build, check and learn. Nothing to install.' }), (() => {
     // the hub's three groups, in the hub's order (Theme & layout first); HUB order is DP-600, health, licensing, theme, calendar, measures, PL-300, SVG KPI designer
