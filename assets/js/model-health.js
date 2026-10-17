@@ -54,12 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (/\.pbix$/i.test(file.name)) return showError('PBIX');
     loading(file.name);
     const reader = new FileReader();
-    reader.onload = () => run(reader.result, file.name, file.size);
+    reader.onload = () => run(reader.result, file.name);
     reader.onerror = () => showError('READ');
     reader.readAsArrayBuffer(file);
   }
   let worker = null;
-  function run(buffer, fileName, size) {
+  function run(buffer, fileName) {
     if (worker) worker.terminate();
     try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261016g11'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
@@ -79,7 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
         worker.terminate(); worker = null;
         render();
         root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
-        track('mh_analyze', { file_type: R.meta.source, tables: R.stats.tables, measures: R.stats.measures, score: R.score.overall, has_report: R.meta.hasReport, size_kb: Math.round((size || 0) / 1024), sample: fileName === 'Contoso-Sales-Demo.pbit' });
+        // (17 Oct, the outside audit: nothing about the user's model is sent, not even its size, counts or score)
+        track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport, sample: fileName === 'Contoso-Sales-Demo.pbit' });
       }
     };
     worker.onerror = () => showError('PARSE');
@@ -132,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loading('Contoso-Sales-Demo.pbit');
       track('mh_sample');
       fetch('../assets/data/model-health-sample.pbit').then((r) => { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
-        .then((b) => run(b, 'Contoso-Sales-Demo.pbit', b.byteLength)).catch(() => showError('READ'));
+        .then((b) => run(b, 'Contoso-Sales-Demo.pbit')).catch(() => showError('READ'));
     };
   }
 
