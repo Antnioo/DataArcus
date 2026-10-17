@@ -2,7 +2,6 @@
 window.portfolioTranslations = {
   en: {
     attrs: {
-      pulse: "A preview of the DataArcus Pulse sales CRM dashboard",
       fintech: "A preview of the Fintech Portfolio Risk dashboard",
       repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
       cfpb: "A preview of the Consumer Financial Complaints Analysis dashboard",
@@ -46,13 +45,6 @@ window.portfolioTranslations = {
       
       // Individual Projects
       projects: {
-
-        pulse: {
-          badge: "SALES CRM",
-          title: "DataArcus Pulse: CRM Intelligence",
-          description: "A production-grade sales CRM command center: leads, calls and call journeys resolved into one documented model, with daily pacing targets and PII-safe anonymization.",
-          button: "View Showcase"
-        },
         fintech: {
           badge: "FINTECH & RISK",
           title: "Fintech Portfolio Risk Engine",
@@ -106,11 +98,11 @@ window.portfolioTranslations = {
     
     // Hero Project Section
     heroProject: {
-      embedAlt: "DataArcus Pulse CRM Intelligence Dashboard",
+      embedAlt: "Fintech portfolio risk dashboard: 72 projects, Earned Value Management (public challenge data)",
       badge: "LIVE & INTERACTIVE",
-      title: "Hero Showcase: DataArcus Pulse (Sales CRM Intelligence)",
+      title: "Hero Showcase: Fintech Portfolio Risk Engine",
       featuresTitle: "Key Features & Technologies Used:",
-      tags: ["Fabric Lakehouse", "Advanced DAX", "Journey Clustering", "Run-Rate Forecasting", "PII-Safe Anonymization"],
+      tags: ["Earned Value Management", "Predictive EAC (CPI & SPI)", "Risk Scoring", "ZoomCharts", "Advanced DAX"],
       button: "View Full Showcase"
     },
     
@@ -127,7 +119,6 @@ window.portfolioTranslations = {
 
   ar: {
     attrs: {
-      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM للمبيعات",
       fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
       repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
       cfpb: "معاينة للوحة تحليل الشكاوى المالية للمستهلكين",
@@ -171,13 +162,6 @@ window.portfolioTranslations = {
 
       // Individual Projects Arabic
       projects: {
-
-        pulse: {
-          badge: "CRM للمبيعات",
-          title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
-          description: "مركز قيادة CRM للمبيعات بمستوى الإنتاج: العملاء المحتملون والمكالمات ورحلات الاتصال في نموذج واحد موثّق، مع أهداف وتيرة يومية وإخفاء هوية آمن للبيانات الشخصية.",
-          button: "عرض النموذج"
-        },
         fintech: {
           badge: "التكنولوجيا المالية والمخاطر",
           title: "محرك مخاطر محافظ التكنولوجيا المالية",
@@ -231,11 +215,11 @@ window.portfolioTranslations = {
 
     // Hero Project Section Arabic
     heroProject: {
-      embedAlt: "لوحة DataArcus Pulse لذكاء مبيعات CRM",
+      embedAlt: "لوحة مخاطر محفظة مشاريع Fintech: 72 مشروعًا وإدارة القيمة المكتسبة (بيانات تحدٍّ عامة)",
       badge: "تفاعلي ومباشر",
-      title: "النموذج المميّز: داتا أركوس بالس (ذكاء CRM للمبيعات)",
+      title: "النموذج المميّز: محرّك مخاطر محفظة مشاريع Fintech",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",
-      tags: ["Fabric Lakehouse", "DAX متقدّم", "تجميع الرحلات", "تنبؤ معدل الإنجاز", "إخفاء هوية آمن للبيانات"],
+      tags: ["إدارة القيمة المكتسبة (EVM)", "توقّع التكلفة النهائية (CPI و SPI)", "تقييم المخاطر", "ZoomCharts", "DAX متقدّم"],
       button: "عرض النموذج الكامل"
     },
 

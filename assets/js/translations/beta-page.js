@@ -52,7 +52,7 @@ window.betaPageTranslations = {
         "title": "A real run",
         "intro": "Measured on 8 October 2026 with DataArcus 0.2.8, on a made-up home-goods sales model (Marsa Home):",
         "files": "91 files written, all new: 2 pages and 2 tooltip pages, 45 visuals.",
-        "validator": "Microsoft's report validator: 0 errors, 0 warnings.",
+        "validator": "Microsoft's report validator: 0 errors, 0 warnings. (It checks that the files follow Microsoft's format, not that the report answers the right question.)",
         "model": "The model's files byte-identical before and after."
       },
       "safe": {
@@ -134,7 +134,7 @@ window.betaPageTranslations = {
         "title": "تشغيل حقيقي",
         "intro": "قيس في 8 أكتوبر 2026 بالإصدار 0.2.8 من DataArcus، على نموذج مختلَق لمبيعات أدوات منزلية (Marsa Home):",
         "files": "كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح، و45 عنصرًا مرئيًا.",
-        "validator": "مدقّق التقارير من Microsoft: 0 أخطاء، 0 تحذيرات.",
+        "validator": "مدقّق التقارير من Microsoft: 0 أخطاء، 0 تحذيرات. (يتحقق من أن الملفات تتبع تنسيق Microsoft، لا من أن التقرير يجيب عن السؤال الصحيح.)",
         "model": "ملفات النموذج مطابقة بايتًا ببايت قبل التشغيل وبعده."
       },
       "safe": {

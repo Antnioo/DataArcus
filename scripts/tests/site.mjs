@@ -157,12 +157,11 @@ export default async function ({ browser, url }) {
       "dashboards/adventureworks-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=b1001ce2d5a628ad47b5&language=en",
       "dashboards/call-center-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZDljNDRmMzItYWZkZS00ZGZiLWFkOGMtOWY3ODNhMDAxNTA2IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/consumer-financial-complaints.html": "https://app.powerbi.com/view?r=eyJrIjoiMTliODc1NjktOTM5Yy00OTM2LWIwNzYtMDY1MjE0ZWNiOTVlIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
-      "dashboards/dataarcus-pulse.html": "https://app.powerbi.com/view?r=eyJrIjoiYTc3ZWNmYjEtYjQzNS00ZTU3LWJkNDQtMGU5Y2Y5MGQxMjA3IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=fd8c012f45535b521bba",
       "dashboards/er-health-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWU2MmMzNGUtMjU4NS00YTZiLWIyYzYtYTE3MTY3NjQ5NjhiIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/fintech-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/maven-market-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZGJjZmJjYzMtOWQzYi00MzE0LWIwMjktMDJhZjQzZjExZWMxIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
       "dashboards/repeatiq-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiMmVmYWFiMDgtNmY5Yy00NDJjLWIwM2ItMjk0MWUwYTlkMzM5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
-      "portfolio.html": "https://app.powerbi.com/view?r=eyJrIjoiYTc3ZWNmYjEtYjQzNS00ZTU3LWJkNDQtMGU5Y2Y5MGQxMjA3IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=fd8c012f45535b521bba"
+      "portfolio.html": "https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en"
     };
     for (const [page, src] of Object.entries(REPORTS)) for (const lang of ['en', 'ar']) {
       const v = await visitor(browser, { viewport: [1440, 900] }); const pbi = [];
