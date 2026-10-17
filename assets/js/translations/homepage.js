@@ -8,8 +8,7 @@ window.homepageTranslations = {
       azure: "Azure icon",
       python: "Python icon",
       fabric: "Fabric icon",
-      pulse: "A preview of the DataArcus Pulse sales CRM dashboard",
-      fintech: "A preview of the Fintech Portfolio Risk dashboard",
+            fintech: "A preview of the Fintech Portfolio Risk dashboard",
       repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
       founder: "A photo of Abdelrahman M., Founder of DataArcus",
       googleCert: "Google Data Analytics Professional Certificate",
@@ -54,7 +53,7 @@ window.homepageTranslations = {
         "Custom Visual Development"
       ],
       proofBadges: ["Microsoft Certified Power BI Data Analyst", "Every number validated against the source", "Arabic & English"],
-      proof: {"live": "Production model", "subtitle": "Sales CRM, anonymized", "caption": "Three disconnected systems, one model, every lead resolved once and matched against the source.", "link": "See the live dashboard"}
+      proof: {"live": "Live showcase", "title": "Fintech Portfolio Risk Engine", "subtitle": "72 projects, public challenge data", "caption": "Budget, schedule and delivery risk in one model: Earned Value Management forecasts each project's final cost and end date.", "link": "See the live dashboard"}
     },
 
     // Tech Stack Section
@@ -95,11 +94,6 @@ window.homepageTranslations = {
 portfolio: {
       title: "Solution Showcases",
       subtitle: "Explore my proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
-      cardPulse: {
-        badge: "SALES CRM",
-        title: "DataArcus Pulse: CRM Intelligence",
-        desc: "A production-grade sales CRM command center: leads, calls and call journeys resolved into one documented model with daily pacing targets."
-      },
       cardFintech: {
         badge: "FINTECH & RISK",
         title: "Fintech Portfolio Risk Engine",
@@ -223,7 +217,7 @@ portfolio: {
         },
         {
           q: "Why work with an independent specialist instead of a large agency?",
-          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade sales CRM model, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
+          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built every dashboard in my <a href='portfolio.html' class='text-accent'>showcases</a> entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
         },
         {
           q: "What if we're not sure what we need?",
@@ -307,8 +301,7 @@ portfolio: {
       azure: "أيقونة Azure",
       python: "أيقونة Python",
       fabric: "أيقونة Fabric",
-      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM للمبيعات",
-      fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
+            fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
       repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
       founder: "صورة عبدالرحمن م.، مؤسس DataArcus",
       googleCert: "شهادة Google Data Analytics الاحترافية",
@@ -353,7 +346,7 @@ portfolio: {
         "تطوير واجهات مرئية مخصصة"
       ],
       proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "كل رقم مُطابق مع المصدر", "العربية والإنجليزية"],
-      proof: {"live": "نموذج إنتاج حقيقي", "subtitle": "نظام CRM للمبيعات، ببيانات مجهولة الهوية", "caption": "ثلاثة أنظمة منفصلة، نموذج واحد، وكل عميل محتمل يُحل مرة واحدة ويُطابق مع المصدر.", "link": "شاهد لوحة التحكم"}
+      proof: {"live": "نموذج تفاعلي مباشر", "title": "محرّك مخاطر محفظة مشاريع Fintech", "subtitle": "72 مشروعًا، ببيانات تحدٍّ عامة", "caption": "مخاطر الميزانية والجدول الزمني والتسليم في نموذج واحد: إدارة القيمة المكتسبة تتوقّع التكلفة النهائية وتاريخ الانتهاء لكل مشروع.", "link": "شاهد لوحة التحكم"}
     },
 
     // Tech Stack Section
@@ -394,11 +387,6 @@ portfolio: {
 portfolio: {
       title: "نماذج الحلول",
       subtitle: "استكشف لوحات التحكم التجريبية التي بنيتها. شاهد ما هو ممكن لبياناتك.",
-      cardPulse: {
-        badge: "CRM للمبيعات",
-        title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
-        desc: "مركز قيادة CRM للمبيعات بمستوى الإنتاج: العملاء المحتملون والمكالمات ورحلات الاتصال في نموذج واحد موثّق مع أهداف وتيرة يومية."
-      },
       cardFintech: {
         badge: "التكنولوجيا المالية والمخاطر",
         title: "محرك مخاطر محافظ التكنولوجيا المالية",
@@ -522,7 +510,7 @@ portfolio: {
         },
         {
           q: "لماذا العمل مع متخصص مستقل بدلاً من شركة استشارات كبرى؟",
-          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج CRM للمبيعات بمستوى الإنتاج، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
+          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت كل لوحة في <a href='portfolio.html' class='text-accent'>نماذج الحلول</a> بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
