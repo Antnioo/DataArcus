@@ -1,6 +1,7 @@
 // The website's configuration files, checked on every push (owner's rule 2026-10-06: any website change runs a check
 // on all site config files). No network: it reads the repo as GitHub Pages publishes it.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -95,6 +96,15 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   const missing = tools.filter((t) => !page.includes(`<code translate="no">${t}</code>`) || (beta.match(new RegExp(`"${t}":`, 'g')) || []).length < 2);
   ok(!missing.length, `the beta page must have a line for each tool in English and Arabic: missing ${missing.join(', ')}`);
   ok(!/"validator": "It checks the report offline/.test(betaEn) && /check_report/.test((betaEn.match(/"safe":[\s\S]*?\}/) || [''])[0]), 'the beta page must say check_report is the offline check (create_report does not run the validator)');
+}
+
+// the Health Check's "30+ checks" pill (17 Oct, the outside audit: a count typed by hand must follow the engine): the
+// number in English and Arabic is never more than the engine's rules
+{
+  const rules = Object.keys(createRequire(import.meta.url)(path.join(ROOT, 'assets/js/model-health-engine.js')).RULES).length;
+  const mh = read('assets/js/translations/model-health.js');
+  const said = [...mh.matchAll(/"rules": "(?:(\d+)\+ checks|أكثر من (\d+) فحصًا)"/g)].map((m) => +(m[1] || m[2]));
+  ok(said.length === 2 && said.every((n) => n <= rules), `the Health Check says ${said.join(' / ')} checks in English / Arabic; the engine has ${rules} rules`);
 }
 
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
