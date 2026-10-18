@@ -199,6 +199,7 @@
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
    * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
+   * @property {boolean} [phoneLayout]  false: no phone layout (no mobile.json); every page has one by default (0.3.0)
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
@@ -253,6 +254,7 @@
     opt('logo', (x) => isObj(x) && x.bytes instanceof Uint8Array && /^(png|jpe?g)$/i.test(String(x.ext)), 'null or { bytes, ext: png or jpg }');
     opt('model', (x) => isObj(x) && (typeof x.byPath === 'string' || typeof x.byConnection === 'string'), '{ byPath } or { byConnection }');
     opt('bind', isObj, 'an object of fields');
+    opt('phoneLayout', (x) => typeof x === 'boolean', 'true or false');
     const box = (x) => isObj(x) && num(x.x) && num(x.y) && num(x.w) && num(x.h);
     const pages = o.pages && o.pages.length ? o.pages : [{ page: o.page, slots: o.slots, png: o.png }], where = o.pages && o.pages.length ? (i) => 'pages[' + i + ']' : () => 'the page';
     if (o.pages != null && !Array.isArray(o.pages)) bad.push('pages must be a list');
