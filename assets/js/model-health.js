@@ -47,6 +47,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // the same in English, for the CSV and the documentation: [label, url]
   const srcEn = (id) => { const s = srcOf(id); return !s ? ['', ''] : s.kind === 'microsoft' ? ['Microsoft guidance', s.url] : s.kind === 'bpa' ? ['BPA ' + s.title, s.url] : ['DataArcus rule', '']; };
 
+  // "Please confirm": the engine's questions about possible calculation mistakes (R.confirm), never findings and never in
+  // the score. Each can be dismissed for this browser session
+  const QKEY = 'dataarcus-mh-confirm-dismissed';
+  const qDismissed = () => { try { return new Set(JSON.parse(sessionStorage.getItem(QKEY) || '[]')); } catch (e) { return new Set(); } };
+  const qKey = (c) => c.id + '|' + c.obj + '|' + c.evidence;
+  const qWhere = (c) => (c.relationship ? c.obj + ' (' + c.relationship.fromTable + '[' + c.relationship.candidateColumn + '])' : c.evidence);
+  // object names such as Sales[Amount] keep their left-to-right order inside an Arabic sentence
+  const qText = (t) => String(t).split(/(\S+\[[^\]]+\])/).map((x, i) => (i % 2 ? bdi(x) : esc(x))).join('');
+  const confirmHtml = () => {
+    const gone = qDismissed(), list = (R.confirm || []).filter((c) => !gone.has(qKey(c)));
+    if (!list.length) return '';
+    return '<section class="mh-confirm" id="mhConfirm"><h3 class="mh-h"><i class="bi bi-question-circle"></i> ' + L('Please confirm', 'يرجى التأكيد') + ' <span class="mh-count">' + num(list.length) + '</span></h3>' +
+      '<p class="mh-note">' + L('The check asks about some common calculation mistakes. These are questions, not findings, and they don\'t affect the score: the check reads the model\'s structure and DAX, not your numbers, so it can\'t tell whether a result is wrong.',
+        'يسأل الفحص عن بعض أخطاء الحساب الشائعة. هذه أسئلة وليست مشاكل، ولا تؤثر في التقييم: يقرأ الفحص بنية النموذج وصيغ <bdi>DAX</bdi> لا أرقامك، لذلك لا يستطيع أن يعرف إن كانت النتيجة خاطئة.') + '</p>' +
+      list.map((c) => '<div class="mh-q" data-q="' + esc(qKey(c)) + '"><div class="mh-qhead"><code>' + esc(c.obj) + '</code><button type="button" class="mh-copy" data-qdismiss><i class="bi bi-x-lg"></i> ' + L('Dismiss', 'إخفاء') + '</button></div>' +
+        '<p>' + qText(isAr() ? c.message.ar : c.message.en) + '</p>' +
+        (c.evidence ? '<pre class="mh-dax mh-qdax" dir="ltr"><code>' + esc(c.evidence) + '</code></pre>'
+          : c.relationship ? '<p class="mh-qrel">' + L('Relationship', 'العلاقة') + ': ' + bdi(c.obj) + ' · ' + L('unused column', 'العمود غير المستخدم') + ': ' + bdi(c.relationship.fromTable + '[' + c.relationship.candidateColumn + ']') + '</p>' : '') + '</div>').join('') + '</section>';
+  };
+
   // ---------- file input ----------
   function pick(file) {
     if (!file) return;
@@ -61,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261016g11'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261018h'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -206,7 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return '<details class="mh-issue' + (ign ? ' ignored' : '') + '" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b>' + badge + '<span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
           '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' + srcHtml(f.id) + extra +
           '<div class="mh-cat"><i class="bi ' + CAT[f.cat].icon + '"></i> ' + L(CAT[f.cat].en, CAT[f.cat].ar) + (f.share != null ? ' · ' + L(f.share + '% of objects', f.share + '% من العناصر') : '') + '<button type="button" class="mh-ign" data-ign="' + f.id + '">' + (ign ? '<i class="bi bi-eye"></i> ' + L('Count it again', 'احسبه مرة أخرى') : '<i class="bi bi-eye-slash"></i> ' + L('Ignore this check', 'تجاهل هذا الفحص')) + '</button></div>' + itemList(f.items) + '</div></details>';
-      }).join('') : '<div class="mh-panel mh-note">' + L('No issues in this group. Nice work.', 'لا توجد مشاكل في هذه المجموعة. عمل ممتاز.') + '</div>');
+      }).join('') : '<div class="mh-panel mh-note">' + L('No issues in this group. Nice work.', 'لا توجد مشاكل في هذه المجموعة. عمل ممتاز.') + '</div>') + confirmHtml();
+    el.querySelectorAll('[data-qdismiss]').forEach((b) => b.onclick = () => {
+      const gone = qDismissed(); gone.add(b.closest('.mh-q').dataset.q);
+      try { sessionStorage.setItem(QKEY, JSON.stringify(Array.from(gone))); } catch (e) { /* private mode: dismissed until the page reloads */ }
+      const q = b.closest('.mh-q'), sec = q.closest('.mh-confirm'); q.remove();
+      if (sec && !sec.querySelector('.mh-q')) sec.remove(); else if (sec) sec.querySelector('.mh-count').textContent = num(sec.querySelectorAll('.mh-q').length);
+    });
     el.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { filt.cat = b.dataset.cat; tIssues(); });
     el.querySelectorAll('[data-gofix]').forEach((b) => b.onclick = () => { tab = 'fix'; renderResult(); const t = document.getElementById('mhTab'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
@@ -221,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('mhCsv').onclick = () => {
       const rows = [['Severity', 'Category', 'Rule', 'Object', 'Detail', 'Source']];
       R.findings.forEach((f) => { const [sl, su] = srcEn(f.id); f.items.forEach((i) => rows.push([f.sev, CAT[f.cat].en, RULES()[f.id].en[0], i.obj, i.detail || '', su && sl === 'Microsoft guidance' ? su : sl])); });
+      (R.confirm || []).forEach((c) => rows.push(['question', 'Please confirm', c.message.en, c.obj, qWhere(c), 'DataArcus question (not a finding, not in the score)']));
       download('model-health-findings.csv', '﻿' + rows.map((r) => r.map((x) => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\r\n'), 'text/csv');
       track('mh_download', { kind: 'csv' });
     };
@@ -583,6 +610,8 @@ document.addEventListener('DOMContentLoaded', () => {
       '<h2>Health check findings</h2><table><tr><th>Severity</th><th>Area</th><th>Finding</th><th>Count</th><th>How to fix</th><th>Source</th></tr>' + R.findings.map((f) => { const [sl, su] = srcEn(f.id);
         return '<tr><td><span class="sev ' + f.sev + '">' + f.sev + '</span></td><td>' + CAT[f.cat].en + '</td><td>' + h(RULES()[f.id].en[0]) + '</td><td>' + f.items.length + '</td><td>' + h(RULES()[f.id].en[2]) + '</td><td>' + (su ? '<a href="' + h(su) + '">' + h(sl) + '</a>' : h(sl) + ': ' + h(srcOf(f.id).says.en)) + '</td></tr>'; }).join('') + '</table>' +
       R.findings.map((f) => '<h3>' + h(RULES()[f.id].en[0]) + ' (' + f.items.length + ')</h3><div>' + f.items.map((i) => '<code>' + h(i.obj) + '</code>' + (i.detail ? ' <span class="no">' + h(i.detail) + '</span>' : '')).join(', ') + '</div>').join('') +
+      ((R.confirm || []).length ? '<h2>Please confirm (questions, not findings)</h2><p class="sub">Questions about possible calculation mistakes. They are not findings and don\'t affect the score: the check reads structure and DAX, not the numbers.</p><table><tr><th>Type</th><th>Object</th><th>Question</th><th>Evidence</th></tr>' +
+        R.confirm.map((c) => '<tr><td>question</td><td><code>' + h(c.obj) + '</code></td><td>' + h(c.message.en) + '</td><td><code>' + h(qWhere(c)) + '</code></td></tr>').join('') + '</table>' : '') +
       '<h2>Tables</h2><table><tr><th>Table</th><th>Type</th><th>Columns</th><th>Measures</th><th>Description</th></tr>' + R.tables.filter((t) => !t.auto).map((t) => '<tr><td><b>' + h(t.name) + '</b>' + (t.hidden ? ' <span class="no">(hidden)</span>' : '') + '</td><td>' + (t.isCalcTable ? 'DAX' : h(t.mode)) + '</td><td>' + t.columns.length + '</td><td>' + t.measures + '</td><td>' + h(t.description) + '</td></tr>').join('') + '</table>' +
       R.tables.filter((t) => !t.auto).map((t) => '<h3>' + h(t.name) + '</h3><table><tr><th>Column</th><th>Type</th><th>Kind</th><th>Used</th><th>Notes</th></tr>' + t.columns.map((c) => '<tr><td>' + h(c.name) + '</td><td>' + h(c.dataType) + '</td><td>' + (c.kind === 'calculated' ? 'Calculated' : 'Data') + (c.hidden ? ', hidden' : '') + '</td><td>' + (c.used == null ? '' : c.used ? 'Yes' : '<span class="no">No</span>') + '</td><td>' + (c.sortBy ? 'Sorted by ' + h(c.sortBy) + '. ' : '') + h(c.description) + (c.expr ? '<pre>' + h(c.expr.trim()) + '</pre>' : '') + '</td></tr>').join('') + '</table>' + (t.calcExpr ? '<pre>' + h(t.calcExpr.trim()) + '</pre>' : '')).join('') +
       '<h2>Measures</h2>' + Object.keys(folders).sort().map((k) => '<h3>' + h(k) + ' (' + folders[k].length + ')</h3>' + folders[k].map((m) => '<div class="m"><b>[' + h(m.name) + ']</b> <span class="meta">' + (m.formatString ? 'Format ' + h(m.formatString) + ' · ' : '') + (m.used == null ? '' : m.used ? (m.visuals ? 'in ' + m.visuals + ' visuals on ' + m.pages.length + ' pages' : 'used by other measures or filters') : '<span class="no">unused</span>') + '</span>' + (m.description ? '<div>' + h(m.description) + '</div>' : '') + '<pre>' + h(m.expr.trim()) + '</pre>' + (m.dependsOn.length ? '<div class="meta">Depends on: ' + m.dependsOn.map((x) => x.type === 'measure' ? '[' + h(x.name) + ']' : x.type === 'column' ? h(x.table) + '[' + h(x.name) + ']' : h(x.name)).join(', ') + '</div>' : '') + '</div>').join('')).join('') +
@@ -607,6 +636,12 @@ document.addEventListener('DOMContentLoaded', () => {
       f.items.forEach((i) => lines.push('- `' + String(i.obj).replace(/`/g, "'") + '`' + (i.detail ? ': ' + String(i.detail).replace(/\n/g, ' ') : '')));
       lines.push('');
     });
+    if ((R.confirm || []).length) {
+      lines.push('## Please confirm (questions, not findings)', '', 'Questions about possible calculation mistakes. They are not findings and don\'t affect the score: the check reads structure and DAX, not the numbers.', '',
+        '| Type | Object | Question | Evidence |', '|---|---|---|---|');
+      R.confirm.forEach((c) => lines.push('| question | ' + cell(c.obj) + ' | ' + cell(c.message.en) + ' | ' + cell(qWhere(c)) + ' |'));
+      lines.push('');
+    }
     lines.push('## Tables', '');
     R.tables.filter((t) => !t.auto).forEach((t) => {
       lines.push('### ' + t.name + (t.hidden ? ' (hidden)' : ''), '');
