@@ -61,6 +61,19 @@ if (Agg) {
   chk(() => byName.class === 'non_additive' && byName.confidence === 'medium', () => `classify. a ratio name over DAX it can't read: non_additive, medium: ${JSON.stringify(byName)}`);
   // a column the visual sums (a model without measures): a snapshot column summed is asked about
   chk(() => Agg.classify({ column: 'Balance', agg: 'Sum' }).class === 'semi_additive_time' && Agg.classify({ column: 'Amount', agg: 'Sum' }).class === 'unknown', () => 'classify. a summed Balance column is semi_additive_time; a summed Amount unknown');
+  // (the fresh holdout, 18 Oct: each wrong call it found, fixed in the rule and pinned here; red on the frozen rule)
+  const unitScale = { name: 'Unit Scale', expression: 'VAR t = ABS ( CALCULATE ( [Sales], ALLSELECTED () ) ) RETURN SWITCH ( TRUE (), t >= 1E9, 1E9, t >= 1E6, 1E6, 1 )' };
+  const hctx = { measures: MEASURES.concat([unitScale]), tables: [{ name: 'FactShipments', columns: [{ name: 'ShipmentID' }] }, { name: 'Sales', columns: [{ name: 'Customer' }] }, { name: 'Stores', columns: [{ name: 'Store Code', isKey: true }] }] };
+  chk(() => Agg.classify({ name: 'Sales Disp', expression: 'DIVIDE ( [Sales], [Unit Scale] )' }, hctx).class === 'unknown', () => 'holdout. a total divided by a unit chosen once for the visual (1E9, 1E6) is not a ratio');
+  chk(() => Agg.classify({ name: 'Sales Share', expression: 'DIVIDE ( [Sales], CALCULATE ( [Sales], ALLSELECTED () ) )', formatString: '0.0%' }, hctx).class === 'unknown', () => 'holdout. a share of the total (its rows add up to the total row) is not called non-additive');
+  chk(() => Agg.classify({ name: 'Row share', expression: 'SUMX ( Sales, Sales[Amount] / SUMX ( ALL ( Sales ), Sales[Amount] ) )', formatString: '0.0%' }, hctx).class === 'unknown', () => 'holdout. a SUMX of each row\'s share of the total is not called non-additive');
+  chk(() => Agg.classify({ name: 'Total Shipments', expression: 'DISTINCTCOUNT ( FactShipments[ShipmentID] )' }, hctx).class === 'unknown' && Agg.classify({ name: 'Stores', expression: 'DISTINCTCOUNT ( Stores[Store Code] )' }, hctx).class === 'unknown', () => 'holdout. a distinct count of the table\'s own row id (by name, or a key column) is not called non-additive');
+  chk(() => Agg.classify({ name: 'Customers', expression: 'DISTINCTCOUNT ( Sales[Customer] )' }, hctx).class === 'non_additive', () => 'holdout. a distinct count of a repeated column stays non_additive');
+  chk(() => Agg.classify({ name: 'Qtd no Prazo', expression: 'SUM ( Sales[Amount] )' }, hctx).class === 'unknown', () => 'holdout. "Qtd" (Portuguese: quantity) is not QTD');
+  const ytdVar = Agg.classify({ name: 'Units YTD Var', expression: '[Units YTD] - [Units YTD LY]' }, { measures: [{ name: 'Units YTD', expression: 'TOTALYTD ( [Sales], Calendar[Date] )' }, { name: 'Units YTD LY', expression: 'CALCULATE ( [Units YTD], SAMEPERIODLASTYEAR ( Calendar[Date] ) )' }, MEASURES[0]] });
+  chk(() => ytdVar.class === 'semi_additive_time' && ytdVar.timeHandled === true, () => `holdout. a YTD minus a YTD is handled over time, nothing to ask: ${JSON.stringify(ytdVar)}`);
+  const window = Agg.classify({ name: 'New Customers', expression: 'CALCULATE ( DISTINCTCOUNT ( Sales[Customer] ), FILTER ( Sales, Sales[Date] >= MIN ( Calendar[Date] ) && Sales[Date] <= MAX ( Calendar[Date] ) ) )' }, hctx);
+  chk(() => window.class === 'non_additive', () => `holdout. a period window (>= MIN and <= MAX) is not a running total: ${JSON.stringify(window)}`);
   // the guard: every stacked or area type Microsoft has is known to it (none is written today, test below)
   // (Microsoft's names: columnChart is the stacked column chart, barChart the stacked bar chart; areaChart overlaps, it doesn't stack)
   const VT = require('../assets/js/visual-types.js');

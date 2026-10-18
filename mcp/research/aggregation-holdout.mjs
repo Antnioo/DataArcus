@@ -26,7 +26,7 @@ for (const [root, rel] of (which === 'ms' ? ms : which === 'own' ? own : [...own
   let m; try { m = loadModel(rel, { root }); } catch (e) { rows.push(`!! ${rel}: ${e.message}`); continue; }
   counts.models++;
   const mt = modelOf(m.tmsl).tables || [], measures = mt.flatMap((t) => (t.measures || []).map((x) => ({ table: t.name, name: x.name, expression: x.expression, formatString: x.formatString })));
-  for (const x of measures) { counts.measures++; const r = Agg.classify(x, { measures });
+  for (const x of measures) { counts.measures++; const r = Agg.classify(x, { measures, tables: mt });
     if (r.class === 'unknown') { counts.unknown++; continue; }
     if (r.class === 'non_additive') counts.non++; else { counts.semi++; if (!r.timeHandled) counts.semiAsk++; }
     const dax = (Array.isArray(x.expression) ? x.expression.join(' ') : String(x.expression || '')).replace(/\s+/g, ' ').slice(0, 150);

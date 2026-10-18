@@ -36,6 +36,15 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   non_additive, 10 asked, 14 handled, 756 unknown; repo fixtures 9 models, 1023 measures: 537, 10, 132, 344. 0 wrong.
   Eight rule fixes on the way (unit conversions, // in texts, % format on arithmetic, text measures, "utilization",
   inventory catalogues, flows, average+cumulative), none special-cased.
+- **The reviewer's #51 review (18 Oct): the 26 models were a tuning set, not a holdout.** Fresh holdout (15 public repos,
+  34 models, 916 measures), rule FROZEN at `6c9177f`: non_additive 315/399 right (0.789), semi 25/28. Causes: a unit
+  `1E9` not read as a constant (35), shares of a total (8), distinct counts of a table's own id (41), "Qtd"/YTD-YTD/
+  period window (3). Fixed in the rule, 7 red-first checks in test-b146 (32 checks now): after fixing on the holdout
+  310/312 (0.994), 28/28. The tuning set's first "0 wrong" was not true: 99 calls I had marked right were wrong
+  (94 synthetic "Share %", 4 "Items Unique", New Customers); corrected in AGGREGATION-HOLDOUT.md and the tsv (1 wrong,
+  12 undecidable ids left). The fresh holdout's per-measure list stays out of the repo (other people's repos).
+- **Next (the reviewer's item 2):** B-147 format review as "Please confirm", new branch `feat/0.3-format-review` from
+  `hc/b143-unrelated-tables` (draft #48), draft PR.
 - **Open (for the owner):** (1) packaging (dataarcus-engine build) must carry `assets/js/aggregation.js` with the
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums

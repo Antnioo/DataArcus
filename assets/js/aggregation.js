@@ -38,12 +38,15 @@
   var SUMS = { SUM: 1, SUMX: 1, COUNT: 1, COUNTA: 1, COUNTAX: 1, COUNTX: 1, COUNTBLANK: 1 };
   var DISTINCT_TABLE = { DISTINCT: 1, VALUES: 1, SUMMARIZE: 1, SUMMARIZECOLUMNS: 1, GROUPBY: 1 };
   var BRANCHES = { IF: 1, 'IF.EAGER': 1, IFERROR: 1, COALESCE: 1, SWITCH: 1 };
+  // a denominator that is the total of the whole selection, or of a dimension: the value is a share of it
+  var SHARE = /\b(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i;
   // a CALCULATE filter that takes the period end or the time so far
   var TIME_FILTER = /\b(LASTDATE|FIRSTDATE|DATESYTD|DATESQTD|DATESMTD|ENDOFMONTH|ENDOFQUARTER|ENDOFYEAR|STARTOFMONTH|STARTOFQUARTER|STARTOFYEAR|LASTNONBLANK|FIRSTNONBLANK)\s*\(|(<=|=)\s*MAX\s*\(/i;
   // names: a snapshot over time, a ratio
-  var SNAPSHOT = /(^|[^a-z])(balance|balances|head ?count|headcount|on hand|closing|opening|ending|beginning|end of (month|period|year)|eop|bop|ytd|qtd|mtd|year to date|month to date|quarter to date|running total|cumulative)([^a-z]|$)|الرصيد|رصيد|عدد الموظفين|منذ بداية السنة/i;
+  var SNAPSHOT = /(^|[^a-z])(balance|balances|head ?count|headcount|on hand|closing|opening|ending|beginning|end of (month|period|year)|year to date|month to date|quarter to date|running total|cumulative)([^a-z]|$)|الرصيد|رصيد|عدد الموظفين|منذ بداية السنة/i;
   // (an inventory or a stock is a level only when it is a quantity summed: COUNTROWS ( reports ) of an "Inventory" is a
   // catalogue, one row per item)
+  var TODATE = /(^|[^A-Za-z])(YTD|QTD|MTD|EOP|BOP)([^A-Za-z]|$)/;
   var STOCK = /(^|[^a-z])(inventory|stock|stock on hand|stock level)([^a-z]|$)|المخزون/i;
   // (a level word with a flow word is a flow: "Stock Movements", "Balance Transfers" add up over time)
   var FLOW = /(^|[^a-z])(movements?|transactions?|receipts?|issues?|purchases?|sales?|adjustments?|changes?|flows?|transfers?|postings?)([^a-z]|$)|حركة|حركات/i;
@@ -51,13 +54,13 @@
 
   // ---------- reading the DAX's shape (comments and texts out; never run) ----------
   // one pass, so a // or -- inside a text ("https://...") or a name ([a--b]) is not read as a comment: a text becomes "",
-  // a quoted table name 'T', a comment a space
+  // a quoted table name keeps its letters ('Sales_Orders'), a comment a space
   function clean(x) {
     var s = Array.isArray(x) ? x.join('\n') : String(x == null ? '' : x), out = '', i = 0, n = s.length;
     while (i < n) {
       var c = s[i], d = s[i + 1];
       if (c === '"') { i++; while (i < n && !(s[i] === '"' && s[i + 1] !== '"')) i += s[i] === '"' ? 2 : 1; i++; out += '""'; continue; }
-      if (c === "'") { i++; while (i < n && !(s[i] === "'" && s[i + 1] !== "'")) i += s[i] === "'" ? 2 : 1; i++; out += "'T'"; continue; }
+      if (c === "'") { var q = i + 1; i++; while (i < n && !(s[i] === "'" && s[i + 1] !== "'")) i += s[i] === "'" ? 2 : 1; out += "'" + s.slice(q, i).replace(/[^\w\u0080-\uffff]+/g, '_') + "'"; i++; continue; }
       if (c === '[') { var j = s.indexOf(']', i); if (j < 0) j = n - 1; out += s.slice(i, j + 1); i = j + 1; continue; }
       if (c === '/' && d === '*') { var k = s.indexOf('*/', i + 2); i = k < 0 ? n : k + 2; out += ' '; continue; }
       if ((c === '/' && d === '/') || (c === '-' && d === '-')) { var e = s.indexOf('\n', i); i = e < 0 ? n : e; out += ' '; continue; }
@@ -91,14 +94,16 @@
     var v = vars(s);
     if (v) { var env2 = Object.assign({}, env.vars || {}, v.vars); return shape(v.ret, Object.assign({}, env, { vars: env2 }), depth + 1); }
     if (/^-/.test(s)) s = s.slice(1).trim();
-    if (/^(\d+(\.\d+)?|BLANK\s*\(\s*\)|TRUE\s*\(\s*\)|FALSE\s*\(\s*\)|""|'T')$/i.test(s)) return { s: 'const' };
+    if (/^(\d*\.?\d+([eE][+-]?\d+)?|BLANK\s*\(\s*\)|TRUE\s*\(\s*\)|FALSE\s*\(\s*\)|"")$/i.test(s)) return { s: 'const' };
     if (env.vars && /^[A-Za-z_][\w.]*$/.test(s) && env.vars[s.toUpperCase()] != null) return shape(env.vars[s.toUpperCase()], env, depth + 1);
     // operators at the top: a division is a ratio; a sum or difference keeps its terms' shape when they agree
     // (a division by a constant, SUM ( x ) / 1000, only changes the unit: the numerator's shape)
     var parts = [], from = 0;
     scan(s, function (c, i) { if (c === '/') { parts.push(s.slice(from, i)); from = i + 1; } });
     // (and by one selected value, SELECTEDVALUE ( Units[Value] ): the unit the user picks, the same for every row)
-    if (parts.length) { parts.push(s.slice(from)); if (parts.slice(1).every(function (x) { return unit(shape(x, env, depth + 1)); })) return shape(parts[0], env, depth + 1); return { s: 'non', says: 'a division (/)' }; }
+    // (and by the same total over ALL or ALLSELECTED: a share of the total, whose rows add up to the total row)
+    if (parts.length) { parts.push(s.slice(from)); if (parts.slice(1).every(function (x) { return unit(shape(x, env, depth + 1)); })) return shape(parts[0], env, depth + 1);
+      if (parts.slice(1).some(function (x) { return SHARE.test(x); })) return { s: 'share' }; return { s: 'non', says: 'a division (/)' }; }
     var terms = [], last = 0;
     // (a + or - after an operator is a sign; after a digit's E, an exponent)
     scan(s, function (c, i) { var before = s.slice(0, i).trimEnd(); if ((c === '+' || c === '-') && before && !/[(,*\/+\-<>=&|^]$/.test(before) && !/\d[eE]$/.test(before)) { terms.push(s.slice(last, i)); last = i + 1; } });
@@ -121,13 +126,17 @@
     if (close !== s.length - 1) return { s: 'unknown' };
     var a = args(inner);
     if (name === 'DIVIDE' && a[1] != null && unit(shape(a[1], env, depth + 1))) return shape(a[0], env, depth + 1);
+    if (name === 'DIVIDE' && a[1] != null && SHARE.test(a[1])) return { s: 'share' };
     if (name === 'SELECTEDVALUE') return { s: 'scalar' };
+    if ((name === 'DISTINCTCOUNT' || name === 'DISTINCTCOUNTNOBLANK') && ownId(a[0], env)) return { s: 'unknown' };
     if (NON[name]) return { s: 'non', says: name + ': ' + NON[name] };
     if (TIME[name]) return { s: 'time', says: name };
     if (name === 'COUNTROWS') { var t = (unwrap(a[0] || '').match(/^([A-Za-z]+)\s*\(/) || [])[1]; return t && DISTINCT_TABLE[t.toUpperCase()] ? { s: 'non', says: 'COUNTROWS(' + t.toUpperCase() + '): a distinct count' } : { s: 'sum', says: 'COUNTROWS' }; }
+    if ((name === 'SUMX') && a[1] != null && /\bDIVIDE\s*\(|\//.test(a[1]) && SHARE.test(a[1])) return { s: 'share' };
     if (SUMS[name]) return { s: 'sum', says: name };
     if (name === 'CALCULATE' || name === 'CALCULATETABLE') {
-      var hit = a.slice(1).map(function (f) { return f.match(TIME_FILTER); }).filter(Boolean)[0];
+      // (a window with both ends, >= MIN ( ... ) && <= MAX ( ... ), keeps the rows of the period: not a running total)
+      var hit = a.slice(1).filter(function (f) { return !/>=?\s*MIN\s*\(/i.test(f); }).map(function (f) { return f.match(TIME_FILTER); }).filter(Boolean)[0];
       if (hit) return { s: 'time', says: 'CALCULATE with ' + (hit[1] ? hit[1].toUpperCase() : 'the date up to its MAX') };
       return shape(a[0] || '', env, depth + 1);
     }
@@ -136,6 +145,21 @@
       return agree(vals.map(function (x) { return shape(x, env, depth + 1); }), false);
     }
     return { s: 'unknown' };
+  }
+  // DISTINCTCOUNT ( T[c] ) where c is T's own row id (its key, "id", or T's own name with id/key/number: FactShipments[ShipmentID],
+  // 'Resource Groups'[Resource Group Id], 'Virtual Machines'[VM Resource Id]): one row per id, so it adds up like a count
+  function ownId(arg, env) {
+    var m = String(arg || '').trim().match(/^(?:'([^']+)'|([A-Za-z_][\w]*))?\s*\[([^\]]+)\]$/); if (!m) return false;
+    var t = String(m[1] || m[2] || ''), c = m[3], low = function (x) { return String(x).toLowerCase().replace(/[^a-z0-9\u0080-\uffff]+/g, ''); };
+    var col = (env.tables || []).reduce(function (hit, tb) { return hit || ((!t || low(tb.name) === low(t)) ? (tb.columns || []).find(function (x) { return x.name === c; }) && (tb.columns || []).find(function (x) { return x.name === c; }) : null); }, null);
+    if (col && col.isKey) return true;
+    if (!t) return false;
+    var lc = low(c);
+    if (lc === 'id' || lc === 'key') return true;
+    var words = t.replace(/^(fact|dim|f|d)(?=[A-Z_ ])/, '').replace(/([a-z])([A-Z])/g, '$1 $2').split(/[\s_]+/).filter(Boolean).map(function (w) { return low(w).replace(/(ies)$/, 'y').replace(/s$/, ''); }).filter(function (w) { return w && ['all', 'cc', 'get', 'idle', 'the'].indexOf(w) < 0; });
+    var base = lc.replace(/(id|key|number|no|code)$/, ''), initials = words.map(function (w) { return w[0]; }).join('');
+    if (base === lc || !base) return false;
+    return words.join('') === base || words.some(function (w) { return w.length > 2 && base.indexOf(w) === 0; }) || (initials.length > 1 && base.indexOf(initials) === 0);
   }
   // a denominator that only sets the unit: a constant, or one selected value
   function unit(x) { return x.s === 'const' || x.s === 'scalar'; }
@@ -147,6 +171,7 @@
     if (real.some(function (x) { return x.s === 'unknown'; })) return { s: 'unknown' };
     if (real.every(function (x) { return x.s === 'non'; })) return { s: 'non', says: real[0].says };
     if (real.every(function (x) { return x.s === 'sum'; })) return { s: 'sum', says: real[0].says };
+    if (arithmetic && real.every(function (x) { return x.s === 'time'; })) return { s: 'time', says: real[0].says };
     if (!arithmetic && real.every(function (x) { return x.s === 'time' || x.s === 'sum'; })) { var t = real.filter(function (x) { return x.s === 'time'; }); return t.length === real.length ? { s: 'time', says: t[0].says } : { s: 'unknown' }; }
     return { s: 'unknown' };
   }
@@ -159,17 +184,17 @@
     if (it.column != null) {
       var agg = String(it.agg || ''), cn = String(it.column);
       if (/^(Avg|Average|Min|Max|Median|StandardDeviation|StdDev|StDev|Variance|Var|CountDistinct|DistinctCount)$/i.test(agg)) return result('non_additive', 'high', [{ kind: 'aggregation', says: agg }]);
-      if (!FLOW.test(cn) && ((/^(Sum|Count|CountNonNull)$/i.test(agg) && SNAPSHOT.test(cn)) || (/^Sum$/i.test(agg) && STOCK.test(cn)))) return result('semi_additive_time', 'high', [{ kind: 'aggregation', says: agg }, { kind: 'name', says: 'named as a snapshot' }], { timeHandled: false });
+      if (!FLOW.test(cn) && ((/^(Sum|Count|CountNonNull)$/i.test(agg) && (SNAPSHOT.test(cn) || TODATE.test(cn))) || (/^Sum$/i.test(agg) && STOCK.test(cn)))) return result('semi_additive_time', 'high', [{ kind: 'aggregation', says: agg }, { kind: 'name', says: 'named as a snapshot' }], { timeHandled: false });
       if (/^Sum$/i.test(agg) && RATIO.test(cn)) return result('non_additive', 'medium', [{ kind: 'name', says: 'named as a ratio or an average' }]);
       return result('unknown', 'low', []);
     }
-    var name = String(it.name || ''), sh = it.expression != null ? shape(clean(it.expression), { measures: c.measures || [], seen: [name] }, 0) : { s: 'unknown' };
-    if (sh.s === 'text') return result('unknown', 'low', []);
+    var name = String(it.name || ''), sh = it.expression != null ? shape(clean(it.expression), { measures: c.measures || [], tables: c.tables || [], seen: [name] }, 0) : { s: 'unknown' };
+    if (sh.s === 'text' || sh.s === 'share') return result('unknown', 'low', []);
     if (sh.s === 'time') return result('semi_additive_time', 'high', [{ kind: 'dax', says: sh.says }], { timeHandled: true });
     if (sh.s === 'non') return result('non_additive', 'high', [{ kind: 'dax', says: sh.says }]);
     if (percentFormat(it.formatString) && !sh.op) return result('non_additive', 'high', [{ kind: 'format', says: 'a % format' }]);
     // (a name that reads as both, "Avg cumulative storage", is an average: averaged over time, never summed)
-    var snap = !FLOW.test(name) && (SNAPSHOT.test(name) || (STOCK.test(name) && /^SUMX?$/.test(String(sh.says || ''))));
+    var snap = !FLOW.test(name) && (SNAPSHOT.test(name) || TODATE.test(name) || (STOCK.test(name) && /^SUMX?$/.test(String(sh.says || ''))));
     if (snap && sh.s !== 'const' && !(RATIO.test(name) && sh.s !== 'sum')) return result('semi_additive_time', sh.s === 'sum' ? 'high' : 'medium', [{ kind: 'name', says: 'named as a snapshot' }].concat(sh.s === 'sum' ? [{ kind: 'dax', says: sh.says + ': summed over the dates' }] : []), { timeHandled: false });
     if (RATIO.test(name) && sh.s === 'unknown') return result('non_additive', 'medium', [{ kind: 'name', says: 'named as a ratio or an average' }]);
     return result('unknown', 'low', []);
@@ -191,7 +216,7 @@
       VALUE_ROLES.forEach(function (role) { (fields[role] || []).forEach(function (f) {
         if (!f || f.report || (f.kind !== 'measure' && f.kind !== 'aggregation')) return;
         var key = f.table + '[' + f.name + ']', r;
-        if (f.kind === 'measure') { var m = measures.find(function (x) { return x.name === f.name && (!x.table || x.table === f.table); }); if (!m) return; r = classify(m, { measures: measures }); }
+        if (f.kind === 'measure') { var m = measures.find(function (x) { return x.name === f.name && (!x.table || x.table === f.table); }); if (!m) return; r = classify(m, { measures: measures, tables: c.tables || [] }); }
         else r = classify({ column: f.name, agg: f.agg });
         var s = seen[key] || (seen[key] = { key: key, name: f.name, r: r, in: [] });
         if (s.in.indexOf(where) < 0) s.in.push(where);
