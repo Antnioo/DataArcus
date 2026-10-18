@@ -834,5 +834,16 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // B-149: the stats row under the score (tables, columns, measures, relationships, pages, visuals) is all Arabic on the
+  // Arabic page, the sample model included (it has report pages, so the pages and visuals pills show)
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=ar`, { waitUntil: 'networkidle' });
+    await v.pg.click('#mhSample');
+    await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 });
+    const pills = await v.pg.$$eval('.mh-pill', (ps) => ps.map((p) => [...p.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim()));
+    check(pills.length === 6 && pills.every((t) => t && !/[A-Za-z]/.test(t)), `B-149: the Arabic stats row has English labels: ${JSON.stringify(pills)}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
