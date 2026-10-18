@@ -82,6 +82,12 @@ jobs:
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 
+      # (in one shard only: it renders every Arabic copy again, so once per run is enough; a failure fails the shard,
+      # so the website check)
+      - name: The Arabic copies at /ar/ are what a fresh render of their English pages gives (never edited by hand)
+        if: matrix.shard == 1
+        run: node scripts/ar-pages.mjs
+
       - name: Website suites, shard ${{ matrix.shard }} of 3
         run: |
           mkdir -p ci-logs
