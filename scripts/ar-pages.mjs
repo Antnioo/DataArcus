@@ -3,7 +3,8 @@
 // The copy is made by the same code visitors run: the browser opens the page at ?lang=ar on the local server, and
 // lang-manager.js translates the page's own HTML with the translations it loaded (the page as written, not the page
 // after every script ran: the scripts run again on the copy and would add their widgets twice). Then what must differ:
-//   - <html lang="ar" dir="rtl"> and the Arabic font in the file itself; title, description and Open Graph in Arabic
+//   - <html lang="ar" dir="rtl"> in the file itself (the head's language guard loads the Arabic font and holds the page
+//     until it is in, as on ?lang=ar: the path decides, B-150); title, description and Open Graph in Arabic
 //   - canonical and og:url = the /ar/ address; hreflang en / ar / x-default (x-default = English) on both copies
 //   - every relative address made root-absolute (from /ar/tools/, "../assets" would be /ar/assets), and links to a page
 //     that has an Arabic copy go to that copy (the others stay English)
@@ -82,16 +83,11 @@ export async function render(browser, url, enFile) {
       const doc = new DOMParser().parseFromString(src, 'text/html'), lm = window.langManager;
       if (!lm || lm.currentLang !== 'ar') throw new Error('the page did not open in Arabic');
       lm.applyLanguage(doc, true);
-      const root = doc.documentElement, head = doc.head, own = alt[1][1];
+      const root = doc.documentElement, own = alt[1][1];
       root.setAttribute('lang', 'ar'); root.setAttribute('dir', 'rtl'); doc.body.classList.add('rtl');
       const set = (sel, attr, val) => { const e = doc.querySelector(sel); if (e) e.setAttribute(attr, val); };
       set('link[rel="canonical"]', 'href', own);
       set('meta[property="og:url"]', 'content', own);
-      // the Arabic font from the start (lang-manager adds it too, but only once its script runs)
-      const font = lm.updateDirection.toString().match(/https:\/\/fonts\.googleapis\.com\/css2\?family=IBM\+Plex\+Sans\+Arabic[^'"]*/)[0];
-      const fl = doc.createElement('link'); fl.id = 'ar-font'; fl.rel = 'stylesheet'; fl.href = font;
-      const pre = [...head.querySelectorAll('link[rel="preconnect"]')].pop();
-      head.insertBefore(fl, pre ? pre.nextSibling : null); head.insertBefore(doc.createTextNode('\n  '), fl);
       // addresses: relative ones from the English page's folder become root-absolute; links to a page with an Arabic
       // copy go to the copy (relative, root-absolute or https://dataarcus.com/...)
       const base = new URL('/' + enFile, location.origin);
