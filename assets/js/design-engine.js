@@ -762,6 +762,7 @@
       samples: { about: 'sample visuals in the preview (the website only)', type: 'boolean' },
       transparent: { about: 'transparent visuals over panels drawn in the background image', type: 'boolean' },
       wideTable: { about: 'on a narrow page a table takes the wider share of its row (default on)', type: 'boolean' },
+      phoneLayout: { about: 'a phone layout for every report page (mobile.json, Power BI\'s 323-wide phone canvas; default on)', type: 'boolean' },
       kpiBar: { about: 'the KPI cards\' accent bar', values: ['start', 'top', 'bottom', 'none'] },
       kpiBarC: { about: 'the KPI bar\'s colour (default accent)', values: BAR_COLORS },
       kpiBarW: { about: 'the KPI bar\'s thickness', range: RANGE.kpiBarW },
@@ -822,6 +823,7 @@
       opt('kpiBarC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`); opt('headLineC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`);
       opt('fpos', (v) => ['start', 'end', 'top'].includes(v), 'use start, end or top');
       opt('wideTable', (v) => typeof v === 'boolean', 'true or false');
+      opt('phoneLayout', (v) => typeof v === 'boolean', 'true or false');
     }
     return state;
   }

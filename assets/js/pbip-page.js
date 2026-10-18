@@ -1267,7 +1267,8 @@
     visuals.forEach((v) => { headed(v.visual);
       add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
       const p = pos[v.name];
-      if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
+      // (0.3.0: a design that says phoneLayout false gets no phone layout; every page has one by default)
+      if (p && o.phoneLayout !== false) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
         position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } },
         v.visual ? phoneLook(v, p) : {})));
     });

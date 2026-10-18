@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test-release-text.mjs && node test.mjs && node test-0.2.9c.mjs && node test-0.2.9d.mjs && node test-0.2.9e.mjs && node test-0.2.9f.mjs && node test-0.2.9g.mjs && node test-models/golden-baseline.mjs && node test-fuzz.mjs && node test-0.2.9-layouts.mjs && node test-rc22.mjs && node test-rc23.mjs"
+    "test": "node test-release-text.mjs && node test.mjs && node test-0.2.9c.mjs && node test-0.2.9d.mjs && node test-0.2.9e.mjs && node test-0.2.9f.mjs && node test-0.2.9g.mjs && node test-models/golden-baseline.mjs && node test-fuzz.mjs && node test-0.2.9-layouts.mjs && node test-rc22.mjs && node test-rc23.mjs && node test-phone.mjs"
   },
   "engines": {
     "node": ">=20.10"
