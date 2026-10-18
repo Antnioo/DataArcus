@@ -33,6 +33,10 @@ export function planLint(a) {
   const bind = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, pinned ? { pinned } : {}));
   if (!(bind.kpis || []).filter(Boolean).length) return { skipped: 'the model has no measure a card or a chart can show, so the planned page was not linted (create_report counts its columns instead)' };
   if (F) delete bind.catPool;   // (as create_report's binding with the plan's fields)
+  // (0.3, J4, B-130: the planned page showed cards titled "KPI 2", "KPI 3", "KPI 4" on a model with one measure) the cards
+  // the binding can fill, as create_report caps them (maxKpis): a card is never planned without its measure
+  const filled = (bind.kpis || []).filter(Boolean).length;
+  if (filled < design.layout.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) });
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   const pages = E.projectPages(design.layout, lang, { second: false }).slice(0, 1).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
@@ -47,5 +51,10 @@ export function planLint(a) {
   // (rc.22, B-140) the kinds the writer gave the plan's slots, where they differ (a column chart whose category names
   // can't stand level is a bar chart; a two-valued category a donut): kept off the answer (not enumerable), the plan
   // shows them on its slots
-  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  const answer = Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  // (0.3, J4) the planned page's visual titles as written (the full title, its alt text), kept off the answer as kinds is
+  const page0 = r.files.filter((f) => /\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(f.path) && f.path.includes('/pages/' + (inv.pages[0] || {}).id + '/'));
+  const titles = page0.map((f) => { try { const v = JSON.parse(f.data).visual || {}, g = (((v.visualContainerObjects || {}).general || [])[0] || {}).properties || {}, t = (((v.visualContainerObjects || {}).title || [])[0] || {}).properties || {};
+    return t.show && t.show.expr && t.show.expr.Literal.Value === 'true' && g.altText ? String(g.altText.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; } catch (e) { return null; } }).filter(Boolean);
+  return Object.defineProperty(answer, 'titles', { value: titles, enumerable: false });
 }
