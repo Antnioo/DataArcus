@@ -54,6 +54,11 @@ window.themeGeneratorTranslations = {
         "triadic": "Triadic (vivid)",
         "mono": "Monochrome (shades)"
       },
+      "logo": {
+        "title": "Or start from your logo",
+        "drop": "Drop a PNG, SVG or JPG logo here, or click to choose one",
+        "private": "Read in this tab only: never uploaded, never saved."
+      },
       "generate": "Generate",
       "dataColors": "Data colors (used in order)",
       "reportColors": "Report colors",
@@ -164,6 +169,11 @@ window.themeGeneratorTranslations = {
         "complementary": "متكاملة (تباين)",
         "triadic": "ثلاثية (حيوية)",
         "mono": "أحادية (درجات)"
+      },
+      "logo": {
+        "title": "أو ابدأ من شعارك",
+        "drop": "أفلت شعارًا بصيغة PNG أو SVG أو JPG هنا، أو انقر لاختياره",
+        "private": "يُقرأ داخل هذه الصفحة فقط: لا يُرفع ولا يُحفظ أبدًا."
       },
       "generate": "إنشاء",
       "dataColors": "ألوان البيانات (تُستخدم بالترتيب)",

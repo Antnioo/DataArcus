@@ -90,6 +90,24 @@ run found: the early approval check must not delete an expired plan, G9; server.
 - **Seen, not in scope:** a report saved in the older format (report.json at the report's root) is counted but not read
   by check_model_health (said now in notRead; reading it would be new work); the problem texts of the rules are English.
 
+## 0.3.0 step 6: theme from a logo (18 Oct, cloud builder; branch `feat/0.3-theme-from-logo` from main `dcc0f1a`; DRAFT PR, not merged)
+The owner's go (18 Oct: "finish as much R&D as we can"). Website only (the MCP's generate_theme is untouched: mcp/ is frozen).
+- Engine (`assets/js/design-engine.js`, shared with the MCP but unused there yet): `rgbToLab`, `deltaE` (CIEDE2000, Sharma's
+  pairs), `simulateCvd` (Machado 2009, severity 1, linear RGB), `logoColours(px)` (alpha < 128, near-white/near-black
+  with chroma < 12 skipped; weighted k-means in Lab, k 6, seeded deterministically; merge < 12; soft edges (blends with
+  white, black or a heavier cluster) dropped; >= 4%; top 3, each the logo's own most frequent colour; mono when no hue),
+  `logoTheme(colours, { ui, harmony })` (logo colours + generate(lead, harmony) + CALM, 15 apart; each to 3:1 on the
+  card with toContrast, listed in `adjusted`; order: lead first, all 5040 orders of the rest scored by the closest
+  neighbours over normal/deutan/protan; the logo's colours keep places 2-3 when within 10% of the best or >= 20 apart).
+- Page (`theme-generator.js`, both generator pages): drop zone under "Generate"; the file is drawn on a <=128 px canvas
+  from an object URL (revoked), never uploaded or stored, no analytics event (the no-network test). Applies like Generate
+  (data, accent, brand box). Panel: logo swatches with shares, the palette, the honest line for an adjusted logo colour,
+  a contrast table (visuals, page, 3:1, 4.5:1), the colour-blind line (min CIEDE2000 per vision). EN + AR, hex codes in
+  <bdi dir=ltr>.
+- Tests: `scripts/tests/theme-logo.mjs` (753 checks; in run-all, shard 3). Screenshots: scripts/tests/shots/theme-logo-*.png
+  (capture-theme-logo.mjs).
+- Open: the MCP could expose the same (a `logo` input to generate_theme) after 0.2.9; Desktop proof of a logo theme.
+
 ## Health Check 3: precision fixes and "Please confirm" (18 Oct, cloud builder; branch `hc3/precision-and-confirm` from main `6d88fe4`; one PR, not merged)
 The owner's go (18 Oct). One engine (`assets/js/model-health-engine.js`), used by the website and the MCP.
 - **Part A (scored rules, each with a red/green test, `scripts/tests/model-health.mjs` "Health Check 3"):** PCT_FORMAT no
