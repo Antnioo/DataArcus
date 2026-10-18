@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261018h'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261018h'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('mhSample').onclick = () => {
       loading('Contoso-Sales-Demo.pbit');
       track('mh_sample');
-      fetch('../assets/data/model-health-sample.pbit').then((r) => { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
+      fetch('/assets/data/model-health-sample.pbit').then((r) => { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
         .then((b) => run(b, 'Contoso-Sales-Demo.pbit')).catch(() => showError('READ'));
     };
   }

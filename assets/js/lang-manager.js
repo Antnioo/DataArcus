@@ -57,9 +57,33 @@ class LanguageManager {
     }
   }
   
+  // The page's own path: an Arabic copy (/ar/...) is the page at the same path without /ar
+  pagePath() {
+    return window.location.pathname.replace(/^\/ar(?=\/)/, '');
+  }
+
+  // Whether a page path has an Arabic copy: every public page has one (scripts/ar-pages.mjs, PAIRS = the sitemap);
+  // not files, the go/ short links, the 404 page or a lab page
+  hasArCopy(p) {
+    return /(\.html|\/)$/.test(p) && !/^\/(ar|go|assets)\//.test(p) && !/^\/404\.html$|-lab\.html$/.test(p);
+  }
+
+  // Links in translated HTML on an Arabic copy: a relative address is read from the English page's folder, and a link
+  // to a page that has an Arabic copy goes to the copy (as the generator writes the page's own links)
+  arLinks(root) {
+    const site = 'https://dataarcus.com', base = window.location.origin + this.pagePath();
+    root.querySelectorAll('[href], [src]').forEach((e) => ['href', 'src'].forEach((a) => {
+      const v = e.getAttribute(a), abs = !!v && v.startsWith(site + '/');
+      if (v === null || (!abs && /^(#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(v))) return;
+      const u = new URL(abs ? v.slice(site.length) : v, base);
+      const p = a === 'href' && e.tagName === 'A' && this.hasArCopy(u.pathname) ? '/ar' + u.pathname : u.pathname;
+      e.setAttribute(a, (abs ? site : '') + p + u.search + u.hash);
+    }));
+  }
+
   // Get page-specific translations based on current page
   getPageTranslations() {
-    const path = window.location.pathname;
+    const path = this.pagePath();
     
     // Free tools pages (checked first: /tools/index.html also contains "index")
     if (path.includes('power-bi-theme-generator')) {
@@ -239,7 +263,8 @@ class LanguageManager {
   
   // Apply translations to DOM elements (of this page, or of another document: scripts/ar-pages.mjs translates the page's
   // own HTML with it to write the /ar/ copy)
-  applyLanguage(doc = document) {
+  // (arCopy: the document is an Arabic copy; the generator passes it, as it translates from the English address)
+  applyLanguage(doc = document, arCopy = /^\/ar\//.test(window.location.pathname)) {
     // Update all elements with data-i18n attribute
     doc.querySelectorAll('[data-i18n]').forEach(element => {
       const key = element.getAttribute('data-i18n');
@@ -262,6 +287,7 @@ class LanguageManager {
       const html = this.getText(key);
       if (typeof html === 'string') {
         element.innerHTML = html;
+        if (arCopy) this.arLinks(element);
       }
     });
     

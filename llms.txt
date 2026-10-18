@@ -12,7 +12,7 @@
 - [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
 
 ## Arabic versions
-- [أدوات Power BI و Fabric مجانية](https://dataarcus.com/ar/tools/): the Arabic pages have their own addresses under https://dataarcus.com/ar/ (the same path as the English page). So far: the tools hub, the [DAX Calendar Table Generator](https://dataarcus.com/ar/tools/dax-calendar-table-generator.html), the [DAX Measure Builder](https://dataarcus.com/ar/tools/dax-measure-builder.html) and the [SVG KPI Designer](https://dataarcus.com/ar/tools/svg-kpi-designer.html).
+- [داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
 
 ## Articles
 - [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)

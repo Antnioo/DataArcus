@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/articles/article-etl-vs-power-query.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-etl-vs-power-query.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-etl-vs-power-query.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-etl-vs-power-query.html">
+  
+  <title>ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس</title>
+  <meta name="description" content="متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.">
+  <meta name="author" content="داتا أركوس">
+  <meta name="keywords" content="ETL مقابل Power Query للتجارة الإلكترونية, خطوط بيانات Shopify, إعداد البيانات في Power BI, هندسة البيانات للتجارة الإلكترونية, داتا أركوس">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس">
+  <meta property="og:description" content="متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.">
+  <meta property="og:url" content="https://dataarcus.com/ar/articles/article-etl-vs-power-query.html">
+  <meta property="og:site_name" content="داتا أركوس">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/etl-vs-power-query.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+  <meta property="og:locale" content="ar_AE">
+  <meta property="article:published_time" content="2025-09-04T12:00:00Z">
+  <meta property="article:author" content="Abdelrahman M.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس">
+  <meta name="twitter:description" content="متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/etl-vs-power-query.jpg">
+  <meta name="twitter:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+  
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "ETL vs Power Query: Choosing the Right Data Strategy for Your E-commerce Store",
+    "description": "A guide for e-commerce businesses on when to use ETL vs Power Query in Power BI. Learn the right approach for handling Shopify data, ad APIs, and more for scale and governance.",
+    "url": "https://dataarcus.com/articles/article-etl-vs-power-query.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2025-09-04",
+    "image": "https://dataarcus.com/assets/img/og/etl-vs-power-query.jpg"
+  }
+  </script>
+
+<meta property="og:article:published_time" content="2025-09-04T12:00:00Z"><meta property="og:article:author" content="عبدالرحمن م."></head>
+<body class="rtl">
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/articles/article-etl-vs-power-query.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+<main class="article-section">
+    <div class="container">
+        <div class="row">
+        <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+            <h1 class="display-5 fw-bold" data-i18n="header.title">ETL مقابل Power Query: اختيار استراتيجية البيانات الصحيحة لمتجرك الإلكتروني</h1>
+            <p class="lead text-white-50" data-i18n="header.subtitle">نُشر في 4 سبتمبر 2025</p>
+            </header>
+
+            <article class="article-body">
+            <p data-i18n-html="content.p1">في مشاريع Power BI، أحد أول الأسئلة التي تواجه فرق التجارة الإلكترونية هو: هل يجب أن نعتمد على خطوط ETL/ELT الهندسية أم نكتفي باستخدام Power Query لتحضير البيانات؟ الاختيار الحكيم يوفر أشهرًا من إعادة العمل.</p>
+            <p data-i18n-html="content.p2">لا يوجد خيار 'أفضل' عالميًا. تتألق ETL في الحجم الكبير، والحوكمة، وإعادة الاستخدام. بينما يتفوق Power Query في السرعة واستقلالية المحللين. أفضل الفِرَق تمزج بين الاثنين.</p>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h1">ما هي ETL؟</h2>
+            <p data-i18n-html="content.p3">تشير ETL (أو ELT) إلى خطوط بيانات مُنسَّقة تدمج مصادر متعددة، وتطبق تحويلات مُصَدَّرة، وتُنتج جداول مُنظَّمة في مستودع بيانات للاستهلاك على نطاق واسع.</p>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list1.0"><strong>هندسية ومُنسَّقة:</strong> خطوط أنابيب مجدولة مع مراقبة وتنبيهات وتتبع لمسار البيانات.</li>
+                <li data-i18n-html="content.list1.1"><strong>قابلة للإصدار والاختبار:</strong> تُخزن في مستودعات الأكواد (مثل SQL/dbt) مع CI/CD.</li>
+                <li data-i18n-html="content.list1.2"><strong>مصممة للتوسع:</strong> تتعامل مع الأحجام الكبيرة (مثل ملايين الطلبات من Shopify)، وقواعد العمل المعقدة قبل طبقة ذكاء الأعمال.</li>
+                <li data-i18n-html="content.list1.3"><strong>منتجات بيانات قابلة لإعادة الاستخدام:</strong> تُنتج جداول مُنمذجة (نماذج نجمية) تخدم العديد من التقارير والأدوات، وليس فقط Power BI.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h2">ما هو Power Query؟</h2>
+            <p data-i18n-html="content.p4">Power Query هو محرك التحويل M المدمج في Power BI. يقوم المحللون بتشكيل البيانات عبر استعلامات متدرجة يمكنها 'الطي' (folding) إلى المصدر، مما يُبقي منطق العمل قريبًا من التقرير.</p>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list2.0"><strong>سريع في التكرار والتجربة:</strong> مثالي للنماذج الأولية وتطبيق منطق الأعمال النهائي دون انتظار فريق البيانات.</li>
+                <li data-i18n-html="content.list2.1"><strong>طي الاستعلام (Source folding):</strong> عندما يتم طي الاستعلامات، يُنفذ العمل الثقيل في المصدر؛ تجنب الأنماط التي تكسر هذه الميزة.</li>
+                <li data-i18n-html="content.list2.2"><strong>متمحور حول النموذج:</strong> التحويلات تعيش مع مجموعة البيانات؛ وتعزز <em>Dataflows</em> إعادة الاستخدام عبر التقارير.</li>
+                <li data-i18n-html="content.list2.3"><strong>الأفضل للبيانات المتوسطة:</strong> مثالي عندما تكون المصادر بسيطة (مثل بعض تقارير Shopify المصدرة) والأحجام معتدلة.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h3">ETL مقابل Power Query: الفروقات الرئيسية</h2>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list3.0"><strong>الحجم:</strong> ETL للأحجام الضخمة؛ Power Query ممتازة للتحويلات الأصغر والمحددة النطاق.</li>
+                <li data-i18n-html="content.list3.1"><strong>زمن الوصول:</strong> تدعم ETL شبه الوقت الفعلي؛ Power Query تتماشى مع نوافذ تحديث مجموعة البيانات المجدولة.</li>
+                <li data-i18n-html="content.list3.2"><strong>الحوكمة:</strong> تركز ETL على توحيد المعايير؛ بينما يركز Power Query على المرونة مع توفير الحوكمة عبر dataflows.</li>
+                <li data-i18n-html="content.list3.3"><strong>إعادة الاستخدام:</strong> تنشئ ETL جداول مشتركة لعدة مستهلكين؛ منطق Power Query غالبًا ما يكون خاصًا بالتقرير ما لم يتم ترقيته إلى dataflows.</li>
+                <li data-i18n-html="content.list3.4"><strong>الفريق والملكية:</strong> ETL مملوكة لفريق هندسة البيانات؛ Power Query يمكّن المحللين.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h4">متى تستخدم ETL لمتجرك الإلكتروني</h2>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list4.0">عند دمج <strong>مصادر متعددة</strong> (Shopify API، إعلانات Meta، Google Analytics، قاعدة بيانات SQL) مع عمليات ربط معقدة.</li>
+                <li data-i18n-html="content.list4.1">عندما يكون حجم البيانات <strong>كبيرًا</strong> (عشرات الملايين من الصفوف أو أكثر) أو يحتاج إلى تحديث <strong>متكرر</strong> لتتبع المخزون.</li>
+                <li data-i18n-html="content.list4.2">عندما تحتاج إلى <strong>حوكمة على مستوى المؤسسة</strong>: تتبع المصدر، التدقيق، إخفاء البيانات الشخصية، واتفاقيات مستوى الخدمة.</li>
+                <li data-i18n-html="content.list4.3">عندما يجب أن تخدم المخرجات <strong>أدوات متعددة</strong> (Power BI، تعلم الآلة، ETL العكسي لمنصتك التسويقية).</li>
+                <li data-i18n-html="content.list4.4">عندما تريد <strong>صيانة طويلة الأمد</strong> مع كود مُصَدَّر واختبارات.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h5">متى تستخدم Power Query</h2>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list5.0">عند التعامل مع <strong>مصدر واحد</strong> مثل تقرير مبيعات شهري من WooCommerce بأحجام متواضعة.</li>
+                <li data-i18n-html="content.list5.1">عندما تحتاج إلى <strong>تكرار سريع</strong> في تحليل الحملات التسويقية أو تجارب سريعة.</li>
+                <li data-i18n-html="content.list5.2">عندما تكون التحويلات <strong>خاصة بتقرير معين</strong>, مثل إنشاء علامة سريعة لعرض ترويجي معين.</li>
+                <li data-i18n-html="content.list5.3">عندما تخطط <strong>لترقية المنطق القابل لإعادة الاستخدام</strong> عبر <em>Dataflows</em> بعد استقرار الأنماط.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h6">البنية الهجينة (الاستراتيجية الرابحة للتجارة الإلكترونية)</h2>
+            <p data-i18n-html="content.p5">معظم الفِرَق الناضجة تدفع العمليات الثقيلة (مثل معالجة ملايين الطلبات) إلى ETL/ELT وتحتفظ باللمسات الأخيرة (مثل حساب نسبة كفاءة التسويق) في Power Query من أجل المرونة.</p>
+            <ol class="mb-4">
+                <li data-i18n-html="content.list6.0"><strong>التجهيز والتوحيد:</strong> جهّز بيانات Shopify/الإعلانات الأولية في بحيرة/مستودع البيانات. طبق التنظيف الأساسي والنماذج النجمية عبر ETL.</li>
+                <li data-i18n-html="content.list6.1"><strong>نشر منتجات البيانات:</strong> اعرض الجداول المُنظَّمة للاستهلاك الواسع (تحليلات، تعلم الآلة، تطبيقات).</li>
+                <li data-i18n-html="content.list6.2"><strong>التشكيل في Power Query:</strong> أضف منطقًا خفيفًا خاصًا بالتقرير (أعلام، عمليات دمج صغيرة، قواعد KPI).</li>
+                <li data-i18n-html="content.list6.3"><strong>تحسين التحديث:</strong> استخدم التحديث التزايدي؛ ادفع عمليات الربط الثقيلة إلى المصدر؛ خزّن فقط ما يحتاجه التقرير.</li>
+            </ol>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h7">نصائح للأداء والحوكمة</h2>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list7.0"><strong>فضّل الطي (Folding):</strong> تجنب أنماط M التي تمنع دفع العمل إلى قاعدة بيانات المصدر.</li>
+                <li data-i18n-html="content.list7.1"><strong>صمم نماذج نجمية:</strong> تتفوق الأبعاد + جداول الحقائق على الجداول الفردية الواسعة في الحجم وأداء DAX.</li>
+                <li data-i18n-html="content.list7.2"><strong>حدد أنواع البيانات:</strong> تحديد أنواع البيانات بدقة في وقت مبكر يحسن طي الاستعلام والضغط.</li>
+                <li data-i18n-html="content.list7.3"><strong>قسّم بذكاء:</strong> استخدم التحديث التزايدي مع مفاتيح تاريخ مفيدة.</li>
+                <li data-i18n-html="content.list7.4"><strong>مركزية إعادة الاستخدام:</strong> قم بترقية المنطق المشترك إلى <em>Dataflows</em> أو ETL حتى ترث التقارير المتعددة التحسينات.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h8">مصفوفة قرار سريعة للتجارة الإلكترونية</h2>
+            <p data-i18n-html="content.p6">استخدم هذه القواعد الإرشادية لتحديد مكان تنفيذ التحويل:</p>
+            <ul class="mb-4">
+                <li data-i18n-html="content.list8.0"><strong>ملف Shopify مُصدَّر واحد (أقل من 5 ملايين صف):</strong> Power Query عادة ما يكون كافيًا.</li>
+                <li data-i18n-html="content.list8.1"><strong>Shopify + إعلانات + ERP:</strong> فضّل استخدام ETL.</li>
+                <li data-i18n-html="content.list8.2"><strong>تتبع المخزون في الوقت الفعلي تقريبًا:</strong> ETL/ELT؛ فكر في Direct Lake.</li>
+                <li data-i18n-html="content.list8.3"><strong>منطق يُعاد استخدامه عبر تقارير كثيرة:</strong> اجعله مركزيًا في ETL أو Dataflows.</li>
+                <li data-i18n-html="content.list8.4"><strong>متطلبات تسويق متطورة:</strong> ابدأ في Power Query، ثم قم بالترحيل إلى ETL.</li>
+            </ul>
+
+            <h2 class="mt-5 mb-3" data-i18n="content.h9">الخلاصة</h2>
+            <p data-i18n-html="content.p7">لا توجد منافسة، بل 'الملاءمة للغرض'. استخدم ETL للتوسع والحوكمة؛ واستخدم Power Query للسرعة. امزج بينهما لتحقيق أقصى قيمة لمتجرك.</p>
+            <p data-i18n-html="content.p8"><strong>هل تحتاج إلى مساعدة في تصميم بنية البيانات المناسبة لعملك في التجارة الإلكترونية؟</strong> احجز مكالمة وضوح بيانات مجانية وغير مُلزِمة وسنرسم لك الطريق من البيانات الأولية إلى رؤى موثوقة.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">استكشف المزيد من النماذج</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">شاهد كيف نحل التحديات عبر مختلف القطاعات.</p>
+                <div class="cta-actions">
+                  <a href="/ar/portfolio.html" class="btn btn-accent"><i class="bi bi-arrow-right-circle me-2"></i><span data-i18n="exploreMore.button">عرض كل النماذج</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.</p>
+                <div class="cta-actions">
+                  <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
+                </div>
+              </div>
+            </div>
+
+        </div>
+        </div>
+    </div>
+    </main>
+  
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/article-etl-vs-power-query.min.js" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+
+
+</body></html>

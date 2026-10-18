@@ -126,6 +126,10 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   };
   const AR = /[؀-ۿ]/;
   const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html')) : [];
+  // every public page has its copy: the pages outside the sitemap are exactly the ones lang-manager's hasArCopy() leaves
+  // English (404.html, a -lab page), so the links it rewrites at run time go to copies that exist
+  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$/.test(p)).sort();
+  ok(JSON.stringify(want) === JSON.stringify([...PAIRS].sort()), `the pages with an Arabic copy (the sitemap) must be every page but 404.html and -lab pages: missing ${want.filter((p) => !PAIRS.includes(p)).join(', ') || '-'}, extra ${PAIRS.filter((p) => !want.includes(p)).join(', ') || '-'}`);
   for (const f of onDisk) ok(PAIRS.map(arFile).includes(f), `${f}: an Arabic copy with no English page in scripts/ar-pages.mjs PAIRS`);
   for (const en of PAIRS) {
     const ar = arFile(en);

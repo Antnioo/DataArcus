@@ -1,4 +1,4 @@
-// The Arabic pages at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2; step 1, the pilot). Each English page in PAIRS
+// The Arabic pages at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2; step 1 the pilot, step 2 every page). Each English page in PAIRS
 // gets a copy at ar/<the same path>: real Arabic HTML on its own address, so search engines index the Arabic page.
 // The copy is made by the same code visitors run: the browser opens the page at ?lang=ar on the local server, and
 // lang-manager.js translates the page's own HTML with the translations it loaded (the page as written, not the page
@@ -20,10 +20,11 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const SITE = 'https://dataarcus.com/';
 
-// The pilot: the tools hub and the four tools whose scripts load nothing by a page-relative address. The Health Check,
-// the Theme Generator, the Licensing Calculator and the two exams load files from '../assets/...' in their scripts
-// (a worker, a sample, the builder, the prices, the outline), which from /ar/tools/ would be /ar/assets/: step 2.
-export const PAIRS = ['tools/index.html', 'tools/dax-calendar-table-generator.html', 'tools/dax-measure-builder.html', 'tools/svg-kpi-designer.html'];
+// Every page in the sitemap (step 2): its English pages, in the sitemap's order. Pages outside the sitemap (404.html, the
+// Theme Generator lab, the go/ short links) stay English only; lang-manager's hasArCopy() says the same at run time
+// (test-site-config.mjs checks the two agree).
+export const PAIRS = [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dataarcus\.com\/([^<]*)<\/loc>/g)]
+  .map((m) => m[1]).filter((p) => !p.startsWith('ar/')).map((p) => (!p || p.endsWith('/') ? p + 'index.html' : p));
 
 export const arFile = (file) => 'ar/' + file;
 // a page file's address ("tools/index.html" -> https://dataarcus.com/tools/), and back
@@ -45,14 +46,14 @@ export function withAlternates(html, enFile) {
 
 // The sitemap with the pairs: the xhtml namespace; on each pair's two <url> entries the three alternates (after the
 // entry's own lines, so sitemap-lastmod.mjs still finds <loc> then <lastmod>); the Arabic entry right after the English
-// one, with the English entry's lines, except its own lastmod once it has one (sitemap-lastmod.mjs keeps that)
+// one, with the English entry's lines, lastmod included (the copy is the page and its translations, the same files
+// whose last change the English date is; sitemap-lastmod.mjs dates an /ar/ entry by its English page too)
 export function sitemapWithPairs(xml) {
   const ns = 'xmlns:xhtml="http://www.w3.org/1999/xhtml"';
   let out = xml.includes(ns) ? xml : xml.replace(/<urlset xmlns="([^"]+)"/, `<urlset xmlns="$1" ${ns}`);
   const blocks = [...out.matchAll(/([ \t]*)<url>[\s\S]*?<\/url>\r?\n/g)];
   const locOf = (b) => (b.match(/<loc>([^<]+)<\/loc>/) || [])[1];
   const pairOf = new Map(PAIRS.flatMap((f) => [[urlOf(f), f], [urlOf(arFile(f)), f]]));
-  const arLastmod = new Map(blocks.filter((b) => locOf(b[0]).startsWith(SITE + 'ar/')).map((b) => [locOf(b[0]), (b[0].match(/<lastmod>([^<]+)<\/lastmod>/) || [])[1]]));
   const clean = (b) => b.replace(/^[ \t]*<xhtml:link [^\n]*\n/gm, '');
   const withLinks = (b, ind, f) => b.replace(/([ \t]*)<\/url>/, (all, end) => alternates(f).map(([l, u]) => `${ind}  <xhtml:link rel="alternate" hreflang="${l}" href="${u}"/>\n`).join('') + all);
   let res = '', at = 0;
@@ -63,10 +64,7 @@ export function sitemapWithPairs(xml) {
     const f = pairOf.get(loc), own = clean(b[0]);
     if (!f) { res += own; continue; }
     res += withLinks(own, b[1], f);
-    const ar = urlOf(arFile(f)), last = arLastmod.get(ar);
-    let copy = own.replace(`<loc>${loc}</loc>`, `<loc>${ar}</loc>`);
-    if (last) copy = copy.replace(/<lastmod>[^<]+<\/lastmod>/, `<lastmod>${last}</lastmod>`);
-    res += withLinks(copy, b[1], f);
+    res += withLinks(own.replace(`<loc>${loc}</loc>`, `<loc>${urlOf(arFile(f))}</loc>`), b[1], f);
   }
   return res + out.slice(at);
 }
@@ -83,7 +81,7 @@ export async function render(browser, url, enFile) {
       const src = await (await fetch('/' + enFile, { cache: 'no-store' })).text();
       const doc = new DOMParser().parseFromString(src, 'text/html'), lm = window.langManager;
       if (!lm || lm.currentLang !== 'ar') throw new Error('the page did not open in Arabic');
-      lm.applyLanguage(doc);
+      lm.applyLanguage(doc, true);
       const root = doc.documentElement, head = doc.head, own = alt[1][1];
       root.setAttribute('lang', 'ar'); root.setAttribute('dir', 'rtl'); doc.body.classList.add('rtl');
       const set = (sel, attr, val) => { const e = doc.querySelector(sel); if (e) e.setAttribute(attr, val); };
@@ -135,12 +133,14 @@ async function loads(browser, url, file) {
     await v.pg.goto(`${url}/${file}`, { waitUntil: 'networkidle' });
     await ready(v.pg);
     const r = await v.pg.evaluate(() => ({ lang: document.documentElement.lang, dir: document.documentElement.dir,
-      links: [...new Set([...document.querySelectorAll('a[href]')].map((a) => new URL(a.getAttribute('href'), location.href)).filter((u) => u.origin === location.origin).map((u) => u.pathname))] }));
+      links: [...new Set([...document.querySelectorAll('a[href]:not([hreflang="en"])')].map((a) => new URL(a.getAttribute('href'), location.href)).filter((u) => u.origin === location.origin).map((u) => u.pathname))] }));
     const problems = [];
     if (r.lang !== 'ar' || r.dir !== 'rtl') problems.push(`${file}: opens as ${r.lang}/${r.dir} for a visitor who saved English`);
     if (missing.length) problems.push(`${file}: the site has no ${[...new Set(missing)].join(', ')}`);
     const broken = r.links.filter((p) => !fs.existsSync(path.join(ROOT, fileOf(p))));
     if (broken.length) problems.push(`${file}: links to missing pages ${broken.join(', ')}`);
+    const english = r.links.filter((p) => PAIRS.includes(fileOf(p)));
+    if (english.length) problems.push(`${file}: links to the English page where an Arabic copy exists: ${english.join(', ')}`);
     if (v.errs.length) problems.push(`${file}: ${v.errs.slice(0, 3).join(' | ')}`);
     return problems;
   } finally { await v.ctx.close(); }
