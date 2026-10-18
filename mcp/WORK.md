@@ -1,8 +1,33 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "rc.22" just below (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-145" just below (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
+The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
+lowered, no path filters, actions SHA-pinned, the scan job untouched, no GitHub setting to change.
+- `mcp/test.mjs`: every block is a part (`if (part('id'))`, 54 parts, not re-indented so blame stays readable; five
+  helpers hoisted above the parts: tryCall, E, page, readReport, boundFields). `DA_SHARD=k/4` runs `SHARDS[k-1]` on
+  its own server and ROOT; `0/4` runs none (SKIP line); unset = everything as before. Guards (hard failures, not
+  counted as checks, so the count is unchanged): every part in exactly one shard; `TOGETHER` groups (parts that read
+  what an earlier part wrote: found by running shards alone) in one shard; no check outside a part of the running
+  shard. G-13 (every created report validates) runs in each shard over its own reports and prints `G13  n reports`;
+  `scripts/ci-sum.mjs` counts it once (sum of reports > 50, 0 errors): same reports as unsharded.
+- `scripts/tests/run-all.mjs --shard k/3` (SHARDS there, same guard). `scripts/ci-sum.mjs mcp|website <logs>`: every
+  shard/suite/script exactly once, all PASS, checks per script and total.
+- `.github/workflows/tests.yml`: website-checks (the 6 scripts) + website-suites x3 -> `website`; mcp-parts x5 (0-4) ->
+  `mcp`; mcp-windows-parts x5 -> `mcp-windows`. Each final job keeps the required name, needs its shards, fails
+  unless all succeeded, then runs ci-sum. Logs pass through upload/download-artifact (SHA-pinned v7.0.2 / v8.0.2).
+- Measured locally (Linux, 4 cores): unsharded test.mjs 1569 checks, 756 s; 4 shards in parallel 32 + 584 + 620 + 332
+  + G-13 = 1569, 249 reports, 222 s; shard 0 (npm test's other scripts) 132 s: release-text 4, v029c 36, d 21, e 21,
+  f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports), rc22 26.
+- Expected in CI (written before the run): mcp total 10155 (= the unsharded numbers above), website 19 suites with the
+  check counts main 5c0ad21 printed (site 316, anchors 76, tools 341, model-health 194, spacing 533, components 526,
+  consent 38, lang-switcher 684, theme-generator 894, -lab 894, pbip 85, dax 51, layout 512, layout-lab 512, svg-kpi
+  854, tmdl-model 70, design-engine 598, gulf-calendar 814, text-align 426 = 8619). Before (main 5c0ad21): website
+  12:23, mcp 10:41, mcp-windows ~14+ min.
+- Next: CI green on the PR, before/after wall times in the PR, the reviewer reviews, the owner merges.
 
 ## rc.22: fixes from the owner's rc.21 Desktop test (18 Oct, cloud builder; branch `fix/0.2.9-rc22` from main `cd6f1b6`; PR to main, not merged)
 The owner's go ("go rc.22", 18 Oct; top priority before more 0.3.0 work). His Desktop test of rc.21 passed the approval
