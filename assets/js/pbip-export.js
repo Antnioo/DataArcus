@@ -9,6 +9,8 @@
   // the writer's modules (0.2.9, audit 3's A3-12): in Node required here, in the browser loaded before this file
   const Query = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Sizing = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const Engine = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
+  // (0.3, J7: Power BI's accessibility basics on every report written: report-a11y.js, loaded before this file on the website)
+  const A11y = (typeof module !== 'undefined' && module.exports ? require('./report-a11y.js') : root.DAA11y);
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
@@ -318,6 +320,11 @@
   /** @param {BuildInput} o @returns {BuildResult} */
   function build(o) {
     checkBuild(o);
+    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
+    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
+    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
+    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
+    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
     const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
     const W = o.texts || {};
     // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
@@ -487,7 +494,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
+    const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
+    return Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
   }
 
 

@@ -59,7 +59,7 @@
     headerGrew: n.headerGrew, tableSmaller: n.tableSmaller, tableWide: n.tableWide, noDataSkipped: n.noDataSkipped, svgSizes: n.svgSizes, noPageButtons: n.noPageButtons, tableColumns: n.tableColumns,
     rowLabels: n.rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped: n.rowLabelSkipped, extRenamed: n.extRenamed, chartColors: r.chartColors, chartAxes: r.chartAxes,
     tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, kindChanges: n.kindChanges, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
-    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts });
+    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts, a11y: r.a11y });
 
   const api = {
     make, result
