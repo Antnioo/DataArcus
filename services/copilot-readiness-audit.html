@@ -134,7 +134,7 @@
         "name": "Do you need access to our data?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. A Power BI template (.pbit) holds the model and the report layout but no data rows. If you prefer, we work in a session on your machine instead."
+          "text": "No. A Power BI template (.pbit) holds the model's definition and the report layout, not the data Power BI loaded. It can still include small tables typed in with Enter data and values written in DAX (DATATABLE); remove any you would rather keep before you send it, or we work in a session on your machine instead."
         }
       },
       {
@@ -236,7 +236,7 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h4">Scope and timeline</h2>
               <ul>
                 <li data-i18n-html="content.scope1">One semantic model per audit.</li>
-                <li data-i18n-html="content.scope2">You send a Power BI template (.pbit: the model without any data rows), or we work in a session on your machine. Your data never leaves your machine.</li>
+                <li data-i18n-html="content.scope2">You send a Power BI template (.pbit: the model's definition, not the data Power BI loaded; small tables typed in with Enter data or written in DAX with DATATABLE stay in it), or we work in a session on your machine. The data Power BI loaded never leaves your machine.</li>
                 <li data-i18n-html="content.scope3">Nothing in your model changes without your approval.</li>
                 <li data-i18n-html="content.scope4">The report in English or Arabic. Any Arabic text for your model is supplied or approved by you.</li>
                 <li data-i18n-html="content.scope5">The written report within 5 business days of receiving the model.</li>
@@ -252,7 +252,7 @@
               <p data-i18n-html="content.p6">Export a .pbit from Power BI Desktop (File > Export > Power BI template) and drop it on the <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>. It runs in your browser and nothing is uploaded. If the findings look familiar, the audit is the next step.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h7">Questions</h2>
               <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">Do you need access to our data?</h3>
-              <p data-i18n-html="content.a1">No. A Power BI template (.pbit) holds the model and the report layout but no data rows. If you prefer, we work in a session on your machine instead.</p>
+              <p data-i18n-html="content.a1">No. A Power BI template (.pbit) holds the model's definition and the report layout, not the data Power BI loaded. It can still include small tables typed in with Enter data and values written in DAX (DATATABLE); remove any you would rather keep before you send it, or we work in a session on your machine instead.</p>
               <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">Do we need Copilot switched on for the audit?</h3>
               <p data-i18n-html="content.a2">No. The audit checks the semantic model itself. Copilot needs a paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher); our <a href='../articles/article-power-bi-licensing-guide.html' class='text-accent'>licensing guide</a> explains the options.</p>
               <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">Can the report be in Arabic?</h3>
@@ -336,7 +336,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/copilot-audit.min.js" defer></script>
+  <script src="../assets/js/translations/copilot-audit.min.js?v=20261018b155" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261018ar3" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

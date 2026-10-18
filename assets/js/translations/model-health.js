@@ -11,7 +11,7 @@ window.modelHealthTranslations = {
       "faq": {
         "title": "Questions",
         "q1": "Is my file uploaded anywhere?",
-        "a1": "No. The file is opened and checked inside your browser tab. Nothing is sent to DataArcus or anyone else, and closing the tab clears it. A .pbit also contains no data rows, only the model structure and report layout.",
+        "a1": "No. The file is opened and checked inside your browser tab. Nothing is sent to DataArcus or anyone else, and closing the tab clears it. A .pbit holds the model's definition and report layout, not the data Power BI loaded. The definition can still include small tables typed in with Enter data (stored compressed in the Power Query text) and values written in DAX (DATATABLE). The check never unpacks the Enter data tables; DAX is shown as written, only to you.",
         "q2": "Why a .pbit and not a .pbix?",
         "a2": "A .pbix stores your data in a compressed format only Power BI can read. A .pbit has the same model and report without the data, so it is small even for very large models and safe to check. In Power BI Desktop: File > Export > Power BI template.",
         "q3": "How is \"unused\" decided?",
@@ -32,7 +32,7 @@ window.modelHealthTranslations = {
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "هل يتم رفع ملفي إلى أي مكان؟",
-        "a1": "لا. يتم فتح الملف وفحصه داخل صفحة المتصفح فقط، ولا يُرسل إلى DataArcus أو أي جهة أخرى، وإغلاق الصفحة يمسحه. كما أن ملف .pbit لا يحتوي أي صفوف بيانات، فقط هيكل النموذج وتصميم التقرير.",
+        "a1": "لا. يتم فتح الملف وفحصه داخل صفحة المتصفح فقط، ولا يُرسل إلى DataArcus أو أي جهة أخرى، وإغلاق الصفحة يمسحه. ملف ‎.pbit يحمل تعريف النموذج وتصميم التقرير، لا البيانات التي حمّلها Power BI. لكن التعريف قد يضم جداول صغيرة كُتبت يدويًا عبر Enter data (مضغوطة داخل نص Power Query) وقيمًا مكتوبة في DAX ‏(DATATABLE). الفحص لا يفك ضغط جداول Enter data أبدًا، ويُعرض كود DAX كما هو، ولك وحدك.",
         "q2": "لماذا .pbit وليس .pbix؟",
         "a2": "ملف pbix يخزن بياناتك بصيغة مضغوطة لا يقرأها إلا Power BI. أما pbit فيحتوي نفس النموذج والتقرير بدون البيانات، فيكون صغيرًا حتى للنماذج الضخمة وآمنًا للفحص. في Power BI Desktop اختر File > Export > Power BI template.",
         "q3": "كيف يتم تحديد \"غير المستخدم\"؟",
