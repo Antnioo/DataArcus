@@ -18,6 +18,17 @@ The owner's go (18 Oct, through the reviewer). From an outside audit of 0.2.9 (e
   copy), calendar, twin (its model through definition.pbir; checked in writeTwin, one small change, rc.24 touches the file).
 - Test first: `mcp/test-approval-hardening.mjs` (22 checks, in npm test): **18 red on main**. Expected after: 22 pass;
   every other count of npm test unchanged.
+- **Done (`d902fc6`):** as planned. Full `npm test` (Linux): all PASS, counts unchanged (release-text 4, test.mjs 1569,
+  v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51) + approval-hardening 22.
+  No website file touched. Shared files touched: lib/read-report.mjs, lib/model.mjs, lib/plans.mjs, server.mjs (8 call
+  sites: modelKey -> modelRef), lib/arabic-twin.mjs (5 lines), lib/native-copy.mjs, PRIVACY.md, README.md.
+- Decisions made: the allowlist by place in the folder (Microsoft's report-folder doc), .pbi/localSettings.json left out
+  (user-local, Git ignores it); the print is computed from the bytes loadModel already reads (no second read); a write
+  that passes no print to a plan that pinned one is refused (fails closed); the twin checks the model in writeTwin from
+  the plan's data (as its source report). Seen, not in scope: read_report/check_report still walk every file name (they
+  read only known JSON paths); the model's report files are not in the model's print (a report edited after the go
+  is not a model change).
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 reaches testers.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
