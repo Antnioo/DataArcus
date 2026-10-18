@@ -4,6 +4,22 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Health Check 3: precision fixes and "Please confirm" (18 Oct, cloud builder; branch `hc3/precision-and-confirm` from main `6d88fe4`; one PR, not merged)
+The owner's go (18 Oct). One engine (`assets/js/model-health-engine.js`), used by the website and the MCP.
+- **Part A (scored rules, each with a red/green test, `scripts/tests/model-health.mjs` "Health Check 3"):** PCT_FORMAT no
+  longer triggers on "ratio" and skips counts (a count root or "count" in the name); DIVISION counts a VAR bound to a
+  nonzero number as a constant; DOUBLE leaves Latitude/Longitude columns alone (Microsoft: map coordinates must be
+  Decimal Number); NO_FORMAT sees text through FIRSTNONBLANK/LASTNONBLANK (and their VALUE forms) and MINX/MAXX over a
+  text column, IF branches included.
+- **Part B:** `analyze()` returns `confirm` (questions, never findings, never in the score): duplicateAggregate,
+  wrongColumn, wrongRelationshipKey (generic-id gate), totalFilter, shiftedCurrentDate; evidence an exact piece of the
+  DAX, or the relationship's columns. Website: "Please confirm" below the findings (EN/AR, dismissible for the session,
+  CSV/HTML/Markdown list them as questions). MCP: `pleaseConfirm` (the question and the object; the DAX piece is not
+  returned, PRIVACY.md section 3).
+- **Holdout:** 11 repo fixtures and 18 Microsoft sample models (TMDL, model.bim, .pbit): 0 questions; scored rules
+  unchanged except DOUBLE -2 (one model's Latitude/Longitude). The published COVID-19 sample score stays 85.
+- **Next:** the reviewer reviews the PR; the owner checks the Arabic texts and the section at phone width.
+
 ## Health Check 2, phase 1 "trust" (15 Oct, cloud builder; website engine only; branch `fix/health-check-p1` from main `33ea82d`; not merged, no PR)
 The owner's go (15 Oct): steps 1a, 1b, 1c only; Phase 2 not started. Out of scope: `assets/js/model-health-tmdl.js` and
 everything in `mcp/` (the 0.2.9 release gate changes them; the MCP takes this engine change after 0.2.9 ships).

@@ -37,6 +37,22 @@ const planLayout = { sections: [{ name: 's1', displayName: 'Page 1', filters: '[
   Select: [{ Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: 'Total' } }, { Column: { Expression: { SourceRef: { Source: 'c' } }, Property: 'Month Year' } },
     { Column: { Expression: { SourceRef: { Source: 'c' } }, Property: 'Month Name' } }] } } }), filters: '[]' }] }], config: '{}' };
 
+// the model inside a .pbit (stored and deflate entries; Power BI writes it as UTF-16LE), as JSON text
+function readPbitModel(buf) {
+  let e = buf.length - 22; while (e >= 0 && buf.readUInt32LE(e) !== 0x06054b50) e--;
+  let p = buf.readUInt32LE(e + 16);
+  for (let n = buf.readUInt16LE(e + 10); n > 0; n--) {
+    const method = buf.readUInt16LE(p + 10), size = buf.readUInt32LE(p + 20), nlen = buf.readUInt16LE(p + 28), lho = buf.readUInt32LE(p + 42);
+    if (buf.toString('utf8', p + 46, p + 46 + nlen) === 'DataModelSchema') {
+      const start = lho + 30 + buf.readUInt16LE(lho + 26) + buf.readUInt16LE(lho + 28), raw = buf.subarray(start, start + size), u8 = method === 8 ? zlib.inflateRawSync(raw) : raw;
+      const b = Buffer.from(u8), bom = b[0] === 0xff && b[1] === 0xfe;
+      return bom || (b.length > 1 && b[1] === 0) ? b.subarray(bom ? 2 : 0).toString('utf16le') : b.toString('utf8').replace(/^\uFEFF/, '');
+    }
+    p += 46 + nlen + buf.readUInt16LE(p + 30) + buf.readUInt16LE(p + 32);
+  }
+  throw new Error('no DataModelSchema');
+}
+
 // A small stored .pbit (UTF-16 files, like Power BI writes them)
 function pbit(files) {
   const parts = [], dir = []; let off = 0;
@@ -395,6 +411,104 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // ---- Health Check 3 (18 Oct 2026), part A: four scored rules made precise, each with a case that stays flagged ----
+  {
+    const col = (n, ty, x) => Object.assign({ name: n, dataType: ty || 'int64', sourceColumn: n }, x || {});
+    const ms = (name, expression, x) => Object.assign({ name, expression }, x || {});
+    const items = (r, id) => ((r.findings.find((f) => f.id === id) || {}).items || []).map((i) => i.obj).sort();
+    const model = (cols, measures, extra) => ({ model: Object.assign({ tables: [{ name: 'Sales', columns: cols, partitions: mpart('Sales'), measures },
+      { name: 'Product', columns: [col('Name', 'string'), col('Key')], partitions: mpart('Product') }] }, extra || {}) });
+    const base = [col('Amount', 'decimal'), col('Cost', 'decimal'), col('Qty')];
+
+    // A1. PCT_FORMAT: a ratio formatted 0.00 is a multiple (Current Ratio, Quick Ratio), and a count is a whole number
+    //     however it is named; a percentage-like measure formatted 0.00 stays flagged
+    {
+      const r = E.analyze(model(base, [ms('Current Ratio', 'DIVIDE(SUM(Sales[Amount]), SUM(Sales[Cost]))', { formatString: '0.00' }),
+        ms('Quick Ratio', 'DIVIDE(SUM(Sales[Amount]) - SUM(Sales[Qty]), SUM(Sales[Cost]))', { formatString: '0.00' }),
+        ms('Asset Turnover', 'DIVIDE(SUM(Sales[Amount]), SUM(Sales[Cost]))', { formatString: '0.00' }),
+        ms('Rate Count', 'COUNTROWS(Sales)', { formatString: '0' }), ms('Rate Lines', 'DISTINCTCOUNT(Sales[Qty])', { formatString: '#,0' }),
+        ms('Share of Orders Count', 'DIVIDE(SUM(Sales[Qty]), 2)', { formatString: '0' }),
+        ms('Margin %', 'DIVIDE(SUM(Sales[Amount]) - SUM(Sales[Cost]), SUM(Sales[Amount]))', { formatString: '0.00' }),
+        ms('Return Rate', 'DIVIDE(SUM(Sales[Qty]), SUM(Sales[Amount]))', { formatString: '0.00' })]), null);
+      check(JSON.stringify(items(r, 'PCT_FORMAT')) === '["[Margin %]","[Return Rate]"]', `HC3 A1, PCT_FORMAT: flags ${JSON.stringify(items(r, 'PCT_FORMAT'))}, expected only [Margin %] and [Return Rate]`);
+    }
+
+    // A2. DIVISION: a divisor that is a VAR bound to a nonzero number is a constant; a VAR bound to a measure, or to 0, is not
+    {
+      const r = E.analyze(model(base, [ms('Minutes', 'VAR _TotalTicks = 60\nRETURN SUM(Sales[Qty]) / _TotalTicks', { formatString: '0' }),
+        ms('Thousands', 'VAR k = 1e3 VAR n = SUM(Sales[Amount]) RETURN n / k', { formatString: '0' }),
+        ms('Per Unit', 'VAR d = SUM(Sales[Qty])\nRETURN SUM(Sales[Amount]) / d', { formatString: '0' }),
+        ms('By Zero', 'VAR z = 0 RETURN SUM(Sales[Amount]) / z', { formatString: '0' })]), null);
+      check(JSON.stringify(items(r, 'DIVISION')) === '["[By Zero]","[Per Unit]"]', `HC3 A2, DIVISION: flags ${JSON.stringify(items(r, 'DIVISION'))}, expected only [By Zero] and [Per Unit]`);
+    }
+
+    // A3. DOUBLE: map coordinates (dataCategory Latitude / Longitude) need a decimal type; other doubles stay flagged
+    {
+      const r = E.analyze(model(base.concat([col('Lat', 'double', { dataCategory: 'Latitude' }), col('Lon', 'double', { dataCategory: 'Longitude' }), col('Weight', 'double')]), []), null);
+      check(JSON.stringify(items(r, 'DOUBLE')) === '["Sales[Weight]"]', `HC3 A3, DOUBLE: flags ${JSON.stringify(items(r, 'DOUBLE'))}, expected only Sales[Weight]`);
+    }
+
+    // A4. NO_FORMAT: text returned through FIRSTNONBLANK / LASTNONBLANK (and their VALUE forms) or MINX / MAXX over
+    //     ALLSELECTED of a text column, also inside IF branches; the same over a number column stays flagged
+    {
+      const text = { F1: 'FIRSTNONBLANK(Product[Name], 1)', F2: 'LASTNONBLANK(Product[Name], [Total])', F3: 'IF(HASONEVALUE(Product[Name]), FIRSTNONBLANK(Product[Name], 1), "Several")',
+        F4: 'MAXX(ALLSELECTED(Product[Name]), Product[Name])', F5: 'IF([Total] > 0, MINX(ALLSELECTED(Product), Product[Name]), BLANK())', F6: 'LASTNONBLANKVALUE(Product[Key], MAX(Product[Name]))' };
+      const kept = { K1: 'FIRSTNONBLANK(Sales[Amount], 1)', K2: 'MAXX(ALLSELECTED(Sales), Sales[Amount])', K3: 'LASTNONBLANKVALUE(Product[Name], SUM(Sales[Amount]))' };
+      const r = E.analyze(model(base, [ms('Total', 'SUM(Sales[Amount])', { formatString: '#,0' })].concat(Object.entries(Object.assign({}, text, kept)).map(([n, e]) => ms(n, e)))), null);
+      check(JSON.stringify(items(r, 'NO_FORMAT')) === JSON.stringify(Object.keys(kept).map((k) => `[${k}]`).sort()), `HC3 A4, NO_FORMAT on text through FIRSTNONBLANK and ALLSELECTED: flags ${JSON.stringify(items(r, 'NO_FORMAT'))}, expected only ${Object.keys(kept)}`);
+    }
+  }
+
+  // ---- Health Check 3, part B: the "Please confirm" questions. Never a finding, never in the score; the evidence is
+  //      an exact piece of the measure's DAX, or the relationship's own columns ----
+  {
+    const col = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const ms = (name, expression) => ({ name, expression, formatString: '#,0' });
+    const measures = {
+      'Total Sales Overall': 'CALCULATE(SUM(Sales[Amount]), Sales[Category] <> "Test")',
+      'Sales Excl Test': 'CALCULATE(SUM(Sales[Amount]), Sales[Category] <> "Test")',
+      'Total A': 'CALCULATE(SUM(Sales[Amount]), Sales[Category] = "A")',
+      'Units Doubled': 'SUM(Sales[Qty]) + SUM(Sales[Qty])',
+      'Units Mixed': 'SUM(Sales[Qty]) + SUM(Sales[Cases])',
+      'Total Deaths': 'SUM ( Sales[Cases] )',
+      'Total Cases': 'SUM(Sales[Cases])',
+      'Latest Date': 'MAX(Sales[OrderDate]) - 1',
+      'Current Sales': 'CALCULATE(SUM(Sales[Amount]), DATEADD(Sales[OrderDate], -1, DAY))',
+      'Previous Day Sales': 'CALCULATE(SUM(Sales[Amount]), DATEADD(Sales[OrderDate], -1, DAY))',
+      'Latest Order': 'MAX(Sales[OrderDate])'
+    };
+    const m = (names) => ({ model: { tables: [
+      { name: 'Sales', columns: [col('OrderID'), col('CustomerKey'), col('ProductKey'), col('Amount', 'decimal'), col('Qty'), col('Cases'), col('Category', 'string'), col('OrderDate', 'dateTime'), col('RefId')],
+        partitions: mpart('Sales'), measures: names.map((n) => ms(n, measures[n])) },
+      { name: 'Product', columns: [col('ProductKey'), col('Color', 'string')], partitions: mpart('Product') },
+      { name: 'Ref', columns: [col('Id'), col('RefId'), col('Label', 'string')], partitions: mpart('Ref') }],
+    relationships: [{ name: 'p', fromTable: 'Sales', fromColumn: 'CustomerKey', toTable: 'Product', toColumn: 'ProductKey' },
+      { name: 'g', fromTable: 'Sales', fromColumn: 'OrderID', toTable: 'Ref', toColumn: 'Id' }] } });
+    const r = E.analyze(m(Object.keys(measures)), null);
+    const conf = r.confirm || [];
+    const got = conf.map((c) => c.id + ' ' + c.obj).sort();
+    const want = ['duplicateAggregate [Units Doubled]', 'shiftedCurrentDate [Current Sales]', 'shiftedCurrentDate [Latest Date]', 'totalFilter [Total Sales Overall]', 'wrongColumn [Total Deaths]',
+      'wrongRelationshipKey Sales[CustomerKey] → Product[ProductKey]'].sort();
+    check(JSON.stringify(got) === JSON.stringify(want), `HC3 B, the questions: ${JSON.stringify(got)}, expected ${JSON.stringify(want)}`);
+    // the evidence: an exact substring of the measure's DAX (never rewritten), or no DAX for a relationship
+    for (const c of conf) {
+      const expr = measures[String(c.obj).replace(/^\[|\]$/g, '')];
+      if (c.relationship) check(c.evidence === '' && c.relationship.fromColumn === 'CustomerKey' && c.relationship.candidateColumn === 'ProductKey', `HC3 B, ${c.id}: structural evidence only: ${JSON.stringify(c)}`);
+      else check(!!c.evidence && expr.includes(c.evidence), `HC3 B, ${c.id} on ${c.obj}: the evidence "${c.evidence}" is not an exact piece of its DAX`);
+      check(/\?$/.test(c.message.en) && /[؀-ۿ]/.test(c.message.ar) && /؟$/.test(c.message.ar), `HC3 B, ${c.id}: a question in English and Arabic: ${JSON.stringify(c.message)}`);
+    }
+    const dup = conf.find((c) => c.id === 'duplicateAggregate') || {}, tf = conf.find((c) => c.id === 'totalFilter') || {}, wc = conf.find((c) => c.id === 'wrongColumn') || {};
+    check(dup.evidence === 'SUM(Sales[Qty]) + SUM(Sales[Qty])' && tf.evidence === 'Sales[Category] <> "Test"' && wc.evidence === 'SUM ( Sales[Cases] )', `HC3 B, evidence pieces: ${JSON.stringify([dup.evidence, tf.evidence, wc.evidence])}`);
+    // never a finding and never in the score: the same model without the measures that raise questions scores the same
+    const quiet = E.analyze(m(['Sales Excl Test', 'Total A', 'Units Mixed', 'Total Cases', 'Previous Day Sales', 'Latest Order']), null);
+    check(!r.findings.some((f) => conf.some((c) => c.id === f.id)) && ['overall', 'perf', 'maint', 'bp'].every((k) => r.score[k] === E.scoreFrom(r.findings)[k]), 'HC3 B, a question is counted as a finding or in the score');
+    check(JSON.stringify(r.findings.filter((f) => !/^(UNUSED|DUP_MEASURE|NO_DESC|NO_FOLDERS)/.test(f.id)).map((f) => f.id)) === JSON.stringify(quiet.findings.filter((f) => !/^(UNUSED|DUP_MEASURE|NO_DESC|NO_FOLDERS)/.test(f.id)).map((f) => f.id)),
+      `HC3 B, the questions changed the findings: ${r.findings.map((f) => f.id)} vs ${quiet.findings.map((f) => f.id)}`);
+    // a clean Microsoft sample raises no question
+    const covid = E.analyze(JSON.parse(readPbitModel(fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/microsoft/COVID-19 US Tracking Sample.pbit')))), null);
+    check(Array.isArray(covid.confirm) && covid.confirm.length === 0, `HC3 B, questions on Microsoft's COVID-19 sample: ${JSON.stringify(covid.confirm)}`);
+  }
+
   {
     // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
     for (const lang of ['en', 'ar']) {
@@ -487,6 +601,59 @@ export default async function ({ browser, url }) {
       });
       check(out.cards > 10 && !out.bad.length && out.page <= 390, `AUD-037 ${lang} at 390 px: ${out.cards} cards, page ${out.page} px wide, past their card: ${out.bad.slice(0, 4).join('; ')}`);
       if (v.errs.length) problems.push(`AUD-037 ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  {
+    // HC3 part B on the page: "Please confirm" below the findings, in English and Arabic (right to left), each question
+    // with its object and its exact DAX, dismissible for the session, no horizontal scroll at phone width; the CSV and
+    // the documentation list them as questions, not findings
+    const c = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const qModel = { name: 'q', compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Sales', columns: [c('CustomerKey'), c('ProductKey'), c('Amount', 'decimal'), c('Qty'), c('Cases'), c('Category', 'string')], partitions: mpart('Sales'),
+        measures: [{ name: 'Units Doubled', expression: 'SUM(Sales[Qty]) + SUM(Sales[Qty])', formatString: '#,0' },
+          { name: 'Total Sales Excluding Category Placeholder With A Very Long Name', expression: 'CALCULATE(SUM(Sales[Amount]), Sales[Category] <> "Internal transfers between our own regional warehouses")', formatString: '#,0' }] },
+      { name: 'Product', columns: [c('ProductKey'), c('Color', 'string')], partitions: mpart('Product') }],
+    relationships: [{ name: 'p', fromTable: 'Sales', fromColumn: 'CustomerKey', toTable: 'Product', toColumn: 'ProductKey' }] } };
+    const file = pbit({ DataModelSchema: JSON.stringify(qModel), Version: '1.28' });
+    for (const [lang, w] of [['en', 1440], ['ar', 1440], ['en', 390], ['ar', 390]]) {
+      const v = await visitor(browser, { viewport: [w, 900], downloads: true });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.setInputFiles('#mhFile', { name: 'questions.pbit', mimeType: 'application/octet-stream', buffer: file });
+      await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 });
+      const got = await v.pg.evaluate(() => {
+        const sec = document.querySelector('#mhConfirm'), last = [...document.querySelectorAll('#mhTab > *')].pop();
+        return { title: sec ? sec.querySelector('h3').textContent : '', note: sec ? sec.querySelector('.mh-note').textContent : '', afterFindings: last === sec,
+          qs: [...document.querySelectorAll('.mh-q')].map((q) => ({ obj: q.querySelector('code').textContent, text: q.querySelector('p').textContent, dax: (q.querySelector('pre') || {}).textContent || '', bdi: q.querySelectorAll('p bdi').length })),
+          page: document.documentElement.scrollWidth, dir: document.documentElement.dir,
+          over: [...document.querySelectorAll('.mh-q, .mh-q *')].filter((e) => e.getBoundingClientRect().right > document.documentElement.clientWidth + 1).length };
+      });
+      const tag = `HC3 page (${lang}, ${w} px)`;
+      check(got.title.includes(lang === 'en' ? 'Please confirm' : 'يرجى التأكيد') && got.afterFindings && (lang === 'en' ? /don't affect the score/.test(got.note) && /asks about some common calculation mistakes/.test(got.note) : /لا تؤثر في التقييم/.test(got.note)),
+        `${tag}: the section and its note: ${JSON.stringify([got.title, got.note, got.afterFindings])}`);
+      check(got.qs.length === 3 && got.qs.some((q) => q.obj === '[Units Doubled]' && q.dax === 'SUM(Sales[Qty]) + SUM(Sales[Qty])' && (lang === 'en' ? /intentional\?$/.test(q.text) : /؟$/.test(q.text)))
+        && got.qs.some((q) => /CustomerKey/.test(q.obj) && !q.dax && (lang === 'en' || q.bdi > 0)), `${tag}: the questions: ${JSON.stringify(got.qs)}`);
+      check(got.page <= w && !got.over && (lang === 'ar' ? got.dir === 'rtl' : true), `${tag}: ${got.page} px wide, ${got.over} element(s) past the screen, dir ${got.dir}`);
+      if (lang === 'en' && w === 1440) {
+        // dismissed for the session: gone after a reload of the result, back in a new session
+        await v.pg.click('.mh-q[data-q^="duplicateAggregate"] [data-qdismiss]');
+        const left = await v.pg.$$eval('.mh-q', (qs) => qs.length);
+        await v.pg.click('[data-tab=fix]'); await v.pg.click('[data-tab=issues]');
+        const after = await v.pg.$$eval('.mh-q', (qs) => qs.map((q) => q.dataset.q));
+        check(left === 2 && after.length === 2 && !after.some((k) => k.startsWith('duplicateAggregate')), `${tag}: dismiss: ${left} left, then ${JSON.stringify(after)}`);
+        const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#mhCsv')]);
+        const csv = fs.readFileSync(await dl.path(), 'utf8');
+        check(csv.split('\r\n').filter((l) => l.startsWith('"question","Please confirm"')).length === 3 && csv.includes('"SUM(Sales[Qty]) + SUM(Sales[Qty])"'), 'HC3 CSV: the questions as "question" rows');
+        await v.pg.click('[data-tab=docs]');
+        const [dh] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="html"]')]);
+        const html = fs.readFileSync(await dh.path(), 'utf8');
+        const [dm] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="md"]')]);
+        const md = fs.readFileSync(await dm.path(), 'utf8');
+        check(/<h2>Please confirm \(questions, not findings\)<\/h2>/.test(html) && (html.match(/<td>question<\/td>/g) || []).length === 3, 'HC3 HTML documentation: the questions section');
+        check(md.includes('## Please confirm (questions, not findings)') && (md.match(/^\| question \|/gm) || []).length === 3, 'HC3 Markdown documentation: the questions section');
+      }
+      if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }
   }
