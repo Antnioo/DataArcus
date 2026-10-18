@@ -50,12 +50,18 @@ const shownOf = (vis) => { const ps = vis.query.queryState.Values.projections, h
 // only the parts of SHARDS[k-1], in file order, with its own server on its own temporary ROOT, so shards can't touch each
 // other's files. DA_SHARD=0/N runs none (CI's job for npm test's other scripts). Without DA_SHARD every part runs, in
 // order, as before. Every part must be in exactly one shard (checked at the end of every run, sharded or not), and a
-// check made outside a part of the running shard fails the run. Shards balanced by time measured on Linux (18 Oct).
+// check made outside a part of the running shard fails the run. Shards balanced by time measured on Linux (18 Oct,
+// DA_PART_TIMES=1): a part's seconds plus about 2 s for each report it creates before G-13, which validates them all;
+// round10 (69 reports, about 207 s) is a shard alone.
 const SHARDS = [
-  ['basics', 'design-tools', 'design-report', 'quality', 'round3', 'gulf-health', 'round4', 'round5', 'round6', 'round7', 'round8', 'round9', 'gulf-calendar', 'check-report', 'check-report-2', 'round10', 'round10-design', 'round10-choices', 'round11', 'check-report-b', 'pbit-limits', 'model-size', 'round13', 'round12', 'round12b', 'round14', 'round15', 'round16', 'round17'],
-  ['round18', 'round20', 'round21', 'round22', 'round23', 'v029', 'v029b', 'v029i'],
-  ['v029w', 'v029k', 'v029p', 'v029q', 'v029checks', 'v029visuals', 'v029design', 'v029agent', 'audit4'],
-  ['v029sweep', 'twin', 'audit6', 'zgate', 'rgate', 'approval', 'g04'],
+  ['round10'],
+  ['basics', 'design-report', 'quality', 'round3', 'gulf-health', 'round4', 'round6', 'round8', 'round9', 'round11',
+   'pbit-limits', 'model-size', 'v029', 'v029b', 'v029checks', 'v029design', 'v029sweep', 'audit6'],
+  ['round5', 'round7', 'check-report', 'check-report-2', 'round10-design', 'check-report-b', 'round13', 'round12b',
+   'round16', 'round18', 'round22', 'v029i', 'v029w', 'v029k', 'v029p', 'v029q', 'v029agent', 'twin', 'rgate',
+   'approval', 'g04'],
+  ['design-tools', 'gulf-calendar', 'round10-choices', 'round12', 'round14', 'round15', 'round17', 'round20',
+   'round21', 'round23', 'v029visuals', 'audit4', 'zgate'],
 ];
 const SHARD = (() => {
   const v = process.env.DA_SHARD, m = /^(\d+)\/(\d+)$/.exec(v || '');
@@ -63,9 +69,15 @@ const SHARD = (() => {
   if (!m || +m[2] !== SHARDS.length || +m[1] > SHARDS.length) { console.error(`DA_SHARD must be k/${SHARDS.length}, k from 0 to ${SHARDS.length}: ${v}`); process.exit(2); }
   return { k: +m[1], n: +m[2] };
 })();
+// Parts that read what an earlier part wrote in ROOT, so they must share a shard (found by running each shard alone):
+// round4 compares read_model's answers on the fixtures with the reports the parts before it created there, and round6
+// reads round4's 'plain' model; gulf-health reads basics' sort.bim; round9 reads round8's filter-project; the other
+// check_report parts, round16 and g04 use check-report's cr-project (its reports, its logo.png).
+const TOGETHER = [['basics', 'design-report', 'quality', 'round3', 'gulf-health', 'round4', 'round6'], ['round8', 'round9'], ['check-report', 'check-report-2', 'check-report-b', 'round16', 'g04']];
 {
-  const twice = SHARDS.flat().filter((p, i, all) => all.indexOf(p) !== i);
+  const twice = SHARDS.flat().filter((p, i, all) => all.indexOf(p) !== i), split = TOGETHER.filter((g) => !SHARDS.some((s) => g.every((p) => s.includes(p))));
   if (twice.length) { console.error(`FAIL  mcp  parts in two shards: ${twice.join(', ')}`); process.exit(1); }
+  if (split.length) { console.error(`FAIL  mcp  these parts must share a shard: ${split.map((g) => g.join(', ')).join(' | ')}`); process.exit(1); }
 }
 if (SHARD && SHARD.k === 0) { console.log(`SKIP  mcp  (DA_SHARD=0/${SHARD.n}: shards 1-${SHARD.n} run its parts)`); process.exit(0); }
 const asked = []; let inPart = null;
