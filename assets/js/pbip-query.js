@@ -200,6 +200,7 @@
   // taken for a day or month name. A category's kind: the picker's, where it gives it ({ kind, rows, family }), else
   // read from the name as before: a day name (7 rows), a month name (12; "Month Year" is no month name: it holds a
   // month per year), a quarter without a year in its name (4; "Year Quarter" holds many).
+  const Story = () => (typeof module !== 'undefined' && module.exports ? require('./story-titles.js') : root.DAStoryTitles);
   const Bind = () => { try { return (typeof module !== 'undefined' && module.exports ? require('./pbip-bind.js') : root.DABind) || null; } catch (e) { return null; } };
   const nameLike = (n) => { const b = Bind(); return !!(b && b.nameLike && b.nameLike(n)); };
   const YEARISH = /year|سنة|السنة|عام/i;
@@ -323,19 +324,26 @@
     if (ar !== AR_LETTERS.test(b)) return a;
     return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
   };
-  function bindTitle(kind, B, by) {
+  // 0.3, J4 (B-130, B-131): the title says what the visual answers, from its fields' metadata (story-titles.js): its
+  // measure's time intelligence in words ("Sales PY" -> "Sales last year"), and every shorter form its rules allow, so
+  // the page can pick the first that fits its box (bindStory: the list, the full title first)
+  function bindStory(kind, B, by) {
     const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure;
-    if (kind === 'line' && B.date && B.measure) return byTitle(label(B.measure), by, label(B.date));
-    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return byTitle(label(y), by, label(cat));
-    if ((kind === 'gauge' || kind === 'card') && y) return label(y);
+    const of = (m, c) => Story().variants(m, c, by, shown);
+    if (kind === 'line' && B.date && B.measure) return of(B.measure, B.date);
+    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return of(y, cat);
+    if ((kind === 'gauge' || kind === 'card') && y) return of(y, null);
     // a table or matrix by its content (the owner's design choice 3, 5 Oct 2026): its first measure by its first text
     // column, "Total Sales by Region"; the other columns are named by their headers
     if (kind === 'table' || kind === 'matrix') {
       const fs = (B.table || []).filter(Boolean), m = fs.find(isValue), c = fs.find(isTextField);
-      return m && c ? byTitle(label(m), by, label(c)) : m ? label(m) : null;
+      return m ? of(m, c || null) : null;
     }
     return null;
   }
+  function bindTitle(kind, B, by) { const v = bindStory(kind, B, by); return v ? v[0].text : null; }
+  // a KPI card's title: its measure's name, its time intelligence in words (a display name stays as given)
+  const kpiLabel = (f) => (f ? Story().nameOf(f, shown) : null);
   const PF_KINDS = { boolean: 'boolean', string: 'text', int64: 'whole', double: 'decimal' };
   // one page filter value as Power BI writes it, by the column's type (or, with none, the value's own), or null
   const pfLiteral = (v, type) => {
@@ -457,7 +465,7 @@
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
-    labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, pageFilterOf, measures
+    labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, bindStory, kpiLabel, PF_KINDS, pfLiteral, pageFilterOf, measures
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipQuery = api;
 })(typeof self !== 'undefined' ? self : this);
