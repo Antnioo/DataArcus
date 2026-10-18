@@ -104,7 +104,7 @@ The owner's go (18 Oct: "finish as much R&D as we can"). Website only (the MCP's
   (data, accent, brand box). Panel: logo swatches with shares, the palette, the honest line for an adjusted logo colour,
   a contrast table (visuals, page, 3:1, 4.5:1), the colour-blind line (min CIEDE2000 per vision). EN + AR, hex codes in
   <bdi dir=ltr>.
-- Tests: `scripts/tests/theme-logo.mjs` (753 checks; in run-all, shard 3). Screenshots: scripts/tests/shots/theme-logo-*.png
+- Tests: `scripts/tests/theme-logo.mjs` (753 checks; in run-all, shard 3). Screenshots: branch `shots/theme-logo`
   (capture-theme-logo.mjs).
 - Open: the MCP could expose the same (a `logo` input to generate_theme) after 0.2.9; Desktop proof of a logo theme.
 
