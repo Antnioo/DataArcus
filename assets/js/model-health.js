@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName) {
     if (worker) worker.terminate();
-    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261018h'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261018u'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);

@@ -509,6 +509,58 @@ export default async function ({ browser, url }) {
     check(Array.isArray(covid.confirm) && covid.confirm.length === 0, `HC3 B, questions on Microsoft's COVID-19 sample: ${JSON.stringify(covid.confirm)}`);
   }
 
+  // ---- B-143 (the owner's rc.21 test): a date table or a fact table that no relationship touches is a "Please
+  //      confirm" question, never a finding; tables meant to stand alone are never asked about ----
+  {
+    // the bridge project (Calendar, Customer and Sales, no relationship): Calendar (read only by SAMEPERIODLASTYEAR, which
+    // filters nothing through it) and Sales (its CustomerKey is Customer's key); Customer, a dimension, is not asked about
+    const T = load('tmdl-model.js'), dir = path.join(ROOT, 'scripts/tests/fixtures/bridge-project/Sales.SemanticModel');
+    const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+    const bridge = E.analyze(T.fromFiles(walk(dir).filter((f) => /\.tmdl$/.test(f)).map((f) => ({ path: path.relative(dir, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') }))), null);
+    const q = (r) => (r.confirm || []).filter((c) => c.id === 'unrelatedTable');
+    check(JSON.stringify(q(bridge).map((c) => c.obj + ' ' + c.table.looksLike).sort()) === '["Calendar date","Sales fact"]' && q(bridge).find((c) => c.obj === 'Sales').table.otherTable === 'Customer',
+      `B-143, the bridge project: ${JSON.stringify(q(bridge))}`);
+    for (const c of q(bridge)) check(/\?$/.test(c.message.en) && /[؀-ۿ]/.test(c.message.ar) && /؟$/.test(c.message.ar) && c.evidence === '', `B-143, ${c.obj}: a question in English and Arabic, no DAX: ${JSON.stringify(c)}`);
+    // never a finding and never in the score: the same model with the relationships scores the same, without the questions
+    const col = (n, ty, x) => Object.assign({ name: n, dataType: ty || 'int64', sourceColumn: n }, x || {});
+    const base = (rels, extra) => ({ model: { tables: [
+      { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Calendar') },
+      { name: 'Customer', columns: [col('CustomerKey'), col('City', 'string')], partitions: mpart('Customer') },
+      { name: 'Sales', columns: [col('CustomerKey'), col('OrderDate', 'dateTime'), col('Amount', 'decimal')], partitions: mpart('Sales'),
+        measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])', formatString: '#,0' }] }].concat(extra || []), relationships: rels } });
+    const linked = [{ name: 'c', fromTable: 'Sales', fromColumn: 'CustomerKey', toTable: 'Customer', toColumn: 'CustomerKey' }, { name: 'd', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Calendar', toColumn: 'Date' }];
+    const loose = E.analyze(base([]), null), tied = E.analyze(base(linked), null);
+    check(JSON.stringify(q(loose).map((c) => c.obj).sort()) === '["Calendar","Sales"]' && q(tied).length === 0, `B-143, unrelated vs related: ${JSON.stringify([q(loose).map((c) => c.obj), q(tied).map((c) => c.obj)])}`);
+    check(!loose.findings.some((f) => f.id === 'unrelatedTable') && ['overall', 'perf', 'maint', 'bp'].every((k) => loose.score[k] === E.scoreFrom(loose.findings)[k]) && !E.RULES.unrelatedTable,
+      'B-143: the question is counted as a finding, in the score, or as a rule');
+    // tables meant to stand alone, beside a related model: a measure table, a field parameter, a what-if parameter, a
+    // calculation group, a hidden table, a one-column list, a disconnected date slicer read by MAX, a second log that
+    // shares an operation id with a fact, and a fact whose key is linked in DAX (TREATAS): no question
+    const standAlone = [
+      { name: '_Measures', columns: [col('Column1', 'string', { isHidden: true })], measures: [{ name: 'Avg', expression: 'AVERAGE(Sales[Amount])', formatString: '#,0' }], partitions: mpart('_Measures') },
+      { name: 'Metric', columns: [col('Metric', 'string', { relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Metric Fields' }] } }), col('Metric Fields', 'string', { isHidden: true }), col('Metric Order')],
+        partitions: [{ name: 'p', source: { type: 'calculated', expression: '{ ("Total", NAMEOF([Total]), 0) }' } }] },
+      { name: 'Discount', columns: [col('Discount', 'decimal'), col('Step')], measures: [{ name: 'Discount Value', expression: 'SELECTEDVALUE(Discount[Discount], 0)', formatString: '0%' }],
+        partitions: [{ name: 'p', source: { type: 'calculated', expression: 'GENERATESERIES(0, 0.5, 0.05)' } }] },
+      { name: 'Time Calc', calculationGroup: { calculationItems: [{ name: 'YTD', expression: 'TOTALYTD(SELECTEDMEASURE(), Calendar[Date])' }] }, columns: [col('Name', 'string'), col('Ordinal')], partitions: [{ name: 'p', source: { type: 'calculationGroup' } }] },
+      { name: 'Staging', isHidden: true, columns: [col('CustomerKey'), col('Amount', 'decimal'), col('Note', 'string')], partitions: mpart('Staging') },
+      { name: 'Region List', columns: [col('Region', 'string')], partitions: mpart('Region List') },
+      { name: 'Date Compare', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Date Compare'),
+        measures: [{ name: 'Sales To Date', expression: 'CALCULATE([Total], FILTER(ALL(Sales[OrderDate]), Sales[OrderDate] <= MAX(\'Date Compare\'[Date])))', formatString: '#,0' }] },
+      { name: 'Errors', columns: [col('OperationId'), col('Message', 'string'), col('Code', 'string')], partitions: mpart('Errors') },
+      { name: 'Commits', columns: [col('OperationId'), col('Duration', 'double'), col('Rows')], partitions: mpart('Commits') },
+      { name: 'Budget', columns: [col('CustomerKey'), col('Target', 'decimal'), col('Year')], partitions: mpart('Budget'),
+        measures: [{ name: 'Budget', expression: 'CALCULATE(SUM(Budget[Target]), TREATAS(VALUES(Customer[CustomerKey]), Budget[CustomerKey]))', formatString: '#,0' }] }];
+    const quiet = E.analyze(base(linked, standAlone), null);
+    check(q(quiet).length === 0, `B-143, tables meant to stand alone were asked about: ${JSON.stringify(q(quiet).map((c) => c.obj))}`);
+    // red before green: the same fact without its TREATAS, and the same calendar unread by DAX, are asked about
+    const shown = E.analyze(base(linked, [{ name: 'Budget', columns: [col('CustomerKey'), col('Target', 'decimal'), col('Year')], partitions: mpart('Budget') },
+      { name: 'Date Compare', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Date Compare') }]), null);
+    check(JSON.stringify(q(shown).map((c) => c.obj).sort()) === '["Budget","Date Compare"]', `B-143, a fact and a calendar nothing links: ${JSON.stringify(q(shown).map((c) => c.obj))}`);
+    // one table only: nothing to relate it to
+    check(q(E.analyze({ model: { tables: [{ name: 'Sales', columns: [col('CustomerKey'), col('Amount', 'decimal'), col('OrderDate', 'dateTime')], partitions: mpart('Sales') }] } }, null)).length === 0, 'B-143: a one-table model was asked about');
+  }
+
   {
     // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
     for (const lang of ['en', 'ar']) {
