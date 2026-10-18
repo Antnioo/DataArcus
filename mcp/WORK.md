@@ -20,10 +20,24 @@ based on is unchanged, and the question comes back when it changes. Metadata onl
   file `<model>.dataarcus-answers.json` next to the model (where the fix scripts go) is written ONLY with an approved
   plan that lists it (plan kind scripts, pinned records); read back on every check: answered questions under
   `pleaseConfirm.answered`, not asked again; stale ones named as `answersForgotten`.
-- **Tests red first:** `mcp/test-confirm-memory.mjs` (in npm test; expected 23 checks, all red before the code: the module
-  does not exist) and a block in `scripts/tests/model-health.mjs` (expected +7 checks).
-- Shared files touched: server.mjs (check_model_health only), model-health.js, the Health Check page and its /ar/ copy,
-  mcp/package.json (the test script), PRIVACY.md (the new file).
+- **Tests red first:** `mcp/test-confirm-memory.mjs` (in npm test): 16 run before the code, 15 red (the module did not
+  exist, so its 12 unit checks were not reached); now 28 of 28. `scripts/tests/model-health.mjs` "B-148": crashed red
+  before the page code (no answer button); now model-health 205 checks PASS (+10: 5 checks x EN 1440 / AR 390).
+- **Built:** `assets/js/confirm-memory.js` (+ .min); `mcp/lib/answers.mjs` (read; write = new file by link, or rename
+  over a DataArcus answers file only; anything else at the name is never replaced); check_model_health: `answers`,
+  `forgetAnswers`, items' `answerKey` (16 hex of the signature), `answered`, `answersForgotten`, `answersNotRecorded`,
+  `answersFileProblem`; the plan pins the records without their date. Website: "Yes, intended" / "No, a mistake",
+  "Your earlier answers on this model", "Forget my answers" (every answer in this browser); stale answers dropped
+  when a model is loaded. PRIVACY.md section 4 names the file (the one file DataArcus replaces, its own only).
+- Shared files touched: server.mjs (check_model_health only), model-health.js, the Health Check page and its /ar/ copy
+  (styles, the new script, ?v=20261018b148), mcp/package.json (the test script), PRIVACY.md.
+- **Arabic for the owner:** نعم، مقصود / لا، خطأ / إجاباتك السابقة على هذا النموذج / انسَ إجاباتي / مقصود / خطأ: لم يُصلح بعد /
+  لم يتغير منذ ذلك الحين / تبقى إجاباتك في هذا المتصفح فقط ولا تُرسل إلى أي مكان. يعود السؤال عندما يتغير المقياس أو العلاقة التي يخصها.
+- **Seen, not in scope:** the MCP has no other "confirm" questions with ids (the plan tools' asks, e.g. arabicNames
+  sayFirst, are instructions, not questions): only pleaseConfirm is remembered; the CSV/HTML/Markdown exports still list
+  every question (answers not in them); in the Arabic page the DAX evidence box looked right at 390 px but was not
+  checked character by character for mirrored brackets.
+- **Next:** the reviewer reviews the draft PR; the owner checks the Arabic texts; merges only after 0.2.9 reaches testers.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
