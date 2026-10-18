@@ -27,6 +27,19 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   models (Analysis-Services 4, fabric-samples 1, fabric-toolbox 12, the COVID .pbit; shallow clones, metadata only):
   every non_additive and semi_additive call listed and marked; 0 wrong non_additive is the bar. Full `npm test`
   unchanged; golden numbers unchanged unless this rule fires (none of the golden models has a snapshot name, expected).
+- **Done (cloud builder):** `assets/js/aggregation.js` (classify, guard, whyAr, STACKED), `lib/plan-lint.mjs` (the guard on
+  the built page; `aggregationAnswer`), `server.mjs` plan_layout (`aggregation`; designLint computed before the plan id
+  so a stacked problem can refuse it), PRIVACY.md's plan_layout row. `mcp/test-b146.mjs` 24 checks (red on main: no
+  module), in npm test.
+- **Precision (measured):** `mcp/research/AGGREGATION-HOLDOUT.md` + `aggregation-holdout.tsv` (every call marked) +
+  `aggregation-holdout.mjs`. Microsoft 17 models read (Gateway Monitor.pbit holds no model), 1161 measures: 381
+  non_additive, 10 asked, 14 handled, 756 unknown; repo fixtures 9 models, 1023 measures: 537, 10, 132, 344. 0 wrong.
+  Eight rule fixes on the way (unit conversions, // in texts, % format on arithmetic, text measures, "utilization",
+  inventory catalogues, flows, average+cumulative), none special-cased.
+- **Open (for the owner):** (1) packaging (dataarcus-engine build) must carry `assets/js/aggregation.js` with the
+  engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
+  "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
+  (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
 
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
