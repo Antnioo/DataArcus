@@ -4,15 +4,17 @@
 // in a right-to-left report), titles on, data colours at 3:1 against what they are drawn on, and no information by
 // colour alone where a legend is needed.
 // Two halves, one set of rules:
-//   - the writer's (pbip-export.js): readable(o) steps the report theme's data colours to 3:1 on the card before the
-//     pages are written; apply(files, opts) gives every data visual its alt text from its role and fields, puts each
+//   - the writer's (pbip-export.js): readable(o) steps the report theme's first data colour to 3:1 on the card before the
+//     pages are written; apply(files, opts) gives every data visual without alt text one from its role and fields, puts each
 //     page's tab stops in reading order and takes the decorative ones (an empty text box, a shape or an image without
 //     alt text) out of the tab order (seen in Desktop 2.158 on 6-7 Oct: a visual without tabOrder is no Tab stop).
 //   - check_report's rule family "a11y" (RULES, run by report-rules.js), on any report: the findings say what is
 //     missing in numbers and kinds, never the report's own text (a report's text is untrusted input).
-// An alt text names fields only (metadata), never a value: the tools never read the data. A screen reader reads a
-// visual's type and title before its alt text (GUIDE), so the alt text describes what the visual shows, in the
-// report's language: "Total Sales by Region, one bar per Region." «إجمالي المبيعات حسب المنطقة، شريط لكل المنطقة.»
+// An alt text names fields only (metadata), never a value: the tools never read the data. The writer's alt text is the
+// visual's full title, made from its fields ("Total Sales by Region"); where a data visual has none, describe() says what
+// it shows, in the report's language: "Total Sales by Region, one bar per Region." «إجمالي المبيعات حسب المنطقة، شريط لكل
+// المنطقة.» (A screen reader reads the type and the title before the alt text (GUIDE): a sentence of its own instead
+// of the title is the owner's decision, J7's "Decisions I made".)
 // With the story titles (story-titles.js, 0.3 J4) loaded, a measure's name is said as its title says it (its time
 // intelligence in words, "Sales last year"): the alt text and the title then name each field the same way.
 // Browser and Node (module.exports / window.DAA11y). The rules never write anything; apply() changes only the files
@@ -175,7 +177,10 @@
     const list = theme && Array.isArray(theme.dataColors) ? theme.dataColors : null;
     if (!list) return { theme, changed: [] };
     const changed = [];
-    const dataColors = list.map((c) => { const x = hex6(c); if (!x) return c; const y = Engine.toContrast(x, bg, MIN_CONTRAST); if (y !== x) changed.push({ from: x, to: y, contrast: +Engine.contrast(x, bg).toFixed(2) }); return y === x ? c : y; });
+    // (only the first: the colour every one-measure chart draws; the others are drawn only by a legend or slices, and
+    // the designed theme stays the plan's: test.mjs holds the written theme to the design's, and the second chart's
+    // colour is chosen at 3:1 already, design-engine secondColour)
+    const dataColors = list.map((c, i) => { const x = hex6(c); if (!x || i > 0) return c; const y = Engine.toContrast(x, bg, MIN_CONTRAST); if (y !== x) changed.push({ from: x, to: y, contrast: +Engine.contrast(x, bg).toFixed(2) }); return y === x ? c : y; });
     return { theme: changed.length ? Object.assign({}, theme, { dataColors }) : theme, changed, card: bg };
   }
 
@@ -213,8 +218,10 @@
           return;
         }
         if (DECORATIVE.test(type) && type !== 'actionButton' && !strOf(altOf(vis))) { delete pos.tabOrder; x.changed = true; done.untabbed++; return; }
-        const alt = describe(vis, lang);
-        if (alt && strOf(altOf(vis)) !== alt) { setAlt(vis, alt); x.changed = true; done.alt++; }
+        // (a visual's alt text is its full title where the writer gave one: "Total Sales by Region", made from its
+        // fields, and the reference the writer's own title fit and the tests read; the sentence fills only a missing one)
+        const alt = strOf(altOf(vis)).trim() ? null : describe(vis, lang);
+        if (alt) { setAlt(vis, alt); x.changed = true; done.alt++; }
       });
       // the tab stops of each group (and of the page) in reading order, keeping the numbers they had
       const abs = (x, seen) => { const p = x.j.position || {}, par = x.j.parentGroupName && byName.get(x.j.parentGroupName);
