@@ -128,6 +128,27 @@ r = await call('check_model_health', { path: 'tmdl-project' });
 check(!r.err && r.j.score.overall > 0 && r.j.stats.tables === 3 && r.j.stats.autoDateTables === 1 && r.j.stats.measures === 4 && r.j.findings.some((f) => f.id === 'AUTODATE'),
   `health on TMDL: ${r.t.slice(0, 200)}`);
 check(!r.err && !r.j.skipped, `health on TMDL with every type known: nothing should be skipped: ${r.err ? r.t : JSON.stringify(r.j.skipped)}`);
+// (HC3) pleaseConfirm: the engine's questions, the same items as the website's, never findings and never in the score;
+// the DAX piece behind each stays on the machine (PRIVACY.md section 3), and a clean model has none
+{
+  const c = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+  const q = { model: { tables: [{ name: 'Sales', columns: [c('CustomerKey'), c('ProductKey'), c('Qty'), c('Cases')], measures: [{ name: 'Units Doubled', expression: 'SUM(Sales[Qty]) + SUM(Sales[Qty])', formatString: '#,0' },
+    { name: 'Total Deaths', expression: 'SUM(Sales[Cases])', formatString: '#,0' }] }, { name: 'Product', columns: [c('ProductKey')] }],
+  relationships: [{ name: 'p', fromTable: 'Sales', fromColumn: 'CustomerKey', toTable: 'Product', toColumn: 'ProductKey' }] } };
+  fs.writeFileSync(path.join(ROOT, 'questions.bim'), JSON.stringify(q));
+  const x = await call('check_model_health', { path: 'questions.bim' }), pc = x.err ? null : x.j.pleaseConfirm;
+  const ids = pc ? pc.items.map((i) => i.id + ' ' + i.object).sort() : [];
+  check(pc && pc.count === 3 && JSON.stringify(ids) === JSON.stringify(['duplicateAggregate [Units Doubled]', 'wrongColumn [Total Deaths]', 'wrongRelationshipKey Sales[CustomerKey] → Product[ProductKey]']),
+    `HC3 pleaseConfirm items: ${x.err ? x.t.slice(0, 200) : JSON.stringify(pc)}`);
+  check(pc && pc.items.every((i) => /\?$/.test(i.question)) && /never edit DAX/.test(pc.note) && !x.t.includes('SUM(Sales[Qty]) + SUM(Sales[Qty])') && !x.t.includes('SUM(Sales[Cases])'),
+    `HC3 pleaseConfirm: questions, the note, and no DAX in the answer: ${x.err ? '' : x.t.slice(0, 300)}`);
+  check(pc && !x.j.findings.some((f) => pc.items.some((i) => i.id === f.id)) && (pc.items.find((i) => i.relationship) || {}).relationship.candidateColumn === 'ProductKey', 'HC3 pleaseConfirm: not findings; the relationship carries its columns');
+  const clean = await call('check_model_health', { path: 'sample.pbit' });
+  check(!clean.err && clean.j.pleaseConfirm === undefined, `HC3 pleaseConfirm on the clean sample: ${clean.err ? clean.t.slice(0, 200) : JSON.stringify(clean.j.pleaseConfirm)}`);
+  const tl = (await client.listTools()).tools.find((t) => t.name === 'check_model_health');
+  check(/pleaseConfirm lists questions for the user, never fixes/.test(tl.description), 'HC3: check_model_health\'s description says pleaseConfirm holds questions, never fixes');
+}
+
 // columns of DAX tables: the checks that need their type are listed as skipped, with the ways to get them, never guessed
 r = await call('check_model_health', { path: 'dax-project' });
 const sk = r.err || !r.j.skipped ? [] : r.j.skipped.checks.map((s) => s.id);
