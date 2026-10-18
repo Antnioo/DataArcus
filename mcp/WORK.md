@@ -4,6 +4,21 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## J5 (0.3 R&D): privacy and approval hardening B-152 + B-154 (18 Oct, cloud builder; branch `feat/0.3-approval-hardening` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, through the reviewer). From an outside audit of 0.2.9 (every write is gated; these were the gaps).
+- **B-152:** reportPrint, the Arabic twin and the native copy read EVERY file of a .Report folder. Plan: `strictFiles`
+  (lib/read-report.mjs) lists only the report's own file types: definition.pbir, .platform, semanticModelDiagramLayout.json,
+  mobileState.json, definition/**/*.json, StaticResources/** images and JSON (and .pbiviz), CustomVisuals/** (a private
+  visual's package files); any other file (a stray .csv/.xlsx, .pbi/localSettings.json) is never opened, hashed or copied
+  (only its name is seen), and the twin's and the native copy's plans name it (`notCopied`). Links still refuse the read.
+- **B-154:** an approval pinned inputs, not the model. Plan: loadModel returns `print` (sha256 of the definition files it
+  already reads: model.bim, the .tmdl files; a .pbit or model.bim file's own bytes; nothing else, never .pbi/cache.abf);
+  Plans.propose/gate take `{ key, print }`; a write after the model changed is refused "Nothing was written: the model
+  changed after you approved: make the plan again ...". Every plan that reads a model: scripts, report (and the native
+  copy), calendar, twin (its model through definition.pbir; checked in writeTwin, one small change, rc.24 touches the file).
+- Test first: `mcp/test-approval-hardening.mjs` (22 checks, in npm test): **18 red on main**. Expected after: 22 pass;
+  every other count of npm test unchanged.
+
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
 Enter data (compressed in the Power Query text) and DATATABLE values in DAX. Checked in code: the Health Check reads only
