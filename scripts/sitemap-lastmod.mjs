@@ -3,7 +3,7 @@
 // Commits that only change boilerplate (CDN versions and their integrity hashes, ?v= cache bumps, the analytics and
 // consent loader in each page's head, the Content Security Policy, Clarity's masking attribute) don't count: a library
 // or privacy update on every page is not a change to any page's content. Dates are Dubai dates (the site's time zone).
-//   node scripts/sitemap-lastmod.mjs           check; exit code 1 and the list when a date is out of step
+//   node scripts/sitemap-lastmod.mjs           check (CI, B-151); exit code 1 and the list when a date is out of step
 //   node scripts/sitemap-lastmod.mjs --write   rewrite the stale dates
 // Run after committing page changes (uncommitted edits don't count: the date is the commit's).
 import fs from 'node:fs';
@@ -28,8 +28,9 @@ const strip = (line) => line
   .trim();
 // lines of the analytics and consent loader in each page's head (the EU time zones, Google Analytics, Clarity), the
 // Content Security Policy (scripts/csp.mjs), and lines that are only a script comment: not what the page says
-// (and the hreflang lines scripts/ar-pages.mjs writes: they name the Arabic copy, they don't change what the page says)
-const loader = (line) => /<link rel="alternate" hreflang=|var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'|^<meta http-equiv="Content-Security-Policy"/.test(line) || /^\/\//.test(line);
+// (and the hreflang lines scripts/ar-pages.mjs writes: they name the Arabic copy, they don't change what the page says;
+// and the language guard at the top of each head, the same line on every page, B-150)
+const loader = (line) => /<link rel="alternate" hreflang=|classList\.add\("i18n-pending"\)|var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'|^<meta http-equiv="Content-Security-Policy"/.test(line) || /^\/\//.test(line);
 // true when every line the diff removes comes back, boilerplate aside, as a line it adds (and the other way round)
 export function boilerplateOnly(diff) {
   const minus = [], plus = [];
@@ -60,10 +61,14 @@ const translations = (file, rev) => {
 // the Dubai date of the last commit that changed the page's content (its HTML or its translations), as of rev
 // (default: the files on disk and the current history)
 export function pageDate(page, rev) {
+  return (lastChange(page, rev) || {}).date || null;
+}
+// that commit and its date
+function lastChange(page, rev) {
   const files = [page, ...translations(page, rev)];
   for (const row of git(['log', '--format=%H %ct', ...(rev ? [rev] : []), '--', ...files]).trim().split('\n').filter(Boolean)) {
     const [sha, secs] = row.split(' ');
-    if (!boilerplateOnly(git(['show', '--format=', '-U0', '--no-color', sha, '--', ...files]))) return dubaiDate(+secs);
+    if (!boilerplateOnly(git(['show', '--format=', '-U0', '--no-color', sha, '--', ...files]))) return { sha, date: dubaiDate(+secs) };
   }
   return null;
 }
@@ -76,8 +81,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   xml = xml.replace(/(<loc>([^<]+)<\/loc>\s*<lastmod>)([^<]+)(<\/lastmod>)/g, (all, head, loc, old, tail) => {
     const page = pageFile(loc);
     if (!fs.existsSync(path.join(ROOT, page))) { stale.push(`${loc}: no file ${page}`); return all; }
-    const date = pageDate(page);
+    const last = lastChange(page), date = last && last.date;
     if (!date || date === old) return all;
+    // (B-151, the check in CI: a squash merge dates the page's change on the day of the merge, after the day the branch
+    // wrote in the sitemap. A date written in that same commit, and not after it, is the author's own: accepted.)
+    if (!write && old <= date && git(['diff-tree', '--no-commit-id', '--name-only', '-r', last.sha]).split('\n').includes('sitemap.xml')) return all;
     stale.push(`${loc}: ${old} -> ${date}`);
     return head + date + tail;
   });

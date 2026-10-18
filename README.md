@@ -21,7 +21,7 @@ them is uploaded), articles in English and Arabic, and the public test notes beh
 
 ## How we check our work
 
-- **Automated tests on every change:** 17 website test suites (thousands of checks) run on each push.
+- **Automated tests on every change:** 19 website test suites (thousands of checks) run on each push.
 - **Microsoft's own validator:** our test runs check the reports the tools write, on our sample models, with
   Microsoft's report validator. It does not run on the reports you make.
 - **Measured in Power BI Desktop:** sizes, layouts and numbers are measured in Power BI Desktop, never estimated, and
