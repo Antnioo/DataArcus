@@ -1163,7 +1163,7 @@ server.registerTool('check_report', {
 
 server.registerTool('read_report', {
   title: 'Read a Power BI report',
-  description: 'Reads a PBIR report that already exists, whoever built it, and never changes it: a compact inventory, one line per visual (its type, place and size on the page, title, the fields in each role with their display names, sort, visual filters by field and kind, the group it sits in, hidden or not, its action or tooltip page), the pages in order (size, hidden, tooltip or drillthrough, page filters), slicers, buttons and their targets, bookmarks (name, page, what they keep), the theme\'s colours and label size, and custom visuals. Read it before a redesign, so the plan keeps the report\'s pages, questions and wiring (bookmarks, tooltip and drillthrough pages). Read it with the model (read_model): the report names fields, the model says their types and sort-by columns. A 4-page report of 160 visuals is about 10,000 to 18,000 characters (2,500 to 4,500 tokens); past 40,000 characters, pages are listed without their visuals and the answer says how to read them (pages). No data: filter values, slicer selections and bookmark states are never read; titles and text-box texts are returned only when short, long or instruction-like ones withheld. Custom visuals are listed by type: DataArcus can\'t check their sizes or formats, create_report can\'t write them (a redesign would drop them), and a licensed one may ask the viewer to sign in: tell the user, and never replace one unasked.' + REPORT_UNTRUSTED,
+  description: 'Reads a PBIR report that already exists, whoever built it, and never changes it: a compact inventory, one line per visual (its type, place and size on the page, title, the fields in each role with their display names, sort, visual filters by field and kind, the group it sits in, hidden or not, its action or tooltip page), the pages in order (size, hidden, tooltip or drillthrough, page filters), slicers, buttons and their targets, bookmarks (name, page, what they keep), the theme\'s colours and label size, and custom visuals. Read it before a redesign, so the plan keeps the report\'s pages, questions and wiring (bookmarks, tooltip and drillthrough pages). Read it with the model (read_model): the report names fields, the model says their types and sort-by columns. A 4-page report of 160 visuals is about 10,000 to 18,000 characters (2,500 to 4,500 tokens); past 40,000 characters, pages are listed without their visuals and the answer says how to read them (pages). No data: filter values, slicer selections and bookmark states are read with the report\'s files but never returned; titles and text-box texts are returned only when short, long or instruction-like ones withheld. Custom visuals are listed by type: DataArcus can\'t check their sizes or formats, create_report can\'t write them (a redesign would drop them), and a licensed one may ask the viewer to sign in: tell the user, and never replace one unasked.' + REPORT_UNTRUSTED,
   inputSchema: {
     path: z.string().describe('The report: a .pbip file, a .Report folder, or a folder holding definition/, inside the working folder'),
     pages: z.array(z.number().int().min(1).max(500)).min(1).max(50).optional().describe('Only these pages (1 is the first in the report\'s order), for a report too large for one answer'),
@@ -1394,6 +1394,8 @@ server.registerTool('approve_plan', {
 }, safe(async (a) => {
   const P = Plans.pending(a.planId), done = Plans.approval(P.id);
   if (done) return text(done);
+  // (rc.23, F7b) a refused plan is never asked about again
+  if (Plans.refusal(P.id)) throw new Error(Plans.refusal(P.id));
   // Audit 6, A6-3 (the owner's P-1: an assistant could approve its own plan): when the app declares MCP elicitation, the
   // person answers the app's own prompt, which lists what will be written
   const caps = server.server.getClientCapabilities() || {};
@@ -1405,7 +1407,11 @@ server.registerTool('approve_plan', {
         requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
       { timeout: 10 * 60 * 1000 });
     } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
-    if (!r || r.action !== 'accept' || !r.content || r.content.approve !== true) throw new Error(`Not approved: the person ${r && r.action === 'cancel' ? 'closed' : 'declined'} DataArcus's approval prompt in the app (they did not approve writing these files). Nothing was written. Ask what to change in the plan.`);
+    // (rc.23, F7b) a no in the app's prompt (declined, or the box left unticked) refuses the plan, as "Not now" in the
+    // window does; a prompt closed without an answer leaves it to be approved later
+    const closed = !r || r.action === 'cancel', no = !closed && !(r.action === 'accept' && r.content && r.content.approve === true);
+    if (no) Plans.refuse(P.id, 'app');
+    if (closed || no) throw new Error(`Not approved: the person ${closed ? 'closed' : 'declined'} DataArcus's approval prompt in the app (they did not approve writing these files)${no ? `, so plan ${P.id} is refused: it can't be approved later` : ''}. Nothing was written. Ask what to change in the plan${no ? ', make a new plan, show it and wait for their go' : ''}.`);
     return text(Plans.approve(a.planId, 'user-in-app'));
   }
   // (A-01) DataArcus's own approval window, in the person's browser: only their click approves
