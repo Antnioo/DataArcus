@@ -49,7 +49,9 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     chk(() => r1.err && /declined|did not approve/i.test(r1.t) && /Not approved/.test(r1.t), () => `A6-3. the person declines in the app: refused, whatever the reply says: ${short(r1)}`);
     chk(() => /theme file/i.test(shown.message || '') && shown.requestedSchema && shown.requestedSchema.properties && shown.requestedSchema.properties.approve, () => `A6-3. the prompt shows what will be written (writesAfterGo) and asks yes or no: ${JSON.stringify(shown).slice(0, 300)}`);
     const w1 = await no.call('generate_theme', { brand: '#0F766E', planId: id1 });
-    chk(() => w1.err && /not approved yet/.test(w1.t), () => `A6-3. after a decline the plan writes nothing: ${short(w1)}`);
+    // (rc.23, F7b, an outside audit of 0.2.9: "No" in the app's prompt left the plan "not approved yet", where "Not now"
+    // in the window refuses it; now both refuse, and a refused plan is never approved later)
+    chk(() => w1.err && /refused/.test(w1.t) && !/not approved yet/.test(w1.t), () => `A6-3. after a decline the plan is refused and writes nothing: ${short(w1)}`);
     await no.close();
     // the person accepts: approved by the person, without any reply from the assistant
     const yes = await elicitClient(ROOT, () => ({ action: 'accept', content: { approve: true } }));

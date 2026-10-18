@@ -63,9 +63,13 @@ export function approve(id, by) {
 }
 
 /** Marks a plan refused: the person clicked "Not now" in DataArcus's approval window (rc.22, B-134: the plan then said
- *  "not approved yet"). A refused plan is never approved later; a new plan is needed. */
-export function refuse(id) { const p = plans.get(String(id)); if (p && p.status === 'proposed') { p.status = 'refused'; p.refusedAt = now(); } }
-const REFUSED = (p) => `Nothing was written: plan ${p.id} was refused: the person clicked "Not now" in DataArcus's approval window. Ask what to change, make a new plan, show it and wait for their go.`;
+ *  "not approved yet"), or said no in the app's own prompt (by 'app'; rc.23, F7b: it stayed "not approved yet" there).
+ *  A refused plan is never approved later; a new plan is needed. */
+export function refuse(id, by) { const p = plans.get(String(id)); if (p && p.status === 'proposed') { p.status = 'refused'; p.refusedAt = now(); p.refusedIn = by === 'app' ? 'app' : 'window'; } }
+const REFUSED = (p) => `Nothing was written: plan ${p.id} was refused: the person ${p.refusedIn === 'app' ? 'said no in DataArcus\'s approval prompt in the app' : 'clicked "Not now" in DataArcus\'s approval window'}. Ask what to change, make a new plan, show it and wait for their go.`;
+
+/** (rc.23, F7b) why a refused plan can't be approved ("Not approved: ..."), or null when it was not refused. */
+export function refusal(id) { const p = plans.get(String(id)); return p && p.status === 'refused' ? REFUSED(p).replace('Nothing was written: ', 'Not approved: ') : null; }
 
 /** (rc.22, B-134) what keeps a plan from being used by a tool, said before its other inputs are checked: null when the
  *  plan can be used (known, alive, approved, not used yet for this tool, of the right kind), else the reason. */

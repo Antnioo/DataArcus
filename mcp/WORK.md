@@ -1,8 +1,28 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-145" just below (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "rc.23" just below (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## rc.23: three fixes from an outside audit of 0.2.9 (18 Oct, cloud builder; branch `fix/0.2.9-rc23` from main `4a837f9`; one PR, not merged)
+The owner's go (18 Oct, "yes rc.23"): rc.22 + these three, so mcp/PRIVACY.md says exactly what the code does; 0.2.9's
+scope is otherwise frozen. Test first: `mcp/test-rc23.mjs` (51 checks, in npm test), 31 of its first 50 red on main.
+- F1 (lib/model.mjs loadModel): `notAModelFile` refuses a .pbix (PBIX_FILE: export a .pbit or save as a project) and
+  .csv/.tsv/.xlsx/.xlsm/.xls/.parquet (DATA_FILE) by name before any open; `zipDirectoryCheck` reads only a zip's EOCD
+  (last 22 bytes; last 64 KB only for a zip with a comment) and its central directory (bounded by PBIT_LIMITS) and
+  refuses a DataModel without DataModelSchema before readCapped. .json stays a model's JSON; the browser path untouched.
+  The test counts every fs read (openSync/readSync/readFileSync) by byte range.
+- F3: PRIVACY.md section 3 (no "holds no data"; "Enter data" and DATATABLE values read, never decoded, never returned;
+  the refusals by name), read_report's row, README row, tool description and answer NOTE (lib/read-report.mjs): "read
+  with the report's files but never returned". No Arabic needed (the MCP docs are English).
+- F7b (server.mjs approve_plan, lib/plans.mjs): a no in the app's prompt (decline, or accept with the box unticked)
+  calls `Plans.refuse(id, 'app')`; a closed prompt (cancel) leaves the plan proposed; a refused plan is never asked
+  about again (`Plans.refusal`). test-audit6 A6-3 now expects "refused" (was "not approved yet": that was the bug).
+- Seen, not in scope: the website's pages say "a .pbit contains no data rows" for the website's own Health Check
+  (tools/power-bi-model-health-check.html FAQ and JSON-LD, articles/article-power-bi-model-health-check.html,
+  articles/article-power-bi-model-ai-ready.html, services/copilot-readiness-audit.html, their /ar/ copies and
+  translations): the same inexactness about "Enter data" tables, about the browser tool, left for the owner.
+  PRIVACY.md's header still records "checked ... on 2026-10-11, with Microsoft's validator 0.4.0" (history).
 
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
