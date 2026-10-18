@@ -561,6 +561,58 @@ export default async function ({ browser, url }) {
     check(q(E.analyze({ model: { tables: [{ name: 'Sales', columns: [col('CustomerKey'), col('Amount', 'decimal'), col('OrderDate', 'dateTime')], partitions: mpart('Sales') }] } }, null)).length === 0, 'B-143: a one-table model was asked about');
   }
 
+  // ---- B-147 (0.3): a format that may not show what the measure means is a "Please confirm" question, never a finding,
+  //      never in the score: a ratio or multiple shown as a percentage, a value multiplied by 100 and then formatted as a
+  //      percentage again, a value divided by 1,000 or 1,000,000 shown as a plain number ----
+  {
+    const col = (n, ty) => ({ name: n, dataType: ty || 'decimal', sourceColumn: n });
+    const ms = (name, expression, formatString) => ({ name, expression, formatString });
+    const asked = { // name: [expression, format, the question's id]
+      'Current Ratio': ['DIVIDE(SUM(BS[Current Assets]), SUM(BS[Current Liabilities]))', '0.0%', 'ratioAsPercent'],
+      'Asset Turnover': ['DIVIDE(SUM(Sales[Amount]), SUM(BS[Total Assets]))', '0%', 'ratioAsPercent'],
+      'Debt to Equity': ['DIVIDE(SUM(BS[Debt]), SUM(BS[Equity]))', '0.00%', 'ratioAsPercent'],
+      'Margin Pct': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0%', 'percentTwice'],
+      'Compete Share': ['INT(DIVIDE(SUM(Sales[Units]), SUM(Sales[Market Units])) * 100)', '0%;-0%;0%', 'percentTwice'],
+      'Revenue': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0.0', 'thousandsPlain'],
+      'Total Cost': ['SUM(Sales[Cost]) / 1000000', '#,0', 'thousandsPlain']
+    };
+    const quietOnes = { // the same shapes that mean what they show: no question
+      'Gross Margin Ratio': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount]))', '0.0%'],
+      'Employee Turnover': ['DIVIDE(SUM(HR[Leavers]), SUM(HR[Headcount]))', '0.0%'],
+      'Quick Ratio': ['DIVIDE(SUM(BS[Current Assets]), SUM(BS[Current Liabilities]))', '0.00"x"'],
+      'Margin Points': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0'],
+      'Margin Literal': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0"%"'],
+      'Margin Escaped': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0\\%'],
+      'Revenue K': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0'],
+      'Revenue (thousands)': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0'],
+      'Revenue Shown': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0.0"K"'],
+      'Duration (s)': ['DIVIDE(SUM(Log[DurationMs]), 1000)', '0.0'],
+      'Query Seconds': ['SUM(Log[DurationMs]) / 1000', '#,0.0'],
+      'Data Size': ['DIVIDE(SUM(Log[Bytes]), 1024)', '#,0'],
+      'Sales Amount': ['SUM(Sales[Amount])', '#,0']
+    };
+    const all = Object.assign({}, asked, quietOnes);
+    const model = (names) => ({ model: { tables: [
+      { name: 'Sales', columns: [col('Amount'), col('Profit'), col('Cost'), col('Units'), col('Market Units')], partitions: mpart('Sales'), measures: names.map((n) => ms(n, all[n][0], all[n][1])) },
+      { name: 'BS', columns: [col('Current Assets'), col('Current Liabilities'), col('Total Assets'), col('Debt'), col('Equity')], partitions: mpart('BS') },
+      { name: 'HR', columns: [col('Leavers'), col('Headcount')], partitions: mpart('HR') },
+      { name: 'Log', columns: [col('DurationMs'), col('Bytes')], partitions: mpart('Log') }] } });
+    const r = E.analyze(model(Object.keys(all)), null);
+    const fmtIds = ['ratioAsPercent', 'percentTwice', 'thousandsPlain'], conf = (r.confirm || []).filter((c) => fmtIds.includes(c.id));
+    const got = conf.map((c) => c.id + ' ' + c.obj).sort(), want = Object.entries(asked).map(([n, v]) => v[2] + ' [' + n + ']').sort();
+    check(JSON.stringify(got) === JSON.stringify(want), `B-147, the format questions: ${JSON.stringify(got)}, expected ${JSON.stringify(want)}`);
+    for (const c of conf) {
+      check(/\?$/.test(c.message.en) && /[؀-ۿ]/.test(c.message.ar) && /؟$/.test(c.message.ar) && c.format === all[c.obj.slice(1, -1)][1], `B-147, ${c.id} on ${c.obj}: a question in English and Arabic, with the format: ${JSON.stringify(c)}`);
+      check(c.evidence === '' || all[c.obj.slice(1, -1)][0].includes(c.evidence), `B-147, ${c.id} on ${c.obj}: the evidence "${c.evidence}" is not an exact piece of its DAX`);
+    }
+    const p2 = conf.find((c) => c.obj === '[Margin Pct]') || {}, t2 = conf.find((c) => c.obj === '[Total Cost]') || {};
+    check(p2.evidence === '* 100' && t2.evidence === '/ 1000000', `B-147, evidence pieces: ${JSON.stringify([p2.evidence, t2.evidence])}`);
+    // never a finding, never a rule, never in the score: the same model without the asked measures scores the same
+    const quiet = E.analyze(model(Object.keys(quietOnes)), null);
+    check(!fmtIds.some((id) => E.RULES[id] || r.findings.some((f) => f.id === id)) && ['overall', 'perf', 'maint', 'bp'].every((k) => r.score[k] === E.scoreFrom(r.findings)[k])
+      && (quiet.confirm || []).filter((c) => fmtIds.includes(c.id)).length === 0, `B-147: a format question is a rule, a finding or in the score, or a quiet one was asked: ${JSON.stringify((quiet.confirm || []).filter((c) => fmtIds.includes(c.id)))}`);
+  }
+
   {
     // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
     for (const lang of ['en', 'ar']) {

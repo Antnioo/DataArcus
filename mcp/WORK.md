@@ -1,8 +1,21 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-145" just below (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-147" just below (branch `feat/0.3-format-review`, draft PR, stacked on #48); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-147: format review as "Please confirm" (18 Oct, cloud builder; branch `feat/0.3-format-review` from `hc/b143-unrelated-tables` (draft #48); DRAFT PR)
+The owner's R&D go; the reviewer's brief. `assets/js/model-health-engine.js` pleaseConfirm only: never a finding, never a
+RULE, never the score (the published 85 unchanged).
+- `ratioAsPercent`: a ratio or multiple by name (current/quick/debt... ratio, asset/inventory turnover, debt to X,
+  multiple) with a % format and no percentage word in the name. `percentTwice`: a % format (a % outside quotes, not
+  escaped) on DAX with `* 100`. `thousandsPlain`: DIVIDE(x, 1000 or 1000000) or `/ 1000` on an amount (name or column)
+  that is not a unit conversion (ms, bytes, km...), the format with no K/M and no thousands comma, the name not scaled.
+  Each question in EN and AR with `format`; evidence the exact DAX piece ("* 100", "/ 1000000") or ''.
+- Test first (`scripts/tests/model-health.mjs` "B-147", red on the branch: no questions): 7 asked, 13 quiet look-alikes.
+- Precision: 60 models (9 repo fixtures, 17 Microsoft, 34 fresh holdout from the B-146 review): 1 question
+  (`[% Category Compete Share]`, INT(DIVIDE * 100) formatted 0%): right. 0 wrong; recall not measured (few cases).
+- Engine .min.js rebuilt, `?v=20261018w` on the Health Check page and its /ar/ copy (ar-pages --write).
 
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
