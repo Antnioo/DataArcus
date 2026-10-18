@@ -175,7 +175,7 @@ Online Sales =
 CALCULATE ( [Sales], KEEPFILTERS ( Sales[Channel] = "Online" ) )</code></pre>
               <p data-i18n-html="content.p9">استخدام <code>FILTER(Table, ...)</code> كفلتر داخل CALCULATE يبني جدولًا بكل أعمدة كل الصفوف المطابقة ويطبقه كاملًا، أما فلترة العمود الذي يهمك فقط فتجعل المحرك يعمل على هذا العمود وحده. وفي أغلب النماذج تكون النتيجة واحدة، وتضمن <code>KEEPFILTERS</code> ذلك عندما يفلتر slicer نفس العمود، فبدونها يحل فلتر العمود محل الـ slicer.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h6">كيف يعمل الفحص، ولماذا يبقى ملفك معك</h2>
-              <p data-i18n-html="content.p10">تقرأ الأداة <strong>قالب Power BI (.pbit)</strong>. يحتوي القالب نموذجك وتصميم تقريرك لكن <strong>بدون أي صفوف بيانات</strong>، لذلك يبقى صغيرًا حتى للنماذج الضخمة. يُفتح الملف داخل صفحة المتصفح ولا يُرفع أبدًا. ترسم الأداة خريطة لكل مقياس والأعمدة والمقاييس التي يعتمد عليها، ثم تتبع كل visual وفلتر وعلاقة وقاعدة أمان لتعرف ما المستخدم فعلًا.</p>
+              <p data-i18n-html="content.p10">تقرأ الأداة <strong>قالب Power BI (.pbit)</strong>. يحتوي القالب تعريف نموذجك وتصميم تقريرك، <strong>لا البيانات التي حمّلها Power BI</strong>، لذلك يبقى صغيرًا حتى للنماذج الضخمة. (قد يضم التعريف جداول صغيرة كُتبت يدويًا عبر Enter data وقيمًا مكتوبة في DAX عبر DATATABLE، والأداة لا تفك ضغط جداول Enter data أبدًا.) يُفتح الملف داخل صفحة المتصفح ولا يُرفع أبدًا. ترسم الأداة خريطة لكل مقياس والأعمدة والمقاييس التي يعتمد عليها، ثم تتبع كل visual وفلتر وعلاقة وقاعدة أمان لتعرف ما المستخدم فعلًا.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h7">افحص نموذجك في ثلاث خطوات</h2>
               <ul>
   <li data-i18n-html="content.list3_1">في Power BI Desktop اختر <strong>File &gt; Export &gt; Power BI template</strong>.</li>
@@ -267,7 +267,7 @@ CALCULATE ( [Sales], KEEPFILTERS ( Sales[Channel] = "Online" ) )</code></pre>
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
-  <script src="/assets/js/translations/article-power-bi-model-health-check.min.js?v=20261017p" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-model-health-check.min.js?v=20261018b155" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>

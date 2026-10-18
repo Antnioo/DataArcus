@@ -75,7 +75,7 @@
       { "@type": "WebApplication", "name": "Power BI Model Health Check", "url": "https://dataarcus.com/tools/power-bi-model-health-check.html", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any (web browser)", "inLanguage": ["en", "ar"],
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }, "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" } },
       { "@type": "FAQPage", "mainEntity": [
-        { "@type": "Question", "name": "Is my Power BI file uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. The file is opened and checked inside your browser tab. Nothing is sent to a server, and a .pbit contains no data rows." } },
+        { "@type": "Question", "name": "Is my Power BI file uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. The file is opened and checked inside your browser tab. Nothing is sent to a server. A .pbit holds the model's definition, not the data Power BI loaded; it can still include small tables typed in with Enter data and values written in DAX (DATATABLE), and the check never unpacks the Enter data tables." } },
         { "@type": "Question", "name": "Why use a .pbit instead of a .pbix?", "acceptedAnswer": { "@type": "Answer", "text": "A .pbit has the same model and report without the data, so it is small and safe to check. In Power BI Desktop use File, Export, Power BI template." } },
         { "@type": "Question", "name": "How does it find unused columns and measures?", "acceptedAnswer": { "@type": "Answer", "text": "It follows every visual, filter, measure, calculated column, relationship, sort order and security rule in the file. Anything none of them needs, directly or through other measures, is reported as unused." } }
       ] }
@@ -363,7 +363,7 @@
           <section class="tg-faq">
             <h2 class="h4 fw-bold" data-i18n="mh.faq.title">Questions</h2>
             <h3 data-i18n="mh.faq.q1">Is my file uploaded anywhere?</h3>
-            <p data-i18n="mh.faq.a1">No. The file is opened and checked inside your browser tab. Nothing is sent to DataArcus or anyone else, and closing the tab clears it. A .pbit also contains no data rows, only the model structure and report layout.</p>
+            <p data-i18n="mh.faq.a1">No. The file is opened and checked inside your browser tab. Nothing is sent to DataArcus or anyone else, and closing the tab clears it. A .pbit holds the model's definition and report layout, not the data Power BI loaded. The definition can still include small tables typed in with Enter data (stored compressed in the Power Query text) and values written in DAX (DATATABLE). The check never unpacks the Enter data tables; DAX is shown as written, only to you.</p>
             <h3 data-i18n="mh.faq.q2">Why a .pbit and not a .pbix?</h3>
             <p data-i18n="mh.faq.a2">A .pbix stores your data in a compressed format only Power BI can read. A .pbit has the same model and report without the data, so it is small even for very large models and safe to check. In Power BI Desktop: File > Export > Power BI template.</p>
             <h3 data-i18n="mh.faq.q3">How is "unused" decided?</h3>
@@ -432,7 +432,7 @@
   </footer>
 
     <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/model-health.min.js?v=20261018b149" defer></script>
+  <script src="../assets/js/translations/model-health.min.js?v=20261018b155" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261018ar3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
