@@ -7,23 +7,31 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 ## J7: accessibility of written reports (18 Oct, cloud builder; branch `feat/0.3-accessibility` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
 The owner's go (18 Oct, 0.3 R&D). Microsoft's "Design Power BI reports for accessibility" (learn.microsoft.com/power-bi/create-reports/desktop-accessibility-creating-reports).
 - New module `assets/js/report-a11y.js` (+ .min): the writer's half and check_report's rule family "a11y", one set of rules.
-  Writer (pbip-export.js calls it twice): `readable(theme, card)` steps the report theme's data colours under 3:1 on the
-  card with design-engine `toContrast` before anything reads them (a colour at 3:1 is kept exactly); `apply(files)` after
-  the pages: alt text for every data visual that is a Tab stop from its type, role and fields (EN/AR, never a value, at most
-  250, not the title again: a screen reader reads the type and title first), a text box's own text as its alt text, an empty
-  text box / shape / picture without alt text out of the tab order (measured 6-7 Oct: no tabOrder = no Tab stop), each
-  page's and group's Tab stops in reading order (rows, then left to right or right to left by the right edge), keeping
-  their numbers. create_report tells the colours stepped (from, ratio, to). Tooltip pages untouched.
+  Writer (pbip-export.js calls it twice): `readable(theme, card)` steps the theme's FIRST data colour (the one every
+  one-measure chart draws) to 3:1 on the card with design-engine `toContrast` (kept exactly when at 3:1; the other colours
+  stay the design's: test.mjs holds the written theme to the design's, and the second chart's colour is chosen at 3:1
+  already). `apply(files)` after the pages: a data visual's alt text stays the writer's full title (made from its fields,
+  "Total Sales by Region"; test.mjs's title-fit checks read it as the full title); a data visual WITHOUT alt text gets
+  `describe()`'s sentence of its type, role and fields (EN/AR, never a value, at most 250: "Total Sales by Region, one bar
+  per Region."); a text box's own text as its alt text; an empty text box / shape / picture without alt text out of the
+  tab order (measured 6-7 Oct: no tabOrder = no Tab stop); each page's and group's Tab stops in reading order (rows, then
+  left to right or right to left by the right edge), keeping their numbers. create_report tells a stepped colour (from,
+  ratio, to). Tooltip pages untouched.
   check_report (report-rules.js runs the six rules; `checks: ["a11y"]`): A11Y_ALT_TEXT, A11Y_DECORATIVE (note),
   A11Y_TAB_ORDER (pairs met against the reading order, by the report's direction; a data visual not a stop unless 80% of
   it lies on a stop: the "No data" overlay), A11Y_TITLE, A11Y_CONTRAST (the colours a chart draws: its fixed fills, else
   the theme's first 1 / Y count / 8 with a legend or slices, against the visual's background, else the page's; a page
   picture not judged), A11Y_COLOUR_ONLY (legend field, 2+ measures or slices with the legend off). Impact kind stays
   dataarcusRule (its sentence now names the accessibility basics; C13 keeps three kinds).
-- Test first: `mcp/test-0.3-a11y.mjs` (in npm test), 110 checks, 52 red on main (W1 alt text, W2 decorative stops and
-  one RTL/LTR pair, W4 #f4b183 / #9dc3e6 / #a9d18e at 1.7-1.8:1, W5 rules absent, C1-C8); 110/110 after.
-- Story titles (#57): with story-titles.js loaded, a measure's name in the alt text goes through `ST.timeWords`, as its
-  title says it; the alt text never repeats the title, so the two add up for a screen reader (type, title, alt text).
+- Test first: `mcp/test-0.3-a11y.mjs` (in npm test). First version 110 checks, 52 red on main (W1, W2 decorative stops,
+  W4, W5 rules absent, C1-C8). The first full run then failed 13 test.mjs checks: they read a visual's alt text as its
+  full title (#24, #1, e, h, 10, KPI fit) and hold the theme to the design's (gradient, P1-2): my first version replaced
+  every alt text and stepped every palette colour. Fixed at the cause (above); the new test's W1 / W4 now say that
+  contract (121 checks, describe() and apply() checked on their own). Proposal for the owner: alt text as a sentence of
+  its own (Microsoft: the reader says the title first) once test.mjs reads the full title from the writer's notes.
+- Story titles (#57): #57 writes the story title, and the writer's alt text is that full title, so the two agree with no
+  extra step; where describe() writes a sentence, a measure's name goes through `ST.timeWords` when story-titles.js is
+  loaded, as its title says it.
 - Shared files touched: pbip-export.js (2 calls), pbip-notes.js (`a11y` in the result), report-rules.js (rules, guide
   source, per-finding severity), server.mjs (check_report's checks description, one create_report note),
   check-report.mjs (CHECKS, page json, notChecked line, the dataarcusRule sentence), theme-generator.js (BUILDER + ?v=).

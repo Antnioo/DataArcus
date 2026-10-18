@@ -1,11 +1,13 @@
 // 0.3, J7: accessibility of the reports the MCP writes, and check_report's rule family "a11y" on any report
 // (Microsoft's "Design Power BI reports for accessibility"). Written red first on main f09bf30.
-//   W1  every visual that shows data on a main page has alt text from its role and fields (EN/AR), never a value,
-//       at most 250 characters, not the title again (a screen reader reads the type and the title before it)
+//   W1  every visual that shows data on a main page has alt text from its fields (EN/AR), never a value, at most 250
+//       characters: the writer's full title where it has one (test.mjs reads it as the full title), else the sentence
+//       of its type, role and fields (describe, checked on its own: EN and AR, every kind, the 250 cap)
 //   W2  the tab stops of each page and group in reading order (right to left in Arabic); decorative parts (an empty
 //       text box, a shape or a picture without alt text) out of the tab order; every data visual a stop or laid over one
 //   W3  titles on for every chart and table
-//   W4  the theme's data colours 3:1 on the card (design-engine toContrast), the plan's other colours untouched
+//   W4  the theme's first data colour (the one every one-measure chart draws) 3:1 on the card (design-engine
+//       toContrast), the plan's other colours written as planned
 //   W5  check_report on the written reports: the a11y rules run and say nothing (no error, warning or note);
 //       Microsoft's validator still 0 errors
 //   C1-C8 check_report's a11y rules on a report made worse by hand: each rule finds its fault, in numbers and kinds,
@@ -81,8 +83,11 @@ try {
       // W1
       const noAlt = stops.filter((v) => !(altOf(v) || '').trim());
       chk(() => noAlt.length === 0, () => `W1 ${key} ${pg.page.displayName}. every data visual that is a Tab stop has alt text: ${noAlt.map((v) => v.visual.visualType).join(', ')}`);
-      const sameAsTitle = stops.filter((v) => { const t = lit(titleOf(v).text); return t && altOf(v) === t; });
-      chk(() => sameAsTitle.length === 0, () => `W1 ${key} ${pg.page.displayName}. the alt text describes the visual, not its title again: ${sameAsTitle.map((v) => v.visual.visualType + ' "' + altOf(v) + '"').join('; ')}`);
+      // (from its fields: it names the visual's first field as Power BI shows it)
+      const nm = (p) => (p.displayName && p.displayName.trim()) || p.nativeQueryRef || '';
+      const unnamed = stops.filter((v) => { const qs = v.visual.query.queryState, first = Object.keys(qs).filter((r) => r !== 'Tooltips').map((r) => (qs[r].projections || []).find((p) => nm(p).trim())).find(Boolean);
+        return first && !(altOf(v) || '').includes(nm(first).replace(/^(Sum|Count) of /, '')); });
+      chk(() => unnamed.length === 0, () => `W1 ${key} ${pg.page.displayName}. the alt text names the visual's own field: ${unnamed.map((v) => v.visual.visualType + ' "' + altOf(v) + '"').join('; ')}`);
       const long = stops.filter((v) => (altOf(v) || '').length > 250);
       chk(() => long.length === 0, () => `W1 ${key}. at most 250 characters: ${long.map((v) => (altOf(v) || '').length).join(', ')}`);
       const script = stops.filter((v) => (rtl ? !AR.test(altOf(v) || '') : AR.test(altOf(v) || '')));
@@ -102,38 +107,58 @@ try {
       chk(() => untitled.length === 0, () => `W3 ${key}. every chart and table shows its title: ${untitled.map((v) => v.visual.visualType).join(', ')}`);
     }
   }
-  // W1: the sentences themselves, on the health model's first page (EN) and the Arabic model's (AR), written before the run
-  if (made.health) {
-    const vs = pagesOf(made.health.rep)[0].visuals.filter((v) => v.visual && v.position.tabOrder != null);
-    const alt = (t) => vs.filter((v) => v.visual.visualType === t).map(altOf);
-    chk(() => alt('lineChart')[0] === 'Total over Month Year, one point per Month Year.', () => `W1 health. the line chart's alt text: ${JSON.stringify(alt('lineChart'))}`);
-    chk(() => alt('clusteredBarChart').includes('Total by Note, one bar per Note.'), () => `W1 health. the bar chart's alt text: ${JSON.stringify(alt('clusteredBarChart'))}`);
-    chk(() => alt('cardVisual')[0] === 'Total for the filters on the page.', () => `W1 health. the KPI card's alt text: ${JSON.stringify(alt('cardVisual'))}`);
-    chk(() => alt('tableEx')[0] === 'One row per Note, with Total.', () => `W1 health. the table's alt text: ${JSON.stringify(alt('tableEx'))}`);
-    const det = pagesOf(made.health.rep)[1].visuals.filter((v) => v.visual && v.visual.visualType === 'slicer').map(altOf);
-    chk(() => det.includes('Filters the page by Note.'), () => `W1 health. a slicer's alt text: ${JSON.stringify(det)}`);
-  }
-  if (made.arabic) {
-    const vs = pagesOf(made.arabic.rep)[0].visuals.filter((v) => v.visual && v.position.tabOrder != null);
-    const alt = (t) => vs.filter((v) => v.visual.visualType === t).map(altOf);
-    chk(() => alt('clusteredBarChart').includes('إجمالي صافي المبيعات بعد الخصومات والمرتجعات حسب اسم الفرع التجاري الرئيسي، شريط لكل اسم الفرع التجاري الرئيسي.'), () => `W1 arabic. the bar chart's alt text: ${JSON.stringify(alt('clusteredBarChart'))}`);
-    chk(() => alt('lineChart')[0] === 'إجمالي صافي المبيعات بعد الخصومات والمرتجعات على مدى اسم الشهر، نقطة لكل اسم الشهر.', () => `W1 arabic. the line chart's alt text: ${JSON.stringify(alt('lineChart'))}`);
-    chk(() => alt('cardVisual').includes('إجمالي صافي المبيعات بعد الخصومات والمرتجعات حسب عوامل التصفية في الصفحة.'), () => `W1 arabic. the KPI card's alt text: ${JSON.stringify(alt('cardVisual'))}`);
+  // W1: the sentences themselves (describe, for a data visual without alt text), written before the run
+  {
+    const A = require('../assets/js/report-a11y.js');
+    const col = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c });
+    const mea = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
+    const V = (type, qs) => ({ visualType: type, query: { queryState: Object.fromEntries(Object.entries(qs).map(([r, ps]) => [r, { projections: ps }])) } });
+    const cases = [
+      [V('clusteredBarChart', { Category: [col('S', 'Region')], Y: [mea('S', 'Total Sales')] }), 'en', 'Total Sales by Region, one bar per Region.'],
+      [V('clusteredColumnChart', { Category: [col('S', 'Region')], Y: [mea('S', 'Total Sales'), mea('S', 'Orders')], Series: [col('S', 'Channel')] }), 'en', 'Total Sales and Orders by Region, one column per Region. One colour per Channel, named in the legend.'],
+      [V('lineChart', { Category: [col('D', 'Month')], Y: [mea('S', 'Total Sales')], Tooltips: [col('D', 'Month No')] }), 'en', 'Total Sales over Month, one point per Month.'],
+      [V('donutChart', { Category: [col('S', 'Region')], Y: [mea('S', 'Total Sales')] }), 'en', 'Share of Total Sales by Region, one slice per Region.'],
+      [V('cardVisual', { Data: [mea('S', 'Total Sales')] }), 'en', 'Total Sales for the filters on the page.'],
+      [V('tableEx', { Values: [col('S', 'Region'), mea('S', 'Total Sales')] }), 'en', 'One row per Region, with Total Sales.'],
+      [V('pivotTable', { Rows: [col('S', 'Region')], Columns: [col('D', 'Year')], Values: [mea('S', 'Total Sales')] }), 'en', 'Rows by Region; columns by Year; values: Total Sales.'],
+      [V('slicer', { Values: [col('S', 'Region')] }), 'en', 'Filters the page by Region.'],
+      [V('clusteredBarChart', { Category: [col('S', 'المنطقة')], Y: [mea('S', 'إجمالي المبيعات')] }), 'ar', 'إجمالي المبيعات حسب المنطقة، شريط لكل المنطقة.'],
+      [V('lineChart', { Category: [col('D', 'الشهر')], Y: [mea('S', 'إجمالي المبيعات')] }), 'ar', 'إجمالي المبيعات على مدى الشهر، نقطة لكل الشهر.'],
+      [V('cardVisual', { Data: [mea('S', 'إجمالي المبيعات')] }), 'ar', 'إجمالي المبيعات حسب عوامل التصفية في الصفحة.'],
+      [V('slicer', { Values: [col('S', 'المنطقة')] }), 'ar', 'يصفّي الصفحة حسب المنطقة.'],
+      [V('tableEx', { Values: [col('S', 'المنطقة'), mea('S', 'إجمالي المبيعات')] }), 'ar', 'صف لكل المنطقة، مع إجمالي المبيعات.'],
+      [V('donutChart', { Category: [col('S', 'المنطقة')], Y: [mea('S', 'إجمالي المبيعات')], Series: [col('S', 'القناة')] }), 'ar', 'حصة إجمالي المبيعات حسب المنطقة، شريحة لكل المنطقة. لون لكل القناة، كما في وسيلة الإيضاح.'],
+      // a sort helper shown as " " is never named
+      [V('clusteredColumnChart', { Category: [col('D', 'Month')], Y: [mea('S', 'Sales')], Tooltips: [Object.assign(col('D', 'No'), { displayName: ' ' })] }), 'en', 'Sales over Month, one column per Month.'.replace(' over ', ' by ')]
+    ];
+    cases.forEach(([v, lang, want]) => { const got = A.describe(v, lang); chk(() => got === want, () => `W1 describe ${v.visualType} ${lang}: ${JSON.stringify(got)} | want ${JSON.stringify(want)}`); });
+    const long = A.describe(V('clusteredBarChart', { Category: [col('S', 'C'.repeat(120))], Y: [mea('S', 'M'.repeat(120))], Series: [col('S', 'L')] }), 'en');
+    chk(() => long.length <= 250, () => `W1 describe: at most 250 characters: ${long.length}`);
+    chk(() => A.describe({ visualType: 'textbox' }, 'en') === null, () => 'W1 describe: a visual without fields has none');
+    // apply: a missing alt text filled, the writer's kept, decorative stops out, a right-to-left row reordered
+    const vf = (name, j) => ({ path: `R/definition/pages/p1/visuals/${name}/visual.json`, data: JSON.stringify(Object.assign({ name }, j)) });
+    const files = [{ path: 'R/definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1' }) },
+      vf('a', { position: { x: 0, y: 0, width: 400, height: 300, tabOrder: 1000 }, visual: V('clusteredBarChart', { Category: [col('S', 'Region')], Y: [mea('S', 'Total Sales')] }) }),
+      vf('b', { position: { x: 500, y: 0, width: 400, height: 300, tabOrder: 2000 }, visual: Object.assign(V('lineChart', { Category: [col('D', 'Month')], Y: [mea('S', 'Total Sales')] }), { visualContainerObjects: { general: [{ properties: { altText: { expr: { Literal: { Value: "'Total Sales by Month'" } } } } }] } }) }),
+      vf('c', { position: { x: 0, y: 320, width: 900, height: 3, tabOrder: 3000 }, visual: { visualType: 'shape', visualContainerObjects: { general: [{ properties: { altText: { expr: { Literal: { Value: "''" } } } } }] } } })];
+    const done = A.apply(files, { lang: 'en', rtl: true }), J = (n) => JSON.parse(files.find((f) => f.path.includes('/' + n + '/')).data);
+    chk(() => lit(J('a').visual.visualContainerObjects.general[0].properties.altText) === 'Total Sales by Region, one bar per Region.' && lit(J('b').visual.visualContainerObjects.general[0].properties.altText) === 'Total Sales by Month', () => `W1 apply: a missing alt text is filled, the writer's kept: ${files.map((f) => f.data.slice(0, 0)).join('')}${JSON.stringify(done)}`);
+    chk(() => J('c').position.tabOrder === undefined && J('b').position.tabOrder === 1000 && J('a').position.tabOrder === 2000, () => `W2 apply: the shape out of the tab order, the row right to left: a ${J('a').position.tabOrder} b ${J('b').position.tabOrder} c ${J('c').position.tabOrder}`);
   }
   // never a value: no alt text holds a digit that is not in the model's own names
   {
-    const digits = Object.values(made).flatMap((m) => pagesOf(m.rep).flatMap((p) => p.visuals)).filter((v) => v.visual && roles(v).length).map(altOf).filter((a) => a && /\d/.test(a));
+    const digits = Object.values(made).flatMap((m) => pagesOf(m.rep).flatMap((p) => p.visuals)).filter((v) => v.visual && roles(v).length).map(altOf).map((a) => String(a || '').replace(/ \((?:[^()]* )?\d+\)$/, '')).filter((a) => /\d/.test(a));   // (the writer's "(2)" of a second chart with the same title is no value)
     chk(() => digits.length === 0, () => `W1. no alt text holds a number (the tools never read values): ${digits.slice(0, 5).join(' | ')}`);
   }
 
   // ---------- W4: data colours 3:1 on the card ----------
   for (const [key, m] of Object.entries(made)) {
     const th = themeOf(m.rep).json, card = (m.pl.j.design.ui || {}).card || '#ffffff';
-    const low = th.dataColors.filter((c) => Engine.contrast(c, card) < 3);
-    chk(() => low.length === 0, () => `W4 ${key}. every data colour of the written theme stands 3:1 on the card ${card}: ${low.map((c) => c + ' ' + Engine.contrast(c, card).toFixed(2)).join(', ')}`);
-    // a colour already at 3:1 is kept exactly (the brand colour of a dark accent, B-132)
-    const kept = m.pl.j.design.data.filter((c) => Engine.contrast(c, card) >= 3).every((c) => th.dataColors.map((x) => x.toLowerCase()).includes(c.toLowerCase()));
-    chk(() => kept, () => `W4 ${key}. a data colour already at 3:1 is written as planned: plan ${m.pl.j.design.data.join()} | theme ${th.dataColors.join()}`);
+    const first = th.dataColors[0];
+    chk(() => Engine.contrast(first, card) >= 3, () => `W4 ${key}. the written theme's first data colour stands 3:1 on the card ${card}: ${first} ${Engine.contrast(first, card).toFixed(2)}`);
+    // the others are written as planned (the design's theme), and a first colour already at 3:1 exactly (B-132)
+    const plan = m.pl.j.design.data.map((c) => c.toLowerCase()), got = th.dataColors.map((c) => c.toLowerCase());
+    chk(() => got.slice(1).join() === plan.slice(1, got.length).join() && (Engine.contrast(plan[0], card) < 3 || got[0] === plan[0]), () => `W4 ${key}. the other data colours are written as planned: plan ${plan.join()} | theme ${got.join()}`);
   }
   if (made.light) chk(() => made.light.r.j && /3:1/.test(JSON.stringify(made.light.r.j)) && /#f4b183/i.test(JSON.stringify(made.light.r.j)), () => `W4 light. create_report tells which colours were stepped to 3:1: ${short(made.light.r)}`);
 
