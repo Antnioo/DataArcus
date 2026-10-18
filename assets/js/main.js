@@ -463,7 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
  * ==================================================================
  */
 (() => {
-  const page = location.pathname.replace(/\/index\.html$/, '/') || '/';
+  // (an Arabic copy, /ar/..., is the same page type as its English page; page_location tells them apart)
+  const page = location.pathname.replace(/^\/ar(?=\/)/, '').replace(/\/index\.html$/, '/') || '/';
   const pageType = page.includes('/articles/') ? 'article'
     : page.includes('/dashboards/') ? 'dashboard'
     : page.includes('/tools/') ? 'tool'

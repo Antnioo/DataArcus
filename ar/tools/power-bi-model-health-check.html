@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/tools/power-bi-model-health-check.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/power-bi-model-health-check.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/power-bi-model-health-check.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/power-bi-model-health-check.html">
+  <title>فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء</title>
+  <meta name="description" content="أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="Power BI model health check, Power BI best practice analyzer, find unused columns Power BI, Power BI model documentation, pbit analyzer, VertiPaq, DAX best practices">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء">
+  <meta property="og:description" content="أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل.">
+  <meta property="og:url" content="https://dataarcus.com/ar/tools/power-bi-model-health-check.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/model-health-check.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/model-health-check.jpg">
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebApplication", "name": "Power BI Model Health Check", "url": "https://dataarcus.com/tools/power-bi-model-health-check.html", "applicationCategory": "DeveloperApplication", "operatingSystem": "Any (web browser)", "inLanguage": ["en", "ar"],
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }, "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" } },
+      { "@type": "FAQPage", "mainEntity": [
+        { "@type": "Question", "name": "Is my Power BI file uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. The file is opened and checked inside your browser tab. Nothing is sent to a server, and a .pbit contains no data rows." } },
+        { "@type": "Question", "name": "Why use a .pbit instead of a .pbix?", "acceptedAnswer": { "@type": "Answer", "text": "A .pbit has the same model and report without the data, so it is small and safe to check. In Power BI Desktop use File, Export, Power BI template." } },
+        { "@type": "Question", "name": "How does it find unused columns and measures?", "acceptedAnswer": { "@type": "Answer", "text": "It follows every visual, filter, measure, calculated column, relationship, sort order and security rule in the file. Anything none of them needs, directly or through other measures, is reported as unused." } }
+      ] }
+    ]
+  }
+  </script>
+  <style>
+    .tg { padding: var(--page-top) 0 var(--page-bottom); }
+    .tg h1 { color: var(--accent); }
+    .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .tg-preset { display: inline-flex; align-items: center; gap: 6px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 14px; font-size: .85rem; cursor: pointer; }
+    .tg-preset small { color: #94a3b8; font-size: .72rem; }
+    .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
+    .tg-preset.active { background: rgba(0, 212, 255, .1); }
+    .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
+    .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
+    .tg-btn2.btn-sm { padding: 6px 14px; font-size: .85rem; }
+    .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
+    .tg-faq p { color: #94a3b8; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+    .tg-cta > a.btn, .tg-cta > a.tg-btn2 { margin: 6px 4px !important; }
+    .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
+    .mb-seg button { background: none; border: 0; color: #94a3b8; font-weight: 600; font-size: .82rem; padding: 5px 12px; border-radius: 30px; }
+    .mb-seg button.active { background: var(--accent); color: #051018; }
+
+    .mh-hpills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mh-hpills > span { font-size: .8rem; color: #cbd5e1; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); border-radius: 30px; padding: 4px 12px; }
+    .mh-hpills i { color: var(--accent); }
+    .mh-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .mh-note { font-size: .83rem; color: #94a3b8; }
+    .mh-drop { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; border: 2px dashed rgba(0,212,255,.45); border-radius: 18px; padding: 48px 20px; background: linear-gradient(135deg, rgba(0,212,255,.06), rgba(0,132,255,.06)); cursor: pointer; transition: background .2s, border-color .2s, transform .2s; }
+    .mh-drop:hover, .mh-drop.over { background: linear-gradient(135deg, rgba(0,212,255,.13), rgba(0,132,255,.12)); border-color: var(--accent); }
+    .mh-drop.over { transform: scale(1.01); }
+    .mh-drop > i { font-size: 2.6rem; color: var(--accent); }
+    .mh-drop b { font-size: 1.25rem; color: var(--lt); }
+    .mh-drop span { color: #cbd5e1; }
+    .mh-drop small { color: #94a3b8; margin-top: 6px; }
+    .mh-under { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 14px; }
+    .mh-under .mh-note i { color: #22c55e; }
+    .mh-how { margin-top: 18px; color: #cbd5e1; font-size: .9rem; }
+    .mh-how ol { margin: 6px 0 0; padding-inline-start: 20px; color: #94a3b8; }
+    .mh-loading { display: flex; gap: 16px; align-items: center; }
+    .mh-spin { width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(0,212,255,.2); border-top-color: var(--accent); animation: mhSpin .8s linear infinite; flex: none; }
+    @keyframes mhSpin { to { transform: rotate(360deg); } }
+    .mh-error { display: flex; gap: 14px; align-items: flex-start; border-color: rgba(245,158,11,.4); }
+    .mh-error > i { font-size: 1.6rem; color: #f59e0b; }
+    .mh-error p { color: #cbd5e1; margin: 4px 0; }
+    .mh-filebar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; color: #cbd5e1; font-size: .9rem; margin-bottom: 14px; }
+    .mh-filebar i { color: var(--accent); }
+    .mh-ring { position: relative; margin: 0 auto; }
+    .mh-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .mh-ring circle { fill: none; stroke-width: 9; }
+    .mh-ring .bg { stroke: rgba(255,255,255,.07); }
+    .mh-ring .fg { stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .mh-ring > div { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .mh-ring b { font-size: 3rem; font-weight: 800; color: var(--lt); line-height: 1; }
+    .mh-ring span { font-size: .8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-top: 6px; }
+    .mh-cats { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; text-align: start; }
+    .mh-cats > div { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: .88rem; color: var(--lt); }
+    .mh-cats i { color: #94a3b8; }
+    .mh-cats .mh-bar { grid-column: 1 / -1; }
+    .mh-bar { height: 7px; background: var(--dk-3); border-radius: 6px; overflow: hidden; }
+    .mh-bar span { display: block; height: 100%; border-radius: 6px; transition: width .8s; }
+    .mh-share { background: none; border: 0; color: #94a3b8; margin-top: 14px; font-size: .85rem; }
+    .mh-share:hover { color: var(--accent); }
+    .mh-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mh-pill { background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 5px 12px; font-size: .82rem; color: #cbd5e1; }
+    .mh-pill i { color: var(--accent); margin-inline-end: 4px; }
+    .mh-pill b { color: var(--lt); }
+    .mh-unusedsum { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 16px; }
+    .mh-unusedsum > div { background: rgba(245,158,11,.06); border: 1px solid rgba(245,158,11,.25); border-radius: 12px; padding: 12px; text-align: center; }
+    .mh-unusedsum > div:last-child { background: rgba(255,255,255,.03); border-color: var(--glass-border); }
+    .mh-unusedsum b { display: block; font-size: 1.6rem; color: var(--lt); font-variant-numeric: tabular-nums; }
+    .mh-unusedsum span { font-size: .75rem; color: #94a3b8; }
+    .mh-warn, .mh-caution { font-size: .85rem; color: #fdcb6e; background: rgba(253,203,110,.07); border: 1px solid rgba(253,203,110,.3); border-radius: 12px; padding: 10px 14px; margin-top: 14px; }
+    .mh-caution { margin-top: 0; }
+    .mh-quick { display: flex; flex-direction: column; gap: 6px; }
+    .mh-quick button { display: flex; align-items: center; gap: 10px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 9px 12px; color: var(--lt); text-align: start; font-size: .9rem; }
+    .mh-quick button:hover { border-color: var(--accent); }
+    .mh-quick button span:nth-child(2) { flex: 1; }
+    .mh-quick small { color: #94a3b8; }
+    .mh-quick b { color: #22c55e; font-size: .85rem; }
+    .mh-sev { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; border-radius: 20px; padding-inline: 9px; white-space: nowrap; }
+    .mh-sev.high { background: rgba(239,68,68,.15); color: #f87171; }
+    .mh-sev.medium { background: rgba(245,158,11,.15); color: #fbbf24; }
+    .mh-sev.low { background: rgba(0,212,255,.12); color: #67e8f9; }
+    .mh-sev.info { background: rgba(148,163,184,.12); color: #94a3b8; }
+    .mh-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 26px 0 14px; border-bottom: 1px solid var(--glass-border); scrollbar-width: none; }
+    .mh-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: #94a3b8; font-weight: 600; padding: 10px 14px; white-space: nowrap; }
+    .mh-tabs button small { color: #94a3b8; font-weight: 700; }
+    .mh-tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+    .mh-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .mh-issue { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; margin-bottom: 8px; overflow-wrap: anywhere; }   /* AUD-037: a long word (a BPA rule id, a long name) wraps inside its card */
+    .mh-issue summary { display: flex; gap: 10px; align-items: center; padding: 12px 16px; cursor: pointer; list-style: none; color: var(--lt); }
+    .mh-issue summary::-webkit-details-marker { display: none; }
+    .mh-issue summary b { flex: 1; font-weight: 600; }
+    .mh-issue summary > i { color: #64748b; transition: transform .2s; }
+    .mh-issue[open] summary > i { transform: rotate(180deg); }
+    .mh-count { font-size: .78rem; font-weight: 800; color: var(--lt); background: var(--dk-3); border-radius: 20px; padding: 1px 9px; }
+    .mh-pen { font-size: .75rem; color: #f87171; font-weight: 700; }
+    .mh-ibody { padding: 0 16px 16px; color: #cbd5e1; font-size: .9rem; }
+    .mh-ibody p { margin: 0 0 8px; }
+    .mh-fix { background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.25); border-radius: 10px; padding: 8px 12px; }
+    .mh-fix i { color: #22c55e; }
+    .mh-src { font-size: .8rem; color: #94a3b8; }
+    .mh-src i { color: #94a3b8; }
+    .mh-src a { color: var(--accent); }
+    .mh-cat { font-size: .75rem; color: #94a3b8; margin: 6px 0; }
+    .mh-items { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 3px; }
+    .mh-items code, .mh-tags code, .mh-tunused code { color: #7dd3fc; background: rgba(125,211,252,.07); border-radius: 6px; padding: 1px 7px; font-size: .82rem; direction: ltr; unicode-bidi: plaintext; }
+    .mh-items small { color: #94a3b8; }
+    .mh-more { background: none; border: 0; color: var(--accent); font-size: .85rem; padding: 6px 0 0; }
+    .mh-h { display: flex; align-items: center; gap: 8px; color: var(--lt); margin-bottom: 10px; }
+    .mh-copy { background: none; border: 1px solid var(--glass-border); color: #cbd5e1; border-radius: 20px; font-size: .78rem; padding: 3px 10px; }
+    .mh-copy:hover { border-color: var(--accent); color: var(--accent); }
+    .mh-group { margin-top: 12px; }
+    .mh-gh { font-size: .85rem; color: var(--lt); font-weight: 600; margin-bottom: 5px; }
+    .mh-gh small { color: #94a3b8; font-weight: 400; }
+    .mh-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .mh-tags code.calc { border: 1px dashed rgba(125,211,252,.4); }
+    .mh-tags code.off { opacity: .45; }
+    .mh-tags code.ms { cursor: pointer; }
+    .mh-tags code.ms:hover { background: rgba(125,211,252,.18); }
+    .mh-tags small { color: #64748b; }
+    .mh-tunused { font-size: .85rem; color: #fdcb6e; margin-bottom: 6px; }
+    .mh-search { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; }
+    .mh-search input { flex: 1; background: none; border: 0; color: var(--lt); outline: none; font-size: .9rem; min-width: 0; }
+    .mh-search i { color: #94a3b8; }
+    .mh-mscroll { max-height: 560px; overflow: auto; margin: 0 -8px; }
+    .mh-mrow { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 8px; background: none; border: 0; border-radius: 10px; padding: 7px 10px; color: var(--lt); text-align: start; }
+    .mh-mrow:hover { background: rgba(255,255,255,.04); }
+    .mh-mrow.on { background: rgba(0,212,255,.1); }
+    .mh-mrow b { display: block; font-weight: 500; font-size: .88rem; }
+    .mh-mrow small { color: #64748b; font-size: .72rem; }
+    .mh-badge { font-size: .7rem; font-weight: 700; color: #67e8f9; background: rgba(0,212,255,.1); border-radius: 20px; padding: 1px 8px; white-space: nowrap; }
+    .mh-badge.off { color: #fbbf24; background: rgba(245,158,11,.12); }
+    .mh-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: #94a3b8; margin-bottom: 10px; }
+    .mh-dax { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12.5px/1.55 ui-monospace, Consolas, monospace; padding: 12px 14px; max-height: 320px; overflow: auto; white-space: pre; direction: ltr; text-align: left; }
+    .mh-deps { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mh-dep { background: var(--dk-3); border: 1px solid var(--glass-border); color: #cbd5e1; border-radius: 20px; padding: 3px 10px; font-size: .78rem; direction: ltr; }
+    .mh-dep.measure { color: #7dd3fc; cursor: pointer; }
+    .mh-dep.measure:hover { border-color: var(--accent); }
+    .mh-dep.column { cursor: default; }
+    .mh-dep.tbl { color: #c4b5fd; cursor: default; }
+    .mh-empty { text-align: center; color: #94a3b8; padding: 60px 10px; }
+    .mh-empty i { font-size: 2.4rem; color: #475569; }
+    .mh-tscroll { overflow-x: auto; }
+    .mh-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    .mh-table th { color: #94a3b8; font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px; border-bottom: 1px solid var(--glass-border); text-align: start; white-space: nowrap; }
+    .mh-table td { color: var(--lt); padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
+    .mh-table tr[data-t] { cursor: pointer; }
+    .mh-table tr[data-t]:hover td { background: rgba(255,255,255,.03); }
+    .mh-table tr.open td { background: rgba(0,212,255,.05); }
+    .mh-table code { color: #7dd3fc; font-size: .8rem; }
+    .mh-dimrow td { opacity: .6; }
+    .mh-dim { color: #64748b; }
+    .mh-unum { color: #fbbf24; font-weight: 700; }
+    .mh-doc { height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .mh-doc > i { font-size: 1.8rem; color: var(--accent); }
+    .mh-doc b { color: var(--lt); font-size: 1.05rem; }
+    .mh-doc p { flex: 1; }
+    .mh-mrow bdi, .mh-gh bdi { unicode-bidi: isolate; }
+    [dir=rtl] .mh-mrow > span:first-child { text-align: right; }
+    .mh-delta { font-size: .85rem; font-weight: 700; color: #94a3b8; margin-top: 6px; }
+    .mh-delta.up { color: #22c55e; } .mh-delta.down { color: #f87171; }
+    .mh-confirm { margin-top: 22px; }
+    .mh-q { background: var(--glass-bg); border: 1px solid rgba(253,203,110,.3); border-radius: 14px; padding: 12px 16px; margin-bottom: 8px; color: #cbd5e1; font-size: .9rem; overflow-wrap: anywhere; }
+    .mh-q p { margin: 8px 0 0; }
+    .mh-qhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .mh-qhead code { color: #7dd3fc; background: rgba(125,211,252,.07); border-radius: 6px; padding: 1px 7px; font-size: .82rem; direction: ltr; unicode-bidi: plaintext; }
+    .mh-qdax { margin: 8px 0 0; max-height: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .mh-qrel { font-size: .85rem; color: #94a3b8; }
+    .mh-q bdi { unicode-bidi: isolate; }
+    .mh-ign { background: none; border: 0; color: #94a3b8; font-size: .75rem; margin-inline-start: 10px; padding: 0; }
+    .mh-ign:hover { color: var(--accent); }
+    .mh-issue.ignored { opacity: .55; }
+    .mh-issue.ignored summary b { text-decoration: line-through; }
+    .mh-script { margin-top: 10px; }
+    .mh-sh { display: flex; align-items: center; gap: 8px; color: var(--lt); font-size: .88rem; margin-bottom: 4px; }
+    .mh-sh small { color: #94a3b8; }
+    .mh-script .mh-dax { max-height: 140px; white-space: pre-wrap; word-break: break-word; }
+    .mh-sbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mh-danger { border-color: #f87171 !important; color: #f87171 !important; }
+    .mh-pages { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 12px; font-size: .75rem; line-height: 1.3; }
+    .mh-pages > i { color: #94a3b8; font-size: .85rem; }
+    .mh-pages > span, .mh-pages > button { background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2px 9px; color: #cbd5e1; font-size: .75rem; font-weight: 500; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .mh-pages > button { color: var(--accent); cursor: pointer; }
+    .mh-pages > button:hover { border-color: var(--accent); }
+    .mh-help { font-size: .76rem; color: #64748b; margin: -4px 0 8px; }
+    .mh-chain { margin-top: 14px; border: 1px solid var(--glass-border); border-radius: 12px; padding: 8px 12px; background: rgba(255,255,255,.015); }
+    .mh-chain summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+    .mh-chain[open] summary { margin-bottom: 8px; }
+    .mh-tree, .mh-tree ul { list-style: none; margin: 0; padding: 0; text-align: left; }
+    .mh-tree { overflow-x: auto; }
+    .mh-tree ul { padding-inline-start: 18px; border-inline-start: 1px dashed rgba(125,211,252,.3); margin-inline-start: 8px; }
+    .mh-tree li { position: relative; padding-block: 3px; padding-inline-start: 10px; }
+    .mh-tree ul > li::before { content: ''; position: absolute; inset-inline-start: -18px; top: 14px; width: 24px; border-top: 1px dashed rgba(125,211,252,.3); }
+    .mh-tnode { background: none; border: 0; padding: 0; color: #7dd3fc; font-size: .82rem; text-align: start; }
+    .mh-tnode:hover { text-decoration: underline; }
+    .mh-tree small { color: #64748b; font-size: .72rem; margin-inline-start: 6px; }
+    .mh-kind { font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; border-radius: 20px; padding-inline: 8px; white-space: nowrap; }
+    .mh-kind.quick { background: rgba(34,197,94,.12); color: #4ade80; }
+    .mh-kind.expert { background: rgba(167,139,250,.14); color: #c4b5fd; }
+    .mh-expert { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: linear-gradient(135deg, rgba(167,139,250,.1), rgba(0,212,255,.06)); border: 1px solid rgba(167,139,250,.35); border-radius: 12px; padding: 10px 14px; margin: 4px 0 10px; }
+    .mh-expert > i { font-size: 1.4rem; color: #c4b5fd; }
+    .mh-expert > div { flex: 1; min-width: 200px; }
+    .mh-expert b { display: block; color: var(--lt); font-size: .9rem; }
+    .mh-expert span { font-size: .8rem; color: #94a3b8; }
+    .mh-step { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border-radius: 10px; cursor: pointer; margin: 0 -10px; }
+    .mh-step:hover { background: rgba(255,255,255,.03); }
+    .mh-step input { margin-top: 4px; accent-color: #22c55e; width: 17px; height: 17px; flex: none; }
+    .mh-step b { display: block; color: var(--lt); font-size: .9rem; font-weight: 600; }
+    .mh-step small { display: block; color: #94a3b8; font-size: .78rem; margin-top: 2px; }
+    .mh-step.done b { text-decoration: line-through; color: #64748b; }
+    .mh-expertbox { border-color: rgba(167,139,250,.35); }
+    .mh-elist { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; font-size: .86rem; color: var(--lt); }
+    .mh-elist small { color: #94a3b8; }
+    .mh-qf { max-height: 300px; white-space: pre; }
+    .mh-premium { border-color: rgba(253,203,110,.45); background: linear-gradient(135deg, rgba(253,203,110,.07), rgba(167,139,250,.07)); }
+    .mh-premium .mh-h i { color: #fdcb6e; }
+    .mh-prem { margin-inline-start: auto; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #1a1200; background: linear-gradient(90deg, #fdcb6e, #f59e0b); border-radius: 20px; padding-inline: 9px; }
+    .mh-steps { color: #cbd5e1; font-size: .85rem; padding-inline-start: 20px; margin: 6px 0 12px; }
+    .mh-steps li { margin-bottom: 4px; }
+    .mh-manual { color: #cbd5e1; font-size: .82rem; padding-inline-start: 18px; margin: 0; }
+    .mh-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 3000; }
+    .mh-toast.show { opacity: 1; }
+    [dir=rtl] .mh-issue summary b, [dir=rtl] .mh-quick button { text-align: right; }
+    @media (max-width: 767px) {
+      .mh-panel { padding: 16px; }
+      .mh-drop { padding: 36px 16px; }
+      .mh-unusedsum b { font-size: 1.3rem; }
+      .mh-mscroll { max-height: 360px; }
+    }
+
+    /* the loading box keeps the place of the drop zone that replaces it (measured 2026-10-04) */
+    .mh-boot { min-height: 457px; }
+    @media (min-width: 768px) { .mh-boot { min-height: 447px; } }
+  </style>
+</head>
+<body class="rtl">
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/tools/power-bi-model-health-check.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+    <main class="tg mh">
+    <div class="container">
+      <header class="mb-4">
+        <span class="page-badge" data-i18n="mh.badge">مجاني · يعمل داخل متصفحك · لا يتم رفع أي ملف</span>
+        <h1 class="display-5 fw-bold" data-i18n="mh.title">فحص صحة نموذج Power BI</h1>
+        <p class="lead text-white-50 mb-2" data-i18n="mh.subtitle">أسقط ملف .pbit واحصل على تقييم لصحة النموذج، والأعمدة والمقاييس التي لا تستخدمها ملفات تقاريرك، والعلاقات الخطرة وDAX البطيء، مع طريقة إصلاح واضحة لكل مشكلة. وتوثيق كامل للنموذج بضغطة واحدة.</p>
+        <div class="mh-hpills"><span><i class="bi bi-shield-lock"></i> <span data-i18n="mh.pill.private">ملفك يبقى على جهازك</span></span><span><i class="bi bi-list-check"></i> <span data-i18n="mh.pill.rules">أكثر من 30 فحصًا</span></span><span><i class="bi bi-file-earmark-text"></i> <span data-i18n="mh.pill.docs">تصدير التوثيق</span></span></div>
+      </header>
+      <div id="mhApp" aria-live="polite" data-clarity-mask="true"><div class="mh-panel mh-note mh-boot">Loading…</div></div>
+      <noscript><p class="text-warning">This tool needs JavaScript.</p></noscript>
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="tg-cta mb-5 text-center">
+            <h2 class="h4 fw-bold mb-2" data-i18n="mh.cta.title">تريد من يصلحها لك؟</h2>
+            <p class="text-white-50 mb-3" data-i18n="mh.cta.desc">DataArcus تراجع وتحسّن نماذج Power BI للشركات في منطقة الشرق الأوسط وشمال أفريقيا: تقارير أسرع ونماذج أصغر وDAX يسهل على فريقك صيانته.</p>
+            <a href="/ar/#contact" class="btn btn-accent" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+            <a href="/ar/tools/" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="mh.cta.more">أدوات مجانية أخرى</a>
+            <p class="small mt-3 mb-0"><a href="/ar/articles/article-power-bi-model-health-check.html" class="text-accent" data-i18n="mh.cta.article">اقرأ دراسة الحالة: ماذا وجد الفحص في نموذج تجريبي من Microsoft ←</a></p>
+          </div>
+          <section class="tg-faq">
+            <h2 class="h4 fw-bold" data-i18n="mh.faq.title">أسئلة شائعة</h2>
+            <h3 data-i18n="mh.faq.q1">هل يتم رفع ملفي إلى أي مكان؟</h3>
+            <p data-i18n="mh.faq.a1">لا. يتم فتح الملف وفحصه داخل صفحة المتصفح فقط، ولا يُرسل إلى DataArcus أو أي جهة أخرى، وإغلاق الصفحة يمسحه. كما أن ملف .pbit لا يحتوي أي صفوف بيانات، فقط هيكل النموذج وتصميم التقرير.</p>
+            <h3 data-i18n="mh.faq.q2">لماذا .pbit وليس .pbix؟</h3>
+            <p data-i18n="mh.faq.a2">ملف pbix يخزن بياناتك بصيغة مضغوطة لا يقرأها إلا Power BI. أما pbit فيحتوي نفس النموذج والتقرير بدون البيانات، فيكون صغيرًا حتى للنماذج الضخمة وآمنًا للفحص. في Power BI Desktop اختر File &gt; Export &gt; Power BI template.</p>
+            <h3 data-i18n="mh.faq.q3">كيف يتم تحديد "غير المستخدم"؟</h3>
+            <p data-i18n="mh.faq.a3">يُعتبر العمود أو المقياس مستخدمًا إذا احتاجه أي visual أو فلتر أو bookmark أو مقياس أو عمود محسوب أو علاقة أو ترتيب أو قاعدة أمان في الملف، مباشرة أو عبر مقاييس أخرى. إن كانت تقارير أخرى متصلة بنفس النموذج فراجعها قبل الحذف.</p>
+            <h3 data-i18n="mh.faq.q4">كيف يُحسب التقييم؟</h3>
+            <p data-i18n="mh.faq.a4">لكل فحص وزن حسب خطورته. الأداء يمثل 40% من التقييم، وسهولة الصيانة وأفضل الممارسات 30% لكل منهما. النماذج الكبيرة تُقيَّم بنسبة العناصر المتأثرة لا بعددها، حتى لا يُعاقب النموذج على حجمه.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+    <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/model-health.min.js?v=20261018ar2" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+  <script src="/assets/js/model-health-engine.min.js?v=20261018h" defer=""></script>
+  <script src="/assets/js/field-meaning.min.js?v=20261011t" defer=""></script>
+  <script src="/assets/js/model-health-tmdl.min.js?v=20261011t" defer=""></script>
+  <script src="/assets/js/model-health.min.js?v=20261018ar2" defer=""></script>
+
+
+</body></html>

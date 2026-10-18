@@ -28,7 +28,8 @@ const strip = (line) => line
   .trim();
 // lines of the analytics and consent loader in each page's head (the EU time zones, Google Analytics, Clarity), the
 // Content Security Policy (scripts/csp.mjs), and lines that are only a script comment: not what the page says
-const loader = (line) => /var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'|^<meta http-equiv="Content-Security-Policy"/.test(line) || /^\/\//.test(line);
+// (and the hreflang lines scripts/ar-pages.mjs writes: they name the Arabic copy, they don't change what the page says)
+const loader = (line) => /<link rel="alternate" hreflang=|var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'|^<meta http-equiv="Content-Security-Policy"/.test(line) || /^\/\//.test(line);
 // true when every line the diff removes comes back, boilerplate aside, as a line it adds (and the other way round)
 export function boilerplateOnly(diff) {
   const minus = [], plus = [];
@@ -43,8 +44,9 @@ export function boilerplateOnly(diff) {
   return key(minus) === key(plus);
 }
 
-// the page file for a sitemap URL ("" -> index.html, "tools/" -> tools/index.html)
-const pageFile = (loc) => { const p = loc.slice(SITE.length); return !p ? 'index.html' : p.endsWith('/') ? p + 'index.html' : p; };
+// the page file for a sitemap URL ("" -> index.html, "tools/" -> tools/index.html); an Arabic copy (ar/...) is dated by
+// its English page: the copy is generated from that page and its translations (scripts/ar-pages.mjs)
+const pageFile = (loc) => { const p = loc.slice(SITE.length).replace(/^ar\//, ''); return !p ? 'index.html' : p.endsWith('/') ? p + 'index.html' : p; };
 // the page's own translation sources (translations/x.min.js -> translations/x.js); common.js (menu and footer on
 // every page) is left out: a menu change is not a change to the page's content
 const translations = (file, rev) => {

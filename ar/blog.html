@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/blog.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/blog.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/blog.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/blog.html">
+
+  <title>دليل Power BI: أدلة لفرق الخليج - داتا أركوس</title>
+  <meta name="description" content="أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.">
+  <meta name="author" content="داتا أركوس">
+  <meta name="keywords" content="مدونة Power BI, Power BI الخليج, التقويم الهجري في Power BI, مبيعات رمضان في Power BI, Copilot في Power BI, تصميم تقارير Power BI, DAX, تراخيص Power BI, مدونة DataArcus">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="دليل Power BI: أدلة لفرق الخليج - داتا أركوس">
+  <meta property="og:description" content="أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.">
+  <meta property="og:url" content="https://dataarcus.com/ar/blog.html">
+  <meta property="og:site_name" content="داتا أركوس">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/blog.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+  <meta property="og:locale" content="ar_AE">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="دليل Power BI: أدلة لفرق الخليج - داتا أركوس">
+  <meta name="twitter:description" content="أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/blog.jpg">
+  <meta name="twitter:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+  
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "The Power BI Playbook by DataArcus",
+      "description": "Practical Power BI guides from real work for teams in the Gulf: Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.",
+      "url": "https://dataarcus.com/blog.html",
+      "numberOfItems": 14,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "We Checked 23 Power BI Models Against Microsoft's Rules. Our Own Tool Was Wrong 206 Times.",
+            "url": "https://dataarcus.com/articles/article-power-bi-best-practice-exceptions.html",
+            "datePublished": "2026-10-17",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend",
+            "url": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
+            "datePublished": "2026-10-03",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Is Your Power BI Model Ready for AI? A 7-Point Check",
+            "url": "https://dataarcus.com/articles/article-power-bi-model-ai-ready.html",
+            "datePublished": "2026-10-02",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "One Design Doesn’t Fit All: 7 Power BI Report Styles",
+            "url": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
+            "datePublished": "2026-09-29",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes",
+            "url": "https://dataarcus.com/articles/article-power-bi-report-redesign.html",
+            "datePublished": "2026-09-28",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 6,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.",
+            "url": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
+            "datePublished": "2026-09-25",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 7,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan",
+            "url": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html",
+            "datePublished": "2026-09-23",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 8,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
+            "url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
+            "datePublished": "2026-09-23",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 9,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution",
+            "url": "https://dataarcus.com/articles/article-journey-attribution.html",
+            "datePublished": "2026-09-01",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 10,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "Beyond 'Traffic Lights': How Earned Value Management (EVM) Predicts Project Risk",
+            "url": "https://dataarcus.com/articles/article-evm.html",
+            "datePublished": "2025-12-10",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 11,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI",
+            "url": "https://dataarcus.com/articles/article-shopify.html",
+            "datePublished": "2025-10-04",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 12,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "The 5 Marketing KPIs Every E-commerce Leader Should Track (But Isn't)",
+            "url": "https://dataarcus.com/articles/article-kpi.html",
+            "datePublished": "2025-09-15",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 13,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "ETL vs Power Query: Choosing the Right Data Strategy for Your E-commerce Store",
+            "url": "https://dataarcus.com/articles/article-etl-vs-power-query.html",
+            "datePublished": "2025-09-04",
+            "inLanguage": "en"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 14,
+          "item": {
+            "@type": "BlogPosting",
+            "headline": "The One Metric That Defines Your E-commerce Future (And How to Track It in Power BI)",
+            "url": "https://dataarcus.com/articles/article-clv.html",
+            "datePublished": "2025-08-23",
+            "inLanguage": "en"
+          }
+        }
+      ]
+    }
+    </script>
+
+</head>
+<body class="rtl">
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/blog.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+  <header class="page-header">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold" data-i18n="header.title">دليل Power BI</h1>
+        <p class="lead text-white-50 col-lg-8 mx-auto" data-i18n="header.subtitle">أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.</p>
+    </div>
+    </header>
+
+    <section id="blog" class="py-5">
+    <div class="container">
+
+        <div class="row align-items-center mb-4">
+        <div class="col-lg-8">
+        <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-glass active" data-filter="all" data-i18n="filters.all">الكل</button>
+              <button class="btn btn-glass" data-filter="gulf" data-i18n="filters.gulf">الخليج ورمضان</button>
+              <button class="btn btn-glass" data-filter="ai" data-i18n="filters.ai">Copilot والذكاء الاصطناعي</button>
+              <button class="btn btn-glass" data-filter="design" data-i18n="filters.design">تصميم التقارير</button>
+              <button class="btn btn-glass" data-filter="modelling" data-i18n="filters.modelling">النمذجة و DAX</button>
+              <button class="btn btn-glass" data-filter="strategy" data-i18n="filters.strategy">استراتيجية</button>
+            </div>
+        </div>
+        <div class="col-lg-4 mt-3 mt-lg-0">
+            <input id="blogSearch" type="search" class="form-control" placeholder="ابحث في الأدلة…" aria-label="ابحث في المقالات" data-i18n-aria-label="attrs.search" data-i18n-placeholder="blog.searchPlaceholder">
+        </div>
+        </div>
+
+        <div class="row mb-4">
+        <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-3" data-i18n="blog.sectionTitle">أحدث الأدلة الإرشادية</h2>
+            <p class="lead text-white-50" data-i18n="blog.sectionSubtitle">الأحدث أولاً. اختر موضوعًا أو ابحث.</p>
+        </div>
+        </div>
+
+        <div class="row g-4 mb-5 pb-3">
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="modelling">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="modelling" data-i18n="topics.modelling">النمذجة و DAX</span>
+                <h3 class="mb-2" data-i18n="posts.bestPracticeExceptions.title">فحصنا 23 نموذج Power BI مقابل قواعد Microsoft. أخطأت أداتنا نفسها 206 مرات.</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-10-17" data-i18n="posts.bestPracticeExceptions.date">17 أكتوبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.bestPracticeExceptions.excerpt">فحصنا 23 نموذج Power BI، منها 18 من Microsoft، مقابل إرشادات Microsoft. أخطأت أداتنا نفسها 206 مرات. خمس حالات لا تنطبق فيها قاعدة أفضل الممارسات، بكلمات Microsoft نفسها.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-best-practice-exceptions.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.bestPracticeExceptions.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="gulf">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="gulf" data-i18n="topics.gulf">الخليج ورمضان</span>
+                <h3 class="mb-2" data-i18n="posts.gulfCalendar.title">تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة الصحيحة</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-10-03" data-i18n="posts.gulfCalendar.date">3 أكتوبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.gulfCalendar.excerpt">رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-gulf-calendar-power-bi.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.gulfCalendar.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="ai">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="ai" data-i18n="topics.ai">Copilot والذكاء الاصطناعي</span>
+                <h3 class="mb-2" data-i18n="posts.aiReady.title">هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-10-02" data-i18n="posts.aiReady.date">2 أكتوبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.aiReady.excerpt">Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-model-ai-ready.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.aiReady.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="design">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="design" data-i18n="topics.design">تصميم التقارير</span>
+                <h3 class="mb-2" data-i18n="posts.reportStyles.title">تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-29" data-i18n="posts.reportStyles.date">29 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.reportStyles.excerpt">تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-report-styles.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.reportStyles.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="design">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="design" data-i18n="topics.design">تصميم التقارير</span>
+                <h3 class="mb-2" data-i18n="posts.reportRedesign.title">نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-28" data-i18n="posts.reportRedesign.date">28 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.reportRedesign.excerpt">تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-report-redesign.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.reportRedesign.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="modelling">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="modelling" data-i18n="topics.modelling">النمذجة و DAX</span>
+                <h3 class="mb-2" data-i18n="posts.modelHealth.title">فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 85 من 100.</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-25" data-i18n="posts.modelHealth.date">25 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.modelHealth.excerpt">نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-model-health-check.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.modelHealth.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="gulf">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="gulf" data-i18n="topics.gulf">الخليج ورمضان</span>
+                <h3 class="mb-2" data-i18n="posts.ramadanSales.title">مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-23" data-i18n="posts.ramadanSales.date">23 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.ramadanSales.excerpt">تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-ramadan-sales-power-bi.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.ramadanSales.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="strategy">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="strategy" data-i18n="topics.strategy">استراتيجية</span>
+                <h3 class="mb-2" data-i18n="posts.licensingGuide.title">Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-23" data-i18n="posts.licensingGuide.date">23 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.licensingGuide.excerpt">رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-power-bi-licensing-guide.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.licensingGuide.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="modelling">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="modelling" data-i18n="topics.modelling">النمذجة و DAX</span>
+                <h3 class="mb-2" data-i18n="posts.journeyAttribution.title">حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2026-09-01" data-i18n="posts.journeyAttribution.date">1 سبتمبر 2026</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.journeyAttribution.excerpt">لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق كل عميل محتمل قبل استبدال منطق الربط المتناثر.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-journey-attribution.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.journeyAttribution.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100" data-category="strategy">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="strategy" data-i18n="topics.strategy">استراتيجية</span>
+                <h3 class="mb-2" data-i18n="posts.evm.title">ما وراء "إشارات المرور": كيف تتنبأ إدارة القيمة المكتسبة (EVM) بمخاطر المشروع</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2025-12-10" data-i18n="posts.evm.date">10 ديسمبر 2025</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.evm.excerpt">تخبرك معظم لوحات المعلومات بما حدث بالأمس. تعلم كيف تستخدم CPI و SPI للتنبؤ رياضيًا بالتأخيرات وتجاوز الميزانية قبل حدوثها.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-evm.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.evm.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200" data-category="strategy">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="strategy" data-i18n="topics.strategy">استراتيجية</span>
+                <h3 class="mb-2" data-i18n="posts.shopify.title">دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2025-10-04" data-i18n="posts.shopify.date">04 اكتوبر 2025</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.shopify.excerpt">دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI لتتبع المبيعات وعائد الاستثمار التسويقي وسلوك العملاء.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-shopify.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.shopify.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200" data-category="strategy">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="strategy" data-i18n="topics.strategy">استراتيجية</span>
+                <h3 class="mb-2" data-i18n="posts.kpis.title">5 مؤشرات أداء تسويقية يتجاهلها متجرك الإلكتروني</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2025-09-15" data-i18n="posts.kpis.date">15 سبتمبر 2025</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.kpis.excerpt">يتعمق دليلنا الجديد في تحليلات التسويق المتقدمة، بما في ذلك تكلفة اكتساب العملاء (CAC) ونسبة كفاءة التسويق (MER)، التي تدفع النمو المربح.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-kpi.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.kpis.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-category="modelling">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="modelling" data-i18n="topics.modelling">النمذجة و DAX</span>
+                <h3 class="mb-2" data-i18n="posts.etlpq.title">ETL مقابل Power Query: استراتيجية البيانات الصحيحة لمتجرك الإلكتروني</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2025-09-04" data-i18n="posts.etlpq.date">4 سبتمبر 2025</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.etlpq.excerpt">إطار عملي لاتخاذ قرار بشأن متى تستخدم خطوط البيانات الهندسية لبيانات Shopify ومتى تحتفظ بالمنطق في Power Query لتحليلات التسويق.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-etl-vs-power-query.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.etlpq.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100" data-category="strategy">
+            <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="topic-badge cap-pill" data-topic="strategy" data-i18n="topics.strategy">استراتيجية</span>
+                <h3 class="mb-2" data-i18n="posts.clv.title">المقياس الوحيد الذي يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه)</h3>
+                <div class="small text-white-50 mb-3">
+                <time datetime="2025-08-23" data-i18n="posts.clv.date">23 أغسطس 2025</time>
+                </div>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="posts.clv.excerpt">لماذا تُعد القيمة الدائمة للعميل (وليس فقط الإيرادات) هي مؤشر الأداء الرئيسي لنمو التجارة الإلكترونية، ومسار عملي لنمذجتها في Power BI.</p>
+                <a class="btn btn-glass mt-auto" href="/ar/articles/article-clv.html">
+                <i class="bi bi-journal-text me-2"></i><span data-i18n="posts.clv.button">اقرأ الدليل</span>
+                </a>
+            </div>
+            </div>
+        </div>
+
+        <div id="noResults" class="text-center py-5" style="display: none;">
+            <div class="glass-card p-4">
+                <i class="bi bi-search text-white-50" style="font-size: 3rem;"></i>
+                <h3 class="mt-3 text-white-50" data-i18n="blog.noResultsTitle">لم يتم العثور على مقالات</h3>
+                <p class="text-white-50" data-i18n="blog.noResultsSubtext">حاول تعديل كلمات البحث أو الفلاتر.</p>
+            </div>
+        </div>
+
+        </div>
+
+        <div class="row">
+        <div class="col-12" data-aos="fade-up">
+            <div class="glass-card p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <h3 class="mb-0">
+                <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>
+                <span data-i18n="subscribe.title">احصل على دليل Power BI القادم</span>
+                </h3>
+                <span class="badge bg-primary" data-i18n="subscribe.badge">لا رسائل مزعجة</span>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                <p class="text-white-50 mb-3" data-i18n="subscribe.copy">أدلة جديدة عند صدورها: Power BI لفرق الخليج، من عمل حقيقي. لا حشو، فقط ما ينفع.</p>
+                </div>
+                <div class="col-lg-4">
+                <a href="/ar/#contact" class="btn btn-accent w-100">
+                    <i class="bi bi-envelope-open me-2"></i><span data-i18n="subscribe.button">اشترك مجانًا</span>
+                </a>
+                </div>
+            </div>
+
+            </div>
+        </div>
+        </div>
+
+    </div>
+    </section>
+
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/blog.min.js?v=20261017a" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+
+</body></html>

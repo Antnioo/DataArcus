@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Exam settings. DP-600 is the default; another exam page sets window.EXAM before this script.
   const EX = Object.assign({
     data: 'DP600', code: 'DP-600', store: 'dataarcus-dp600-v1', ev: 'dp600',
-    outline: '../assets/data/dp600-outline.json',
+    outline: '/assets/data/dp600-outline.json',
     page: 'https://dataarcus.com/tools/dp-600-practice-exam.html',
     dom: {
       prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5 },

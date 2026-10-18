@@ -440,7 +440,7 @@ export default async function ({ browser, url }) {
     // every page with the menu has the item (the menu is the same on every page)
     for (const p of pages()) {
       const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
-      if (html.includes('id="navmenu"') && !/<li class="nav-item"><a class="nav-link" href="\/power-bi-mcp\/" data-i18n="nav.agent">/.test(html)) problems.push(`${p}: the menu has no AI Agent (beta) item`);
+      if (html.includes('id="navmenu"') && !/<li class="nav-item"><a class="nav-link" href="(\/ar)?\/power-bi-mcp\/" data-i18n="nav.agent">/.test(html)) problems.push(`${p}: the menu has no AI Agent (beta) item`);
       checks++;
     }
   }
