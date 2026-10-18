@@ -208,8 +208,8 @@ export function meaningOf(visual, opts) {
   if (by('start').length && by('end').length) {
     shape = 'schedule';
     roles = { Values: live.flatMap((r) => r.fields.map(copy)) };
-    why = 'a start date and an end date per row: a schedule (a Gantt), which no native visual draws as bars; a table keeps its facts';
-    lost.push('the bars from start to end date: no native visual draws a date range; the table lists the same fields');
+    why = 'a start date and an end date per row: a schedule (a Gantt), which no generally available native visual draws as bars (Microsoft\'s Gantt visual is in preview); a table keeps its facts';
+    lost.push('the bars from start to end date: no generally available native visual draws a date range as bars (Microsoft\'s Gantt visual is in preview); the table lists the same fields');
   } else if (by('node').length || (by('from').length && (by('to').length || by('node').length))) {
     shape = 'network';
     roles = { Source: cols('from', 'node'), Target: cols('to'), Weight: vals('size', 'value', 'anonVal') };
