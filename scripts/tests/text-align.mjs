@@ -60,6 +60,10 @@ async function centring(pg, tag) {
       e.__text = [...e.childNodes].filter((x) => x.nodeType === 3).map((x) => [x, x.textContent]);
       e.__text.forEach(([x], k) => { x.textContent = k ? '' : 'HHHH'; });
       [...e.children].forEach((c) => c.style.setProperty('visibility', 'hidden', 'important'));   // an icon is not a capital
+      // the tests serve Inter but not the Arabic font (Google Fonts are blocked), so an Arabic page falls back to a
+      // system font whose cap height and glyphs differ from machine to machine: its capitals are drawn in Inter, the
+      // site's Latin font, so the rule is measured and not the runner's fallback font
+      if (document.documentElement.lang === 'ar') e.style.setProperty('font-family', 'Inter, sans-serif', 'important');
       const r = e.getBoundingClientRect();
       return { x: r.left, y: r.top, w: r.width, h: r.height, name: e.className };
     }, i);
@@ -86,7 +90,7 @@ async function centring(pg, tag) {
       if (before === after && withText.data.some((v, k) => Math.abs(v - noText.data[k]) > 40)) break;
       await pg.waitForTimeout(300);
     }
-    await pg.evaluate((i) => { const e = window.__pills[i]; e.style.removeProperty('color'); e.__text.forEach(([x, t]) => { x.textContent = t; }); [...e.children].forEach((c) => c.style.removeProperty('visibility')); }, i);
+    await pg.evaluate((i) => { const e = window.__pills[i]; e.style.removeProperty('color'); e.__text.forEach(([x, t]) => { x.textContent = t; }); [...e.children].forEach((c) => c.style.removeProperty('visibility')); e.style.removeProperty('font-family'); }, i);
     // each row's ink: the largest change in the middle half of the width. A pill sits at fractional pixels, so the
     // first and last ink rows are partly covered: their share of a full row's ink is the edge's subpixel position,
     // and the gaps are measured from the pill's exact box, not the rounded screenshot
