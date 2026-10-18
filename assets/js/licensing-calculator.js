@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hours: 730
   };
   const SKUS = [2, 4, 8, 16, 32, 64, 128, 256];
-  fetch('../assets/data/powerbi-prices.json', { cache: 'no-cache' })
+  fetch('/assets/data/powerbi-prices.json', { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (!d) return;

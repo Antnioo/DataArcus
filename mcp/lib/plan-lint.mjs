@@ -60,7 +60,10 @@ export function planLint(a) {
   // (the writer's paths start with its .Report folder; the reading block takes paths inside the report: A5-12)
   const inv = inventory(memorySource(inReport(b.r)), 'the planned report');
   const out = lint(inv, a.m.tables, null, { pages: [1] });
-  return Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out);
+  // (rc.22, B-140) the kinds the writer gave the plan's slots, where they differ (a column chart whose category names
+  // can't stand level is a bar chart; a two-valued category a donut): kept off the answer (not enumerable), the plan
+  // shows them on its slots
+  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
 }
 
 // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the pages of the plan as the shared renderer draws

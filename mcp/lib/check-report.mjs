@@ -231,13 +231,15 @@ export async function checkReport(p, opts) {
     try {
       const { runReportValidation, getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli');
       const s = await runReportValidation({ reportDir: loc.reportDir, defDir: loc.defDir, provider: await getMetadataProvider(), skipSchema: true, pbipPath: loc.pbipPath || undefined });
-      Object.assign(validator, { ran: true, mode: 'offline', errors: s.errorCount, warnings: s.warningCount, known: 0 });
+      // (rc.22, B-142: errors 3 beside the same 3 items as notes, counts.errors 0) errors and warnings count what stays an
+      // error or a warning among the findings; a known gap is a note (known), and reported keeps the validator's own counts
+      Object.assign(validator, { ran: true, mode: 'offline', errors: s.errorCount, warnings: s.warningCount, known: 0, reported: { errors: s.errorCount, warnings: s.warningCount } });
       for (const [code, d] of Object.entries(s.diagnostics || {})) for (const it of (d.items || [])) {
         const file = it.file && path.isAbsolute(it.file) ? rel(loc.reportDir, it.file) : null;
         // (polish round P2) a gap of the validator's own catalog that Desktop was seen to draw: a note with its evidence
         let known = null;
         if (file && !file.startsWith('..') && /visual\.json$/i.test(file) && VALIDATOR_GAPS.some((g) => g.code === code && g.object === it.path)) { try { known = knownGap(code, it.path, readJson(path.join(loc.reportDir, ...file.split('/')))); } catch (e) { known = null; } }
-        if (known) validator.known++;
+        if (known) { validator.known++; if (d.severity === 'error') validator.errors--; else if (d.severity === 'warning') validator.warnings--; }
         add(Object.assign({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: known ? 'note' : d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !file.startsWith('..') ? file : null, page: null, visual: null,
           what: scrub(String(it.message || '').split(String(it.file || '\u0000')).join('').replace(/[:\s]+$/, ''), loc.reportDir), fix: 'See Microsoft\'s report authoring reference for this code; in Power BI Desktop, opening and saving the report fixes most structure problems.',
           source: `Microsoft validator ${VALIDATOR_VERSION}: ${code}` }, known ? { known, fix: 'Nothing to fix: Power BI Desktop draws it (see known.evidence). Keep it; only Microsoft\'s validator does not list it yet.' } : {}));

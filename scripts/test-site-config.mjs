@@ -107,5 +107,73 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   ok(said.length === 2 && said.every((n) => n <= rules), `the Health Check says ${said.join(' / ')} checks in English / Arabic; the engine has ${rules} rules`);
 }
 
+// The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
+// copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy
+// is lang="ar" dir="rtl" with its title, description and Open Graph in Arabic within the limits search results show,
+// its links go to the Arabic copy of a page that has one and every file it names exists, the sitemap lists both with
+// their alternates, robots.txt lets crawlers in, llms.txt names them. (That each copy is what a fresh render gives is
+// scripts/ar-pages.mjs's own check, in CI after Chromium is installed.)
+{
+  const { PAIRS, arFile, urlOf, fileOf, alternates } = await import('./ar-pages.mjs');
+  const attrs = (tag) => Object.fromEntries([...tag.matchAll(/([a-z:-]+)="([^"]*)"/gi)].map((m) => [m[1].toLowerCase(), m[2].replace(/&amp;/g, '&')]));
+  const tags = (h, name) => [...h.replace(/<script\b[\s\S]*?<\/script>/gi, '').matchAll(new RegExp(`<${name}\\b[^>]*>`, 'gi'))].map((m) => attrs(m[0]));
+  const head = (h) => {
+    const links = tags(h, 'link'), metas = tags(h, 'meta'), html = tags(h, 'html')[0] || {};
+    const meta = (k, v) => (metas.find((m) => m[k] === v) || {}).content;
+    return { lang: html.lang, dir: html.dir, title: ((h.match(/<title>([^<]*)<\/title>/) || [])[1] || '').trim(), description: meta('name', 'description'),
+      ogTitle: meta('property', 'og:title'), ogDescription: meta('property', 'og:description'), ogUrl: meta('property', 'og:url'),
+      canonical: (links.find((l) => l.rel === 'canonical') || {}).href, alt: links.filter((l) => l.rel === 'alternate' && l.hreflang).map((l) => [l.hreflang, l.href]) };
+  };
+  const AR = /[؀-ۿ]/;
+  const onDisk = exists('ar') ? fs.readdirSync(path.join(ROOT, 'ar'), { recursive: true }).map((f) => 'ar/' + f.split(path.sep).join('/')).filter((f) => f.endsWith('.html')) : [];
+  // every public page has its copy: the pages outside the sitemap are exactly the ones lang-manager's hasArCopy() leaves
+  // English (404.html, a -lab page), so the links it rewrites at run time go to copies that exist
+  const want = pages.map((p) => p.split(path.sep).join('/')).filter((p) => !p.startsWith('ar/') && !/^404\.html$|-lab\.html$/.test(p)).sort();
+  ok(JSON.stringify(want) === JSON.stringify([...PAIRS].sort()), `the pages with an Arabic copy (the sitemap) must be every page but 404.html and -lab pages: missing ${want.filter((p) => !PAIRS.includes(p)).join(', ') || '-'}, extra ${PAIRS.filter((p) => !want.includes(p)).join(', ') || '-'}`);
+  for (const f of onDisk) ok(PAIRS.map(arFile).includes(f), `${f}: an Arabic copy with no English page in scripts/ar-pages.mjs PAIRS`);
+  for (const en of PAIRS) {
+    const ar = arFile(en);
+    ok(exists(en) && exists(ar), `the pair ${en} and ${ar}: ${exists(en) ? ar : en} is missing`);
+    if (!exists(en) || !exists(ar)) continue;
+    const E = head(read(en)), A = head(read(ar)), want = JSON.stringify(alternates(en));
+    ok(E.lang === 'en' && !E.dir, `${en}: <html lang="en"> (got lang=${E.lang} dir=${E.dir})`);
+    ok(A.lang === 'ar' && A.dir === 'rtl', `${ar}: <html lang="ar" dir="rtl"> (got lang=${A.lang} dir=${A.dir})`);
+    for (const [f, h, own] of [[en, E, urlOf(en)], [ar, A, urlOf(ar)]]) {
+      ok(JSON.stringify(h.alt) === want, `${f}: hreflang must be exactly ${want} (got ${JSON.stringify(h.alt)})`);
+      ok(h.alt.every(([, u]) => u.startsWith(SITE)), `${f}: hreflang addresses must be fully qualified https://dataarcus.com/...`);
+      ok(h.canonical === own, `${f}: canonical ${h.canonical}, not its own ${own}`);
+      ok(h.ogUrl === own, `${f}: og:url ${h.ogUrl}, not its own ${own}`);
+    }
+    for (const k of ['title', 'description', 'ogTitle', 'ogDescription']) {
+      ok(E[k] && A[k] && E[k] !== A[k], `${ar}: ${k} is the same as the English page's (or missing): "${(A[k] || '').slice(0, 50)}"`);
+      ok(AR.test(A[k] || ''), `${ar}: ${k} has no Arabic letters: "${(A[k] || '').slice(0, 50)}"`);
+    }
+    ok([...A.title].length <= 60, `${ar}: title over 60 characters (${[...A.title].length}), the limit the English titles keep`);
+    ok(A.description && [...A.description].length <= 155, `${ar}: description empty or over 155 characters (${[...(A.description || '')].length})`);
+    // every address in the copy: the files exist; a page link goes to the Arabic copy when the page has one
+    const h = read(ar).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (s) => s.replace(/>[\s\S]*<\//, '></'));
+    for (const m of h.matchAll(/<([a-z]+)\b[^>]*?\s(href|src|poster|action)="([^"]*)"/gi)) {
+      const [, tag, , val] = m;
+      if (/^(#|mailto:|tel:|data:|javascript:)/i.test(val) || /rel="(canonical|alternate|preconnect)"/.test(m[0])) continue;
+      if (/^https?:\/\//i.test(val) && !val.startsWith(SITE)) continue;
+      const p = new URL(val.replace(/&amp;/g, '&'), urlOf(ar)).pathname, file = fileOf(p);
+      ok(exists(file), `${ar}: ${val} is not on the site (${file})`);
+      // (the language switch, marked hreflang="en", is the one link meant for the English page)
+      if (tag.toLowerCase() === 'a' && !file.startsWith('ar/') && !/\shreflang="en"/.test(m[0] + h.slice(m.index + m[0].length).split('>')[0])) ok(!PAIRS.includes(file), `${ar}: links to ${val}, which has an Arabic copy (${arFile(file)})`);
+    }
+  }
+  // the sitemap: the xhtml namespace; both copies of each pair, each with the alternates of the pair, itself included
+  ok(/<urlset[^>]*\sxmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/.test(sitemap), 'sitemap.xml: the xmlns:xhtml namespace is not declared');
+  const entries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => ({ loc: (m[1].match(/<loc>([^<]+)<\/loc>/) || [])[1], alt: [...m[1].matchAll(/<xhtml:link\b[^>]*>/g)].map((t) => attrs(t[0])).map((a) => [a.hreflang, a.href]) }));
+  for (const en of PAIRS) for (const u of [urlOf(en), urlOf(arFile(en))]) {
+    const e = entries.find((x) => x.loc === u);
+    ok(e, `sitemap.xml: no entry for ${u}`);
+    if (e) ok(JSON.stringify(e.alt) === JSON.stringify(alternates(en)), `sitemap.xml: ${u} must list the alternates ${JSON.stringify(alternates(en))} (got ${JSON.stringify(e.alt)})`);
+  }
+  for (const e of entries) if (e.alt.length) ok(PAIRS.some((en) => [urlOf(en), urlOf(arFile(en))].includes(e.loc)), `sitemap.xml: ${e.loc} has alternates but no Arabic copy`);
+  ok(!/^Disallow:\s*\/ar\b/im.test(robots), 'robots.txt must not block /ar/');
+  ok(PAIRS.some((en) => llms.includes(`(${urlOf(arFile(en))})`)), 'llms.txt must name the Arabic versions (a link to an /ar/ page)');
+}
+
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
 console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);

@@ -60,7 +60,7 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     chk(() => !strict.err && CODES.every((c) => sf.some((f) => f.rule === c)), () => `C1. the fixture must reproduce the five codes, verbatim: ${JSON.stringify(strict.j && strict.j.counts.byRule)} ${strict.err ? strict.t.slice(0, 200) : ''}`);
     chk(() => CODES.every((c) => sf.filter((f) => f.rule === c && !f.known).every((f) => f.impact === 'desktopOpens' && f.severity === 'error' && new RegExp(`Microsoft validator [^:]+: ${c}$`).test(f.source))),
       () => `C2. each of the five is "desktopOpens", its severity and source kept: ${JSON.stringify(sf.filter((f) => CODES.includes(f.rule)).map((f) => [f.rule, f.impact, f.severity, f.source]))}`);
-    chk(() => strict.j.validator.errors === 6 + SL && strict.j.validator.known === SL && strict.j.counts.errors >= 6, () => `C3. the validator's own counts stay as it gives them (6 errors, and ${SL} known, one per slicer): ${JSON.stringify([strict.j.validator, strict.j.counts])}`);
+    chk(() => strict.j.validator.reported.errors === 6 + SL && strict.j.validator.errors === 6 && strict.j.validator.known === SL && strict.j.counts.errors >= 6, () => `C3. the validator's own counts kept in reported (6 + ${SL} errors), errors the 6 that stay errors (rc.22, B-142), and ${SL} known, one per slicer: ${JSON.stringify([strict.j.validator, strict.j.counts])}`);
     const im = strict.j && strict.j.impact;
     chk(() => im && KINDS.every((k) => im.kinds[k] && typeof im.kinds[k].count === 'number' && /\S/.test(im.kinds[k].means)) && im.kinds.desktopOpens.count === 6 + SL && im.kinds.canBreak.count === 0,
       () => `C4. impact.kinds: each kind with its count and one sentence; 6 + ${SL} known desktopOpens, 0 canBreak: ${JSON.stringify(im)}`);
@@ -110,7 +110,7 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     const nSl = slicersOf(Rd).length;
     const round = await ask('check_report', { path: `${dir}/Round.pbip` }), rdf = (round.j && round.j.findings) || [];
     const unk = (fs2) => fs2.filter((f) => f.rule === 'PBIR_FORMATTING_OBJECT_UNKNOWN');
-    chk(() => nSl >= 1 && !round.err && unk(rdf).length === nSl && round.j.validator.errors === nSl, () => `P2a. the fixture reproduces the validator's error once per slicer (${nSl}), its own count kept: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
+    chk(() => nSl >= 1 && !round.err && unk(rdf).length === nSl && round.j.validator.reported.errors === nSl && round.j.validator.errors === 0, () => `P2a. the fixture reproduces the validator's error once per slicer (${nSl}), its own count kept: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
     chk(() => unk(rdf).every((f) => f.severity === 'note' && f.impact === 'desktopOpens' && f.known && /Power BI Desktop 2\.158 draws it/.test(f.known.what) && f.known.what.includes(`validator ${VALIDATOR_PIN} does not list it yet`) && round.j.validator.version === VALIDATOR_PIN
       && [...`${f.known.what} ${round.j.impact.summary}`.matchAll(/validator (\d+\.\d+\.\d+)/g)].every((m) => m[1] === VALIDATOR_PIN)
       && /DESKTOP-TESTS\.md/.test(f.known.evidence) && /2026-10-12/.test(f.known.evidence) && /^Microsoft validator [^:]+: PBIR_FORMATTING_OBJECT_UNKNOWN$/.test(f.source)),
