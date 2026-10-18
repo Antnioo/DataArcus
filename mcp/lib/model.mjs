@@ -349,7 +349,12 @@ export function loadModel(p, opts) {
   // then suggested deleting good reports. Every other report is named with why, and never read.
   const all = beside.filter((n) => /\.Report$/i.test(n)), notCounted = [];
   const reports = all.filter((r) => { const why = notThisModel(projectDir, r, folder); if (why) notCounted.push({ report: shownName(r.replace(/\.Report$/i, ''), 80), why }); return !why; });
-  const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
+  // (rc.22, B-144: a report of this model with no pages to read was "counted" and the answer said reportRead false with no
+  // reason) each counted report whose files can't be read is named with why: the columns it uses are then unknown
+  const notRead = [];
+  const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); const files = !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : [];
+    if (!files.length) notRead.push({ report: shownName(r.replace(/\.Report$/i, ''), 80), why: isLink(d) ? 'its definition folder is a link (never followed)' : fs.existsSync(d) ? 'its definition folder has no report files' : fs.existsSync(path.join(projectDir, r, 'report.json')) ? 'it is saved in the older report format (report.json), which this check does not read yet: save it again in Power BI Desktop with the PBIR format' : 'it has no definition folder (no pages or visuals saved): only its definition.pbir is there' });
+    return files; });
   // (round 17, the outside review's G-05: each report file was capped, but not all of them together) every report JSON
   // file measured first, all together, before any is read, as the TMDL files above
   { let total = 0; for (const f of pbir) total += fs.lstatSync(f).size;
@@ -357,7 +362,7 @@ export function loadModel(p, opts) {
   // (A1-4: a file that cannot be read is listed as skipped with why, and the "unused" findings are said to be partial)
   const skipped = [];
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { skipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
-  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
+  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
   return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen });
 }
 

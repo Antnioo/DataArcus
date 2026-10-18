@@ -1,21 +1,28 @@
 name: Tests
 
-# Every push and pull request runs the website's 16 suites and the MCP's checks, so nothing reaches main untested.
+# Every push and pull request runs the website's suites and the MCP's checks, so nothing reaches main untested.
+# B-145 (owner's go 18 Oct): the long runs are split into shards that run as parallel jobs; each required check
+# (website, mcp, mcp-windows) is a last job of that name that needs all its shards, fails unless every one of them
+# passed, and adds up their checks (scripts/ci-sum.mjs: every shard, suite and script exactly once).
 
+# Pushes to main, every pull request (drafts included) and a manual "Run workflow" on any branch (owner 18 Oct): a branch
+# without a PR gets no automatic run, so a push to a PR branch is no longer tested twice.
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# one run per ref: refs/heads/main for pushes, refs/pull/<n>/merge for a PR, the branch for a manual run
 concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  website:
+  website-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -49,17 +56,88 @@ jobs:
       - name: Analytics events follow GA4 rules (no parameter GA4 reads as the traffic source)
         run: node scripts/test-analytics-events.mjs
 
+  website-suites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]   # SHARDS in scripts/tests/run-all.mjs
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # as before the split: the suites see the same checkout
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 
-      - name: All website suites
-        run: node scripts/tests/run-all.mjs
+      # (in one shard only: it renders every Arabic copy again, so once per run is enough; a failure fails the shard,
+      # so the website check)
+      - name: The Arabic copies at /ar/ are what a fresh render of their English pages gives (never edited by hand)
+        if: matrix.shard == 1
+        run: node scripts/ar-pages.mjs
 
-  mcp:
+      - name: Website suites, shard ${{ matrix.shard }} of 3
+        run: |
+          mkdir -p ci-logs
+          node scripts/tests/run-all.mjs --shard ${{ matrix.shard }}/3 2>&1 | tee ci-logs/suites-${{ matrix.shard }}.log
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: website-suites-${{ matrix.shard }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 7
+
+  website:
+    needs: [website-checks, website-suites]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every shard passed (a failed, cancelled or skipped one fails this check)
+        run: |
+          echo "website-checks: ${{ needs.website-checks.result }}"; test "${{ needs.website-checks.result }}" = success
+          echo "website-suites: ${{ needs.website-suites.result }}"; test "${{ needs.website-suites.result }}" = success
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: website-suites-*
+          path: ci-logs
+          merge-multiple: true
+
+      - name: Every part ran exactly once; the checks added up
+        run: node scripts/ci-sum.mjs website ci-logs
+
+  mcp-parts:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        shard: [0, 1, 2, 3, 4]
     defaults:
       run:
+        shell: bash
         working-directory: mcp
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,18 +151,61 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: MCP checks
-        run: npm test
+      - name: MCP checks, shard ${{ matrix.shard }} of 4
+        env:
+          DA_SHARD: ${{ matrix.shard }}/4
+        run: |
+          mkdir -p ../ci-logs
+          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mcp-parts-${{ matrix.shard }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 7
+
+  mcp:
+    needs: [mcp-parts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every shard passed (a failed, cancelled or skipped one fails this check)
+        run: |
+          echo "mcp-parts: ${{ needs.mcp-parts.result }}"; test "${{ needs.mcp-parts.result }}" = success
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mcp-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      - name: Every part ran exactly once; the checks added up
+        run: node scripts/ci-sum.mjs mcp ci-logs
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
   # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).
-  mcp-windows:
+  # 40, like the website job: the suite takes 15-20 min on GitHub's Windows runners and one run on main hit the old
+  # limit of 25 (16 Oct, 273fd90: stopped at 25:08, shown as cancelled, no test failed); kept for each shard
+  mcp-windows-parts:
     runs-on: windows-latest
-    # 40, like the website job: the suite takes 15-20 min on GitHub's Windows runners and one run on main hit the old
-    # limit of 25 (16 Oct, 273fd90: stopped at 25:08, shown as cancelled, no test failed)
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        shard: [0, 1, 2, 3, 4]
     defaults:
       run:
+        shell: bash
         working-directory: mcp
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -98,5 +219,42 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: MCP checks on Windows
-        run: npm test
+      - name: MCP checks on Windows, shard ${{ matrix.shard }} of 4
+        env:
+          DA_SHARD: ${{ matrix.shard }}/4
+        run: |
+          mkdir -p ../ci-logs
+          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mcp-windows-parts-${{ matrix.shard }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 7
+
+  mcp-windows:
+    needs: [mcp-windows-parts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every shard passed (a failed, cancelled or skipped one fails this check)
+        run: |
+          echo "mcp-windows-parts: ${{ needs.mcp-windows-parts.result }}"; test "${{ needs.mcp-windows-parts.result }}" = success
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mcp-windows-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      - name: Every part ran exactly once; the checks added up
+        run: node scripts/ci-sum.mjs mcp ci-logs

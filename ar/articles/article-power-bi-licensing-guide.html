@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/articles/article-power-bi-licensing-guide.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-licensing-guide.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-licensing-guide.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-licensing-guide.html">
+
+  <title>Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026</title>
+  <meta name="description" content="Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="Power BI licensing, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI pricing 2026, Fabric capacity pricing, Power BI free viewers, DataArcus">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026">
+  <meta property="og:description" content="Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.">
+  <meta property="og:url" content="https://dataarcus.com/ar/articles/article-power-bi-licensing-guide.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/licensing-guide.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="DataArcus logo">
+  <meta property="og:locale" content="ar_AE">
+  <meta property="article:published_time" content="2026-09-23T09:00:00Z">
+  <meta property="article:author" content="Abdelrahman M.">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026">
+  <meta name="twitter:description" content="Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/licensing-guide.jpg">
+  <meta name="twitter:image:alt" content="DataArcus logo">
+
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
+      "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even and a worked example.",
+      "url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
+      "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
+      "author": {
+        "@type": "Person",
+        "name": "Abdelrahman M."
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DataArcus",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dataarcus.com/assets/img/logo.svg"
+        }
+      },
+      "datePublished": "2026-09-23",
+      "dateModified": "2026-10-03",
+      "image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How much does Power BI cost in the UAE and Saudi Arabia?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Microsoft publishes Power BI prices in US dollars: Pro $14 and Premium Per User $24 per user per month, paid yearly (Power BI pricing). It shows no dirham or riyal price, and its page notes that prices \"may not be reflective of actual list price due to currency, country, and regional variant factors\". At the fixed pegs of 3.6725 dirhams (Central Bank of the UAE) and 3.75 riyals (SAMA) to the dollar, that is about AED 51.42 or SAR 52.50 for Pro, and AED 88.14 or SAR 90.00 for PPU, before VAT. These are conversions, not local prices: the price you pay is your Microsoft reseller's quote."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Fabric capacity cost more in the UAE?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, in Azure's public price list (Fabric pricing). A capacity unit costs $0.22 an hour pay-as-you-go in UAE North against $0.18 in East US, so an F64 there is about $10,278 a month pay-as-you-go, or about $6,112 with a one-year reservation (US: about $8,410 and $5,004). That moves the reserved F64 break-even from about 358 to about 437 viewers. Microsoft's Fabric region list has no region in Saudi Arabia; in the Gulf it lists UAE North with all Fabric workloads, and UAE Central and Qatar Central for Power BI only."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which license do we need for Copilot?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher). Pro or PPU on its own isn't enough: see \"What Copilot needs\" above. To get the model ready first, see the Copilot readiness audit."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body class="rtl">
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/articles/article-power-bi-licensing-guide.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">استراتيجية</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">نُشر في 23 سبتمبر 2026 · حُدّث في 3 أكتوبر 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">الترخيص هو السؤال الأكثر تكرارًا قبل بدء أي مشروع Power BI. معظم الشركات إما تدفع أكثر من اللازم على سعة لا تحتاجها، أو تستمر في شراء تراخيص Pro بعد أن أصبحت السعة أرخص بكثير. والإجابة تعتمد غالبًا على رقم واحد: <strong>عدد الأشخاص الذين يشاهدون التقارير فقط</strong>.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">الخيارات الثلاثة في دقيقة</h2>
+              <ul>
+  <li data-i18n-html="content.list1_1"><strong>Power BI Pro (14 دولارًا للمستخدم شهريًا).</strong> كل من ينشر أو يشارك أو يشاهد محتوى في مساحة عمل مشتركة يحتاج إلى ترخيص. يغطي معظم الفرق الصغيرة والمتوسطة.</li>
+  <li data-i18n-html="content.list1_2"><strong>Premium Per User (24 دولارًا للمستخدم شهريًا).</strong> كل ما في Pro مع مزايا Premium: نماذج أكبر، وحتى 48 تحديثًا مجدولًا يوميًا، وخطوط النشر، والقراءة والكتابة عبر XMLA. لكن كل من يشاهد محتوى PPU يحتاج أيضًا إلى ترخيص PPU.</li>
+  <li data-i18n-html="content.list1_3"><strong>سعة Fabric (فئات F).</strong> تدفع مقابل قدرة المعالجة بالساعة بدلًا من الدفع لكل شخص: 0.18 دولار لكل وحدة سعة في الساعة بالدفع حسب الاستخدام في مناطق الولايات المتحدة، وأقل بنحو 40.5% مع حجز لمدة سنة. بدءًا من <strong>F64</strong> يمكن للمشاهدين بترخيص مجاني فتح التقارير، أما دون F64 فيحتاج المشاهدون إلى Pro. ومنشئو التقارير يحتاجون دائمًا إلى Pro.</li>
+</ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">الرقم الحاسم: عدد المشاهدين</h2>
+              <p data-i18n-html="content.p2">تكلف F64 نحو <strong>8,410 دولارًا شهريًا</strong> بالدفع حسب الاستخدام، أو نحو <strong>5,004 دولارات شهريًا</strong> مع حجز لمدة سنة. ويكلف Pro أربعة عشر دولارًا لكل مشاهد. اقسم الأول على الثاني تحصل على نقطة التعادل: F64 المحجوزة تغطي تكلفتها عند نحو <strong>358 مشاهدًا</strong>، وبالدفع حسب الاستخدام عند نحو <strong>601 مشاهد</strong>.</p>
+              <p data-i18n-html="content.p3">عدد المنشئين لا يغيّر هذه النقطة، لأنهم يحتاجون إلى Pro في الحالتين. قبلها يكون Pro للجميع أرخص، وبعدها تتفوق F64، ويتسع الفارق مع كل مشاهد جديد.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">مثال عملي</h2>
+              <p data-i18n-html="content.p4">شركة لديها <strong>12 محللًا</strong> يبنون التقارير و<strong>200 مدير وموظف مبيعات</strong> يشاهدونها. Pro للجميع: 212 × 14 = <strong>2,968 دولارًا شهريًا</strong>. F64 محجوزة مع 12 ترخيص Pro: ‏5,004 + 168 = <strong>5,172 دولارًا شهريًا</strong>. يتفوق Pro بأكثر من 2,000 دولار.</p>
+              <p data-i18n-html="content.p5">ثم تعمّم المجموعة اللوحات على كل الفروع ويصل العدد إلى <strong>450 مشاهدًا</strong>. Pro للجميع: 462 × 14 = <strong>6,468 دولارًا شهريًا</strong>، بينما تبقى تكلفة F64 عند <strong>5,172 دولارًا</strong>. توفر السعة الآن نحو 1,300 دولار شهريًا، وكل فرع جديد يقلل التكلفة للفرد.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">عندما لا يكون الخيار الأرخص هو الصحيح</h2>
+              <ul>
+  <li data-i18n-html="content.list2_1"><strong>تحتاج أحمال Fabric.</strong> مستودعات Lakehouse وخطوط البيانات ودفاتر Notebooks لا تعمل إلا على السعة. وغالبًا ما تكون F2 صغيرة مع تراخيص Pro أرخص بداية.</li>
+  <li data-i18n-html="content.list2_2"><strong>نماذجك تجاوزت حدود Pro.</strong> يحدّ Pro حجم النموذج بـ 1 غيغابايت والتحديث المجدول بثماني مرات يوميًا. ويرفع PPU أو السعة كلا القيدين.</li>
+  <li data-i18n-html="content.list2_3"><strong>لديك Microsoft 365 E5.</strong> تتضمن E5 ترخيص Pro، فلا يكلفك Pro شيئًا إضافيًا، وتذكر Microsoft الترقية إلى PPU كإضافة بـ 14 دولارًا للمستخدم شهريًا.</li>
+  <li data-i18n-html="content.list2_4"><strong>تريد عرض التقارير لعملائك.</strong> تضمين التقارير في تطبيقك أو بوابتك يحتاج إلى سعة، لا إلى تراخيص لكل مستخدم.</li>
+</ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">ما الذي يحتاجه Copilot</h2>
+              <p data-i18n-html="content.p8">لا يأتي Copilot في Power BI مع Pro أو PPU. هذه متطلبات Microsoft (<a href="https://learn.microsoft.com/power-bi/create-reports/copilot-introduction" class="text-accent" target="_blank" rel="noopener">نظرة عامة على Copilot في Power BI</a>):</p>
+              <ul>
+  <li data-i18n-html="content.list3_1"><strong>سعة مدفوعة.</strong> سعة Fabric بحجم F2 أو أعلى، أو Power BI Premium بحجم P1 أو أعلى. السعات التجريبية والإصدارات المجانية غير مدعومة.</li>
+  <li data-i18n-html="content.list3_2"><strong>Pro أو PPU وحده لا يكفي.</strong> بتعبير Microsoft، يحتاج Copilot إلى سعة على مستوى المؤسسة. ويمكن إعداد سعة F2 أو أكبر لتكون <a href="https://learn.microsoft.com/fabric/enterprise/fabric-copilot-capacity" class="text-accent" target="_blank" rel="noopener">سعة Copilot في Fabric</a>: فيستخدم المستخدمون المعيَّنون لها Copilot في Power BI Desktop وفي مساحات عمل Pro وPPU، ويُحتسب استخدامهم لـ Copilot على تلك السعة.</li>
+  <li data-i18n-html="content.list3_3"><strong>Copilot يستهلك من السعة.</strong> يُحتسب استخدامه بوحدات السعة حسب الرموز (tokens) التي يستهلكها، فوق حِمل تقاريرك نفسها. خذ Copilot في الحسبان عند اختيار حجم السعة.</li>
+  <li data-i18n-html="content.list3_4"><strong>في الإمارات، إعداد يفعّله المسؤول.</strong> تعمل خدمة Azure OpenAI التي يعتمد عليها Copilot في مراكز بيانات بالولايات المتحدة والاتحاد الأوروبي. لذلك يبقى Copilot معطّلًا لسعة موجودة في الإمارات حتى يسمح مسؤول Fabric بمعالجة البيانات خارج منطقة السعة (<a href="https://learn.microsoft.com/fabric/fundamentals/copilot-fabric-overview#available-regions" class="text-accent" target="_blank" rel="noopener">Microsoft Learn</a>).</li>
+</ul>
+              <p data-i18n-html="content.p9">ثم جهّز النموذج قبل أن يبدأ المستخدمون بطرح أسئلتهم عليه: تقول Microsoft إن Copilot قد يقدّم دون تجهيز نتائج عامة أو غير دقيقة. تسرد <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">قائمتنا ذات النقاط السبع</a> ما يجب إصلاحه، ويفحص <a href="/ar/services/copilot-readiness-audit.html" class="text-accent">تدقيق الجاهزية لـ Copilot</a> نموذجك أنت ويكتب الإصلاحات الدقيقة.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">سعر Power BI في الإمارات والسعودية</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">كم يكلّف Power BI في الإمارات والسعودية؟</h3>
+              <p data-i18n-html="content.a1">تنشر Microsoft أسعار Power BI بالدولار الأمريكي: ‏Pro بـ 14 دولارًا وPremium Per User بـ 24 دولارًا للمستخدم شهريًا، بدفع سنوي (<a href="https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing" class="text-accent" target="_blank" rel="noopener">أسعار Power BI</a>). ولا تعرض سعرًا بالدرهم أو الريال، وتنبّه صفحتها إلى أن الأسعار قد لا تعكس سعر القائمة الفعلي بسبب العملة والبلد والفروق الإقليمية. وبسعر الربط الثابت، 3.6725 درهم (<a href="https://www.centralbank.ae/en/our-operations/monetary-policy-and-domestic-markets/domestic-market-operations/" class="text-accent" target="_blank" rel="noopener">مصرف الإمارات العربية المتحدة المركزي</a>) و3.75 ريال (<a href="https://www.sama.gov.sa/en-US/MediaCenter/News/Pages/news-557.aspx" class="text-accent" target="_blank" rel="noopener">البنك المركزي السعودي</a>) للدولار، يعادل ذلك نحو 51.42 درهمًا أو 52.50 ريالًا لـ Pro، و88.14 درهمًا أو 90.00 ريالًا لـ PPU، قبل ضريبة القيمة المضافة. هذه تحويلات لا أسعار محلية: السعر الذي تدفعه هو عرض موزّع Microsoft لديك.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">هل سعة Fabric أغلى في الإمارات؟</h3>
+              <p data-i18n-html="content.a2">نعم، وفق قائمة أسعار Azure العامة (<a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" class="text-accent" target="_blank" rel="noopener">أسعار Fabric</a>). تكلّف وحدة السعة 0.22 دولار في الساعة بالدفع حسب الاستخدام في منطقة UAE North، مقابل 0.18 دولار في East US، فتكلّف F64 هناك نحو 10,278 دولارًا شهريًا بالدفع حسب الاستخدام، أو نحو 6,112 دولارًا بحجز لسنة (في الولايات المتحدة: نحو 8,410 و5,004 دولارات). وهذا ينقل نقطة التعادل لـ F64 المحجوزة من نحو 358 إلى نحو 437 مشاهدًا. ولا تضم <a href="https://learn.microsoft.com/fabric/admin/region-availability" class="text-accent" target="_blank" rel="noopener">قائمة مناطق Fabric</a> من Microsoft أي منطقة في السعودية؛ وفي الخليج تذكر UAE North بكل أحمال Fabric، وUAE Central وQatar Central لـ Power BI فقط.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">ما الترخيص الذي نحتاجه لـ Copilot؟</h3>
+              <p data-i18n-html="content.a3">سعة Fabric مدفوعة (F2 أو أعلى) أو Power BI Premium ‏(P1 أو أعلى). أما Pro أو PPU وحده فلا يكفي: راجع قسم «ما الذي يحتاجه Copilot» أعلاه. ولتجهيز النموذج أولًا، اطّلع على <a href="/ar/services/copilot-readiness-audit.html" class="text-accent">تدقيق الجاهزية لـ Copilot</a>.</p>
+              <p data-i18n-html="content.p6">الأسعار تتغير، ونسبة المنشئين إلى المشاهدين لديك ستتغير أيضًا. تُجري <a href="/ar/tools/power-bi-licensing-cost-calculator.html" class="text-accent">حاسبة تكلفة تراخيص Power BI</a> المجانية هذه المقارنة بأرقامك أنت، بالدولار أو الدرهم أو الريال، وتُراجع أسعارها مقابل أسعار Microsoft كل أسبوع.</p>
+              <p data-i18n-html="content.p7"><em>أسعار Microsoft المعلنة، تمت مراجعتها في 3 أكتوبر 2026 على <a href="https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing" class="text-accent" target="_blank" rel="noopener">صفحة أسعار Power BI</a> و<a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" class="text-accent" target="_blank" rel="noopener">قائمة أسعار Fabric في Azure</a>. لمناطق الولايات المتحدة ما لم يُذكر غير ذلك. قد تختلف أسعار اتفاقيات المؤسسات والعملات المحلية.</em></p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">احسب أرقامك أنت</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">أدخل عدد المنشئين والمشاهدين لترى أرخص ترخيص مناسب، مع نقطة التعادل لـ F64.</p>
+                <div class="cta-actions">
+                  <a href="/ar/tools/power-bi-licensing-cost-calculator.html" class="btn btn-accent"><i class="bi bi-cash-coin me-2"></i><span data-i18n="exploreMore.button1">افتح حاسبة التراخيص</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">التراخيص هي الجزء الأصغر من الفاتورة</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">القيمة الحقيقية في نموذج يجيب عن الأسئلة الصحيحة. يمكننا تحديد الإعداد المناسب لك وبناءه.</p>
+                <div class="cta-actions">
+                  <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-licensing-guide.min.js" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+
+
+</body></html>

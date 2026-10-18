@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'sha256-aJ2mmg1sDwabEx4l/jrM8kxapTQj0+7TlSE636jINgk=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/articles/article-power-bi-report-styles.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-report-styles.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-report-styles.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-report-styles.html">
+
+  <title>تصميم لوحات Power BI حسب القسم: 7 أنماط للتقارير</title>
+  <meta name="description" content="تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تحتاج تصاميم مختلفة. 7 أنماط بأمثلة، وكيف تختار نمطك.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="Power BI dashboard design, Power BI report design examples, Power BI sales dashboard, Power BI finance report, Power BI executive dashboard, Power BI HR dashboard, Power BI operations dashboard, Power BI marketing dashboard, customer service dashboard, report design philosophy, DataArcus">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="تصميم لوحات Power BI حسب القسم: 7 أنماط للتقارير">
+  <meta property="og:description" content="تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تحتاج تصاميم مختلفة. 7 أنماط بأمثلة، وكيف تختار نمطك.">
+  <meta property="og:url" content="https://dataarcus.com/ar/articles/article-power-bi-report-styles.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/report-styles.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="Seven Power BI report styles: executive, sales, finance, marketing, operations, HR and customer service">
+  <meta property="og:locale" content="ar_AE">
+  <meta property="article:published_time" content="2026-09-29T09:00:00Z">
+  <meta property="article:author" content="Abdelrahman M.">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="تصميم لوحات Power BI حسب القسم: 7 أنماط للتقارير">
+  <meta name="twitter:description" content="تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تحتاج تصاميم مختلفة. 7 أنماط بأمثلة، وكيف تختار نمطك.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/report-styles.jpg">
+  <meta name="twitter:image:alt" content="Seven Power BI report styles: executive, sales, finance, marketing, operations, HR and customer service">
+
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "One Design Doesn’t Fit All: 7 Power BI Report Styles",
+    "description": "Executive, sales, finance, marketing, operations, HR and customer service reports need different designs. 7 styles with examples, and how to pick yours.",
+    "url": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2026-09-29",
+    "dateModified": "2026-10-03",
+    "image": [
+      "https://dataarcus.com/assets/img/og/report-styles.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/executive-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/sales-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/finance-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/marketing-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/operations-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/hr-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/service-en.jpg"
+    ]
+  }
+  </script>
+
+  <style>
+    /* report styles article: language images, explorer, quiz, hotspots */
+    html[lang="ar"] .lang-en, html:not([lang="ar"]) .lang-ar { display: none; }
+    .rs-box { padding: var(--space-md); margin: var(--space-lg) 0; }
+    .rs-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-sm); }
+    .rs-tab { background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); color: #cbd5e1; border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 600; }
+    .rs-tab b { color: var(--accent); margin-inline-end: 2px; }
+    .rs-tab.on { background: var(--accent); border-color: var(--accent); color: #051018; }
+    .rs-tab.on b { color: #051018; }
+    .rs-panel { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-md); align-items: start; }
+    .rs-panel[hidden] { display: none; }
+    .rs-shot { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); }
+    .rs-shot img { display: block; width: 100%; height: auto; }
+    .rs-nick { font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    .rs-info dl { margin: 0; } .rs-info dt { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-top: 10px; }
+    html[lang="ar"] .rs-info dt { text-transform: none; font-size: .85rem; }
+    .rs-info dd { margin: 2px 0 0; color: #e2e8f0; }
+    .rs-jump { display: inline-block; margin-top: 14px; font-weight: 600; }
+    @media (max-width: 767.98px) { .rs-panel { grid-template-columns: 1fr; } }
+    #rs-quiz fieldset { margin-bottom: var(--space-sm); } #rs-quiz legend { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .rs-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .rs-opt { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--glass-border); border-radius: 10px; padding: 6px 12px; cursor: pointer; font-size: .92rem; color: #cbd5e1; background: rgba(255,255,255,.03); }
+    .rs-opt:has(input:checked) { border-color: var(--accent); color: #fff; background: rgba(0,212,255,.12); }
+    .rs-opt input { accent-color: var(--accent); }
+    .rs-result { border-top: 1px solid var(--glass-border); padding-top: var(--space-sm); }
+    .rs-result .rs-win { font-size: 1.2rem; font-weight: 800; color: #fff; }
+    .rs-result .btn { margin-top: 10px; }
+    .rs-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .rs-n { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: #051018; font-size: 1.1rem; flex: none; align-self: center; }
+    .rs-phil { font-size: 1.15rem; color: #fff; font-weight: 600; border-inline-start: 3px solid var(--accent); padding-inline-start: 12px; }
+    .rs-fig { margin: var(--space-md) 0; }
+    .rs-hs { position: absolute; left: var(--xe); top: var(--ye); transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; background: #ff3d7f; color: #fff; font-weight: 800; font-size: .95rem; box-shadow: 0 0 0 5px rgba(255,61,127,.28); animation: rs-pulse 2.4s ease-in-out infinite; cursor: pointer; display: grid; place-items: center; padding: 0; }
+    html[lang="ar"] .rs-hs { left: var(--xa); top: var(--ya); }
+    .rs-hs:hover, .rs-hs:focus-visible, .rs-hs.on { background: #fff; color: #ff3d7f; }
+    @keyframes rs-pulse { 50% { box-shadow: 0 0 0 10px rgba(255,61,127,0); } }
+    @media (prefers-reduced-motion: reduce) { .rs-hs { animation: none; } }
+    @media (max-width: 575.98px) { .rs-hs { width: 26px; height: 26px; font-size: .8rem; } }
+    .rs-notes { margin: 12px 0 0; padding-inline-start: 1.4rem; }
+    .rs-notes li { margin-bottom: 6px; color: #cbd5e1; transition: color .2s; }
+    .rs-notes li.on { color: #fff; } .rs-notes li::marker { color: #ff3d7f; font-weight: 800; }
+    .rs-table table { font-size: .92rem; } .rs-table th a { font-weight: 700; }
+    .rs-expert { margin: var(--space-md) 0; padding: var(--space-sm) var(--space-md); border-radius: 12px; background: rgba(108,92,231,.12); border: 1px solid rgba(108,92,231,.4); }
+    .rs-expert-h { font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #a29bfe; margin-bottom: 6px; }
+    html[lang="ar"] .rs-expert-h { text-transform: none; letter-spacing: normal; font-size: .9rem; }
+    .rs-expert p { color: #e2e8f0; font-size: .95rem; }
+    .rs-sources li { color: #cbd5e1; font-size: .92rem; } html[dir="rtl"] .rs-sources { text-align: left; padding-left: 2rem; padding-right: 0; }
+  </style>
+</head>
+<body class="rtl">
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/articles/article-power-bi-report-styles.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-9 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">تصميم التقارير</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">كل قسم يسأل سؤالًا مختلفًا، لذا يحتاج كل تقرير تصميمًا مختلفًا. إليك الأنماط السبعة، مع صورة لكل نمط وطريقة اختيار نمطك.</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.i0">مديرة تنفيذية ومشرف مستودع يفتحان نفس اللوحة الجميلة. تغلقها المديرة بعد خمس ثوانٍ لأنها لا ترى إن كانت الشركة على المسار الصحيح. ويغلقها المشرف أيضًا، لأن لا شيء يخبره بما يجب إصلاحه قبل خروج الشاحنة التالية. اللوحة لم تكن سيئة التصميم، بل صُممت لشخص غير محدد.</p>
+              <p data-i18n-html="content.i1">التصميم الجيد يبدأ بقاعدة واحدة: <strong>التصميم يتبع السؤال الذي يطرحه القارئ.</strong> مدير المبيعات يسأل "من يتصدر؟"، والمدير المالي يسأل "أين ذهب المال؟"، ومسؤول العمليات يسأل "ما الذي يحتاج إجراءً الآن؟". أسئلة مختلفة، وتصاميم مختلفة.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.i2">ثلاثة أسئلة تحدد النمط</h2>
+              <ul>
+              <li data-i18n-html="content.i3"><strong>من يقرؤه؟</strong> عضو مجلس الإدارة وقائد الفريق والمحلل يقرؤون بطرق مختلفة جدًا.</li>
+              <li data-i18n-html="content.i4"><strong>كم من الوقت ينظرون إليه؟</strong> خمس ثوانٍ، أو خمس دقائق يوميًا، أو ساعة في نهاية الشهر.</li>
+              <li data-i18n-html="content.i5"><strong>ماذا يفعلون بعد ذلك؟</strong> يقررون اتجاهًا، أو يلاحقون هدفًا، أو يشرحون رقمًا، أو يصلحون شيئًا الآن.</li>
+              </ul>
+              <p data-i18n-html="content.i6">أجب عن هذه الأسئلة الثلاثة وستتحدد قرارات التصميم تقريبًا من تلقاء نفسها: عدد العناصر، ونوع المخططات، والكثافة، والألوان. استكشف الأنماط السبعة أدناه، أو أجب عن الاختبار القصير لتعرف نمطك.</p>
+              <section class="rs-box glass-card" aria-labelledby="rs-explorer-h"><h2 id="rs-explorer-h" class="h4 mb-1" data-i18n="ui.explorer">استكشف الأنماط السبعة</h2><p class="text-white-50 mb-3" data-i18n="ui.explorerSub">اضغط على نمط لترى فلسفته وصفحة مثال.</p>
+<div class="rs-tabs" role="tablist" aria-labelledby="rs-explorer-h"><button type="button" role="tab" class="rs-tab on" id="rs-t-executive" aria-controls="rs-p-executive" aria-selected="true" data-rs="executive"><b>1</b> <span data-i18n="styles.executive.name">الإدارة العليا</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-sales" aria-controls="rs-p-sales" aria-selected="false" data-rs="sales"><b>2</b> <span data-i18n="styles.sales.name">المبيعات</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-finance" aria-controls="rs-p-finance" aria-selected="false" data-rs="finance"><b>3</b> <span data-i18n="styles.finance.name">المالية</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-marketing" aria-controls="rs-p-marketing" aria-selected="false" data-rs="marketing"><b>4</b> <span data-i18n="styles.marketing.name">التسويق</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-operations" aria-controls="rs-p-operations" aria-selected="false" data-rs="operations"><b>5</b> <span data-i18n="styles.operations.name">العمليات</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-hr" aria-controls="rs-p-hr" aria-selected="false" data-rs="hr"><b>6</b> <span data-i18n="styles.hr.name">الموارد البشرية</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-service" aria-controls="rs-p-service" aria-selected="false" data-rs="service"><b>7</b> <span data-i18n="styles.service.name">خدمة العملاء</span></button></div><div class="rs-panel" role="tabpanel" id="rs-p-executive" aria-labelledby="rs-t-executive">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/executive-en.webp"><img src="/assets/img/articles/styles/executive-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a executive report in Power BI: the 5-second report" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/executive-ar.webp"><img src="/assets/img/articles/styles/executive-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الإدارة العليا في Power BI: تقرير الثواني الخمس" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.executive.nick">تقرير الثواني الخمس</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.executive.phil">أجب عن سؤال "هل نحن بخير؟" قبل أن ينهي القارئ قهوته.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.executive.q">هل نسير على المسار الصحيح، وهل هناك ما يدعو للقلق؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.executive.sig">4 إلى 5 مؤشرات كبيرة، ومخطط اتجاه واحد مقابل الهدف، والاستثناءات فقط.</dd></dl>
+    <a href="#style-executive" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-sales" aria-labelledby="rs-t-sales" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/sales-en.webp"><img src="/assets/img/articles/styles/sales-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a sales report in Power BI: the race" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/sales-ar.webp"><img src="/assets/img/articles/styles/sales-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المبيعات في Power BI: السباق" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.sales.nick">السباق</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.sales.phil">أظهر الفجوة عن الهدف، ومن يسدّها.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.sales.q">هل سنحقق هدف هذا الشهر، ومن يتصدر؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.sales.sig">الفعلي مقابل الهدف في كل مكان، وترتيب، وأيام متبقية، ومسار الصفقات.</dd></dl>
+    <a href="#style-sales" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-finance" aria-labelledby="rs-t-finance" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/finance-en.webp"><img src="/assets/img/articles/styles/finance-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a finance report in Power BI: the ledger" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/finance-ar.webp"><img src="/assets/img/articles/styles/finance-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المالية في Power BI: الدفتر" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.finance.nick">الدفتر</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.finance.phil">الدقة أولًا: كل رقم في مكانه، وكل فرق مشروح.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.finance.q">أين نحن بالضبط مقارنة بالموازنة، ولماذا؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.finance.sig">جدول أرباح وخسائر بالفروقات، وجسر شلالي، وتعليق مكتوب.</dd></dl>
+    <a href="#style-finance" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-marketing" aria-labelledby="rs-t-marketing" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/marketing-en.webp"><img src="/assets/img/articles/styles/marketing-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a marketing report in Power BI: the journey" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/marketing-ar.webp"><img src="/assets/img/articles/styles/marketing-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير التسويق في Power BI: الرحلة" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.marketing.nick">الرحلة</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.marketing.phil">تتبّع العميل من أول مشاهدة حتى الشراء، واحسب تكلفة كل خطوة.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.marketing.q">أي قناة تجلب العملاء، وبأي تكلفة؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.marketing.sig">قمع بنسب التحويل، وتكلفة العميل المحتمل لكل قناة، واتجاهات حسب المصدر.</dd></dl>
+    <a href="#style-marketing" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-operations" aria-labelledby="rs-t-operations" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/operations-en.webp"><img src="/assets/img/articles/styles/operations-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a operations report in Power BI: the control room" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/operations-ar.webp"><img src="/assets/img/articles/styles/operations-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير العمليات في Power BI: غرفة التحكم" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.operations.nick">غرفة التحكم</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.operations.phil">هدوء عندما يكون كل شيء بخير، وإنذار عندما لا يكون.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.operations.q">ما الذي يحتاج إجراءً الآن؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.operations.sig">بطاقات حالة بحدود، ووقت تحديث مباشر، وقائمة استثناءات مرتبة حسب الأولوية.</dd></dl>
+    <a href="#style-operations" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-hr" aria-labelledby="rs-t-hr" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/hr-en.webp"><img src="/assets/img/articles/styles/hr-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a hr report in Power BI: the people map" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/hr-ar.webp"><img src="/assets/img/articles/styles/hr-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الموارد البشرية في Power BI: خريطة الموظفين" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.hr.nick">خريطة الموظفين</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.hr.phil">أظهر كيف تتغير القوى العاملة، دون كشف الأفراد.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.hr.q">كيف تتغير قوانا العاملة، وأين نخسر الموظفين؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.hr.sig">المنضمون مقابل المغادرين، وترك العمل حسب الفريق، ومدة الخدمة، وقواعد الخصوصية.</dd></dl>
+    <a href="#style-hr" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-service" aria-labelledby="rs-t-service" hidden="">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/service-en.webp"><img src="/assets/img/articles/styles/service-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a customer service report in Power BI: the queue" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/service-ar.webp"><img src="/assets/img/articles/styles/service-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير خدمة العملاء في Power BI: الطابور" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.service.nick">الطابور</div>
+    <dl><dt data-i18n="ui.philosophy">الفلسفة</dt><dd data-i18n="styles.service.phil">قِس الوعد الذي قطعته للعملاء، والطابور خلفه.</dd>
+    <dt data-i18n="ui.question">سؤال القارئ</dt><dd data-i18n="styles.service.q">هل نفي بوعدنا للعملاء؟</dd>
+    <dt data-i18n="ui.signature">العلامة المميزة</dt><dd data-i18n="styles.service.sig">مستوى الخدمة مقابل الوعد، والتذاكر المتراكمة حسب العمر، وزمن الرد، والموظفون.</dd></dl>
+    <a href="#style-service" class="rs-jump"><span data-i18n="ui.jump">اقرأ الشرح الكامل</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div></section>
+              <section class="rs-box glass-card" id="rs-quiz" aria-labelledby="rs-quiz-h"><h2 id="rs-quiz-h" class="h4 mb-1" data-i18n="ui.quiz">أي نمط يحتاجه تقريرك؟</h2><p class="text-white-50 mb-3" data-i18n="ui.quizSub">ثلاثة أسئلة، عشر ثوانٍ.</p>
+<fieldset><legend data-i18n="ui.q1">كم من الوقت ينظر القارئ إلى التقرير؟</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q1" value="a"> <span data-i18n="ui.q1a">بضع ثوانٍ</span></label><label class="rs-opt"><input type="radio" name="rs-q1" value="b"> <span data-i18n="ui.q1b">بضع دقائق، معظم الأيام</span></label><label class="rs-opt"><input type="radio" name="rs-q1" value="c"> <span data-i18n="ui.q1c">مراجعة طويلة، شهريًا</span></label></div></fieldset>
+<fieldset><legend data-i18n="ui.q2">ماذا يفعل بعد قراءته؟</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q2" value="a"> <span data-i18n="ui.q2a">يقرر اتجاهًا</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="b"> <span data-i18n="ui.q2b">يدفع لتحقيق هدف</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="c"> <span data-i18n="ui.q2c">يشرح كل رقم</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="d"> <span data-i18n="ui.q2d">يصلح شيئًا فورًا</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="e"> <span data-i18n="ui.q2e">يغيّر توجيه الإنفاق</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="f"> <span data-i18n="ui.q2f">يخطط للموظفين والفرق</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="g"> <span data-i18n="ui.q2g">يفي بوعد للعملاء</span></label></div></fieldset>
+<fieldset><legend data-i18n="ui.q3">كم مرة تتغير البيانات؟</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q3" value="a"> <span data-i18n="ui.q3a">كل بضع دقائق</span></label><label class="rs-opt"><input type="radio" name="rs-q3" value="b"> <span data-i18n="ui.q3b">يوميًا</span></label><label class="rs-opt"><input type="radio" name="rs-q3" value="c"> <span data-i18n="ui.q3c">أسبوعيًا أو شهريًا</span></label></div></fieldset>
+<div class="rs-result" id="rs-result" role="status" aria-live="polite"><span class="text-white-50" data-i18n="ui.pick">أجب عن الأسئلة الثلاثة</span></div></section>
+              <h2 class="mt-5 mb-2 rs-h" id="style-executive"><span class="rs-n">1</span> <span data-i18n="styles.executive.name">الإدارة العليا</span>: <span data-i18n="styles.executive.nick">تقرير الثواني الخمس</span></h2>
+<p class="rs-phil" data-i18n="styles.executive.phil">أجب عن سؤال "هل نحن بخير؟" قبل أن ينهي القارئ قهوته.</p>
+<p data-i18n="styles.executive.body">المدراء لا يستكشفون، بل يتصفحون سريعًا. تقريرهم حكم وليس ورشة عمل. كل عنصر إضافي يجعل الرقم المهم أصعب في الإيجاد، لذا فالانضباط هنا هو فيما تحذفه.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/executive-en.webp"><img src="/assets/img/articles/styles/executive-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a executive report in Power BI: the 5-second report" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/executive-ar.webp"><img src="/assets/img/articles/styles/executive-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الإدارة العليا في Power BI: تقرير الثواني الخمس" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:24.2%;--ye:11.6%;--xa:76.4%;--ya:12.6%" aria-describedby="rs-executive-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:65.9%;--ye:32.2%;--xa:34.1%;--ya:33.2%" aria-describedby="rs-executive-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:32.2%;--xa:3.1%;--ya:33.2%" aria-describedby="rs-executive-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-executive-n1" data-i18n="styles.executive.n1">أرقام كبيرة مع سياق: كل مؤشر يعرض التغيّر عن العام الماضي واتجاهًا صغيرًا، فلا يحتاج سؤال "جيد أم سيئ؟" نظرة ثانية.</li><li id="rs-executive-n2" data-i18n="styles.executive.n2">اتجاه واحد وخط هدف واحد، والعام الماضي بالرمادي. ترى العين في ثانية إن كان العام فوق الخطة أو تحتها.</li><li id="rs-executive-n3" data-i18n="styles.executive.n3">"3 أمور يجب معرفتها": استثناءات مكتوبة بدل عشرة مخططات إضافية. فقط ما تغيّر أو يحتاج قرارًا.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.executive.u1">خمسة مؤشرات كحد أقصى، لكل منها مقارنة (الهدف أو العام الماضي).</li><li data-i18n="styles.executive.u2">مساحات بيضاء واسعة وخط كبير.</li><li data-i18n="styles.executive.u3">ملخص مكتوب قصير لما تغيّر.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.executive.avoid">الجداول والمقسمات والتفصيل في الصفحة الأولى. ضعها في صفحة ثانية للمحللين.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.executive.expert">يعرّف ستيفن فيو (Stephen Few) لوحة المعلومات بأنها أهم المعلومات اللازمة لتحقيق هدف أو أكثر، على شاشة واحدة، بحيث تُتابع <em>بنظرة واحدة</em> (كتاب <em>Information Dashboard Design</em>). واختبار عملي لذلك هو اختبار الثواني الخمس: اعرض الصفحة خمس ثوانٍ ثم اسأل هل الوضع جيد أم سيئ. إن لم يستطع القارئ الإجابة، فبسّط.</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-sales"><span class="rs-n">2</span> <span data-i18n="styles.sales.name">المبيعات</span>: <span data-i18n="styles.sales.nick">السباق</span></h2>
+<p class="rs-phil" data-i18n="styles.sales.phil">أظهر الفجوة عن الهدف، ومن يسدّها.</p>
+<p data-i18n="styles.sales.body">المبيعات سباق مع التقويم. أي رقم لا معنى له إلا بجانب هدفه والأيام المتبقية، والناس يتحفزون بمعرفة موقعهم. اجعل التقرير يبدو كلوحة نتائج.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/sales-en.webp"><img src="/assets/img/articles/styles/sales-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a sales report in Power BI: the race" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/sales-ar.webp"><img src="/assets/img/articles/styles/sales-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المبيعات في Power BI: السباق" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:23.6%;--ye:10.9%;--xa:76.4%;--ya:11.8%" aria-describedby="rs-sales-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:56.3%;--ye:29.3%;--xa:43.7%;--ya:30.2%" aria-describedby="rs-sales-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:29.3%;--xa:3.1%;--ya:30.2%" aria-describedby="rs-sales-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:63.6%;--xa:3.1%;--ya:64.4%" aria-describedby="rs-sales-n4"><span aria-hidden="true">4</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-sales-n1" data-i18n="styles.sales.n1">منذ بداية الشهر مع هدفه كشريط تقدم، والأيام المتبقية والمبلغ اليومي المطلوب. سؤال "هل سننجح؟" مُجاب في الأعلى.</li><li id="rs-sales-n2" data-i18n="styles.sales.n2">لوحة ترتيب بأشرطة مقارنة: الشريط هو الفعلي والعلامة السوداء هي الهدف والبرتقالي يعني متأخر. الترتيب يجعلها شخصية.</li><li id="rs-sales-n3" data-i18n="styles.sales.n3">مسار الصفقات يظهر أين تتعثر الصفقات، مع نسبة التحويل بين كل خطوة.</li><li id="rs-sales-n4" data-i18n="styles.sales.n4">المناطق مقابل الهدف بنفس أشرطة المقارنة، فتسري لغة بصرية واحدة في الصفحة.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.sales.u1">منذ بداية الشهر والربع، وليس الإجماليات فقط.</li><li data-i18n="styles.sales.u2">الترتيب والتقدم نحو الهدف لكل شخص أو منطقة.</li><li data-i18n="styles.sales.u3">وقت التحديث على الصفحة، لأن الناس يتصرفون بناءً عليه اليوم.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.sales.avoid">المخططات الدائرية للإيرادات حسب المنتج. تُظهر الحصة، لكن فريق المبيعات يحتاج التقدم.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.sales.expert">أشرطة المقارنة في لوحة الترتيب هي <em>مخطط الرصاصة</em> (bullet graph) الذي صممه ستيفن فيو بديلًا لعدّادات القياس: الفعلي والهدف والنطاقات في جزء صغير من المساحة. كما تتابع فرق مبيعات كثيرة <em>تغطية مسار الصفقات</em>، أي الصفقات المفتوحة مقسومة على المتبقي من الهدف، وتعدّ نحو 3 أضعاف مستوى صحيًا؛ والنسبة الصحيحة تعتمد على نسبة فوزك أنت.</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-finance"><span class="rs-n">3</span> <span data-i18n="styles.finance.name">المالية</span>: <span data-i18n="styles.finance.nick">الدفتر</span></h2>
+<p class="rs-phil" data-i18n="styles.finance.phil">الدقة أولًا: كل رقم في مكانه، وكل فرق مشروح.</p>
+<p data-i18n="styles.finance.body">قرّاء المالية يثقون بالجداول أكثر من المخططات، ويقرؤون كل صف. هدف التصميم هنا نظام هادئ: أرقام متحاذية، وتنسيقات ثابتة، وترميز موحد حتى لا يختلط الفعلي والموازنة والعام السابق.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/finance-en.webp"><img src="/assets/img/articles/styles/finance-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a finance report in Power BI: the ledger" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/finance-ar.webp"><img src="/assets/img/articles/styles/finance-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المالية في Power BI: الدفتر" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:53.3%;--ye:11.9%;--xa:46.7%;--ya:12.8%" aria-describedby="rs-finance-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:11.9%;--xa:3.1%;--ya:12.8%" aria-describedby="rs-finance-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:54%;--xa:3.1%;--ya:55.6%" aria-describedby="rs-finance-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:53.3%;--ye:60.9%;--xa:46.7%;--ya:65.8%" aria-describedby="rs-finance-n4"><span aria-hidden="true">4</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-finance-n1" data-i18n="styles.finance.n1">الأرباح والخسائر كجدول: الفعلي والموازنة والفرق والعام السابق، مع أشرطة فروقات صغيرة داخل الجدول. التكاليف بين قوسين والإجماليات بخط مزدوج، كما على الورق.</li><li id="rs-finance-n2" data-i18n="styles.finance.n2">جسر شلالي من الموازنة إلى الفعلي: الحجم والسعر والمزيج والتكاليف تشرح الفرق في صورة واحدة.</li><li id="rs-finance-n3" data-i18n="styles.finance.n3">الفعلي مصمت والموازنة بإطار فقط. نفس الترميز في كل صفحة، فلا يحتاج أحد لقراءة المفتاح مرتين.</li><li id="rs-finance-n4" data-i18n="styles.finance.n4">تعليق مكتوب: القصة وراء الفرق في جملتين. التقارير المالية تُقرأ ولا يُلقى عليها نظرة فقط.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.finance.u1">تنسيق أرقام واحد للتقرير (مليون درهم، رقم عشري واحد).</li><li data-i18n="styles.finance.u2">أرقام محاذاة لليمين بعرض ثابت لتتحاذى الأعمدة.</li><li data-i18n="styles.finance.u3">الأخضر والأحمر فقط للأفضل أو الأسوأ من الموازنة.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.finance.avoid">الزخرفة: التدرجات والأيقونات والأبعاد الثلاثية والبطاقات الدائرية تجعل الأرقام تبدو أقل موثوقية.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.finance.expert">الترميز (الفعلي مصمت وداكن، والموازنة بإطار فقط، والعام السابق بالرمادي، والفروقات بالأخضر أو الأحمر) يتبع <em>معايير التواصل في الأعمال الدولية</em> (IBCS)، التي نشأت من قواعد SUCCESS لرولف هيشرت (Rolf Hichert) لتقارير الأعمال. أما الجسر فهو تحليل <em>السعر والحجم والمزيج</em> الكلاسيكي: يقسم فرق الإيرادات إلى ما بعت منه أكثر، وما سعّرت به، وما الذي بعته.</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-marketing"><span class="rs-n">4</span> <span data-i18n="styles.marketing.name">التسويق</span>: <span data-i18n="styles.marketing.nick">الرحلة</span></h2>
+<p class="rs-phil" data-i18n="styles.marketing.phil">تتبّع العميل من أول مشاهدة حتى الشراء، واحسب تكلفة كل خطوة.</p>
+<p data-i18n="styles.marketing.body">التسويق سلسلة من التحويلات الصغيرة. قد تبدو الحملة رائعة من حيث الوصول وهي تهدر المال، لذا يربط التصميم دائمًا الإنفاق بالخطوة التالية وبالعملاء، وليس بمرات الظهور فقط.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/marketing-en.webp"><img src="/assets/img/articles/styles/marketing-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a marketing report in Power BI: the journey" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/marketing-ar.webp"><img src="/assets/img/articles/styles/marketing-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير التسويق في Power BI: الرحلة" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:44.2%;--ye:27.1%;--xa:55.8%;--ya:28%" aria-describedby="rs-marketing-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:27.1%;--xa:3.1%;--ya:28%" aria-describedby="rs-marketing-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:62.2%;--xa:3.1%;--ya:63.1%" aria-describedby="rs-marketing-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-marketing-n1" data-i18n="styles.marketing.n1">رحلة العميل كقمع، مع نسبة التحويل بين الخطوات. أكبر تسرّب هو حيث يضيع المال.</li><li id="rs-marketing-n2" data-i18n="styles.marketing.n2">تكلفة العميل المحتمل لكل قناة، مرتبة، والأرخص بالأخضر. تجيب عن سؤال "أين أضع الدرهم التالي؟"</li><li id="rs-marketing-n3" data-i18n="styles.marketing.n3">العملاء المحتملون شهريًا، المدفوع مقابل المجاني، لترى إن كان النمو مدفوعًا أم مكتسبًا.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.marketing.u1">تكلفة العميل المحتمل والعائد على الإنفاق بجانب كل رقم حجم.</li><li data-i18n="styles.marketing.u2">لون ثابت لكل قناة في كل الصفحات.</li><li data-i18n="styles.marketing.u3">ملاحظة واضحة لأكبر تسرّب في الرحلة.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.marketing.avoid">مقاييس المظهر في الأعلى (مرات الظهور والإعجابات). اعرضها، لكن تحت الأرقام المرتبطة بالمال.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.marketing.expert">تحليل القمع لا ينجح إلا إذا عُدّت الخطوات بالطريقة نفسها في كل قناة. وانتبه لطريقة الإسناد: تقارير <em>النقرة الأخيرة</em> تنسب الفضل كله للمسة الأخيرة، فتبدو قنوات التوعية أسوأ مما هي عليه. قارن القنوات بتكلفة <em>العميل</em> لا بتكلفة العميل المحتمل فقط، لأن العملاء المحتملين الرخيصين الذين لا يشترون هم الأغلى.</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-operations"><span class="rs-n">5</span> <span data-i18n="styles.operations.name">العمليات</span>: <span data-i18n="styles.operations.nick">غرفة التحكم</span></h2>
+<p class="rs-phil" data-i18n="styles.operations.phil">هدوء عندما يكون كل شيء بخير، وإنذار عندما لا يكون.</p>
+<p data-i18n="styles.operations.body">تقارير العمليات تعيش غالبًا على شاشة حائط أو جهاز لوحي، وتُقرأ في ثوانٍ ومن مسافة. هي كثيفة عمدًا، لكن اللون مخصص لمهمة واحدة: إخبارك بما تجاوز حدّه.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/operations-en.webp"><img src="/assets/img/articles/styles/operations-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a operations report in Power BI: the control room" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/operations-ar.webp"><img src="/assets/img/articles/styles/operations-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير العمليات في Power BI: غرفة التحكم" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:31.9%;--ye:9.9%;--xa:68.1%;--ya:10.7%" aria-describedby="rs-operations-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:52.6%;--ye:24.3%;--xa:47.4%;--ya:25.1%" aria-describedby="rs-operations-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:24.3%;--xa:3.1%;--ya:25.1%" aria-describedby="rs-operations-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-operations-n1" data-i18n="styles.operations.n1">كل بطاقة مكتوب تحت رقمها حدّها، والحافة الملونة في الأعلى تُظهر الحالة. الشحنات المتأخرة بالأحمر لأن 27 أعلى من الحد 15.</li><li id="rs-operations-n2" data-i18n="styles.operations.n2">الطلبات في الانتظار خلال اليوم مقابل خط الحد. يرى المشرف الذروة القادمة، وليس الرقم الحالي فقط.</li><li id="rs-operations-n3" data-i18n="styles.operations.n3">"يحتاج إجراء الآن": فقط ما تجاوز حدّه، مرتبًا حسب التأخير. إنها قائمة مهام وليست تقريرًا.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.operations.u1">حدود واضحة لكل رقم، ظاهرة على الصفحة.</li><li data-i18n="styles.operations.u2">وقت تحديث مباشر، وتحديث تلقائي للصفحة.</li><li data-i18n="styles.operations.u3">سمة داكنة لشاشات الحائط، ونص كبير يُقرأ من 3 أمتار.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.operations.avoid">الإجماليات الشهرية والاتجاهات الطويلة هنا. مكانها تقرير المراجعة الأسبوعية، لا غرفة التحكم.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.operations.expert">هذا نهج غرف التحكم الصناعية، كما في ممارسة <em>واجهات التشغيل عالية الأداء</em> (High-Performance HMI) ومعيار ISA-101 لشاشات المشغّلين: رمادي وهادئ عندما يكون كل شيء طبيعيًا، واللون فقط للحالات غير الطبيعية، فيبرز الإنذار فورًا. وينجح ذلك لأن اللون سمة <em>ما قبل الانتباه</em>: تجده العين قبل أن تبدأ القراءة (كولن وير، <em>Information Visualization: Perception for Design</em>).</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-hr"><span class="rs-n">6</span> <span data-i18n="styles.hr.name">الموارد البشرية</span>: <span data-i18n="styles.hr.nick">خريطة الموظفين</span></h2>
+<p class="rs-phil" data-i18n="styles.hr.phil">أظهر كيف تتغير القوى العاملة، دون كشف الأفراد.</p>
+<p data-i18n="styles.hr.body">بيانات الموارد البشرية تتعلق بالأشخاص، لذا فالأسلوب مهم بقدر الأرقام. التصميم هادئ، ويعرض التدفقات والمجموعات لا الأسماء، ولا يسمح أبدًا بالتعرف على فريق صغير.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/hr-en.webp"><img src="/assets/img/articles/styles/hr-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a hr report in Power BI: the people map" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/hr-ar.webp"><img src="/assets/img/articles/styles/hr-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الموارد البشرية في Power BI: خريطة الموظفين" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:53.6%;--ye:27.1%;--xa:46.4%;--ya:28%" aria-describedby="rs-hr-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:27.1%;--xa:3.1%;--ya:28%" aria-describedby="rs-hr-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:52.2%;--ye:80.3%;--xa:47.8%;--ya:82.4%" aria-describedby="rs-hr-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-hr-n1" data-i18n="styles.hr.n1">المنضمون فوق الخط والمغادرون تحته: الفرق هو صافي النمو. التدفق يقول أكثر من رقم عدد الموظفين.</li><li id="rs-hr-n2" data-i18n="styles.hr.n2">ترك العمل حسب القسم مقارنة بمتوسط القطاع؛ فقط الفرق الأعلى منه تأخذ لون التمييز.</li><li id="rs-hr-n3" data-i18n="styles.hr.n3">السبب وراء الأرقام، من مقابلات الخروج، مكتوب في سطر واحد.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.hr.u1">النسب والتدفقات (نسبة ترك العمل، المنضمون مقابل المغادرين)، لا قوائم أسماء.</li><li data-i18n="styles.hr.u2">قاعدة خصوصية: إخفاء المجموعات الأقل من 5 أشخاص.</li><li data-i18n="styles.hr.u3">مقارنات معيارية، ليصبح للرقم معنى.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.hr.avoid">تفاصيل الرواتب أو الأداء في الصفحات المشتركة. استخدم أمان مستوى الصف لأي شيء شخصي.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.hr.expert">إخفاء المجموعات الصغيرة قاعدة <em>حد أدنى لحجم المجموعة</em>، وهي فكرة إخفاء الهوية (k-anonymity) نفسها في أعمال الخصوصية: متوسط ثلاثة أشخاص قد يكشف راتب شخص أو تقييمه. تستخدم مؤسسات كثيرة حدًا من 5 أو 10. واعرض نسبة ترك العمل كمعدل متحرك لـ 12 شهرًا (المغادرون في آخر 12 شهرًا مقسومين على متوسط عدد الموظفين) حتى لا يغيّر شهر سيئ واحد الرقم.</p></aside>
+              <h2 class="mt-5 mb-2 rs-h" id="style-service"><span class="rs-n">7</span> <span data-i18n="styles.service.name">خدمة العملاء</span>: <span data-i18n="styles.service.nick">الطابور</span></h2>
+<p class="rs-phil" data-i18n="styles.service.phil">قِس الوعد الذي قطعته للعملاء، والطابور خلفه.</p>
+<p data-i18n="styles.service.body">العملاء لا يهتمون بالمتوسطات، بل بتذكرتهم. التصميم يقيس الخدمة مقابل الوعد (رد خلال ساعتين، وإغلاق خلال 3 أيام) ويجعل التذاكر الأقدم مستحيلة التجاهل.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="/assets/img/articles/styles/service-en.webp"><img src="/assets/img/articles/styles/service-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a customer service report in Power BI: the queue" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="/assets/img/articles/styles/service-ar.webp"><img src="/assets/img/articles/styles/service-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير خدمة العملاء في Power BI: الطابور" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:25.7%;--ye:10.9%;--xa:74.3%;--ya:11.8%" aria-describedby="rs-service-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:64.6%;--ye:10.9%;--xa:35.4%;--ya:11.8%" aria-describedby="rs-service-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:10.9%;--xa:3.1%;--ya:11.8%" aria-describedby="rs-service-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">اضغط على الأرقام في الصورة</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">اضغط على الأرقام في الصورة</span> · <span data-i18n="ui.fictional">كل الأسماء والأرقام وهمية.</span></figcaption>
+<ol class="rs-notes"><li id="rs-service-n1" data-i18n="styles.service.n1">مستوى خدمة واحد كبير مقابل هدفه، ثم الأرقام الثلاثة وراءه: التذاكر المفتوحة وأول رد والرضا.</li><li id="rs-service-n2" data-i18n="styles.service.n2">التذاكر المفتوحة حسب العمر، ملونة من الحديثة إلى المتأخرة. العمود الأحمر هو الوعد الذي يُخلف.</li><li id="rs-service-n3" data-i18n="styles.service.n3">الموظفون مقارنة بالوعد لا ببعضهم، فتصبح الصفحة للتوجيه لا للوم.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">افعل</h3><ul><li data-i18n="styles.service.u1">مستوى الخدمة مقابل هدف مكتوب.</li><li data-i18n="styles.service.u2">التذاكر المتراكمة حسب العمر، لا الإجمالي فقط.</li><li data-i18n="styles.service.u3">الرضا بجانب السرعة، حتى لا تفوز السرعة وحدها.</li></ul>
+<p><strong data-i18n="ui.avoid">تجنّب:</strong> <span data-i18n="styles.service.avoid">متوسط زمن المعالجة كعنوان رئيسي. إنه يكافئ إنهاء المكالمات بسرعة على حساب العميل.</span></p>
+<aside class="rs-expert"><div class="rs-expert-h"><i class="bi bi-mortarboard" aria-hidden="true"></i> <span data-i18n="ui.expert">من أين جاء هذا</span></div><p class="mb-0" data-i18n-html="styles.service.expert">تعرّف مراكز الاتصال <em>مستوى الخدمة</em> بأنه نسبة التواصلات التي يُرد عليها خلال وقت محدد؛ ومعيار شائع للمكالمات هو 80/20، أي الرد على 80% خلال 20 ثانية. وتستخدم فرق البريد والتذاكر الفكرة نفسها بالساعات بدل الثواني. وتلوين الموظفين مقارنة بالوعد، لا ببعضهم، يُبقي التقرير أداة توجيه.</p></aside>
+              <h2 class="mt-5 mb-3" id="rs-table" data-i18n="ui.tableTitle">الأنماط السبعة جنبًا إلى جنب</h2>
+<div class="table-responsive rs-table"><table class="table table-dark mb-0"><thead><tr><th scope="col" data-i18n="ui.thStyle">النمط</th><th scope="col" data-i18n="ui.thReader">القارئ</th><th scope="col" data-i18n="ui.thTime">الوقت</th><th scope="col" data-i18n="ui.thDens">الكثافة</th><th scope="col" data-i18n="ui.thCol">قاعدة الألوان</th></tr></thead><tbody><tr><th scope="row"><a href="#style-executive" data-i18n="styles.executive.name">الإدارة العليا</a><small class="d-block text-white-50" data-i18n="styles.executive.nick">تقرير الثواني الخمس</small></th><td data-i18n="styles.executive.reader">المدير التنفيذي ومجلس الإدارة والمدراء</td><td data-i18n="styles.executive.time">5 إلى 30 ثانية</td><td data-i18n="styles.executive.dens">منخفضة جدًا</td><td data-i18n="styles.executive.col">لون واحد للعلامة؛ الأخضر والأحمر للحالة فقط</td></tr><tr><th scope="row"><a href="#style-sales" data-i18n="styles.sales.name">المبيعات</a><small class="d-block text-white-50" data-i18n="styles.sales.nick">السباق</small></th><td data-i18n="styles.sales.reader">مدراء المبيعات ومندوبوها</td><td data-i18n="styles.sales.time">2 إلى 5 دقائق يوميًا</td><td data-i18n="styles.sales.dens">متوسطة</td><td data-i18n="styles.sales.col">لون حيوي؛ البرتقالي لـ "متأخر عن الهدف"</td></tr><tr><th scope="row"><a href="#style-finance" data-i18n="styles.finance.name">المالية</a><small class="d-block text-white-50" data-i18n="styles.finance.nick">الدفتر</small></th><td data-i18n="styles.finance.reader">المدير المالي والمراقبون والفريق المالي</td><td data-i18n="styles.finance.time">30 إلى 60 دقيقة شهريًا</td><td data-i18n="styles.finance.dens">عالية لكن منظمة</td><td data-i18n="styles.finance.col">أسود ورمادي؛ الأخضر والأحمر للفروقات فقط</td></tr><tr><th scope="row"><a href="#style-marketing" data-i18n="styles.marketing.name">التسويق</a><small class="d-block text-white-50" data-i18n="styles.marketing.nick">الرحلة</small></th><td data-i18n="styles.marketing.reader">مدراء التسويق والوكالات</td><td data-i18n="styles.marketing.time">5 إلى 15 دقيقة أسبوعيًا</td><td data-i18n="styles.marketing.dens">متوسطة</td><td data-i18n="styles.marketing.col">ألوان العلامة لكل قناة، ثابتة في كل مكان</td></tr><tr><th scope="row"><a href="#style-operations" data-i18n="styles.operations.name">العمليات</a><small class="d-block text-white-50" data-i18n="styles.operations.nick">غرفة التحكم</small></th><td data-i18n="styles.operations.reader">المشرفون وقادة الورديات وشاشات العرض</td><td data-i18n="styles.operations.time">ثوانٍ، مرات كثيرة يوميًا</td><td data-i18n="styles.operations.dens">عالية</td><td data-i18n="styles.operations.col">خلفية داكنة؛ الأخضر والأصفر والأحمر كإشارات</td></tr><tr><th scope="row"><a href="#style-hr" data-i18n="styles.hr.name">الموارد البشرية</a><small class="d-block text-white-50" data-i18n="styles.hr.nick">خريطة الموظفين</small></th><td data-i18n="styles.hr.reader">قادة الموارد البشرية ورؤساء الأقسام</td><td data-i18n="styles.hr.time">10 إلى 20 دقيقة شهريًا</td><td data-i18n="styles.hr.dens">منخفضة إلى متوسطة</td><td data-i18n="styles.hr.col">ألوان هادئة ودافئة؛ لون تمييز واحد للخطر</td></tr><tr><th scope="row"><a href="#style-service" data-i18n="styles.service.name">خدمة العملاء</a><small class="d-block text-white-50" data-i18n="styles.service.nick">الطابور</small></th><td data-i18n="styles.service.reader">مدراء الخدمة وقادة الفرق</td><td data-i18n="styles.service.time">دقائق، عدة مرات يوميًا</td><td data-i18n="styles.service.dens">متوسطة</td><td data-i18n="styles.service.col">أساس محايد؛ اللون حسب العمر ومقابل الوعد</td></tr></tbody></table></div>
+              <h2 class="mt-5 mb-3" data-i18n="ui.sources">المصادر وقراءات إضافية</h2><p class="text-white-50" data-i18n="ui.sourcesNote">الكتب والمعايير وراء هذه الأنماط. صفحات الأمثلة من إعدادنا، ببيانات وهمية.</p><ul class="rs-sources" lang="en" dir="ltr"><li>Stephen Few, <em>Information Dashboard Design: Displaying Data for At-a-Glance Monitoring</em> (2nd edition, 2013).</li><li>Edward Tufte, <em>The Visual Display of Quantitative Information</em> (1983): the data-ink idea behind removing decoration.</li><li>Cole Nussbaumer Knaflic, <em>Storytelling with Data</em> (2015): titles that say what to see, and decluttering.</li><li>Colin Ware, <em>Information Visualization: Perception for Design</em>: pre-attentive attributes.</li><li>IBCS, International Business Communication Standards (ibcs.com): notation for actual, plan and variance.</li><li>ANSI/ISA-101.01, Human Machine Interfaces for Process Automation Systems: high-performance operator screens.</li></ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.o0">تقرير واحد بعدة أنماط</h2>
+              <p data-i18n-html="content.o1">التقارير الحقيقية تمزج الأنماط حسب الصفحة. نمط جيد: صفحة للإدارة أولًا (الحكم)، ثم صفحة لكل فريق بنمطه الخاص (التفاصيل)، ثم صفحة تفصيلية للمحللين. وتبقى كل صفحة تجيب عن سؤال واحد لقارئ واحد.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.o2">ابنِ تخطيطك في دقائق</h2>
+              <p data-i18n-html="content.o3">يحتوي <a href="/ar/tools/power-bi-theme-generator.html">مولّد السمات والتخطيطات لـ Power BI</a> المجاني على تخطيطات للملخص التنفيذي وصفحات التحليل ومراقبة العمليات: اختر تخطيطًا، وضع ألوان علامتك، ونزّل السمة وخلفية مطابقة والموضع الدقيق لكل عنصر.</p>
+              <p data-i18n-html="content.o4">هذا أول مقال في سلسلة. في المقالات القادمة، يحصل كل نمط على شرح معمّق: التخطيط الدقيق، وصيغ DAX لمؤشراته، والأخطاء الأكثر شيوعًا، وقائمة مراجعة.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">صمّم تقريرك بألوان علامتك التجارية</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">سمة وخلفية وتخطيط لـ Power BI، مجانًا ودون تسجيل.</p>
+                <div class="cta-actions">
+                  <a href="/ar/tools/power-bi-theme-generator.html" class="btn btn-accent"><i class="bi bi-palette me-2"></i><span data-i18n="exploreMore.button1">افتح مولّد السمات والتخطيطات</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">تريد تقريرًا يستخدمه فريقك فعلًا؟</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">أصمم وأبني تقارير Power BI حول الأسئلة التي يطرحها فريقك.</p>
+                <div class="cta-actions">
+                  <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-report-styles.min.js" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+  <script>
+    // Report styles article: the explorer tabs, the 3-question quiz and the picture hotspots
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = [...document.querySelectorAll('.rs-tab')];
+      const show = (id, focus) => tabs.forEach((t) => { const on = t.dataset.rs === id; t.classList.toggle('on', on); t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+        document.getElementById('rs-p-' + t.dataset.rs).hidden = !on; if (on && focus) t.focus(); });
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', () => { show(t.dataset.rs); if (window.dataArcusTrack) window.dataArcusTrack('styles_tab', { style: t.dataset.rs }); });
+        t.addEventListener('keydown', (e) => { const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key] * (document.documentElement.dir === 'rtl' ? -1 : 1); if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].dataset.rs, true); } });
+      });
+      show(tabs[0].dataset.rs);
+      const SCORE = {"q1": {"a": {"executive": 2, "operations": 1}, "b": {"sales": 1, "operations": 1, "service": 1, "marketing": 1}, "c": {"finance": 2, "hr": 2, "executive": 1}}, "q2": {"a": {"executive": 3}, "b": {"sales": 3}, "c": {"finance": 3}, "d": {"operations": 3}, "e": {"marketing": 3}, "f": {"hr": 3}, "g": {"service": 3}}, "q3": {"a": {"operations": 2, "service": 1}, "b": {"sales": 1, "service": 1, "marketing": 1}, "c": {"finance": 1, "hr": 1, "executive": 1, "marketing": 1}}}, NAMES = {"executive": "Executive", "sales": "Sales", "finance": "Finance", "marketing": "Marketing", "operations": "Operations", "hr": "HR", "service": "Customer service"};
+      const quiz = document.getElementById('rs-quiz'), res = document.getElementById('rs-result');
+      const tr = (k) => { const L = document.documentElement.lang === 'ar' ? 'ar' : 'en', T = window.reportStylesArticleTranslations; return T && T[L] ? k.split('.').reduce((o, p) => (o || {})[p], T[L]) : null; };
+      const render = () => {
+        const pick = ['q1', 'q2', 'q3'].map((q) => (quiz.querySelector(`input[name="rs-${q}"]:checked`) || {}).value);
+        if (pick.some((v) => !v)) return;
+        const pts = {}; pick.forEach((v, i) => Object.entries(SCORE['q' + (i + 1)][v]).forEach(([s, n]) => { pts[s] = (pts[s] || 0) + n; }));
+        const win = Object.keys(pts).sort((a, b) => pts[b] - pts[a])[0];
+        res.innerHTML = `<div class="text-white-50">${tr('ui.result') || 'Your style:'}</div><div class="rs-win">${tr('styles.' + win + '.name') || NAMES[win]}: ${tr('styles.' + win + '.nick') || ''}</div><div>${tr('styles.' + win + '.phil') || ''}</div>`
+          + `<a class="btn btn-accent btn-sm" href="#style-${win}">${tr('ui.show') || 'See this style'}</a>`;
+        show(win); res.dataset.win = win;
+        if (window.dataArcusTrack) window.dataArcusTrack('styles_quiz', { style: win });
+      };
+      quiz.addEventListener('change', render);
+      new MutationObserver(() => { if (res.dataset.win) render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+      // hotspots: tapping a number highlights its note under the picture
+      document.querySelectorAll('.rs-hs').forEach((b) => b.addEventListener('click', () => {
+        const fig = b.closest('.rs-fig'), id = b.getAttribute('aria-describedby');
+        fig.querySelectorAll('.rs-hs').forEach((x) => x.classList.toggle('on', x === b));
+        fig.querySelectorAll('.rs-notes li').forEach((li) => li.classList.toggle('on', li.id === id));
+        const li = document.getElementById(id); if (li && li.getBoundingClientRect().top > innerHeight - 40) li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }));
+    });
+  </script>
+
+
+
+</body></html>

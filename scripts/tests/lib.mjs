@@ -42,6 +42,9 @@ export async function launch() {
   throw new Error('No browser found. Run "npx playwright-core install chromium" or set CHROME_PATH.\n' + last.message);
 }
 
+// The languages a page is tested in: an Arabic copy (ar/..., scripts/ar-pages.mjs) is Arabic whatever ?lang= says
+export const langsOf = (p) => (p.startsWith('ar/') ? ['ar'] : ['en', 'ar']);
+
 // The HTML pages of the site (the go/ short links are redirects, not pages)
 // git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)
 export const pages = () => {
