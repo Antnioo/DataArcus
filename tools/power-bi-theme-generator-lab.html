@@ -162,6 +162,10 @@
     .tg-check { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; color: #cbd5e1; cursor: pointer; margin: 0; }
     .tg-lab { display: flex; gap: 10px; align-items: center; background: rgba(253, 203, 110, .12); border: 1px solid rgba(253, 203, 110, .45); color: #fde68a; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
     .tg-file-pbip { border-color: rgba(108, 92, 231, .6); }
+    .tg-pv-box { margin-bottom: 10px; }
+    .tg-pv-box figure { margin: 0 0 10px; }
+    .tg-pv-box svg { display: block; width: 100%; height: auto; border-radius: 6px; }
+    .tg-pv-box figcaption, .tg-pv-box p { font-size: .8rem; color: rgba(255, 255, 255, .6); margin: 4px 0 0; }
     .tg-logo-in { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
     .tg-check input { accent-color: var(--accent); width: 16px; height: 16px; flex: none; margin-top: 2px; }
     .tg-sizes { border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -450,6 +454,8 @@
               <label class="tg-check"><input type="checkbox" id="pbipPanel"> <span data-i18n-html="tg.dl.pbipPanel">Filters as a slide-in panel <small class="d-block text-white-50">A Filters button opens them over the page, so charts get the full width.</small></span></label>
               <label class="tg-check tg-logo-in"><i class="bi bi-image" aria-hidden="true"></i> <span><span data-i18n="tg.dl.pbipLogo">Add your logo (optional, PNG or JPG)</span> <small class="d-block text-white-50" id="pbipLogoName"></small></span><input type="file" id="pbipLogo" accept="image/png,image/jpeg" class="visually-hidden"></label>
             </div>
+            <button class="tg-btn2 w-100 mb-2" id="pbipPreviewBtn" type="button"><i class="bi bi-eye me-1" aria-hidden="true"></i><span data-i18n="tg.dl.pbipPreview">Preview the download</span></button>
+            <div id="pbipPreview" class="tg-pv-box" hidden></div>
             <button class="btn btn-accent w-100" id="pbipBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.pbipBtn">Download project</span></button>
           </div>
           <div class="tg-file" data-file="csv">
@@ -567,12 +573,12 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/theme-generator.min.js" defer></script>
+  <script src="../assets/js/translations/theme-generator.min.js?v=20261018b" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261017a" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js?v=20261016r29" defer></script>
   <script src="../assets/js/design-engine.min.js?v=20261013p4" defer></script>
-  <script src="../assets/js/theme-generator.min.js?v=20261016g11" defer></script>
+  <script src="../assets/js/theme-generator.min.js?v=20261018b" defer></script>
 </body>
 </html>

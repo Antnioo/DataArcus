@@ -10,6 +10,10 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+
+// (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
+const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
 
 const windows = new Map();          // planId -> { secret, plan, show, decided: null | 'approve' | 'decline', waiters, opened, seen }
 const bySecret = new Map();         // secret -> planId
@@ -52,7 +56,8 @@ table{width:100%;border-collapse:collapse}td{padding:6px 8px;border-top:1px soli
 ul{margin:0;padding-inline-start:20px}li{overflow-wrap:anywhere}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}form{margin:0}
 button{font:inherit;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 button.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.note{color:var(--soft);font-size:13px;margin-top:18px}.warn{color:var(--warn)}
-.done{font-size:18px;font-weight:600}`;
+.done{font-size:18px;font-weight:600}
+.preview figure{margin:0 0 14px}.preview svg{display:block;width:100%;height:auto;border-radius:6px}.preview figcaption{color:var(--soft);font-size:13px;margin-top:6px}`;
 
 function page(title, body) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
@@ -62,8 +67,12 @@ const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td
 function askPage(w) {
   const s = w.show;
   const sections = s.sections.filter((x) => x.rows.length).map((x) => `<h2>${esc(x.heading)}</h2>${rows(x.rows)}`).join('');
+  // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
+  const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>What the report will look like</h2><div class="card preview">${s.previews.pages.map((p, i) => {
+    const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
+    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">Page ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} to check: ${esc([...new Set(fl.map((f) => Preview.WORDS.en[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus never reads the model's rows.</p></div>` : '';
   return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">Nothing is overwritten or deleted.</p></div>
+${pv}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">Nothing is overwritten or deleted.</p></div>
 ${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
 <form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
@@ -156,7 +165,7 @@ export function summary(kind, data) {
   const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : cut(JSON.stringify(v), 600));
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null };
+    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)]) });
