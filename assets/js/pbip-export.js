@@ -227,6 +227,7 @@
    * @property {Array} ringsSmall  ring pictures drawn without their number
    * @property {Array} shortDays  column charts that show Day Short
    * @property {Array} barCharts  column charts written as bar charts
+   * @property {Array} kindChanges  every slot written as another kind than planned { page, pageIndex, role, from, to, topN } (rc.22, B-140)
    * @property {Array} blankKept  cards too narrow for the "No data" text
    * @property {string[]} subtitlesUsed
    * @property {Array} timeAxes  time axes ordered by their month start

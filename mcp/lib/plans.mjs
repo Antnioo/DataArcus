@@ -55,11 +55,21 @@ export function pending(id) {
  *  what to do when it can't. (Audit 6, A6-3; A-01) */
 export function approve(id, by) {
   const p = plans.get(String((pending(id), id)));
+  if (p.status === 'refused') throw new Error(REFUSED(p).replace('Nothing was written: ', 'Not approved: '));
   if (p.status === 'approved') throw new Error(`Not approved again: plan ${p.id} is already approved (an approval is given once, and a plan is good for ${Math.round(TTL / 60000)} minutes from its proposal). Use it, or make a new plan.`);
   if (by !== 'user-in-browser' && by !== 'user-in-app') throw new Error('Not approved: only the person approves a plan, by a click on Approve in DataArcus\'s approval window (or in the app\'s own prompt).');
   p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by;
   return approval(p.id);
 }
+
+/** Marks a plan refused: the person clicked "Not now" in DataArcus's approval window (rc.22, B-134: the plan then said
+ *  "not approved yet"). A refused plan is never approved later; a new plan is needed. */
+export function refuse(id) { const p = plans.get(String(id)); if (p && p.status === 'proposed') { p.status = 'refused'; p.refusedAt = now(); } }
+const REFUSED = (p) => `Nothing was written: plan ${p.id} was refused: the person clicked "Not now" in DataArcus's approval window. Ask what to change, make a new plan, show it and wait for their go.`;
+
+/** (rc.22, B-134) what keeps a plan from being used by a tool, said before its other inputs are checked: null when the
+ *  plan can be used (known, alive, approved, not used yet for this tool, of the right kind), else the reason. */
+export function approvalProblem(tool, id) { try { gate(tool, id, null, undefined, { approvalOnly: true }); return null; } catch (e) { return String(e && e.message || e); } }
 
 /** The answer for an approved plan (approve_plan's), or null when the plan is not approved. */
 export function approval(id) {
@@ -90,15 +100,17 @@ function differences(want, got) {
 
 /** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model:
  *  its model's key (or null); pin: the write's own inputs in the form the plan pinned them (A6-1, A6-5). */
-export function gate(tool, id, model, pin) {
+export function gate(tool, id, model, pin, opts) {
   if (id == null || id === '') throw new Error(`Nothing was written: ${tool} writes a file only with an approved plan id (planId). ${tool === 'create_report' ? 'Call plan_layout with the model (path) and the plan\'s fields: it checks the plan against the tools\' limits and gives a plan id. ' : ''}${SHOW}`);
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
+  if (p.status === 'refused') throw new Error(REFUSED(p));
   if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet (the person approves it with a click on Approve in DataArcus's approval window, which approve_plan opens in their browser). ${SHOW}`);
   if (p.used && p.used[tool]) throw new Error(`Nothing was written: plan ${p.id} was already used for ${tool} (a plan writes once). For another write, make a new plan, show it to the user and wait for their go.`);
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
+  if (opts && opts.approvalOnly) return p;
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
   const want = p.data && p.data.pins && p.data.pins[tool];
   // (Z-01: the gate fails closed: a writing tool's plan must pin its inputs; the twin writes only from the plan's data)

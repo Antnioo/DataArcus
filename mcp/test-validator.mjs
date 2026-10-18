@@ -44,4 +44,5 @@ export function validatorCounts(reportDir) {
 // the old one-line form the tests compared with '0' / 0: the count, and the codes when there are errors
 export const validatorErrors = (reportDir) => { const r = validatorCounts(reportDir); return r.ran ? r.errorCount + (r.errorCount ? ' (' + r.codes.join(', ') + ')' : '') : 'the validator did not run: ' + r.why; };
 // a check_report answer: 0 validator errors outside the known-false entry, and its hits exactly the expected ones
-export const checkReportClean = (ans, reportDir) => !!(ans && ans.validator && ans.validator.errors - (ans.validator.known || 0) === 0 && (ans.validator.known || 0) === expectedKnown(reportDir));
+// (rc.22, B-142: validator.errors no longer counts the known entries, which are notes)
+export const checkReportClean = (ans, reportDir) => !!(ans && ans.validator && ans.validator.errors === 0 && (ans.validator.known || 0) === expectedKnown(reportDir));
