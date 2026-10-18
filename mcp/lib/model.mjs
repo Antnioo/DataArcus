@@ -197,6 +197,42 @@ export function readCapped(f, cap, what) {
   } finally { fs.closeSync(fd); }
 }
 
+// (rc.23, F1, an outside audit of 0.2.9: a .pbix was read whole into memory, its data cache included, and refused only
+// then with "No model in this file". Nothing was decoded or returned, but PRIVACY.md says it never opens the data cache.)
+// A .pbix and data files are refused by their name, before they are opened; a .json is read as a model's JSON.
+const PBIX_WHY = 'A .pbix holds Power BI\'s data cache (your data), so DataArcus never opens it. Export a .pbit (File > Export > Power BI template), or save the report as a Power BI project (File > Save as, .pbip), and point at that.';
+const DATA_FILE = /\.(csv|tsv|xlsx|xlsm|xls|parquet)$/i;
+function notAModelFile(full) {
+  if (/\.pbix$/i.test(full)) throw new ReadError('PBIX_FILE', {}, `This file was not opened: ${PBIX_WHY}`);
+  const ext = (full.match(DATA_FILE) || [])[0];
+  if (ext) throw new ReadError('DATA_FILE', { ext: ext.toLowerCase() }, `This file was not opened: a ${ext.toLowerCase()} is a data file, not a Power BI model, and DataArcus reads no data. Point at a project folder, a model.bim or a .pbit (File > Export > Power BI template).`);
+}
+// A zip's directory, read alone: the end-of-central-directory record (the last 22 bytes; a zip with a comment after it:
+// the last 64 KB, where the format puts it), then the directory itself, bounded by the limits. Nothing else of the file.
+// Throws when the directory lists a DataModel and no DataModelSchema (a .pbix by another name). A zip it can't make
+// sense of is left to unzipNeeded, which says why in its own words.
+function readAt(fd, size, start, n) { const b = Buffer.alloc(Math.max(0, Math.min(n, size - start))); let got = 0, r; while (got < b.length && (r = fs.readSync(fd, b, got, b.length - got, start + got)) > 0) got += r; return b.subarray(0, got); }
+function zipDirectoryCheck(full, size) {
+  let fd;
+  try { fd = fs.openSync(full, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { return; }
+  try {
+    let tail = readAt(fd, size, Math.max(0, size - 22), 22), at = tail.length === 22 && tail.readUInt32LE(0) === 0x06054b50 ? 0 : -1;
+    if (at < 0) {
+      const from = Math.max(0, size - 65557); tail = readAt(fd, size, from, size - from);
+      for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50) { at = i; break; }
+      if (at < 0) return;
+    }
+    const count = tail.readUInt16LE(at + 10), dirSize = tail.readUInt32LE(at + 12), dirAt = tail.readUInt32LE(at + 16);
+    if (count > PBIT_LIMITS.entries || dirSize > PBIT_LIMITS.entry || dirAt + dirSize > size) return;
+    const dir = readAt(fd, size, dirAt, dirSize), names = new Set();
+    for (let p = 0, n = count; n > 0 && p + 46 <= dir.length && dir.readUInt32LE(p) === 0x02014b50; n--) {
+      const nlen = dir.readUInt16LE(p + 28); names.add(dir.toString('utf8', p + 46, p + 46 + nlen));
+      p += 46 + nlen + dir.readUInt16LE(p + 30) + dir.readUInt16LE(p + 32);
+    }
+    if (names.has('DataModel') && !names.has('DataModelSchema')) throw new ReadError('PBIX_FILE', {}, `This file was not read: its list of parts shows a DataModel and no model schema, so it is a .pbix by another name. ${PBIX_WHY}`);
+  } finally { fs.closeSync(fd); }
+}
+
 // Links (symbolic links, junctions) are never followed: they are left out, and listed in `links` when given
 const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
   const full = path.join(dir, e.name);
@@ -290,10 +326,16 @@ export function loadModel(p, opts) {
   else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = realIn(nothingAt(beside) ? path.dirname(full) : beside, p); }
   const st = fs.statSync(full);
   if (st.isFile()) {
+    // (rc.23, F1, an outside audit of 0.2.9) a .pbix holds Power BI's data cache and a data file holds data: both are
+    // refused by their name, before the file is opened (PRIVACY.md section 3)
+    notAModelFile(full);
     // a file above the limit is refused before it is read into memory (a .pbit 300 MB; a model.bim given as a file 64 MB)
     const isZip = (() => { try { const fd = fs.openSync(full, 'r'), b = Buffer.alloc(2); fs.readSync(fd, b, 0, 2, 0); fs.closeSync(fd); return b[0] === 0x50 && b[1] === 0x4b; } catch (e) { return false; } })();
     const cap = isZip ? PBIT_LIMITS.file : PBIT_LIMITS.model;
     if (st.size > cap) throw refuse(`it is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads${isZip ? '' : ' for a model file'}`);
+    // (rc.23, F1) a zip accepted by its name (.pbit, no extension): its directory first, and a .pbix by another name (a
+    // DataModel, Power BI's data cache, and no DataModelSchema) is refused before the rest of the file is read
+    if (isZip) zipDirectoryCheck(full, st.size);
     const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80);
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
       const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];

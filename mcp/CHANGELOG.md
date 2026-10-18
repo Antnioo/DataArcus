@@ -7,6 +7,17 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.2.9 (in main since 2026-10-16, rc.21; the package for testers after the owner's Power BI Desktop test)
 The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
 rc.21 passes; until then testers keep 0.2.8.
+- **rc.23, three fixes from an outside audit of 0.2.9, so `PRIVACY.md` says exactly what the code does** (18 Oct):
+  - F1: a `.pbix` (it holds Power BI's data cache) and data files (`.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.xls`, `.parquet`)
+    are refused by their name before they are opened (a `.pbix` was read whole, then refused: "No model in this file").
+    A `.pbix` refusal says how to get a `.pbit` or a project. A template (or a file with no extension) is read by its
+    list of parts first: one that holds a data cache and no model schema is refused before the rest of it is read.
+  - F3: `PRIVACY.md` section 3 no longer says a `.pbit`'s schema "holds no data": a model's definition can hold "Enter
+    data" tables and DATATABLE values, which DataArcus reads on your machine but never decodes or returns. `read_report`
+    (its row, its description, its note and the README) says slicer selections and bookmark states are read with the
+    report's files but never returned.
+  - F7b: "No" in the app's own approval prompt refuses the plan, as "Not now" in the approval window does: it can't be
+    approved later (it stayed "not approved yet"). A prompt closed without an answer still leaves it to be approved.
 - **rc.22, fixes from the owner's own Desktop test of rc.21** (18 Oct; the approval window passed in every case):
   - B-137: the Arabic twin of a report DataArcus wrote mirrors its pages. Their background is DataArcus's own transparent
     placeholder (known by its bytes), not a picture; a page on a real background picture still stays left to right.
