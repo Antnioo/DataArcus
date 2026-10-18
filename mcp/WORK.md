@@ -28,7 +28,10 @@ temporary folder (and the folder too); generate_theme's new folders (freeFile) s
   answer field already). PRIVACY.md section 4: two sentences.
 - Test first: `test-partial-writes.mjs` (in npm test): 12 of its first 16 checks red on main (the unit checks need
   the module); 31 then. U1-U5 (withPlan in-process, 5 checks) were added with withPlan's last rule (an error after
-  the files were placed uses the plan), not red first. Expected after: 36 PASS; test-audit6 47, twin 116, z 13, approval 20 unchanged; npm test all PASS.
+  the files were placed uses the plan), not red first. Expected after: 37 PASS (W2's "folders that were there are never
+  removed" added after CI's first Windows run: freeFile found its new folders by comparing a path with mkdirSync's
+  answer, which Windows spells differently (RUNNER~1), so the clean-up removed the empty folder above them; now found
+  by walking up to the first folder that exists. Not red on Linux, where the spellings agree); test-audit6 47, twin 116, z 13, approval 20 unchanged; npm test all PASS.
 - No Arabic sentence added. Seen, not in scope: see the PR.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)

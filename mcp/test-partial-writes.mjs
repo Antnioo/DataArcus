@@ -16,7 +16,7 @@ import { serverClient } from './test-0.2.9.mjs';
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const short = (x) => (x.err ? x.t.slice(0, 500) : JSON.stringify(x.j).slice(0, 500));
-const ROOT = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-b153-')));
+const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-b153-')));
 process.env.DATAARCUS_ROOT = ROOT;   // (before the modules are loaded: the working folder of the in-process checks)
 const rel = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 // every file and folder under d (relative, '/'), folders with a trailing '/'
@@ -46,6 +46,7 @@ if (typeof W.writeFileNew === 'function') {
   e = threw(() => W.writeFileNew(f2, data, { madeDirs: made }));
   W.setIo();
   chk(() => e && /^Nothing was written/.test(e.message) && tree(D).length === 0, () => `W2. a failure after the folder was made leaves no folder: ${tree(D)} ${e && e.message}`);
+  chk(() => fs.existsSync(D) && fs.existsSync(ROOT), () => 'W2. the folders that were there before (unit, the working folder) are never removed, even empty');
   // W3. the clean-up can't remove the half file: exactly that file is named, and it is all that is on disk
   stub({ code: 'ENOSPC', how: 'partial', n: 1, stuck: true });
   e = threw(() => W.writeFileNew(path.join(D, 'Stuck.json'), data));
