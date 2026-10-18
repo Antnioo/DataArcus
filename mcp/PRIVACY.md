@@ -121,6 +121,10 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   - `create_arabic_twin` writes a new "<name> AR" report folder and `.pbip` next to the original report, refusing
     when either name is taken; the original report is only read. Its Arabic month script (when you ask for it) is a
     new `.tmdl` file next to the project under a free name, as the scripts below.
+  - The twin and the native copy (`create_report` with `customVisualsFrom`) copy only the report's own files: its
+    definition JSON, `definition.pbir`, `.platform`, the StaticResources' images and themes, a private custom visual's
+    files. Any other file in the `.Report` folder (a `.csv` or `.xlsx` left there, `.pbi/localSettings.json`) is never
+    read, hashed or copied; the plan names it.
   - `check_model_health` and `add_gulf_calendar` write their scripts as new files next to the project, under free names; asked again, it
     names the file that already holds exactly that script instead of writing a second copy. When the working folder
     is the model folder itself it writes no script (nothing is ever written inside a model folder) and says so.

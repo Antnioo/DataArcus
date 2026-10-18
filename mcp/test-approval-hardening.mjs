@@ -80,8 +80,8 @@ const { loadModel } = await import('./lib/model.mjs');
   const done = writeTwin({ path: 'twin/Twin Sales.pbip' }, { data: { labels: {}, arabicMonth: false, source: reportPrint('twin/Twin Sales.pbip') } });
   const TD = path.join(ROOT, 'twin/Twin Sales AR.Report'), written = tree(TD);
   chk(() => done.written && strayRead().length === 0, () => `B152-7. writing the twin opens no stray file: ${JSON.stringify(strayRead())}`);
-  chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)) && !written.some((f) => /\.(csv|xlsx|txt)$/.test(f) || /\.pbi/.test(f)),
-    () => `B152-8. the twin holds none of them: ${JSON.stringify(written.map(rel).filter((f) => /\.(csv|xlsx|txt)$|\.pbi/.test(f)))}`);
+  chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)) && !written.some((f) => /\.(csv|xlsx|txt)$/.test(f) || /\/\.pbi\//.test(f)),
+    () => `B152-8. the twin holds none of them: ${JSON.stringify(written.map(rel).filter((f) => /\.(csv|xlsx|txt)$|\/\.pbi\//.test(f)))}`);
   fs.rmSync(TD, { recursive: true, force: true }); fs.rmSync(path.join(ROOT, 'twin/Twin Sales AR.pbip'), { force: true });
 }
 // B152-9..12: the native copy's plan and write
@@ -96,7 +96,7 @@ const { loadModel } = await import('./lib/model.mjs');
   const done = writeNative('twin/Twin Sales.Report', m, { data: { customVisuals: P.entries } });
   const ND = path.join(ROOT, 'twin/Twin Sales native.Report'), written = tree(ND);
   chk(() => done.written && strayRead().length === 0, () => `B152-11. writing the native copy opens no stray file: ${JSON.stringify(strayRead())}`);
-  chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)), () => `B152-12. the native copy holds none of them: ${JSON.stringify(written.map(rel).filter((f) => /\.(csv|xlsx|txt)$|\.pbi/.test(f)))}`);
+  chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)), () => `B152-12. the native copy holds none of them: ${JSON.stringify(written.map(rel).filter((f) => /\.(csv|xlsx|txt)$|\/\.pbi\//.test(f)))}`);
   fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(ROOT, 'twin/Twin Sales native.pbip'), { force: true });
 }
 fs.openSync = orig.openSync; fs.readFileSync = orig.readFileSync;
