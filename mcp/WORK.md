@@ -35,6 +35,10 @@ change to what the writer writes (the writer's own findings are listed, not fixe
 - **Tests (red first for the MCP):** `mcp/test-0.3.0-check.mjs` C-01..C-03 (0 -> 31, in npm test; red on step 1's code
   at C-01); approval window 28 -> 31 (W-12, W-13 red on step 1's code); website `pbip` 92 -> 98 (the lab's check; written
   with the code, not run red first). Existing lint and check_report suites unchanged: v029a4 39, v029w 75, v029checks 37.
+- **Full runs (Linux) on `efe9bee`:** `cd mcp && npm test` all PASS (mcp 1575, v029c/d/e/f/g 36/21/21/20/21, golden 12
+  unchanged, fuzz 600, layouts 32 reports 226 checks, preview 71, check 31); website 18 of 18 PASS (pbip 98); check:min
+  66 match, csp, site config PASS. One existing test was pointed at the moved code: test-0.2.9d's R7 reads the lint's
+  thresholds and sources in layout-check.js (the same assertion; design-lint.mjs no longer holds them).
 - **Open (for the owner):** (1) the line between "problems Desktop would show" and "worth a look" (above): agree or
   change. (2) Problem texts are English on the Arabic lab page (the rules' and lint's own words; only the summary is
   Arabic). (3) "Worth a look" is counted, not listed, in the lab and the approval window.
