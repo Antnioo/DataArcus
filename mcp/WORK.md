@@ -1,8 +1,48 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 1: Preview before Approve" just below (branch `feat/0.3.0-preview`, draft PR, merged only after 0.2.9 reaches testers).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 2: Check before download / write" just below (branch `feat/0.3.0-check`, stacked on step 1's `feat/0.3.0-preview` / PR #37; draft PR, merged only after 0.2.9 reaches testers). Step 1: the owner said yes to the previews (18 Oct).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 step 2: Check before download / write (18 Oct, cloud builder; branch `feat/0.3.0-check` from `feat/0.3.0-preview` `6eac888`; draft PR stacked on #37, not merged)
+The owner's go (18 Oct, after his yes to step 1's previews), from PLAN-0.3.0 step 2: the measured rules and the layout
+check run on the generated project before the lab offers the download and before the MCP writes; the answer is "0
+problems Power BI Desktop would show" or the list. Out of scope: story titles (step 4; B-130/B-131), the gallery, any
+change to what the writer writes (the writer's own findings are listed, not fixed). Health Check files untouched.
+- **One engine:** `assets/js/layout-check.js` (new; Node and `window.DALayoutCheck`): the design lint moved here
+  unchanged in what it finds (`lint`, `LINT_RULES`, `MEASURED`; the names a finding shows are the caller's: the MCP
+  passes read-report's screened ones); `inventoryOf(files)` (the in-memory reader of a project's PBIR files, the fields
+  read-report's inventory gives the lint and the rules; paths with or without a download's folder); `rulesInput` (the
+  one copy: check_report uses it too); `checkProject(files, { model, lang })` -> `{ pages, visuals, desktop, worth,
+  summary, problems, worthALook, counts }`. A problem Desktop would show = a measured rule's warning or error, or a
+  layout finding that is neither a guess nor a note; the rest is "worth a look". `mcp/lib/design-lint.mjs` is now a
+  22-line adapter.
+- **MCP:** `plan-lint.mjs` `checkFiles` / `checkSummary` (and `plannedReport` for the tests); `create_report` checks the
+  project in memory before `writeTree` and answers `check` (summary, problems with their fixes, the rest counted);
+  `planPreview` checks the planned pages and the approval window shows "Checked before writing" next to the preview,
+  above Approve. The check reports only: it never writes, approves or holds a write back.
+- **Lab:** the check runs on "Preview the download" and on "Download project" (on the files offered), and shows the
+  summary (en/ar) and up to 12 problems; the download is never held back. Loads visual-types, report-rules and
+  layout-check (new .min.js files) after the writer. Stamps 20261018c: theme-generator.min.js on both generator pages,
+  the three new files.
+- **Found and fixed before the PR:** the first reader stripped only "<Name>.Report/", so a download's paths
+  ("<folder>/<Name>.Report/...") were read as no pages and a false ".platform missing"; the tests now prove pages were
+  read (pages, visuals) and that a folder in front gives the same answer.
+- **What the check finds on the golden models** (writer's planned report, 2 pages + tooltip): arabic-long-names ar exec,
+  health-project en analysis, large-synthetic en ops (logistics): 0 problems Desktop would show; worth a look
+  TOOLTIP_SCROLL 1, COVER_CARDS 2 each. Ramadan en focus: 0; TOOLTIP_SCROLL 2, AXIS_TEXT_TIME_UNSORTED 2 (guess),
+  COVER_CARDS 2. The lab's sample download: 0 problems, 5 worth a look. MCP and lab identical on every golden model.
+- **Tests (red first for the MCP):** `mcp/test-0.3.0-check.mjs` C-01..C-03 (0 -> 31, in npm test; red on step 1's code
+  at C-01); approval window 28 -> 31 (W-12, W-13 red on step 1's code); website `pbip` 92 -> 98 (the lab's check; written
+  with the code, not run red first). Existing lint and check_report suites unchanged: v029a4 39, v029w 75, v029checks 37.
+- **Open (for the owner):** (1) the line between "problems Desktop would show" and "worth a look" (above): agree or
+  change. (2) Problem texts are English on the Arabic lab page (the rules' and lint's own words; only the summary is
+  Arabic). (3) "Worth a look" is counted, not listed, in the lab and the approval window.
+- **Seen, not in scope:** every golden report gets TOOLTIP_SCROLL (the tooltip page's bar chart may need a scrollbar,
+  a note) and COVER_CARDS (the "No data" message cards: meant); on the Ramadan model the time axis is a text column
+  with no sort-by column in the model (a guess from its name). The small Arabic preview in the lab draws some titles
+  past their box (the preview's width estimate at 260 px). From step 1: the writer's duplicate titles "(2) (2)" and
+  "KPI 2/3/4" titles (B-130/B-131, step 4).
 
 ## 0.3.0 step 1: Preview before Approve (18 Oct, cloud builder; branch `feat/0.3.0-preview` from main `6d88fe4`; draft PR, not merged)
 The owner's go (18 Oct) on the 0.3.0 plan approved 17 Oct ("yes B and the promise stays"): step 1 first, merged only after
