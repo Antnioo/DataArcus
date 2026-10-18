@@ -24,8 +24,21 @@ The owner's go (18 Oct, R&D for 0.3): titles that say what the visual answers, f
   KPI titles get the time words. `lib/plan-lint.mjs`: the planned cards capped to the measures the binding fills (the
   planned page had "KPI 2/3/4" cards with no field on health-project), its titles kept off the answer (`titles`).
   `theme-generator.js` loads story-titles.min.js before pbip-query (stamps 20261018st on the 3 generator pages).
-- **Tests:** `mcp/test-0.3-story-titles.mjs` (82 checks, in npm test): 6 red on the writer before (c52c30c), 0 after
-  (777a8fd). The engine checks (ST-1) were written with the engine.
+- **Tests:** `mcp/test-0.3-story-titles.mjs` (91 checks, in npm test): 6 of 82 red on the writer before (c52c30c), 0
+  after (777a8fd); then ST-1m (capital after "Total") and ST-2e (no "…" on any page, tooltips too: found the tooltip
+  bar's title still cut, fixed in 5e303b2). The engine checks (ST-1) were written with the engine.
+- **Tests changed on purpose (listed in the PR):** test-round22 `e` (expected "(2)", now "Total Sales per Region") and
+  `3rd-4` (expected a "…" entry for a long title, now shortened by rule; still checks every told title is shown);
+  golden task 6 longTitleUses 142 -> 128 (why written in golden-expected.json): **needs the owner's go** (GOLDEN-TASKS rule).
+- **Full runs (Linux) on 5e303b2 + golden:** test.mjs 4 shards 32 + 584 + 620 + 332 PASS, G13 249 reports 0 errors;
+  release-text 4, v029c/d/e/f/g 36/21/21/20/21, golden 12 (after the update), fuzz 8199, layouts 226 (32 reports),
+  rc22 26, rc23 51, story-titles 91; round22 58 (in test.mjs). Website 19 of 19 PASS; check:min, site config, ar-pages,
+  sitemap-lastmod, csp PASS.
+- **Seen, not in scope:** plan_layout's slot list still shows 4 KPI slots (roles "KPI 2/3/4") on a model with one measure
+  while create_report writes one card (design/server, other drafts); titles keep column names such as "Month Short",
+  "Month Year", "Day Name" on wide charts (only shortened under budget); the lab's no-model download keeps its "KPI 1-4"
+  placeholder cards; a KPI title is not rule-shortened (it wraps; none cut on the golden models); Desktop not run for
+  this branch (Arabic shortened titles to be judged from full-size crops).
 - **Decisions I made:** the owner's "Top N of M:" lead (design rounds 8/10) stays; the story is its core, so no "Top 10
   Customers by Sales" form. Rules apply only when a title doesn't fit (no "Total" dropped on a wide chart). KPI titles
   keep the wrap rule (none cut on the golden models). Tooltip pages' titles unchanged.
