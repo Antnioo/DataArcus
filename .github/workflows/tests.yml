@@ -47,6 +47,9 @@ jobs:
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
+      - name: Every sitemap lastmod is its page's last content change (git history, B-151)
+        run: node scripts/sitemap-lastmod.mjs
+
       - name: IndexNow sends the right pages, and the key file is in place (no network)
         run: node scripts/test-indexnow.mjs
 

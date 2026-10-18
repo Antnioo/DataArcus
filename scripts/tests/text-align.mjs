@@ -52,6 +52,10 @@ async function centring(pg, tag) {
   await pg.evaluate(() => new Promise((done) => { let t = setTimeout(fin, 500); const mo = new MutationObserver(() => { clearTimeout(t); t = setTimeout(fin, 500); });
     function fin() { mo.disconnect(); done(); } mo.observe(document.body, { childList: true, subtree: true, characterData: true }); setTimeout(fin, 8000); }));
   await pg.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity).map((a) => a.finished.catch(() => null))));
+  // the endless ones (the background's floating .particle dots, 4 px, shown above 768 px) are paused where they are: a
+  // pill's background is translucent, so a dot rising behind it between the two shots was read as ink above or below
+  // the capitals (CI on #44, 18 Oct; 7 of 60 runs under load, always at 1440 px; the pills and their text don't animate)
+  await pg.evaluate(() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().endTime === Infinity).forEach((a) => a.pause()));
   const n = await pg.evaluate((fp) => { window.__pills = (0, eval)('(' + fp + ')')().filter((e) => !e.closest('.cap-pill-skip')); return window.__pills.length; }, findPills.toString());
   for (let i = 0; i < n; i++) {
     const box = await pg.evaluate((i) => {
