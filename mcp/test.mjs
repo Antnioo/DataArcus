@@ -46,6 +46,45 @@ const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE
 const hiddenOf = (vis) => ((vis.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
 const isRowLabelP = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
 const shownOf = (vis) => { const ps = vis.query.queryState.Values.projections, hid = hiddenOf(vis), col = ps.find((p) => hid.includes(p.queryRef)); return ps.filter((p) => !hid.includes(p.queryRef)).map((p) => (isRowLabelP(p) && col ? col : p)); };
+// B-145 (owner's go 18 Oct): CI runs this file in shards. Each block below is a part, `if (part('id'))`; DA_SHARD=k/N runs
+// only the parts of SHARDS[k-1], in file order, with its own server on its own temporary ROOT, so shards can't touch each
+// other's files. DA_SHARD=0/N runs none (CI's job for npm test's other scripts). Without DA_SHARD every part runs, in
+// order, as before. Every part must be in exactly one shard (checked at the end of every run, sharded or not), and a
+// check made outside a part of the running shard fails the run. Shards balanced by time measured on Linux (18 Oct,
+// DA_PART_TIMES=1): a part's seconds plus about 2 s for each report it creates before G-13, which validates them all;
+// round10 (69 reports, about 207 s) is a shard alone.
+const SHARDS = [
+  ['round10'],
+  ['basics', 'design-report', 'quality', 'round3', 'gulf-health', 'round4', 'round6', 'round8', 'round9', 'round11',
+   'pbit-limits', 'model-size', 'v029', 'v029b', 'v029checks', 'v029design', 'v029sweep', 'audit6'],
+  ['round5', 'round7', 'check-report', 'check-report-2', 'round10-design', 'check-report-b', 'round13', 'round12b',
+   'round16', 'round18', 'round22', 'v029i', 'v029w', 'v029k', 'v029p', 'v029q', 'v029agent', 'twin', 'rgate',
+   'approval', 'g04'],
+  ['design-tools', 'gulf-calendar', 'round10-choices', 'round12', 'round14', 'round15', 'round17', 'round20',
+   'round21', 'round23', 'v029visuals', 'audit4', 'zgate'],
+];
+const SHARD = (() => {
+  const v = process.env.DA_SHARD, m = /^(\d+)\/(\d+)$/.exec(v || '');
+  if (!v) return null;
+  if (!m || +m[2] !== SHARDS.length || +m[1] > SHARDS.length) { console.error(`DA_SHARD must be k/${SHARDS.length}, k from 0 to ${SHARDS.length}: ${v}`); process.exit(2); }
+  return { k: +m[1], n: +m[2] };
+})();
+// Parts that read what an earlier part wrote in ROOT, so they must share a shard (found by running each shard alone):
+// round4 compares read_model's answers on the fixtures with the reports the parts before it created there, and round6
+// reads round4's 'plain' model; gulf-health reads basics' sort.bim; round9 reads round8's filter-project; the other
+// check_report parts, round16 and g04 use check-report's cr-project (its reports, its logo.png).
+const TOGETHER = [['basics', 'design-report', 'quality', 'round3', 'gulf-health', 'round4', 'round6'], ['round8', 'round9'], ['check-report', 'check-report-2', 'check-report-b', 'round16', 'g04']];
+{
+  const twice = SHARDS.flat().filter((p, i, all) => all.indexOf(p) !== i), split = TOGETHER.filter((g) => !SHARDS.some((s) => g.every((p) => s.includes(p))));
+  if (twice.length) { console.error(`FAIL  mcp  parts in two shards: ${twice.join(', ')}`); process.exit(1); }
+  if (split.length) { console.error(`FAIL  mcp  these parts must share a shard: ${split.map((g) => g.join(', ')).join(' | ')}`); process.exit(1); }
+}
+if (SHARD && SHARD.k === 0) { console.log(`SKIP  mcp  (DA_SHARD=0/${SHARD.n}: shards 1-${SHARD.n} run its parts)`); process.exit(0); }
+const asked = []; let inPart = null;
+// DA_PART_TIMES=1 prints each part's seconds and the reports it created (G-13 validates them later): to rebalance SHARDS
+let timing = null;
+const partTime = () => { if (timing && process.env.DA_PART_TIMES) console.log(`TIME  ${timing.id}  ${((Date.now() - timing.t) / 1000).toFixed(1)}s  ${createdReports.size - timing.n} reports`); };
+const part = (id) => { partTime(); asked.push(id); const mine = !SHARD || SHARDS[SHARD.k - 1].includes(id); inPart = mine ? id : null; timing = mine ? { id, t: Date.now(), n: createdReports.size } : null; return mine; };
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
 // (round 17, the outside review's G-02: answers give paths relative to the working folder, never absolute. The checks
 // open the files the answers name, so a relative path that is not a file here is read from the working folder)
@@ -78,7 +117,8 @@ const ramadan = pbitSchema(path.join(REPO, 'scripts/tests/fixtures/model-health/
 fs.writeFileSync(path.join(ROOT, 'ramadan.bim'), JSON.stringify(ramadan));
 
 const problems = []; let checks = 0;
-const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+const outside = [];
+const check = (ok, msg) => { if (SHARD && !inPart) outside.push(asked[asked.length - 1] || '(before the first part)'); checks++; if (!ok) problems.push(msg); };
 const client = new Client({ name: 'test', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
 // every report the main client creates, validated once at the end (round 17, the outside review's G-13)
@@ -93,6 +133,11 @@ const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('
 const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
+let r;
+const page = { name: 'Overview', width: 1280, height: 720, slots: [
+  { kind: 'title', x: 24, y: 16, w: 600, h: 48 }, { kind: 'kpi', x: 24, y: 80, w: 300, h: 110 }, { kind: 'kpi', x: 340, y: 80, w: 300, h: 110 },
+  { kind: 'line', title: 'Trend', x: 24, y: 210, w: 800, h: 480 }, { kind: 'table', title: 'Detail', x: 840, y: 210, w: 416, h: 480 }] };
+if (part('basics')) {
 // (check_report added 5 Oct 2026: 7 -> 8 tools)
 // (approve_plan added 11 Oct 2026, 0.2.9's gate: 8 -> 9 tools; read_report, 0.2.9 item 10, and create_arabic_twin, 0.3.0,
 // each added one: 11 since the three branches were merged for the laptop proof, 11 Oct)
@@ -108,7 +153,7 @@ check(tools.join() === 'add_gulf_calendar,approve_plan,check_model_health,check_
 }
 
 // read_model: a TMDL project, automatic date tables left out
-let r = await call('read_model', { path: 'tmdl-project' });
+r = await call('read_model', { path: 'tmdl-project' });
 check(!r.err && r.j.tables.map((t) => t.table).join() === 'Calendar,Customer,Sales', `read_model tables: ${r.err ? r.t : r.j.tables.map((t) => t.table)}`);
 check(!r.err && r.j.tables.find((t) => t.table === 'Calendar').dateTable, 'read_model: Calendar not marked as the date table');
 
@@ -223,9 +268,6 @@ check(r.err && /outside the allowed folder/.test(r.t), 'a path outside the folde
 
 // create_report: next to the model, never over an existing report, every field in the model
 const bim = path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), before = hash(bim);
-const page = { name: 'Overview', width: 1280, height: 720, slots: [
-  { kind: 'title', x: 24, y: 16, w: 600, h: 48 }, { kind: 'kpi', x: 24, y: 80, w: 300, h: 110 }, { kind: 'kpi', x: 340, y: 80, w: 300, h: 110 },
-  { kind: 'line', title: 'Trend', x: 24, y: 210, w: 800, h: 480 }, { kind: 'table', title: 'Detail', x: 840, y: 210, w: 416, h: 480 }] };
 r = await call('create_report', { path: 'bim-project', name: 'Health Test Report', pages: [page] });
 check(!r.err && r.j.report === 'Health Test Report - New design.Report', `create_report name: ${r.t.slice(0, 200)}`);
 const r2 = await call('create_report', { path: 'bim-project', name: 'Health Test Report', pages: [page] });
@@ -262,15 +304,17 @@ if (!r.err) {
 } else check(false, `dark theme report: ${r.t}`);
 r = await call('create_report', { path: 'sample.pbit', name: 'X', pages: [page] });
 check(r.err && /project folder/.test(r.t), 'create_report accepted a .pbit');
+}
 
 // ---------- design tools: the website's design engine, byte for byte ----------
+const E = (await import('node:module')).createRequire(import.meta.url)('../assets/js/design-engine.js');
+const tryCall = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e.message), j: null }; } };
+if (part('design-tools')) {
 // The design fixtures (captured from the Theme Generator page), read here directly so the MCP needs none of the
 // website's test packages: a blob starting with "=" is kept as it is, any other is compact JSON to pretty-print.
 const FIX = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/design-engine/cases.json'), 'utf8'));
 const blob = (h) => { const v = FIX.blobs[h]; return v == null ? null : v[0] === '=' ? v.slice(1) : JSON.stringify(JSON.parse(v), null, 2); };
 const DESIGNS = FIX.cases.map((c) => Object.assign({}, c, { theme: blob(c.theme) }));
-const E = (await import('node:module')).createRequire(import.meta.url)('../assets/js/design-engine.js');
-const tryCall = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e.message), j: null }; } };
 check(DESIGNS.length === 54, `design fixtures: ${DESIGNS.length}`);
 
 // generate_theme: every fixture's saved design, given through the tool's own inputs, writes the website's theme JSON
@@ -359,6 +403,7 @@ for (const [tag, dz] of [['partial layout', { name: 'P', layout: { preset: 'anal
   r = await tryCall('plan_layout', { design: dz });
   check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.preset === (dz.layout ? 'analysis' : 'exec'), `plan_layout ${tag}: ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ' ' + r.j.design.layout.preset}`);
 }
+}
 // ---------- create_report with a design: the website's project pages, positions exactly as planned ----------
 // a written report read back: its visible pages in order, each with its size and every visual's absolute box (a visual in
 // a group stores its position relative to the group), type, hidden flag and text
@@ -373,9 +418,10 @@ const readReport = (dir) => {
     return { name: pj.displayName, w: pj.width, h: pj.height, hidden: pj.visibility === 'HiddenInViewMode', visuals };
   });
 };
-const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
 // (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
 const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
+if (part('design-report')) {
+const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
 const besideRail = (got, wp, s, v) => { const r = wp.slots.find((x) => x.rail), sl = got.visuals.filter((x) => x.type === 'slicer');
   if (!r || !sl.length || s.y < Math.max(...sl.map((x) => x.y + x.h))) return false;
@@ -473,8 +519,10 @@ const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', ha
 r = gt.err ? gt : await tryCall('plan_layout', { design: gt.j.design, layout: 'ops' });
 check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.stringify(r.j.design.data) === JSON.stringify(gt.j.design.data) && r.j.slots.filter((s) => s.kind === 'kpi').length === 6,
   `plan_layout after generate_theme: ${r.t.slice(0, 200)}`);
+}
 
 // ---------- report quality: what the Desktop check of Gulf Sales AR found ----------
+if (part('quality')) {
 // a report from a design on the Ramadan Test project (its DAX tables' columns have no type in the files)
 {
   const t0 = await tryCall('generate_theme', { name: 'Quality', brand: '#0F4C5C', folder: 'themes/q' });
@@ -737,9 +785,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
   // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
   check(!r.err && f(r.j.date) === 'Calendar[Month Short]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+}
 
 // ---------- round 3: safety before the first beta build ----------
-{
+if (part('round3')) {
   // another server, with its own environment (no DATAARCUS_ROOT unless given) and folder to start in
   const start = async (env, cwd) => {
     const c = new Client({ name: 'test-r3', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
@@ -888,7 +937,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- the Gulf calendar beta cut: an unscored gulfCalendar section in check_model_health ----------
-{
+if (part('gulf-health')) {
   const ask = async (args) => { try { return await call('check_model_health', Object.assign({ maxItems: 50 }, args)); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const ASOF = '2026-10-03';
   const ids = (x) => (x.j && x.j.gulfCalendar ? x.j.gulfCalendar.findings.map((f) => f.id) : null), find = (x, id) => (x.j && x.j.gulfCalendar ? x.j.gulfCalendar.findings.find((f) => f.id === id) : null);
@@ -978,7 +1027,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 4: large models (a summary first, details on request) and fewer measures than KPI cards ----------
-{
+if (part('round4')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + e.message; } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
@@ -1085,7 +1134,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 5: the audit's fixes (AUD-006, AUD-005, AUD-007), the agent's guidance (AUD-023), the install answers ----------
-{
+if (part('round5')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const start = async (env, cwd) => {
@@ -1221,7 +1270,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 6: the fields of the approved plan, the picker, names; thousand separators; the header logo ----------
-{
+if (part('round6')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 240) : x.t.slice(0, 240));
@@ -1421,7 +1470,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 7: the night audit's AUD-015 (CamelCase keys), AUD-016 (the summary's ceiling), AUD-017 (hidden characters) ----------
-{
+if (part('round7')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
@@ -1482,7 +1531,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 8: a page filter in create_report (golden task 3: "the page is limited to Ramadan") ----------
-{
+if (part('round8')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
@@ -1570,7 +1619,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- round 9: separators on cards (D8), "this Ramadan only", SVG columns in tables (D-P1; experimental) ----------
-{
+if (part('round9')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
@@ -1732,7 +1781,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 }
 
 // ---------- add_gulf_calendar: the Calendar Generator's table as a TMDL script file (round 10, cloud part) ----------
-{
+if (part('gulf-calendar')) {
   const add = (a) => call('add_gulf_calendar', a);
   const filesIn = (dir) => fs.readdirSync(path.join(ROOT, dir)).sort().join('|');
   const short = (x) => (x.err ? x.t.slice(0, 200) : JSON.stringify(x.j).slice(0, 400));
@@ -1811,7 +1860,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 // (mcp/plans/CHECK-REPORT.md, approved 4 Oct 2026, "accept all": ship the validator, offline with bundled schemas,
 // unmeasured fonts as notes.) First session: the tool, its inputs and answer, the offline validator, the bundled
 // schemas, the general rules of report-check.mjs as a rule engine (assets/js/report-rules.js), caps, untrusted text.
-{
+if (part('check-report')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 400));
@@ -1958,7 +2007,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 
 // ---------- check_report, session 2: one copy of the measured numbers; RTL_MIRROR, PAGE_BUTTON_WRAP, TOOLTIP_SCROLL,
 // SORT_IN_VISUAL, each from a measured fact in DESKTOP-TESTS.md ----------
-{
+if (part('check-report-2')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 400));
@@ -2040,7 +2089,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // labelPrecision 2L (it works in the default entry); a value's text is 0.54 em a digit, 0.21 a separator, and at most
 // 4.4 em for "-888.88bn"; a button needs its text's width + 10; the table's image size is grid.imageHeight/imageWidth;
 // a table column's format is "format" on its projection; the card's image is imageType 'imageData' + imageData.
-{
+if (part('round10')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
@@ -2343,7 +2392,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 10, R10.7: the design pass (checklist gaps fixed in the shared writer) ----------
-{
+if (part('round10-design')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const req = (await import('node:module')).createRequire(import.meta.url), Pb = req(path.join(REPO, 'assets/js/pbip-export.js')), E2 = req(path.join(REPO, 'assets/js/design-engine.js'));
   const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), N = (p) => parseFloat(L(p));
@@ -2405,7 +2454,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // row's "Total" word shows; 6 the Arabic Reset text and tooltip "إعادة ضبط الفلاتر"; 7 Reset only as wide as its icon
 // and text. (4 axis labels and 8 the tab's line: no change.) Then "never cut" for a KPI title too long at 8pt, and the
 // SVG pictures' width capped by the table's room.
-{
+if (part('round10-choices')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
@@ -2652,7 +2701,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 11, small fixes (owner's go 5 Oct) ----------
-{
+if (part('round11')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
@@ -2717,7 +2766,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // B-03: every text from the report that reaches the answer (visual names and types, page ids, the files' folder names)
 // is cleaned like page names: invisible and direction characters as code points, capped at 60, and a name that reads
 // like an instruction gives an INSTRUCTION_TEXT note without repeating it.
-{
+if (part('check-report-b')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 400));
@@ -2771,7 +2820,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // ---------- .pbit limits (owner's go 5 Oct; the outside review's F-02): only the entries the tools use are unpacked,
 // each and all together within limits, refused before unpacking when the zip's directory says too much, and
 // stopped while unpacking when the directory lies ----------
-{
+if (part('pbit-limits')) {
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 200));
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   // a zip: entries [{ name, data, deflate, declared }], declared = the uncompressed size written in the directory
@@ -2837,7 +2886,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 
 // ---------- the outside review's B-02 (owner's go 5 Oct ~13:15): a model.bim, a TMDL file or a model part is measured
 // before it is read and checked for nesting after it is parsed; over the limits: refused in plain words ----------
-{
+if (part('model-size')) {
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 200));
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -2866,7 +2915,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 13 (owner's go 6 Oct): gradient colours in bar and column charts ----------
-{
+if (part('round13')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
@@ -3186,7 +3235,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // The design findings of round 11 (WORK.md "Round 11, design findings", by number) and the eight accepted
 // recommendations, each with its check written before the code. What Desktop must confirm is listed in WORK.md,
 // "Round 12, for the laptop to prove".
-{
+if (part('round12')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
@@ -3582,7 +3631,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // ---------- end of round 12 ----------
 
 // ---------- round 12b: the night audit's AUD-030 (in test-models/golden-baseline.mjs) and small leftovers of rounds 9 to 12 ----------
-{
+if (part('round12b')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -3694,7 +3743,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 14: the owner's late Arabic asks (6 Oct 03:20-03:44) ----------
-{
+if (part('round14')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -3875,7 +3924,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 15: the owner's accepted recommendations of rounds 13 and 14 (6 Oct 09:56) ----------
-{
+if (part('round15')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -3942,7 +3991,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 16: round 13's design findings left over (non-severe; 6 Oct) ----------
-{
+if (part('round16')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -4067,7 +4116,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 
 // ---------- round 17: the outside review's fixes (6 Oct) ----------
-{
+if (part('round17')) {
   const os = (await import('node:os')).default;
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
@@ -4153,13 +4202,21 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 {
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  partTime(); timing = null; const g13t = Date.now();
   const errors = validatorErrors;
   const dirs = [...createdReports].filter((d) => fs.existsSync(path.join(d, 'definition')));
   const bad = dirs.map((d) => [path.relative(ROOT, d), errors(d)]).filter(([, e]) => String(e) !== '0');
-  check(dirs.length > 50 && !bad.length, `every created report must validate with 0 errors (${dirs.length} reports): ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
+  // (B-145: a shard validates the reports its own parts above created and prints them; scripts/ci-sum.mjs makes this one
+  // check from every shard's line, so it covers the same reports as an unsharded run)
+  if (process.env.DA_PART_TIMES) console.log(`TIME  G-13  ${((Date.now() - g13t) / 1000).toFixed(1)}s  ${dirs.length} reports validated`);
+  if (SHARD) {
+    console.log(`G13  ${dirs.length} reports, ${bad.length} with errors`);
+    if (bad.length) problems.push(`G-13 (not counted here; counted by ci-sum): every created report must validate with 0 errors: ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
+  } else check(dirs.length > 50 && !bad.length, `every created report must validate with 0 errors (${dirs.length} reports): ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
 }
 
 // ---------- round 18 (6 Oct night, the laptop): three things Desktop showed in the rounds 15-17 proof ----------
+if (part('round18')) {
 {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
@@ -4427,8 +4484,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const untyped = parts.filter((x) => !/Source = #table\(type table \[/.test(x.t) && !/= calculated\n\t\tmode: import\n\t\tsource = DATATABLE \( "[^"]+", (DATETIME|INTEGER|STRING|DOUBLE|BOOLEAN)/.test(x.t)).map((x) => x.f);
   checks++; if (!(parts.length === 5 && !untyped.length)) problems.push(`the golden test models' made-up rows must be typed tables (#table(type table [...], rows)): ${parts.length} partitions with rows, untyped: ${untyped.join(', ')}`);
 }
+}
 // ---------- round 20 (7 Oct, the owner's "all recommended"): the audit's AUD-032 and the repeated titles ----------
-{
+if (part('round20')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
@@ -4471,7 +4529,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   }
 }
 // ---------- round 21 (7 Oct, the owner's go on the capabilities lab's "adopt now" list) ----------
-{
+if (part('round21')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
@@ -4542,55 +4600,61 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   }
 }
 // ---------- round 22 (the code review of rounds 20 and 21): its checks live in test-round22.mjs, which also runs alone ----------
-await round22({ call, check, ROOT, fs });
+if (part('round22')) await round22({ call, check, ROOT, fs });
 // ---------- round 23 (the Arabic table's "Total" word, way 4): its checks live in test-round23.mjs, which also runs alone ----------
-await round23({ call, check, ROOT, fs });
+if (part('round23')) await round23({ call, check, ROOT, fs });
 // ---------- 0.2.9 part 1 (the gate, the plan's limits, the user's choices): test-0.2.9.mjs, which also runs alone ----------
 // (the raw call: the gate is tested without the helper that gets plans)
-await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+if (part('v029')) await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- 0.2.9 part 2 (the report writer's fixes): test-0.2.9b.mjs, which also runs alone ----------
-await v029b({ call, check, ROOT, fs });
+if (part('v029b')) await v029b({ call, check, ROOT, fs });
 // ---------- 0.2.9 integration, the gate block's root fixes (the cross-review): test-0.2.9i.mjs, which also runs alone ----------
-await v029i({ call, raw: rawCall, check, ROOT, fs });
+if (part('v029i')) await v029i({ call, raw: rawCall, check, ROOT, fs });
 // ---------- 0.2.9, the report writer's block (audit 3's A3-7 to A3-12, writer side): test-0.2.9w.mjs, which also runs alone ----------
-v029w({ check });
+if (part('v029w')) v029w({ check });
 // ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
-await v029k({ call, check, ROOT, fs });
+if (part('v029k')) await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 audit fixes, the field picker's block (A3-2 ... A3-9, A6-15): test-0.2.9p.mjs, which also runs alone ----------
-await v029p({ call, check, ROOT, fs });
+if (part('v029p')) await v029p({ call, check, ROOT, fs });
 // ---------- 0.2.9 picker fixes from the rc's laptop proof (S4, S5, S8, D2, D4-D14, D17): test-0.2.9q.mjs, which also runs alone ----------
+if (part('v029q')) {
 await v029q({ check });
 await v029r({ check });
+}
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
-await v029checks({ call, check, ROOT, fs });
+if (part('v029checks')) await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------
+if (part('v029visuals')) {
 await v029visuals({ check });
 await v029visualsTools({ call: rawCall, check, ROOT, fs });
+}
 // ---------- 0.2.9, the design engine block (the audit's A2-1 to A2-12): test-0.2.9-design.mjs, which also runs alone ----------
-await v029design({ call, check, ROOT, fs });
+if (part('v029design')) await v029design({ call, check, ROOT, fs });
 // ---------- 0.2.9, the agent instructions and public claims (the audit's A7): test-0.2.9-agent.mjs, which also runs alone ----------
-await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+if (part('v029agent')) await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
-await v029a4({ call, check, ROOT, fs });
+if (part('audit4')) await v029a4({ call, check, ROOT, fs });
 // ---------- 0.2.9, the design block's items of the laptop's sweep (S5/D19, S6, S7, D16): test-0.2.9-sweep.mjs, which also runs alone ----------
-await v029sweep({ call, check, ROOT, fs });
+if (part('v029sweep')) await v029sweep({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
+if (part('twin')) {
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
 await v030audit({ call: rawCall, check, ROOT, fs });
 await v029twin({ call: rawCall, check, ROOT, fs });
+}
 // ---------- audit 6 (the MCP tools block): test-audit6.mjs, which also runs alone ----------
-await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+if (part('audit6')) await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- the outside review of the 0.2.9 release candidate (Z-01..Z-07, the tools layer): test-z.mjs, which also runs alone ----------
-await zgate({ call: rawCall, check, ROOT, fs });
+if (part('zgate')) await zgate({ call: rawCall, check, ROOT, fs });
 // ---------- the outside review of rc.12 (R-01, R-02, R-04): test-r.mjs, which also runs alone ----------
-await rgate({ call: rawCall, check, ROOT, fs });
+if (part('rgate')) await rgate({ call: rawCall, check, ROOT, fs });
 // ---------- A-01, DataArcus's own approval window (the owner's decision of 14 Oct): test-approval.mjs, which also runs alone ----------
-await approvalWindow({ check, ROOT, fs });
+if (part('approval')) await approvalWindow({ check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual
-{
+if (part('g04')) {
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const tree = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)]));
   const RP = (name) => path.join(ROOT, 'cr-project', name + '.Report');
@@ -4611,7 +4675,18 @@ await approvalWindow({ check, ROOT, fs });
     `check_report's result must not change with the flag: ${plain.err ? plain.t.slice(0, 200) : strip(plain.j) + ' vs ' + (bad.j ? strip(bad.j) : '')}`);
 }
 
+partTime();
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
-console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
+// B-145: every part in exactly one shard, every check inside a part of the running shard
+{
+  const listed = SHARDS.flat(), notListed = asked.filter((p) => !listed.includes(p)), notAsked = listed.filter((p) => !asked.includes(p));
+  const twice = asked.filter((p, i) => asked.indexOf(p) !== i);
+  if (notListed.length) problems.push(`parts in no shard (add them to SHARDS): ${notListed.join(', ')}`);
+  if (notAsked.length) problems.push(`SHARDS names parts this file does not have: ${notAsked.join(', ')}`);
+  if (twice.length) problems.push(`part ids used twice: ${twice.join(', ')}`);
+  if (outside.length) problems.push(`checks outside a part of this shard (after: ${[...new Set(outside)].join(', ')}): wrap them in a part`);
+}
+const shardNote = SHARD ? `  (shard ${SHARD.k}/${SHARD.n}: ${SHARDS[SHARD.k - 1].length} parts)` : '';
+console.log(problems.length ? `FAIL  mcp  ${checks} checks${shardNote}\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks${shardNote}`);
 process.exit(problems.length ? 1 : 0);
