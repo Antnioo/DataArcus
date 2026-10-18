@@ -140,8 +140,11 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
 // that fails can remove them again (writeFileNew's madeDirs)
 export function freeFile(folder, base, ext, made) {
   const dir = inside(folder || '.');
-  const first = fs.mkdirSync(dir, { recursive: true });
-  if (first && Array.isArray(made)) { const chain = []; for (let d = dir; ; d = path.dirname(d)) { chain.unshift(d); if (d === first || path.dirname(d) === d) break; } made.push(...chain); }
+  // (the folders missing before, found by walking up from dir to the first one that is there, never by comparing a
+  // path with mkdirSync's answer: on Windows the two can spell one folder differently, a short name like RUNNER~1)
+  const missing = []; for (let d = dir; nothingAt(d) && path.dirname(d) !== d; d = path.dirname(d)) missing.unshift(d);
+  fs.mkdirSync(dir, { recursive: true });
+  if (Array.isArray(made)) made.push(...missing);
   for (let n = 1; ; n++) {
     const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
     if (nothingAt(f)) return f;
