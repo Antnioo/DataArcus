@@ -20,6 +20,7 @@ import { lint } from './design-lint.mjs';
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const Rules = require('../../assets/js/report-rules.js');
+const LC = require('../../assets/js/layout-check.js');
 const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = '8db0a64';
@@ -44,30 +45,9 @@ const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(St
 // with the lint on. Its measured rules now take their input from the reading block's inventory(): the same files,
 // links never followed, the same limits, one reading for the rules and the lint.)
 // (A4-2, audit 4: a value that is not the object or list a rule expects, as null or a string, is read as none, never a crash)
-const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
 const arr = (v) => (Array.isArray(v) ? v : []);
-function rulesInput(inv) {
-  const TC = (inv.themeJson && inv.themeJson.textClasses) || {}, VS = (inv.themeJson && inv.themeJson.visualStyles) || {};
-  const R = { pages: [], visuals: [], textSize: 12, labelSize: +((TC.label || {}).fontSize) || 10, font: (TC.label || {}).fontFace || 'Segoe UI',
-    theme: inv.themeRef ? { file: inv.themeFile, ref: inv.themeRef, json: inv.themeJson } : null, hasPlatform: inv.hasPlatform };
-  R.slicerSize = +(((((VS.slicer || {})['*'] || {}).header || [{}])[0] || {}).textSize) || R.labelSize;
-  const texts = [];   // the report's own words, only to tell the reading direction and instruction-like text (never returned)
-  let customVisuals = 0;
-  inv.pages.forEach((pg) => {
-    const page = { id: pg.id, name: pg.name, rawName: pg.rawName, w: pg.raw.width, h: pg.raw.height, tooltip: pg.kind === 'Tooltip', visuals: [] };
-    pg.visuals.forEach((x) => {
-      const j = x.json, type = j.visual ? String(j.visual.visualType || '') : j.visualGroup ? 'group' : 'unknown';
-      if (j.visual && isCustom(type)) customVisuals++;
-      page.visuals.push({ name: x.id, type, file: x.file, mobileFile: x.mobileFile, json: j, mobile: x.mobile, parent: x.group, page: { id: pg.id, name: pg.name }, x: x.x, y: x.y, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0 });
-      // (A5-2: the text the reading block read safely, not the raw paragraphs again)
-      if (type === 'textbox' && x.rawText) texts.push(x.rawText);
-    });
-    R.pages.push(page); R.visuals.push(...page.visuals);
-    texts.push(page.rawName);
-  });
-  const bookmarkNames = inv.bookmarks.map((b) => ({ file: b.file, name: b.rawName }));
-  return { R, versions: inv.versions, texts, customVisuals, unreadable: inv.unreadable, bookmarks: inv.bookmarkFiles, bookmarkNames };
-}
+// (0.3.0 step 2: the one copy is the shared check's, assets/js/layout-check.js)
+const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the reading block's one custom-visual test)
 
 // ---- the bundled schemas ----
 let AJV = null;

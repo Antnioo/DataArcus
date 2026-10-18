@@ -642,6 +642,14 @@ export default async function ({ browser, url }) {
       check(shown.length === want.length && shown.every((x, i) => boxes(x).join('|') === boxes(want[i]).join('|') && boxes(x).length >= 6), `lab preview ${lang}: the boxes are the download's: ${shown.map((x) => boxes(x).length).join()} vs ${want.map((x) => boxes(x).length).join()}`);
       check(shown.every((x) => /data-kind="card"/.test(x) && /data-kind="(bar|column|line)"/.test(x) && (lang === 'ar' ? /معاينة/ : />preview</).test(x) && [...x.matchAll(/<g class="ph">([\s\S]*?)<\/g>/g)].every((m) => !/<text/.test(m[1]))), `lab preview ${lang}: cards and charts drawn, "preview" said, no text in a placeholder`);
       if (lang === 'ar') check(shown.every((x) => /<text class="t"[^>]*text-anchor="end"/.test(x)), 'lab preview ar: titles from the right');
+      // 0.3.0 step 2, "Check before download": the page shows the shared check's answer on what it offers (the same as
+      // layout-check.js gives on the downloaded files), and the download is offered with it
+      const LC = require('../../assets/js/layout-check.js');
+      const want2 = LC.checkProject(Object.entries(files).map(([p0, b]) => ({ path: p0, data: /\.(png|jpe?g)$/i.test(p0) ? new Uint8Array(b) : b.toString('utf8') })), { lang });
+      const said = await v.pg.$eval('#pbipCheck', (e) => (e.hidden ? null : { sum: (e.querySelector('.tg-ck-sum') || {}).textContent, items: e.querySelectorAll('li').length })).catch(() => null);
+      check(want2.pages >= 3 && want2.visuals >= 20, `lab check ${lang}: the check read the download's pages (${want2.pages} pages, ${want2.visuals} visuals)`);
+      check(said && said.sum === want2.summary && said.items === Math.min(12, want2.problems.length), `lab check ${lang}: the page says "${said && said.sum}", the download's check "${want2.summary}"`);
+      check(lang === 'ar' ? /سيُظهرها Power BI Desktop/.test(said && said.sum || '') : /Power BI Desktop would show/.test(said && said.sum || ''), `lab check ${lang}: the answer is in the page's language: ${said && said.sum}`);
       if (v.errs.length) problems.push(`lab preview ${lang}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }
