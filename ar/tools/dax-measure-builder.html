@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/tools/dax-measure-builder.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-measure-builder.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/dax-measure-builder.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/dax-measure-builder.html">
+  <title>منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك</title>
+  <meta name="description" content="أنشئ مقاييس ذكاء الوقت في Power BI من مقياس أساسي واحد: YTD وMTD والنمو السنوي والشهري والأشهر المتحركة والإجماليات التراكمية ورمضان مقابل رمضان الماضي.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="DAX year over year, DAX YTD, DAX running total, DAX rolling 3 months, Power BI time intelligence, DAX measure generator">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك">
+  <meta property="og:description" content="أنشئ مقاييس ذكاء الوقت في Power BI من مقياس أساسي واحد: YTD وMTD والنمو السنوي والشهري والأشهر المتحركة والإجماليات التراكمية ورمضان مقابل رمضان الماضي.">
+  <meta property="og:url" content="https://dataarcus.com/ar/tools/dax-measure-builder.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/measure-builder.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/measure-builder.jpg">
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "DAX Time Intelligence Measure Builder",
+        "url": "https://dataarcus.com/tools/dax-measure-builder.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (web browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I calculate year over year growth in DAX?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Create a prior-year measure with CALCULATE and SAMEPERIODLASTYEAR, then divide the difference by it: DIVIDE([Sales] - [Sales PY], [Sales PY]). DIVIDE returns blank instead of an error when last year is empty." } },
+          { "@type": "Question", "name": "How do I add many measures at once in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Open DAX query view in Power BI Desktop, paste a DEFINE block with several MEASURE lines, and click Update model with changes. All measures are added in one step." } },
+          { "@type": "Question", "name": "Why do my time intelligence measures return blank or wrong values?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Time intelligence needs a proper date table: one row per day with no gaps, marked as a date table, and related to your fact table. Use the date column from that table in visuals and in the measures." } }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    .tg { padding: var(--page-top) 0 var(--page-bottom); }
+    .tg h1 { color: var(--accent); }
+    .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
+    .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
+    .tg-preset .sw { display: flex; }
+    .tg-preset .sw i { width: 10px; height: 16px; display: block; }
+    .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
+    .tg-color { display: flex; flex-direction: column; gap: 4px; }
+    .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
+    .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
+    .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
+    .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
+    .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
+    .tg-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .tg-card { border-radius: 10px; padding: 12px; }
+    .tg-card .k { font-size: .7rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+    .tg-card .v { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .tg-card .d { font-size: .75rem; font-weight: 600; }
+    .tg-grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .tg-grid2 .tg-card { min-height: 190px; }
+    .tg-card svg { width: 100%; height: auto; display: block; }
+    .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
+    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; color: var(--accent); border-bottom: 1px solid var(--glass-border); }
+    .tg-table td { padding: 6px 8px; color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
+    .tg-json { margin: 0; background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
+    .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
+    .tg-faq p { color: #94a3b8; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+    @media (max-width: 767px) { .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cg-form .form-control, .cg-form .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
+    .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
+    @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
+    .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
+    .mb-seg button { background: none; border: 0; color: #94a3b8; font-weight: 600; font-size: .85rem; padding: 6px 14px; border-radius: 30px; }
+    .mb-seg button.active { background: var(--accent); color: #051018; }
+    .mb-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .mb-group .tg-label { width: 100%; margin-bottom: 0; }
+    .mb-check { display: inline-flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 6px 12px; font-size: .85rem; color: var(--lt); cursor: pointer; }
+    .mb-check input { accent-color: var(--accent); }
+    .mb-check:has(input:checked) { border-color: var(--accent); }
+    .mb-card { border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .mb-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+    .mb-head b { color: var(--lt); }
+    .mb-what { color: #94a3b8; font-size: .82rem; margin-top: 2px; }
+    .mb-tag { display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; color: var(--accent); border: 1px solid rgba(0,212,255,.35); border-radius: 20px; padding: 1px 8px; }
+    .mb-tag.dep { color: #fdcb6e; border-color: rgba(253,203,110,.4); }
+    .mb-pre { max-height: 180px; margin: 0; }
+    .mb-copy { padding: 6px 12px; }
+    .mb-note { font-size: .82rem; color: #fdcb6e; }
+    .tg-panel a.hover-accent { color: var(--accent); }
+    /* Code and hex values always read left to right, even on the Arabic page */
+    .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
+  </style>
+</head>
+<body class="rtl">
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/tools/dax-measure-builder.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="tg">
+    <div class="container">
+      <header class="mb-4">
+        <span class="page-badge" data-i18n="mb.badge">أداة مجانية · بدون تسجيل</span>
+        <h1 class="display-5 fw-bold" data-i18n="mb.title">منشئ مقاييس DAX</h1>
+        <p class="lead text-white-50 mb-0" data-i18n="mb.subtitle">مقياس أساسي واحد يتحول إلى مجموعة كاملة من مقاييس ذكاء الوقت: YTD والسنة السابقة ونسبة النمو السنوي والأشهر المتحركة والإجماليات التراكمية، وحتى رمضان مقابل رمضان الماضي. أضفها كلها إلى Power BI بنقرة واحدة.</p>
+      </header>
+
+      <div class="row g-4" data-clarity-mask="true">
+        <div class="col-lg-5">
+          <div class="tg-panel d-flex flex-column gap-4">
+            <div>
+              <span class="tg-label" data-i18n="mb.step1">1. المقياس الأساسي</span>
+              <div class="mb-seg mb-3" role="group" aria-label="مصدر المقياس الأساسي" data-i18n-aria-label="mb.attrs.source">
+                <button type="button" data-mode="column" data-i18n="mb.fromColumn">إنشاء من عمود</button>
+                <button type="button" data-mode="existing" data-i18n="mb.haveOne">لدي مقياس بالفعل</button>
+              </div>
+              <div id="modeColumn" class="cg-form">
+                <div style="grid-column:1/-1"><label class="tg-label" for="agg" data-i18n="mb.calc">العملية الحسابية</label>
+                  <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS" data-i18n="mb.countrows">COUNTROWS (عدّ الصفوف)</option></select></div>
+                <div><label class="tg-label" for="base" data-i18n="mb.measureName">اسم المقياس</label><input id="base" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fact" data-i18n="mb.fact">جدول الحقائق</label><input id="fact" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="column" data-i18n="mb.column">العمود</label><input id="column" translate="no" class="form-control" maxlength="60"></div>
+              </div>
+              <div id="modeExisting" class="cg-form">
+                <div><label class="tg-label" for="existing" data-i18n="mb.existing">اسم المقياس الحالي</label><input id="existing" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="home" data-i18n="mb.home">ضع المقاييس الجديدة في جدول</label><input id="home" translate="no" class="form-control" maxlength="60"></div>
+              </div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="mb.step2">2. جدول التواريخ</span>
+              <div class="cg-form">
+                <div><label class="tg-label" for="cal" data-i18n="mb.cal">جدول التواريخ</label><input id="cal" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="dateCol" data-i18n="mb.dateCol">عمود التاريخ</label><input id="dateCol" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fyEnd" data-i18n="mb.fyEnd">نهاية السنة المالية</label>
+                  <select id="fyEnd" class="form-select"><option value="12-31" data-i18n="mb.fy.dec">31 ديسمبر</option><option value="3-31" data-i18n="mb.fy.mar">31 مارس</option><option value="6-30" data-i18n="mb.fy.jun">30 يونيو</option><option value="9-30" data-i18n="mb.fy.sep">30 سبتمبر</option></select></div>
+                <div><label class="tg-label" for="n" data-i18n="mb.rolling">أشهر متحركة / أيام المتوسط</label>
+                  <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="عدد الأشهر المتحركة" data-i18n-aria-label="mb.attrs.months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="عدد أيام المتوسط" data-i18n-aria-label="mb.attrs.days"></div></div>
+              </div>
+              <p class="small text-white-50 mt-2 mb-0" data-i18n-html="mb.noDate">لا يوجد جدول تواريخ بعد؟ <a href="/ar/tools/dax-calendar-table-generator.html" class="hover-accent">أنشئ واحدًا من هنا</a> أولًا.</p>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="mb.step3">3. اختر المقاييس</span>
+              <div id="patterns"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="tg-panel d-flex flex-column gap-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div class="mb-seg" role="tablist" aria-label="صيغة المخرجات" data-i18n-aria-label="mb.attrs.output">
+                <button type="button" role="tab" aria-selected="true" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">الكل دفعة واحدة</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="tmdl" data-i18n="mb.tmdlTab">مع التنسيق (TMDL)</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="one" data-i18n="mb.oneByOne">واحدًا تلو الآخر</button>
+              </div>
+              <span class="small text-white-50" id="count"></span>
+            </div>
+            <div id="outAll" class="d-flex flex-column gap-3">
+              <div class="tg-actions justify-content-end">
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">تنزيل</span></button>
+                <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">نسخ كل المقاييس</span></button>
+              </div>
+              <pre class="tg-json" id="script" style="max-height:520px" tabindex="0" aria-label="مقاييس DAX" data-i18n-aria-label="mb.a11yBox"></pre>
+              <p class="small text-white-50 mb-0" data-i18n-html="mb.allHow">في Power BI Desktop افتح <strong>DAX query view</strong> (الشريط الأيسر)، الصق الكود، واضغط <strong>Update model with changes</strong>. ستُضاف كل المقاييس دفعة واحدة.</p>
+            </div>
+            <div id="outTmdl" class="d-flex flex-column gap-3 d-none">
+              <div class="tg-actions justify-content-end">
+                <button class="tg-btn2" id="dlTmdl" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">تنزيل</span></button>
+                <button class="btn btn-accent" id="copyTmdl" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">نسخ كل المقاييس</span></button>
+              </div>
+              <pre class="tg-json" id="tmdl" style="max-height:520px"></pre>
+              <p class="small text-white-50 mb-0" data-i18n-html="mb.tmdlHow">في Power BI Desktop افتح <strong>TMDL view</strong> (الشريط الأيسر)، الصق الكود، واضغط <strong>Apply</strong>. ستُضاف كل المقاييس مع تنسيق الأرقام ومجلد عرض ووصف. يحتاج إصدار Desktop من 2025 أو أحدث.</p>
+            </div>
+            <div id="outOne" class="d-none">
+              <p class="small text-white-50" data-i18n-html="mb.oneHow">عبر <strong>Modeling → New measure</strong>: انسخ كل مقياس والصقه. أنشئها بهذا الترتيب.</p>
+              <div id="list"></div>
+            </div>
+            <p class="mb-note mb-0" id="ramNote"><i class="bi bi-moon-stars me-1"></i><span data-i18n-html="mb.ramNote">تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href="/ar/tools/dax-calendar-table-generator.html" class="hover-accent">تقويم داتا أركوس</a>.</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="tg-cta mb-5 text-center">
+            <h2 class="h4 fw-bold mb-2" data-i18n="mb.cta.title">المقاييس سهلة. الأرقام الصحيحة ليست كذلك.</h2>
+            <p class="text-white-50 mb-3" data-i18n="mb.cta.desc">عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني داتا أركوس نماذج بيانات Power BI وتصلحها.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+              <a href="/ar/#contact" class="btn btn-accent" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+              <a href="/ar/tools/dax-calendar-table-generator.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="mb.cta.next">مولّد تقويم DAX المجاني</a>
+            </div>
+            <p class="small mt-3 mb-0"><a href="/ar/articles/article-ramadan-sales-power-bi.html" class="text-accent" data-i18n="mb.cta.guide">دليل: لماذا تنكسر المقارنة السنوية في رمضان، والمقياس الذي يصلحها ←</a></p>
+          </div>
+          <section class="tg-faq">
+            <h2 class="h4 fw-bold" data-i18n="mb.faq.title">أسئلة شائعة</h2>
+            <h3 data-i18n="mb.faq.q1">كيف أحسب النمو السنوي في DAX؟</h3>
+            <p data-i18n-html="mb.faq.a1">أنشئ مقياسًا للسنة السابقة باستخدام <strong>SAMEPERIODLASTYEAR</strong>، ثم استخدم <strong>DIVIDE(الحالي - السنة السابقة، السنة السابقة)</strong>. تُرجع DIVIDE قيمة فارغة بدل الخطأ عندما لا توجد بيانات للسنة الماضية. اختر "YoY %" بالأعلى وسيكتب المنشئ المقياسين لك.</p>
+            <h3 data-i18n="mb.faq.q2">كيف أضيف كل المقاييس دفعة واحدة؟</h3>
+            <p data-i18n-html="mb.faq.a2">استخدم <strong>DAX query view</strong> في Power BI Desktop. الصق الكود كاملًا واضغط <strong>Update model with changes</strong>. ثم اضبط مقاييس النسب على تنسيق Percentage من شريط Measure tools.</p>
+            <h3 data-i18n="mb.faq.q3">مقياس YTD أو PY يظهر فارغًا. لماذا؟</h3>
+            <p data-i18n="mb.faq.a3">يحتاج ذكاء الوقت إلى جدول تواريخ حقيقي: صف لكل يوم بدون فجوات، ومُعلَّم كجدول تواريخ، ومرتبط بجدول الحقائق. استخدم عمود Date من هذا الجدول في العناصر المرئية، لا عمود التاريخ من جدول الحقائق.</p>
+            <h3 data-i18n="mb.faq.q4">ما الفرق بين Rolling 3M و 30D Avg؟</h3>
+            <p data-i18n-html="mb.faq.a4"><strong>Rolling 3M</strong> يجمع آخر ثلاثة أشهر، وهو ممتاز لتنعيم المبيعات الموسمية. <strong>30D Avg</strong> هو المتوسط اليومي لآخر 30 يومًا، وهو أفضل لخطوط الاتجاه على البيانات اليومية.</p>
+            <h3 data-i18n="mb.faq.q5">كيف تعمل مقارنة رمضان برمضان الماضي؟</h3>
+            <p data-i18n-html="mb.faq.a5">يتقدم رمضان نحو 11 يومًا كل عام، لذا فمقارنة مارس بمارس مضللة. يبحث المقياس عن نفس أيام رمضان في السنة الهجرية السابقة. ضع <strong>Ramadan Day</strong> على المحور لتقارن اليوم الخامس باليوم الخامس.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="tg-toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/measure-builder.min.js" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+  <script src="/assets/js/measure-builder.min.js" defer=""></script>
+
+
+</body></html>

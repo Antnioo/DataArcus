@@ -116,7 +116,8 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     const nope = await req(tlink, { method: 'POST', origin: new URL(tlink).origin, body: 'decision=decline' });
     const refused = await s.call('approve_plan', { planId: tid });
     const before = tree(ROOT).length, tw = await s.call('generate_theme', { brand: '#0F766E', name: 'Window Theme', planId: tid });
-    chk(() => /Not approved\./.test(nope.t) && refused.err && /Not now/.test(refused.t) && tw.err && /not approved yet/.test(tw.t) && tree(ROOT).length === before, () => `W-05. "Not now" refuses and writes nothing: ${short(refused)} / ${short(tw)}`);
+    // (rc.22, B-134: after "Not now" the plan is refused, no longer "not approved yet")
+    chk(() => /Not approved\./.test(nope.t) && refused.err && /Not now/.test(refused.t) && tw.err && /refused/.test(tw.t) && tree(ROOT).length === before, () => `W-05. "Not now" refuses and writes nothing: ${short(refused)} / ${short(tw)}`);
 
     // ---------- W-10: one picture per page; an Arabic plan right to left ----------
     const two = await s.call('plan_layout', { path: 'aw', layout: 'analysis', name: 'Two Pages', planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' } });

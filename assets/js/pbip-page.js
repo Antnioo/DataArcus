@@ -309,7 +309,7 @@
   function write(c, pg, pageIndex) {
     const {
       AUTO_EM, B, bound, CALLOUT, D, DEF, FULL, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES,
-      SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, base, blankKept, bookmarks,
+      SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, kindChanges, base, blankKept, bookmarks,
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
@@ -401,7 +401,10 @@
         barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN }); }
       return s;
     };
-    const sorted = pg.slots.map(asBar).map(byField).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+    // (rc.22, B-140: the approved column chart was written as a bar chart, and the plan never said so) every kind changed
+    // here is recorded, so the plan shows the kind written (plan_layout runs this writer on the plan's page)
+    const changed = (s0) => { const s1 = byField(asBar(s0)); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth: pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0), from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN }); return s1; };
+    const sorted = pg.slots.map(changed).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
     const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };

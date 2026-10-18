@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://app.powerbi.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/dashboards/adventureworks-dashboard.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/adventureworks-dashboard.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/dashboards/adventureworks-dashboard.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/dashboards/adventureworks-dashboard.html">
+
+  <title>مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس</title>
+  <meta name="description" content="شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.">
+  <meta name="author" content="داتا أركوس">
+  <meta name="keywords" content="لوحة تحكم AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا أركوس">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس">
+  <meta property="og:description" content="شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.">
+  <meta property="og:url" content="https://dataarcus.com/ar/dashboards/adventureworks-dashboard.html">
+  <meta property="og:site_name" content="داتا أركوس">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/adventureworks.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+  <meta property="og:locale" content="ar_AE">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس">
+  <meta name="twitter:description" content="شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/adventureworks.jpg">
+  <meta name="twitter:image:alt" content="شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.">
+
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link id="ar-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap">
+  
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Advanced Showcase: Enterprise Sales & Operations Analysis - DataArcus",
+    "description": "Explore our flagship Power BI showcase, a multi-page command center demonstrating advanced capabilities like predictive what-if analysis and customer segmentation.",
+    "url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
+    "author": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "url": "https://dataarcus.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "keywords": "advanced Power BI dashboard, predictive analytics showcase, what-if analysis Power BI, enterprise sales dashboard, DataArcus"
+  }
+  </script>
+
+</head>
+<body class="rtl">
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/dashboards/adventureworks-dashboard.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+<main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-10 mx-auto">
+            
+            <header class="page-header article-header text-center">
+              <h1 class="display-5 fw-bold" data-i18n="header.title">نموذج متقدم: مبيعات وعمليات الشركات</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">مركز التحكم الرائد لدينا المكون من 6 صفحات في Power BI، والمصمم لعرض التحليلات على مستوى الشركات للمبيعات والعملاء والمنتجات.</p>
+            </header>
+
+            <article class="article-body">
+              
+              <div class="case-study-intro mb-5">
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <h2 class="h4" data-i18n="intro.objective.title">هدف النموذج</h2>
+                    <p data-i18n="intro.objective.content">يعرض هذا المشروع الرائد حلاً متكاملاً لذكاء الأعمال بزاوية 360 درجة. كان الهدف هو هندسة أداة تتجاوز التقارير البسيطة إلى التحليل التنبؤي والتشخيصي، مما يُظهر عمق الرؤى الممكنة لأي عملية مبيعات واسعة النطاق.</p>
+                  </div>
+                  <div class="col-md-6">
+                    <h2 class="h4" data-i18n="intro.skills.title">الإمكانيات المتقدمة المعروضة</h2>
+                    <p data-i18n="intro.skills.content">هذا التقرير متعدد الصفحات هو نموذج متقدم في تطوير Power BI، يسلط الضوء على خبرتنا في:</p>
+                    <ul>
+                      <li data-i18n-html="intro.skills.list.0"><strong>التحليلات التنبؤية:</strong> تطبيق معاملات 'ماذا لو' لمحاكاة تأثير تغييرات التسعير على الربح.</li>
+                      <li data-i18n-html="intro.skills.list.1"><strong>التحليل التشخيصي:</strong> استخدام 'شجرة التفكيك' لتحليل الأسباب الجذرية لمرتجعات المنتجات.</li>
+                      <li data-i18n-html="intro.skills.list.2"><strong>نمذجة البيانات المعقدة:</strong> دمج مجموعات بيانات مختلفة في نموذج واحد عالي الأداء وقابل للتوسع.</li>
+                      <li data-i18n-html="intro.skills.list.3"><strong>تصميم واجهة تنفيذية (UX/UI):</strong> تصميم تقرير معمّق ومتعدد الصفحات يظل سهل الاستخدام والتنقل لصانعي القرار.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card p-3">
+                <div class="ratio ratio-16x9">
+                  <div class="pbi-facade" data-pbi-src="https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&amp;pageName=b1001ce2d5a628ad47b5&amp;language=en"><button type="button" class="pbi-load"><img src="/assets/img/portfolio/adventureworks-preview-opt.jpg" srcset="/assets/img/portfolio/adventureworks-preview-opt.webp 720w, /assets/img/portfolio/adventureworks-preview.jpg 952w" sizes="(min-width: 1200px) 1110px, 100vw" alt="لوحة Power BI التفاعلية: AdventureWorks Sales Dashboard" data-i18n-alt="attrs.embed" width="720" height="405" decoding="async"><span class="pbi-cta"><i class="bi bi-play-circle-fill" aria-hidden="true"></i> <span data-i18n="pbi.load">تحميل التقرير التفاعلي</span></span><small class="pbi-note" data-i18n="pbi.note">يفتح تقرير Power BI التفاعلي (حوالي 6 ميجابايت)</small></button></div>
+                </div>
+                
+                <div class="p-3">
+                  <h4 class="h6 mb-3" style="color: var(--accent);" data-i18n="features.title">الميزات والتقنيات الرئيسية المستخدمة:</h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="tech-pill" data-i18n="features.tags.0">Power BI</span>
+                    <span class="tech-pill" data-i18n="features.tags.1">DAX متقدم</span>
+                    <span class="tech-pill" data-i18n="features.tags.2">معاملات ماذا لو</span>
+                    <span class="tech-pill" data-i18n="features.tags.3">التحليل الجغرافي</span>
+                    <span class="tech-pill" data-i18n="features.tags.4">شجرة التفكيك</span>
+                    <span class="tech-pill" data-i18n="features.tags.5">نمذجة البيانات</span>
+                  </div>
+                  <p class="small text-white-50 mt-4 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <span data-i18n="features.note">هذا تقرير تفاعلي بالكامل ومتعدد الصفحات. استخدم أيقونات التنقل على يسار لوحة التحكم لاستكشاف جميع الصفحات.</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="article-body mt-5">
+                <h2 class="mt-5 mb-3" data-i18n="capabilities.title">رؤى يمكننا كشفها لعملك</h2>
+                <p data-i18n="capabilities.subtitle">يوضح هذا النموذج كيف نحوّل البيانات الأولية إلى أداة استراتيجية، مما يوفر رؤى عميقة عبر كل جانب من جوانب أعمال المبيعات:</p>
+                <ul>
+                  <li data-i18n-html="capabilities.list.0"><strong>الملخص التنفيذي:</strong> نبني لك نظرة سريعة على أهم مؤشرات الأداء الرئيسية، وتتبع الاتجاهات الشهرية وتحديد المنتجات الأعلى أداءً.</li>
+                  <li data-i18n-html="capabilities.list.1"><strong>الذكاء الجغرافي:</strong> تتيح الخريطة التفاعلية الفلترة والتحليل الديناميكي لأداء المبيعات عبر مختلف القارات والدول.</li>
+                  <li data-i18n-html="capabilities.list.2"><strong>محاكاة الأرباح التنبؤية:</strong> تتيح صفحة تحليل 'ماذا لو' للمديرين استخدام شريط تمرير بسيط لتعديل الأسعار ورؤية التأثير المتوقع على الإيرادات والأرباح فورًا.</li>
+                  <li data-i18n-html="capabilities.list.3"><strong>تحليل عميق للعملاء:</strong> ننشئ طرق عرض مخصصة لتقسيم عملائك حسب الدخل والوظيفة وتاريخ الشراء، وتحديد الشرائح الأكثر قيمة.</li>
+                  <li data-i18n-html="capabilities.list.4"><strong>تحليل متقدم للمرتجعات:</strong> باستخدام أدوات مثل 'شجرة التفكيك'، يمكننا تحديد الأسباب الجذرية لمرتجعات المنتجات، والتعمق من الفئات إلى منتجات معينة.</li>
+                </ul>
+              </div>
+
+              <div class="text-center block">
+                <div class="glass-card cta" data-aos="fade-up">
+                  <h3 class="h4 mb-3" data-i18n="exploreMore.title">استكشف المزيد من النماذج</h3>
+                  <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">شاهد كيف نحل التحديات عبر مختلف القطاعات.</p>
+                  <div class="cta-actions">
+                    <a href="/ar/portfolio.html" class="btn btn-accent"><i class="bi bi-arrow-right-circle me-2"></i><span data-i18n="exploreMore.button">عرض كل النماذج</span></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <hr class="divider">
+                <div class="glass-card cta">
+                  <h3 class="h4 mb-3" data-i18n="finalCta.title">هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟</h3>
+                  <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات عملياتك الخاصة.</p>
+                  <div class="cta-actions">
+                    <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
+                  </div>
+                </div>
+              </div>
+
+            </article>
+          </div>
+        </div>
+      </div>
+  </main>
+  
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/adventureworks.min.js" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
+
+</body></html>

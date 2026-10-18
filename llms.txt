@@ -11,6 +11,9 @@
 - [Power BI Licensing Cost Calculator](https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html): compares Pro, Premium Per User and Fabric capacity costs for a team.
 - [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
 
+## Arabic versions
+- [داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج](https://dataarcus.com/ar/): every page above has an Arabic version at its own address, the same path under https://dataarcus.com/ar/ (for example the [Arabic tools hub](https://dataarcus.com/ar/tools/) and the [Arabic Model Health Check](https://dataarcus.com/ar/tools/power-bi-model-health-check.html)).
+
 ## Articles
 - [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)
 - [Compare Ramadan sales year over year in Power BI](https://dataarcus.com/articles/article-ramadan-sales-power-bi.html)
