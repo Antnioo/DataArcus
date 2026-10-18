@@ -121,7 +121,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
   <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="../assets/css/style.min.css?v=20261016r29" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -149,7 +149,7 @@
     .kd-starter { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 14px; font-size: .85rem; }
     .kd-starter:hover { border-color: var(--accent); }
     .kd-starter.kd-pro { border-color: rgba(253, 203, 110, .45); }
-    .kd-prem { font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #1a1200; background: linear-gradient(90deg, #fdcb6e, #f59e0b); border-radius: 20px; padding: 2px 7px; margin-inline-start: 4px; vertical-align: middle; }
+    .kd-prem { font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #1a1200; background: linear-gradient(90deg, #fdcb6e, #f59e0b); border-radius: 20px; padding-inline: 7px; margin-inline-start: 4px; vertical-align: middle; }
     .kd-actions { display: flex; flex-wrap: wrap; gap: 6px; }
     .kd-actions button { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 10px; padding: 6px 11px; font-size: .82rem; }
     .kd-actions button:hover:not(:disabled) { border-color: var(--accent); }
@@ -200,7 +200,7 @@
     .kd-val { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
     .kd-val-h { display: flex; align-items: center; gap: 6px; }
     .kd-vlabel { font-weight: 700; }
-    .kd-tag { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); border: 1px solid rgba(0, 212, 255, .4); border-radius: 20px; padding: 1px 7px; white-space: nowrap; }
+    .kd-tag { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); border: 1px solid rgba(0, 212, 255, .4); border-radius: 20px; padding-inline: 7px; white-space: nowrap; }
     .kd-tag2 { color: #a29bfe; border-color: rgba(162, 155, 254, .45); }
     .kd-slider { width: 100%; accent-color: var(--accent); }
     .kd-dax { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 380px; overflow: auto; white-space: pre; margin: 0; }
@@ -222,7 +222,7 @@
     .kd-dax { text-align: left; }
     .kd-route { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 20px; }
     .kd-route h3 { font-size: 1.02rem; color: var(--lt); margin: 6px 0 10px; }
-    .kd-route-k { font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: var(--accent); border-radius: 20px; padding: 2px 9px; }
+    .kd-route-k { font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: var(--accent); border-radius: 20px; padding-inline: 9px; }
     .kd-route-k.alt { background: #fdcb6e; }
     .kd-faq h3 { font-size: 1rem; color: var(--lt); margin-top: 1.1rem; }
     .kd-faq p { color: #94a3b8; font-size: .92rem; }
@@ -309,7 +309,7 @@
         </div>
         <div class="kd-panel kd-premium mt-3" id="libPanel" hidden>
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <b><i class="bi bi-stars" style="color:#fdcb6e"></i> <span data-i18n="kd.libTitle">Design library</span></b><span class="kd-prem" data-i18n="kd.premium">Premium preview</span>
+            <b><i class="bi bi-stars" style="color:#fdcb6e"></i> <span data-i18n="kd.libTitle">Design library</span></b><span class="kd-prem cap-pill" data-i18n="kd.premium">Premium preview</span>
             <button type="button" class="kd-link ms-auto" id="libSave"><i class="bi bi-save"></i> <span data-i18n="kd.libSave">Save current design</span></button>
           </div>
           <ul class="kd-lib" id="libList"></ul>
@@ -376,12 +376,12 @@
         <div class="col-lg-7">
           <h2 class="h4 fw-bold mb-3" data-i18n="kd.how.title">Two ways to show it in Power BI</h2>
           <div class="kd-route">
-            <span class="kd-route-k" data-i18n="kd.how.aTag">Recommended</span>
+            <span class="kd-route-k cap-pill" data-i18n="kd.how.aTag">Recommended</span>
             <h3 data-i18n="kd.how.aTitle">Image visual: any size, reads like a card</h3>
             <ol class="kd-steps" data-i18n-html="kd.how.aSteps"><li>Create the measure and set its <strong>Data category</strong> to <strong>Image URL</strong>.</li><li>Select <strong>Insert › Image</strong> and place it on the page.</li><li>In <strong>Format › Image</strong>, set <strong>Image URL</strong> with <strong>fx › Field value</strong> and pick your measure.</li><li>Resize the visual freely. Slicers and filters on the page change the card.</li></ol>
           </div>
           <div class="kd-route mt-3">
-            <span class="kd-route-k alt" data-i18n="kd.how.bTag">One card per row</span>
+            <span class="kd-route-k alt cap-pill" data-i18n="kd.how.bTag">One card per row</span>
             <h3 data-i18n="kd.how.bTitle">Table or Matrix: a card for every product, store or person</h3>
             <ol class="kd-steps" data-i18n-html="kd.how.bSteps"><li>Add a <strong>Table</strong> with a category column (for example Store) and the measure.</li><li>In <strong>Format › Image size</strong>, set height and width. The maximum is 512 pixels.</li><li>Turn off the column header and grid if you want a clean gallery.</li></ol>
           </div>
@@ -468,6 +468,6 @@
   <script src="../assets/js/main.min.js?v=20261016r29" defer></script>
   <script src="../assets/js/svg-kpi-compiler.min.js?v=20261011b" defer></script>
   <script src="../assets/js/svg-kpi-templates.min.js?v=20261005e" defer></script>
-  <script src="../assets/js/svg-kpi-designer.min.js?v=20261006g" defer></script>
+  <script src="../assets/js/svg-kpi-designer.min.js?v=20261018t" defer></script>
 </body>
 </html>

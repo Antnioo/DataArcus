@@ -424,11 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const del = `<button type="button" class="kd-x" data-vdel="${i}" aria-label="${L('Remove', 'حذف')}"><i class="bi bi-trash"></i></button>`;
       if (v.kind === 'measure') {
         const s = +v.sample || 0, max = Math.max(10, Math.abs(s) * 2);
-        return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag">${L('Measure', 'مقياس')}</span>${del}</div>
+        return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag cap-pill">${L('Measure', 'مقياس')}</span>${del}</div>
           <div class="kd-row2"><label class="kd-f"><span>${L('Name in your model', 'الاسم في نموذجك')}</span><input data-v="${i}" data-vk="measure" value="${esc(v.measure)}" spellcheck="false" maxlength="80"></label><label class="kd-f"><span>${L('Test value', 'قيمة للتجربة')}</span><input type="number" step="any" data-v="${i}" data-vk="sample" value="${esc(v.sample)}"></label></div>
           <input type="range" class="kd-slider" data-v="${i}" data-vk="sample" min="${Math.min(0, -max)}" max="${max}" step="${max / 200}" value="${s}" aria-label="${L('Test value slider', 'شريط قيمة التجربة')}"></div>`;
       }
-      return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag kd-tag2">${L('Formula', 'معادلة')}</span>${del}</div>
+      return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag kd-tag2 cap-pill">${L('Formula', 'معادلة')}</span>${del}</div>
         <div class="kd-rule"><select data-v="${i}" data-vk="a" aria-label="${L('First value', 'القيمة الأولى')}">${valOpts(v.a, i)}</select><select data-v="${i}" data-vk="kind" aria-label="${L('Formula', 'المعادلة')}">${Object.entries(KINDS).map(([k, t]) => `<option value="${k}"${k === v.kind ? ' selected' : ''}>${L(t[0], t[1])}</option>`).join('')}</select><select data-v="${i}" data-vk="b" aria-label="${L('Second value', 'القيمة الثانية')}">${valOpts(v.b, i)}</select></div>
         <div class="kd-hint">= ${esc(fmtVal(vals[v.id]))}${isFraction(v.id) && vals[v.id] != null ? ' (' + r1(vals[v.id] * 100) + '%)' : ''}</div></div>`;
     }).join('');
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- starters, share, import/export, library ----------
   const renderStarters = () => {
-    $('starters').innerHTML = T.TEMPLATES.map((t) => `<button class="kd-starter${t.premium ? ' kd-pro' : ''}" type="button" data-t="${t.id}">${esc(isAr() && t.nameAr ? t.nameAr : t.name)}${t.premium ? ` <span class="kd-prem">${L('Premium preview', 'نسخة مميزة تجريبية')}</span>` : ''}</button>`).join('') +
+    $('starters').innerHTML = T.TEMPLATES.map((t) => `<button class="kd-starter${t.premium ? ' kd-pro' : ''}" type="button" data-t="${t.id}">${esc(isAr() && t.nameAr ? t.nameAr : t.name)}${t.premium ? ` <span class="kd-prem cap-pill">${L('Premium preview', 'نسخة مميزة تجريبية')}</span>` : ''}</button>`).join('') +
       `<button class="kd-starter" type="button" data-t="__blank"><i class="bi bi-plus-lg"></i> ${L('Blank card', 'بطاقة فارغة')}</button>`;
   };
   $('starters').addEventListener('click', (e) => {
