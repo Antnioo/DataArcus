@@ -1,5 +1,6 @@
 // Screenshots for the PR of 0.3.0 step 6 (theme from a logo): two logos dropped on the Theme Generator, English and
-// Arabic, the Colors step at full size. node scripts/tests/capture-theme-logo.mjs <folder>
+// Arabic, the Colors step at full size. node scripts/tests/capture-theme-logo.mjs <folder> (the PNGs live on the
+// branch shots/theme-logo, not in the site)
 import { serve, launch, visitor } from './lib.mjs';
 const out = process.argv[2];
 const server = await serve(), browser = await launch();
