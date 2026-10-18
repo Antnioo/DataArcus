@@ -4,6 +4,27 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## B-148: confirmation memory (0.3 R&D, 18 Oct, cloud builder; branch `feat/0.3-confirm-memory` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The reviewer's brief (owner's go 18 Oct, J3): a "Please confirm" answer is remembered while the metadata the question was
+based on is unchanged, and the question comes back when it changes. Metadata only: no DAX text or data is stored.
+- **The record:** `{ questionId, object, answer, evidenceSignature, at, by: 'user' }`; answer `intended` | `mistake`;
+  evidenceSignature = SHA-256 of the question's id, object, a hash of its DAX piece, the measure's DAX text hash, format
+  string, table and measure names (a relationship's: its four columns, the candidate column and their types).
+- **One module, shared:** `assets/js/confirm-memory.js` (browser and Node; sync SHA-256 in plain JS, no network):
+  signature, fingerprint, apply (reused / asked again / stale dropped), record, and the browser's localStorage helpers.
+  model-health-engine.js is NOT touched (other 0.3 drafts change it).
+- **Website:** each question gets "Yes, intended" / "No, a mistake" (Dismiss stays, for the session); answers kept in
+  localStorage only, per model fingerprint (the model's table names, hashed); "Your earlier answers" list and "Forget my
+  answers" (removes every answer this browser holds).
+- **MCP:** check_model_health: items get `answerKey`; input `answers: [{ answerKey, answer }]` and `forgetAnswers`; the
+  file `<model>.dataarcus-answers.json` next to the model (where the fix scripts go) is written ONLY with an approved
+  plan that lists it (plan kind scripts, pinned records); read back on every check: answered questions under
+  `pleaseConfirm.answered`, not asked again; stale ones named as `answersForgotten`.
+- **Tests red first:** `mcp/test-confirm-memory.mjs` (in npm test; expected 23 checks, all red before the code: the module
+  does not exist) and a block in `scripts/tests/model-health.mjs` (expected +7 checks).
+- Shared files touched: server.mjs (check_model_health only), model-health.js, the Health Check page and its /ar/ copy,
+  mcp/package.json (the test script), PRIVACY.md (the new file).
+
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
 Enter data (compressed in the Power Query text) and DATATABLE values in DAX. Checked in code: the Health Check reads only
