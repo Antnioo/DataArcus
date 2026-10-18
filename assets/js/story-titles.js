@@ -72,7 +72,7 @@
     // a column's "Name", "Short", "Label" ("Month Name" -> "Month"; «اسم الفرع» -> «الفرع»)
     { on: 'c', cut: (x) => (arabic(x) ? x.replace(/^اسم\s+(?=ال)/, '') : x.replace(/\s+(Name|Short|Label|Desc|Description)$/i, '')) },
     // "Total" before a measure's name ("Total Net Amount" -> "Net Amount"; «إجمالي صافي المبيعات» -> «صافي المبيعات»)
-    { on: 'm', own: true, cut: (x) => (arabic(x) ? x.replace(/^(إجمالي|مجموع)\s+(?=\S)/, '') : x.replace(/^(Total|Sum of)\s+(?=\S)/i, '')) },
+    { on: 'm', own: true, cut: (x) => (arabic(x) ? x.replace(/^(إجمالي|مجموع)\s+(?=\S)/, '') : x.replace(/^(Total|Sum of)\s+(?=\S)/i, '').replace(/^\p{Ll}/u, (ch) => ch.toUpperCase())) },   // ("Total net sales" -> "Net sales")
     // a trailing clause of the column's, then of the measure's name
     { on: 'c', cut: clause },
     { on: 'm', own: true, cut: clause }

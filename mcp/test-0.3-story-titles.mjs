@@ -73,6 +73,7 @@ try {
     const words = (t) => new Set(String(t).split(/\s+/));
     const full = words(a[0].text);
     chk(() => a.every((x) => [...words(x.text)].every((w) => full.has(w))) && v.every((x) => [...words(x.text)].every((w) => words(v[0].text).has(w))), () => 'ST-1g. every shortened title is made of whole words of the full one');
+    chk(() => ST.variants({ t: 'S', m: 'Total net sales' }, null, 'by').map((x) => x.text).includes('Net sales'), () => 'ST-1m. a name left after "Total" starts with a capital ("Net sales")');
     chk(() => ST.variants({ t: 'S', m: 'Total Sales', name: 'Total Sales Display' }, { t: 'R', c: 'Region' }, 'by').every((x) => x.m === 'Total Sales Display'), () => 'ST-1h. the user\'s display name is never rewritten');
     chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة' && ST.join('عدد Order Id', 'Region', 'حسب') === 'عدد Order Id',
       () => 'ST-1i. "M by C", «M حسب C», and one script per title');
@@ -97,6 +98,7 @@ try {
     // every chart's and table's title (its alt text: the full title, also for a "Top N of M" title made by a measure) unique on its page
     pages.forEach((p) => { const ts = p.visuals.filter((v) => /Chart$|^tableEx$|^pivotTable$/.test(v.visual.visualType) && titleOf(v)).map(altOf);
       chk(() => new Set(ts).size === ts.length, () => `ST-2c ${name} "${p.page.displayName}". every chart's and table's title unique on its page: ${JSON.stringify(ts)}`); });
+    chk(() => all.every((x) => !/…/.test(x.t || '')), () => `ST-2e ${name}. no title cut with "…" on any page, the tooltip pages too: ${JSON.stringify(all.filter((x) => /…/.test(x.t || '')).slice(0, 4))}`);
     chk(() => all.every((x) => ST.NEVER[lang].every((w) => !String(x.t || '').toLowerCase().includes(w))), () => `ST-2d ${name}. no judgement word in a title`);
     if (m === 'arabic' && layout === 'ops') {
       const cut = all.filter((x) => /…/.test(x.t || ''));

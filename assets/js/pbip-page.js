@@ -1317,6 +1317,10 @@
     // (the second sweep's T4: the tooltip now shows the hovered chart's own measure, whatever its name's length: a title
     // two lines of the page's width don't hold is shortened, as the report's chart titles are; the full name stays the alt text)
     const tipTitle = (t) => { const f = titleFit(t, TIP_TITLE, 296 - 16); return f.mode === 'shortened' ? f.shown : t; };
+    // (0.3, J4, B-131: the tooltip's bar chart title was cut with "…" too) the story title's first form that fits, with
+    // the Top-N lead where its category is cut to its top 6 (the same rules as the page's charts, story-titles.js)
+    const tipStory = (m, c) => { const lead = c && c.c != null && c.agg == null && !isTime(c) ? (lang === 'ar' ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
+      return ST.fit(ST.variants(m, c, W.by || 'by', shown), (x) => titleFit(lead + x, TIP_TITLE, 296 - 16).mode !== 'shortened').text; };
     const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(shown(tipTitle(t))), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
@@ -1390,12 +1394,12 @@
         tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card, topW),
           tipTop({ x: 12, y: 92, w: topW, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
             objects: tipLook(card, topW),
-            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipSix + 8, TOP_W);
+            visualContainerObjects: tipFrame(tipStory(t.m, t.cat)) }) }, t.cat, t.m, tipStory(t.m, t.cat))], 92 + tipSix + 8, TOP_W);
         return;
       }
       const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),
         objects: tipLook(card),
-        visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(tip.date))) }) };
+        visualContainerObjects: tipFrame(tipStory(t.m, tip.date)) }) };
       // (rc1, DETAIL-2 T1: the month tooltip showed "(Blank)" first and 13 rows: it gets the chart's "is not blank" filter)
       tv.filters = [notBlankOf(tip.date)];
       if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(t.m).field, 6); if (lf) tv.filters.push(lf); }
