@@ -1,8 +1,34 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-155" just below (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3 J4 story titles" just below (branch `feat/0.3-story-titles`, draft PR, merged only after 0.2.9 reaches testers), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3 J4: story titles + B-130 / B-131 (18 Oct, cloud builder; branch `feat/0.3-story-titles` from main `f09bf30`; draft PR, not merged)
+The owner's go (18 Oct, R&D for 0.3): titles that say what the visual answers, from metadata only, unique on a page without
+"(2)", shortened by rule to the box, never cut in a word; EN + AR. Merges only after 0.2.9 reaches testers. The twin
+(lib/arabic-twin.mjs, rc.24 PR #55) untouched.
+- **Engine:** `assets/js/story-titles.js` (new, browser + Node, `window.DAStoryTitles`): `timeWords` (PY/LY/SPLY, YTD,
+  QTD, MTD, YoY, MoM said in words; "PY Sales" -> "Sales last year"; Arabic names get Arabic words; names written in words
+  such as "Last Ramadan" kept), `nameOf` (a display name as given, never rewritten), `variants` (the full title, then one
+  per rule: the measure's table prefix, a column's Name/Short/Label (AR «اسم»), "Total"/«إجمالي», a trailing clause of the
+  column then of the measure from its first qualifier word (after, during, by... / بعد، خلال، من، في، حسب، المستخدمة، وال...)),
+  `fit`/`fitWidth` (first that fits, text-measure.js), `alternate` (another true sentence for a same chart), `NEVER`.
+- **Patterns:** EN "M by C", "C ranked by M" (a chart sorted by its measure: a top-N bar/column), "M per C", "M breakdown
+  by C", "M across C"; without a column (a column in the other script): "Ranked by M", "M breakdown", "M overview".
+  AR «M حسب C», «ترتيب C حسب M», «M لكل C», «توزيع M حسب C», «M عبر C»; «الترتيب حسب M», «توزيع M», «نظرة على M».
+  Time words AR: «في العام الماضي», «منذ بداية العام/الربع/الشهر», «مقارنة بالعام الماضي/بالشهر الماضي», «مقابل» (vs).
+- **Writer (shared files touched):** `pbip-query.js` bindStory (bindTitle reads its first form), kpiLabel;
+  `pbip-page.js` (also touched by other 0.3 drafts): the chart/table title takes the first form that fits two lines with
+  "Top 999 of 999: " and ": detail"; the "(2)" numbering became `alternate` (number kept only if the forms run out);
+  KPI titles get the time words. `lib/plan-lint.mjs`: the planned cards capped to the measures the binding fills (the
+  planned page had "KPI 2/3/4" cards with no field on health-project), its titles kept off the answer (`titles`).
+  `theme-generator.js` loads story-titles.min.js before pbip-query (stamps 20261018st on the 3 generator pages).
+- **Tests:** `mcp/test-0.3-story-titles.mjs` (82 checks, in npm test): 6 red on the writer before (c52c30c), 0 after
+  (777a8fd). The engine checks (ST-1) were written with the engine.
+- **Decisions I made:** the owner's "Top N of M:" lead (design rounds 8/10) stays; the story is its core, so no "Top 10
+  Customers by Sales" form. Rules apply only when a title doesn't fit (no "Total" dropped on a wide chart). KPI titles
+  keep the wrap rule (none cut on the golden models). Tooltip pages' titles unchanged.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
