@@ -454,8 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let logo = null;
     // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['../assets/js/text-measure.min.js?v=20261011a4', '../assets/js/pbip-query.min.js?v=20261012r10', '../assets/js/pbip-sizing.min.js?v=20261013p6', '../assets/js/pbip-notes.min.js?v=20261018r22',
-      '../assets/js/pbip-page.min.js?v=20261018r22', '../assets/js/pbip-export.min.js?v=20261013p6'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261011a4', '/assets/js/pbip-query.min.js?v=20261012r10', '/assets/js/pbip-sizing.min.js?v=20261013p6', '/assets/js/pbip-notes.min.js?v=20261018r22',
+      '/assets/js/pbip-page.min.js?v=20261018r22', '/assets/js/pbip-export.min.js?v=20261013p6'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -470,9 +470,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // model read by one copy was picked by the other, whose own field notes (a WeakMap) knew none of it: one KPI card)
     let binding = null;
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
-      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011t'))
-        .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261012i11')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
+        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261011t')))
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261012i11')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20261018h')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261018h')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const exCard = $('exampleCard'), exImg = $('exampleImg');
   if (exCard) exCard.addEventListener('click', () => $('exampleBtn').click());
-  const exPic = () => { if (exImg) exImg.src = `../assets/img/tools/theme-example-${isAr() ? 'ar' : 'en'}.jpg`; };
+  const exPic = () => { if (exImg) exImg.src = `/assets/img/tools/theme-example-${isAr() ? 'ar' : 'en'}.jpg`; };
   exPic(); new MutationObserver(exPic).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   $('exampleUndo').addEventListener('click', () => {
     if (!beforeExample) return;
