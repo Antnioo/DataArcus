@@ -1,8 +1,18 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-145" just below (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-155" just below (branch `site/pbit-wording`), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
+The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
+Enter data (compressed in the Power Query text) and DATATABLE values in DAX. Checked in code: the Health Check reads only
+DataModelSchema/model.bim or the TMDL files and the report JSON (model-health-worker.js:110-142), keeps the Power Query text
+as text and never unpacks it (no Binary/Decompress anywhere in the engine), posts nothing but its result to the page; the
+measures panel and the documentation export show DAX as written (model-health.js:545, 653), so a DATATABLE is shown, only
+to the visitor. New sentences in the 4 pages + translations (EN, AR), /ar/ copies regenerated, ?v= bumped, sitemap dates.
+test-site-config pins it (the old phrases gone; "not the data Power BI loaded" / the Arabic, Enter data, DATATABLE).
+- Seen, not in scope: mcp/PRIVACY.md:55 says the schema inside a .pbit "holds no data" (mcp/ is frozen at 0.2.9).
 
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
