@@ -6,6 +6,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { nothingAt, real, inside, readCapped } from './model.mjs';
+import { io, placeFile, writeFailed, writeFileNew } from './write-io.mjs';
+import { consume } from './plans.mjs';
+export { writeFileNew };   // (B-153: the one writer of one new file, for the tools; writeNew in model.mjs is the same)
 
 // what was written in this server's life, in order (audit 6, A6-17): a tool that fails says what it had written
 const WRITTEN = [];
@@ -41,15 +44,18 @@ export function writeTree(dir, files, opts) {
   // folders, each only when empty; anything else found is left where it is and named)
   const createdFiles = [], createdDirs = [], placed = new Set();
   const where = (rel) => (placed.has(rel.split('/')[0]) ? path.join(dir, ...rel.split('/')) : path.join(tmp, ...rel.split('/')));
-  const ensureDir = (relDir) => { const parts = relDir ? relDir.split('/') : []; for (let k = 1; k <= parts.length; k++) { const rel = parts.slice(0, k).join('/'); const f = path.join(tmp, ...rel.split('/')); if (nothingAt(f)) { fs.mkdirSync(f); createdDirs.push(rel); } } };
+  const ensureDir = (relDir) => { const parts = relDir ? relDir.split('/') : []; for (let k = 1; k <= parts.length; k++) { const rel = parts.slice(0, k).join('/'); const f = path.join(tmp, ...rel.split('/')); if (nothingAt(f)) { io.mkdirSync(f); createdDirs.push(rel); } } };
   let madeTmp = false;
   try {
-    fs.mkdirSync(tmp); madeTmp = true;
+    io.mkdirSync(tmp); madeTmp = true;
     let n = 0;
     for (const f of files) {
       const rel = String(f.path), relDir = rel.split('/').slice(0, -1).join('/');
       ensureDir(relDir);
-      fs.writeFileSync(path.join(tmp, ...rel.split('/')), f.data, { flag: 'wx' }); createdFiles.push(rel);
+      // (0.3, B-153: recorded BEFORE the write, so a file the disk cut off part-way is removed too; 'wx' refuses a taken
+      // name, which is then not ours)
+      createdFiles.push(rel);
+      try { io.writeFileSync(path.join(tmp, ...rel.split('/')), f.data, { flag: 'wx' }); } catch (x) { if (x && x.code === 'EEXIST') createdFiles.pop(); throw x; }
       if (fail && ++n >= fail.after) { const e = new Error(`${fail.code}: the write failed after ${n} files (a test, DATAARCUS_TEST_WRITE_FAIL)`); e.code = fail.code; throw e; }
     }
     const isDir = (t) => fs.lstatSync(path.join(tmp, t)).isDirectory();
@@ -57,30 +63,55 @@ export function writeTree(dir, files, opts) {
     for (const t of order) {
       if (beforePlace) beforePlace(t);   // (tests only: something happening between two moves)
       const from = path.join(tmp, t), to = path.join(dir, t);
-      if (isDir(t)) { if (!nothingAt(to)) throw new Error(`"${t}" appeared while writing`); fs.renameSync(from, to); placed.add(t); }
-      else { fs.linkSync(from, to); placed.add(t); fs.unlinkSync(from); }   // link: fails with EEXIST rather than replace a file
+      if (isDir(t)) { if (!nothingAt(to)) throw new Error(`"${t}" appeared while writing`); io.renameSync(from, to); placed.add(t); }
+      else { const how = placeFile(from, to); placed.add(t); if (how === 'link') io.unlinkSync(from); }   // link: fails with EEXIST rather than replace a file
       noteWritten(to);
     }
-    fs.rmdirSync(tmp); madeTmp = false;
+    io.rmdirSync(tmp); madeTmp = false;
     return order;
   } catch (e) {
-    const left = [];
-    for (const rel of createdFiles.slice().reverse()) { try { fs.unlinkSync(where(rel)); } catch (x) { if (x.code !== 'ENOENT') left.push(rel); } }
+    // what this call created and could not remove (ours), and what it found in its folders and left (foreign): both
+    // named exactly (B-153: the folder that holds a file still there is still there too, and named)
+    const ours = [], foreign = [];
+    for (const rel of createdFiles.slice().reverse()) { try { io.unlinkSync(where(rel)); } catch (x) { if (x.code !== 'ENOENT') ours.push(where(rel)); } }
     // (a top-level file linked into place also had its temporary name: gone already, or removed here)
-    for (const t of placed) if (!createdDirs.includes(t)) { try { fs.unlinkSync(path.join(tmp, t)); } catch (x) { /* moved */ } }
+    for (const t of placed) if (!createdDirs.includes(t)) { try { io.unlinkSync(path.join(tmp, t)); } catch (x) { /* moved */ } }
     for (const rel of createdDirs.slice().reverse()) {
       const d = where(rel);
-      try { fs.rmdirSync(d); } catch (x) { if (x.code === 'ENOTEMPTY' || x.code === 'EEXIST') { try { fs.readdirSync(d).forEach((name) => { const r = rel + '/' + name; if (!createdDirs.includes(r) && !createdFiles.includes(r)) left.push(r); }); } catch (y) { left.push(rel); } } else if (x.code !== 'ENOENT') left.push(rel); }
+      try { io.rmdirSync(d); } catch (x) {
+        if (x.code === 'ENOENT') continue;
+        ours.push(d);
+        if (x.code === 'ENOTEMPTY' || x.code === 'EEXIST') { try { fs.readdirSync(d).forEach((name) => { const r = rel + '/' + name; if (!createdDirs.includes(r) && !createdFiles.includes(r)) foreign.push(path.join(d, name)); }); } catch (y) { /* the folder is named */ } }
+      }
     }
-    if (madeTmp) { try { fs.rmdirSync(tmp); } catch (x) { /* named below if anything is left in it */ } }
-    const gone = [...placed].length; if (gone) WRITTEN.splice(WRITTEN.length - gone, gone);   // (removed again: not written)
-    const why = e && e.code === 'ENOSPC' ? 'the disk is full (ENOSPC)' : String(e && e.message || e).slice(0, 200);
-    const err = new Error(`Nothing was written: the files could not be written (${why}). What this call had written was removed.` + (left.length
-      ? ` Left as found, not created by this call (not removed): ${left.slice(0, 5).join(', ')}${left.length > 5 ? ', ...' : ''}; the folder holding them stays.`
-      : ' Nothing else was touched.'));
-    err.code = e && e.code;
-    throw err;
+    if (madeTmp) { try { io.rmdirSync(tmp); } catch (x) { if (x.code !== 'ENOENT') ours.push(tmp); } }
+    const gone = placed.size; if (gone) WRITTEN.splice(WRITTEN.length - gone, gone);   // (removed again: not written)
+    throw writeFailed(e, 'the files', ours.sort(), foreign.sort());
   }
+}
+
+/**
+ * (0.3, B-153) A write with an approved plan. The plan is marked used the moment the write is complete (before the
+ * answer is built, so an error after it can't leave the plan open with the files on disk). When the write fails:
+ * - everything it had created was removed (e.left.ours empty): the plan is NOT used. Nothing on disk differs from what
+ *   the person approved, so the same planId can write once the cause is fixed (a full disk: free some space); the
+ *   approval was for these files, written once, and they were not written.
+ * - something it created is still there: the plan IS used. The folder now holds part of this write, which the person
+ *   did not approve; they see what is left (named exactly) and approve again after deleting it.
+ * Either way the answer says which. An error that is not a write's (e.left absent) is passed on as it is: the plan is
+ * used when files were placed before it (writtenSince), and as it was otherwise (a refusal before the write).
+ */
+export function withPlan(planId, tool, write) {
+  let r; const mark = writtenSince();
+  try { r = write(); } catch (e) {
+    // (an error after the files were placed, a twin's answer for one: the files are on disk, so the plan wrote)
+    if (!e || !e.left) { if (writtenSince(mark).length) consume(planId, tool); throw e; }
+    if (e.left.ours.length) { consume(planId, tool); e.message += ` The plan ${planId} is now used: part of this write is still on disk, so the approval can't be used for another try. Delete what is named above, then make a new plan, show it to the user and wait for their go.`; }
+    else e.message += ` The plan ${planId} was not used: once the cause is fixed (for a full disk: free some space), call this tool again with the same planId.`;
+    throw e;
+  }
+  consume(planId, tool);
+  return r;
 }
 
 /**
@@ -105,10 +136,12 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
 }
 
 // A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext... (a name held by
-// anything, a link included, is skipped)
-export function freeFile(folder, base, ext) {
+// anything, a link included, is skipped). made (B-153): gets the folders this call created, outermost first, so a write
+// that fails can remove them again (writeFileNew's madeDirs)
+export function freeFile(folder, base, ext, made) {
   const dir = inside(folder || '.');
-  fs.mkdirSync(dir, { recursive: true });
+  const first = fs.mkdirSync(dir, { recursive: true });
+  if (first && Array.isArray(made)) { const chain = []; for (let d = dir; ; d = path.dirname(d)) { chain.unshift(d); if (d === first || path.dirname(d) === d) break; } made.push(...chain); }
   for (let n = 1; ; n++) {
     const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
     if (nothingAt(f)) return f;
