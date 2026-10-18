@@ -104,7 +104,7 @@ export function gate(tool, id, model, pin, opts) {
   if (id == null || id === '') throw new Error(`Nothing was written: ${tool} writes a file only with an approved plan id (planId). ${tool === 'create_report' ? 'Call plan_layout with the model (path) and the plan\'s fields: it checks the plan against the tools\' limits and gives a plan id. ' : ''}${SHOW}`);
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
-  if (!alive(p)) { plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
+  if (!alive(p)) { if (!(opts && opts.approvalOnly)) plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
   if (p.status === 'refused') throw new Error(REFUSED(p));
   if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet (the person approves it with a click on Approve in DataArcus's approval window, which approve_plan opens in their browser). ${SHOW}`);
   if (p.used && p.used[tool]) throw new Error(`Nothing was written: plan ${p.id} was already used for ${tool} (a plan writes once). For another write, make a new plan, show it to the user and wait for their go.`);

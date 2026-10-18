@@ -277,6 +277,9 @@ export function planLayout(a) {
   return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
 
+// (rc.22, B-140) a slot kind's visual, in the plan's language (the slots' "visual")
+export const kindLabel = (kind, lang) => E.label(E.KINDS[kind], lang);
+
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
 export function pageOf(layout) {
   const p = E.page(layout), asked = layout.page === 'custom' ? { w: Math.round(+layout.pageW) || null, h: Math.round(+layout.pageH) || null } : null;
