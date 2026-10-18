@@ -25,9 +25,14 @@ lowered, no path filters, actions SHA-pinned, the scan job untouched, no GitHub 
 - Expected in CI (written before the run): mcp total 10155 (= the unsharded numbers above), website 19 suites with the
   check counts main 5c0ad21 printed (site 316, anchors 76, tools 341, model-health 194, spacing 533, components 526,
   consent 38, lang-switcher 684, theme-generator 894, -lab 894, pbip 85, dax 51, layout 512, layout-lab 512, svg-kpi
-  854, tmdl-model 70, design-engine 598, gulf-calendar 814, text-align 426 = 8619). Before (main 5c0ad21): website
-  12:23, mcp 10:41, mcp-windows ~14+ min.
-- Next: CI green on the PR, before/after wall times in the PR, the reviewer reviews, the owner merges.
+  854, tmdl-model 70, design-engine 598, gulf-calendar 814, text-align 426; I first wrote their sum as 8619, an
+  addition slip: it is 8418). Before (main 5c0ad21, run 39127589803, from the run's start): mcp 11:00, website 12:41,
+  mcp-windows 16:15.
+- **CI on `fa50ac7` (PR #42): all green.** ci-sum: mcp 10155 (test.mjs 1569, 249 reports), mcp-windows 10182 (Windows'
+  fuzz prints 8226 checks on main too: same as before), website 8418, every suite's count as on main. Wall time from
+  the run's start (push run 39130096482): mcp 3:26, mcp-windows 5:02, website 6:35. The PR run beside it, sharing
+  runners: 5:00, 6:28, 8:32.
+- Next: the reviewer reviews PR #42, the owner merges (no GitHub setting changes: the required names are kept).
 
 ## rc.22: fixes from the owner's rc.21 Desktop test (18 Oct, cloud builder; branch `fix/0.2.9-rc22` from main `cd6f1b6`; PR to main, not merged)
 The owner's go ("go rc.22", 18 Oct; top priority before more 0.3.0 work). His Desktop test of rc.21 passed the approval
