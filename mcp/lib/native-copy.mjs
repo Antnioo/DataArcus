@@ -54,7 +54,7 @@ export function planNative(reportPath, model) {
   };
   if (!entries.length) answer.none = 'This report has no custom visual: nothing to replace.';
   if (!free) answer.taken = `"${path.basename(loc.outDir)}" or its .pbip is already there: DataArcus never writes over a file; rename or move it before create_report.`;
-  return { loc, entries: replace, answer, writes: replace.length ? [`the report "${safeName(loc.base + SUFFIX)}" next to "${safeName(loc.base)}": a copy with ${replace.length} custom visual(s) replaced by native ones (create_report with customVisualsFrom)`] : [] };
+  return { loc, entries: replace, answer, writes: replace.length ? [`the report "${safeName(loc.base + SUFFIX)}.Report" and its "${safeName(loc.base + SUFFIX)}.pbip" next to "${safeName(loc.base)}": a copy with ${replace.length} custom visual(s) replaced by native ones (create_report with customVisualsFrom)`] : [] };
 }
 
 // plan: the approved plan (its data.customVisuals: the entries the user approved)

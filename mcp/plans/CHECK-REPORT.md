@@ -145,8 +145,9 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
 - `known` (polish round P2, 12 Oct 2026; validator findings only): `{ what, evidence }` when the finding is exactly a
   gap of the validator's catalog that Power BI Desktop was seen to draw (`VALIDATOR_GAPS`: today the dropdown slicer's
   `dropdown.borderRadius`, `borderIndividualCorners`, `borderColor`). Such a finding is a `note` with impact
-  `desktopOpens`, its code and source verbatim; `validator.errors` stays the validator's own count and
-  `validator.known` counts these. Anything else unknown stays the validator's error.
+  `desktopOpens`, its code and source verbatim; `validator.known` counts these, and `validator.errors` and
+  `warnings` count what stays an error or a warning among the findings (rc.22, B-142: they agree with the findings'
+  severities); `validator.reported` keeps the validator's own counts. Anything else unknown stays the validator's error.
 - The design lint's findings (the answer's `lint.findings`) keep their own `severity` (`high`, `medium`, `note`) and
   `why`, and carry the same `origin` (`lint`), `impact` (`dataarcusRule`), `source`, and `level` on the common scale
   (`warning` for high and medium, `note`).
