@@ -1267,7 +1267,7 @@
         CF.calls(ts, 'CALCULATE').forEach((c) => c.args.slice(1).forEach((a) => {
           const z = CF.strip(a), pos = z.findIndex((t) => t.value === '<>'), last = z[z.length - 1];
           if (pos < 0 || !last || last.kind !== 'string' || !last.value) return;
-          if (column(CF.reference(z.slice(0, pos)))) ask('totalFilter', m, 'Should this total leave out a hard-coded category?', 'هل يجب أن يستبعد هذا الإجمالي فئة مكتوبة يدويًا؟', a);
+          if (column(CF.reference(z.slice(0, pos)))) ask('totalFilter', m, 'Should this total leave out a hard-coded category?', 'هل يجب أن يستبعد هذا الإجمالي فئة ثابتة في الصيغة؟', a);
         }));
       }
       // the same aggregate added to itself: SUM(x) + SUM(x)
@@ -1275,7 +1275,7 @@
       aggs.forEach((left) => {
         const right = aggs.find((x) => x.start === left.end + 2);
         if (ts[left.end + 1] && ts[left.end + 1].value === '+' && right && CF.same(left.tokens, right.tokens))
-          ask('duplicateAggregate', m, 'The same aggregate is added twice. Is the doubling intentional?', 'يُجمع التجميع نفسه مرتين. هل المضاعفة مقصودة؟', ts.slice(left.start, right.end + 1));
+          ask('duplicateAggregate', m, 'The same aggregate is added twice. Is the doubling intentional?', 'يُضاف التجميع نفسه مرتين. هل المضاعفة مقصودة؟', ts.slice(left.start, right.end + 1));
       });
       // the measure's name says one thing and its only aggregate reads another: Deaths = SUM(T[Cases])
       const root = CF.rootCall(ts);
