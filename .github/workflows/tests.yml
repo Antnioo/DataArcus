@@ -5,14 +5,18 @@ name: Tests
 # (website, mcp, mcp-windows) is a last job of that name that needs all its shards, fails unless every one of them
 # passed, and adds up their checks (scripts/ci-sum.mjs: every shard, suite and script exactly once).
 
+# Pushes to main, every pull request (drafts included) and a manual "Run workflow" on any branch (owner 18 Oct): a branch
+# without a PR gets no automatic run, so a push to a PR branch is no longer tested twice.
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# one run per ref: refs/heads/main for pushes, refs/pull/<n>/merge for a PR, the branch for a manual run
 concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
