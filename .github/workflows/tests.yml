@@ -52,6 +52,9 @@ jobs:
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 
+      - name: The Arabic copies at /ar/ are what a fresh render of their English pages gives (never edited by hand)
+        run: node scripts/ar-pages.mjs
+
       - name: All website suites
         run: node scripts/tests/run-all.mjs
 

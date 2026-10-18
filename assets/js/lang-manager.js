@@ -10,6 +10,13 @@ class LanguageManager {
   
   // Detect browser/stored language preference
   detectLanguage() {
+    // An Arabic copy (/ar/...) is Arabic whatever was saved before: its address is its language. Saved, like ?lang=ar,
+    // so the English-only pages it links to open in Arabic too
+    if (/^\/ar\//.test(window.location.pathname)) {
+      try { localStorage.setItem('dataarcus-lang', 'ar'); } catch (e) {}
+      return 'ar';
+    }
+
     // Check URL parameter first
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
@@ -230,10 +237,11 @@ class LanguageManager {
     return value || `[Missing: ${path}]`;
   }
   
-  // Apply translations to DOM elements
-  applyLanguage() {
+  // Apply translations to DOM elements (of this page, or of another document: scripts/ar-pages.mjs translates the page's
+  // own HTML with it to write the /ar/ copy)
+  applyLanguage(doc = document) {
     // Update all elements with data-i18n attribute
-    document.querySelectorAll('[data-i18n]').forEach(element => {
+    doc.querySelectorAll('[data-i18n]').forEach(element => {
       const key = element.getAttribute('data-i18n');
       const text = this.getText(key);
       
@@ -249,7 +257,7 @@ class LanguageManager {
     });
     
     // Update elements with data-i18n-html for HTML content
-    document.querySelectorAll('[data-i18n-html]').forEach(element => {
+    doc.querySelectorAll('[data-i18n-html]').forEach(element => {
       const key = element.getAttribute('data-i18n-html');
       const html = this.getText(key);
       if (typeof html === 'string') {
@@ -260,25 +268,25 @@ class LanguageManager {
     // Translate attributes: data-i18n-placeholder, data-i18n-alt, data-i18n-aria-label and data-i18n-title
     // each name the key for that attribute, so inputs, images and buttons read in the page's language too
     ['placeholder', 'alt', 'aria-label', 'title'].forEach((attr) => {
-      document.querySelectorAll(`[data-i18n-${attr}]`).forEach((element) => {
+      doc.querySelectorAll(`[data-i18n-${attr}]`).forEach((element) => {
         const text = this.getText(element.getAttribute(`data-i18n-${attr}`));
         if (typeof text === 'string') element.setAttribute(attr, text);
       });
     });
 
     // Update meta tags
-    this.updateMetaTags();
+    this.updateMetaTags(doc);
   }
   
   // Update meta tags for SEO
-  updateMetaTags() {
+  updateMetaTags(doc = document) {
     // pages without their own translation file (404) name their meta key on <html data-i18n-meta="...">
-    const found = this.getText(document.documentElement.getAttribute('data-i18n-meta') || 'meta');
+    const found = this.getText(doc.documentElement.getAttribute('data-i18n-meta') || 'meta');
     if (typeof found === 'object') {
       // Share previews follow the page: og:/twitter: title and description default to the page's own, and
       // og:locale to its language, so a page only needs a title and a description in each language
       const metaData = Object.assign({}, found);
-      const has = (sel) => !!document.querySelector(sel);
+      const has = (sel) => !!doc.querySelector(sel);
       [['title', 'og:title', 'twitter:title'], ['description', 'og:description', 'twitter:description']].forEach(([base, og, tw]) => {
         if (!metaData[base]) return;
         if (!metaData[og] && has(`meta[property="${og}"]`)) metaData[og] = metaData[base];
@@ -287,8 +295,10 @@ class LanguageManager {
       if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_AE' : 'en_US';
       // Update <title>
       if (metaData.title) {
-        document.title = metaData.title;
+        doc.title = metaData.title;
       }
+      // a page with its own Arabic copy (hreflang links) has its canonical in its file: each copy names itself
+      if (doc.querySelector('link[rel="alternate"][hreflang]')) delete metaData.canonical;
 
       // Loop through all meta properties
       Object.entries(metaData).forEach(([key, value]) => {
@@ -324,22 +334,22 @@ class LanguageManager {
         // Add more custom cases as needed
 
         if (selector) {
-          let tag = document.querySelector(selector);
+          let tag = doc.querySelector(selector);
           if (!tag) {
             // Create tag if it doesn't exist
             if (selector.startsWith('meta')) {
-              tag = document.createElement('meta');
+              tag = doc.createElement('meta');
               if (selector.includes('property')) {
                 tag.setAttribute('property', key);
               } else if (selector.includes('name')) {
                 tag.setAttribute('name', key);
               }
-              document.head.appendChild(tag);
+              doc.head.appendChild(tag);
             } else if (selector.startsWith('link')) {
-              tag = document.createElement('link');
+              tag = doc.createElement('link');
               if (key === 'canonical') tag.setAttribute('rel', 'canonical');
               if (key === 'icon') tag.setAttribute('rel', 'icon');
-              document.head.appendChild(tag);
+              doc.head.appendChild(tag);
             }
           }
           tag.setAttribute(attr, value);
@@ -544,7 +554,26 @@ class LanguageManager {
    */
   toggleLanguage() {
     const newLang = this.currentLang === 'en' ? 'ar' : 'en';
+    // a page with an Arabic copy goes to the other language's own address (the hreflang link in its head); the
+    // choice is saved first, or carried in ?lang= when storage is blocked (the English page would follow the
+    // browser's language otherwise)
+    const to = this.pairUrl(newLang);
+    if (to) {
+      let saved = true;
+      try { localStorage.setItem('dataarcus-lang', newLang); } catch (e) { saved = false; }
+      window.location.assign(saved || newLang === 'ar' ? to : to + '?lang=' + newLang);
+      return;
+    }
     this.setLanguage(newLang);
+  }
+
+  // The address of this page in another language, when it has its own copy there: <link rel="alternate" hreflang>
+  // naming another path on this site (null for the page itself, so an English page shown in Arabic switches in place)
+  pairUrl(lang) {
+    const link = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
+    if (!link) return null;
+    const to = new URL(link.getAttribute('href'), window.location.href), bare = (p) => p.replace(/\/index\.html$/, '/');
+    return bare(to.pathname) === bare(window.location.pathname) ? null : window.location.origin + to.pathname;
   }
   
   // Initialize the language manager

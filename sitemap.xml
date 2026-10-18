@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://dataarcus.com/</loc>
     <lastmod>2026-10-05</lastmod>
@@ -17,6 +17,18 @@
     <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/"/>
+  </url>
+  <url>
+    <loc>https://dataarcus.com/ar/tools/</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/"/>
   </url>
   <url>
     <loc>https://dataarcus.com/tools/power-bi-theme-generator.html</loc>
@@ -29,6 +41,18 @@
     <lastmod>2026-10-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/dax-calendar-table-generator.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
+  </url>
+  <url>
+    <loc>https://dataarcus.com/ar/tools/dax-calendar-table-generator.html</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/dax-calendar-table-generator.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/adventureworks-dashboard.html</loc>
@@ -119,6 +143,18 @@
     <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/dax-measure-builder.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
+  </url>
+  <url>
+    <loc>https://dataarcus.com/ar/tools/dax-measure-builder.html</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/dax-measure-builder.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
   </url>
   <url>
     <loc>https://dataarcus.com/articles/article-gulf-calendar-power-bi.html</loc>
@@ -191,6 +227,18 @@
     <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/svg-kpi-designer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
+  </url>
+  <url>
+    <loc>https://dataarcus.com/ar/tools/svg-kpi-designer.html</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/tools/svg-kpi-designer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
   </url>
   <url>
     <loc>https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html</loc>

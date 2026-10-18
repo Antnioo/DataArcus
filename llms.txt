@@ -11,6 +11,9 @@
 - [Power BI Licensing Cost Calculator](https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html): compares Pro, Premium Per User and Fabric capacity costs for a team.
 - [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
 
+## Arabic versions
+- [أدوات Power BI و Fabric مجانية](https://dataarcus.com/ar/tools/): the Arabic pages have their own addresses under https://dataarcus.com/ar/ (the same path as the English page). So far: the tools hub, the [DAX Calendar Table Generator](https://dataarcus.com/ar/tools/dax-calendar-table-generator.html), the [DAX Measure Builder](https://dataarcus.com/ar/tools/dax-measure-builder.html) and the [SVG KPI Designer](https://dataarcus.com/ar/tools/svg-kpi-designer.html).
+
 ## Articles
 - [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)
 - [Compare Ramadan sales year over year in Power BI](https://dataarcus.com/articles/article-ramadan-sales-power-bi.html)
