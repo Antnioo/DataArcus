@@ -30,6 +30,23 @@ Test first: `mcp/test-rc24.mjs` (in npm test), on the golden report (large synth
   narrowed; what can't fit: fitted.headersCut.
 - Expected (written before the build): test-rc24 28 checks, 16 red on main `f09bf30` (B-140 3, T-1 6, T-2 3, T-3 2, T-4 2);
   all green after. The other suites unchanged (golden baseline, fuzz, layouts, rc22, rc23: same counts).
+- **Done (see the PR):** test-rc24 28/28 (16 red before, as expected). Full run on
+  Linux (5 shards as CI): release-text 4, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32
+  reports), rc22 26, rc23 51, rc24 28; test.mjs 32 + 584 + 620 + 332 = 1568, G-13 249 reports, 0 with errors (B-145
+  recorded 1569 on main 5c0ad21; test.mjs not touched here: compare with CI on main). Website: pbip 85 (it loads
+  report-rules.js's MEASURED; the site pages load neither report-rules.js nor report-mirror.js, no .min, no ?v=).
+- Decisions I made: the title text is one template per branch with {1}, {2} for the counted numbers (one text per
+  distinct template across the report); a label must keep each {n} once. Buttons may use the container's edge margin
+  (the golden Reset text needs 294 = the filter group's width). Header donors are text columns only, down to the larger
+  of their Arabic header and the writer's 12-letter stand-in. The card's padding leftMargin/rightMargin swap with its
+  value (the mirror of the writer's own margins).
+- Seen, not in scope: "No data for this selection" (the "No data: ..." report measure) and the cards' showBlankAs
+  "No data" stay English in the twin; visuals' altText stays English; the Reset button's leading spaces (the writer's
+  gap before its icon) are lost when its Arabic replaces the text; on the golden twin the summary table's "Plan Group"
+  header in Arabic needs 171 in 161 (headersCut: every other column is a number); TOOLTIP_SCROLL note on the month
+  tooltip; 3 PBIR_FORMATTING_OBJECT_UNKNOWN validator notes (known gaps). For a laptop proof: the twin of the golden
+  report in Desktop 2.159 (title measures in Arabic, Reset and page buttons whole, KPI values right, headers).
+- Next: the reviewer reviews the PR, the laptop proves it in Desktop, the owner merges.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
