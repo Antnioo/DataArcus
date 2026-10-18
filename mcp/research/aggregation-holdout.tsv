@@ -1,0 +1,1085 @@
+model	measure	class	confidence	evidence	marked
+Arabic Long Names.SemanticModel	متوسط قيمة الفاتورة الواحدة بعد الخصم	non_additive	high	dax: DIVIDE: a ratio	right
+Arabic Long Names.SemanticModel	نسبة النمو مقارنة بنفس الفترة من العام الماضي	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	GL Entries Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	GL Entries Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	GL Entries Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	GL Entries Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	GL Entries Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	GL Entries Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	GL Entries Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	GL Entries Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	GL Entries Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	GL Entries Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Budget Lines Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Budget Lines Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Budget Lines Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Budget Lines Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Budget Lines Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Budget Lines Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Budget Lines Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Budget Lines Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Budget Lines Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Budget Lines Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Forecast Lines Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Forecast Lines Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Forecast Lines Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Forecast Lines Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Forecast Lines Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Forecast Lines Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Forecast Lines Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Forecast Lines Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Forecast Lines Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Forecast Lines Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AP Invoices Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	AP Invoices Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AP Invoices Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	AP Invoices Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	AP Invoices Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AP Invoices Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	AP Invoices Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AP Invoices Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	AP Invoices Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	AP Invoices Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AR Invoices Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	AR Invoices Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AR Invoices Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	AR Invoices Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	AR Invoices Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AR Invoices Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	AR Invoices Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	AR Invoices Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	AR Invoices Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	AR Invoices Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payments Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Payments Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payments Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Payments Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Payments Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payments Average Weight Kg	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Payments Total Weight Kg YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payments Total Weight Kg YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Payments Max Weight Kg	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Payments Weight Kg Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Fixed Asset Movements Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payroll Lines Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Payroll Lines Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payroll Lines Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Payroll Lines Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Payroll Lines Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payroll Lines Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Payroll Lines Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Payroll Lines Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Payroll Lines Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Payroll Lines Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Attendance Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Attendance Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Attendance Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Attendance Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Attendance Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Attendance Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Attendance Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Attendance Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Attendance Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Attendance Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leave Requests Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Leave Requests Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leave Requests Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Leave Requests Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Leave Requests Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leave Requests Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Leave Requests Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leave Requests Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Leave Requests Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Leave Requests Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Recruiting Pipeline Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Training Sessions Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Training Sessions Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Training Sessions Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Training Sessions Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Training Sessions Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Training Sessions Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Training Sessions Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Training Sessions Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Training Sessions Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Training Sessions Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Amount	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Headcount Snapshot Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Headcount Snapshot Count	semi_additive_time (ask)	high	name: named as a snapshot; dax: COUNTROWS: summed over the dates	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Amount LY	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Headcount Snapshot Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Headcount Snapshot Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Quantity	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Headcount Snapshot Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Quantity LY	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Headcount Snapshot Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Headcount Snapshot Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Headcount Snapshot Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Orders Average Weight Kg	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Purchase Orders Total Weight Kg YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Orders Total Weight Kg YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Purchase Orders Max Weight Kg	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Purchase Orders Weight Kg Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Orders Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Purchase Orders Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Orders Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Purchase Orders Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Purchase Orders Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Receipts Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Purchase Receipts Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Receipts Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Purchase Receipts Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Purchase Receipts Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Receipts Average Weight Kg	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Purchase Receipts Total Weight Kg YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Purchase Receipts Total Weight Kg YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Purchase Receipts Max Weight Kg	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Purchase Receipts Weight Kg Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Supplier Invoices Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Supplier Invoices Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Supplier Invoices Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Supplier Invoices Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Supplier Invoices Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Supplier Invoices Average Weight Kg	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Supplier Invoices Total Weight Kg YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Supplier Invoices Total Weight Kg YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Supplier Invoices Max Weight Kg	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Supplier Invoices Weight Kg Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Contracts Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Contracts Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Contracts Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Contracts Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Contracts Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Contracts Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Contracts Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Contracts Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Contracts Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Contracts Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Spend Lines Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Spend Lines Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Spend Lines Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Spend Lines Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Spend Lines Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Spend Lines Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Spend Lines Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Spend Lines Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Spend Lines Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Spend Lines Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock On Hand Total Price	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Stock On Hand Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Stock On Hand Count	semi_additive_time (ask)	high	name: named as a snapshot; dax: COUNTROWS: summed over the dates	right
+Large Synthetic.SemanticModel	Stock On Hand Total Price LY	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Stock On Hand Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock On Hand Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Stock On Hand Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Stock On Hand Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock On Hand Total Value	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Stock On Hand Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Stock On Hand Total Value LY	semi_additive_time (ask)	high	name: named as a snapshot; dax: SUM: summed over the dates	right
+Large Synthetic.SemanticModel	Stock On Hand Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock On Hand Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Stock On Hand Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Stock On Hand Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock Movements Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Stock Movements Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock Movements Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Stock Movements Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Stock Movements Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock Movements Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Stock Movements Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Stock Movements Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Stock Movements Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Stock Movements Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cycle Counts Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Cycle Counts Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cycle Counts Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Cycle Counts Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Cycle Counts Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cycle Counts Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Cycle Counts Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cycle Counts Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Cycle Counts Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Cycle Counts Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Replenishment Orders Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Replenishment Orders Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Replenishment Orders Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Replenishment Orders Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Replenishment Orders Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Replenishment Orders Average Duration Minutes	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Replenishment Orders Total Duration Minutes YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Replenishment Orders Total Duration Minutes YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Replenishment Orders Max Duration Minutes	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Replenishment Orders Duration Minutes Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Write Offs Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Write Offs Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Write Offs Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Write Offs Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Write Offs Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Write Offs Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Write Offs Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Write Offs Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Write Offs Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Write Offs Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipments Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Shipments Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipments Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Shipments Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Shipments Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipments Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Shipments Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipments Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Shipments Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Shipments Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipment Legs Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Shipment Legs Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipment Legs Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Shipment Legs Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Shipment Legs Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipment Legs Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Shipment Legs Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Shipment Legs Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Shipment Legs Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Shipment Legs Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Deliveries Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Deliveries Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Deliveries Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Deliveries Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Deliveries Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Deliveries Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Deliveries Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Deliveries Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Deliveries Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Deliveries Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Freight Costs Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Freight Costs Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Freight Costs Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Freight Costs Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Freight Costs Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Freight Costs Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Freight Costs Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Freight Costs Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Freight Costs Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Freight Costs Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Returns Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Returns Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Returns Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Returns Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Returns Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Returns Average Weight Kg	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Returns Total Weight Kg YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Returns Total Weight Kg YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Returns Max Weight Kg	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Returns Weight Kg Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Orders Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Web Orders Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Orders Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Web Orders Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Web Orders Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Orders Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Web Orders Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Orders Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Web Orders Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Web Orders Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Order Lines Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Web Order Lines Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Order Lines Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Web Order Lines Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Web Order Lines Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Order Lines Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Web Order Lines Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Web Order Lines Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Web Order Lines Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Web Order Lines Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Sessions Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Sessions Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Sessions Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Sessions Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Sessions Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Sessions Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Sessions Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Sessions Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Sessions Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Sessions Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cart Events Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Cart Events Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cart Events Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Cart Events Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Cart Events Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cart Events Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Cart Events Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Cart Events Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Cart Events Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Cart Events Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Promotions Applied Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Promotions Applied Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Promotions Applied Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Promotions Applied Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Promotions Applied Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Promotions Applied Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Promotions Applied Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Promotions Applied Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Promotions Applied Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Promotions Applied Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscriptions Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Subscriptions Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscriptions Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Subscriptions Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Subscriptions Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscriptions Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Subscriptions Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscriptions Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Subscriptions Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Subscriptions Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscription Events Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Subscription Events Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscription Events Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Subscription Events Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Subscription Events Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscription Events Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Subscription Events Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Subscription Events Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Subscription Events Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Subscription Events Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Campaign Spend Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Campaign Spend Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Campaign Spend Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Campaign Spend Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Campaign Spend Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Campaign Spend Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Campaign Spend Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Campaign Spend Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Campaign Spend Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Campaign Spend Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leads Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Leads Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leads Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Leads Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Leads Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leads Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Leads Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Leads Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Leads Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Leads Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Email Sends Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Email Sends Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Email Sends Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Email Sends Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Email Sends Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Email Sends Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Email Sends Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Email Sends Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Email Sends Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Email Sends Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Social Posts Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Social Posts Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Social Posts Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Social Posts Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Social Posts Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Social Posts Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Social Posts Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Social Posts Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Social Posts Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Social Posts Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Survey Responses Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Survey Responses Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Survey Responses Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Survey Responses Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Survey Responses Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Survey Responses Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Survey Responses Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Survey Responses Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Survey Responses Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Survey Responses Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Tickets Average Duration Minutes	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Tickets Total Duration Minutes YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Tickets Total Duration Minutes YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Tickets Max Duration Minutes	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Tickets Duration Minutes Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Tickets Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Tickets Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Tickets Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Tickets Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Tickets Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Ticket Events Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Ticket Events Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Ticket Events Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Ticket Events Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Ticket Events Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Ticket Events Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Ticket Events Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Ticket Events Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Ticket Events Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Ticket Events Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Calls Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Calls Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Calls Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Calls Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Calls Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Calls Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Calls Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Calls Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Calls Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Calls Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Chats Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Chats Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Chats Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Chats Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Chats Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Chats Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Chats Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Chats Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Chats Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Chats Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	SLA Breaches Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	SLA Breaches Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	SLA Breaches Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	SLA Breaches Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	SLA Breaches Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	SLA Breaches Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	SLA Breaches Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	SLA Breaches Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	SLA Breaches Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	SLA Breaches Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	CSAT Scores Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	CSAT Scores Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	CSAT Scores Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	CSAT Scores Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	CSAT Scores Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	CSAT Scores Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	CSAT Scores Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	CSAT Scores Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	CSAT Scores Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	CSAT Scores Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Timesheets Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Timesheets Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Timesheets Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Timesheets Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Timesheets Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Timesheets Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Timesheets Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Timesheets Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Timesheets Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Timesheets Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Project Costs Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Project Costs Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Project Costs Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Project Costs Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Project Costs Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Project Costs Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Project Costs Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Project Costs Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Project Costs Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Project Costs Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Milestones Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Milestones Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Milestones Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Milestones Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Milestones Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Milestones Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Milestones Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Milestones Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Milestones Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Milestones Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Resource Plans Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Resource Plans Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Resource Plans Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Resource Plans Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Resource Plans Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Resource Plans Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Resource Plans Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Resource Plans Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Resource Plans Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Resource Plans Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Change Requests Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Change Requests Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Change Requests Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Change Requests Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Change Requests Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Change Requests Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Change Requests Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Change Requests Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Change Requests Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Change Requests Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Production Orders Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Production Orders Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Production Orders Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Production Orders Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Production Orders Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Production Orders Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Production Orders Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Production Orders Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Production Orders Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Production Orders Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Machine Events Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Machine Events Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Machine Events Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Machine Events Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Machine Events Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Machine Events Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Machine Events Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Machine Events Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Machine Events Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Machine Events Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Quality Inspections Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Quality Inspections Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Quality Inspections Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Quality Inspections Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Quality Inspections Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Quality Inspections Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Quality Inspections Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Quality Inspections Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Quality Inspections Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Quality Inspections Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Scrap Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Scrap Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Scrap Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Scrap Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Scrap Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Scrap Average Price	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Scrap Total Price YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Scrap Total Price YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Scrap Max Price	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Scrap Price Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Energy Readings Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Energy Readings Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Energy Readings Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Energy Readings Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Energy Readings Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Energy Readings Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Energy Readings Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Energy Readings Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Energy Readings Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Energy Readings Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Maintenance Orders Average Value	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Maintenance Orders Total Value YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Maintenance Orders Total Value YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Maintenance Orders Max Value	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Maintenance Orders Value Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Maintenance Orders Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Maintenance Orders Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Maintenance Orders Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Maintenance Orders Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Maintenance Orders Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Bookings Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Bookings Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Bookings Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Bookings Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Bookings Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Bookings Average Net Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Bookings Total Net Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Bookings Total Net Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Bookings Max Net Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Bookings Net Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Room Nights Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Room Nights Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Room Nights Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Room Nights Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Room Nights Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Room Nights Average Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Room Nights Total Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Room Nights Total Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Room Nights Max Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Room Nights Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Guest Reviews Average Hours	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Guest Reviews Total Hours YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Guest Reviews Total Hours YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Guest Reviews Max Hours	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Guest Reviews Hours Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Guest Reviews Average Tax Amount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Guest Reviews Total Tax Amount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Guest Reviews Total Tax Amount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Guest Reviews Max Tax Amount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Guest Reviews Tax Amount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Events Average Quantity	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Events Total Quantity YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Events Total Quantity YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Events Max Quantity	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Events Quantity Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Events Average Duration Minutes	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Events Total Duration Minutes YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Events Total Duration Minutes YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Events Max Duration Minutes	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Events Duration Minutes Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Work Orders Average Units	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Work Orders Total Units YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Work Orders Total Units YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Work Orders Max Units	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Work Orders Units Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Work Orders Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Work Orders Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Work Orders Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Work Orders Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Work Orders Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Space Usage Average Count	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Space Usage Total Count YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Space Usage Total Count YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Space Usage Max Count	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Space Usage Count Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Space Usage Average Score	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Space Usage Total Score YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Space Usage Total Score YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Space Usage Max Score	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Space Usage Score Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Utility Bills Average Margin	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Utility Bills Total Margin YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Utility Bills Total Margin YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Utility Bills Max Margin	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Utility Bills Margin Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Utility Bills Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Utility Bills Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Utility Bills Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Utility Bills Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Utility Bills Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Inspections Average Cost	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Inspections Total Cost YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Inspections Total Cost YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Inspections Max Cost	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Inspections Cost Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Inspections Average Discount	non_additive	high	dax: AVERAGE: an average	right
+Large Synthetic.SemanticModel	Inspections Total Discount YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+Large Synthetic.SemanticModel	Inspections Total Discount YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+Large Synthetic.SemanticModel	Inspections Max Discount	non_additive	high	dax: MAX: a maximum	right
+Large Synthetic.SemanticModel	Inspections Discount Share %	non_additive	high	dax: DIVIDE: a ratio	right
+Ramadan Test.pbit	Total Sales vs Last Ramadan %	non_additive	high	dax: DIVIDE: a ratio	right
+Ramadan Test.pbit	Total Sales vs Last Ramadan % (old)	non_additive	high	dax: DIVIDE: a ratio	right
+model-health-sample.pbit	Margin %	non_additive	high	dax: a division (/)	right
+model-health-sample.pbit	Orders	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+model-health-sample.pbit	Avg Order Value	non_additive	high	dax: a division (/)	right
+model-health-sample.pbit	Online Share	non_additive	high	dax: DIVIDE: a ratio	right
+model-health-sample.pbit	Sales YoY %	non_additive	high	dax: DIVIDE: a ratio	right
+model-health-sample.pbit	Sales YTD	semi_additive_time (handled)	high	dax: TOTALYTD	right
+model-health-sample.pbit	Sales YTD LY	semi_additive_time (handled)	high	dax: TOTALYTD	right
+model-health-sample.pbit	Customers	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+model-health-sample.pbit	New Customers	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+model-health-sample.pbit	Sales per Customer	non_additive	high	dax: a division (/)	right
+model-health-sample.pbit	Return Rate	non_additive	high	dax: DIVIDE: a ratio	right
+model-health-sample.pbit	Target Achievement %	non_additive	high	dax: DIVIDE: a ratio	right
+model-health-sample.pbit	Discount %	non_additive	high	dax: a division (/)	right
+model-health-sample.pbit	Avg Price	non_additive	high	dax: AVERAGE: an average	right
+model-health-sample.pbit	Big Orders	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Model.bim	InternetDistinctCountSalesOrder	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Model.bim	InternetCurrentQuarterSalesPerformance	non_additive	high	dax: a division (/)	right
+Model.bim	InternetCurrentQuarterMargin	semi_additive_time (handled)	high	dax: TOTALQTD	right
+Model.bim	InternetCurrentQuarterSales	semi_additive_time (handled)	high	dax: TOTALQTD	right
+Model.bim	InternetCurrentQuarterMarginPerformance	non_additive	high	dax: a division (/)	right
+Model.bim	YTD InternetTotalSales	semi_additive_time (handled)	high	dax: CALCULATE with DATESYTD	right
+SamplePBIP	# Customers (with Sales)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+SamplePBIP	# Products (with Sales)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+SamplePBIP	Sales Amount (YTD, LY)	semi_additive_time (handled)	high	dax: TOTALYTD	right
+SamplePBIP	Sales Amount (YTD)	semi_additive_time (handled)	high	dax: TOTALYTD	right
+SamplePBIP	Sales Amount Avg per Day	non_additive	high	dax: AVERAGEX: an average	right
+SamplePBIP	Sales Amount  (% Δ LY)	non_additive	high	dax: DIVIDE: a ratio	right
+SamplePBIP	Sales Amount (12M average)	non_additive	high	dax: AVERAGEX: an average	right
+SamplePBIP	Sales Amount (6M average)	non_additive	high	dax: AVERAGEX: an average	right
+SamplePBIP	Margin %	non_additive	high	dax: DIVIDE: a ratio	right
+SamplePBIP	Margin % Overall	non_additive	high	format: a % format	right
+SamplePBIP	Value (ytd)	semi_additive_time (handled)	high	dax: CALCULATE with DATESYTD	right
+SamplePBIP	Value Avg per Month	non_additive	high	dax: AVERAGEX: an average	right
+SamplePBIP	Value Daily Max	non_additive	high	dax: MAXX: a maximum	right
+SamplePBIP	Value % (Δ ly)	non_additive	high	dax: DIVIDE: a ratio	right
+SamplePBIP	Value Normalized (by date)	non_additive	high	dax: DIVIDE: a ratio	right
+Model.bim	InternetDistinctCountSalesOrder	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Model.bim	InternetCurrentQuarterSalesPerformance	non_additive	high	dax: a division (/)	right
+Model.bim	InternetCurrentQuarterMargin	semi_additive_time (handled)	high	dax: TOTALQTD	right
+Model.bim	InternetCurrentQuarterSales	semi_additive_time (handled)	high	dax: TOTALQTD	right
+Model.bim	InternetCurrentQuarterMarginPerformance	non_additive	high	dax: a division (/)	right
+Model.bim	YTD InternetTotalSales	semi_additive_time (handled)	high	dax: CALCULATE with DATESYTD	right
+Bank Customer Churn Analysis	TotalCustomer	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Bank Customer Churn Analysis	ChurnRate	non_additive	high	dax: a division (/)	right
+Bank Customer Churn Analysis	ActiveRate	non_additive	high	dax: a division (/)	right
+Bank Customer Churn Analysis	AverageBalance	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM Items Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	SM Capacity Throttling Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM CPU Time Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM DirectQuery Rows Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Duration Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Execution Delay Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM External Query Execution Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Operation Peak Memory Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM Operation Peak Memory Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Operations	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	SM PowerQuery CPU Time Average	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM PowerQuery CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM PowerQuery Peak Memory Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Query Processing CPU Time Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM Query Processing CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Query Result Rows Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Users Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	SM VertiPaq CPU Time Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	SM VertiPaq CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	Progress Operation End	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	Progress Operation Start	non_additive	high	dax: MIN: a minimum	right
+Fabric Workspace Monitoring Report.pbit	SM  Progress PowerQuery Peak Memory Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Progress CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Progress Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Progress PowerQuery CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Available Cold Cache Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Available Hot Cache Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query CPU Time Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	EH Query CPU Time Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Duration Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	EH Query Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Operation Success Ratio	non_additive	high	dax: DIVIDE: a ratio	right
+Fabric Workspace Monitoring Report.pbit	EH Query Operations	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	EH Query Peak Memory Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	EH Query Peak Memory Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Unavailable Cold Cache Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Unavailable Hot Cache Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Query Users Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	EH Streaming Latency Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Size Avg	non_additive	medium	name: named as a ratio or an average	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Latency Avg	non_additive	medium	name: named as a ratio or an average	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Ingestion Success Ratio	non_additive	high	dax: DIVIDE: a ratio	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Ingestion Latency Avg	non_additive	medium	name: named as a ratio or an average	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Blob Count Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	EH Batch Blob Count Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	EH Items Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	GQL Users Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	GQL Overhead Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	GQL Operations	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	GQL Operation Success Ratio	non_additive	high	dax: DIVIDE: a ratio	right
+Fabric Workspace Monitoring Report.pbit	GQL Operation Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	GQL Items Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	Start Date	non_additive	high	dax: MIN: a minimum	right
+Fabric Workspace Monitoring Report.pbit	End Date	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	Selected Semantic Model	non_additive	high	dax: MIN: a minimum	right
+Fabric Workspace Monitoring Report.pbit	Selected Mirrored Database	non_additive	high	dax: MIN: a minimum	right
+Fabric Workspace Monitoring Report.pbit	Selected Eventhouse Database	non_additive	high	dax: MIN: a minimum	right
+Fabric Workspace Monitoring Report.pbit	MDB Duration Avg	non_additive	high	dax: AVERAGE: an average	right
+Fabric Workspace Monitoring Report.pbit	MDB Duration Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	MDB Items Unique	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	MDB Mirrored Tables	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	MDB Operation Success Ratio	non_additive	high	dax: DIVIDE: a ratio	right
+Fabric Workspace Monitoring Report.pbit	MDB Operations	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	MDB Processed Rows Max	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	MDB Replicator Batch Latency Avg	non_additive	medium	name: named as a ratio or an average	right
+Fabric Workspace Monitoring Report.pbit	MDB Source Mirroring Types	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Fabric Workspace Monitoring Report.pbit	SM Duration Max Aggregated	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Capacity Throttling Max Aggregated	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Execution Delay Time Max Aggregated	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM CPU Time Max Aggregated	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Operation Peak Memory Max Aggregated	non_additive	high	dax: MAX: a maximum	right
+Fabric Workspace Monitoring Report.pbit	SM Operation Success Ratio Aggregated	non_additive	high	dax: DIVIDE: a ratio	right
+Gateway Monitoring.SemanticModel	# Nodes	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Queries	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Queries (DirectQuery)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Queries (errors)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Queries (Refresh)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Jobs	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	Perc. 0.9 Query Duration (s)	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+Gateway Monitoring.SemanticModel	Disk Read Avg. (byte/sec)	non_additive	high	dax: AVERAGEX: an average	right
+Gateway Monitoring.SemanticModel	Disk Write Avg. (byte/sec)	non_additive	high	dax: AVERAGEX: an average	right
+Gateway Monitoring.SemanticModel	Query Avg. Execution - DirectQuery (ms)	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+Gateway Monitoring.SemanticModel	Query Avg. Execution - Refresh (ms)	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+Gateway Monitoring.SemanticModel	Workspace ID	non_additive	high	dax: MAX: a maximum	right
+Gateway Monitoring.SemanticModel	Max. Query Duration (s)	non_additive	high	dax: MAXX: a maximum	right
+Gateway Monitoring.SemanticModel	# Queries (success)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	# Queries (running)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Gateway Monitoring.SemanticModel	Avg. Counter Value	non_additive	high	dax: DIVIDE: a ratio	right
+Gateway Monitoring.SemanticModel	Max Counter Value	non_additive	high	dax: DIVIDE: a ratio	right
+Gateway Monitoring.SemanticModel	Min Counter Value	non_additive	high	dax: DIVIDE: a ratio	right
+Query Capacity Correlation.SemanticModel	SKU CU by timepoint short % preview	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Sum of timepoint detail CU % preview	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative CU usage % preview	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	SKU CU by timepoint %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Background billable CU %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Background non billable CU %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive billable CU %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive non billable CU %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	SKU CU by timepoint short % preview (2)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Sum of timepoint detail CU % preview (2)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative CU usage (s)	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	CU limit	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Utilization (GB) % workspace 1	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Total cumulative storage in (GB)	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Carry over add %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry over burndown %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry over %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last cumulative carry over	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Last cumulative carry over %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward add % (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward (last 60 minutes)	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward add % (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward (last 10 minutes)	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward add % (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last cumulative carry over t2	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last cumulative carry over t2 %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % t2 (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % t2 (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward add % t2 (last 24 hrs)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward add % t2 (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % t2 (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % t2 (last 10 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward burndown % t2 (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Carry forward  add % t2 (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry forward % t2 (last 60 minutes)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic M1 cumulative utilization (GB) by workspace	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Cumulative utilization (GB) % by workspace	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Avg cumulative static storage daily	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Avg cumulative static storage hourly	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Billed (GB) %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic M1 cumulative utilization (GB) by date	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Last carry over add %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last carry over burndown %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last carry over add t2 %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Last carry over burndown t2 %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Cumulative carry over	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Dynamic interactive delay %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic interactive rejection %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic background rejection %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive delay threshold	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive rejection threshold	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Background rejection threshold	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Overage reference line	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Autoscale CU usage %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic M1 % of base capacity	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic interactive % of base capacity	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Dynamic background % of base capacity	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Avg utilization %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Peak utilization %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Status %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Background % (Item history page)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive % (Item history page)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	CU limit item history	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Pass rate	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	% compute operation	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	% compute operation detail	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Background non billable % (Item history page)	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Interactive non billable % (Item history page)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization (last 1 hour)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization (last 24 hours)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization (last 7 days)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization by capacity (last 1 hour)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization by capacity (last 24 hours)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Average utilization by capacity (last 7 days)	non_additive	medium	name: named as a ratio or an average	right
+Query Capacity Correlation.SemanticModel	Pause Resume Cumulative Carry Over Last Window	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Pause Resume Cumulative Carry Over Last Window %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	Pause Resume Cumulative Carry Over Last Window 2	semi_additive_time (ask)	medium	name: named as a snapshot	right
+Query Capacity Correlation.SemanticModel	Pause Resume Cumulative Carry Over Last Window 2 %	non_additive	high	format: a % format	right
+Query Capacity Correlation.SemanticModel	# Queries	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Query Capacity Correlation.SemanticModel	# Failed Queries	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+Query Capacity Correlation.SemanticModel	Failure Rate	non_additive	high	dax: DIVIDE: a ratio	right
+Query Capacity Correlation.SemanticModel	Average Duration (s)	non_additive	high	dax: AVERAGEX: an average	right
+Query Capacity Correlation.SemanticModel	P95 Duration (s)	non_additive	high	dax: PERCENTILEX.INC: a percentile	right
+Query Capacity Correlation.SemanticModel	Capacity Utilization	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Core_SM.SemanticModel	# Workspace Accesses	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Add %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Burndown %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Cumulative %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Background rejection %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Interactive rejection %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Autoscale %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Background %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Background non-billable %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	CU % Limit	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Interactive %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Interactive non-billable %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Total CU Usage %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Interactive Delay %	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	# Tenant Settings Snapshots	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Different Datasource Types	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Users	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Avg Refresh Duration Minutes	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Core_SM.SemanticModel	Consideration End	non_additive	high	dax: MIN: a minimum	right
+FUAM_Core_SM.SemanticModel	Consideration Start	non_additive	high	dax: MIN: a minimum	right
+FUAM_Core_SM.SemanticModel	Median Refresh Duration Minutes	non_additive	high	dax: MEDIAN: a median	right
+FUAM_Core_SM.SemanticModel	Last Enabled	semi_additive_time (handled)	high	dax: CALCULATE with the date up to its MAX	right
+FUAM_Core_SM.SemanticModel	Last Disabled	semi_additive_time (handled)	high	dax: CALCULATE with the date up to its MAX	right
+FUAM_Core_SM.SemanticModel	Activities Growth MoM	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day 14d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day 30d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Max CU by Item by Day 30d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	Max CU by Item by Day 14d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day Difference 14d vs 30d IOD	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Max Throttling (min) IOD	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	Avg Duration (min) KD	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Core_SM.SemanticModel	Avg CUs KD	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Core_SM.SemanticModel	# Viewed Reports (Activities)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Users CM	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Users PM	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Users PY	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Avg Refresh Duration Minutes (Det.)	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Core_SM.SemanticModel	# Users CY	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Monthly Active User Growth MoM	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Total CU Growth MoM	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	# Users last 14d	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Users last 30d	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Max CU by Item by Day IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	# Workspace Accesses (User)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Workspace Accesses (App)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Workspace Accesses (Group)	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Trend of Avg CU by Item by Day 30d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Trend Avg CU by Item by Day Difference 14d vs 30d IOD	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	# Delegated Tenant Settings Overrides Snapshots	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Capacities with Current Tenant Setting Overrides	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	CU 100% Limit static	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	Used CU(s) %	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Used CU(s) % last 14d	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Used CU(s) % last 30d	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Used CU(s) % last 60d	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Used CU(s) % last 90d	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day 7d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day 90d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Max CU by Item by Day 90d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	Last Run OM-SM	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	Max CU by Item by Day 7d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	Avg TimePoint CU %	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Max TimePoint CU %	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Core_SM.SemanticModel	# Viewed Reports 30d	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	# Viewed Reports 14d	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Daily CU vs Avg CU IOD OA	non_additive	medium	name: named as a ratio or an average	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item by Day Relative 14d IOD OA	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Avg CU by Item By Day IOD OA	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	CU Outlier Factor IOD OA	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Daily CU vs Avg CU date filtered IOD OA	non_additive	medium	name: named as a ratio or an average	right
+FUAM_Core_SM.SemanticModel	TimePoint SKU CU	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	Assigned Workspaces to Domains %	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	Trends Views 14d vs. 30d	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Core_SM.SemanticModel	# Activities by Item by Day	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	# Activities by Item by Day TI	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Core_SM.SemanticModel	Unused Workspace Indicator Score TI	non_additive	high	format: a % format	right
+FUAM_Core_SM.SemanticModel	First Workspace Admin (User)	non_additive	high	dax: MIN: a minimum	right
+FUAM_Core_SM.SemanticModel	Previous Run OM-SM	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	# Analyzed Semantic Models OM-SM	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Last Run Datetime OM-SM	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	Widely Shared Organisation Links	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Widely Shared Objects Published to Web	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Core_SM.SemanticModel	Last Run Name	non_additive	high	dax: MAX: a maximum	right
+FUAM_Core_SM.SemanticModel	Last Run Date	non_additive	high	dax: MAX: a maximum	right
+FUAM_Item_SM.SemanticModel	Avg CU by Item by Day IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Max CU by Item by Day IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Item_SM.SemanticModel	Max Throttling (min) IOD	non_additive	high	dax: MAX: a maximum	right
+FUAM_Item_SM.SemanticModel	Avg CU by Item by Day 14d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Avg CU by Item by Day 30d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Avg CU by Item by Day 7d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Avg CU by Item by Day 90d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Max CU by Item by Day 14d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Item_SM.SemanticModel	Max CU by Item by Day 30d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Item_SM.SemanticModel	Max CU by Item by Day 7d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Item_SM.SemanticModel	Max CU by Item by Day 90d IOD	non_additive	high	dax: MAXX: a maximum	right
+FUAM_Item_SM.SemanticModel	Avg Refresh Duration Minutes (Det.)	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Item_SM.SemanticModel	Avg Refresh Duration Minutes	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Item_SM.SemanticModel	Consideration End	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Consideration Start	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Median Refresh Duration Minutes	non_additive	high	dax: MEDIAN: a median	right
+FUAM_Item_SM.SemanticModel	Avg Capacity CU 90d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Avg Capacity CU 90d vs SM CU 7d % IOD	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Item_SM.SemanticModel	Avg Capacity CU 90d vs SM CU 7d IOD	non_additive	high	dax: AVERAGEX: an average	right
+FUAM_Item_SM.SemanticModel	Last Run OM-SM	non_additive	high	dax: MAX: a maximum	right
+FUAM_Item_SM.SemanticModel	# Users	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Item_SM.SemanticModel	# Viewed Reports	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Item_SM.SemanticModel	# Report Users	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Item_SM.SemanticModel	Selected Capacity	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Selected Capacity SKU	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Selected Workspace	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Selected Workspace Storage Format	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Selected Workspace Storage Mode	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Selected SM Connectivity Mode	non_additive	high	dax: MIN: a minimum	right
+FUAM_Item_SM.SemanticModel	Last Run Datetime OM-SM	non_additive	high	dax: MAX: a maximum	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Compatibility Level	non_additive	high	dax: MAX: a maximum	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	# Objects	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	# Objects referenced	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Avg Segment Temperature	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Avg Dictionary Temperature	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Ratio Table Documented %	non_additive	high	dax: a division (/)	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Ratio Measure Documented %	non_additive	high	dax: a division (/)	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Avg Rows by Partition	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Median Rows by Partition	non_additive	high	dax: MEDIAN: a median	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Min Rows by Partition	non_additive	high	dax: MIN: a minimum	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Max Rows by Partition	non_additive	high	dax: MAX: a maximum	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Avg Data Size by Partition	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Median Data Size by Partition	non_additive	high	dax: MEDIAN: a median	right
+FUAM_Semantic_Model_Meta_Data_Analyzer_SM.SemanticModel	Avg Data Size by Partition Bytes	non_additive	high	dax: AVERAGE: an average	right
+FUAM_SQL_Endpoint_Analyzer_SM.SemanticModel	Last Timestamp	non_additive	high	dax: MAX: a maximum	right
+FUAM_SQL_Endpoint_Analyzer_SM.SemanticModel	Success Rate (RH)	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_SQL_Endpoint_Analyzer_SM.SemanticModel	Max Allocated CPU Time (RH)	non_additive	high	dax: MAX: a maximum	right
+FUAM_SQL_Endpoint_Analyzer_SM.SemanticModel	Max Elapsed Duration (RH)	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Max Query Execution Duration	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Max Data Processing Duration	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Query Trackings	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Requests	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. System CPU Percent	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Gateway CPU Percent	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Mashup Memory	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Used System Memory	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Gateway Memory	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Mashup CPU Percent	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Gateway Active Async IO Thread Count	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Avg. Gateway Active Worker Thread Count	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Last Timestamp	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Request Success Ratio	non_additive	high	dax: DIVIDE: a ratio	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Query Trackings QSR	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Requests QSR	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Average Commit Size ME	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Average Working Set Size ME	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Max Working Set Size ME	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Max Commit Size ME	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Average Percent Processor Time ME	non_additive	high	dax: AVERAGE: an average	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Max Percent Processor Time ME	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Requests ME	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Query Trackings ME	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Refresh WorkspaceId QSR	non_additive	high	dax: MAX: a maximum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Refresh SemanticModelId QSR	non_additive	high	dax: MIN: a minimum	right
+FUAM_Gateway_Monitoring_From_Files_SM.SemanticModel	Failed Requests	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FCA_Core_SM.SemanticModel	#Capacities	non_additive	high	dax: DISTINCTCOUNT: a distinct count	right
+FCA_Core_SM.SemanticModel	#UsageRatioCapacity	non_additive	high	dax: DIVIDE: a ratio	right
+FCA_Core_SM.SemanticModel	Total Cost MTD	semi_additive_time (handled)	high	dax: TOTALMTD	right
+FCA_Core_SM.SemanticModel	Total Cost YTD	semi_additive_time (handled)	high	dax: CALCULATE with the date up to its MAX	right
+FCA_Core_SM.SemanticModel	SparkAutoScale %	non_additive	high	dax: DIVIDE: a ratio	right
+FCA_Core_SM.SemanticModel	Reservation %	non_additive	high	dax: DIVIDE: a ratio	right
+FCA_Core_SM.SemanticModel	PauseCost %	non_additive	high	dax: DIVIDE: a ratio	right
+FCA_Core_SM.SemanticModel	Available capacity YTD	semi_additive_time (handled)	high	dax: CALCULATE with the date up to its MAX	right
+FCA_Core_SM.SemanticModel	Quota Consumed	non_additive	high	dax: DIVIDE: a ratio	right
+FCA_Core_SM.SemanticModel	Reservation used ratio %	non_additive	high	dax: AVERAGEX: an average	right
+FCA_Core_SM.SemanticModel	Reservation unused ratio %	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	% Time Resident	non_additive	high	dax: DIVIDE: a ratio	right
+SemanticModelAudit.pbit	Error Count MoM%	non_additive	high	format: a % format	right
+SemanticModelAudit.pbit	P50 Cold Cache Duration Time	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P50 Duration (s)	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P50 Duration (s) MoM%	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P50 Duration (s) PM	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P90 Duration (s)	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P90 Duration (s) MoM%	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	P90 Duration (s) PM	non_additive	high	dax: PERCENTILE.INC: a percentile	right
+SemanticModelAudit.pbit	Query Count MoM%	non_additive	high	format: a % format	right
+SemanticModelAudit.pbit	Report Count (Model Objects)	non_additive	high	dax: COUNTROWS(SUMMARIZE): a distinct count	right
+SemanticModelAudit.pbit	Title Average Error Count	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average Error Count by Date	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average Error Count by Status Code	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average Query Count	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average Query Count by Date	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average User Count	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	Title Average User Count by Date	non_additive	medium	name: named as a ratio or an average	right
+SemanticModelAudit.pbit	User Count MoM%	non_additive	high	format: a % format	right
+COVID-19 US Tracking Sample.pbit	Max date	non_additive	high	dax: MAX: a maximum	right
+COVID-19 US Tracking Sample.pbit	Case fatality rate	non_additive	high	dax: DIVIDE: a ratio	right

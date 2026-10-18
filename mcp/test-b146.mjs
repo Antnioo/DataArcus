@@ -57,17 +57,17 @@ if (Agg) {
   chk(() => Agg.classify({ name: 'Line total', expression: 'SUMX ( Sales, Sales[Amount] / 2 )' }, ctx).class === 'unknown', () => 'classify. a division inside SUMX is summed row by row: unknown');
   // a ratio name with an additive DAX shape is not called a ratio (the DAX wins); with a DAX it can't read, the name speaks (medium)
   chk(() => Agg.classify({ name: 'Rate card total', expression: 'SUM ( Sales[Amount] )' }, ctx).class === 'unknown', () => 'classify. a SUM named "rate" is unknown (the DAX shape wins over the name)');
-  const byName = Agg.classify({ name: 'Conversion Rate', expression: 'SWITCH ( TRUE (), 1, 2 )' }, ctx);
+  const byName = Agg.classify({ name: 'Conversion Rate', expression: 'PRODUCTX ( Sales, Sales[Amount] )' }, ctx);
   chk(() => byName.class === 'non_additive' && byName.confidence === 'medium', () => `classify. a ratio name over DAX it can't read: non_additive, medium: ${JSON.stringify(byName)}`);
   // a column the visual sums (a model without measures): a snapshot column summed is asked about
   chk(() => Agg.classify({ column: 'Balance', agg: 'Sum' }).class === 'semi_additive_time' && Agg.classify({ column: 'Amount', agg: 'Sum' }).class === 'unknown', () => 'classify. a summed Balance column is semi_additive_time; a summed Amount unknown');
   // the guard: every stacked or area type Microsoft has is known to it (none is written today, test below)
+  // (Microsoft's names: columnChart is the stacked column chart, barChart the stacked bar chart; areaChart overlaps, it doesn't stack)
   const VT = require('../assets/js/visual-types.js');
-  const all = (VT.TYPES || VT.types || VT.VISUAL_TYPES || VT || []);
-  const stackedNames = (Array.isArray(all) ? all : Object.keys(all)).filter((t) => /stacked|area|ribbon|waterfall/i.test(t));
+  const stackedNames = VT.NATIVE_TYPES.filter((t) => /stacked|ribbon|waterfall|^barChart$|^columnChart$/i.test(t));
   chk(() => stackedNames.length >= 5 && stackedNames.every((t) => Agg.STACKED.includes(t)), () => `guard. every stacked or area type is in Agg.STACKED: ${stackedNames.filter((t) => !Agg.STACKED.includes(t))}`);
   const page = (type) => ({ visuals: [{ type, fields: { Category: [{ kind: 'column', table: 'Sales', name: 'Region' }], Y: [{ kind: 'measure', table: 'Sales', name: 'Margin %' }] } }] });
-  const g1 = Agg.guard(page('stackedColumnChart'), { measures: MEASURES, tables: bim.model.tables });
+  const g1 = Agg.guard(page('columnChart'), { measures: MEASURES, tables: bim.model.tables });
   chk(() => g1.problems.length === 1 && /Margin %/.test(g1.problems[0].en) && g1.problems[0].ar, () => `guard. a stacked column with Margin % is a plan problem (EN and AR): ${JSON.stringify(g1)}`);
   const g2 = Agg.guard(page('clusteredColumnChart'), { measures: MEASURES, tables: bim.model.tables });
   chk(() => g2.problems.length === 0, () => `guard. a clustered column with Margin % is no problem: ${JSON.stringify(g2)}`);
@@ -79,7 +79,7 @@ if (Agg) {
 // ---------- 2. plan_layout: what the plan says (the page built as create_report writes it) ----------
 {
   const s = await serverClient(ROOT);
-  const plan = (pf, lang) => s.call('plan_layout', Object.assign({ path: 'Guard', layout: 'analysis', filters: 'none', planFields: pf }, lang ? { lang } : {}));
+  const plan = (pf, lang) => s.call('plan_layout', Object.assign({ path: 'Guard', layout: 'exec', filters: 'none', planFields: pf }, lang ? { lang } : {}));
   // A: Sales on the trend, the ratios on cards and in the table: no question; the table's ratios said
   const A = await plan({ kpis: ['Sales[Sales]', 'Sales[Margin %]', 'Sales[Avg Order Value]', 'Sales[Distinct Customers]'], measure: 'Sales[Sales]', timeAxis: 'Calendar[Date]', category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Margin %]', 'Sales[Sales]'] });
   const ag = A.j && A.j.aggregation;
@@ -89,7 +89,7 @@ if (Agg) {
   // B: Balance on the date axis: one question, never a change
   const B = await plan({ kpis: ['Sales[Sales]', 'Sales[Balance]'], measure: 'Sales[Balance]', timeAxis: 'Calendar[Date]', category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Sales]'] });
   const bq = B.j && B.j.aggregation && B.j.aggregation.pleaseConfirm;
-  chk(() => !B.err && bq && bq.length === 1 && bq[0].field === 'Sales[Balance]' && /Should Balance be taken at the period end rather than summed over time\?/.test(bq[0].question), () => `plan. Balance on a date axis asks one question: ${short(B)}`);
+  chk(() => !B.err && bq && bq.length === 1 && bq[0].field === 'Sales[Balance]' && bq[0].in.includes('time axis') && /Should Balance be taken at the period end rather than summed over time\?/.test(bq[0].question), () => `plan. Balance on a date axis asks one question: ${short(B)}`);
   chk(() => B.j && B.j.plan && B.j.plan.planId && !(B.j.planProblems || []).length, () => `plan. the question changes nothing and refuses nothing: ${short(B)}`);
   const Bar = await plan({ kpis: ['Sales[Sales]', 'Sales[Balance]'], measure: 'Sales[Balance]', timeAxis: 'Calendar[Date]', category: 'Sales[Region]', table: ['Sales[Region]', 'Sales[Sales]'] }, 'ar');
   const aq = Bar.j && Bar.j.aggregation && Bar.j.aggregation.pleaseConfirm;
