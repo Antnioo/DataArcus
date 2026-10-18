@@ -69,7 +69,10 @@ const SHARD = (() => {
 }
 if (SHARD && SHARD.k === 0) { console.log(`SKIP  mcp  (DA_SHARD=0/${SHARD.n}: shards 1-${SHARD.n} run its parts)`); process.exit(0); }
 const asked = []; let inPart = null;
-const part = (id) => { asked.push(id); const mine = !SHARD || SHARDS[SHARD.k - 1].includes(id); inPart = mine ? id : null; return mine; };
+// DA_PART_TIMES=1 prints each part's seconds and the reports it created (G-13 validates them later): to rebalance SHARDS
+let timing = null;
+const partTime = () => { if (timing && process.env.DA_PART_TIMES) console.log(`TIME  ${timing.id}  ${((Date.now() - timing.t) / 1000).toFixed(1)}s  ${createdReports.size - timing.n} reports`); };
+const part = (id) => { partTime(); asked.push(id); const mine = !SHARD || SHARDS[SHARD.k - 1].includes(id); inPart = mine ? id : null; timing = mine ? { id, t: Date.now(), n: createdReports.size } : null; return mine; };
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
 // (round 17, the outside review's G-02: answers give paths relative to the working folder, never absolute. The checks
 // open the files the answers name, so a relative path that is not a file here is read from the working folder)
@@ -4187,11 +4190,13 @@ if (part('round17')) {
 {
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  partTime(); timing = null; const g13t = Date.now();
   const errors = validatorErrors;
   const dirs = [...createdReports].filter((d) => fs.existsSync(path.join(d, 'definition')));
   const bad = dirs.map((d) => [path.relative(ROOT, d), errors(d)]).filter(([, e]) => String(e) !== '0');
   // (B-145: a shard validates the reports its own parts above created and prints them; scripts/ci-sum.mjs makes this one
   // check from every shard's line, so it covers the same reports as an unsharded run)
+  if (process.env.DA_PART_TIMES) console.log(`TIME  G-13  ${((Date.now() - g13t) / 1000).toFixed(1)}s  ${dirs.length} reports validated`);
   if (SHARD) {
     console.log(`G13  ${dirs.length} reports, ${bad.length} with errors`);
     if (bad.length) problems.push(`G-13 (not counted here; counted by ci-sum): every created report must validate with 0 errors: ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
@@ -4658,6 +4663,7 @@ if (part('g04')) {
     `check_report's result must not change with the flag: ${plain.err ? plain.t.slice(0, 200) : strip(plain.j) + ' vs ' + (bad.j ? strip(bad.j) : '')}`);
 }
 
+partTime();
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 // B-145: every part in exactly one shard, every check inside a part of the running shard

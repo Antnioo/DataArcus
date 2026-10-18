@@ -14,11 +14,12 @@ const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components'
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 // CI's parallel jobs (B-145, owner's go 18 Oct): every suite in exactly one shard, balanced by the seconds CI measured
-// (18 Oct, 3 at a time): site 358 alone with the short ones; design-engine 253 and anchors 249 each with the middle ones
+// on main 5c0ad21 (18 Oct, 3 at a time): site 379 with the short ones; design-engine 292 with tools 142, components 98,
+// spacing 79, gulf-calendar 62; anchors 259 with text-align 163 and the two theme generators (99, 93)
 const SHARDS = [
-  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model'],
+  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model'],
   ['design-engine', 'tools', 'components', 'spacing', 'gulf-calendar'],
-  ['anchors', 'theme-generator', 'theme-generator-lab', 'pbip', 'text-align'],
+  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab'],
 ];
 {
   const listed = SHARDS.flat(), twice = listed.filter((n, i) => listed.indexOf(n) !== i), none = ALL.filter((n) => !listed.includes(n)), extra = listed.filter((n) => !ALL.includes(n));
