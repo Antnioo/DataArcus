@@ -1,8 +1,34 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-155" just below (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "J7" just below (branch `feat/0.3-accessibility`, draft PR), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J7: accessibility of written reports (18 Oct, cloud builder; branch `feat/0.3-accessibility` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D). Microsoft's "Design Power BI reports for accessibility" (learn.microsoft.com/power-bi/create-reports/desktop-accessibility-creating-reports).
+- New module `assets/js/report-a11y.js` (+ .min): the writer's half and check_report's rule family "a11y", one set of rules.
+  Writer (pbip-export.js calls it twice): `readable(theme, card)` steps the report theme's data colours under 3:1 on the
+  card with design-engine `toContrast` before anything reads them (a colour at 3:1 is kept exactly); `apply(files)` after
+  the pages: alt text for every data visual that is a Tab stop from its type, role and fields (EN/AR, never a value, at most
+  250, not the title again: a screen reader reads the type and title first), a text box's own text as its alt text, an empty
+  text box / shape / picture without alt text out of the tab order (measured 6-7 Oct: no tabOrder = no Tab stop), each
+  page's and group's Tab stops in reading order (rows, then left to right or right to left by the right edge), keeping
+  their numbers. create_report tells the colours stepped (from, ratio, to). Tooltip pages untouched.
+  check_report (report-rules.js runs the six rules; `checks: ["a11y"]`): A11Y_ALT_TEXT, A11Y_DECORATIVE (note),
+  A11Y_TAB_ORDER (pairs met against the reading order, by the report's direction; a data visual not a stop unless 80% of
+  it lies on a stop: the "No data" overlay), A11Y_TITLE, A11Y_CONTRAST (the colours a chart draws: its fixed fills, else
+  the theme's first 1 / Y count / 8 with a legend or slices, against the visual's background, else the page's; a page
+  picture not judged), A11Y_COLOUR_ONLY (legend field, 2+ measures or slices with the legend off). Impact kind stays
+  dataarcusRule (its sentence now names the accessibility basics; C13 keeps three kinds).
+- Test first: `mcp/test-0.3-a11y.mjs` (in npm test), 110 checks, 52 red on main (W1 alt text, W2 decorative stops and
+  one RTL/LTR pair, W4 #f4b183 / #9dc3e6 / #a9d18e at 1.7-1.8:1, W5 rules absent, C1-C8); 110/110 after.
+- Story titles (#57): with story-titles.js loaded, a measure's name in the alt text goes through `ST.timeWords`, as its
+  title says it; the alt text never repeats the title, so the two add up for a screen reader (type, title, alt text).
+- Shared files touched: pbip-export.js (2 calls), pbip-notes.js (`a11y` in the result), report-rules.js (rules, guide
+  source, per-finding severity), server.mjs (check_report's checks description, one create_report note),
+  check-report.mjs (CHECKS, page json, notChecked line, the dataarcusRule sentence), theme-generator.js (BUILDER + ?v=).
+- Not yet seen in Desktop: the alt texts in the Selection pane / a screen reader, and the tab order after the decorative
+  stops left it (the next laptop round).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with

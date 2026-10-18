@@ -452,10 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
   if (pbipBtn) {
     let logo = null;
-    // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
+    // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261011a4', '/assets/js/pbip-query.min.js?v=20261012r10', '/assets/js/pbip-sizing.min.js?v=20261013p6', '/assets/js/pbip-notes.min.js?v=20261018r22',
-      '/assets/js/pbip-page.min.js?v=20261018r22', '/assets/js/pbip-export.min.js?v=20261013p6'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261011a4', '/assets/js/pbip-query.min.js?v=20261012r10', '/assets/js/pbip-sizing.min.js?v=20261013p6', '/assets/js/pbip-notes.min.js?v=20261018a11y',
+      '/assets/js/pbip-page.min.js?v=20261018r22', '/assets/js/report-a11y.min.js?v=20261018a11y', '/assets/js/pbip-export.min.js?v=20261018a11y'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
