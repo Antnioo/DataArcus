@@ -81,5 +81,23 @@ export default async function ({ browser, url }) {
       await v.ctx.close();
     }
   }
+  // B-150: the head's language guard (the inline script before the page shows, AUD-002) treats an Arabic copy as Arabic
+  // by its path, exactly as it treats ?lang=ar: a first visit to /ar/ with nothing saved and an English browser is
+  // hidden until its Arabic font is in, in Arabic direction. lang-manager is held back, so only the guard is seen.
+  {
+    const { PAIRS, arFile } = await import('../ar-pages.mjs');
+    const guard = async (p) => {
+      const v = await visitor(browser, { viewport: [1440, 900], consent: null });
+      await v.ctx.route(/lang-manager\.min\.js/, (rt) => rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+      await v.pg.goto(`${url}/${p}`, { waitUntil: 'domcontentloaded' });
+      const r = await v.pg.evaluate(() => [document.documentElement.lang, document.documentElement.dir, document.documentElement.classList.contains('i18n-pending'), !!document.getElementById('ar-font')].join(' '));
+      await v.ctx.close();
+      return r;
+    };
+    for (const en of PAIRS) {
+      const want = await guard(`${en}?lang=ar`), got = await guard(arFile(en));
+      check(want === 'ar rtl true true' && got === want, `B-150 ${arFile(en)}: a first visit gives "${got}", ?lang=ar on the English page gives "${want}" (want "ar rtl true true")`);
+    }
+  }
   return { checks, problems };
 }
