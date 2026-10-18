@@ -128,6 +128,6 @@ try {
 } finally {
   await s.close();
 }
-console.log(`${problems.length ? 'FAIL' : 'PASS'}  ${checks - problems.length} of ${checks} story-title checks passed`);
-problems.forEach((p) => console.log('  - ' + p));
-process.exit(problems.length ? 1 : 0);
+fs.rmSync(ROOT, { recursive: true, force: true });
+if (problems.length) { console.log(`FAIL  story-titles  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  story-titles  ${checks} checks`);
