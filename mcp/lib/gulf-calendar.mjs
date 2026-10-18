@@ -121,7 +121,7 @@ export function addGulfCalendar(m, a, env) {
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
   if (!scriptDir) refuse('The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again.');
   const script = scriptOf(Fix, table, built.columns, body, rels);
-  let file; try { file = writeScript(scriptDir, scriptBase + ' - add Gulf calendar', script); } catch (e) { refuse('The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + ').'); }
+  let file; try { file = writeScript(scriptDir, scriptBase + ' - add Gulf calendar', script); } catch (e) { if (e && e.left) throw e; refuse('The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + ').'); }
 
   const later = st.observed ? GD.events.flatMap((e) => [['ramadan', e.ramadan, 0], ['fitr', e.fitr, 0], ['adha', e.adha, 9]].filter(([, d]) => d)
     .filter(([, d, back]) => T(d) - back * 864e5 > T(GD.checked) && T(d) >= T(start) && T(d) <= T(end)).map(([, d]) => d)).sort()[0] || null : null;

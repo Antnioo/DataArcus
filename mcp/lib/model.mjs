@@ -71,8 +71,11 @@ export class Notice extends Error { constructor(state, message) { super(message)
 // A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
 // exist" to existsSync, and writing at its name would create the target, outside the working folder (audit AUD-005)
 export const nothingAt = (f) => { try { fs.lstatSync(f); return false; } catch (e) { return e.code === 'ENOENT'; } };
-// A new file: 'wx' fails when anything is at the name (a link included), so nothing is ever written over or through
-export const writeNew = (f, data) => { fs.writeFileSync(f, data, { flag: 'wx' }); };
+// A new file, never over or through anything (a link included); 0.3, B-153: written under a temporary name in the same
+// folder and then put in place, so a write cut off part-way (a full disk) leaves nothing at the name (write-io.mjs)
+// (imported here, beside its one use, rather than at the top: this module is otherwise the reading block's)
+import { writeFileNew } from './write-io.mjs';
+export const writeNew = (f, data) => writeFileNew(f, data);
 const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
 const linkError = (p) => new ReadError('OUTSIDE_LINK', { path: p }, `"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch (e) { return false; } };

@@ -129,8 +129,10 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   - `read_model`, `suggest_fields`, `plan_layout` and `check_report` only read.
   - Your logo and background images are copied into the new report; the originals are not changed.
 - **Nothing of yours is deleted.** No tool deletes a file it did not just create. When a write fails part-way, the
-  tool removes only the files and folders that same call had created, so no half-written report or twin is left; a
-  file or folder that was there before is never touched.
+  tool removes only the files and folders that same call had created, so no half-written report, twin, theme or script
+  is left (each is written under a temporary name first); a file or folder that was there before is never touched. If
+  something it created can't be removed, the answer names exactly what is left, and the approved plan can't be used
+  again; when everything was removed, the same plan can be used again.
 - **Keep the folder clean.** Put in it only the models you are allowed to share with your AI app. Don't put employer
   or client models there unless you may send their structure to the AI provider.
 
