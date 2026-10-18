@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -49,6 +49,16 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
   (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+
+## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
+The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
+Enter data (compressed in the Power Query text) and DATATABLE values in DAX. Checked in code: the Health Check reads only
+DataModelSchema/model.bim or the TMDL files and the report JSON (model-health-worker.js:110-142), keeps the Power Query text
+as text and never unpacks it (no Binary/Decompress anywhere in the engine), posts nothing but its result to the page; the
+measures panel and the documentation export show DAX as written (model-health.js:545, 653), so a DATATABLE is shown, only
+to the visitor. New sentences in the 4 pages + translations (EN, AR), /ar/ copies regenerated, ?v= bumped, sitemap dates.
+test-site-config pins it (the old phrases gone; "not the data Power BI loaded" / the Arabic, Enter data, DATATABLE).
+- This is the website half of rc.23's "Seen, not in scope" (rc.23 fixed mcp/PRIVACY.md the same way).
 
 ## rc.23: three fixes from an outside audit of 0.2.9 (18 Oct, cloud builder; branch `fix/0.2.9-rc23` from main `4a837f9`; one PR, not merged)
 The owner's go (18 Oct, "yes rc.23"): rc.22 + these three, so mcp/PRIVACY.md says exactly what the code does; 0.2.9's
