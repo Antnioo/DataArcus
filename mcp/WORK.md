@@ -1,8 +1,35 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-155" just below (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "rc.24" just below (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## rc.24: the gaps of the laptop's Desktop release proof of rc.23 (18 Oct, cloud builder; branch `fix/0.2.9-rc24` from main `f09bf30`; one PR, not merged)
+The reviewer's brief (18 Oct): rc.23 + these gaps, found by the laptop's Desktop proof of rc.23 (Power BI Desktop 2.159).
+They finish features approved for 0.2.9 (B-140, the twin B-137/B-138); nothing else changes (0.2.9's scope frozen).
+Test first: `mcp/test-rc24.mjs` (in npm test), on the golden report (large synthetic model, focus Web Orders, exec).
+- 1, B-140 (block: approval window + the plan data it shows; server.mjs plan_layout): the plan's data was proposed before
+  the writer's kind changes were known, so the page said "Column chart by". Plan: the page lint runs first; the plan's
+  data carries `kinds` [{ role, from, to }]; the Fields rows name the written kind with the reason ("Bar chart by X
+  (planned as a column chart: the names would slant or be cut)"); the Layout section lists every kind change by role.
+- 2, title measures (block: lib/arabic-twin.mjs texts + writer): the "fx" titles (`Title: ...` report measures of
+  reportExtensions.json) were never offered. Plan: each report measure a visual's title uses is read; a DAX of the shape
+  `[VARs without text] RETURN IF ( cond, A, B )` or `A`, each of A/B fixed texts and variables joined by &, offers each
+  branch as a template ("Top {1} of {2}: Web Orders Total Score by Coupon Region", kind titleMeasure, "Chart title (from
+  a title measure)"); a label must keep every {n} once (else labels.problems, not taken). The twin's reportExtensions
+  gets "Title AR: ..." measures (same DAX, Arabic strings), its visuals' titles point to them; the original and the model
+  untouched. Any other DAX (a model value, FORMAT, a model measure): titleMeasures.notTranslated with why, no text.
+- 3, buttons (block: twin writer): each button (page buttons too) is widened to its Arabic text by check_report's own
+  measure (report-rules.js buttonNeed, now shared by BUTTON_ONE_LINE and PAGE_BUTTON_WRAP): grows toward its left in the
+  twin (the text's end), the visuals left of it in its row shift with it, then to the right; within its page or group
+  (0..W), no new overlap; an underline shape under it follows. No room: fitted.buttonsCut (needs, room, a shorter text).
+- 4, KPI values (block: report-mirror.js): a new card's value `horizontalAlignment` 'left' -> 'right' (one value too; it
+  was done only for 2+), and its padding object's leftMargin/rightMargin swap.
+- 5, table headers (block: twin writer): a fixed column narrower than its Arabic header (bold, + 24 x page/1080, the
+  writer's cellRoom) takes the table's spare width, then width from text columns down to their own need; numbers never
+  narrowed; what can't fit: fitted.headersCut.
+- Expected (written before the build): test-rc24 28 checks, 16 red on main `f09bf30` (B-140 3, T-1 6, T-2 3, T-3 2, T-4 2);
+  all green after. The other suites unchanged (golden baseline, fuzz, layouts, rc22, rc23: same counts).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
