@@ -3,7 +3,7 @@
 // and the top offset (style.css --top-offset) matches the real navbar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { pages, visitor, ROOT, ready, WAIT } from './lib.mjs';
+import { pages, langsOf, visitor, ROOT, ready, WAIT } from './lib.mjs';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -14,7 +14,7 @@ export default async function ({ browser, url }) {
     for (const m of html.matchAll(/data-i18n="([^"]+)"[^>]*>([^<]*)<(?!\/)/g)) problems.push(`${p}: data-i18n="${m[1]}" has a tag inside ("${m[2].trim().slice(0, 40)}...")`);
     checks++;
   }
-  for (const p of pages()) for (const lang of ['en', 'ar']) for (const vp of [[390, 844], [1440, 900]]) {
+  for (const p of pages()) for (const lang of langsOf(p)) for (const vp of [[390, 844], [1440, 900]]) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
     await ready(v.pg);
@@ -304,7 +304,7 @@ export default async function ({ browser, url }) {
     for (const lang of ['en', 'ar']) {
       const v = await visitor(browser);
       const wrongLang = [], longTitle = [], longDesc = [];
-      for (const p of inMap) {
+      for (const p of inMap.filter((p) => langsOf(p).includes(lang))) {
         await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
         const m = await v.pg.evaluate(() => ({ title: document.title, description: (document.querySelector('meta[name="description"]') || {}).content || '', lang: document.documentElement.lang }));
         if (m.lang !== lang) wrongLang.push(`${p} (${m.lang})`);
