@@ -330,8 +330,16 @@
     return n;
   }
 
-  // a page drawn on a picture (T-1): Power BI has no setting that mirrors a page's background image
-  const pageHasPicture = (page) => isObj(page) && isObj(page.objects) && ['background', 'wallpaper'].some((k) => (entries(page.objects, k) || []).some((e) => isObj(e.properties) && e.properties.image !== undefined));
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, round, pageHasPicture };
+  // DataArcus's own page background when no picture is given: a fully transparent 1 x 1 PNG (create_report writes it so
+  // the theme's page colour shows). Base64, the one copy: the MCP writes it from here
+  const BLANK_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==';
+  // the image names a page's background and wallpaper use ('x.png'), as written in its objects
+  const pageImages = (page) => (isObj(page) && isObj(page.objects) ? ['background', 'wallpaper'].flatMap((k) => (entries(page.objects, k) || []).filter((e) => isObj(e.properties) && e.properties.image !== undefined)
+    .map((e) => { const im = e.properties.image, n = isObj(im) && isObj(im.image) ? im.image.name : null, v = n && n.expr && n.expr.Literal ? String(n.expr.Literal.Value).replace(/^'|'$/g, '') : null; return v; })) : []);
+  // a page drawn on a picture (T-1): Power BI has no setting that mirrors a page's background image. (rc.22, B-137: the
+  // twin of a report DataArcus wrote kept its pages left to right: their background is the transparent placeholder, not a
+  // picture.) opts.blank(name): true for an image that is the placeholder (the twin checks its bytes); such a page has no picture
+  const pageHasPicture = (page, opts) => { const names = pageImages(page), blank = opts && opts.blank; return names.length > 0 && names.some((n) => !(blank && n != null && blank(n))); };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, round, pageHasPicture, pageImages, BLANK_PNG };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);

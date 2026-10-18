@@ -202,6 +202,12 @@
           const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h));
           // (A4-12, audit 4: a Top N filter on the visual that keeps no more rows than fit leaves no scrollbar: nothing to say)
           const top = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'TopN').map((g) => n((((((g.filter || {}).From || [])[0] || {}).Expression || {}).Subquery || { Query: {} }).Query.Top)).filter(Number.isFinite);
+          // (rc.22, B-142: flagged on DataArcus's own month tooltip page, whose trend is kept to its last 6 months) a time axis
+          // kept to its last N periods: a visual filter on a report measure "Last N months: ..." equal to 1 (the writer's own,
+          // pbip-query.js lastMonths: a time field takes its last N periods, never a Top N by value)
+          const last = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'Advanced' && entries(((g.filter || {}).From)).some((f) => f && f.Schema === 'extension'))
+            .map((g) => { const c = ((((g.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison || {}, p = ((c.Left || {}).Measure || {}).Property, mm = /^Last (\d+) months?:/.exec(String(p || '')); return mm && ((c.Right || {}).Literal || {}).Value === '1L' ? +mm[1] : NaN; }).filter(Number.isFinite);
+          top.push(...last);
           if (top.length && Math.min(...top) <= rows) return;
           // the 22 a row was measured with 8pt category labels; another size makes the row count an estimate
           const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 8;
