@@ -1,8 +1,44 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "rc.22" just below (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## rc.22: fixes from the owner's rc.21 Desktop test (18 Oct, cloud builder; branch `fix/0.2.9-rc22` from main `cd6f1b6`; PR to main, not merged)
+The owner's go ("go rc.22", 18 Oct; top priority before more 0.3.0 work). His Desktop test of rc.21 passed the approval
+window in every case and found these; 0.2.9's scope is otherwise frozen. Each fix in its block, each with a failing test
+first (`mcp/test-rc22.mjs`, 26 checks, in npm test): commits `86aa708` (all fixes) and `68d9cb0` (two follow-ups the full
+run found: the early approval check must not delete an expired plan, G9; server.mjs calls no E.* directly, A2-8).
+- B-137: report-mirror.js `pageHasPicture(page, { blank })` + `BLANK_PNG` (the one copy; create_report writes it); the
+  twin passes the images that are the placeholder byte for byte. Desktop unchanged for the original.
+- B-140: the writer turned EVERY designed column chart on the golden models into a bar chart (its 12-letter stand-in for
+  a category name; the planner's Top N allows 64 a column) and the plan said column. Now pbip-page records
+  `kindChanges` and plan_layout's slots show the written kind (`plannedAs`, `kindChanges.sayInPlan`). What Desktop shows is
+  unchanged. Decision for the owner: keep "plan shows bar" or make the planner and the writer agree (column kept).
+- B-132: lib/design.mjs planLayout: `colors.accent` with no theme file and no design of its own colours (or the plain
+  Corporate default) -> generate_theme's brand design (accent exact, first; calm set), `colours.from: 'accent'` in the
+  plan; create_report's planLayout and the pin's resolvedDesign get colors and theme too.
+- B-141: "<name>.Report" and its "<name>.pbip" in create_report's and the native copy's plan (the twin's already had both).
+- B-142: validator.errors/warnings exclude the known gaps (notes), validator.reported keeps the raw counts
+  (plans/CHECK-REPORT.md updated). TOOLTIP_SCROLL: the RULE was wrong for the 6-month trend (it knew only TopN filters):
+  it now reads the writer's "Last N months" filter. Tests changed for the new meaning (owner's B-142):
+  test-0.2.9-checks C3, P2a; test-validator checkReportClean.
+- B-144: the fixture's Sales.Report holds only definition.pbir (no pages): nothing to read, the reader is right. The
+  answer now says so: `reports.notRead` [{ report, why }], `reportNotRead` (and that unused columns were not checked).
+  model-health-engine.js untouched.
+- B-133: plan_layout puts "name an area first" in planProblems on a large model without focus (no plan id).
+- B-134: plans.mjs `approvalProblem` (no side effects) and `refuse`; create_report names the plan's state first ("...
+  Also: <missing input>"); the window's "Not now" marks the plan refused. test-approval W-05 now expects "refused".
+- B-138: the twin's page buttons (visualLink PageNavigation) take their page's approved Arabic label by default
+  (`goesTo`, `labelFrom` in the plan's texts; written with the labels).
+- B-135/B-139: approval window: colours as swatches and the plan's data colours; the twin's texts named by kind and text.
+- Stamps 20261018r22: pbip-page, pbip-notes (in theme-generator.js), theme-generator on both generator pages.
+- **For a laptop / Desktop proof:** (1) the twin of an rc.22 report in Desktop (pages mirrored, page buttons Arabic);
+  (2) TOOLTIP_SCROLL's other two hits are possibly real: a month with no date column gets a 12-month tooltip 320 high, and
+  the tooltip lab measured 27 a bar at 8pt (about 10 rows in 320): a scrollbar in Desktop? Likewise a time category's
+  tooltip with no Top N (210 high). Not changed (it would change what Desktop shows).
+- **Seen, not in scope:** a report saved in the older format (report.json at the report's root) is counted but not read
+  by check_model_health (said now in notRead; reading it would be new work); the problem texts of the rules are English.
 
 ## Health Check 2, phase 1 "trust" (15 Oct, cloud builder; website engine only; branch `fix/health-check-p1` from main `33ea82d`; not merged, no PR)
 The owner's go (15 Oct): steps 1a, 1b, 1c only; Phase 2 not started. Out of scope: `assets/js/model-health-tmdl.js` and
