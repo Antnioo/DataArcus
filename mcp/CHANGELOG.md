@@ -7,6 +7,25 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.2.9 (in main since 2026-10-16, rc.21; the package for testers after the owner's Power BI Desktop test)
 The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
 rc.21 passes; until then testers keep 0.2.8.
+- **rc.22, fixes from the owner's own Desktop test of rc.21** (18 Oct; the approval window passed in every case):
+  - B-137: the Arabic twin of a report DataArcus wrote mirrors its pages. Their background is DataArcus's own transparent
+    placeholder (known by its bytes), not a picture; a page on a real background picture still stays left to right.
+  - B-140: the plan shows the kind each visual is written as. A column chart whose category names would slant or be
+    cut is written as a bar chart, and the plan's slots now say so (`kindChanges`), so what is approved is what is written.
+  - B-132: `colors: { accent }` without a theme or design gives the data colours from the accent (exact, first, its calm
+    set, as `generate_theme` makes them), shown in the plan; no more Corporate navy.
+  - B-141: every plan lists every file it writes: the report's `.pbip` beside its `.Report` folder.
+  - B-142: `check_report`'s `validator.errors` and `warnings` agree with the findings (a known gap is a note);
+    `validator.reported` keeps the validator's own counts. No false `TOOLTIP_SCROLL` on a tooltip chart kept to its last
+    6 months.
+  - B-144: `check_model_health` says plainly when a report of the model can't be read and why (`reportNotRead`,
+    `reports.notRead`), and that unused columns were not checked then.
+  - B-133: `plan_layout` on a large model with no focus gives no plan id: it asks for an area first.
+  - B-134: `create_report` says first that a plan is not approved (with any missing input); after "Not now" a plan is
+    refused, not "not approved yet".
+  - B-138: in the Arabic twin, a page button takes the approved Arabic name of the page it goes to, shown in the plan.
+  - B-135: the approval window shows colours as swatches, with the report's real data colours.
+  - B-139: the twin's approval window names each Arabic text by what it is and its own text, never by internal ids.
 - **Microsoft's report validator 0.5.0** (was 0.4.0), used offline by `check_report`: our reports still pass with 0 errors and 0 warnings.
 - `check_report`'s known notes (the dropdown slicer's rounded box) name the validator that ran, read from the installed package; they still said 0.4.0.
 - **Approval inside the tools:** a report, theme, script, calendar or twin is written only after a plan is approved

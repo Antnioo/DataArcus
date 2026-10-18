@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Exam settings. DP-600 is the default; another exam page sets window.EXAM before this script.
   const EX = Object.assign({
     data: 'DP600', code: 'DP-600', store: 'dataarcus-dp600-v1', ev: 'dp600',
-    outline: '../assets/data/dp600-outline.json',
+    outline: '/assets/data/dp600-outline.json',
     page: 'https://dataarcus.com/tools/dp-600-practice-exam.html',
     dom: {
       prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5 },
@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       (last.timeUp ? '<div class="dp-resume"><span><i class="bi bi-alarm"></i> ' + L('Time is up. Your exam was submitted automatically.', 'انتهى الوقت وتم تسليم الاختبار تلقائيًا.') + '</span></div>' : '') +
       '<div class="row g-4"><div class="col-lg-5"><div class="dp-panel text-center dp-score">' +
       '<div class="dp-ringwrap big">' + ring(r.score / 1000, '<b>' + r.score + '</b><span>/ 1000</span>', pass ? '#22c55e' : '#f59e0b') + '</div>' +
-      '<div class="dp-passbadge ' + (pass ? 'pass' : 'fail') + '">' + (pass ? L('Pass', 'ناجح') : L('Not yet', 'ليس بعد')) + '</div>' +
+      '<div class="dp-passbadge cap-pill ' + (pass ? 'pass' : 'fail') + '">' + (pass ? L('Pass', 'ناجح') : L('Not yet', 'ليس بعد')) + '</div>' +
       '<p class="dp-note mt-2">' + L('Passing score: 700. Time used: ' + fmtTime(r.used) + '.', 'درجة النجاح: 700. الوقت المستخدم: ' + fmtTime(r.used) + '.') + '</p>' +
       '<p class="dp-note">' + L('This is an estimate from original practice questions. Microsoft scales real exam scores differently.', 'هذه نتيجة تقديرية من أسئلة تدريبية أصلية. Microsoft تحسب نتائج الاختبار الحقيقي بطريقة مختلفة.') + '</p>' +
       '<div class="dp-actions justify-content-center"><button type="button" class="btn btn-accent" data-a="retake">' + L('New mock exam', 'اختبار جديد') + '</button><button type="button" class="tg-btn2" data-a="weak">' + L('Practice weak skills', 'تدرّب على نقاط الضعف') + '</button></div>' +

@@ -224,7 +224,18 @@ export function planLayout(a) {
   // keep the report's theme instead
   const rt = a.reportTheme && a.reportTheme.theme ? a.reportTheme : null;
   let given = a.design, colours = null;
-  if (rt && !namesColours(a.design)) {
+  // rc.22, B-132 (the owner's rc.21 test: colors { accent } kept the Corporate preset's navy data colours; O-11: the brand
+  // colour is exact by default): an accent given with no theme file and no design of its own colours (or the plain
+  // default one) makes the data colours as generate_theme does from a brand colour: the accent first and exact, the
+  // others from its calm set; text, card and page colours given are kept
+  const acc = a.colors && typeof a.colors === 'object' ? hex(a.colors.accent) : null;
+  const plainDesign = !namesColours(a.design) || (a.design.preset === 'Corporate' && Array.isArray(a.design.data) && a.design.data.join() === E.PRESETS.Corporate.data.join());
+  if (acc && !a.theme && plainDesign) {
+    const td = themeDesign({ brand: acc, lang: a.lang }).design, own = Object.fromEntries(['text', 'card', 'background'].map((k) => [k, hex(a.colors[k])]).filter(([, v]) => v));
+    given = Object.assign({}, a.design || {}, { data: td.data.slice(), ui: Object.assign({}, td.ui, own, { accent: acc }), preset: null });
+    colours = { from: 'accent', accent: acc, data: td.data.slice(), sayInPlan: `The colours come from the accent ${acc}, used exactly: it is the first data colour and the accent; the other 7 data colours are its calm set (as generate_theme makes them from a brand colour). Show them in the plan.` };
+  }
+  else if (rt && !namesColours(a.design)) {
     const c = themeColours(rt, a.lang), g0 = a.design || {}, gl = g0.layout && typeof g0.layout === 'object' ? g0.layout : {};
     // (the font, corners and shadow of a rich theme, where the design has those settings and does not set them itself)
     given = Object.assign({}, g0, { data: c.data, ui: c.ui, preset: c.preset }, c.style.font && g0.font == null ? { font: c.style.font } : {},
@@ -265,6 +276,9 @@ export function planLayout(a) {
   // (the owner's decision on layouts, 12 Oct: a setup that ships as preview says so in one plain line, E.isPreview)
   return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
+
+// (rc.22, B-140) a slot kind's visual, in the plan's language (the slots' "visual")
+export const kindLabel = (kind, lang) => E.label(E.KINDS[kind], lang);
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
 export function pageOf(layout) {

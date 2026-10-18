@@ -35,6 +35,7 @@
       let k = 2; while (has(want + ' (' + k + ')')) k++; const nm = want + ' (' + k + ')'; if (!extRenamed.some((x) => x.t === t && x.from === want)) extRenamed.push({ t, from: want, to: nm }); return nm; };
     const rowLabels = [], rowLabelSkipped = [];   // round 23: the tables' row-label measures { page, t, c, m, expression }; tables kept as before (a control character) { page, t, c }
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
+    const kindChanges = [];   // rc.22, B-140: every slot the writer gives another kind { page, pageIndex, role, nth (its place among the page's slots of that kind), from, to, topN }: the plan shows them
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }
@@ -47,7 +48,7 @@
     return {
       tableColumns, tabRows, noPageButtons, leftOut, kpiTitles, titles, tableOrder, tableRows,
       headerGrew, tableSmaller, tableWide, subtitlesUsed, blankKept, noData, noDataSkipped, modelNames,
-      extRenamed, freeExt, rowLabels, rowLabelSkipped, barCharts, shortDays, ringsSmall, svgSizes,
+      extRenamed, freeExt, rowLabels, rowLabelSkipped, barCharts, kindChanges, shortDays, ringsSmall, svgSizes,
       timeExt, timeAxes, blankFiltered, bound, topCharts
     };
   }
@@ -57,7 +58,7 @@
   const result = (n, r) => ({ base: r.base, files: r.files, zip: r.zip, leftOut: n.leftOut, kpiTitles: n.kpiTitles, titles: n.titles, tableOrder: n.tableOrder, tableRows: n.tableRows,
     headerGrew: n.headerGrew, tableSmaller: n.tableSmaller, tableWide: n.tableWide, noDataSkipped: n.noDataSkipped, svgSizes: n.svgSizes, noPageButtons: n.noPageButtons, tableColumns: n.tableColumns,
     rowLabels: n.rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped: n.rowLabelSkipped, extRenamed: n.extRenamed, chartColors: r.chartColors, chartAxes: r.chartAxes,
-    tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
+    tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, kindChanges: n.kindChanges, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
     blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts });
 
   const api = {

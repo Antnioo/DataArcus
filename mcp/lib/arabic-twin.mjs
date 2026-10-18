@@ -79,12 +79,15 @@ function textsOf(R) {
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
   R.pages.forEach((pg) => {
     add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
-    pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(t, t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
+    // (rc.22, B-138: a page button kept its English text in the twin) a button that goes to a page knows that page
+    const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
+      return /PageNavigation/i.test(String(lit(p.type))) ? lit(p.navigationSection) : null; };
+    pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
   });
   R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
   return all.map((t) => {
     const raw = String(t.text);
-    const out = { id: safeId(t.id), kind: t.kind, rawId: t.id };
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id }, t.goesTo ? { goesTo: safeId(t.goesTo) } : {});
     if (t.page) out.page = safeName(t.page);
     if (t.visual) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
@@ -178,10 +181,16 @@ export function planTwin(a) {
   const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = dateColumnsOf(model.m);
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
-  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page)).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
+  // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
+  const blankBytes = Buffer.from(Mirror.BLANK_PNG, 'base64');
+  const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { return readBytes(path.join(loc.dir, ...rel.split('/'))).equals(blankBytes); } catch (e) { return false; } };
+  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank })).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
   const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
+  // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
+  // the plan (labelFrom) and written with it; a label given for the button wins
+  texts.forEach((t) => { if (t.kind === 'button' && t.goesTo && labels[t.id] == null && labels[t.goesTo] != null) { labels[t.id] = labels[t.goesTo]; t.labelFrom = 'the approved Arabic name of the page it goes to'; } });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
