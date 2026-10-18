@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -304,7 +305,12 @@ function shapeChecked(tmsl) {
   return { tmsl: root, skipped };
 }
 const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({}, o0, { tmsl: c.tmsl }); return ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl, partsSkipped: c.skipped,
-  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null }); };
+  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null }); };
+// (0.3, B-154, an outside audit of 0.2.9: an approval pinned the inputs, not the model) the model's fingerprint: a sha256 of
+// the definition files this read already read (model.bim, or each TMDL file by its path; a .pbit or model.bim file's own
+// bytes), never another file of the folder (Power BI's .pbi/cache.abf holds data). A plan pins it; the write reads the
+// model again and refuses one that changed since the go (plans.mjs)
+const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 // a report file that could not be read: said, never dropped silently (A1-4)
 const skippedOf = (e) => (/not valid JSON/.test(String(e && e.message)) ? 'not valid JSON' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
 const PARTIAL = 'Some report files could not be read (skipped): the findings about fields "not used anywhere" are partial, since those files may use them.';
@@ -336,7 +342,7 @@ export function loadModel(p, opts) {
     // (rc.23, F1) a zip accepted by its name (.pbit, no extension): its directory first, and a .pbix by another name (a
     // DataModel, Power BI's data cache, and no DataModelSchema) is refused before the rest of the file is read
     if (isZip) zipDirectoryCheck(full, st.size);
-    const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80);
+    const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80), print = sha(buf);
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
       const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
       if (!dms) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
@@ -345,9 +351,9 @@ export function loadModel(p, opts) {
       const pbir = Object.keys(z).filter((n) => /(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
       const report = layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(layout, 'report part') }] }
         : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
-      return modelRead({ source, tmsl, report, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
+      return modelRead({ source, tmsl, report, print, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
     }
-    return modelRead({ source, tmsl: partJson(buf, 'model file') });
+    return modelRead({ source, tmsl: partJson(buf, 'model file'), print });
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];
@@ -362,8 +368,8 @@ export function loadModel(p, opts) {
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
-  let tmsl = null;
-  if (fs.existsSync(bim)) tmsl = partJson(readCapped(bim, PBIT_LIMITS.model, 'model.bim'), 'model.bim');
+  let tmsl = null, print = null;
+  if (fs.existsSync(bim)) { const b = readCapped(bim, PBIT_LIMITS.model, 'model.bim'); print = sha(b); tmsl = partJson(b, 'model.bim'); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
     if (!fs.existsSync(tdir)) throw new ReadError('NO_MODEL_FILES', { folder: shownPath(path.relative(root, folder)) }, `No model.bim and no definition/tables in ${shownPath(path.relative(root, folder))}`);
@@ -374,7 +380,9 @@ export function loadModel(p, opts) {
     let total = 0;
     for (const f of tfiles) { const size = fs.lstatSync(f).size; if (size > PBIT_LIMITS.entry) throw refuse(`one of its TMDL files is ${mb(size)}, above the ${mb(PBIT_LIMITS.entry)} DataArcus reads`); total += size; }
     if (total > PBIT_LIMITS.total) throw refuse(`its TMDL files are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`);
-    const text = new Map(tfiles.map((f) => [f, decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))]));
+    const lines = [];
+    const text = new Map(tfiles.map((f) => { const b = readCapped(f, PBIT_LIMITS.entry, 'TMDL file'); lines.push(path.relative(folder, f).split(path.sep).join('/') + '\0' + sha(b) + '\n'); return [f, decode(b)]; }));
+    print = sha(lines.sort().join(''));
     // (A1-8: one parse: the model's JSON from tmdl-model.js, the picker's fields from that JSON, as for a model.bim)
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
@@ -405,7 +413,7 @@ export function loadModel(p, opts) {
   const skipped = [];
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { skipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
   const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
-  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen });
+  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen, print });
 }
 
 // why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder

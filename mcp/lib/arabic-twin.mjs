@@ -13,9 +13,10 @@ import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
+import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
 import { capAnswer } from './answer.mjs';
 import { writtenName } from './display-names.mjs';
@@ -50,7 +51,7 @@ function locate(p) {
 // reader and limits): every file listed by strictFiles (a link, a folder too deep, too many files or a file over 8 MB
 // stops it, nothing written); pages in order, their visuals (in file order) and bookmarks from inventory() ----
 function readOriginal(loc) {
-  const files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.' });
+  const left = [], files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.', left });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const unreadable = inv.unreadableFiles.slice();
   // (the fuzz test's F-T4 and its crash in modelOf: any file can hold any JSON; what is not the shape expected is left
@@ -59,7 +60,7 @@ function readOriginal(loc) {
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
     visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
   const bookmarks = inv.bookmarks.filter((b) => isObj(b.raw) && (typeof b.raw.name === 'string' || typeof b.raw.name === 'number')).map((b) => ({ rel: b.file, json: b.raw }));
-  return { files, pages, bookmarks, pbir, unreadable, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
+  return { files, left, pages, bookmarks, pbir, unreadable, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -230,7 +231,8 @@ export function planTwin(a) {
   const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
   const ref = byPathOf(R.pbir);
-  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, answer: capAnswer({
+  // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
+  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -241,6 +243,7 @@ export function planTwin(a) {
     texts: texts.slice(0, TEXTS_MAX).map(({ rawId, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
     labels: { given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length },
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
+    ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
   }, (x) => JSON.stringify(x).length) };
@@ -263,6 +266,8 @@ export function writeTwin(a, plan) {
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
   const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages });
+  // (B-154) the model the plan read (for the month column and the dates), as it was at the go
+  if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P, labels = rawLabels(P.texts, P.labels);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
