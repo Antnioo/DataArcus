@@ -107,6 +107,22 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   ok(said.length === 2 && said.every((n) => n <= rules), `the Health Check says ${said.join(' / ')} checks in English / Arabic; the engine has ${rules} rules`);
 }
 
+// B-155 (the outside audit, 18 Oct): a .pbit holds the model's definition, not the data Power BI loaded, but that
+// definition can hold small tables typed in with Enter data (compressed in the Power Query text) and DATATABLE values in
+// DAX. No public page says it has "no data rows"; each page that talks about it says the exact thing, English and Arabic.
+{
+  const EN = "not the data Power BI loaded", AR = 'لا البيانات التي حمّلها Power BI';
+  const old = /no data rows|without any data rows|has the model but no data|contains no data|صفوف بيانات|النموذج بلا بيانات/;
+  const files = ['tools/power-bi-model-health-check.html', 'articles/article-power-bi-model-health-check.html', 'articles/article-power-bi-model-ai-ready.html', 'services/copilot-readiness-audit.html'];
+  const tr = ['model-health', 'article-power-bi-model-health-check', 'article-power-bi-model-ai-ready', 'copilot-audit'].map((n) => `assets/js/translations/${n}.js`);
+  for (const f of files.concat(files.map((f) => 'ar/' + f), tr, tr.map((f) => f.replace(/\.js$/, '.min.js')))) {
+    const t = read(f), say = f.startsWith('ar/') ? AR : EN;
+    ok(!old.test(t), `${f}: still says a .pbit has no data (B-155): ${(t.match(old) || [])[0]}`);
+    ok(t.includes(say) && t.includes('Enter data') && t.includes('DATATABLE'), `${f}: must say a .pbit holds the model's definition, "${say}", and name Enter data and DATATABLE (B-155)`);
+  }
+  for (const f of tr.concat(files.map((f) => 'ar/' + f))) ok(read(f).includes(AR), `${f}: the Arabic must say "${AR}" (B-155)`);
+}
+
 // The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
 // copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy
 // is lang="ar" dir="rtl" with its title, description and Open Graph in Arabic within the limits search results show,
