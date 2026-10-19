@@ -1255,6 +1255,15 @@
   const CONCEPTS = { deaths: ['death', 'deaths', 'fatalities'], cases: ['case', 'cases', 'infections'], revenue: ['revenue'], cost: ['cost', 'costs', 'expense', 'expenses'],
     quantity: ['quantity', 'quantities', 'qty', 'units'], price: ['price', 'prices'] };
   const CONCEPT_AR = { deaths: 'الوفيات', cases: 'الحالات', revenue: 'الإيرادات', cost: 'التكاليف', quantity: 'الكمية', price: 'السعر' };
+  // B-147: a percent format (a % outside quotes and not escaped: 0.0% multiplies by 100; 0.0"%" and 0.0\% only show the sign)
+  const percentFormat = (f) => /%/.test(String(f || '').replace(/"[^"]*"/g, '').replace(/\\./g, ''));
+  // names of a ratio or a multiple (shown as 1.5x), and names that say a percentage
+  const MULTIPLE = /\b(current|quick|acid[- ]test|cash|liquidity|debt|leverage|coverage|solvency|price[- ]to[- ]\w+|p\/e|ev\/\w+)\s+ratio\b|\b(asset|assets|inventory|stock|receivables?|payables?|capital|fixed asset)\s+turnover\b|\bdebt[- ]to[- ]\w+\b|\btimes interest earned\b|\binterest coverage\b|\b(earnings|revenue|ebitda)\s+multiple\b|\bmultiple\b/i;
+  const PERCENTISH = /%|\b(pct|percent|percentage|rate|share|margin|yield|growth|return on)\b|نسبة مئوية/i;
+  // an amount (a K or M display format makes sense) and a unit conversion (milliseconds to seconds, grams to kilograms)
+  const AMOUNT = /\b(sales|revenue|revenues|amount|amounts|cost|costs|profit|profits|value|price|budget|spend|spending|income|expense|expenses|turnover|ebitda|cash|payroll|salary|salaries)\b|المبيعات|الإيرادات|التكلفة|الربح|القيمة|المبلغ/i;
+  const UNIT = /\b(ms|sec|secs|second|seconds|minute|minutes|hour|hours|duration|time|bytes?|kb|mb|gb|tb|size|memory|meters?|metres?|km|grams?|kg|tons?|tonnes?|liters?|litres?|ml|mwh|kwh|watts?)\b|ms\b|ms\]/i;
+  const SCALED = /(^|[^a-z])(k|m|mn|bn|thousands?|millions?|000s|in 000)([^a-z]|$)|بالآلاف|بالملايين/i;
   function pleaseConfirm(M, ctx) {
     ctx = ctx || {};
     const out = [];
@@ -1262,6 +1271,19 @@
     const measures = [];
     M.tables.forEach((t) => t.measures.forEach((m) => measures.push({ m, ts: CF.lex(m.expr) })));
     const ask = (id, m, en, ar, ts) => out.push({ id, obj: `[${m.name}]`, message: { en, ar }, evidence: CF.piece(m.expr, ts) });
+    const askFormat = (id, m, en, ar, ts) => out.push({ id, obj: `[${m.name}]`, message: { en, ar }, evidence: CF.piece(m.expr, ts), format: m.formatString });
+    // "* 100" or "100 *" at any depth, outside a text: the piece as written
+    const hundred = (ts) => { for (let i = 0; i < ts.length - 1; i++) {
+      if (ts[i].value === '*' && ts[i + 1].kind === 'number' && Number(ts[i + 1].value) === 100) return [ts[i], ts[i + 1]];
+      if (ts[i].kind === 'number' && Number(ts[i].value) === 100 && ts[i + 1].value === '*') return [ts[i], ts[i + 1]]; } return null; };
+    // DIVIDE ( x, 1000 ) or x / 1000 (1,000,000 too) with the column x reads, the piece as written
+    const thousands = (ts) => {
+      const big = (t) => t && t.kind === 'number' && (Number(t.value) === 1000 || Number(t.value) === 1000000);
+      const colOf = (xs) => xs.filter((t) => t.kind === 'ref').map((t) => t.value).join(' ');
+      for (const c of CF.calls(ts, 'DIVIDE')) { const d = CF.strip(c.args[1] || []); if (d.length === 1 && big(d[0])) return { n: String(Number(d[0].value)), ts: c.tokens, column: colOf(c.args[0] || []) }; }
+      for (let i = 1; i < ts.length - 1; i++) if (ts[i].value === '/' && big(ts[i + 1]) && !(ts[i + 2] && /^[*\/^]$/.test(ts[i + 2].value))) return { n: String(Number(ts[i + 1].value)), ts: [ts[i], ts[i + 1]], column: colOf(ts.slice(0, i)) };
+      return null;
+    };
     measures.forEach(({ m, ts }) => {
       // a total that leaves out one hard-coded category: CALCULATE(..., Table[Column] <> "value")
       if (/\b(total|overall|all)\b/i.test(m.name)) {
@@ -1298,6 +1320,22 @@
           if (ts[c.end + 1] && ts[c.end + 1].value === '-' && ts[c.end + 2] && ts[c.end + 2].value === '1')
             ask('shiftedCurrentDate', m, 'This current or as-of date subtracts one day. Is that the right boundary?', 'يطرح هذا التاريخ الحالي يومًا واحدًا. هل هذا هو الحد الصحيح؟', ts.slice(c.start, c.end + 3));
         });
+      }
+      // B-147 (0.3): a format that may not show what the measure means; the measure's own format string (m.format), a
+      // dynamic format (fsExpr) never asked about
+      if (m.formatString && !m.fsExpr) {
+        const f = m.formatString, pct = percentFormat(f), words = new Set(CF.words(m.name));
+        // a ratio or a multiple (Current Ratio, Asset Turnover, Debt to Equity) shown as a percentage: 1.5 shows as 150%
+        if (pct && MULTIPLE.test(m.name) && !PERCENTISH.test(m.name))
+          askFormat('ratioAsPercent', m, 'Should this ratio be shown as a multiple (1.5x) rather than a percentage?', 'هل يجب أن تُعرض هذه النسبة كمضاعف (1.5x) بدلًا من نسبة مئوية؟', []);
+        // a value already multiplied by 100 and formatted as a percentage, which multiplies by 100 again
+        const times = pct ? hundred(ts) : null;
+        if (times) askFormat('percentTwice', m, 'The measure already multiplies by 100, and its percentage format multiplies by 100 again. Is the value shown 100 times too large?', 'يضرب المقياس القيمة في 100، وتنسيق النسبة المئوية يضربها في 100 مرة أخرى. هل تظهر القيمة أكبر بمئة مرة؟', times);
+        // an amount divided by 1,000 or 1,000,000 and shown as a plain number: a K or M display format may have been meant
+        const by = !pct && !/[kKmM]|thousand|million|,["\s]*$|,\./.test(f.replace(/"[^"]*"/g, (q) => (/[kKmM]|thousand|million|mn|bn/i.test(q) ? 'K' : ''))) ? thousands(ts) : null;
+        if (by && AMOUNT.test(m.name + ' ' + by.column) && !UNIT.test(m.name + ' ' + by.column) && !SCALED.test(m.name))
+          askFormat('thousandsPlain', m, `The measure divides by ${by.n === '1000' ? '1,000' : '1,000,000'} and its format shows a plain number. Was a ${by.n === '1000' ? 'thousands (K)' : 'millions (M)'} display format meant?`,
+            `يقسم المقياس على ${by.n === '1000' ? '1,000' : '1,000,000'} ويعرض تنسيقه رقمًا عاديًا. هل كان المقصود تنسيق عرض ${by.n === '1000' ? 'بالآلاف (K)' : 'بالملايين (M)'}؟`, by.ts);
       }
     });
     // a relationship on another column while an unused column of the same table carries the key's own name and type
