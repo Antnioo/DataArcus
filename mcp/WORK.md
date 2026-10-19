@@ -19,6 +19,9 @@ The reviewer's brief (19 Oct): one normal PR, only these two fixes (no 0.3 code;
 - FIX 2 (draft #69's E-23/E-24): pbip-page.js gives the "no value axis" setting only to a bar (a two-valued column chart
   becomes a donut after it); D-1 no valueAxis on the written donut, D-2 Microsoft's validator offline 0 errors on it.
 - Stamps 20261019p2991: pbip-page (in theme-generator.js), theme-generator on the three generator pages; .min rebuilt.
+- CHANGELOG heading `## [Unreleased]: 0.2.9.1`: the package build's version rule (test-release-text.mjs, from the engine's
+  packaging/build.mjs) takes only x.y.z or [Unreleased]; "[0.2.9.1]" failed CI's release-text. For the owner: the
+  build cannot stamp a four-part 0.2.9.1; the release needs an x.y.z number (e.g. 0.2.10) or the build's rule changed.
 - Next: the reviewer reviews the PR, the laptop checks in Desktop (see the PR), the owner merges.
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)

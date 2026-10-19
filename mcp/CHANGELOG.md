@@ -4,7 +4,7 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [0.2.9.1]: unreleased
+## [Unreleased]: 0.2.9.1
 Two fixes after 0.2.9 went to testers; nothing else changes.
 - B-174, the plan says what the chart keeps: a chart planned as "Top 5" keeps its top 5 by its measure, or all of its
   categories when it has 7 or fewer (the report's "Keep:" measure, so a chart never leaves out one or two it could show).
