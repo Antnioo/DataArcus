@@ -46,6 +46,7 @@ function locate(p) {
   if (!/\.Report$/i.test(dir)) throw new Error(`"${p}" is a folder holding a definition folder, not a .Report folder: give the report's .pbip file or its .Report folder, so the twin can be named after it. Nothing was written.`);
   const base = path.basename(dir).replace(/\.Report$/i, '');
   if (/\sAR$/i.test(base)) throw new Error(`"${path.basename(dir)}" is already an Arabic twin (its name ends in " AR"): make the twin of the original report instead. Nothing was written.`);
+  if (/\s\(EN-AR\)$/i.test(base)) throw new Error(`"${path.basename(dir)}" already holds English and Arabic pages (its name ends in " (EN-AR)"): make it from the original report instead. Nothing was written.`);
   let pbip = loc.pbipPath;
   if (!pbip) { const beside = path.join(path.dirname(dir), base + '.pbip'); if (isFile(beside)) pbip = beside; }
   return { dir, base, pbip, project: path.dirname(dir) };
@@ -277,7 +278,7 @@ const dateColumnsOf = (m) => (m ? [...new Set([].concat(...(m.tables || []).map(
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
 const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).replace(/]/g, ']]') + ']';
-function monthOffer(model, loc) {
+function monthOffer(model, loc, outBase) {
   if (!model.m) return { offered: false, why: model.why };
   const m = model.m, isDate = isDateCol;
   // (T-5: by shape; when several, the one marked as the date table, then the one built with CALENDAR)
@@ -308,7 +309,7 @@ function monthOffer(model, loc) {
     '\t\t\tdataType: string', '\t\t\tsummarizeBy: none', `\t\t\tsortByColumn: ${tmdlName(num ? num.name : MONTH_SORT)}`, '');
   return { offered: true, table: visible(t.name), dateColumn: visible(date.name), column: MONTH_COLUMN, sortBy: num ? visible(num.name) : MONTH_SORT + ' (written with it, hidden)',
     ...(calculated ? { note: 'the date table is a DAX (calculated) table: the lab added the column to its formula; adding it as a calculated column is not yet proven in Desktop through TMDL view: check Preview before Apply' } : {}),
-    scriptAfterGo: `${loc.base} AR - Arabic month.tmdl`, script: lines.join('\n') + '\n',
+    scriptAfterGo: `${outBase} - Arabic month.tmdl`, script: lines.join('\n') + '\n',
     howToApply: 'Save a copy of the Power BI file first. Open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (one column is added to the date table, sorted by its month number), then Apply. DataArcus never applies it: the model is changed only when the user applies it. Then a chart or table can show the Arabic month names (يناير، فبراير...) by using that column.' };
 }
 
@@ -438,6 +439,24 @@ const waterfallFacts = (m) => {
 };
 const EXT_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json';
 
+// (0.3.0 X1) a visual of the Arabic pages moved to the Arabic copy of a report measure (rename: "Entity\0name" -> the
+// copy's name): the field, its queryRef and every selector naming it, and its nativeQueryRef, as Power BI names a
+// measure's projection ("Entity.Name", "Name")
+function rewireMeasures(vj, rename) {
+  const refs = new Map();
+  rename.forEach((to, k) => { const [entity, from] = k.split('\u0000'); refs.set(entity + '.' + from, { ref: entity + '.' + to, from, to }); });
+  const walk = (o) => {
+    if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (!isObj(o)) return;
+    const ms = isObj(o.Measure) ? o.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+    if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) ms.Property = rename.get(src.Entity + '\u0000' + ms.Property);
+    const r = typeof o.queryRef === 'string' ? refs.get(o.queryRef) : null;
+    if (r && o.nativeQueryRef === r.from) o.nativeQueryRef = r.to;
+    Object.keys(o).forEach((k) => { if (typeof o[k] === 'string' && refs.has(o[k])) o[k] = refs.get(o[k]).ref; else walk(o[k]); });
+  };
+  walk(vj);
+}
+
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
@@ -475,11 +494,21 @@ function buildTwin(P, labels) {
   // (0.3.0 D3) the report's other text measures a visual shows (the empty state): rewritten in the twin's own copy of
   // reportExtensions.json (the original's file is only read), each text as approved
   let rewritten = 0;
+  // (0.3.0 X1) both languages in one report: the English pages keep the measure as it is, the Arabic pages get their own
+  // ("No data AR: ..."), each name free as the waterfall's are, and their visuals are moved to it (textRename)
+  const textRename = new Map();
   if (ext) textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => {
     const ls = x.pd.branches.map((b) => (b.template && labels['measureText:' + b.template] != null ? labels['measureText:' + b.template] : null));
     if (ls.every((l) => l == null)) return;
     const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), m = e && Array.isArray(e.measures) ? e.measures.find((y) => isObj(y) && y.name === x.name) : null;
-    if (m) { m.expression = arabicDax(x.pd, ls); rewritten++; applied++; }
+    if (!m) return;
+    if (P.same) {
+      const base = /^No data: /.test(x.name) ? 'No data AR: ' + x.name.slice(9) : x.name + ' AR', names = takenAnywhere();
+      let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
+      e.measures.push(Object.assign(JSON.parse(JSON.stringify(m)), { name, expression: arabicDax(x.pd, ls) }));
+      textRename.set(x.entity + '\u0000' + x.name, name);
+    } else m.expression = arabicDax(x.pd, ls);
+    rewritten++; applied++;
   });
   const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
   const pages = R.pages.map((pg) => {
@@ -489,6 +518,7 @@ function buildTwin(P, labels) {
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     r.visuals.forEach((vj) => {
       applied += Mirror.labelVisual(pg.id, vj, labels);
+      if (textRename.size) rewireMeasures(vj, textRename);
       const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
@@ -509,8 +539,230 @@ function buildTwin(P, labels) {
   });
   const notTranslated = tms.filter((x) => !x.pd.branches).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
-  const notShown = [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')) };
+  // (X1: in one report the English pages still show them)
+  const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
+  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+}
+
+// ---- (0.3.0 X1, the owner, 19 Oct: "add the toggle") English and Arabic in ONE report: the copy "<name> (EN-AR)" ----
+// The copy holds the original's files as they are (the English pages), and beside them each page's Arabic page exactly as
+// the twin builds it (buildTwin). The Arabic pages get new page ids, visual names and bookmark names (hashes of the
+// original's, so the plan and the write give the same; never one the report has), and every link of theirs (page buttons,
+// tooltip pages, drillthrough, bookmarks) goes to the Arabic one. Each page gets a language button to its counterpart; each
+// slicer pair one sync group (visual.syncGroup, the visualConfiguration schema's VisualSyncGroup); the counterpart
+// language's pages are hidden from the tabs (HiddenInViewMode). The original is only read.
+export const COPY_TAG = ' (EN-AR)';
+const LANG = { en: { text: 'العربية', alt: 'Show this page in Arabic', on: 'English' }, ar: { text: 'English', alt: 'اعرض هذه الصفحة بالإنجليزية', on: 'Arabic' } };
+const VC_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
+const MOBILE_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.1.0/schema.json';
+const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
+const litStr = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
+const Lv = (v) => ({ expr: { Literal: { Value: v } } }), Ls = (t) => Lv("'" + String(t).replace(/'/g, "''") + "'");
+const linkOf = (v) => { const vco = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) ? v.visual.visualContainerObjects : {}; return (Array.isArray(vco.visualLink) ? vco.visualLink : []).find((e) => isObj(e) && isObj(e.properties) && !e.selector) || null; };
+const isPageBtn = (v) => typeOf(v) === 'actionButton' && litStr((linkOf(v) || { properties: {} }).properties.type) === 'PageNavigation';
+const overlaps = (a, b) => a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
+const holdsBox = (a, b) => a.x <= b.x + 0.5 && a.x + a.width >= b.x + b.width - 0.5 && a.y <= b.y + 0.5 && a.y + a.height >= b.y + b.height - 0.5;
+// a visual's box on the page (a grouped visual's position is relative to its group, groups inside groups too)
+const absBox = (visuals, v) => { const p = posOf(v); if (!p) return null; let x = p.x, y = p.y, g = v; for (let n = 0; g && g.parentGroupName != null && n < 20; n++) { g = visuals.find((u) => isObj(u) && u.name === g.parentGroupName); const q = g && posOf(g); if (!q) break; x += q.x; y += q.y; } return { x, y, width: p.width, height: p.height }; };
+// new names: 20 hex digits of a hash of what they stand for, never one already taken (the same names at the plan and the write)
+function idMaker(taken) { const used = new Set([...taken].map((x) => String(x).toLowerCase())); return (seed) => { for (let k = 0; ; k++) { const id = crypto.createHash('sha256').update('dataarcus-en-ar\u0000' + seed + (k ? '\u0000' + k : '')).digest('hex').slice(0, 20); if (!used.has(id)) { used.add(id); return id; } } }; }
+const textLook = (v) => { const es = isObj(v) && isObj(v.visual) && isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [];
+  const d = es.find((e) => isObj(e.selector) && e.selector.id === 'default') || es.find((e) => !e.selector) || { properties: {} };
+  return { size: parseFloat(litStr(d.properties.fontSize)), font: litStr(d.properties.fontFamily), bold: litStr(d.properties.bold) === 'true' }; };
+
+// The language button of a page: its look is the page's own page tab's (one not bold, the tabs' other pages), else a plain
+// button; its text on one line by the measured rules (the larger of 0.45 em a character and the page button's letter by
+// letter measure: report-rules.js, as check_report measures it), as high as the tab; the show switch of each card in its
+// own entry with no selector, the look with selector default (mcp/CLAUDE.md). It goes where it covers no visual (a visual
+// holding it whole, the header's band, is its panel): the tabs' group (else the top of the page), from its end, the right on
+// an English page, the left on an Arabic page. On the phone (when the page has a phone layout): the tabs' row, as wide as
+// the writer's phone tab rule (phoneTabWidth), from the same end. Returns { json, mobile, phone, why } or { json: null, why }
+function langButton(page, visuals, mobiles, lang, target, name) {
+  const W = LANG[lang], pw = isObj(page) && Number.isFinite(page.width) ? page.width : 1280, ph = isObj(page) && Number.isFinite(page.height) ? page.height : 720;
+  const tabs = visuals.filter((v) => isObj(v) && isObj(v.visual) && isPageBtn(v) && posOf(v));
+  const tpl = tabs.find((v) => !textLook(v).bold) || tabs[0] || null, look = tpl ? textLook(tpl) : {};
+  const t = Number.isFinite(look.size) ? look.size : Math.max(8, Math.round(14 * ph / 1080)), font = look.font || 'Segoe UI';
+  let btn;
+  if (tpl) {
+    btn = clone(tpl); delete btn.parentGroupName; delete btn.filterConfig;
+    const o = btn.visual.objects;
+    // the show switch alone, without a selector; no show inside a selector (Desktop ignores it there)
+    o.text = (Array.isArray(o.text) ? o.text : []).filter((e) => isObj(e) && isObj(e.properties));
+    o.text.forEach((e) => { if (e.selector) delete e.properties.show; });
+    o.text = o.text.filter((e) => Object.keys(e.properties).length);
+    if (!o.text.some((e) => !e.selector && 'show' in e.properties)) o.text.unshift({ properties: { show: Lv('true') } });
+    let d = o.text.find((e) => isObj(e.selector) && e.selector.id === 'default'); if (!d) o.text.push(d = { properties: {}, selector: { id: 'default' } });
+    Object.assign(d.properties, { text: Ls(W.text), bold: Lv('false') });
+  } else {
+    btn = { $schema: VC_SCHEMA, name, position: {}, visual: { visualType: 'actionButton', objects: { icon: [{ properties: { shapeType: Ls('blank') }, selector: { id: 'default' } }],
+      text: [{ properties: { show: Lv('true') } }, { properties: { text: Ls(W.text), fontFamily: Ls(font), fontSize: Lv(t + 'D') }, selector: { id: 'default' } }],
+      fill: [{ properties: { show: Lv('false') } }], outline: [{ properties: { show: Lv('true') } }] }, visualContainerObjects: { title: [{ properties: { show: Lv('false') } }] } } };
+  }
+  btn.name = name;
+  const vco = btn.visual.visualContainerObjects = isObj(btn.visual.visualContainerObjects) ? btn.visual.visualContainerObjects : {};
+  vco.general = [{ properties: { altText: Ls(W.alt) } }];
+  vco.visualLink = [{ properties: { show: Lv('true'), type: Ls('PageNavigation'), navigationSection: Ls(target) } }];
+  delete vco.visualTooltip;
+  const need = Rules.buttonNeed({ json: btn, type: 'actionButton', h: 0, w: 0 }, { labelSize: t, font });
+  const w = Math.max(need ? need.one : 0, Math.ceil(Rules.MEASURED.BTN_TW(t, [...W.text].length))), h = Math.max(tpl ? posOf(tpl).height : 0, need ? need.needH : Rules.MEASURED.BTN_H(t));
+  // where: the tabs' group (else the page), at the tabs' height (else near the top), from its end
+  const g = tpl && tpl.parentGroupName != null ? visuals.find((v) => isObj(v) && v.name === tpl.parentGroupName && posOf(v)) : null;
+  const room = g ? posOf(g).width : pw, y = tpl ? posOf(tpl).y : Math.round(8 * ph / 720), off = g ? absBox(visuals, g) : { x: 0, y: 0 };
+  const obst = visuals.filter((v) => isObj(v) && !isObj(v.visualGroup) && posOf(v)).map((v) => absBox(visuals, v)).filter(Boolean);
+  const free = (x) => { const A = { x: off.x + x, y: off.y + y, width: w, height: h }; return A.x >= -0.5 && A.x + w <= pw + 0.5 && A.y >= -0.5 && A.y + h <= ph + 0.5 && !obst.some((b) => overlaps(b, A) && !holdsBox(b, A)); };
+  const xs = []; for (let x = Math.floor(room - w); x >= 0; x--) xs.push(x); if (lang === 'ar') xs.reverse();
+  const x = xs.find(free);
+  if (x == null) return { json: null, why: `no free place ${w} x ${h} at the ${lang === 'ar' ? 'left' : 'right'} end of ${g ? 'the header (the page tabs\' group)' : 'the top of the page'}: the page is written without it; add the button by hand` };
+  const zs = visuals.filter((v) => posOf(v)).map((v) => posOf(v)), top = (k) => Math.max(0, ...zs.map((p) => (Number.isFinite(p[k]) ? p[k] : 0)));
+  btn.position = { x, y, z: top('z') + 1000, height: h, width: w, tabOrder: top('tabOrder') + 1000 };
+  if (g) btn.parentGroupName = g.name;
+  const at = g ? `the ${lang === 'ar' ? 'left' : 'right'} end of the header, beside the page tabs` : `the top ${lang === 'ar' ? 'left' : 'right'} of the page`;
+  // the phone
+  if (!mobiles.some(Boolean)) return { json: btn, mobile: null, phone: false, at, why: 'the page has no phone layout' };
+  const ptabs = tabs.map((v) => mobiles[visuals.indexOf(v)]).filter((m) => m && posOf(m)), mt = (tpl && mobiles[visuals.indexOf(tpl)] && posOf(mobiles[visuals.indexOf(tpl)])) ? mobiles[visuals.indexOf(tpl)] : ptabs[0];
+  if (!mt) return { json: btn, mobile: null, phone: false, at, why: 'the phone layout has no page tabs to sit beside: the button is on the page only' };
+  const PW = Mirror.PHONE_W, my = posOf(mt).y, mh = posOf(mt).height, mw = Math.min(PW, Sizing.phoneTabWidth(W.text, font));
+  const mob = visuals.map((v, i) => (isObj(v) && !isObj(v.visualGroup) && mobiles[i] && posOf(mobiles[i]) ? posOf(mobiles[i]) : null)).filter(Boolean);
+  const mfree = (x0) => { const A = { x: x0, y: my, width: mw, height: mh }; return !mob.some((b) => overlaps(b, A)); };
+  const mxs = []; for (let x0 = Math.floor(PW - mw); x0 >= 0; x0--) mxs.push(x0); if (lang === 'ar') mxs.reverse();
+  const mx = mxs.find(mfree);
+  if (mx == null) return { json: btn, mobile: null, phone: false, at, why: `no free place ${mw} wide in the phone layout's tab row: the button is on the page only` };
+  const mz = mobiles.filter((m) => m && posOf(m)).map(posOf), mtop = (k) => Math.max(0, ...mz.map((p) => (Number.isFinite(p[k]) ? p[k] : 0)));
+  const mobile = Object.assign(clone(mt), { position: { x: mx, y: my, z: mtop('z') + 1000, width: mw, height: mh, tabOrder: mtop('tabOrder') + 1000 } });
+  if (!mobile.$schema) mobile.$schema = MOBILE_SCHEMA;
+  // the group's phone box holds what is in it (a grouped visual's phone position is a page position)
+  if (g) { const gi = visuals.indexOf(g), gb = mobiles[gi] && posOf(mobiles[gi]); if (gb) { const x0 = Math.min(gb.x, mx), x1 = Math.max(gb.x + gb.width, mx + mw), y0 = Math.min(gb.y, my), y1 = Math.max(gb.y + gb.height, my + mh); Object.assign(gb, { x: x0, width: x1 - x0, y: y0, height: y1 - y0 }); } }
+  return { json: btn, mobile, phone: true, at };
+}
+
+// P: the plan's own (R, keepLtr, tabsShown); built: buildTwin's; labels: by the mirror engine's ids. Returns the copy as
+// a list of files { rel, data } (data: the bytes to write, or from: the original's file copied as it is), and what the
+// plan says: pairs, buttons, syncGroups, bookmarks, tabs
+function languageCopy(P, built, labels) {
+  const { R, loc } = P, tabsShown = P.tabsShown === 'ar' ? 'ar' : 'en', hidden = 'HiddenInViewMode';
+  const newId = idMaker([].concat(R.pages.map((pg) => pg.id), ...R.pages.map((pg) => pg.visuals.map((v) => v.json.name)), R.bookmarks.map((b) => b.json.name)));
+  const arOf = new Map(R.pages.map((pg) => [String(pg.id), newId('page\u0000' + pg.id)])), names = new Map();
+  R.pages.forEach((pg) => names.set(String(pg.id), new Map(pg.visuals.map((v) => [String(v.json.name), newId('visual\u0000' + arOf.get(String(pg.id)) + '\u0000' + v.json.name)]))));
+  const bmOf = new Map(R.bookmarks.map((b) => [String(b.json.name), newId('bookmark\u0000' + b.json.name)]));
+  const changed = new Map(), added = [], pairs = [], buttons = [], syncGroups = [];
+  const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  // an Arabic visual's names and links: its own name and group, its page links, tooltip pages, drillthrough and bookmarks
+  // (Microsoft's validator, PBIR_FILTER_NAME_DUPLICATE_GLOBAL: a filter's name is unique across the report) each filter of
+  // an Arabic page or visual gets its own name, by page (fm: old name -> new), which its bookmarks follow
+  const filtersOf = new Map();
+  const renameFilters = (o, arId, owner) => { const fs0 = isObj(o) && isObj(o.filterConfig) && Array.isArray(o.filterConfig.filters) ? o.filterConfig.filters : [];
+    if (!filtersOf.has(arId)) filtersOf.set(arId, new Map()); const fm = filtersOf.get(arId);
+    fs0.forEach((f) => { if (isObj(f) && f.name != null) { const to = newId('filter\u0000' + arId + '\u0000' + owner + '\u0000' + f.name); fm.set(String(f.name), to); f.name = to; } }); };
+  const remap = (vj, nm) => {
+    if (!isObj(vj)) return;
+    if (vj.name != null && nm.has(String(vj.name))) vj.name = nm.get(String(vj.name));
+    if (vj.parentGroupName != null && nm.has(String(vj.parentGroupName))) vj.parentGroupName = nm.get(String(vj.parentGroupName));
+    const vco = isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) ? vj.visual.visualContainerObjects : null;
+    if (vco) ['visualLink', 'visualTooltip'].forEach((k) => (Array.isArray(vco[k]) ? vco[k] : []).forEach((e) => {
+      if (!isObj(e) || !isObj(e.properties)) return;
+      ['navigationSection', 'section', 'drillthroughSection'].forEach((p) => { const v = litStr(e.properties[p]); if (v != null && arOf.has(v)) e.properties[p] = Ls(arOf.get(v)); });
+      const b = litStr(e.properties.bookmark); if (b != null && bmOf.has(b)) e.properties.bookmark = Ls(bmOf.get(b));
+    }));
+  };
+  let n = 0;
+  built.pages.forEach(({ pg, page, visuals, mobiles }) => {
+    const id = String(pg.id), arId = arOf.get(id), nm = names.get(id), folder = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1), arFolder = 'definition/pages/' + arId + '/';
+    const P0 = pageOf(pg), tooltip = P0.type === 'Tooltip', drill = isObj(P0.pageBinding) && /drillthrough/i.test(String(P0.pageBinding.type || ''));
+    // the English page: the original's, its page hidden when the Arabic tabs are the ones shown
+    const enPage = isObj(pg.page) ? clone(pg.page) : pg.page, enV = pg.visuals.map((v) => clone(v.json)), enM = pg.visuals.map((v) => (v.mobile ? clone(v.mobile.json) : null));
+    if (isObj(enPage) && tabsShown === 'ar') enPage.visibility = hidden;
+    // the Arabic page: the twin's, under its new id, hidden when the English tabs are shown
+    const arPage = isObj(page) ? clone(page) : page, arV = visuals.map((v) => clone(v)), arM = (mobiles || []).map((m) => clone(m || null));
+    if (isObj(arPage)) {
+      arPage.name = arId;
+      if (isObj(arPage.pageBinding) && arPage.pageBinding.name != null) arPage.pageBinding.name = newId('binding\u0000' + arId);
+      if (tabsShown === 'en') arPage.visibility = hidden;
+      if (Array.isArray(arPage.visualInteractions)) arPage.visualInteractions.forEach((x) => { if (isObj(x)) ['source', 'target'].forEach((k) => { if (x[k] != null && nm.has(String(x[k]))) x[k] = nm.get(String(x[k])); }); });
+    }
+    arV.forEach((v, i) => { renameFilters(v, arId, String(pg.visuals[i] ? pg.visuals[i].json.name : i)); remap(v, nm); });
+    if (isObj(arPage)) renameFilters(arPage, arId, '');
+    // each slicer pair in one sync group: a group the English slicer has already, else its own
+    pg.visuals.forEach((v, i) => {
+      if (typeOf(enV[i]) !== 'slicer' || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
+      const has = isObj(enV[i].visual.syncGroup) && typeof enV[i].visual.syncGroup.groupName === 'string' && enV[i].visual.syncGroup.groupName;
+      const ps = isObj(enV[i].visual.query) && isObj(enV[i].visual.query.queryState) ? Object.values(enV[i].visual.query.queryState).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])) : [];
+      const q = ps.map((p) => (isObj(p) && typeof p.queryRef === 'string' ? p.queryRef : '')).find(Boolean) || 'Slicer';
+      if (!has) enV[i].visual.syncGroup = { groupName: `${q.slice(0, 80)} (EN-AR ${++n})`, fieldChanges: true, filterChanges: true };
+      arV[i].visual.syncGroup = clone(enV[i].visual.syncGroup);
+      syncGroups.push({ page: safeName(typeof P0.displayName === 'string' ? P0.displayName : id), slicer: safeName(String(v.json.name)), arabicSlicer: nm.get(String(v.json.name)), group: safeName(enV[i].visual.syncGroup.groupName), ...(has ? { kept: 'the English slicer\'s own sync group: its Arabic copy joins it' } : {}) });
+    });
+    // the language buttons (a tooltip or drillthrough page is reached by its visual, not by the tabs: none)
+    const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
+    if (!tooltip && !drill) {
+      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id));
+      if (en.json) { enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
+      say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
+      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId));
+      if (ar.json) { arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
+      say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
+    }
+    // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
+    if (isObj(enPage) && !jsonEq(enPage, pg.page)) changed.set(pg.rel, json(enPage));
+    pg.visuals.forEach((v, i) => { if (!jsonEq(enV[i], v.json)) changed.set(v.rel, json(enV[i])); if (v.mobile && !jsonEq(enM[i], v.mobile.json)) changed.set(v.mobile.rel, json(enM[i])); });
+    // the Arabic page's files: every file of the English page's folder, under the new page id and visual names
+    const folderOf = new Map(pg.visuals.map((v, i) => [v.rel.split('/')[4], i]));
+    R.files.filter((f) => f.startsWith(folder)).forEach((f) => {
+      const segs = f.split('/'), i = segs[3] === 'visuals' && folderOf.has(segs[4]) ? folderOf.get(segs[4]) : -1;
+      segs[2] = arId; if (i >= 0) segs[4] = nm.get(String(pg.visuals[i].json.name));
+      const rel = segs.join('/');
+      if (f === pg.rel && isObj(arPage)) added.push({ rel, data: json(arPage) });
+      else if (i >= 0 && f === pg.visuals[i].rel) added.push({ rel, data: json(arV[i]) });
+      else if (i >= 0 && pg.visuals[i].mobile && f === pg.visuals[i].mobile.rel && arM[i]) added.push({ rel, data: json(arM[i]) });
+      else added.push({ rel, from: f });
+    });
+    const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
+    pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
+      arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}));
+  });
+  // the bookmarks: an Arabic copy of each (its pages and visuals the Arabic ones, its name as approved), listed after the English
+  const BM = 'definition/bookmarks/bookmarks.json';
+  R.bookmarks.forEach((b) => {
+    const j = clone(b.json), key = String(b.json.name), es = isObj(j.explorationState) ? j.explorationState : null, act = es && es.activeSection != null ? String(es.activeSection) : '';
+    if (labels['bookmark:' + key] != null) j.displayName = labels['bookmark:' + key];
+    j.name = bmOf.get(key);
+    if (es) {
+      if (arOf.has(act)) es.activeSection = arOf.get(act);
+      // the filters it names (by name, in "byName" lists) are the Arabic page's own
+      const byName = (o, fm) => { if (Array.isArray(o)) { o.forEach((x) => byName(x, fm)); return; } if (!isObj(o)) return; Object.keys(o).forEach((k) => { if (k === 'byName' && isObj(o[k])) o[k] = Object.fromEntries(Object.entries(o[k]).map(([fn, v]) => [fm.has(fn) ? fm.get(fn) : fn, v])); byName(o[k], fm); }); };
+      if (isObj(es.sections)) Object.entries(es.sections).forEach(([k, sec]) => { if (arOf.has(k)) byName(sec, filtersOf.get(arOf.get(k)) || new Map()); });
+      if (isObj(es.sections)) es.sections = Object.fromEntries(Object.entries(es.sections).map(([k, sec]) => { const m = names.get(k) || new Map();
+        if (isObj(sec)) ['visualContainers', 'visualContainerGroups'].forEach((x) => { if (isObj(sec[x])) sec[x] = Object.fromEntries(Object.entries(sec[x]).map(([vn, v]) => [m.has(vn) ? m.get(vn) : vn, v])); });
+        return [arOf.has(k) ? arOf.get(k) : k, sec]; }));
+    }
+    if (isObj(j.options) && Array.isArray(j.options.targetVisualNames)) { const m = names.get(act) || new Map(); j.options.targetVisualNames = j.options.targetVisualNames.map((x) => (m.has(String(x)) ? m.get(String(x)) : x)); }
+    added.push({ rel: b.rel.replace(/[^/]+$/, j.name + '.bookmark.json'), data: json(j) });
+  });
+  if (R.bookmarks.length && R.files.includes(BM)) { try { const j = readJson(path.join(loc.dir, ...BM.split('/'))); if (isObj(j) && Array.isArray(j.items)) {
+    const item = (it) => (!isObj(it) ? it : Array.isArray(it.children) ? Object.assign(clone(it), { name: newId('bookmarkGroup\u0000' + it.name), children: it.children.map((c) => bmOf.get(String(c)) || c) }) : Object.assign(clone(it), { name: bmOf.get(String(it.name)) || it.name }));
+    j.items = j.items.concat(j.items.map(item)); changed.set(BM, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
+  // pages.json: the English pages, then the Arabic ones in the same order; the first page opened in the language shown
+  const PJ = 'definition/pages/pages.json';
+  let activePage = null;
+  if (R.files.includes(PJ)) { try { const j = readJson(path.join(loc.dir, ...PJ.split('/'))); if (isObj(j)) {
+    const order = Array.isArray(j.pageOrder) ? j.pageOrder.map(String) : R.pages.map((pg) => String(pg.id));
+    j.pageOrder = order.concat(order.filter((x) => arOf.has(x)).map((x) => arOf.get(x)));
+    const first = j.activePageName != null && arOf.has(String(j.activePageName)) ? String(j.activePageName) : order.find((x) => arOf.has(x) && !(pairs.find((p) => p.english.id === safeName(x)) || {}).tooltip);
+    if (tabsShown === 'ar' && first) j.activePageName = arOf.get(first);
+    activePage = j.activePageName != null ? safeName(String(j.activePageName)) : null;
+    changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
+  if (built.ext) changed.set(EXT, json(built.ext));
+  if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); changed.set('.platform', json(pl)); }
+  const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
+  const anyNav = R.pages.some((pg) => pg.visuals.some((v) => Mirror.kindOf(v.json) === 'navigator')), anyBmNav = R.pages.some((pg) => pg.visuals.some((v) => typeOf(v.json) === 'bookmarkNavigator'));
+  const notes = [].concat(anyNav ? ['A page navigator lists the pages shown in the tabs only: on an Arabic page it lists the English pages (use page buttons there)'] : [], anyBmNav ? ['A bookmark navigator lists every bookmark: the English and the Arabic ones'] : [],
+    R.bookmarks.length ? ['A bookmark group keeps its name in its Arabic copy (bookmarks.json)'] : []);
+  const EN = LANG.en.text;
+  const tabs = tabsShown === 'en'
+    ? { shown: 'the English pages, as in the original', hidden: `the Arabic pages (hidden in the tabs): each English page's «${EN}» button opens its Arabic page, whose "English" button goes back`, tooltipPages: 'stay hidden in both languages',
+      service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per English page; the Arabic pages are not in the page list and are reached by the «${EN}» button, and "English" brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` }
+    : { shown: 'the Arabic pages (the report opens on the first Arabic page)', hidden: `the English pages (hidden in the tabs): each Arabic page's "English" button opens its English page, whose «${EN}» button goes back`, tooltipPages: 'stay hidden in both languages',
+      service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per Arabic page; the English pages are not in the page list and are reached by the "English" button, and «${EN}» brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` };
+  return { files, pairs, buttons, syncGroups, bookmarks: R.bookmarks.length, activePage, tabs, notes, tabsShown };
 }
 
 // ---- the plan ----
@@ -557,7 +809,9 @@ function notTranslatedOf(texts, labels, problems) {
 
 export function planTwin(a) {
   const loc = locate(a.path), R = readOriginal(loc);
-  const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
+  // (0.3.0 X1) into "same": one report holding both languages, "<name> (EN-AR)"; the default, the separate twin "<name> AR"
+  const same = a.into === 'same', outBase = loc.base + (same ? COPY_TAG : ' AR');
+  const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
   const free = nothingAt(twinDir) && nothingAt(twinPbip);
   const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = dateColumnsOf(model.m);
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
@@ -613,11 +867,20 @@ export function planTwin(a) {
   if (together.bars.length) keptTogether.push({ what: 'bar lists with their names beside them', why: 'mirrored as one block in their original order, the bars still growing toward their names (mirrored one by one, the bars and names came apart)', where: together.bars.slice(0, 30) });
   if (together.on.length) keptTogether.push({ what: 'small visuals on a bigger visual (badges, icons)', why: 'they move with the visual they sit on, at the same place on it (what that visual draws inside does not flip, so mirrored on their own they covered its icon or text)', where: together.on.slice(0, 30) });
   if (!model.m) { const t = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'column').map((v) => safeName(pg.id) + '/' + safeName(v.json.name))); if (t.length) checkInTwin.push({ what: 'charts whose axis may be a date', why: 'the model could not be read, so a continuous date axis can\'t be told from a category: such a chart may stay left to right', where: t.slice(0, 30) }); }
-  const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
+  const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc, outBase);
   const { script, howToApply, ...monthShown } = month;
   const ref = byPathOf(R.pbir);
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
-  const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft }, rawLabels(texts, labels));
+  const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, same }, rawLabels(texts, labels));
+  // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
+  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown }, built, rawLabels(texts, labels)) : null;
+  const languages = copy ? { copy: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.' },
+    how: 'One report holding both languages: the original\'s English pages as they are, and after them each page\'s Arabic page, mirrored as the twin is (the same Arabic texts, phone layout, waterfalls and empty state). Every page has a small language button to its counterpart; the slicers of each page pair are kept in sync; the Arabic pages\' links (page tabs, tooltip pages, bookmarks) go to Arabic pages.',
+    pairs: copy.pairs, buttons: copy.buttons, syncGroups: copy.syncGroups, tabs: copy.tabs, activePage: copy.activePage,
+    bookmarks: copy.bookmarks ? `${copy.bookmarks} bookmark${copy.bookmarks === 1 ? '' : 's'} copied for the Arabic pages (their pages and visuals the Arabic ones, their names as approved); the English ones as they are` : 'none',
+    ...(built.textMeasures.length ? { measures: built.textMeasures.map((x) => Object.assign({}, x, { why: 'the English pages keep the original measure; the Arabic pages use this copy with the approved Arabic text' })) } : {}),
+    ...(copy.notes.length ? { notes: copy.notes } : {}),
+    sayInPlan: 'Show the user the copy\'s name, every page pair, the language buttons (and any not placed, with why), the slicers kept in sync and which tabs are shown (tabs.service: what a reader in the Power BI service sees). tabsShown "ar" shows the Arabic pages instead.' } : null;
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
   // (0.3.0 D3) what stays English in the twin, and why, said before the go (as create_report's plan does: R2, #75)
   const notTranslated = notTranslatedOf(texts, labels, problems);
@@ -626,19 +889,20 @@ export function planTwin(a) {
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
+  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot, phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
-    keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
+    keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
     texts: texts.slice(0, TEXTS_MAX).map(({ rawId, raw, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
     labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
+    ...(languages ? { languages } : {}),
     sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...notCopiedOf(R.left),
@@ -661,10 +925,10 @@ function scriptName(dir, base, text) {
  *  the folder it is written in, as writeTwin writes them: the copied report's files, its own reportExtensions.json when
  *  the original has none, the month script when offered and not already there, and the .pbip */
 export function twinOutputs(P) {
-  const { loc, R } = P, dir = loc.base + ' AR.Report', out = R.files.map((rel) => dir + '/' + rel);
-  if (P.built.ext && !R.files.includes(EXT)) out.push(dir + '/' + EXT);
-  if (P.month.offered) { const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
-  return out.concat([loc.base + ' AR.pbip']);
+  const { loc, R } = P, dir = P.outBase + '.Report', out = P.copy ? P.copy.files.map((f) => dir + '/' + f.rel) : R.files.map((rel) => dir + '/' + rel);
+  if (!P.copy && P.built.ext && !R.files.includes(EXT)) out.push(dir + '/' + EXT);
+  if (P.month.offered) { const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
+  return out.concat([P.outBase + '.pbip']);
 }
 export function writeTwin(a, plan) {
   const d = plan.data || {};
@@ -672,12 +936,14 @@ export function writeTwin(a, plan) {
   if (d.source && reportPrint(a.path) !== d.source) throw new Error('Nothing was written: the original report changed after the plan was approved. Make the plan again (call this tool without planId), show it to the user and wait for their go.');
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
-  const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages });
+  // (X1) the plan's own options: a call with planId that names other ones is refused, never written another way
+  if ((a.into != null && (a.into === 'same') !== (d.into === 'same')) || (a.tabsShown != null && d.into === 'same' && a.tabsShown !== (d.tabsShown || 'en'))) throw new Error('Nothing was written: into or tabsShown differ from the approved plan\'s. Make the plan again with the options the user wants, show it and wait for their go.');
+  const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, into: d.into, tabsShown: d.tabsShown });
   // (B-154) the model the plan read (for the month column and the dates), as it was at the go
   if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P;
-  const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
-  if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
+  const twinDir = path.join(loc.project, P.outBase + '.Report'), twinPbip = path.join(loc.project, P.outBase + '.pbip');
+  if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old ${P.same ? 'copy' : 'twin'}, then ask again.`);
   real(twinDir); real(twinPbip);
   // everything is built in memory first (the plan's own build: buildTwin); then written, each file new
   const out = new Map(), labels = rawLabels(P.texts, P.labels);
@@ -695,18 +961,21 @@ export function writeTwin(a, plan) {
   if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; }
   // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
   // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
-  const tree = R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
+  // (X1) the copy holding both languages: its files as the plan built them (the original's copied as they are)
+  const tree = P.copy ? P.copy.files.map((f) => ({ path: path.basename(twinDir) + '/' + f.rel, data: f.data != null ? f.data : readBytes(path.join(loc.dir, ...f.from.split('/'))) }))
+    : R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
   // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
-  if (out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
+  if (!P.copy && out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
   let month = { written: false, why: P.month.why };
   if (P.month.offered) {
-    const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script);
+    const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script);
     if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
     month = { scriptFile: pathOut(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
   writeTree(loc.project, tree);
-  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
+  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
+    ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
