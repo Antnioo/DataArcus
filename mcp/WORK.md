@@ -1,8 +1,34 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3.0 release branch" just below (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R3" just below (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## R3: a right-to-left waterfall reads from the right (19 Oct, cloud builder; branch `fix/0.3.0-waterfall-rtl` from `release/0.3.0`; one PR into release/0.3.0, not merged)
+The reviewer's brief (19 Oct, the owner's must-fix: in an Arabic report the waterfall did not switch direction). Another
+builder has `fix/0.3.0-arabic-titles` (titles in pbip-page.js / story titles): this branch stays out of those lines.
+- (1) What a waterfall has (Microsoft's capabilities, `@microsoft/powerbi-core-visual-schema` as mcp/package.json pins it,
+  data/capabilities.json `waterfallChart.objects`; the bundled PBIR schemas in mcp/schemas name no visual's objects, only
+  `sortDefinition`: visualConfiguration 2.1.0 schema-embedded.json:52, direction "Descending" :120): categoryAxis has NO
+  invertAxis (show, preferredCategoryWidth, maxMarginFactor, innerPadding, fonts, titles, axisStyle); valueAxis has
+  switchAxisPosition and invertAxis (the latter turns values upside down: not a mirror); legend.position (with a
+  Breakdown only); no "reverse" anywhere. So the honest mirror = the order (sort Descending) + the value axis at the right.
+- (2) What was written before: the WRITER already did it (visual-gallery.js objects/mirrorSort, called in pbip-page.js
+  when chartAxes is "mirrored", create_report's default for Arabic): an Arabic waterfall by month is sorted Descending by
+  Min of Month Number (in Tooltips) with valueAxis.switchAxisPosition. The ARABIC TWIN did nothing: report-mirror.js
+  kindOf gave waterfallChart 'other' (moved only). Fixed there: kind 'waterfall' = the column charts' value axis and sort
+  rules, never categoryAxis.invertAxis (not even for a date column), plan text says only the order is reversed.
+- Test first: `mcp/test-0.3.0-waterfall-rtl.mjs` (in npm test), 15 checks, 6 red on release/0.3.0 (all twin: M1-M6);
+  the writer's W1-W5 and the validator V (Arabic report, twin page) were green already. test-0.3.0-twin.mjs T6 changed
+  on purpose (the waterfall moved from "cannot" to "mirrors"; the scatter stays under cannot).
+- Decisions I made: the twin's waterfall follows the column charts' rule exactly, including timeRightToLeft: false
+  (M5 first said "the month sort stays"; the shared rule keeps only a sort by the category itself, so a writer-made
+  chart sorted by Min of the month number is flipped anyway: column charts too; not changed, listed for the owner);
+  the legend is not moved on a waterfall (not measured); no new Arabic sentence.
+- For the laptop (Desktop 2.159): an Arabic report (gallery: true) with a waterfall by month, and the Arabic twin of
+  its English report: the first month at the right, the running total building right to left, the Total column at the
+  left end, the value axis at the right; the English report unchanged (January at the left, axis at the left).
+- Next: the reviewer reviews the PR, the laptop checks in Desktop, the owner merges.
 
 ## 0.3.0 release branch (19 Oct, cloud builder; branch `release/0.3.0` from main `d76703c`; DRAFT PR #74 to main, the owner merges after the laptop proof)
 The owner's decision (19 Oct): beta testers get 0.3.0, the 0.3 drafts as they are. One `git merge --no-ff` per branch,

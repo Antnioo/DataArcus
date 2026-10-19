@@ -10,6 +10,8 @@
  *  - column, line, area and combo charts: the value axis at the right, and the category order reversed BY THE SORT
  *    (an existing sort flipped, else Descending by the category). categoryAxis.invertAxis is never written: on a
  *    categorical axis Desktop ignored it. Mirroring time is the owner's choice (opts.timeRightToLeft, default true);
+ *  - waterfall charts (0.3.0 R3): the same value axis and sort. Microsoft's capabilities give a waterfall's
+ *    categoryAxis no invertAxis, so the order is the only mirror: its steps run right to left, the first at the right;
  *  - legends: left and right swapped, TopRight when none is set; titles right-aligned (centred kept); text boxes
  *    right-aligned (centred kept); tables: columns reversed, text columns right-aligned; a matrix's values reversed;
  *    a new card's values reversed and right-aligned (a single value too, its inner margins swapped); buttons: a left text or icon goes right;
@@ -31,10 +33,12 @@
 
   // ---- the kinds ----
   const COLUMN = ['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart'];
+  // (a waterfall's steps follow its category order: the sort reverses them; its category axis has no invertAxis)
+  const WATERFALL = ['waterfallChart'];
   const BAR = ['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart'];
   const SLICER = ['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer'];
-  // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a waterfall,
-  // a scatter chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
+  // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a scatter
+  // chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
   // for it (the cross-review's T6), instead of claiming it has no side
   const SIDELESS = ['card', 'multiRowCard', 'kpi', 'gauge', 'donutChart', 'pieChart', 'funnel', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'image', 'shape', 'basicShape'];
   // a custom visual: the shared catalog's test (visual-types.js; the reading block uses the same one). A visual with no
@@ -49,6 +53,7 @@
     if (isCustom(t)) return 'custom';
     if (COLUMN.includes(t)) return 'column';
     if (BAR.includes(t)) return 'bar';
+    if (WATERFALL.includes(t)) return 'waterfall';
     if (t === 'tableEx') return 'table';
     if (t === 'pivotTable') return 'matrix';
     if (t === 'cardVisual') return 'newCard';
@@ -60,6 +65,7 @@
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
+    waterfall: 'waterfall charts: value axis at the right, steps right to left by the sort (the first at the right); Power BI has no setting to invert a waterfall\'s category axis, so only its order is reversed',
     bar: 'bar charts: names at the right, bars growing from the right',
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned',
     matrix: 'matrices: values in reverse order (rows keep their order)',
@@ -71,7 +77,7 @@
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
     plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
-    other: 'other visuals (waterfall, scatter...): moved only; no right-to-left setting is proven for them',
+    other: 'other visuals (scatter...): moved only; no right-to-left setting is proven for them',
     unreadable: 'visuals whose file has an unexpected shape: copied as they are, not mirrored'
   };
 
@@ -132,7 +138,7 @@
       plainEntry(objects(), 'valueAxis').properties.invertAxis = mk('true');
       changes.push('axes');
     }
-    if (kind === 'column') {
+    if (kind === 'column' || kind === 'waterfall') {
       plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
       changes.push('value axis');
       const q = v.query, c0 = first(projections(q, 'Category'));
@@ -151,7 +157,7 @@
       const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
       const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
       const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
-      if (cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
+      if (kind === 'column' && cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
     // (charts only: the labs saw it there; a donut's or a map's legend is left as it is)

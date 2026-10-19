@@ -26,6 +26,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - #64 Column or bar from the label limits measured in Desktop 2.159 (B-140 option B).
 - #69 B-168: `plan_layout` checks the exact report `create_report` writes, and the write is those bytes.
 - #70, #71 The 0.2.9.1 fixes (below), with main.
+- R3 A right-to-left waterfall reads from the right: the Arabic twin now mirrors a waterfall as the writer does (the
+  value axis at the right, the steps reversed by the sort: the first category at the right); Power BI has no setting
+  to invert a waterfall's category axis, so only its order is reversed.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
