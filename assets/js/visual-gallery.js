@@ -239,15 +239,21 @@
   const LABELS = Object.freeze({ combo: { en: 'Line and clustered column chart (combo)', ar: 'مخطط خطي وعمودي (مركب)' }, waterfall: { en: 'Waterfall chart', ar: 'مخطط شلالي' },
     multiples: { en: 'Column chart, small multiples', ar: 'مخطط أعمدة بمضاعفات صغيرة' } });
   const labelOf = (k, lang) => { const L = LABELS[fromTool(k)]; return L ? L[lang === 'ar' ? 'ar' : 'en'] : null; };
-  // which slot of a designed page each kind asked for takes (ask: true, every kind; or a list of kinds, either name):
-  // combo the first line chart (the trend); waterfall the first column chart, else that line chart when combo does not
-  // take it; multiples the next column chart, else the first bar chart. Each keeps its own kind (plain) for the writer
-  // to go back to when its fields don't fit. Pure: the slots are copied
+  // which slot of a designed page a kind asked for takes (ask: true, every kind; or a list of kinds, either name): combo
+  // the first line chart (the trend); waterfall the first column chart, else the line chart; multiples a column chart,
+  // else a bar chart. (0.3.0 D2, the reviewer's decision of 19 Oct) at most ONE gallery visual a page, on every designed
+  // page, and only where its fields suit (B, the bound fields: fits; a combo in two units does not suit a page it was not
+  // placed on by the person); a kind used on an earlier page (o.avoid) comes after the others. Each keeps its own kind
+  // (plain) for the writer to go back to. Pure: the slots are copied
   const PLACES = { combo: ['line'], waterfall: ['column', 'line'], multiples: ['column', 'bar'] };
-  function assign(slots, ask) {
-    const want = ask === true ? KIND_NAMES.slice() : Array.isArray(ask) ? KIND_NAMES.filter((k) => ask.map(fromTool).includes(k)) : [];
-    const out = (slots || []).map((s) => Object.assign({}, s)), taken = new Set();
-    want.forEach((k) => { for (const kind of PLACES[k]) { const i = out.findIndex((s, j) => !taken.has(j) && s.kind === kind); if (i >= 0) { taken.add(i); out[i] = Object.assign(out[i], { kind: k, plain: kind }); return; } } });
+  const askedKinds = (ask) => (ask === true ? KIND_NAMES.slice() : Array.isArray(ask) ? KIND_NAMES.filter((k) => ask.map(fromTool).includes(k)) : []);
+  function assign(slots, ask, o) {
+    const B = o && o.B, avoid = (o && o.avoid) || new Set(), want = askedKinds(ask), out = (slots || []).map((s) => Object.assign({}, s));
+    const order = want.filter((k) => !avoid.has(k)).concat(want.filter((k) => avoid.has(k)));
+    for (const k of order) {
+      if (B && !fits(k, B).fits) continue;
+      for (const kind of PLACES[k]) { const i = out.findIndex((s) => s.kind === kind); if (i >= 0) { out[i] = Object.assign(out[i], { kind: k, plain: kind }); return out; } }
+    }
     return out;
   }
   // a gallery visual's title parts for the writer's "two charts read the same" rule (story-titles.js alternate, #57):
@@ -262,6 +268,6 @@
     return { m: both, c, tail: TAILS[kind][inAr ? 'ar' : 'en'] };
   }
 
-  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort };
+  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort };
   if (node) module.exports = api; else root.DAGallery = api;
 })(typeof self !== 'undefined' ? self : this);

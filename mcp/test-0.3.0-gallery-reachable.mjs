@@ -133,15 +133,30 @@ try {
   // ---------- D: a design with gallery: true; a list; none ----------
   let D = null, D0 = null;
   {
-    D = await write({ name: 'Gallery Design', lang: 'en', layout: 'exec', gallery: true, secondPage: false, planFields: SAME_UNIT });
-    const kinds = (D.pl.j && D.pl.j.slots || []).map((x) => x.kind);
-    chk(() => ['combo', 'waterfall', 'smallMultiples'].every((k) => kinds.includes(k)) && !kinds.includes('line'), () => `D: the plan's slots name the gallery kinds (not line, bar, column, table): ${D.err || JSON.stringify(kinds)}`);
+    // (the reviewer's decision of 19 Oct: every designed page, at most one gallery visual a page, only where its fields
+    // suit; the tooltip pages keep their plain kinds)
+    D = await write({ name: 'Gallery Design', lang: 'en', layout: 'exec', gallery: true, secondPage: true, planFields: SAME_UNIT });
+    const kinds = (D.pl.j && D.pl.j.slots || []).map((x) => x.kind), G3 = ['combo', 'waterfall', 'smallMultiples'];
+    chk(() => kinds.filter((k) => G3.includes(k)).length === 1 && kinds.includes('combo') && !kinds.includes('line'), () => `D: the plan's first page takes one gallery visual, the combo in the trend's place: ${D.err || JSON.stringify(kinds)}`);
     chk(() => /Visual gallery<\/td><td[^>]*>[^<]*(yes|every kind)/i.test(unesc(D.html || '')), () => `D: the approval page shows the gallery the plan pins: ${(unesc(D.html || '').match(/<h2>Look and options[\s\S]*?<\/table>/) || [''])[0].slice(0, 500)}`);
-    const vs = D.dir && fs.existsSync(D.dir) ? allVisuals(D.dir) : [];
-    chk(() => ['combo', 'waterfall', 'smallMultiples'].every((k) => vs.some(KIND_OF[k])), () => `D: create_report writes the three: ${D.err || short(D.r)} ${JSON.stringify(vs.map((v) => v.visual.visualType))}`);
+    const pg = D.dir && fs.existsSync(D.dir) ? pagesOf(D.dir) : [], shown = pg.filter((p) => p.page.type !== 'Tooltip'), tips = pg.filter((p) => p.page.type === 'Tooltip');
+    const gOf = (p) => p.visuals.filter((v) => KIND_OF.combo(v) || KIND_OF.waterfall(v) || isMultiples(v)).map((v) => (KIND_OF.combo(v) ? 'combo' : KIND_OF.waterfall(v) ? 'waterfall' : 'smallMultiples'));
+    chk(() => shown.length === 2 && tips.length >= 1 && pg.length >= 3 && JSON.stringify(shown.map(gOf)) === '[["combo"],["waterfall"]]' && tips.every((p) => !gOf(p).length),
+      () => `D: three pages: one gallery visual on each designed page (a kind not used before first), none on the tooltip pages: ${D.err || short(D.r)} ${JSON.stringify(pg.map((p) => [p.page.displayName, p.page.type || '', gOf(p)]))}`);
     const c = D.r && !D.r.err ? await check(D.pbip) : null;
     chk(() => c && clean(c), () => `D: validator 0 errors: ${short(c || D.r)}`);
     chk(() => c && noBreak(c), () => `D: check_report 0 can break: ${short(c || D.r)}`);
+    const gl = (galleryOf(D.pl) || {}).slots || [];
+    chk(() => gl.some((g) => g.kind === 'combo' && g.page && g.written === 'combo') && gl.some((g) => g.kind === 'waterfall' && g.page && g.page !== gl.find((x) => x.kind === 'combo').page)
+      && gl.some((g) => g.kind === 'smallMultiples' && g.page === null && g.written === 'not placed' && /one a page/.test(g.why)), () => `D: the plan names each gallery visual by page, and the kind no page took, with why: ${JSON.stringify(gl)}`);
+    // none where the fields don't suit: a combo of two units is never placed on a designed page (two panels are only for a
+    // combo slot the person placed)
+    const NU = await write({ name: 'No Combo', lang: 'en', layout: 'exec', gallery: ['combo'], secondPage: true, planFields: MIXED });
+    const nk = (NU.pl.j && NU.pl.j.slots || []).map((x) => x.kind), ng = (galleryOf(NU.pl) || {}).slots || [], nv = NU.dir && fs.existsSync(NU.dir) ? allVisuals(NU.dir) : [];
+    chk(() => nk.includes('line') && !nk.includes('combo') && !nv.some(KIND_OF.combo) && ng.length === 1 && ng[0].written === 'not placed' && /different units/.test(ng[0].why) && nv.filter((v) => v.visual.visualType === 'lineChart').length === 1,
+      () => `D: a combo whose fields don't suit is placed nowhere, and the plan says why: ${NU.err || JSON.stringify(nk)} ${JSON.stringify(ng)} ${JSON.stringify(nv.map((v) => v.visual.visualType))}`);
+    const cn = NU.r && !NU.r.err ? await check(NU.pbip) : null;
+    chk(() => cn && clean(cn), () => `D: validator 0 errors on the report without a placed gallery visual: ${short(cn || NU.r)}`);
     const one = await w.call('plan_layout', { path: MP, name: 'Only Waterfall', layout: 'exec', gallery: ['waterfall'], planFields: SAME_UNIT });
     const k1 = (one.j && one.j.slots || []).map((x) => x.kind);
     chk(() => k1.includes('waterfall') && !k1.includes('combo') && !k1.includes('smallMultiples') && k1.includes('line') && k1.includes('bar'), () => `D2: gallery ["waterfall"]: the waterfall alone: ${short(one)} ${JSON.stringify(k1)}`);
@@ -200,9 +215,10 @@ try {
 
   // ---------- P: the approval preview draws them ----------
   {
-    const H = D && D.html ? D.html : '', svg = (H.match(/<svg[\s\S]*?<\/svg>/) || [''])[0];
-    const charts = (svg.match(/data-kind="(line|column)"/g) || []).length;
-    chk(() => charts >= 3 && /placeholder/i.test(unesc(H)), () => `P: the preview draws the gallery visuals (placeholders) and the page says so: ${charts} line/column shapes; ${(unesc(H).match(/<h2>Visual gallery[\s\S]*?<\/table>/) || [''])[0].slice(0, 400)}`);
+    // (each designed page's svg: the combo drawn as a line, the waterfall as columns, page by page)
+    const H = D && D.html ? D.html : '', svgs = H.match(/<svg[\s\S]*?<\/svg>/g) || [];
+    const charts = svgs.filter((x) => /data-kind="(line|column)"/.test(x)).length;
+    chk(() => svgs.length >= 2 && charts >= 2 && /placeholder/i.test(unesc(H)), () => `P: the preview draws the gallery visuals (placeholders) and the page says so: ${charts} line/column shapes; ${(unesc(H).match(/<h2>Visual gallery[\s\S]*?<\/table>/) || [''])[0].slice(0, 400)}`);
   }
 } finally {
   await w.close();
