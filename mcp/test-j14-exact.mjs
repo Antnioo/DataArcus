@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 
@@ -95,13 +96,43 @@ chk(() => cr3.err && /make the plan again/i.test(cr3.t) && /Nothing was written/
 chk(() => tree(ROOT).length === n3 && !fs.existsSync(path.join(PROJECT, 'Tiny Changed.pbip')), () => `E-14 zero writes after the refusal (${n3} -> ${tree(ROOT).length})`);
 fs.writeFileSync(MODEL, JSON.stringify(bim));
 
-// ---- E-15, E-16: a check that could not run makes the result incomplete, never green ----
+// ---- E-15, F-1, F-2: a critical check that did not run: incomplete, and no plan id (the owner's decision, 19 Oct: when
+// Microsoft's validator or the reference check did not run, the plan gets no plan id) ----
 const sk = await serverClient(ROOT, { DATAARCUS_TEST_CHECK_SKIP: 'validator' });
 const pl4 = await ask(sk, 'plan_layout', Object.assign({}, INPUTS, { name: 'Tiny Skipped', planFields: FIELDS }));
 const ex4 = pl4.j && pl4.j.exactCheck;
 chk(() => ex4 && ex4.status === 'incomplete' && (ex4.notRun || []).some((x) => x.check === 'validator') && ex4.checks.validator.ran === false, () => `E-15 a skipped validation makes the plan's check incomplete: ${JSON.stringify(ex4 || null).slice(0, 400)}`);
-chk(() => ex4 && /not every check/i.test(ex4.sayInPlan || ''), () => `E-16 an incomplete check is said in the plan: ${ex4 && ex4.sayInPlan}`);
+chk(() => pl4.j && !pl4.j.plan && (pl4.j.planProblems || []).some((x) => /validator/i.test(x)), () => `F-1 Microsoft's validator did not run: no plan id, said in planProblems: ${short(pl4)}`);
 await sk.close();
+const sr = await serverClient(ROOT, { DATAARCUS_TEST_CHECK_SKIP: 'references' });
+const pl6 = await ask(sr, 'plan_layout', Object.assign({}, INPUTS, { name: 'Tiny No Refs', planFields: FIELDS }));
+chk(() => pl6.j && pl6.j.exactCheck && pl6.j.exactCheck.status === 'incomplete' && !pl6.j.plan && (pl6.j.planProblems || []).some((x) => /fields against the model|reference/i.test(x)),
+  () => `F-2 the reference check did not run: incomplete, no plan id: ${short(pl6)}`);
+await sr.close();
+
+// ---- F-3: only a size cap skipped part of the check (a page background over the 8 MB DataArcus reads; a background may
+// be 10 MB): the plan keeps its id, and the approval page lists exactly what was not checked, before the click ----
+{
+  const { PNG } = await import('pngjs');
+  const png = new PNG({ width: 1500, height: 1500 }); crypto.randomFillSync(png.data);
+  fs.mkdirSync(path.join(ROOT, 'pics'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'pics/big.png'), PNG.sync.write(png, { deflateLevel: 0 }));
+  const bigSize = fs.statSync(path.join(ROOT, 'pics/big.png')).size;
+  const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
+  const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+  const HAND = { path: 'tiny', name: 'Tiny Big', pages: [{ name: 'Big', width: 1280, height: 720, background: 'pics/big.png', slots: [{ kind: 'kpi', x: 24, y: 24, w: 300, h: 110 }, { kind: 'line', title: 'Trend', x: 24, y: 160, w: 800, h: 480 }] }] };
+  const p7 = await ask(w, 'plan_layout', HAND), e7 = p7.j && p7.j.exactCheck;
+  chk(() => bigSize > 8 * 1024 * 1024 && bigSize <= 10 * 1024 * 1024 && p7.j.plan && p7.j.plan.planId && e7.status === 'incomplete' && e7.notRun.some((x) => x.check === 'validator' && x.capped === true),
+    () => `F-3 a background over the cap (${bigSize} bytes): the plan keeps its id, incomplete, the validator skipped by the size cap: ${short(p7)} ${JSON.stringify(e7 || null).slice(0, 300)}`);
+  let page = '';
+  if (p7.j && p7.j.plan) {
+    const n = links().length; await ask(w, 'approve_plan', { planId: p7.j.plan.planId });
+    for (let k = 0; k < 100 && links().length <= n; k++) await new Promise((r) => setTimeout(r, 50));
+    page = await new Promise((resolve) => { http.get(links()[n] || 'http://127.0.0.1:1/', (res) => { let t = ''; res.setEncoding('utf8'); res.on('data', (c) => { t += c; }); res.on('end', () => resolve(t)); }).on('error', () => resolve('')); });
+  }
+  chk(() => /Not checked before writing/.test(page) && /Microsoft(&#39;|')s validator/.test(page) && page.indexOf('Not checked before writing') < page.indexOf('name="decision" value="approve"'),
+    () => `F-3 the approval page lists what was not checked, above Approve: ${(/Not checked[\s\S]{0,400}/.exec(page) || [page.slice(0, 300)])[0]}`);
+  await w.close();
+}
 
 // ---- E-17 to E-20: the checker on its own (lib/artifact.mjs), on the written bytes ----
 let A = null; try { A = await import('./lib/artifact.mjs'); } catch (e) { A = null; }
