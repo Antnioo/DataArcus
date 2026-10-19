@@ -52,7 +52,8 @@ if (CM) {
   chk(() => rq && CM.signature(rq, rr.rawTables) === CM.signature(rq, raw2) && CM.signature(rq, rr.rawTables) !== CM.signature(rq, raw3), () => 'U5. a relationship question\'s signature follows its columns\' types, not their descriptions');
   // a record: hashes and the answer only
   const rec = CM.record(q1, 'intended', raw1, '2026-10-18T10:00:00.000Z');
-  chk(() => JSON.stringify(Object.keys(rec).sort()) === JSON.stringify(['answer', 'at', 'by', 'evidenceSignature', 'object', 'questionId']) && rec.by === 'user' && rec.questionId === 'duplicateAggregate' && rec.object === '[Units Doubled]' && rec.answer === 'intended' && rec.evidenceSignature === CM.signature(q1, raw1),
+  // (R5, 0.3.0: the question id and the object are hashed too; changed on purpose, test-0.3.0-answers-safety.mjs F10)
+  chk(() => JSON.stringify(Object.keys(rec).sort()) === JSON.stringify(['answer', 'at', 'by', 'evidenceSignature', 'objectHash', 'questionHash']) && rec.by === 'user' && rec.questionHash === CM.sha256(JSON.stringify(['b148-question', 'duplicateAggregate'])) && rec.objectHash === CM.sha256(JSON.stringify(['b148-object', '[Units Doubled]'])) && rec.answer === 'intended' && rec.evidenceSignature === CM.signature(q1, raw1),
     () => `U6. the record's shape: ${JSON.stringify(rec)}`);
   chk(() => !JSON.stringify(rec).includes('SUM(') && !JSON.stringify(rec).includes('Qty'), () => `U7. a record holds no DAX: ${JSON.stringify(rec)}`);
   chk(() => { let bad = false; try { CM.record(q1, 'maybe', raw1); } catch (e) { bad = true; } return bad; }, () => 'U8. an answer other than intended or mistake is refused');
@@ -91,7 +92,7 @@ const health = (extra) => s.call('check_model_health', Object.assign({ path: tar
   const h2 = await health({ planId: id, answers: [{ answerKey: key, answer: 'intended' }] });
   let saved = null; try { saved = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch (e) { saved = null; }
   const recs = saved && saved.answers;
-  chk(() => !h2.err && Array.isArray(recs) && recs.length === 1 && recs[0].questionId === 'duplicateAggregate' && recs[0].object === '[Units Doubled]' && recs[0].answer === 'intended' && recs[0].by === 'user' && /^[0-9a-f]{64}$/.test(recs[0].evidenceSignature),
+  chk(() => !h2.err && Array.isArray(recs) && recs.length === 1 && recs[0].questionHash === CM.sha256(JSON.stringify(['b148-question', 'duplicateAggregate'])) && recs[0].objectHash === CM.sha256(JSON.stringify(['b148-object', '[Units Doubled]'])) && recs[0].answer === 'intended' && recs[0].by === 'user' && /^[0-9a-f]{64}$/.test(recs[0].evidenceSignature),
     () => `S4. with the approved plan the answers file is written with the record: ${short(h2)} / ${JSON.stringify(saved)}`);
   chk(() => { const t = fs.readFileSync(FILE, 'utf8'); return !t.includes('SUM(') && !t.includes('Qty') && !t.includes('Sales'); }, () => 'S5. the answers file holds no DAX text and no table or column name beyond the question\'s object');
   // the next check: not asked again, listed as answered
