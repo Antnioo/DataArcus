@@ -84,13 +84,20 @@ export function planLint(a) {
   const page0 = b.r.files.filter((f) => /\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(f.path) && f.path.includes('/pages/' + (inv.pages[0] || {}).id + '/'));
   const titles = page0.map((f) => { try { const v = JSON.parse(f.data).visual || {}, g = (((v.visualContainerObjects || {}).general || [])[0] || {}).properties || {}, t = (((v.visualContainerObjects || {}).title || [])[0] || {}).properties || {};
     return t.show && t.show.expr && t.show.expr.Literal.Value === 'true' && g.altText ? String(g.altText.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; } catch (e) { return null; } }).filter(Boolean);
+  // (0.3.0 R2) every field the planned report shows, as "Table[Field]" (its visuals' projections), kept off the answer as
+  // kinds is: an Arabic plan names an Arabic name for each, or lists it as kept in English, before the go
+  const fields = new Set();
+  b.r.files.filter((f) => /\/visual\.json$/.test(f.path)).forEach((f) => { try { Object.values((((JSON.parse(f.data).visual || {}).query || {}).queryState) || {}).forEach((r) => (r.projections || []).forEach((p) => {
+    const x = p.field || {}, e = x.Measure || x.Column || ((x.Aggregation || {}).Expression || {}).Column, t = e && e.Expression && e.Expression.SourceRef && e.Expression.SourceRef.Entity;
+    if (t && e.Property) fields.add(`${t}[${e.Property}]`); })); } catch (e) { /* not a visual */ } });
   // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
   // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
   return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
     kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false },
     tops: { value: (b.r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
     aggregation: { value: aggregation, enumerable: false },
-    titles: { value: titles, enumerable: false } });
+    titles: { value: titles, enumerable: false },
+    fields: { value: [...fields], enumerable: false } });
 }
 
 // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the pages of the plan as the shared renderer draws

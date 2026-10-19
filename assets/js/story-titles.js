@@ -27,9 +27,11 @@
   const tiOf = (w) => TI.find((t) => t.re.test(w));
   // "Sales PY" -> "Sales last year", "PY Sales" -> "Sales last year", "Sales vs PY %" -> "Sales vs last year %",
   // "Sales_YTD" -> "Sales year to date"; Arabic: "المبيعات YTD" -> «المبيعات منذ بداية العام». A name without such a
-  // word is returned as it is.
-  function timeWords(name) {
+  // word is returned as it is. inArabic: the report is Arabic (0.3.0 R2): an English name is kept as the model has it,
+  // never said in English words ("Sales PY" stays "Sales PY", a field name the plan lists as kept in English)
+  function timeWords(name, inArabic) {
     const s = String(name == null ? '' : name), ar = arabic(s);
+    if (inArabic && !ar) return s;
     const words = s.replace(/_/g, ' ').split(/\s+/).filter(Boolean).map((w) => w.replace(/^\((.*)\)$/, '$1'));
     const found = words.map(tiOf);
     if (!found.some((t) => t && t.en !== 'vs')) return s;
@@ -47,13 +49,14 @@
   }
 
   // A field's name as a title shows it: the display name the user gave, as given; else the model's name with its time
-  // intelligence in words. f: { t, m | c, name? } (the writer's bound field); shown: the writer's format-character filter.
-  const nameOf = (f, shown) => {
+  // intelligence in words. f: { t, m | c, name? } (the writer's bound field); shown: the writer's format-character filter;
+  // inArabic: the report is Arabic (timeWords).
+  const nameOf = (f, shown, inArabic) => {
     const s = shown || String;
     if (!f) return null;
     if (f.name) return s(f.name);
     const n = s(f.m != null ? f.m : f.c);
-    return f.m != null ? timeWords(n) : n;
+    return f.m != null ? timeWords(n, inArabic) : n;
   };
 
   // The shortening rules, in order, each kept when it leaves a name; applied one after another until the title fits.
@@ -81,17 +84,22 @@
   // One title from its parts, as the writer has always joined them (pbip-query.js byTitle, round 14): "M by C" in the
   // measure's script; a column in the other script is left out (never English words in an Arabic title, or the other
   // way round). by: the report's word ("by", «حسب»).
+  // (0.3.0 R2, the owner's must-fix: an Arabic report from an English-named model said "Web Orders Total Score by Plan
+  // Group") the report's word decides the title's language, not the measure's script: two English names in an Arabic
+  // report are not joined with an English word; the measure's name alone, a field name the plan lists as kept in English
   function join(m, c, by) {
     if (!m || !c) return m || null;
     const ar = arabic(m);
     if (ar !== arabic(c)) return m;
+    if (arabic(by) && !ar) return m;
     return m + ' ' + (ar ? (arabic(by) ? by : 'حسب') : (arabic(by) || !by ? 'by' : by)) + ' ' + c;
   }
 
   // Every title a visual can take, the full one first, then one per shortening rule that changes it. Each: { text, m, c }.
   // mf, cf: the bound fields (the measure, the category or time axis; cf null for a card); by: the report's word.
   function variants(mf, cf, by, shown) {
-    let m = nameOf(mf, shown), c = cf ? nameOf(cf, shown) : null;
+    const inAr = arabic(by);
+    let m = nameOf(mf, shown, inAr), c = cf ? nameOf(cf, shown, inAr) : null;
     const out = [{ text: join(m, c, by), m, c }];
     if (!m) return out;
     RULES.forEach((r) => {
@@ -119,6 +127,7 @@
   function alternate(m, c, nth, ranked, by) {
     if (!m) return null;
     const ar = arabic(m), withC = !!c && ar === arabic(c);
+    if (arabic(by) && !ar) return null;   // (R2: no English sentence in an Arabic report; the caller names the column)
     const forms = ar
       ? (withC ? [ranked && `ترتيب ${c} حسب ${m}`, `${m} لكل ${c}`, `توزيع ${m} حسب ${c}`, `${m} عبر ${c}`] : [ranked && `الترتيب حسب ${m}`, `توزيع ${m}`, `نظرة على ${m}`])
       : (withC ? [ranked && `${c} ranked by ${m}`, `${m} per ${c}`, `${m} breakdown by ${c}`, `${m} across ${c}`] : [ranked && `Ranked by ${m}`, `${m} breakdown`, `${m} overview`]);

@@ -16,6 +16,7 @@ import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
 import { readableName } from './lib/display-names.mjs';
+import { proposeArabic } from './lib/arabic-names.mjs';
 import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
@@ -706,8 +707,10 @@ const cardProblems = (dir, rtl) => {
     // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; the row-label measure's header is its column's name, so it carries a displayName)
     // (design round 8, S6: an English plan's default names are the readable forms of database-style names, named in the
     // plan and pinned with it: a displayName here is only that, the field's own name made readable)
-    const planName = (p) => { const f = p.field.Column || p.field.Measure; return !rtl && f && p.displayName === readableName(f.Property); };
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic plan pins the fixed list's Arabic names too, named in
+    // the plan and approved with it: «إجمالي المبيعات» for Total Sales here; before, an Arabic report wrote none without input)
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)); };
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -718,7 +721,7 @@ const cardProblems = (dir, rtl) => {
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
         check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
-          && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === undefined),
+          && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === proposeArabic('Total Sales Last Ramadan')),   // (changed 19 Oct 2026, R2: the plan's pinned name; was none)
           `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
         check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
@@ -726,8 +729,8 @@ const cardProblems = (dir, rtl) => {
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
-          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 3, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
+        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && an.missing.includes('Sales[Total Sales vs Last Ramadan %]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
+          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 6, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
       }
@@ -2529,7 +2532,7 @@ if (part('round10-choices')) {
     // (round 12, #15, the owner's go 6 Oct: a table whose title is a chart's on the same page adds ": detail", so the
     // two never carry the same title; the first measure by the first text column stays its start)
     const titled = (t, base, detail) => t === base || t === base + ': ' + detail;
-    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales by Region', 'detail')) /* (round 14, the owner's ask: a title is never half Arabic, half English: two English names are joined by "by" on an Arabic report too; was "Total Sales حسب Region") */
+    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'إجمالي المبيعات حسب المنطقة', 'التفاصيل')) /* (round 14, the owner's ask: a title is never half Arabic, half English; changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: the Arabic plan pins the fixed list's names «إجمالي المبيعات» and «المنطقة», so the Arabic report's table is titled in Arabic; two English names are no longer joined by "by" in an Arabic report; was "Total Sales by Region") */
         && tt(siteEn).length >= 1 && tt(siteEn).every((t) => titled(t, 'Total Revenue by Region', 'detail')) && tt(siteAr).length >= 1 && tt(siteAr).every((t) => titled(t, 'إجمالي الإيرادات حسب المنطقة', 'التفاصيل')),
       () => `a table must be titled by its first measure and its first text column: ${JSON.stringify([tt(enV), tt(arV), tt(siteEn), tt(siteAr)])}`);
   }
@@ -4362,7 +4365,11 @@ if (part('round18')) {
         // (a plan asked for one card is the same case: plan_layout keeps the layout's three slots and shows one, kpiCards 1)
         chk(() => c1.length === 1 && Math.abs(c1[0].w - quarter) <= 2 && (lang === 'ar' ? Math.abs(c1[0].x + c1[0].w - x1) <= 1 : Math.abs(c1[0].x - x0) <= 1), () => `${lang}: a plan asked for one card gives the quarter card too: ${JSON.stringify(c1.map((v) => [v.x, v.w]))}`);
         const F = { fields: { kpis: MS.map((n) => `Sales[${n}]`), table: ['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)) } };
-        for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, F), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
+        // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's Arabic names, wider than the model's; these
+        // shares were measured with the model's names, so the Arabic report keeps them through displayNames, the plan's
+        // way to keep a model's name; with the pinned names the 960 x 720 table leaves its fourth field out, and says so)
+        const KEEP = lang === 'ar' ? { displayNames: Object.fromEntries(['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)).map((k) => [k, k.replace(/^.*?\[(.*)\]$/, '$1')])) } : {};
+        for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, Object.assign({}, F, KEEP)), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
           // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
           const shown = tb ? shownOf(tb.v.visual).map((p) => p.queryRef).filter((q) => !/^Min\(/.test(q) && !/\.Ring|extension/.test(q)) : [], left = r.x.err ? [] : (r.x.j.tableColumns || []).flatMap((c) => c.leftOut || []);
           chk(() => tb && beside && shown.length === 4 && !left.length && (wider ? Math.abs(tb.w / beside.w - 1.5) < 0.03 : Math.abs(tb.w - beside.w) <= 1),
@@ -4523,7 +4530,9 @@ if (part('round20')) {
     for (const lang of ['en', 'ar']) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
-      chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && (lang === 'ar' ? pages.flat().some((t) => / \([^)]+\)$/.test(t)) : !pages.flat().some((t) => / \([^)]+\)$/.test(t))),
+      // (changed 19 Oct 2026, 0.3.0 R2: the Arabic plan pins the fixed list's names of the columns, «المنطقة», «المنتج»,
+      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs keeps the brackets' case)
+      chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && !pages.flat().some((t) => / \([^)]+\)$/.test(t)),
         () => `${lang}: every chart title of a page must be its own, a repeated one with its grouping column in brackets: ${JSON.stringify(pages)}`);
     }
   }
