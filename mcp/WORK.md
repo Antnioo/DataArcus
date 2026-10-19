@@ -21,10 +21,25 @@ The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Ex
   font, sc)` reads a table's set column widths and header size/font (the twin's reading, moved). New rule TABLE_HEADER_CUT
   (sizes): warning when cut, a note when it may be cut (the reason: Desktop drew Arabic headers whole in about 0.7 of
   the measure); headers set to wrap are skipped; never quotes a header. The twin's fitHeaders uses the same function:
-  `fitted.headersCut` (cut) and new `fitted.headersMayBeCut`, with lowW.
+  `fitted.headersCut` keeps every header under the measure (the rc.24 contract), each with `cut: "cut" | "may be cut"` and lowW.
 - Test first: `mcp/test-b173.mjs` (in npm test), 20 checks, **12 red on main d76703c** (H-1 4, H-2 4, H-3 band 1,
   H-3 plan = check_report 1, H-2 through the tool at 181 / 208 2); all green after. Other suites: same counts, except
   where a fixture has a cut header (to be listed in the PR, never a changed expectation).
+- **Done (see the PR):** test-b173 20/20 (12 red on main, as expected). One change on the way, decided before the PR: a
+  separate `headersMayBeCut` list broke rc.24's T-4 contract (every header under the measure is in `headersCut`), so the
+  twin keeps one list and each entry says `cut: "cut" | "may be cut"` (my own new test followed; rc24's untouched).
+  CHANGELOG: the bullet sits under `## [Unreleased]` with a line "0.2.9.1, not built yet": release-text refuses a newest
+  section naming a version PRIVACY.md isn't checked against (`## [0.2.9.1]: unreleased` failed it); the other 0.2.9.1
+  builder will meet the same check. Full run on Linux: release-text 4, test.mjs 1569 (as main), v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports; its 8 "labelled by title" notes are on main too), rc22 26, rc23 51, rc24 28, b173 20. Website: pbip 85, site config PASS.
+- Decisions I made: no calibration of the measure (cause not shown); the band's edge 0.70 is under the smallest share
+  Desktop drew an Arabic header whole in (0.71, page 2); a Latin header has no band; a header set to wrap is not checked
+  (twin and check_report alike); the "may be cut" finding is a note, the cut one a warning; findings name the column by
+  its position, never its text.
+- For the laptop (Desktop 2.159): the twin of "Teal Exec" again: the plan's headersCut says Total Score "cut" and Total
+  Value "may be cut" on both pages (or whatever the plan says: compare it with Desktop header by header); check_report on
+  the twin: a TABLE_HEADER_CUT warning for Total Score, a note for Total Value; crop each Arabic header at full size and
+  read its drawn width at 10pt and 15pt (the cause), the header font in the format pane, and whether a header wraps.
+- Next: the reviewer reviews the PR, the laptop re-checks in Desktop, the owner merges.
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed

@@ -2464,6 +2464,22 @@ Measured on the laptop (the lab's polish proof, 12 Oct), on the slicers of a gen
   a selector, another slicer mode, another visual or another object stays the validator's error.
 - Named by Desktop for the same object, not tried: the four single corners, the icon colour and the accent bar.
 
+## 2026-10-19: Arabic table headers in the twin, whole and cut (B-173), Power BI Desktop 2.159
+Measured on the laptop (19 Oct, relayed by the reviewer) on the golden twin "Teal Exec" (made-up model, 1920 x 1080):
+our header measure (bold text letter by letter + 24 a page of 1080 high, the writer's cellRoom) gave two Arabic headers
+275 on page 1 (the summary table, 10pt) and 400 on page 2 (the details table, 15pt).
+| Header | Page 1: needs / column | Desktop | Page 2: needs / column | Desktop |
+|---|---|---|---|---|
+| "Total Value" (Arabic) | 275 / 208 | **whole** | 400 / 292 | **whole** |
+| "Total Score" (Arabic) | 275 / 181 | cut ("…الي نقاط") | 400 / 260 | cut |
+| "Plan Group", "Total Cost" | | whole | | whole |
+- So Desktop drew an Arabic header whole in 0.73 (page 1) and 0.71 (page 2) of our text's measure (with the 24 kept):
+  our measure over-counts Arabic headers. The cause is not known: the sizes were read right (251 and 376 for the text,
+  1.5 x); our narrowest earlier measurement of Arabic (Segoe UI, 7-8 Oct sitting: about 311 drawn for 364 counted) still gives 214 for
+  the text alone; header wrap, the header's weight and font were not read in Desktop. To measure next: the Arabic header
+  texts' drawn widths at 10 and 15pt (crop), the header's font in the format pane, and whether a header wraps.
+- check_report said nothing about the cut header (0.2.9.1 adds TABLE_HEADER_CUT; report-rules.js `headerNeed`).
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.

@@ -4,6 +4,14 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]
+0.2.9.1, not built yet (fixes after 0.2.9; the package build names the version).
+- **B-173, Arabic table headers** (Desktop 2.159 on the laptop: the twin listed a header as cut that Desktop draws
+  whole, and `check_report` said nothing about one Desktop cuts): one measure of a header for the twin and
+  `check_report` (`headerNeed`). Under 0.7 of it an Arabic header is cut (`fitted.headersCut`, `cut: "cut"`; a
+  `check_report` warning, TABLE_HEADER_CUT); from there up to the measure it may be cut (`cut: "may be cut"`, with why;
+  a `check_report` note). The twin still widens each column to the full measure.
+
 ## [0.2.9]: 2026-10-19 (the version for testers)
 Given to testers on 19 Oct 2026, after the Power BI Desktop release proof of rc.24 passed on the laptop (Desktop 2.159):
 the approval window names the chart kind that is written, the Arabic twin's title measures, buttons and KPI values,

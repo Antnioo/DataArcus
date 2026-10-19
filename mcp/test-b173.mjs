@@ -7,7 +7,7 @@
 //        header is cut; from there up to the measure it MAY be cut (the cause of the gap is not known yet)
 //   H-2: check_report warns on a cut header (TABLE_HEADER_CUT, as BUTTON_ONE_LINE for buttons) and notes a header that
 //        may be cut; it never quotes the header
-//   H-3: the twin's plan says "cut" (headersCut) and "may be cut" (headersMayBeCut) by the same function, and
+//   H-3: the twin's plan says "cut" and "may be cut" (headersCut, its cut) by the same function, and
 //        check_report on the written twin agrees with it, visual by visual
 //   node test-b173.mjs
 import fs from 'node:fs';
@@ -76,8 +76,8 @@ try {
   const p0 = await s.call('create_arabic_twin', { path: 'large/Golden.Report' });
   const labels = Object.fromEntries(((p0.j && p0.j.texts) || []).filter((t) => t.text != null).map((t) => [t.id, /Total Score/.test(t.text) ? TS : /Total Value/.test(t.text) ? TV : t.draftArabic || 'نص']));
   const p1 = await s.call('create_arabic_twin', { path: 'large/Golden.Report', labels });
-  const F = (!p1.err && p1.j.fitted) || {}, cut = F.headersCut || [], may = F.headersMayBeCut || [];
-  chk(() => cut.length + may.length >= 1, () => `H-3 setup. the twin's plan lists headers it can't widen enough: ${p1.err ? p1.t : JSON.stringify(F)}`);
+  const F = (!p1.err && p1.j.fitted) || {}, cut = (F.headersCut || []).filter((h) => h.cut === 'cut'), may = (F.headersCut || []).filter((h) => h.cut === 'may be cut');
+  chk(() => cut.length + may.length >= 1 && cut.length + may.length === (F.headersCut || []).length, () => `H-3 setup. the twin's plan lists headers it can't widen enough: ${p1.err ? p1.t : JSON.stringify(F)}`);
   chk(() => cut.every((h) => h.lowW != null && h.width < h.lowW && /cuts/.test(h.why)) && may.every((h) => h.width >= h.lowW && h.width < h.needs && /may cut/.test(h.why) && /Desktop/.test(h.why)), () => `H-3. the plan's "cut" are under the band, its "may be cut" in it, each with why: ${JSON.stringify({ cut, may })}`);
   await s.call('approve_plan', { planId: p1.j.plan.planId });
   const tw = await s.call('create_arabic_twin', { path: 'large/Golden.Report', labels, planId: p1.j.plan.planId });
@@ -87,7 +87,7 @@ try {
   const key = (page, visual) => page + '/' + visual;
   const planW = cut.map((h) => key(h.page, h.visual)).sort(), planN = may.map((h) => key(h.page, h.visual)).sort();
   const ckW = hf.filter((f) => f.severity === 'warning').map((f) => key(f.page.id, f.visual.name)).sort(), ckN = hf.filter((f) => f.severity === 'note').map((f) => key(f.page.id, f.visual.name)).sort();
-  chk(() => JSON.stringify(planW) === JSON.stringify(ckW) && JSON.stringify(planN) === JSON.stringify(ckN), () => `H-3. check_report on the twin says what the plan said, header by header (warnings = headersCut, notes = headersMayBeCut): plan ${JSON.stringify({ planW, planN })} | check_report ${JSON.stringify({ ckW, ckN })}`);
+  chk(() => JSON.stringify(planW) === JSON.stringify(ckW) && JSON.stringify(planN) === JSON.stringify(ckN), () => `H-3. check_report on the twin says what the plan said, header by header (warnings = cut, notes = may be cut): plan ${JSON.stringify({ planW, planN })} | check_report ${JSON.stringify({ ckW, ckN })}`);
 
   // H-2 through the tool, at the laptop's exact widths: a copy of the twin whose summary table has its headers at 10pt,
   // "Total Score" in 181 and "Total Value" in 208
