@@ -555,7 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (out) out.textContent = f.name + (size && size.h > size.w ? '. ' + L('This logo is tall; a horizontal version will read much better in the header.', 'هذا الشعار طولي؛ نسخة أفقية منه ستكون أوضح بكثير في الشريط العلوي.') : '');
       });
     });
-    pbipBtn.addEventListener('click', () => {
+    // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
+    // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
+    const withProject = (then) => {
       const c = lay(), p = page(c), m = mode(), sample = m === 'sample';
       // your own model: where it is, and the fields picked for each visual
       let model = null;
@@ -569,7 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // the picker always shows the model of the current choice (see showPicker)
       const bind = model && own[m] && own.getBind ? own.getBind() : null;
-      pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
       // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
@@ -584,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
       const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined, noTime: !!(model && bind && !bind.date) });   // (D16: a model with no time axis gets the layout made for it, as the MCP's)
-      Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
+      return Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
         const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
@@ -600,6 +601,11 @@ document.addEventListener('DOMContentLoaded', () => {
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
           })
         };
+        return then(P, input, { c, m, sample, bind, specs, pages });
+      });
+    };
+    pbipBtn.addEventListener('click', () => {
+      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
         // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
         // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
@@ -615,7 +621,33 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
         });
-      }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
+      });
+      if (!run) return;
+      pbipBtn.disabled = true;
+      run.catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
+    });
+    // 0.3.0 step 1, "Preview before Approve": a picture of each page the download contains, drawn by the renderer the
+    // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
+    // names; grey placeholders, never a value
+    const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261018b').then(() => window.DAPagePreview));
+    if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
+      const run = withProject((P, input) => loadPreview().then((PV) => {
+        const u = state.ui, pages = PV.fromFiles(P.build(input).files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
+        pvBox.textContent = '';
+        pages.forEach((pg, i) => {
+          const fig = document.createElement('figure'), cap = document.createElement('figcaption');
+          fig.innerHTML = PV.render(pg, { lang: isAr() ? 'ar' : 'en', width: 640 });   // (every name in it escaped by the renderer)
+          cap.textContent = L(`Page ${i + 1}: ${pg.name}`, `الصفحة ${i + 1}: ${pg.name}`);
+          fig.appendChild(cap); pvBox.appendChild(fig);
+        });
+        const note = document.createElement('p');
+        note.textContent = L('Drawn from the project as it is set now: where each visual goes, its type and its title. The grey shapes are placeholders, not data. Press again after a change.', 'مرسومة من المشروع بإعداداته الحالية: موضع كل عنصر ونوعه وعنوانه. الأشكال الرمادية للعرض فقط وليست بيانات. اضغط مرة أخرى بعد أي تغيير.');
+        pvBox.appendChild(note); pvBox.hidden = false;
+      }));
+      if (!run) return;
+      pvBtn.disabled = true;
+      run.catch(() => toast(L('Could not draw the preview in this browser', 'تعذّر رسم المعاينة في هذا المتصفح'))).then(() => { pvBtn.disabled = false; });
     });
   }
 
