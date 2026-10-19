@@ -62,6 +62,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - plan_layout and create_report write Power BI's waterfall, combo (line and clustered column) and small multiples when
   the user asks (a slot kind, or `gallery`), where the fields fit; a combo of two measures in different units is two
   panels, never a second axis; gallery titles are told apart by words, never "(2)"; never chosen silently. (D2)
+- D4: a redesign keeps a visual laid over another (a "No data" card, a title box, a panel behind a table) with the
+  visual under it: they move and resize as one, the plan and the approval page name them once, and no overlay takes a
+  slot of its own (the laptop's rc.1/rc.2 proof on "Dense Ops": the overlays stood beside their charts, which were
+  squeezed to 240 wide).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
