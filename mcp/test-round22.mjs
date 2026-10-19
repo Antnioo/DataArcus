@@ -155,7 +155,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // (an Arabic report on English names: round 14 drops the English column from the title, so every chart reads the measure's name)
     // (golden task 7's shape: a model without measures, in Arabic: every chart reads "عدد Order Id")
     model('r22-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'string'), col('Region', 'string'), col('Channel', 'string')] }]);
-    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
+    // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's names, «المنطقة» and «القناة» here, and the titles
+    // are then their own; this case is the English names', so it keeps them through displayNames, the plan's way to keep them)
+    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
     const x = await mk('R22 same title', 470), xn = await mk('R22 same title narrow', 110);
     const pick = (r, w) => vis(r, 'r22-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === w), narrow = pick(xn, 110), wide = pick(x, 470);
     chk(() => narrow.length === 2 && narrow.every((v) => !/… \(/.test(titleOf(v))), () => `e. a bracket never follows a shortened title: ${JSON.stringify(narrow.map((v) => [titleOf(v), JSON.stringify(vco(v, 'title').properties.titleWrap || null)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
