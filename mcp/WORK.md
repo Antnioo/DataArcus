@@ -47,6 +47,55 @@ Test first: `mcp/test-rc24.mjs` (in npm test), on the golden report (large synth
   tooltip; 3 PBIR_FORMATTING_OBJECT_UNKNOWN validator notes (known gaps). For a laptop proof: the twin of the golden
   report in Desktop 2.159 (title measures in Arabic, Reset and page buttons whole, KPI values right, headers).
 - Next: the reviewer reviews the PR, the laptop proves it in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-146: the aggregation guard (18 Oct, cloud builder; branch `feat/0.3-aggregation-guard` from main `4a837f9`; DRAFT PR, merges after 0.2.9 reaches testers)
+The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can join our product"); the reviewer's brief.
+(rc.23 is merged, PR #49; main merged into this branch after it.)
+- **Measured first (the writer today, `assets/js/pbip-query.js` TYPES):** the report writer writes only clustered bar and
+  column, line, donut, table, matrix, cards, gauge, funnel, treemap and map: no stacked, 100% or area chart, no legend
+  (Series), no visual-level total that sums. Power BI's own totals and cards recalculate a measure. So the brief's
+  "stacked slot becomes clustered" has nothing to change today: the guard is a check on the planned page (any stacked
+  or area type with a non-additive value is a plan problem), pinned by a test, so a future stacked kind can't skip it.
+  What can be wrong today: a snapshot (Balance, Headcount, Inventory) summed over time, as a measure that SUMs or as a
+  column the writer sums on a model without measures, on a time axis or a card.
+- **Build:** `assets/js/aggregation.js` (browser + Node, metadata only): `classify(measure, ctx)` -> `non_additive` |
+  `semi_additive_time` | `unknown` with confidence and evidence (DAX shape, format, name), never "additive";
+  `guard(page)` on the planned page. plan_layout (via lib/plan-lint.mjs, the page built as create_report writes it)
+  answers `aggregation`: non-additive values in a table or matrix (sayInPlan: Power BI's own total recalculates it,
+  nothing sums it), one `pleaseConfirm` question per snapshot value on a time axis or a card (EN and AR), and a plan
+  problem for a non-additive value in a stacked type. Nothing the writer writes changes.
+- **Tests first** (`mcp/test-b146.mjs`, red on main: the module does not exist): the brief's synthetic model (Margin %,
+  Avg Order Value, Distinct Customers, Balance, Sales); Balance on a date axis asks one question; Sales and an unknown
+  measure: nothing; a stacked page with Margin %: a plan problem.
+- **Precision (expected, written before the run):** classify every measure of the repo fixtures and 18 public Microsoft
+  models (Analysis-Services 4, fabric-samples 1, fabric-toolbox 12, the COVID .pbit; shallow clones, metadata only):
+  every non_additive and semi_additive call listed and marked; 0 wrong non_additive is the bar. Full `npm test`
+  unchanged; golden numbers unchanged unless this rule fires (none of the golden models has a snapshot name, expected).
+- **Done (cloud builder):** `assets/js/aggregation.js` (classify, guard, whyAr, STACKED), `lib/plan-lint.mjs` (the guard on
+  the built page; `aggregationAnswer`), `server.mjs` plan_layout (`aggregation`; designLint computed before the plan id
+  so a stacked problem can refuse it), PRIVACY.md's plan_layout row. `mcp/test-b146.mjs` 24 checks (red on main: no
+  module), in npm test.
+- **Precision (measured):** `mcp/research/AGGREGATION-HOLDOUT.md` + `aggregation-holdout.tsv` (every call marked) +
+  `aggregation-holdout.mjs`. Microsoft 17 models read (Gateway Monitor.pbit holds no model), 1161 measures: 381
+  non_additive, 10 asked, 14 handled, 756 unknown; repo fixtures 9 models, 1023 measures: 537, 10, 132, 344. 0 wrong.
+  Eight rule fixes on the way (unit conversions, // in texts, % format on arithmetic, text measures, "utilization",
+  inventory catalogues, flows, average+cumulative), none special-cased.
+- **The reviewer's #51 review (18 Oct): the 26 models were a tuning set, not a holdout.** Fresh holdout (15 public repos,
+  34 models, 916 measures), rule FROZEN at `6c9177f`: non_additive 315/399 right (0.789), semi 25/28. Causes: a unit
+  `1E9` not read as a constant (35), shares of a total (8), distinct counts of a table's own id (41), "Qtd"/YTD-YTD/
+  period window (3). Fixed in the rule, 7 red-first checks in test-b146 (32 checks now): after fixing on the holdout
+  310/312 (0.994), 28/28. The tuning set's first "0 wrong" was not true: 99 calls I had marked right were wrong
+  (94 synthetic "Share %", 4 "Items Unique", New Customers); corrected in AGGREGATION-HOLDOUT.md and the tsv (1 wrong,
+  12 undecidable ids left). The fresh holdout's per-measure list stays out of the repo (other people's repos).
+- **Next (the reviewer's item 2):** B-147 format review as "Please confirm", new branch `feat/0.3-format-review` from
+  `hc/b143-unrelated-tables` (draft #48), draft PR.
+- **Open (for the owner):** (1) packaging (dataarcus-engine build) must carry `assets/js/aggregation.js` with the
+  engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
+  "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
+  (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
