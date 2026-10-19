@@ -4,6 +4,45 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## J9 step 1: a redesign that keeps the original (19 Oct, cloud builder; branch `feat/0.3-redesign` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D): `plan_layout` gains a redesign mode. Given an existing report, plan a cleaner page with the
+design engine (same fields, same pages, better layout: grid, header, KPI row, the theme's fonts and colours) and write it as
+a NEW report "<name> redesigned" next to the original, which is never touched (only after approval). Step 1 = the plan and
+the field mapping (every visual of the original accounted for: kept, merged, or not carried over with why) + tests; the
+write reuses create_report.
+- **Where:** `mcp/lib/redesign.mjs` (new: reads the original through read-report.mjs's strictFiles/inventory, maps it, picks
+  the layout); `server.mjs` only wires it: the `redesignFrom` input (create_report's inputs, so plan_layout takes it too),
+  pinned (`REPORT_PINNED`) with the original's contents (`filesPin.source`: reportPrint), plan_layout's defaults and its
+  `redesign` block, create_report's refusals (pages; a name already taken). Shared files touched: server.mjs, README.md,
+  PRIVACY.md, package.json (the test script). Not touched: pbip-page.js, design.mjs, model-health-engine.js, read-report.mjs.
+- **Rules (decisions made by the builder, for the owner):** a slot per field kind, as the writer binds them (measured:
+  analysis's column chart takes `category2`; ops's donut and exceptions bar take `category`). Cards (card, new card,
+  multi-row card, KPI, gauge) -> KPI cards, at most 6; the charts' measure = the one the original's charts show most; a
+  chart's other measure becomes a KPI card while the row has room; line/area/combo -> the trend; bar/funnel/pie/donut/
+  treemap -> `category`; column/ribbon/map -> `category2`; table/matrix -> one table of at most 8 fields (a second table's
+  fields join it); slicers -> at most 3. A second visual of a field already shown -> merged. Not carried over, with why:
+  text boxes, shapes, images, buttons, navigators, custom visuals, hidden visuals, other charts, report-level measures,
+  hierarchy levels; at the report level the tooltip/drillthrough/hidden pages, bookmarks, page/report/visual filters (their
+  values are never read into a plan). Layout: the one that keeps the most and adds the fewest (exec, analysis, focus; a
+  bar chart with no trend or column chart goes to analysis's main chart); a slot the original has no field for gets the
+  picker's field, listed in `added`. Display names the original shows (not instruction-like, <= 80) are the plan's
+  proposal. Name: "<name> redesigned" within the writer's 30 characters (the original's name cut at a whole word, so the
+  suffix stays); `secondPage` false; colours from the original's theme (`themeFrom`).
+- **Step 1 writes one report page only.** A report with more pages is mapped page by page (each its own layout) and gets
+  no plan id: planProblems says writing every page is step 2.
+- **Combines with:** #58 (B-152: strictFiles reads only the report's own files: redesign.mjs calls strictFiles, so it gets
+  that; B-154: plans pin a model print: the redesign goes through create_report's own gate, `modelRef`, unchanged);
+  #59 (B-153 writes through withPlan: the redesign's write is create_report's ordinary write); #37/#38 (preview and check
+  before write in plan-lint.mjs: plan_layout's designLint runs on the redesign's planned page as on any plan).
+- **Tests:** `test-0.3-redesign.mjs` (R1-R8, 30 checks; 24 red with main's server.mjs). Expected before the run: the
+  one-page fixture (twin Overview + Details' table, bar and custom visual + a second Total Sales card + a page filter): 13
+  visuals = 7 kept, 1 merged, 5 not carried over; fields kpis [Total Sales, Orders], measure Total Sales, timeAxis
+  Calendar[Month Name], category Sales[Product], category2 Sales[Region], table [Product, Amount, Total Sales], slicers
+  [Region]; exec + filters start; nothing added; the original byte for byte the same after the write; two pages: no plan id.
+- **Next (step 2, needs the owner's go):** write every page (create_report from several designs, or one design per page);
+  carry page filters file to file (never through the chat), bookmarks and drillthrough pages; a Desktop check of the
+  written redesign (English and Arabic, smallest and largest page).
+
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
   (engine `business/beta/rc24/PROOF-rc24.md`: B and E1-E3 pass, A/D/F pass, 0 network).
