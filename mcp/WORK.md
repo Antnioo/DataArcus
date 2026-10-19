@@ -1,8 +1,30 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J14" just below (branch `feat/0.3-exact-artifact`, one draft PR), then "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J14: check the exact artifact before writing (19 Oct, cloud builder; branch `feat/0.3-exact-artifact` from main `d76703c`; ONE DRAFT PR, merges only after 0.2.9 testers report)
+Backlog B-168 (outside design card C01), the reviewer's brief under the owner's go for 0.3 R&D.
+- Problem: plan_layout's lint (lib/plan-lint.mjs) builds its own variant of the report in memory and lints page 1 only,
+  without number formats, Arabic display names, SVG measures, page filters; create_report rebuilds at write time (new
+  random page and visual ids), so what was checked is never byte-for-byte what is written.
+- Draft #38 (feat/0.3.0-check, stacked on #37) already: the measured rules + the layout lint on the project in memory
+  (assets/js/layout-check.js), shown before Approve and returned by create_report as `check`; it reports only, never
+  holds a write back, runs no validator, binds nothing to the approval, and create_report still rebuilds.
+- Plan (built beside #38, main has neither #37 nor #38): (1) create_report's build becomes one function (`reportRun`,
+  server.mjs) used by plan_layout (mode build) and create_report; (2) `lib/artifact.mjs`: the digest, the model print
+  (B-154's `m.print` when #58 is in, else a hash of the model as read), the binding, and `checkArtifact`: Microsoft's
+  validator offline on the exact bytes (a private folder in the OS temp, never the user's folder, removed at once), the
+  references to the model (REF_UNRESOLVED), the measured rules, the lint, for every page; a check that could not run =>
+  `incomplete`; validator errors, unresolved references, rule errors => `blocked` (no plan id); (3) the plan keeps the
+  built files in memory (plans.mjs `attach`), the approval records the binding (digest + pin + model print); (4)
+  create_report with an approved artifact rechecks the model print and the binding, then writes exactly those bytes; a
+  change => "Nothing was written ... make the plan again"; no artifact => it refuses at the write; (5) the answers carry
+  counts, rule ids, relative paths and the digest only.
+- Expected (written before any run): test-j14-exact 25 checks, 20 red on main d76703c (E-1, E-5, E-8, E-11, E-18 green:
+  they hold today); all 25 green after. Every other suite: same counts as main (the golden baseline unchanged; G-13 0
+  reports with errors).
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
