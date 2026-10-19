@@ -126,6 +126,56 @@ change to what the writer writes (the writer's own findings are listed, not fixe
   with no sort-by column in the model (a guess from its name). The small Arabic preview in the lab draws some titles
   past their box (the preview's width estimate at 260 px). From step 1: the writer's duplicate titles "(2) (2)" and
   "KPI 2/3/4" titles (B-130/B-131, step 4).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J12: preview fidelity fixes" just below (branch `feat/0.3-preview-fidelity`, a draft PR stacked on #37). Before it (18 Oct): "0.3.0 step 1: Preview before Approve" just below (branch `feat/0.3.0-preview`, draft PR #37, merged only after 0.2.9 reaches testers; main merged in on 18 Oct), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J12: preview fidelity fixes (19 Oct, cloud builder; branch `feat/0.3-preview-fidelity` from `feat/0.3.0-preview` `269983b` = draft PR #37; a draft PR stacked on #37, merged only after 0.2.9 reaches testers)
+The laptop compared #37's preview (page-preview.js fromFiles + render) with Desktop's PDF export of the same written
+reports (English exec, its Arabic twin, a dense ops page with 6 KPIs): every box placed right (within 4 units); wrong:
+titles (one line at 11 px; Desktop: the visual's own size, 18pt = 24 on 1920 for charts and tables, 9-10pt for KPI
+cards, wrapping: 7 of 14 took 2 lines, ~36 units from the plot), cut content no flag reports (a 507-wide 4-column
+table shows 3 columns; a 509-wide line chart's 12 months slant), and words that carry meaning (page-button names, the
+report title, the KPI value's side on Arabic pages).
+- **Plan (the reviewer's brief):** (1) fromFiles reads each visual's title size (its own, else the theme's), font, wrap;
+  render draws titles at that size in page units, wrapped at the inner width (w less 16k a side, as the writer) by
+  text-measure.js's textWidth (bold, as the writer measures), and the placeholder plot starts under the lines.
+  (2) check() flags `cut` for a table whose headers at its header size (+24k each, as rc.24's fitHeaders) need more
+  than w - 36k, and for a column/line chart whose category labels slant: px per category < (40 + 8.5 x letters) x
+  size/15 (the laptop's rule), with known lengths only (months 12, quarters 4, weekdays 7; short or full by name; full
+  is never assumed shorter than 9); an unknown category is a quiet note ("label size unknown"), never a flag.
+  (3) page buttons drawn with their names, the current page (navigationSection = the page) underlined (the writer's bar,
+  or the preview's own line); text boxes at their own size and weight; a KPI value drawn where its file aligns it
+  (the writer writes 'right' on Arabic pages; rc.24, PR #55, makes the twin write 'right' too: the preview reads the
+  file, so it follows #55 when it lands; a file still saying 'left' is drawn left, as Desktop shows it).
+- **Expected (before any run):** `test-0.3-preview-fidelity.mjs` 37 checks, 27 red on #37's code, all green after;
+  preview 71 and approval 28 unchanged; the website pbip suite's lab preview checks green; full npm test all PASS.
+- **Shared files touched:** assets/js/page-preview.js (+ .min.js) only (theme-generator.js unchanged: the lab loads
+  text-measure.js with the writer before a preview).
+- **Done (branch pushed, draft PR stacked on #37):** red commit (plan + tests), then the engine: `fromFiles` reads
+  per visual its title size/font/bold/wrap/alignment/padding (own, else the theme's visualStyles, else textClasses),
+  a text box's run size/weight/alignment, a button's text/size/bold and PageNavigation target (`current` when it is
+  the page), a card's value alignment ('center' when the file sets none) and size, a table's columns (header names,
+  widths) and header size, a column/line chart's category and label size; pages get their `id`. `check` adds the two
+  cut flags with a `why`; `notes(page)` (new) lists charts whose labels' length is unknown, drawn as a grey tag, not
+  counted as a flag. `render`: titles in page units at their size, wrapped by textWidth, line 1.5 em; the plot below;
+  text boxes and buttons drawn with their text (page buttons without an outline; the current page underlined by the
+  writer's bar, or the preview's own line when there is none); the card's value rect (`kv`) at its written side.
+- **Tests (Linux):** fidelity 0 -> 38 (27 of the first 37 red on #37's code; 1 added after: the planned dense table
+  fits, see the decision below); preview 71, approval 28 unchanged; website pbip 92 and theme-generator 894 PASS; site
+  config, check:min PASS. Full `cd mcp && npm test` all PASS (mcp 1577, v029c/d/e/f/g 36/21/21/20/21, golden 12
+  unchanged, fuzz 8199, layouts 226, rc22 26, preview 71, fidelity 38).
+- **Decisions made:** (1) the dense table: today's writer writes 3 of the 4 asked columns in a 507 slot at 10pt
+  (106 + 94 + 217 = 417 of 471): not cut, so not flagged; the laptop's 4-column table needs 610 of 471 and is flagged
+  (the test uses the dense page with the laptop's 4 columns). Ask the laptop which file its export came from.
+  (2) A full month or weekday name is taken as 9 letters in any language (never shorter): the Arabic exec's month
+  line chart (1242 wide, 104 a month, 117 needed) is flagged. (3) An unknown category is a note, not a flag (else
+  every chart by a region would say "to check"). (4) F-02 measures the plot on the 508 bar chart (a line's highest
+  point moves with the plot's height). (5) No ?v= bump for page-preview.min.js: the file is not on main yet.
+- **New Arabic words (for the owner):** «طول التسميات غير معروف» (the note "label length unknown").
+- **Seen, not in scope:** the dense page shows one breakdown three times ("by Hub Region", "(2)", "(3)"; draft #57,
+  story titles); the Arabic exec's table headers need 1103 of 891 (long Arabic names: the writer keeps them); merging
+  #38 with this branch conflicts only in WORK.md and package.json's test line.
 
 ## 0.3.0 step 1: Preview before Approve (18 Oct, cloud builder; branch `feat/0.3.0-preview` from main `6d88fe4`; draft PR, not merged)
 The owner's go (18 Oct) on the 0.3.0 plan approved 17 Oct ("yes B and the promise stays"): step 1 first, merged only after
