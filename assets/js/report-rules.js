@@ -64,6 +64,22 @@
   const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
+  // (rc.24: the one measurement of a button's text, for BUTTON_ONE_LINE, PAGE_BUTTON_WRAP and the Arabic twin, which widens
+  // each button to its Arabic text with it) x: { json (visual.json), h, w }; R: { labelSize, font }. null when the button
+  // shows no text; else its size t, its characters n, its font, and the width it needs (needW): a button its one line
+  // (with its icon, as wide as the button is high), a page button one line (one), or two lines (half) when two fit its
+  // height (two)
+  function buttonNeed(x, R) {
+    const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length;
+    if (!n) return null;
+    if (isPageButton(x)) {
+      const font = str(tx.fontFamily) || R.font, one = Math.ceil(PAGE_TW(text, t, font)), two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10);
+      return { page: true, t, n, font, one, two, half, needH: BTN_H(t), needW: x.h + 0.5 >= two ? half : one };
+    }
+    if (lit(plain(o.text).show) === 'false') return null;
+    const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
+    return { page: false, t, n, font: str(tx.fontFamily), icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
+  }
 
   // The rules. Each: id, group (the check_report "checks" input), severity, source, what it checks, and run(R, out),
   // where R is the parsed report and out(visual or file, what, fix, extra) adds a finding.
@@ -101,10 +117,8 @@
       about: 'a button\'s text never wraps: one line needs 6 + 1.6 x pt in height; without an icon the text (0.45 em a character) fits the width; with an icon (as wide as the button is high, drawn at the start) the text measured letter by letter + 10 + the icon fit the width (round 10, M3)',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'actionButton' && !isPageButton(x)).forEach((x) => {   // page buttons: PAGE_BUTTON_WRAP
-          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length;
-          if (!n || lit(plain(o.text).show) === 'false') return;
-          const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
-          const needH = BTN_H(t), needW = Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)), est = measuredFont(str(tx.fontFamily) || R.font) ? null : { estimate: true };
+          const b = buttonNeed(x, R); if (!b) return;
+          const { t, n, icon, needH, needW } = b, est = measuredFont(b.font || R.font) ? null : { estimate: true };
           if (x.h + 0.5 < needH) out(x, `the button is ${x.h} high; one line of ${t}pt needs ${needH}`, `Make it at least ${needH} high: a button never wraps its text, and Arabic text needs the most.`, est);
           else if (x.w + 0.5 < needW) out(x, `the button is ${x.w} wide; ${n} characters at ${t}pt${icon ? ` and its icon (${x.h} wide at this height)` : ''} need ${needW}`, `Make it at least ${needW} wide${icon ? ', or turn the icon off' : ''}: Power BI cuts the text${icon ? ' or draws the icon over it' : ''}.`, est);
         });
@@ -175,10 +189,10 @@
       about: 'a page button (an actionButton that goes to a page) puts a long name on two lines only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "..."; a line is measured letter by letter, + 10 (round 10, M3; A4-6: the flat 0.45 em missed the cut at 150-160 wide)',
       run(R, out) {
         R.visuals.filter(isPageButton).forEach((x) => {
-          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length, font = str(tx.fontFamily) || R.font;
-          const one = Math.ceil(PAGE_TW(text, t, font));
-          if (!n || one <= x.w + 0.5) return;
-          const two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10), est = measuredFont(font) ? null : { estimate: true };
+          const b = buttonNeed(x, R); if (!b) return;
+          const { t, n, font, one, two, half } = b;
+          if (one <= x.w + 0.5) return;
+          const est = measuredFont(font) ? null : { estimate: true };
           if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${one} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${one} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est, SRC.round10);
           else if (half > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${half})`, `Make the button at least ${half} wide, or the name shorter.`, est, SRC.round10);
         });
@@ -263,6 +277,6 @@
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, buttonNeed };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);
