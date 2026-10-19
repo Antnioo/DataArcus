@@ -47,6 +47,25 @@ Expected (written before the run): the new suite about 30 checks, all red on c05
 written) and the page's escaping of hostile names (already escaped): those stay green. After: all green; every listed
 suite green with no expectation changed except where this brief changes behaviour (listed in the PR); full npm test
 green. grep: no "never reads data values"/"not your data" claim left; no "Nothing is overwritten" where untrue.
+- Done (commits bbbacb0, then db31959 = release/0.3.0 with #78 R4 merged in: CHANGELOG, WORK.md and the test list keep
+  both; create_report's write keeps R4's format script and R6's re-read): F07 lib/plans.mjs gate (model plan needs the
+  model at the write, and the reverse), server.mjs themeRef/sameModelBeforeWrite (generate_theme, create_report's new
+  report, redesign, native copy), lib/write-io.mjs testEditBeforeWrite (tests only). F13 the exact build's a11y result in
+  the plan's data (colours), shown as "approved colour -> written colour: contrast X:1 against the visuals' background,
+  needs 3:1". F09 plan data outputs (exact artifact paths + format script; the redesign's copy list) grouped on the
+  page (approval-window.mjs groupFiles), the measured why, customVisualsShown, answersShown, no 600-character cut,
+  answers.mjs writesNote per plan. F08 redesign.mjs: kind, fields, place; no title text in the answer or on the page
+  (the new title the user gives is shown). Wording: agent-text (2200 of 2200), README, PRODUCT_SPEC, SKILL, server
+  notes, PRIVACY.md section 3's first sentence and section 4's "Nothing is overwritten" only, the site's MCP page and
+  the Theme Generator's logo line (EN, AR, lab; translations .min.js rebuilt, ?v= 20261019r6, Arabic copies rendered).
+- Tests: test-0.3.0-approval-disclosure.mjs 37 checks, 23 red on c058e87 (14 green before, as guards: T07-4/5/7/8 a
+  good write and the no-model theme, T08's filter/slicer/bookmark/DATATABLE sentinels already absent, T08-7 the copied
+  title, T09-10 the escaping, the set-up checks), 37/37 after. Changed on purpose: test-0.3-redesign C8 (the old title text no longer
+  returned), test-0.3.0-answers-safety F04-7 (the new-files sentence says what a failed write removes).
+- Full mcp npm test on db31959 + this note: every script PASS (test.mjs 1581, G-13 inside, r6-disclosure 37). Website: theme-logo 753,
+  site 463, anchors 128, tools 341, lang-switcher 1368, theme-generator 894, theme-generator-lab 894; site-config, check-min,
+  csp, ar-pages PASS (test-sitemap-lastmod cannot run here: the shallow clone lacks an old commit, not this change).
+- PR into release/0.3.0 not opened yet: it waits for the owner's go in this session. Next: PR, review, merge; R7 re-reads PRIVACY.md.
 ## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
 integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,
