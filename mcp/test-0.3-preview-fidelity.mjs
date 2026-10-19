@@ -73,12 +73,20 @@ try {
   const one = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === li ? Object.assign({}, v, { title: 'Net by Month' }) : v)) });
   const lg1 = groupOf(P.render(one), li), top2 = phTop(lg), top1 = phTop(lg1);
   chk(() => top2 != null && top2 > ll[1].y, () => `F-02. the plot starts below the title's 2nd line: plot ${top2}, 2nd line ${ll[1] && ll[1].y}`);
-  chk(() => top1 != null && top2 - top1 >= 30 && top2 - top1 <= 40, () => `F-02. a 2-line title takes about one line (36 at 24) more from the plot than a 1-line one: ${top1} -> ${top2}`);
+  // (measured on the 508 bar chart: its first bar sits at a fixed share of the plot, a line's highest point moves with it)
+  const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(dsvg, bi), bone = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === bi ? Object.assign({}, v, { title: 'Net by Hub' }) : v)) });
+  const btop2 = phTop(bg), btop1 = phTop(groupOf(P.render(bone), bi));
+  chk(() => titleLines(bg).length === 2 && btop1 != null && btop2 - btop1 >= 30 && btop2 - btop1 <= 40, () => `F-02. a 2-line title takes about one line (36 at 24) more from the plot than a 1-line one: ${btop1} -> ${btop2}`);
 
   // ---------- F-03: the table's columns cut ----------
   const ti = idx(dense, 'tableEx', 507), eti = idx(exec, 'tableEx');
   const dfl = flagsOf(dsvg), efl = flagsOf(esvg);
-  chk(() => P.check(dense).some((f) => f.i === ti && f.kind === 'cut' && /column/.test(f.why || '')) && dfl.some((f) => f.i === ti && f.kind === 'cut'), () => `F-03. the dense page's 507-wide table of 4 columns is flagged cut (its headers need more than its width): ${JSON.stringify(P.check(dense).filter((f) => f.i === ti))} ${JSON.stringify(dense.visuals[ti] && dense.visuals[ti].columns)}`);
+  // (today's writer writes 3 of the 4 asked columns in this slot, its text at 10pt: 106 + 94 + 217 = 417 of 471, not cut;
+  // the laptop's written table had all 4: 610 of 471. The rule is tested on both)
+  const dt = dense.visuals[ti];
+  chk(() => dt && dt.columns.length === 3 && near(dt.headerSize, 10) && !P.check(dense).some((f) => f.i === ti), () => `F-03. the planned dense table (3 columns at 10pt, as the writer writes it) fits: ${JSON.stringify(dt && { columns: dt.columns, size: dt.headerSize })} ${JSON.stringify(P.check(dense).filter((f) => f.i === ti))}`);
+  const laptop = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === ti ? Object.assign({}, v, { columns: F.table.map((f) => ({ name: f.c != null ? f.c : f.m })) }) : v)) }), ls = P.render(laptop);
+  chk(() => P.check(laptop).some((f) => f.i === ti && f.kind === 'cut' && /column/.test(f.why || '')) && flagsOf(ls).some((f) => f.i === ti && f.kind === 'cut'), () => `F-03. the dense page's 507-wide table with the laptop's 4 columns is flagged cut (its headers need more than its width): ${JSON.stringify(P.check(laptop).filter((f) => f.i === ti))}`);
   chk(() => eti >= 0 && !efl.some((f) => f.i === eti), () => `F-03. the exec page's table is not flagged: ${JSON.stringify(efl)} ${JSON.stringify(exec.visuals[eti] && { w: exec.visuals[eti].w, columns: exec.visuals[eti].columns })}`);
 
   // ---------- F-04: slanted category labels ----------
