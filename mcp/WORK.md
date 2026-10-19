@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -49,6 +49,59 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
   (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+
+## rc.24: the gaps of the laptop's Desktop release proof of rc.23 (18 Oct, cloud builder; branch `fix/0.2.9-rc24` from main `f09bf30`; one PR, not merged)
+The reviewer's brief (18 Oct): rc.23 + these gaps, found by the laptop's Desktop proof of rc.23 (Power BI Desktop 2.159).
+They finish features approved for 0.2.9 (B-140, the twin B-137/B-138); nothing else changes (0.2.9's scope frozen).
+Test first: `mcp/test-rc24.mjs` (in npm test), on the golden report (large synthetic model, focus Web Orders, exec).
+- 1, B-140 (block: approval window + the plan data it shows; server.mjs plan_layout): the plan's data was proposed before
+  the writer's kind changes were known, so the page said "Column chart by". Plan: the page lint runs first; the plan's
+  data carries `kinds` [{ role, from, to }]; the Fields rows name the written kind with the reason ("Bar chart by X
+  (planned as a column chart: the names would slant or be cut)"); the Layout section lists every kind change by role.
+- 2, title measures (block: lib/arabic-twin.mjs texts + writer): the "fx" titles (`Title: ...` report measures of
+  reportExtensions.json) were never offered. Plan: each report measure a visual's title uses is read; a DAX of the shape
+  `[VARs without text] RETURN IF ( cond, A, B )` or `A`, each of A/B fixed texts and variables joined by &, offers each
+  branch as a template ("Top {1} of {2}: Web Orders Total Score by Coupon Region", kind titleMeasure, "Chart title (from
+  a title measure)"); a label must keep every {n} once (else labels.problems, not taken). The twin's reportExtensions
+  gets "Title AR: ..." measures (same DAX, Arabic strings), its visuals' titles point to them; the original and the model
+  untouched. Any other DAX (a model value, FORMAT, a model measure): titleMeasures.notTranslated with why, no text.
+- 3, buttons (block: twin writer): each button (page buttons too) is widened to its Arabic text by check_report's own
+  measure (report-rules.js buttonNeed, now shared by BUTTON_ONE_LINE and PAGE_BUTTON_WRAP): grows toward its left in the
+  twin (the text's end), the visuals left of it in its row shift with it, then to the right; within its page or group
+  (0..W), no new overlap; an underline shape under it follows. No room: fitted.buttonsCut (needs, room, a shorter text).
+- 4, KPI values (block: report-mirror.js): a new card's value `horizontalAlignment` 'left' -> 'right' (one value too; it
+  was done only for 2+), and its padding object's leftMargin/rightMargin swap.
+- 5, table headers (block: twin writer): a fixed column narrower than its Arabic header (bold, + 24 x page/1080, the
+  writer's cellRoom) takes the table's spare width, then width from text columns down to their own need; numbers never
+  narrowed; what can't fit: fitted.headersCut.
+- Expected (written before the build): test-rc24 28 checks, 16 red on main `f09bf30` (B-140 3, T-1 6, T-2 3, T-3 2, T-4 2);
+  all green after. The other suites unchanged (golden baseline, fuzz, layouts, rc22, rc23: same counts).
+- **Done (see the PR):** test-rc24 28/28 (16 red before, as expected). Full run on
+  Linux (5 shards as CI): release-text 4, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32
+  reports), rc22 26, rc23 51, rc24 28; test.mjs 32 + 584 + 620 + 332 = 1568, G-13 249 reports, 0 with errors (B-145
+  recorded 1569 on main 5c0ad21; test.mjs not touched here: compare with CI on main). Website: pbip 85 (it loads
+  report-rules.js's MEASURED; the site pages load neither report-rules.js nor report-mirror.js, no .min, no ?v=).
+- Decisions I made: the title text is one template per branch with {1}, {2} for the counted numbers (one text per
+  distinct template across the report); a label must keep each {n} once. Buttons may use the container's edge margin
+  (the golden Reset text needs 294 = the filter group's width). Header donors are text columns only, down to the larger
+  of their Arabic header and the writer's 12-letter stand-in. The card's padding leftMargin/rightMargin swap with its
+  value (the mirror of the writer's own margins).
+- Seen, not in scope: "No data for this selection" (the "No data: ..." report measure) and the cards' showBlankAs
+  "No data" stay English in the twin; visuals' altText stays English; the Reset button's leading spaces (the writer's
+  gap before its icon) are lost when its Arabic replaces the text; on the golden twin the summary table's "Plan Group"
+  header in Arabic needs 171 in 161 (headersCut: every other column is a number); TOOLTIP_SCROLL note on the month
+  tooltip; 3 PBIR_FORMATTING_OBJECT_UNKNOWN validator notes (known gaps). For a laptop proof: the twin of the golden
+  report in Desktop 2.159 (title measures in Arabic, Reset and page buttons whole, KPI values right, headers).
+- Next: the reviewer reviews the PR, the laptop proves it in Desktop, the owner merges.
+
+## AUD-040: a .pbit also keeps filter, slicer and formatting values (19 Oct, cloud builder; branch `site/aud040-pbit-filter-values` from main `c71ed52`; one PR, not merged)
+Night audit (medium): the Copilot readiness audit page said "The data Power BI loaded never leaves your machine", but Microsoft
+Learn (desktop-templates, Note) says report metadata keeps data values: a filter 'Company' = 'Contoso' persists 'Contoso',
+and so do slicer selections and series formatting. Owner's go 19 Oct ("agree all recommendations"). The four B-155 pages
+(audit page, Health Check FAQ, the two articles), EN + AR and the FAQ JSON-LD, now name "values saved in the report's filters,
+slicers and formatting" next to Enter data and DATATABLE; the audit page says the rows stay, those values travel with the
+file, clear them (reset the filters and slicers) before saving the template. ?v=20261019a040, min rebuilt, /ar/ regenerated,
+sitemap dates. test-site-config pins it. mcp/ untouched (read_report returns a filter's field and kind only).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
