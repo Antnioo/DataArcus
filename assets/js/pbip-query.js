@@ -31,6 +31,13 @@
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
   const obj = (props, selector) => (selector ? [{ properties: props, selector }] : [{ properties: props }]);
+  // a line's style (L1, the owner's smooth lines of 19 Oct, from the lab of 13 Oct): 3 wide (P2); smooth by default,
+  // monotone ('monotoneX': never swings past the data), with a filled circle on each point so every value stays findable
+  // (the series' own colour: no markerColor), its size from the line's width. One entry, no selector: the form Desktop
+  // 2.158 drew in the lab of 7 Oct ("a smooth line, a dot per month"). smooth false: the straight line, no markers.
+  // Every name and value is in Microsoft's capabilities for lineChart and both combos' lineStyles.
+  const LINE_WIDTH = 3;
+  const lineStyle = (smooth) => Object.assign({ strokeWidth: num(LINE_WIDTH) }, smooth ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX'), showMarker: bool(true), markerShape: str('circle'), markerSize: num(LINE_WIDTH + 2) } : {});
   const resource = (item) => ({ expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: item } } });
   const json = (o) => JSON.stringify(o, null, 2);
   const rnd = () => {
@@ -462,7 +469,7 @@
   }
 
   const api = {
-    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource,
+    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,

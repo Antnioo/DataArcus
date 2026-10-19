@@ -8,7 +8,7 @@
   const E = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
   const Q = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Z = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
-    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, byTitle, catKind, kpiLabel,
+    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, byTitle, catKind, kpiLabel, lineStyle,
     color, contrast, daxNames, fieldCol, gradientFill, hasControl, isTextField, isTime, isValue, json, label, lit,
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
@@ -780,9 +780,9 @@
             visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
           } }
         // P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): a line chart's line 3 wide (1 px was the weakest mark
-        // on every page), its markers as before; smooth only with the design's smoothLines option (lineChartType 'smooth' with
-        // interpolationSmooth 'monotoneX'; "interpolation" is no property; smooth swings between the points of a jagged series)
-        if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: Object.assign({ strokeWidth: num(3) }, o.smoothLines ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX') } : {}) }]; }
+        // on every page); L1: smooth with a dot on each point unless the design's smoothLines is false (pbip-query.js lineStyle)
+        const SMOOTH = o.smoothLines !== false;
+        if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: lineStyle(SMOOTH) }]; }
         // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
         // (0.3, J8) a gallery visual's own formatting: the combo's secondary axis only when its units differ, its line 3
         // wide; the quiet gridlines and a right-to-left report's mirrored axes as the other charts (visual-gallery.js)
@@ -796,7 +796,7 @@
           typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(u.good), fall: G.fillOf(u.bad) } }) : null;
         if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
           waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
-        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR, smooth: SMOOTH }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
           if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
           else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }

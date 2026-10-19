@@ -153,15 +153,30 @@
   const GREY = '#A3ACBB', WARN = '#B7791F';
 
   // a placeholder shape inside a box (local 0..1 coordinates mapped to the box; mirrored right to left): never text
-  function shape(k, b, rtl, c, u) {
+  // (L1) the cubic segments of a monotone curve through points [x, y] (x increasing): Fritsch-Carlson's tangents, as d3's
+  // monotoneX that Power BI's 'monotoneX' names; each segment [p0, c1, c2, p1], every control point between its two points
+  function monotone(pts) {
+    const k = pts.length, h = [], sl = [], m = [];
+    for (let i = 0; i < k - 1; i++) { h[i] = pts[i + 1][0] - pts[i][0]; sl[i] = h[i] ? (pts[i + 1][1] - pts[i][1]) / h[i] : 0; }
+    for (let i = 1; i < k - 1; i++) { const p = (sl[i - 1] * h[i] + sl[i] * h[i - 1]) / (h[i - 1] + h[i]); m[i] = sl[i - 1] * sl[i] <= 0 ? 0 : (Math.sign(sl[i - 1]) + Math.sign(sl[i])) * Math.min(Math.abs(sl[i - 1]), Math.abs(sl[i]), 0.5 * Math.abs(p)); }
+    m[0] = k > 2 ? (3 * sl[0] - m[1]) / 2 : sl[0]; m[k - 1] = k > 2 ? (3 * sl[k - 2] - m[k - 2]) / 2 : sl[0];
+    return pts.slice(0, -1).map((p0, i) => { const p1 = pts[i + 1], d = h[i] / 3; return [p0, [p0[0] + d, p0[1] + m[i] * d], [p1[0] - d, p1[1] - m[i + 1] * d], p1]; });
+  }
+  function shape(k, b, rtl, c, u, v) {
     const X = (f) => (rtl ? b.x + b.w * (1 - f) : b.x + b.w * f), Y = (f) => b.y + b.h * f;
     const R = (f0, g0, fw, gh, fill, op) => { const x0 = rtl ? X(f0 + fw) : X(f0); return `<rect x="${n(x0)}" y="${n(Y(g0))}" width="${n(b.w * fw)}" height="${n(b.h * gh)}" rx="${n(Math.min(b.w * fw, b.h * gh, 24 * u) * 0.2)}" fill="${fill || GREY}"${op ? ` opacity="${op}"` : ''}/>`; };
     switch (k) {
       case 'bar': return [0.86, 0.7, 0.56, 0.42, 0.3].map((f, i) => R(0.06, 0.08 + i * 0.18, f * 0.88, 0.11)).join('');
       case 'column': return [0.5, 0.78, 0.6, 0.9, 0.66, 0.8].map((f, i) => R(0.07 + i * 0.145, 0.95 - f * 0.88, 0.1, f * 0.88)).join('');
       case 'line': {
-        const pts = [[0, 0.7], [0.17, 0.52], [0.33, 0.6], [0.5, 0.36], [0.67, 0.45], [0.83, 0.24], [1, 0.32]].map(([f, g]) => `${n(X(0.04 + f * 0.92))},${n(Y(0.05 + g * 0.85))}`).join(' ');
-        return `<polyline points="${pts}" fill="none" stroke="${GREY}" stroke-width="${n(Math.max(2, b.h * 0.035))}" stroke-linejoin="round" stroke-linecap="round"/><line x1="${n(X(0.04))}" y1="${n(Y(0.96))}" x2="${n(X(0.96))}" y2="${n(Y(0.96))}" stroke="${GREY}" stroke-width="${n(Math.max(1, b.h * 0.008))}" opacity=".6"/>`;
+        // (L1) as the file draws it: smooth (monotone, as Power BI's monotoneX: the curve never swings past a point) with a
+        // dot on each point, or straight (v.smooth, v.markers: read from the line chart's lineStyles)
+        const D = [[0, 0.7], [0.17, 0.52], [0.33, 0.6], [0.5, 0.36], [0.67, 0.45], [0.83, 0.24], [1, 0.32]], P = (f, g) => [X(0.04 + f * 0.92), Y(0.05 + g * 0.85)];
+        const sw = Math.max(2, b.h * 0.035), at = (p) => `${n(p[0])},${n(p[1])}`;
+        const curve = v && v.smooth ? `<path class="ln" d="${monotone(D).map((sg, i) => (i ? '' : `M${at(P(...sg[0]))}`) + ` C${at(P(...sg[1]))} ${at(P(...sg[2]))} ${at(P(...sg[3]))}`).join('')}" fill="none" stroke="${GREY}" stroke-width="${n(sw)}" stroke-linejoin="round" stroke-linecap="round"/>`
+          : `<polyline points="${D.map((d) => at(P(...d))).join(' ')}" fill="none" stroke="${GREY}" stroke-width="${n(sw)}" stroke-linejoin="round" stroke-linecap="round"/>`;
+        const dots = v && v.markers ? D.map((d) => { const p = P(...d); return `<circle class="mk" cx="${n(p[0])}" cy="${n(p[1])}" r="${n(sw * 1.1)}" fill="${GREY}"/>`; }).join('') : '';
+        return `${curve}${dots}<line x1="${n(X(0.04))}" y1="${n(Y(0.96))}" x2="${n(X(0.96))}" y2="${n(Y(0.96))}" stroke="${GREY}" stroke-width="${n(Math.max(1, b.h * 0.008))}" opacity=".6"/>`;
       }
       case 'donut': { const r = Math.min(b.w, b.h) * 0.36; return `<circle cx="${n(b.x + b.w / 2)}" cy="${n(b.y + b.h / 2)}" r="${n(r)}" fill="none" stroke="${GREY}" stroke-width="${n(r * 0.42)}"/>`; }
       case 'card': return R(0.06, 0.25, 0.46, 0.4);
@@ -263,7 +278,7 @@
       } else inner = (v.grid === 'dotted' && /^(bar|column|line)$/.test(k) ? [0.25, 0.5, 0.75].map((g) => (k === 'bar'
         ? `<line class="grid" x1="${n(ib.x + ib.w * g)}" y1="${n(ib.y)}" x2="${n(ib.x + ib.w * g)}" y2="${n(ib.y + ib.h)}"`
         : `<line class="grid" x1="${n(ib.x)}" y1="${n(ib.y + ib.h * g)}" x2="${n(ib.x + ib.w)}" y2="${n(ib.y + ib.h * g)}"`) + ` stroke="${GREY}" stroke-width="${n(u)}" stroke-dasharray="${n(u)} ${n(3 * u)}" opacity=".7"/>`).join('') : '')
-        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u));
+        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, v));
       return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
@@ -362,6 +377,8 @@
     // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
     if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
     { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
+    // (L1) a line's look as written: smooth, and a dot on each point (lineStyles, the entry with no selector)
+    if (/^(lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) { const st = props(ob.lineStyles); if (strOf(st.lineChartType) === 'smooth') out.smooth = true; if (boolOf(st.showMarker) === true) out.markers = true; }
     if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }

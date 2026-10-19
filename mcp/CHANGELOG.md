@@ -100,6 +100,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   box-level score between two drawings of a page); `mcp/research/shadow-try.mjs` writes a fixture's shadow project for
   the laptop. Recommendation: (a) as the v1 (S2), (b) as the fast first look grown by measured rules, (c) later as a
   per-run opt-in, not (d).
+- L1: line charts (and the line of a combo) are smooth by default, monotone (no swing past the data), with a small filled
+  dot in the series' colour on each point so every value stays findable; `smoothLines: false` keeps straight lines without
+  dots. plan_layout pins it, the approval page's preview draws the curve and its dots, the look summary says it.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
