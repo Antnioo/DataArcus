@@ -161,6 +161,14 @@ them from the same model open in Power BI Desktop:
   never a second axis; small multiples are one measure by a category, a panel per member of a second category with few
   members. Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
   fit), and say the preview draws them as placeholders.
+- **Look options** (`slicerStyle`, `grid` in `plan_layout` and `create_report`; the plan pins them, show them with the
+  plan): `slicerStyle: "pills"` writes Power BI's button slicer (rounded buttons on one row, a calm fill, the selected
+  one in the accent) for a field whose 2-6 values the model's metadata makes known (true/false, a quarter, a calculated
+  column of a few texts): it fits a short choice the user flips often; every other slicer stays the rounded dropdown
+  (`"dropdown"`, the default), which fits a long or unknown list. The answer's `slicerStyle` says each slicer's style
+  with why: tell the user. `grid: "dotted"` makes the charts' value-axis gridlines dotted and light grey (calmer
+  behind dense bars), `"none"` removes them (for charts with data labels), `"solid"` is the default. In Arabic the pills
+  read from the right; the Arabic twin keeps both.
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.

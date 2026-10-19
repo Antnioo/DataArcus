@@ -82,6 +82,7 @@
     button: 'buttons: a left-aligned text or icon goes right; links unchanged',
     navigator: 'page navigators: moved only',
     slicer: 'slicers: moved only (their items keep Power BI\'s own alignment)',
+    pills: 'button slicers on one row: their buttons read from the right (sorted descending by their field)',
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
     plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
@@ -205,6 +206,16 @@
         const e = plainEntry(objects(), 'legend'), cur = strOf(e.properties.position);
         const next = cur == null ? 'TopRight' : LEGEND[cur] || cur;
         if (next !== cur) { e.properties.position = str(next); changes.push('legend'); }
+      }
+    }
+    // (0.3.0 L2) a button slicer on one row (the writer's pills): its buttons read from the right, by a descending sort on
+    // its field (a sort it already has is turned round); one of several rows moves only
+    if (kind === 'slicer' && v.visualType === 'advancedSlicerVisual') {
+      const lay = (entries(v.objects, 'layout') || []).find((e) => !e.selector && isObj(e.properties)), f0 = first(projections(v.query, 'Values'));
+      if (lay && String(lit(lay.properties.rowCount)) === '1L' && f0 && isObj(f0.field) && isObj(v.query)) {
+        const sd = isObj(v.query.sortDefinition) && Array.isArray(v.query.sortDefinition.sort) && isObj(v.query.sortDefinition.sort[0]) ? v.query.sortDefinition.sort[0] : null;
+        if (sd) sd.direction = sd.direction === 'Descending' ? 'Ascending' : 'Descending'; else v.query.sortDefinition = { sort: [{ field: clone(f0.field), direction: 'Descending' }] };
+        kind = 'pills'; changes.push('order');
       }
     }
     // tables, matrices, new cards
