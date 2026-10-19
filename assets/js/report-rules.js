@@ -35,7 +35,8 @@
     plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles'),
     tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)'),
     round10: M('2026-10-04', '2.158.1177', 'round 10 (overnight): measurements before the code'),
-    textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font')
+    textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font'),
+    headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")')
   };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
@@ -62,6 +63,7 @@
   const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
   const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const ps1 = (x, c) => entries(((((x.json.visual || {}).query || {}).queryState || {}).Values || {}).projections).indexOf(c.p) + 1;
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
   // (rc.24: the one measurement of a button's text, for BUTTON_ONE_LINE, PAGE_BUTTON_WRAP and the Arabic twin, which widens
@@ -79,6 +81,37 @@
     if (lit(plain(o.text).show) === 'false') return null;
     const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
     return { page: false, t, n, font: str(tx.fontFamily), icon, needH: BTN_H(t), needW: Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)) };
+  }
+
+  // (0.2.9.1, B-173: the one measurement of a table header, for TABLE_HEADER_CUT and the Arabic twin, which widens each
+  // column to its Arabic header with it) A header on one line needs its text bold, letter by letter, + 24 a page of 1080
+  // high (the writer's cellRoom): needW. Desktop 2.159 drew Arabic headers narrower than that (SRC.headers: whole in 208
+  // of 275 and 292 of 400; cut in 181 of 275 and 260 of 400), and the cause is not known yet (not the size, which was
+  // read right; our narrowest measured Arabic, Segoe UI 7-8 Oct, still gives 214 for the 208 one): so below the share of the
+  // measure Desktop has drawn an Arabic header whole in (0.71 seen, 0.70 kept) it is cut, from there up to needW it MAY
+  // be cut (lowW). Latin letters were measured on the safe side: a Latin header has no band (lowW = needW).
+  const AR_HEADER_WHOLE = 0.7;
+  const AR_LETTER = /[\u0600-\u06FF\uFB50-\uFEFF]/;
+  function headerNeed(text, t, font, sc) {
+    const w = textWidth()(text, t, true, font), pad = 24 * sc, needW = Math.ceil(w + pad);
+    return { needW, lowW: AR_LETTER.test(String(text)) ? Math.min(needW, Math.floor(AR_HEADER_WHOLE * w + pad)) : needW };
+  }
+  // A table's columns with a set width (columnWidth, selector { metadata: queryRef }) and their header's need. json: the
+  // visual.json; theme: the theme's JSON (its tableEx sizes) or null; font: the report's (its label's) font; sc: the
+  // page's height / 1080. Headers set to wrap (columnHeaders.wordWrap true) are left out: they take a second line, not a
+  // cut. Returns { t, font, cols: [{ p (the projection), text, width, needW, lowW, state: 'fits' | 'may' | 'cut' }] }
+  function tableHeaders(json, theme, font, sc) {
+    const v = (json && json.visual) || {}, o = v.objects || {}, hp = plain(o.columnHeaders);
+    const th = ((((theme || {}).visualStyles || {}).tableEx || {})['*']) || {}, first = (list, k) => (Array.isArray(list) && list[0] && typeof list[0] === 'object' ? list[0][k] : undefined);
+    const t = num(hp.fontSize) || +first(th.columnHeaders, 'fontSize') || +first(th.values, 'fontSize') || 10, f = str(hp.fontFamily) || font;
+    if (String(lit(hp.wordWrap)) === 'true' || !Array.isArray(o.columnWidth)) return { t, font: f, cols: [] };
+    const widthOf = (ref) => { const e = o.columnWidth.find((x) => x && x.selector && x.selector.metadata === ref && x.properties && Number.isFinite(num(x.properties.value))); return e ? num(e.properties.value) : null; };
+    const ps = entries((((v.query || {}).queryState || {}).Values || {}).projections).filter((p) => p && typeof p.queryRef === 'string');
+    const cols = ps.filter((p) => (widthOf(p.queryRef) || 0) > 1).map((p) => {
+      const text = String(p.displayName != null ? p.displayName : p.nativeQueryRef || ''), width = widthOf(p.queryRef), m = headerNeed(text, t, f, sc);
+      return { p, text, width, needW: m.needW, lowW: m.lowW, state: width + 0.5 >= m.needW ? 'fits' : width + 0.5 >= m.lowW ? 'may' : 'cut' };
+    });
+    return { t, font: f, cols };
   }
 
   // The rules. Each: id, group (the check_report "checks" input), severity, source, what it checks, and run(R, out),
@@ -121,6 +154,19 @@
           const { t, n, icon, needH, needW } = b, est = measuredFont(b.font || R.font) ? null : { estimate: true };
           if (x.h + 0.5 < needH) out(x, `the button is ${x.h} high; one line of ${t}pt needs ${needH}`, `Make it at least ${needH} high: a button never wraps its text, and Arabic text needs the most.`, est);
           else if (x.w + 0.5 < needW) out(x, `the button is ${x.w} wide; ${n} characters at ${t}pt${icon ? ` and its icon (${x.h} wide at this height)` : ''} need ${needW}`, `Make it at least ${needW} wide${icon ? ', or turn the icon off' : ''}: Power BI cuts the text${icon ? ' or draws the icon over it' : ''}.`, est);
+        });
+      } },
+    { id: 'TABLE_HEADER_CUT', group: 'sizes', severity: 'warning', source: SRC.headers,
+      about: 'a table column with a set width holds its header on one line: the header bold, measured letter by letter, + 24 a page of 1080 high; an Arabic header is cut under 0.7 of that (Desktop 2.159 drew one whole in 0.71 of it) and may be cut above, up to the measure; headers set to wrap are not checked',
+      run(R, out) {
+        R.visuals.filter((x) => x.type === 'tableEx').forEach((x) => {
+          const pg = (R.pages || []).find((p) => x.page && p.id === x.page.id), sc = pg && pg.h > 0 ? pg.h / 1080 : 1;
+          const h = tableHeaders(x.json, R.theme && R.theme.json, R.font, sc), est = measuredFont(h.font) ? null : { estimate: true };
+          h.cols.forEach((c) => {
+            const at = `column ${ps1(x, c)} of the table: its header (${[...c.text].length} characters, bold ${h.t}pt)`;
+            if (c.state === 'cut') out(x, `${at} needs ${c.needW} wide on one line; the column is ${c.width}`, `Make the column at least ${c.needW} wide (the table's text columns can give width), or the header shorter: Power BI cuts it with "...".`, est);
+            else if (c.state === 'may') out(x, `${at} may be cut: our measure says ${c.needW} wide and the column is ${c.width}; Desktop 2.159 drew Arabic headers whole in about 0.7 of our measure (from ${c.lowW} here), so look at it in Desktop`, `If Desktop cuts it, make the column at least ${c.needW} wide or the header shorter.`, Object.assign({ severity: 'note' }, est || {}));
+          });
         });
       } },
     { id: 'SLICER_FITS', group: 'sizes', severity: 'warning', source: SRC.heights,
@@ -268,7 +314,7 @@
       const mine = [];
       try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
@@ -277,6 +323,6 @@
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, buttonNeed };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, buttonNeed, headerNeed, tableHeaders };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);

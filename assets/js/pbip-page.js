@@ -14,6 +14,9 @@
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
   const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
+  // (0.2.9.1, B-174) each written slot's place in the planned page, { from: its planned kind, nth among them }, as
+  // kindChanges name it, so a chart kept to its top N is told against the plan's own slot
+  const SLOT_PLAN = new WeakMap();
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -250,8 +253,10 @@
       const top = col && st.Y && st.Y.projections[0] ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
       // (design round 10, N14: kept by a report measure, every category where they are at most 2 more than its rows, the
       // fixed Top N filter only where the DAX can't name the fields)
+      // (0.2.9.1, B-174: the plan said "Top 5" over a chart that showed its 6 categories) allUpTo: the most categories it
+      // still shows all of (top + 2 with the Keep: measure, top with the fixed Top N filter), so the plan says what is kept
       const keep = top ? topSet(catOf(Bt, visual.query), st.Y.projections[0].field, top, 2) : null;
-      if (top) { filters.push(keep ? keep.keep() : topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
+      if (top) { filters.push(keep ? keep.keep() : topN(col, st.Y.projections[0].field, top)); n.topCharts.push(Object.assign({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top, allUpTo: keep ? top + 2 : top }, SLOT_PLAN.get(s) || {})); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       // (design round 9, D19: a many-valued category's names, product names, get room for 25 characters where 40% of the
       // chart holds them, else 50%: measured, REPORT-FIXES-LAB B1/B2, 40% of 508 held about 20 characters, 50% about 25,
@@ -403,7 +408,7 @@
     };
     // (rc.22, B-140: the approved column chart was written as a bar chart, and the plan never said so) every kind changed
     // here is recorded, so the plan shows the kind written (plan_layout runs this writer on the plan's page)
-    const changed = (s0) => { const s1 = byField(asBar(s0)); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth: pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0), from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN }); return s1; };
+    const changed = (s0) => { const s1 = byField(asBar(s0)), nth = pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0); SLOT_PLAN.set(s1, { pageIndex, from: s0.kind, nth }); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth, from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN }); return s1; };
     const sorted = pg.slots.map(changed).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
@@ -723,8 +728,8 @@
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
-        // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (J14: only a bar: a two-valued
-        // category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
+        // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (0.2.9.1, from draft #69: only a bar:
+        // a two-valued category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
         if (s.wasColumn && s.kind === 'bar' && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
         // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
         // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
