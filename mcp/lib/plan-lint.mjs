@@ -85,7 +85,7 @@ export function planLint(a) {
   // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
   // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
   return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
-    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false },
+    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false },
     tops: { value: (b.r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
     aggregation: { value: aggregation, enumerable: false },
     titles: { value: titles, enumerable: false } });
