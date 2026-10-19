@@ -74,11 +74,17 @@ export function writeAnswers(dir, base, records, checked) {
   return file;
 }
 
-// (R5, F04) what the approval says about overwriting: an answers file DataArcus wrote is replaced, nothing else is
+// (R5, F04) what the approval says about overwriting: an answers file DataArcus wrote is replaced, nothing else is.
+// (R6, the outside audit of 19 Oct, F09 e: "Nothing is overwritten or deleted" was not true of every plan) each plan's
+// sentence says what it replaces, that everything else is new, and what a failed write removes: only what it created
 export const REPLACES = 'which replaces the answers file DataArcus wrote there';
-export const writesNote = (writes) => ((writes || []).some((w) => String(w).includes(REPLACES))
-  ? 'This plan replaces the answers file DataArcus wrote next to the project (only if it is still the file DataArcus checked); nothing else is overwritten or deleted.'
-  : 'Nothing is overwritten or deleted.');
+const FAILED = 'If the write fails part-way, DataArcus removes what this call created, and names anything it could not remove.';
+export const writesNote = (writes) => {
+  const w = (writes || []).map(String);
+  if (w.some((x) => x.includes(REPLACES))) return `This plan replaces the answers file DataArcus wrote next to the project (only if it is still the file DataArcus checked); every other file is new: nothing else is overwritten or deleted. ${FAILED}`;
+  if (w.some((x) => /^the answers file /.test(x))) return `This plan writes a new answers file next to the project. New files only: nothing is overwritten or deleted. ${FAILED}`;
+  return `New files only: nothing is overwritten or deleted. ${FAILED}`;
+};
 
 /** The short key the assistant passes back for a question: the first 16 characters of its signature. */
 export const answerKey = (sig) => String(sig).slice(0, 16);

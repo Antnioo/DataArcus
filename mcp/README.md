@@ -57,7 +57,8 @@ What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus
 - Every path must be inside one folder, the working folder: `DATAARCUS_ROOT`. Anything outside is refused, also when a link (symbolic link or junction) inside the folder leads outside it, and also for the paths a tool picks itself (the model folder a `.pbip` points at).
 - `DATAARCUS_ROOT` must be set: without it (or empty) the server starts but every tool refuses and says why; it never uses the folder it starts in. For the current folder set `DATAARCUS_ROOT=.` on purpose. A folder that doesn't exist yet is created on start when its parent exists.
 - The version is read from `mcp/package.json`. Tools declare what they do to files: five only read (`readOnlyHint`: `read_model`, `suggest_fields`, `plan_layout`, `read_report`, `check_report`); `generate_theme`, `create_report`, `create_arabic_twin`, `check_model_health` (its fix scripts) and `add_gulf_calendar` only add files (`destructiveHint: false`), and only with an approved plan id; `approve_plan` writes no file.
-- Nothing is overwritten: `create_report` refuses to write if any file already exists.
+- Nothing is overwritten: every write is a new file (`create_report` refuses to write if any file already exists); the one exception is DataArcus's own answers file next to a model, replaced only as its approved plan says and only if it is still the file DataArcus checked. A write that fails part-way removes what that call created.
+- DataArcus reads files on your machine to check and fingerprint them (a model's definition can hold "Enter data" or DATATABLE rows, and a report's files hold saved filter, slicer and bookmark values); it never returns data values to Claude.
 - Keep employer or client files you may not share out of that folder.
 
 ## Install (Windows, in the DataArcus folder)
