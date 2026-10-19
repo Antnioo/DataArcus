@@ -1,8 +1,30 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-155" just below (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J8" just below (branch `feat/0.3-gallery-foundation`, draft PR, 0.3). Before (18 Oct): "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J8: the visual gallery's foundation (19 Oct, cloud builder; branch `feat/0.3-gallery-foundation` from main `f09bf30`; DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D): three of Power BI's own visuals behind the design flag `gallery: true` (off by default).
+New module `assets/js/visual-gallery.js` (browser and Node, `window.DAGallery`): the rules, the queries, the titles and the
+formatting. Slot kinds `combo` (lineClusteredColumnComboChart), `waterfall` (waterfallChart), `multiples`
+(clusteredColumnChart with the `Rows` small-multiples role). Test first: `mcp/test-0.3-gallery.mjs` (44 checks, in npm
+test; 17 of its first 19 red on main).
+- When each fits (field roles only, never data): combo = a time or ordered axis + two different measures; the line on the
+  secondary axis (`valueAxis.secShow`) only when both units are known and differ (percent / currency / count, from the
+  picker's pct and the formats); a percent is always the line. Waterfall = an additive measure (no percent, average,
+  rate, ratio, share, margin, distinct count; English and Arabic words) by a category with a known count of 2-12
+  members (the picker's rows or the kind: 4 quarters, 7 days, 12 months). Multiples = a column chart + a second text
+  category (not the axis, not time, at most 9 members; without a known count, not an id, code or name).
+- The flag off, or the fields don't fit: the slot is written as its plain kind (combo > line, waterfall and multiples >
+  column) and told in the build result's `gallery: [{ page, from, to, title, why }]` (key present only with the flag
+  or a gallery slot).
+- Only roles and properties in Microsoft's capabilities (`@microsoft/powerbi-core-visual-schema`, data/capabilities.json)
+  inside the bundled PBIR schemas; the test checks every written property and runs Microsoft's validator: 0 errors, EN and AR.
+- Shared files touched: `pbip-export.js` (accepts the kinds, resolves them, the result key), `pbip-page.js` (5 hooks:
+  type, query, title, left-out check, formatting), `theme-generator.js` (?v= of the two), the theme generator pages' ?v=.
+  Not touched: server.mjs, design.mjs (the `gallery` argument of create_report / plan_layout is the next step).
+- Open, for the laptop lab (Desktop): see the PR's "Needs a Desktop check".
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with

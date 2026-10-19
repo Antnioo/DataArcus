@@ -10,6 +10,8 @@
   const Query = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Sizing = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const Engine = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
+  // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
+  const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
@@ -199,6 +201,8 @@
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
    * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
+   * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
+   *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
@@ -237,7 +241,7 @@
    *   page by page (A6-12): its fields as Table[Field] or Sum(Table[Field]), the helpers left out
    * @property {Array<{page: string, field: string, top: number}>} chartTops  category charts cut to their top N (rc1)
    */
-  const KIND_NAMES = Object.keys(TYPES);
+  const KIND_NAMES = Object.keys(TYPES).concat(Gallery ? Gallery.KIND_NAMES : []);
   const PBI_LITERAL = /^(true|false|null|'(?:[^']|'')*'|-?\d+L|-?\d+(\.\d+)?D)$/;
   // build's input checked against the contract above; every problem named at once (a TypeError)
   function checkBuild(o) {
@@ -350,6 +354,10 @@
     // pages: the main page first; each has its own layout and background image
     const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
       .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
+    // (0.3, J8) a gallery slot is written as its own visual only with o.gallery and where its fields fit (visual-gallery.js);
+    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why })
+    const galleryNotes = [];
+    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slot; }); });
     const files = [];
     // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
     const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
@@ -487,7 +495,8 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    const out = Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
 
 
