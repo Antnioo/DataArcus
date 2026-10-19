@@ -1486,15 +1486,17 @@ server.registerTool('plan_layout', {
   // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
   // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
   // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
-  const preview = (() => {
+  // (0.3.0 D5: drawn from the exact artifact's files when there is one, the bytes create_report writes: its titles are
+  // the written titles; built here only for a plan without one)
+  const previewOf = (files) => {
     if (!m0 || planProblems.length || cvEntries) return null;
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
       const lang = a.lang === 'ar' ? 'ar' : 'en';
-      return Object.assign({ lang }, planPreview({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
-        second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }));
+      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+        second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
     } catch (e) { return null; }
-  })();
+  };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
@@ -1543,6 +1545,7 @@ server.registerTool('plan_layout', {
     if (unchecked.length) planProblems.push(`the report this plan writes could not be fully checked: ${unchecked.map((n) => MUST_RUN[n.check]).join(' and ')} did not run (exactCheck.notRun says why), so no plan id is given. Tell the user; try again, or check the report with check_report after another plan.`);
     if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
   }
+  const preview = previewOf(exact ? exact.files : null);
   const exactCheck = !planPin ? {} : { exactCheck: exact ? Object.assign({}, exact.check, { digest: exact.digest,
     sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.`
       : exact.check.status === 'incomplete' ? `Tell the user: not every check could run on the report this plan writes (notRun), so it is not known to be clean. ${(exact.check.notRun || []).every((n) => !MUST_RUN[n.check] || n.capped) ? 'The approval page lists what was not checked; create_report writes exactly the files that were checked.' : 'No plan id is given (planProblems).'}`
