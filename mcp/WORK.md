@@ -34,6 +34,11 @@ The owner's go (18 Oct, R&D for 0.3): titles that say what the visual answers, f
   release-text 4, v029c/d/e/f/g 36/21/21/20/21, golden 12 (after the update), fuzz 8199, layouts 226 (32 reports),
   rc22 26, rc23 51, story-titles 91; round22 58 (in test.mjs). Website 19 of 19 PASS; check:min, site config, ar-pages,
   sitemap-lastmod, csp PASS.
+- **19 Oct, the owner's decision (relayed by the reviewer):** a visual's alt text is the FULL story title, never the
+  fitted one (draft #60's a11y W1 failed beside #57). Fixed in f3bf539 (test ST-6 red first, 8a1e63b: 3 of 94): charts,
+  tables, renamed same charts (the alternate with full names), Top N of M titles and the tooltip pages; the drawn title
+  stays fitted. Locally merged with feat/0.3-accessibility (throwaway, not pushed): test-0.3-a11y 121/121, story-titles
+  94/94. Golden task 6 longTitleUses 128 -> 131 (3 alt texts name the long measure whole again; why written).
 - **Seen, not in scope:** plan_layout's slot list still shows 4 KPI slots (roles "KPI 2/3/4") on a model with one measure
   while create_report writes one card (design/server, other drafts); titles keep column names such as "Month Short",
   "Month Year", "Day Name" on wide charts (only shortened under budget); the lab's no-model download keeps its "KPI 1-4"
