@@ -31,6 +31,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   to invert a waterfall's category axis, so only its order is reversed.
 - R2, the owner's must-fix: an Arabic report from an English-named model shows no English title words; the plan pins the
   fixed list's Arabic names and lists every field kept in English, with why, before the go.
+- R4 A failed write's clean-up removes only what that call created and still finds as it made it (a file or folder
+  another program put at one of its names, or a link put on the way, is left and named); folders made one level at a
+  time; nothing renamed over a name; `check_model_health`'s scripts and `create_report`'s format script follow the plan
+  rule (the outside audit's F01-F03, F06).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
