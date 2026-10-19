@@ -186,7 +186,7 @@ export function summary(kind, data) {
   const d = data || {}, pins = d.pins || {}, sections = [];
   // (R6, F09 f: a long value was cut at 600 characters) every value in full
   const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : JSON.stringify(v));
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs) : null;
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i]]) : null;   // (L3: the switch's own script)
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
@@ -227,6 +227,13 @@ export function summary(kind, data) {
     cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (Power BI's accessibility basics; the hue is kept)`]));
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
+    // (L3) the metric switcher: the measures and their labels, the charts that switch, and the model change it needs
+    const ms = d.metricSwitcher && typeof d.metricSwitcher === 'object' ? d.metricSwitcher : null;
+    const CK = { bar: 'Bar chart', line: 'Line chart' };
+    if (ms) sections.push({ heading: 'Metric switcher', rows: [['Page', String(ms.page || '')]]
+      .concat((Array.isArray(ms.measures) ? ms.measures : []).map((x, i) => [`Metric ${i + 1}: ${cut(String(x.field), 120)}`, `shown as "${cut(String(x.label), 100)}"`]))
+      .concat([['Charts that switch', (Array.isArray(ms.charts) ? ms.charts : []).map((c) => `${CK[c.kind] || 'Chart'} by ${String(c.by)}`)]], (ms.notSwitched || []).length ? [['Not on the page', ms.notSwitched.map(String)]] : [],
+        [['Title with nothing chosen', String(ms.fallbackTitle || '')], ['Model change', String(ms.modelChange || '')], ['Script file', String(ms.script || '')], ['Before the script is applied', String(ms.beforeApplied || '')], ['Saved selection', String(ms.savedSelection || '')]]) });
     // (0.3.0 D2) each gallery visual the user asked for: what is written and why (the writer's rule on the fields), and
     // how the preview draws it
     const GN = { combo: 'Combo (line and clustered column)', waterfall: 'Waterfall', smallMultiples: 'Small multiples' };

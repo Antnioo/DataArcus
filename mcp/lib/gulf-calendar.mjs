@@ -22,11 +22,13 @@ const CALENDAR_IDS = ['GC_NO_HIJRI', 'GC_NO_FLAGS', 'GC_WEEKEND', 'GC_DATES_DIFF
 const NOTHING = ' Nothing was written.';
 
 const refuse = (msg) => { throw new Error(msg + NOTHING); };
-const key = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase();
+export const nameKey = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase();
+const key = nameKey;
 const T = (s) => Date.parse(s + 'T00:00:00Z');
 
-// every name a new table must not take: tables (hidden and automatic ones too), measures and columns
-function takenNames(raw) {
+// every name a new table must not take: tables (hidden and automatic ones too), measures and columns (L3: the metric
+// switcher's table takes its free name by the same list)
+export function takenNames(raw) {
   const out = new Map();
   raw.forEach((t) => {
     out.set(key(t.name), { kind: 'table', name: String(t.name) });
