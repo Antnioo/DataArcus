@@ -48,7 +48,7 @@ window.aiReadyArticleTranslations = {
       "h8": "If your business runs on the Gulf calendar",
       "p11": "Ask an AI to compare \"this Ramadan with last Ramadan\" and it can only answer if your model knows when Ramadan was. Put Hijri months, Ramadan and Eid flags and your weekend in the calendar table (our free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>Calendar Generator</a> builds one), then say in the AI instructions how your business compares those periods. We showed the DAX in <a href='article-ramadan-sales-power-bi.html' class='text-accent'>Ramadan sales in Power BI</a>.",
       "h9": "Start with a ten-minute check",
-      "list2_1": "In Power BI Desktop: <strong>File > Export > Power BI template</strong> (a .pbit has the model's definition, not the data Power BI loaded; small tables typed in with Enter data or written in DAX with DATATABLE stay in it).",
+      "list2_1": "In Power BI Desktop: <strong>File > Export > Power BI template</strong> (a .pbit has the model's definition, not the data Power BI loaded; small tables typed in with Enter data or written in DAX with DATATABLE stay in it, and so do values saved in the report's filters, slicers and formatting, for example a filtered customer name).",
       "list2_2": "Drop it on the <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>. It runs in your browser and nothing is uploaded.",
       "list2_3": "Fix the unused fields, missing sort orders and formats first, then add names, descriptions and Prep data for AI.",
       "p12": "AI in Power BI is moving fast. The models that get good answers will be the ones that were clear for people first."
@@ -112,7 +112,7 @@ window.aiReadyArticleTranslations = {
       "h8": "إذا كان عملك يسير على التقويم الخليجي",
       "p11": "اطلب من الذكاء الاصطناعي مقارنة \"رمضان هذا العام برمضان الماضي\" ولن يستطيع الإجابة إلا إذا كان نموذجك يعرف متى كان رمضان. أضف الأشهر الهجرية وعلامات رمضان والعيد وعطلة نهاية الأسبوع إلى جدول التاريخ (أداتنا المجانية <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>مولّد جدول التاريخ</a> تبنيه لك)، ثم اشرح في تعليمات الذكاء الاصطناعي كيف يقارن عملك هذه الفترات. وقد عرضنا كود DAX في مقال <a href='article-ramadan-sales-power-bi.html' class='text-accent'>مبيعات رمضان في Power BI</a>.",
       "h9": "ابدأ بفحص من عشر دقائق",
-      "list2_1": "في Power BI Desktop: <strong>File > Export > Power BI template</strong> (ملف ‎.pbit يحمل تعريف النموذج، لا البيانات التي حمّلها Power BI، وتبقى فيه الجداول الصغيرة المكتوبة يدويًا عبر Enter data أو في DAX عبر DATATABLE).",
+      "list2_1": "في Power BI Desktop: <strong>File > Export > Power BI template</strong> (ملف ‎.pbit يحمل تعريف النموذج، لا البيانات التي حمّلها Power BI، وتبقى فيه الجداول الصغيرة المكتوبة يدويًا عبر Enter data أو في DAX عبر DATATABLE، وكذلك القيم المحفوظة في فلاتر التقرير والـ slicers والتنسيق، مثل اسم عميل مختار في فلتر).",
       "list2_2": "أفلته على أداة <a href='../tools/power-bi-model-health-check.html' class='text-accent'>فحص صحة النموذج</a>. تعمل في متصفحك ولا يُرفع أي شيء.",
       "list2_3": "أصلح الحقول غير المستخدمة وترتيب الفرز والتنسيقات أولًا، ثم الأسماء والأوصاف وPrep data for AI.",
       "p12": "الذكاء الاصطناعي في Power BI يتطور بسرعة. والنماذج التي ستحصل على إجابات جيدة هي التي كانت واضحة للناس أولًا."
