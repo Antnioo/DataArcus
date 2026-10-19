@@ -219,6 +219,39 @@ The owner's go (18 Oct, through the reviewer). From an outside audit of 0.2.9 (e
   read only known JSON paths); the model's report files are not in the model's print (a report edited after the go
   is not a model change).
 - Next: the reviewer reviews the draft PR; it merges only after 0.2.9 reaches testers.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-153" just below (0.3 draft, branch `feat/0.3-partial-writes`), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-153: partial writes (18 Oct, cloud builder; 0.3 R&D, branch `feat/0.3-partial-writes` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The reviewer's brief (owner's go of 18 Oct for 0.3 R&D): a write that fails half-way (disk full) could leave a partial
+file and an unused plan. Found: `writeNew` (theme file, TMDL scripts) wrote straight at the final name, so a full disk left
+a half file there; `writeTree` recorded a file only after writeFileSync returned, so a file cut off part-way stayed in its
+temporary folder (and the folder too); generate_theme's new folders (freeFile) stayed; create_report consumed its plan
+~150 lines after the tree was placed; a clean-up that could not remove something called it "not created by this call".
+- `lib/write-io.mjs` (new): `io` (the writing fs calls, replaceable by tests: `setIo`, `failingIo`; in a server
+  `DATAARCUS_TEST_WRITE_FAIL="<CODE>:<partial|open>:<n>[+stuck]"`: the n-th file write writes half then throws / throws
+  before any byte, once; +stuck: that file can't be removed either), `writeFileNew` (temporary name in the same folder,
+  'wx', then a hard link into place, which fails rather than replace; a rename, checked just before, on a drive without
+  hard links), `writeFailed` (one wording: "Nothing was written" only when the clean-up was complete; otherwise
+  PARTIAL_WRITE "The write stopped part-way ... Still on disk from this call: <exact paths>"), `e.left = { ours, foreign }`.
+  model.mjs `writeNew` = writeFileNew (one line, import beside it, away from PR #58's lines).
+- `lib/files.mjs`: writeTree records each file BEFORE writing it, uses io, names exactly what is left (ours vs foreign);
+  `freeFile(..., made)` tells the folders it made; `withPlan(planId, tool, write)`: the plan policy.
+- **Plan policy (decided):** used the moment the write is complete (before the answer is built). A failed write whose
+  clean-up was complete leaves the plan unused: the disk is as approved, so the same planId writes after the cause is
+  fixed. A failed write that left something marks the plan used: the folder holds part of this write, which nobody
+  approved; the person deletes what is named and approves again. The answer says which.
+- server.mjs: create_report (tree and native copy), generate_theme, add_gulf_calendar, create_arabic_twin go through
+  withPlan; gulf-calendar.mjs passes a write's own error on. check_model_health's scripts unchanged (their error is an
+  answer field already). PRIVACY.md section 4: two sentences.
+- Test first: `test-partial-writes.mjs` (in npm test): 12 of its first 16 checks red on main (the unit checks need
+  the module); 31 then. U1-U5 (withPlan in-process, 5 checks) were added with withPlan's last rule (an error after
+  the files were placed uses the plan), not red first. Expected after: 37 PASS (W2's "folders that were there are never
+  removed" added after CI's first Windows run: freeFile found its new folders by comparing a path with mkdirSync's
+  answer, which Windows spells differently (RUNNER~1), so the clean-up removed the empty folder above them; now found
+  by walking up to the first folder that exists. Not red on Linux, where the spellings agree); test-audit6 47, twin 116, z 13, approval 20 unchanged; npm test all PASS.
+- No Arabic sentence added. Seen, not in scope: see the PR.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with

@@ -1203,8 +1203,8 @@ if (part('round5')) {
     const plan = await ask('plan_layout', {}), cr = await ask('create_report', { path: 'link5-project', name: 'Linked Five', design: (plan.j || {}).design });
     chk(() => !cr.err && cr.j.report !== 'Linked Five.Report' && fs.lstatSync(cr.j.open).isFile() && fs.lstatSync(path.join(d, 'Linked Five.pbip')).isSymbolicLink() && fs.readdirSync(OUT).length === 0,
       () => `create_report at a name held by a dangling ${kind}: ${cr.err ? cr.t.slice(0, 200) : cr.j.report}; outside now holds ${fs.readdirSync(OUT)}`);
-    // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server
-    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+    // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server  (B-153: the one new-file writer is lib/write-io.mjs)
+    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
     chk(() => !/fs\.writeFileSync\(/.test(src.replace(/fs\.writeFileSync\([^;]*flag: 'wx'[^;]*;/g, '')) && /flag: 'wx'/.test(src) && !/existsSync\(f\)\) return f/.test(src),
       () => 'a new file is still written without the wx flag, or a free name is still picked with existsSync');
     unlink(path.join(ROOT, 'dangling-theme.json')); unlink(path.join(d, first)); unlink(path.join(d, 'Linked Five.pbip'));
