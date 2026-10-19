@@ -18,6 +18,9 @@
 //   W-10: one picture per page of the plan (a second page: two); an Arabic plan's picture is right to left
 //   W-11: the pictures change nothing of the window's security: the same headers (no scripts), no image or link, and
 //         opening the page approves nothing
+//   W-12: (0.3.0 step 2, "Check before write") the page says what the check of the planned pages found ("0 problems Power
+//         BI Desktop would show", or the list) next to the preview, above Approve
+//   W-13: create_report checks the project before it writes it and its answer says the result; the check never approves
 import fs0 from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -84,6 +87,9 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     const untitled = (x) => [...x.matchAll(/<text\b(?![^>]*class="t")[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
     chk(() => pics.every((x) => untitled(x).every((t) => !/\d/.test(t)) && [...x.matchAll(/<g class="ph">([\s\S]*?)<\/g>/g)].every((m) => !/<text/.test(m[1]))), () => `W-09. no number in the picture outside the plan's titles: drawn from the plan, never a value: ${pics.flatMap(untitled).filter((t) => /\d/.test(t)).join(' | ')}`);
 
+    // ---------- W-12: the check, next to the preview, above Approve ----------
+    chk(() => /Checked before writing/.test(page.t) && /0 problems Power BI Desktop would show/.test(page.t) && page.t.indexOf('Checked before writing') < page.t.indexOf('Approve</button>'), () => `W-12. the page says the check's result above Approve: ${(/Checked before writing[\s\S]{0,300}/.exec(page.t) || [''])[0]}`);
+
     // ---------- W-03: only the page itself can click ----------
     const here = new URL(link).origin, body = 'decision=approve';
     const rebound = await req(link, { method: 'POST', host: 'evil.example:' + new URL(link).port, origin: here, body });
@@ -106,6 +112,8 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /Approved\./.test(later.t) && !ok.err && ok.j.status === 'approved' && ok.j.approvedBy === 'user-in-browser' && ok.j.allows.join() === 'create_report', () => `W-04. approved by the person in the window (a later "Not now" changes nothing): ${short(ok)}`);
     const wrote = await s.call('create_report', { path: 'aw', planId: pid, name: 'Window Test', title, fields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false, design: pl.j.design });
     chk(() => !wrote.err && fs.existsSync(path.join(ROOT, 'aw', 'Window Test.Report')), () => `W-04. the approved plan writes its report: ${short(wrote)}`);
+    chk(() => !wrote.err && wrote.j.check && /Power BI Desktop would show/.test(wrote.j.check.summary) && Number.isInteger(wrote.j.check.desktop) && Array.isArray(wrote.j.check.problems), () => `W-13. create_report says what the check before writing found: ${short(wrote)}`);
+    chk(() => !early.err === false && !(early.j && early.j.check), () => 'W-13. before the click nothing is written and nothing is checked: the check never approves');
 
     // ---------- W-05: Not now ----------
     const t1 = await s.call('generate_theme', { brand: '#0F766E', name: 'Window Theme' }), tid = t1.j && t1.j.plan && t1.j.plan.planId;
