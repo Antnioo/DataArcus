@@ -78,6 +78,57 @@ scope is otherwise frozen. Test first: `mcp/test-rc23.mjs` (51 checks, in npm te
   translations): the same inexactness about "Enter data" tables, about the browser tool, left for the owner.
   PRIVACY.md's header still records "checked ... on 2026-10-11, with Microsoft's validator 0.4.0" (history).
 
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 1: Preview before Approve" just below (branch `feat/0.3.0-preview`, draft PR #37, merged only after 0.2.9 reaches testers; main merged in on 18 Oct), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 step 1: Preview before Approve (18 Oct, cloud builder; branch `feat/0.3.0-preview` from main `6d88fe4`; draft PR, not merged)
+The owner's go (18 Oct) on the 0.3.0 plan approved 17 Oct ("yes B and the promise stays"): step 1 first, merged only after
+0.2.9 reaches testers. Out of scope: step 2 (check before download), the visual gallery, story titles, anything the
+writer writes.
+- **The promise stays:** the picture is drawn from the PLAN only (visual types, positions, sizes, titles, field names,
+  theme colours); grey placeholder shapes (bars, a line, a ring, rows) with no text and no number, the page labelled
+  "preview" / «معاينة». No values, no sample data.
+- **One engine:** `assets/js/page-preview.js` (new; Node and `window.DAPagePreview`): `render(page, opts)` -> SVG string
+  (deterministic, every name escaped, right to left: titles from the right and bars from the right, positions as the
+  page places them), `check(page)` -> flags `cut` (off the page), `overlap` (>10% of the smaller, a card's cover left
+  out: the design lint's rule), `small` (chosen, not measured: chart/table 140 x 100, card 70 x 40, slicer 70 x 28 on
+  the 720 grid), `fromFiles(files)` (the pages the writer's PBIR files show: tooltip and hidden pages and hidden
+  visuals out; a card with no field and no title, or an empty text box, is a panel), `fromSlots` (the design engine's
+  slots). Flags: a dashed amber outline and a small tag with the word (overlap, cut off, too small).
+- **MCP:** `lib/plan-lint.mjs` `planPreview` (the writer's report of the plan in memory, the same build as planLint,
+  now shared as `build()`; planLint unchanged: first page, title "Plan"), with the design lint's findings of each page
+  as flags (OVERLAP, OFF_PAGE, BAR_LABELS_MAY_BE_CUT, TABLE_GROW_TO_FIT, TABLE_WIDTHS_TOO_WIDE); a model with no
+  measure falls back to the slots. `plan_layout` keeps it in the plan's data (`preview`, never in an answer; none for
+  a custom-visuals copy or a plan with problems). `approval-window.mjs`: "What the report will look like", one picture
+  per page above Approve, with a caption that counts what to check. Security unchanged: same CSP (inline SVG needs no
+  change), secret link, Host/Origin checks, no-store; only the click approves.
+- **Lab page:** "Preview the download" in the project card draws the download's own pages (the writer's files, the
+  same renderer); `withProject()` now builds the input for the download and the preview alike. Button text in the
+  translations (en/ar). Stamps 20261018b: theme-generator.min.js and translations/theme-generator.min.js on both
+  generator pages.
+- **Tests (written red first):** `mcp/test-0.3.0-preview.mjs` P-01..P-08 (71 checks; golden: arabic-long-names ar exec,
+  health-project en analysis, large-synthetic en ops focus logistics, no-measures en focus), in `npm test`;
+  `test-approval.mjs` W-09..W-11 (20 -> 28 checks; the reopen test's link index moved from 2 to 4 because two windows
+  now open before it); website `pbip` suite: the lab preview's boxes equal the download's, en and ar (red 4 before the
+  build, green after).
+- **Samples for the owner:** `mcp/work/preview-samples/` (made by `make.mjs` there: the real approval window, shot in
+  Chromium).
+- **Tests (Linux), before -> after:** preview 0 -> 71 (P-01 red first); approval window 20 -> 28 (4 red first); website
+  `pbip` 92 checks, the lab-preview checks red (4) before the build, all green after; full `cd mcp && npm test` all PASS
+  (mcp 1572, v029c/d/e/f/g 36/21/21/20/21, golden 12 unchanged, fuzz 600, layouts 32 reports 226 checks, preview 71);
+  website 18 of 18 PASS; check:min 63 match with new stamps, csp, site config PASS.
+- **Open (for the owner):** (1) the 3 samples: say yes or what to change. (2) the "too small" sizes are chosen, not
+  measured: measure them in Desktop or accept them. (3) Docs not yet updated for the preview (README, PRIVACY,
+  CHANGELOG 0.3.0, the skill): after the owner's yes. (4) Two copies of the overlap rule (design-lint.mjs and
+  page-preview.js `check`): the lint could use the renderer's `check` later (not in this step).
+- **Seen, not in scope:** the writer's duplicate titles "Total by Note (2) (2)" and "... by Lane Region (2)" when two
+  charts use the same field (health-project, large-synthetic, arabic page 2); KPI titles "KPI 2", "KPI 3", "KPI 4" on
+  health-project (the writer's default titles where the model has fewer measures); long Arabic KPI titles cut to a few
+  words in the preview (in Desktop they wrap to two lines: the preview cuts at one line); the approval page is English
+  only (an Arabic plan's captions mix "Page 1:" with the Arabic name).
+- **Next:** CI green on the draft PR; the owner looks at the 3 samples; merge only after 0.2.9 reaches testers. Step 2
+  (check before download) not started.
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
 lowered, no path filters, actions SHA-pinned, the scan job untouched, no GitHub setting to change.
