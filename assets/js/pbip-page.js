@@ -14,6 +14,10 @@
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
   const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
+  // the visual gallery (0.3, J8; visual-gallery.js): optional in the browser. A gallery slot reaches here only when the
+  // design's flag is on and its fields fit (pbip-export.js resolves the others to their plain kind first)
+  const G = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
+  const isGallery = (kind) => !!(G && G.isKind(kind));
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -548,7 +552,7 @@
     }
 
     sorted.forEach((s) => {
-      const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || 'cardVisual';
+      const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || (isGallery(s.kind) ? G.typeOf(s.kind) : 'cardVisual');
       if (s.kind === 'slicer') {
         // the filter panel holds several dropdown slicers and a Reset button:
         // stacked in a side panel, side by side in a top strip
@@ -674,14 +678,14 @@
           const widest = Math.max(...namesOf(c0, 'day').map((d) => textWidth(d, LABEL, false, font)));   // (A3-7: the day names of its own family)
           if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
         }
-        const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
+        const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
         if (B && CHARTS.includes(s.kind)) { const k = s.kind;
           hov = { m: k === 'line' ? Bt.measure : k === 'funnel' && Bt.y && 'funnel' in Bt.y ? Bt.y.funnel : (Bt.y || {})[k] || Bt.measure, cat: k === 'line' ? Bt.date : (Bt.cats || {})[k] }; }
         let ttl = s.title;
         const extra = {};
         // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
         // user's model does; before, it kept the layout's role names, "Main trend")
-        if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
+        if (B && query) ttl = (isGallery(s.kind) ? G.title(s.kind, Bt, W.by || 'by') : bindTitle(s.kind, Bt, W.by || 'by')) || ttl;
         // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
         let topOf = null;
         { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
@@ -692,7 +696,7 @@
         // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;
         // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
         // counted by the caller.
-        if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
+        if (B && own && !query && (CHARTS.includes(s.kind) || isGallery(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
         visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
@@ -720,6 +724,10 @@
         // interpolationSmooth 'monotoneX'; "interpolation" is no property; smooth swings between the points of a jagged series)
         if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: Object.assign({ strokeWidth: num(3) }, o.smoothLines ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX') } : {}) }]; }
         // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
+        // (0.3, J8) a gallery visual's own formatting: the combo's secondary axis only when its units differ, its line 3
+        // wide; the quiet gridlines and a right-to-left report's mirrored axes as the other charts (visual-gallery.js)
+        if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+          if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
