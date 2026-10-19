@@ -356,16 +356,39 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
   return out;
 }
 
+// ---- the right-to-left waterfall's facts from the model (D1): a column's sort-by column and type, a measure's format ----
+const waterfallFacts = (m) => {
+  const tab = (t) => (m && Array.isArray(m.tables) ? m.tables.find((x) => x && x.name === t) : null);
+  const colOf = (t, c) => { const x = tab(t); return x && Array.isArray(x.columns) ? x.columns.find((y) => y && y.name === c) : null; };
+  return { sortByOf: (t, c) => { const x = colOf(t, c); return x && x.sortBy ? String(x.sortBy) : null; }, typeOf: (t, c) => { const x = colOf(t, c); return x && x.dataType ? String(x.dataType) : null; },
+    formatOf: (t, n) => { const x = tab(t), me = x && Array.isArray(x.measures) ? x.measures.find((y) => y && y.name === n) : null; return me && typeof me.formatString === 'string' && me.formatString ? me.formatString : null; } };
+};
+const EXT_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json';
+
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
 function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, dateTables: P.dateTables, dateColumns: P.dateColumns };
+  // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
+  // name free of the model's and the report's; the same DAX in the same table is one measure
+  const wfWritten = [];
+  opts.waterfall = Object.assign(waterfallFacts(P.model), { theme: R.theme, extMeasure: (t, want, expression, dataType, formatString) => {
+    if (!ext) ext = { $schema: EXT_SCHEMA, name: 'extension', entities: [] };
+    let e = ext.entities.find((x) => isObj(x) && x.name === t); if (!e) ext.entities.push(e = { name: t, measures: [] }); if (!Array.isArray(e.measures)) e.measures = [];
+    const had = wfWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
+    const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
+    e.measures.push(Object.assign({ name: m, dataType, expression }, formatString ? { formatString } : {})); wfWritten.push({ t, m, expression }); return m; } });
   const TC = P.R.theme && isObj(P.R.theme.textClasses) ? P.R.theme.textClasses : {}, lab = isObj(TC.label) ? TC.label : {};
   const ctx = { text: { labelSize: +lab.fontSize || 10, font: lab.fontFace || 'Segoe UI' }, theme: R.theme };
   let applied = 0;
   // the title measures: the twin's own Arabic ones, named "Title AR: ...", beside the original's (which stay as they are)
-  const tms = titleMeasuresOf(R), ext = R.ext ? JSON.parse(JSON.stringify(R.ext)) : null, rename = new Map(), written = [];
+  const tms = titleMeasuresOf(R), rename = new Map(), written = [];
+  let ext = R.ext ? JSON.parse(JSON.stringify(R.ext)) : null;
+  // (D1: a measure's name is unique across the whole model, report measures included, without case (writer P3): the
+  // waterfall's names are checked against every table's and every report measure's)
+  const takenAnywhere = () => new Set([].concat(...((ext && ext.entities) || []).map((e) => (isObj(e) && Array.isArray(e.measures) ? e.measures.map((x) => (isObj(x) ? x.name : '')) : [])),
+    ...((P.model && P.model.tables) || []).map((t) => (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)))).map((n) => String(n).toLowerCase()));
   const taken = (entity) => { const e = ext.entities.find((x) => isObj(x) && x.name === entity), t = P.model && (P.model.tables || []).find((x) => x.name === entity);
     return new Set([].concat((e && Array.isArray(e.measures) ? e.measures : []).map((x) => isObj(x) ? x.name : ''), t ? (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)) : []).map((n) => String(n).toLowerCase())); };
   tms.filter((x) => x.pd.branches && ext).forEach((x) => {
@@ -397,7 +420,7 @@ function buildTwin(P, labels) {
     return { pg, page, visuals: r.visuals };
   });
   const notTranslated = tms.filter((x) => !x.pd.branches).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
-  return { pages, applied, ext: written.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null };
+  return { pages, applied, ext: written.length || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')) };
 }
 
 // ---- the plan ----
@@ -427,11 +450,12 @@ export function planTwin(a) {
   texts.forEach((t) => { if (t.kind === 'titleMeasure' && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).slice('titleText:'.length), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: 'drawn on a background picture: kept left to right' };
-    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables, dateColumns });
+    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
+    (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
     // (T-3, T-6 of rc.5: the pairs mirrored as one)
     const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
     u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
@@ -445,6 +469,7 @@ export function planTwin(a) {
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
   if (where.other.length) cannot.push({ what: 'other visuals (scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
+  if (where.waterfallKept.length) cannot.push({ what: 'waterfall charts the running total can\'t follow', why: Mirror.KIND_WHAT.waterfallKept, where: where.waterfallKept.slice(0, 30) });
   if (where.matrix.length) cannot.push({ what: 'matrix rows', why: 'a matrix keeps its row headers at the left (a hierarchy keeps its order); only its values are reversed', where: where.matrix.slice(0, 30) });
   if (pictureIds.size) cannot.push({ what: 'pages drawn on a background picture', why: mirrorPictures ? 'mirrored as asked (mirrorPicturePages), but the picture is not: its panels stay where they are, so the visuals no longer sit on them' : 'kept left to right: Power BI has no setting that mirrors a page picture, and the visuals would leave its panels. To mirror them anyway (the picture stays as it is), ask again with mirrorPicturePages true', where: [...pictureIds].map((x) => safeName(x)).slice(0, 30) });
   // (T-4: data bars inside a table or a matrix have no proven direction setting)
@@ -526,6 +551,8 @@ export function writeTwin(a, plan) {
   // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
   // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
   const tree = R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
+  // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
+  if (out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
   let month = { written: false, why: P.month.why };
   if (P.month.offered) {
     const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script);
@@ -534,7 +561,7 @@ export function writeTwin(a, plan) {
   }
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
   writeTree(loc.project, tree);
-  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
+  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };

@@ -244,7 +244,9 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   // waterfall is mirrored now, by its sort and value axis, and counted under mirrors; it was listed here before)
   const other = (j.cannot || []).find((c) => /scatter|no right-to-left setting/i.test(c.what + ' ' + c.why));
   chk(() => other && other.where.length === 1 && other.where.some((w) => /scatter/.test(w)) && !/waterfall/i.test(other.what), () => `T6. scatter listed under cannot, the waterfall no longer: ${JSON.stringify(j.cannot)}`);
-  chk(() => (j.mirrors || []).some((x) => x.kind === 'waterfall' && x.count === 1), () => `T6. the waterfall counted under mirrors: ${JSON.stringify(j.mirrors)}`);
+  // (D1, changed on purpose: a waterfall by a text category with no order of its own (Region) is kept a waterfall, left
+  // to right: the running total has no order to follow; counted under mirrors as kept, and listed under cannot with why)
+  chk(() => (j.mirrors || []).some((x) => x.kind === 'waterfallKept' && x.count === 1) && (j.cannot || []).some((c) => /waterfall/.test(c.what) && /reads left to right in Power BI/.test(c.why) && c.where.length === 1), () => `T6. the waterfall counted under mirrors (kept) and listed under cannot: ${JSON.stringify(j.mirrors)} ${JSON.stringify(j.cannot)}`);
   // write it
   const lab = evilTitle ? { [evilTitle.id]: 'الهامش' } : {};
   const pl = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, labels: lab }), pid = pl.j && pl.j.plan && pl.j.plan.planId;

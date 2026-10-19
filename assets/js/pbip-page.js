@@ -329,7 +329,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -759,8 +759,19 @@
         // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
         // (0.3, J8) a gallery visual's own formatting: the combo's secondary axis only when its units differ, its line 3
         // wide; the quiet gridlines and a right-to-left report's mirrored axes as the other charts (visual-gallery.js)
-        if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
-          if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
+        // (D1, the owner's must-fix 2: R3's Descending waterfall was seen in Desktop 2.159 to reverse time, not the
+        // direction: Power BI accumulates a waterfall left to right) a mirrored right-to-left report's waterfall is a
+        // stacked column chart drawn as a waterfall from the report's own measures, read from the right
+        // (visual-gallery.js rtlWaterfall); one the measures can't order stays a waterfall, left to right, and is told
+        const wf = query && MIRROR && s.kind === 'waterfall' ? G.rtlWaterfall(query, { extMeasure, lang, grid: GRID, azText: !!G.fieldsOf('waterfall', Bt).cat && isTime(G.fieldsOf('waterfall', Bt).cat), formatString: (G.fieldsOf('waterfall', Bt).y || {}).tableFormat || null,
+          // (the model's sort-by column and type, o.model.columns from the MCP; else the bound field's own type)
+          sortByOf: (t, cn) => ((((o.model || {}).columns || {})[t] || {})[cn] || {}).sortBy || null,
+          typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(u.good), fall: G.fillOf(u.bad) } }) : null;
+        if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
+          waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+          if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
+          else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
