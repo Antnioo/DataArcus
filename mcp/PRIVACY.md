@@ -136,9 +136,15 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
     is the model folder itself it writes no script (nothing is ever written inside a model folder) and says so.
   - (0.3) `check_model_health` keeps your answers to its "Please confirm" questions, when you ask it to, in
     `<model>.dataarcus-answers.json` next to the project, written only after you approve a plan that lists it. It
-    holds hashes (of each question's measure, its DAX text and format string, or of a relationship's columns) and
-    your answer, never DAX text or data. It is the one file DataArcus replaces, and only when what is at that name is
-    a DataArcus answers file (anything else there is left as it is and named); forgetting your answers empties it.
+    holds hashes and your answers. For each answer: a hash of the question (its id), a hash of the object it is about, a hash of the metadata
+    it was based on (a measure's DAX text and format string, a relationship's columns, an unrelated table's key
+    columns, with their types), your answer, its date and "user". No name, no DAX text, no data. It is the one file
+    DataArcus replaces: the plan says so ("replaces the answers file DataArcus wrote"), and the replace happens only
+    when what is at that name is still the DataArcus answers file DataArcus checked (its identity, size and content
+    hash, checked again just before); anything else there is left as it is and named. A write that fails leaves
+    nothing, or names exactly what it could not remove. Answers that no longer apply are dropped from the file at an
+    approved write, which the plan says; forgetting your answers empties it. (The website's Health Check keeps the
+    same records in your browser only, and keeps answers that no longer apply until you click "Forget my answers".)
   - A name counts as taken when anything at all is there, including a link whose target is missing, and every new
     file is created in a way that fails if the name exists: nothing is written over a file or through a link.
   - `read_model`, `suggest_fields`, `plan_layout` and `check_report` only read. (0.3, J14: to run Microsoft's validator on

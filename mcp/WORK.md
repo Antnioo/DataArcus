@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R4" just below (branch `fix/0.3.0-write-safety`, PR into release/0.3.0); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R4" and "R5" just below (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -44,6 +44,41 @@ scripts/answers and create_report's format script are written outside withPlan. 
   the window is one call, named in PRIVACY's "what these checks are not".
 - Next: the reviewer reviews the PR into release/0.3.0, CI green (mcp-windows runs S3 with a junction), the owner merges.
 
+## R5: the answers file and memory, safe and truthful (19 Oct, cloud builder; branch `fix/0.3.0-answers-safety` from `release/0.3.0`; one PR into release/0.3.0, not merged)
+The reviewer's brief (the owner approved fixing every finding of the outside audit of 19 Oct before release; findings
+pinned to integration ce8335b, found again on release/0.3.0). Another builder has `fix/0.3.0-write-safety`
+(write-io.mjs / files.mjs / withPlan): this branch only calls write-io's public functions (io, writeFileNew,
+writeFailed, shownWritePath), never changes them.
+- F04 (High): `lib/answers.mjs` readAnswers takes the file's identity (dev+ino by lstat, size, SHA-256 of the bytes read);
+  writeAnswers(dir, base, records, checked) writes the temp, takes the identity again right before the rename and
+  refuses ("Nothing was written: the answers file ... changed after DataArcus checked it", code ANSWERS_CHANGED, nothing
+  touched) when it differs; a file that appeared after a check that found none goes through writeFileNew (EEXIST, never
+  replaced). The plan line says "a new file" or "which replaces the answers file DataArcus wrote there" (and how many
+  answers that no longer apply are dropped); `writesNote(writes)` (answers.mjs) is the approval page's and the app
+  prompt's note: "This plan replaces the answers file DataArcus wrote ..." for such a plan, "Nothing is overwritten or
+  deleted." otherwise. Residual: between the last identity check and the rename (microseconds) a swap is still possible
+  (POSIX rename has no compare-and-swap); said in the PR.
+- F05 (Med): the temp is written with `io.writeFileSync(..., 'wx')` inside the try, recorded before the call, removed on
+  any failure; errors are write-io's writeFailed (e.left). check_model_health: `answersLeftOnDisk` names what is left;
+  `answersPlan` says the plan was NOT used when nothing of this call is on disk (the same planId writes again), and IS
+  used otherwise (leftovers, or fix scripts written in the same call).
+- F14 (Med): confirm-memory.js signature() has a table branch ('b148-table-v1'): table, looksLike, key column and the
+  other table's key with their types; a date table's dateTime column names. Earlier table answers come back once (they
+  were signed without their evidence).
+- F10 (Low), decided: HASH. Records are { questionHash, objectHash, answer, evidenceSignature, at, by }; `at`/`by` kept as
+  non-sensitive metadata. Why: the answers file sits next to the project and travels with it (a shared folder, Git), so
+  names in it would describe the model without the model; hashes say nothing to anyone without the model. Older records
+  (plain questionId/object) are read through `upgrade()` and kept hashed from then on (browser at once, the file at its
+  next approved write). PRIVACY.md says exactly what is kept.
+- F12 (Low), decided: KEEP. The page no longer prunes: stale answers stay in localStorage, not applied, shown as "N
+  earlier answers no longer apply ... until you click Forget my answers" (#mhStale); an answer whose DAX comes back
+  applies again; saving a new answer keeps them (kept(a) = keep + stale). The MCP file drops them only at an approved
+  write, which its plan now says.
+- Tests: `mcp/test-0.3.0-answers-safety.mjs` (in npm test) 33 checks, 27 red on release/0.3.0; now 33/33.
+  test-confirm-memory.mjs U6/S4 changed on purpose (the record's new shape), 28/28. Website model-health B-148: 6 red on
+  the old page code; now 232 PASS. ?v= 20261019r5 on confirm-memory and model-health (EN and AR pages).
+- Next: the reviewer reviews the PR; the owner checks the Arabic sentence; merges into release/0.3.0.
+
 ## R3: a right-to-left waterfall reads from the right (19 Oct, cloud builder; branch `fix/0.3.0-waterfall-rtl` from `release/0.3.0`; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct, the owner's must-fix: in an Arabic report the waterfall did not switch direction). Another
 builder has `fix/0.3.0-arabic-titles` (titles in pbip-page.js / story titles): this branch stays out of those lines.
@@ -69,6 +104,37 @@ builder has `fix/0.3.0-arabic-titles` (titles in pbip-page.js / story titles): t
   its English report: the first month at the right, the running total building right to left, the Total column at the
   left end, the value axis at the right; the English report unchanged (January at the left, axis at the left).
 - Next: the reviewer reviews the PR, the laptop checks in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3.0 R2" just below (branch `fix/0.3.0-arabic-titles`, normal PR #75 to `release/0.3.0`); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 R2: English titles in an Arabic report from an English-named model (19 Oct, cloud builder; branch `fix/0.3.0-arabic-titles` from `release/0.3.0` f5455c9; normal PR #75 to `release/0.3.0`, not merged)
+The owner's must-fix after testing 0.3: create_report / plan_layout with lang 'ar' on a model with English names showed
+English titles ("Web Orders Total Score by Plan Group"). Rule: every text an Arabic report shows is Arabic, or the plan
+lists it as not translated, with why, before the person approves.
+- Causes found (probe: the golden model, focus Web Orders, exec + ops, tooltip page, no displayNames):
+  (a) story-titles.js join / pbip-query.js byTitle chose the joiner by the measure's script, not the report's language:
+  two English names gave "M by C" (and the Top-N title measures' DAX strings «أعلى N من M: ... by ...»); alternate gave
+  "ranked by", "per", "breakdown by"; timeWords said an English name's PY/YTD in English words ("Sales last year") on
+  KPI labels (kpiLabel), titles and alt text (report-a11y nameOf). (b) visual-gallery.js title: " and ", ", per " and
+  "by" with English names. (c) the plan never pinned the fixed list's Arabic names (only suggested them; create_report
+  wrote names only when the assistant passed them back) and never listed what stays English; the table's ": detail"
+  tail followed the title's script. (d) none found: buttons, page names, "No data", the table total, header subtitle
+  are Arabic already (REPORT_TEXTS.ar); the report name is the user's.
+- Fix: the report's word («حسب» / "by") decides: an Arabic report never joins English names with English words (the
+  measure's name alone; repeated titles get "(column)"), no English alternates, English names kept as they are (no
+  "last year"); gallery the same; the table's tail «: التفاصيل» in an Arabic report. plan_layout (Arabic): the fixed
+  list's names are pinned with the plan (arabicNames.inThePlan, as an English plan's readable names), every other shown
+  field is listed in arabicNames.notTranslated { field, shownAs, why } with sayInPlan; the fields come from the
+  planned page itself (plan-lint fields: the ops layout's 5th/6th cards, a third category); the approval window has a
+  section "Shown in English (n, no Arabic name)". The model is never renamed.
+- Test first: mcp/test-0.3-arabic-titles.mjs (in npm test), 27 checks, 17 red on integration/0.3-preview ce8335b and on
+  release/0.3.0 f5455c9; all green after. AT-4 (English titles unchanged) recorded in test-models/arabic-titles-en.json.
+- Expectations changed (dated notes, listed in the PR for the owner): test.mjs Round0 AR planName, display names (Last
+  Ramadan's pinned name, used 6), the table title in Arabic, the 960x720 Arabic table share (keeps the model's names via
+  displayNames), round 20 repeated titles (Arabic now unique); test-round22 (keeps English names via displayNames),
+  test-round23 (row label header «المنطقة»); test-0.2.9-sweep B-88 (the plan's pinned names written too).
+- Next: the reviewer reviews the PR, the laptop checks in Desktop (list in the PR), the owner merges into release/0.3.0.
 
 ## 0.3.0 release branch (19 Oct, cloud builder; branch `release/0.3.0` from main `d76703c`; DRAFT PR #74 to main, the owner merges after the laptop proof)
 The owner's decision (19 Oct): beta testers get 0.3.0, the 0.3 drafts as they are. One `git merge --no-ff` per branch,

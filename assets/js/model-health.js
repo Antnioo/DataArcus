@@ -56,23 +56,27 @@ document.addEventListener('DOMContentLoaded', () => {
   // object names such as Sales[Amount] keep their left-to-right order inside an Arabic sentence
   const qText = (t) => String(t).split(/(\S+\[[^\]]+\])/).map((x, i) => (i % 2 ? bdi(x) : esc(x))).join('');
   // (B-148, 0.3) an answer is remembered in this browser only (confirm-memory.js: localStorage, per model fingerprint),
-  // reused while the measure or relationship is unchanged; the question comes back when it changes. Hashes and the
-  // answer are stored, never the DAX
+  // reused while the measure or relationship is unchanged; the question comes back when it changes. Hashes, the answer
+  // and its date are stored, never a name or the DAX. (R5) An answer whose measure or relationship changed is kept, not
+  // applied, until "Forget my answers": nothing is deleted without that click
   const qMem = () => {
     const M = window.DataArcusConfirmMemory;
     if (!M || !R || !R.rawTables) return null;
     const fp = M.fingerprint(R.rawTables);
     return { M, fp, a: M.apply(R.confirm || [], M.load(fp), R.rawTables) };
   };
-  const qPrune = () => { const m = qMem(); if (m && m.a.stale.length) m.M.save(m.fp, m.a.keep); };
+  // (R5) answers stored before with names in plain text are held hashed from now on; none is dropped
+  const qRehash = () => { const m = qMem(); if (m && m.M.kept(m.a).length) m.M.save(m.fp, m.M.kept(m.a)); };
   const qAnswerText = (a) => (a === 'intended' ? L('Intended', 'مقصود') : L('A mistake: still to fix', 'خطأ: لم يُصلح بعد'));
-  const answeredHtml = (answered) => !answered.length ? '' : '<div class="mh-qmem" id="mhAnswered"><div class="mh-qhead"><b>' + L('Your earlier answers on this model', 'إجاباتك السابقة على هذا النموذج') + '</b>' +
+  const answeredHtml = (answered, stale) => !answered.length && !stale ? '' : '<div class="mh-qmem" id="mhAnswered"><div class="mh-qhead"><b>' + L('Your earlier answers on this model', 'إجاباتك السابقة على هذا النموذج') + '</b>' +
     '<button type="button" class="mh-copy" id="mhForget"><i class="bi bi-trash3"></i> ' + L('Forget my answers', 'انسَ إجاباتي') + '</button></div>' +
     '<p class="mh-note">' + L('Your answers stay in this browser only and are never sent. A question comes back when the measure or relationship it is about changes.', 'تبقى إجاباتك في هذا المتصفح فقط ولا تُرسل إلى أي مكان. يعود السؤال عندما يتغير المقياس أو العلاقة التي يخصها.') + '</p>' +
-    '<ul>' + answered.map((x) => '<li><code>' + esc(x.question.obj) + '</code> · ' + qAnswerText(x.record.answer) + ' (' + L('unchanged since', 'لم يتغير منذ ذلك الحين') + ')</li>').join('') + '</ul></div>';
+    (answered.length ? '<ul>' + answered.map((x) => '<li><code>' + esc(x.question.obj) + '</code> · ' + qAnswerText(x.record.answer) + ' (' + L('unchanged since', 'لم يتغير منذ ذلك الحين') + ')</li>').join('') + '</ul>' : '') +
+    (stale ? '<p class="mh-note" id="mhStale">' + L(num(stale) + ' earlier ' + (stale === 1 ? 'answer no longer applies' : 'answers no longer apply') + ': what ' + (stale === 1 ? 'it was' : 'they were') + ' about changed, so ' + (stale === 1 ? 'its question is' : 'their questions are') + ' asked again. ' + (stale === 1 ? 'It stays' : 'They stay') + ' in this browser until you click Forget my answers.',
+      'إجابات سابقة لم تعد تنطبق: ' + num(stale) + '. تغيّر ما كانت عنه، لذلك تُطرح أسئلتها من جديد. تبقى في هذا المتصفح حتى تنقر «انسَ إجاباتي».') + '</p>' : '') + '</div>';
   const confirmHtml = () => {
-    const mem = qMem(), gone = qDismissed(), list = (mem ? mem.a.ask : R.confirm || []).filter((c) => !gone.has(qKey(c))), answered = mem ? mem.a.answered : [];
-    if (!list.length && !answered.length) return '';
+    const mem = qMem(), gone = qDismissed(), list = (mem ? mem.a.ask : R.confirm || []).filter((c) => !gone.has(qKey(c))), answered = mem ? mem.a.answered : [], stale = mem ? mem.a.stale.length : 0;
+    if (!list.length && !answered.length && !stale) return '';
     return '<section class="mh-confirm" id="mhConfirm"><h3 class="mh-h"><i class="bi bi-question-circle"></i> ' + L('Please confirm', 'يرجى التأكيد') + ' <span class="mh-count">' + num(list.length) + '</span></h3>' +
       '<p class="mh-note">' + L('The check asks about some common calculation mistakes. These are questions, not findings, and they don\'t affect the score: the check reads the model\'s structure and DAX, not your numbers, so it can\'t tell whether a result is wrong.',
         'يسأل الفحص عن بعض أخطاء الحساب الشائعة. هذه أسئلة وليست مشاكل، ولا تؤثر في التقييم: يقرأ الفحص بنية النموذج وصيغ <bdi>DAX</bdi> لا أرقامك، لذلك لا يستطيع أن يعرف إن كانت النتيجة خاطئة.') + '</p>' +
@@ -81,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '<button type="button" class="mh-copy" data-qdismiss><i class="bi bi-x-lg"></i> ' + L('Dismiss', 'إخفاء') + '</button></span></div>' +
         '<p>' + qText(isAr() ? c.message.ar : c.message.en) + '</p>' +
         (c.evidence ? '<pre class="mh-dax mh-qdax" dir="ltr"><code>' + esc(c.evidence) + '</code></pre>'
-          : c.relationship ? '<p class="mh-qrel">' + L('Relationship', 'العلاقة') + ': ' + bdi(c.obj) + ' · ' + L('unused column', 'العمود غير المستخدم') + ': ' + bdi(c.relationship.fromTable + '[' + c.relationship.candidateColumn + ']') + '</p>' : '') + '</div>').join('') + answeredHtml(answered) + '</section>';
+          : c.relationship ? '<p class="mh-qrel">' + L('Relationship', 'العلاقة') + ': ' + bdi(c.obj) + ' · ' + L('unused column', 'العمود غير المستخدم') + ': ' + bdi(c.relationship.fromTable + '[' + c.relationship.candidateColumn + ']') + '</p>' : '') + '</div>').join('') + answeredHtml(answered, stale) + '</section>';
   };
 
   // ---------- file input ----------
@@ -105,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (d.type === 'error') { showError(d.code, d.message); worker.terminate(); worker = null; }
       else if (d.type === 'done') {
         R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
-        qPrune();   // (B-148) answers whose measure or relationship changed are dropped: their questions are asked again
+        qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
         const hist = store.get('dataarcus-mh-history', {});
         const key = String(fileName).toLowerCase();
         prev = hist[key] && hist[key].length ? hist[key][hist[key].length - 1] : null;
@@ -255,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.querySelectorAll('[data-qanswer]').forEach((b) => b.onclick = () => {
       const m = qMem(), sig = b.closest('.mh-q').dataset.qsig, q = m && m.a.ask.find((c) => c.signature === sig);
       if (!q) return;
-      m.M.save(m.fp, m.a.keep.concat(m.M.record(q, b.dataset.qanswer, R.rawTables)));
+      m.M.save(m.fp, m.M.kept(m.a).concat(m.M.record(q, b.dataset.qanswer, R.rawTables)));
       tIssues();
     });
     const fg = el.querySelector('#mhForget');

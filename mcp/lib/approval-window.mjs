@@ -11,6 +11,7 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { writesNote } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -78,7 +79,7 @@ function askPage(w) {
   // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
   const ck = s.previews && s.previews.check, ckHtml = ck ? `<h2>Checked before writing</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `Page ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}<p class="note">The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.</p></div>` : '';
   return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">Nothing is overwritten or deleted.</p></div>
+${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">${esc(writesNote(w.plan.writes))}</p></div>
 ${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
 <form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
@@ -189,6 +190,8 @@ export function summary(kind, data) {
     sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
+    // (0.3.0 R2: an Arabic report's texts are Arabic, or listed here with why before the go) the fields kept in English
+    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic name)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
     const LK = { theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;

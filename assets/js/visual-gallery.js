@@ -136,7 +136,7 @@
 
   // ---- the title: "Sales and Margin % by Month", "Sales by Quarter", "Sales by Channel, per Region" ----
   // A field's name as the story titles say it when they are loaded (time intelligence in words), else as the writer does
-  const nameOf = (f) => { const S = ST(); return f ? (S && S.nameOf ? S.nameOf(f, shown) : label(f)) : null; };
+  const nameOf = (f, inAr) => { const S = ST(); return f ? (S && S.nameOf ? S.nameOf(f, shown, inAr) : label(f)) : null; };
   const AND = { en: ' and ', ar: ' و' }, PER = { en: ', per ', ar: '، لكل ' };
   // the parts of a title, for the story titles to shorten (variants(m, c, by, shown)): the measure field and the axis field
   function titleParts(kind, B) {
@@ -149,12 +149,14 @@
   function title(kind, B, by) {
     const p = titleParts(kind, B);
     if (!p) return null;
-    let m = nameOf(p.m);
+    // (0.3.0 R2: the report's word decides the language: an Arabic report joins no English names with "and" or "per")
+    const inAr = AR_LETTERS.test(by || ''), join = (x) => AR_LETTERS.test(x) === ar && (ar || !inAr);
+    let m = nameOf(p.m, inAr);
     const ar = AR_LETTERS.test(m);
     // (never half Arabic, half English: a second name in the other script is left out, as byTitle does)
-    if (p.m2) { const m2 = nameOf(p.m2); if (AR_LETTERS.test(m2) === ar) m = m + (ar ? AND.ar : AND.en) + m2; }
-    let t = byTitle(m, by, nameOf(p.c));
-    if (p.split) { const sp = nameOf(p.split); if (AR_LETTERS.test(sp) === ar) t = t + (ar ? PER.ar : PER.en) + sp; }
+    if (p.m2) { const m2 = nameOf(p.m2, inAr); if (join(m2)) m = m + (ar ? AND.ar : AND.en) + m2; }
+    let t = byTitle(m, by, nameOf(p.c, inAr));
+    if (p.split) { const sp = nameOf(p.split, inAr); if (join(sp)) t = t + (ar ? PER.ar : PER.en) + sp; }
     return t;
   }
 
