@@ -3,7 +3,7 @@
 // validator reads and which now lists the dropdown slicer's rounded box, and the SU09 report schemas on
 // github.com/microsoft/json-schemas (af7b264, 15 Oct). Research: mcp/research/POWERBI-2026-10.md; plan: mcp/work/U1.md.
 //   U1-1  the catalog pin: 0.1.3 exactly, installed, and the copy the validator reads
-//   U1-2  the catalog lists slicer.dropdown's three properties the writer writes, of the kinds it writes
+//   U1-2  the catalog lists slicer.dropdown's three properties the writer writes (borderRadius an integer, bool, fill)
 //   U1-3  every object and property the writer emits is in the catalog for its visual type (nothing it writes is gone)
 //   U1-4  the written reports: validator 0 errors, no PBIR_FORMATTING_OBJECT_UNKNOWN; check_report 0 can-break, known 0
 //   U1-5  check_report's known gap is active only while the installed catalog does not list the object
@@ -52,8 +52,8 @@ try {
   // ---------- U1-2 slicer.dropdown in the catalog ----------
   {
     const d = (((CAPS.slicer || {}).objects || {}).dropdown || {}).properties || {};
-    chk(() => d.borderRadius && d.borderRadius.type.numeric && d.borderIndividualCorners && d.borderIndividualCorners.type.bool && d.borderColor && d.borderColor.type.fill && d.borderColor.type.fill.solid,
-      () => `U1-2. Microsoft's catalog lists slicer.dropdown.borderRadius (numeric), borderIndividualCorners (bool), borderColor (fill): ${JSON.stringify(Object.keys(d))}`);
+    chk(() => d.borderRadius && d.borderRadius.type.integer && d.borderIndividualCorners && d.borderIndividualCorners.type.bool && d.borderColor && d.borderColor.type.fill && d.borderColor.type.fill.solid,
+      () => `U1-2. Microsoft's catalog lists slicer.dropdown.borderRadius (integer; the writer's 8D is judged by the validator in U1-4), borderIndividualCorners (bool), borderColor (fill): ${JSON.stringify(Object.keys(d))}`);
     const ls = (CAPS.listSlicer || {}).objects || {};
     chk(() => ls.data && ls.data.properties.dropdownMode && ls.data.properties.dropdownMode.type.bool, () => 'U1-2. the list slicer\'s dropdown mode is data.dropdownMode (bool) in Microsoft\'s catalog (research, not written)');
   }

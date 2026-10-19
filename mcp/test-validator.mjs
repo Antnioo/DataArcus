@@ -7,6 +7,8 @@
 // properties. A test that said "the validator gives 0 errors" now says: 0 errors outside that entry, AND its hits are
 // exactly the boxes the report holds (counted from the files). A report without a dropdown slicer still has 0 of
 // everything. Never a pattern, never a whole rule or file skipped.
+// U1 (19 Oct 2026): Microsoft's catalog 0.1.3 (the version mcp/package.json pins) lists the "dropdown" object, so the
+// validator reports nothing for the box and knownGap gives none: expected and known are 0 on every report.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';

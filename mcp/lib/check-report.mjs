@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 // (Microsoft's report CLI, which needs Node 20 or later, is loaded when the validator runs, never at the server's start:
 // one tool's dependency cannot stop the others; round 22b, the review of round 22, item 5)
 import { loadModel, ROOT, visible } from './model.mjs';
@@ -23,7 +24,7 @@ const Rules = require('../../assets/js/report-rules.js');
 const LC = require('../../assets/js/layout-check.js');
 const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
-const SCHEMA_COMMIT = '8db0a64';
+const SCHEMA_COMMIT = 'af7b264';
 const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
 export const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'a11y', 'lint'];
@@ -129,12 +130,17 @@ export const VALIDATOR_GAPS = [{
   what: `known: Power BI Desktop 2.158 draws it; Microsoft's validator ${VALIDATOR_VERSION} does not list it yet (a dropdown slicer's rounded box: dropdown.borderRadius, borderIndividualCorners, borderColor). Not an error.`,
   evidence: 'scripts/tests/DESKTOP-TESTS.md, 2026-10-12, Desktop 2.158, "A dropdown slicer\'s rounded box"'
 }];
-// code: the validator's code; object: its item's path (the object's name); visualJson: the visual.json it names
-export function knownGap(code, object, visualJson) {
+// A gap holds only while Microsoft's visual catalog, which the validator reads (@microsoft/powerbi-core-visual-schema, the
+// version mcp/package.json pins), does not list the object for that visual type: once it does, the validator judges the
+// object itself and its findings stand (U1, 19 Oct 2026: the catalog 0.1.3 lists the slicer's dropdown).
+const listedIn = (caps, type, object) => { try { const c = caps(type); return !!(c && c.objects && c.objects[object]); } catch (e) { return false; } };
+// code: the validator's code; object: its item's path (the object's name); visualJson: the visual.json it names;
+// caps: the catalog's getCapabilities (a test passes another)
+export function knownGap(code, object, visualJson, caps = getCapabilities) {
   const v = plainObj(visualJson) && plainObj(visualJson.visual) ? visualJson.visual : null;
   if (!v) return null;
   const g = VALIDATOR_GAPS.find((x) => x.code === code && x.object === object && x.visualType === v.visualType);
-  if (!g || !g.fits(v)) return null;
+  if (!g || listedIn(caps, g.visualType, g.object) || !g.fits(v)) return null;
   const entries = (v.objects || {})[g.object];
   if (!Array.isArray(entries) || !entries.length) return null;
   const ok = entries.every((e) => plainObj(e) && !('selector' in e) && Object.keys(e).every((k) => k === 'properties') && plainObj(e.properties) && Object.keys(e.properties).length

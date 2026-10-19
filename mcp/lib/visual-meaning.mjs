@@ -365,7 +365,7 @@ export function meaningOf(visual, opts) {
   return out(kind, roles, Object.assign({ drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network' }, aggregate ? { aggregate } : {}));
 }
 
-// ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema 0.1.1) ----
+// ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema, the version mcp/package.json pins) ----
 const capsOf = (type) => { try { return type ? getCapabilities(type) || null : null; } catch (e) { return null; } };
 const drillsIn = (type) => { const c = capsOf(type); return !!(c && c.drilldown); };
 // whether a native visual takes these fields in these roles: every role is one of its dataRoles, a Grouping role holds
