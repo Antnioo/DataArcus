@@ -210,7 +210,7 @@ try {
     const dark = await w.call('generate_theme', { mode: 'dark', name: 'Dark Shop' });
     const DK = dark.j && dark.j.design ? await write({ name: 'Gallery Dark', lang: 'en', layout: 'exec', gallery: true, secondPage: false, planFields: SAME_UNIT, design: dark.j.design }) : null;
     const td = themeOf(DK && DK.dir);
-    chk(() => td && lum(td.background) < 0.45 && allVisuals(DK.dir).some(KIND_OF.waterfall), () => `TH: dark only when the design asks for it: ${short(dark)} ${DK ? DK.err || short(DK.r) : ''} ${td && td.background}`);
+    chk(() => td && lum(td.background) < 0.45 && allVisuals(DK.dir).some((v) => KIND_OF.combo(v) || KIND_OF.waterfall(v) || isMultiples(v)), () => `TH: dark only when the design asks for it: ${short(dark)} ${DK ? DK.err || short(DK.r) : ''} ${td && td.background}`);
   }
 
   // ---------- P: the approval preview draws them ----------
