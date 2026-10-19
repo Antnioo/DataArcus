@@ -24,7 +24,7 @@ const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = '8db0a64';
 const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
-const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
+export const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'lint'];
 
 // ---- untrusted text: the reading layer's rules (lib/read-report.mjs), one copy ----
@@ -46,7 +46,7 @@ const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(St
 // (A4-2, audit 4: a value that is not the object or list a rule expects, as null or a string, is read as none, never a crash)
 const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
 const arr = (v) => (Array.isArray(v) ? v : []);
-function rulesInput(inv) {
+export function rulesInput(inv) {
   const TC = (inv.themeJson && inv.themeJson.textClasses) || {}, VS = (inv.themeJson && inv.themeJson.visualStyles) || {};
   const R = { pages: [], visuals: [], textSize: 12, labelSize: +((TC.label || {}).fontSize) || 10, font: (TC.label || {}).fontFace || 'Segoe UI',
     theme: inv.themeRef ? { file: inv.themeFile, ref: inv.themeRef, json: inv.themeJson } : null, hasPlatform: inv.hasPlatform };
