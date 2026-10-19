@@ -52,7 +52,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 **Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And:** error messages. Since round 17 no answer or error holds a full local path: paths are relative to the working folder (for example `Sales Report/Sales Report.pbip`), the working folder is named by its last folder name only, and your home folder is written `~`, so your Windows user name is not sent. The full paths stay in the server's local log on your computer.
 
 ## 3. Metadata only: no data values
-- **No DataArcus tool reads or returns the data in your tables.** It reads only the model's definition files (TMDL
+- **No DataArcus tool returns the data in your tables to Claude.** It reads files on your machine to check and
+  fingerprint them: only the model's definition files (TMDL
   files, `model.bim`, or the model schema inside a `.pbit`) and the report's definition files. It never opens Power BI's
   data cache, never connects to Power BI Desktop or to your data sources, and runs no queries. It refuses a `.pbix` (it
   holds Power BI's data cache) and data files (`.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.xls`, `.parquet`) by their name,
@@ -119,7 +120,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.
-- **Nothing is overwritten.**
+- **Nothing is overwritten**, except DataArcus's own answers file (below), and a write that fails part-way removes
+  what that call created.
   - `create_report` writes a new report next to your model under a free name, and refuses to write at all if any of
     its files already exists. It never changes your model or an existing report.
   - `generate_theme` writes a new theme file and picks a free name (`name.json`, then `name-2.json`, `name-3.json`, ...).

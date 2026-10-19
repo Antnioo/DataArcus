@@ -1,9 +1,71 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R4" and "R5" just below (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R6" just below (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## R6: the approval page shows everything the click approves; the theme pins its model (19 Oct, cloud builder; branch `fix/0.3.0-approval-disclosure` from `release/0.3.0` c058e87; one PR into release/0.3.0, not merged)
+The reviewer's brief (B28; the owner's decision of 19 Oct: every finding of the outside audit of 19 Oct is fixed before
+0.3.0 reaches beta testers; R4 write safety = PR #78, R5 done, R7 = PRIVACY.md's full re-read, not this branch).
+Out of scope: PRIVACY.md beyond the sentences with the stronger claim (R7), Gulf dates, terminology, axis units.
+What was found first (release/0.3.0 c058e87):
+- F07: generate_theme proposes with model null and gates with null; the gate lets null/null through. The model's print
+  (model.mjs) hashes the definition files only, NOT the report theme the colours are taken from (existingTheme).
+- F13: the J14 exact artifact is built at plan time, so the a11y step (report-a11y.js readable, 3:1, MIN_CONTRAST) has
+  already run when the plan is shown; the page shows the design's colour, not the written one (said only after the write).
+- F09: release/0.3.0's redesign is #68's lossless copy (step 1's loss list, added fields and format script were #62's,
+  never merged): it writes no format script and loses nothing (verifyCopy refuses a missing file). The loss list that
+  exists is the native copy's (customVisualsFrom: each replacement's `lost`), shown as JSON cut at 600 characters.
+Plan (in order):
+1. Failing tests first: `mcp/test-0.3.0-approval-disclosure.mjs` (in npm test), T07, T08, T09, T13.
+2. F07: generate_theme with path pins modelRef { key, print } where print = the model's print + a hash of the report
+   theme it read (the colours' source); the gate refuses a plan made with a model when the write passes none, and the
+   reverse; no model = still allowed. Before the first write (generate_theme; create_report: new report, redesign,
+   native copy) the model is read again and its print compared with the pinned one: changed = "Nothing was written",
+   before any mkdir. A test hook (DATAARCUS_TEST_EDIT_BEFORE_WRITE, tests only, like DATAARCUS_TEST_WRITE_FAIL) edits a
+   model file between the last read and that re-read.
+3. F13: the plan keeps the writer's own a11y result (the exact build's r.a11y.colours): the page shows "approved colour
+   -> written colour" with "contrast X:1 against the visuals' background #..., needs 3:1" (the code's rule: WCAG 1.4.11
+   for a data colour; the brief's 4.5:1 is text's) before the click; the written theme is that build's bytes.
+4. F09: (a) the native copy's every replacement and every loss item on the page, escaped, never cut; the redesign says
+   "Nothing is left out" with its file count (the copy check refuses a lost file); (b) the writes line names every kind
+   of file (the redesign: no format script, said); (c) the page lists every file written, grouped (pages, visuals, phone
+   layouts, theme, resources, bookmarks, format script, .pbip...) and counted, from the plan's own list (the exact
+   artifact's paths; the redesign's copy list); (d) a kind change shows the lint's stored measured why; (e) the
+   overwrite sentence true per plan kind (new files only; the answers file replaced; a failed write removes what this
+   call created); (f) no value cut at 600 characters: lists shown in full (each answer with its question).
+5. F08: the redesign's answer names a visual by kind, fields and place, never its static title text (the title is still
+   copied into the file; the local approval page keeps showing it, it is not a tool answer). Wording everywhere: "reads
+   files on your machine to check and fingerprint them; never returns data values to Claude" (agent-text, the approval
+   page, README, the site's MCP page EN/AR, PRIVACY.md's stronger sentences only).
+6. F11: Theme Generator logo line (EN, AR, lab): the image is never uploaded or saved; the colours taken from it are
+   saved in this browser like any theme. node scripts/test-site-config.mjs; no .min.js change expected (HTML only).
+7. Suites: the new one, approval-hardening, partial-writes, 0.3-redesign, 0.3-a11y, 0.3-arabic-titles, release-text,
+   website theme-logo, site-config, check:min; then the full mcp npm test once. CHANGELOG "R6" bullet; PR into
+   release/0.3.0 (not merged).
+Expected (written before the run): the new suite about 30 checks, all red on c058e87 except the no-model theme (still
+written) and the page's escaping of hostile names (already escaped): those stay green. After: all green; every listed
+suite green with no expectation changed except where this brief changes behaviour (listed in the PR); full npm test
+green. grep: no "never reads data values"/"not your data" claim left; no "Nothing is overwritten" where untrue.
+- Done (commits bbbacb0, then db31959 = release/0.3.0 with #78 R4 merged in: CHANGELOG, WORK.md and the test list keep
+  both; create_report's write keeps R4's format script and R6's re-read): F07 lib/plans.mjs gate (model plan needs the
+  model at the write, and the reverse), server.mjs themeRef/sameModelBeforeWrite (generate_theme, create_report's new
+  report, redesign, native copy), lib/write-io.mjs testEditBeforeWrite (tests only). F13 the exact build's a11y result in
+  the plan's data (colours), shown as "approved colour -> written colour: contrast X:1 against the visuals' background,
+  needs 3:1". F09 plan data outputs (exact artifact paths + format script; the redesign's copy list) grouped on the
+  page (approval-window.mjs groupFiles), the measured why, customVisualsShown, answersShown, no 600-character cut,
+  answers.mjs writesNote per plan. F08 redesign.mjs: kind, fields, place; no title text in the answer or on the page
+  (the new title the user gives is shown). Wording: agent-text (2200 of 2200), README, PRODUCT_SPEC, SKILL, server
+  notes, PRIVACY.md section 3's first sentence and section 4's "Nothing is overwritten" only, the site's MCP page and
+  the Theme Generator's logo line (EN, AR, lab; translations .min.js rebuilt, ?v= 20261019r6, Arabic copies rendered).
+- Tests: test-0.3.0-approval-disclosure.mjs 37 checks, 23 red on c058e87 (14 green before, as guards: T07-4/5/7/8 a
+  good write and the no-model theme, T08's filter/slicer/bookmark/DATATABLE sentinels already absent, T08-7 the copied
+  title, T09-10 the escaping, the set-up checks), 37/37 after. Changed on purpose: test-0.3-redesign C8 (the old title text no longer
+  returned), test-0.3.0-answers-safety F04-7 (the new-files sentence says what a failed write removes).
+- Full mcp npm test on db31959 + this note: every script PASS (test.mjs 1581, G-13 inside, r6-disclosure 37). Website: theme-logo 753,
+  site 463, anchors 128, tools 341, lang-switcher 1368, theme-generator 894, theme-generator-lab 894; site-config, check-min,
+  csp, ar-pages PASS (test-sitemap-lastmod cannot run here: the shallow clone lacks an old commit, not this change).
+- PR #79 into release/0.3.0 opened on the owner's go (not merged). Next: review, CI, the owner merges; R7 re-reads PRIVACY.md.
 ## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
 integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,

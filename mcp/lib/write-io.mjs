@@ -44,6 +44,19 @@ export function failingIo({ code, how, n, stuck }) {
   if (m) setIo(failingIo({ code: m[1], how: m[2], n: +m[3], stuck: !!m[4] }));
 }
 
+/**
+ * tests only (R6, F07): DATAARCUS_TEST_EDIT_BEFORE_WRITE="<file inside the working folder>" appends a line break to that
+ * file each time a writer re-reads its model before its first write: an edit after the last read, for the re-read to
+ * catch. It can only make a write be refused, never make one succeed.
+ */
+export function testEditBeforeWrite() {
+  const rel = process.env.DATAARCUS_TEST_EDIT_BEFORE_WRITE, root = process.env.DATAARCUS_ROOT;
+  if (!rel || !root) return;
+  const f = path.resolve(root, rel);
+  if (path.relative(path.resolve(root), f).startsWith('..')) return;
+  REAL.writeFileSync(f, '\n', { flag: 'a' });
+}
+
 /** A path as the user sees it: relative to the working folder, '/' between parts. */
 export const shownWritePath = (f) => path.relative(process.env.DATAARCUS_ROOT ? path.resolve(process.env.DATAARCUS_ROOT) : '.', String(f)).split(path.sep).join('/');
 const whyOf = (e) => (e && e.code === 'ENOSPC' ? 'the disk is full (ENOSPC)' : String(e && e.message || e).slice(0, 200));

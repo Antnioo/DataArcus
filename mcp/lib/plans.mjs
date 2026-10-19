@@ -129,6 +129,10 @@ export function gate(tool, id, model0, pin, opts) {
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (opts && opts.approvalOnly) return p;
+  // (R6, the outside audit of 19 Oct, F07: a theme plan pinned no model, and null/null passed) a plan made with a model is
+  // written only with that model, and a plan made without one only without one
+  if (p.model && !model) throw new Error(`Nothing was written: plan ${p.id} was made with a model (path), and this call gives none: call ${tool} with the same path, or make a new plan. ${SHOW}`);
+  if (!p.model && model) throw new Error(`Nothing was written: plan ${p.id} was made without a model, and this call gives one (path): make a new plan with the model, show it to the user and wait for their go.`);
   // (B-154) the model as it was at the plan: read again by the write, the same, or nothing is written. A write that read
   // no print is refused too (fails closed); the twin's writer checks its model itself, with the plan's data (arabic-twin)
   if (p.modelPrint && print && print !== p.modelPrint) throw new Error(modelChanged(p.id));

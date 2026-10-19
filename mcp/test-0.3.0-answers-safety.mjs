@@ -79,7 +79,8 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   // the wording: the plan line and the approval note say what is replaced
   chk(() => typeof A.writesNote === 'function' && /replaces the answers file DataArcus wrote/.test(A.writesNote(['the answers file "M.dataarcus-answers.json" next to the project, which replaces the answers file DataArcus wrote there: x']))
     && !/Nothing is overwritten or deleted\.$/.test(A.writesNote(['the answers file "M.dataarcus-answers.json" next to the project, which replaces the answers file DataArcus wrote there: x']))
-    && A.writesNote(['a new file']) === 'Nothing is overwritten or deleted.', () => 'F04-7. writesNote: "replaces the answers file DataArcus wrote" for a replace, "Nothing is overwritten or deleted." otherwise');
+    // (changed on purpose in R6, F09 e: the sentence for a plan of new files also says what a failed write removes)
+    && A.writesNote(['a new file']) === 'New files only: nothing is overwritten or deleted. If the write fails part-way, DataArcus removes what this call created, and names anything it could not remove.', () => 'F04-7. writesNote: "replaces the answers file DataArcus wrote" for a replace, "New files only: nothing is overwritten or deleted." otherwise');
   const aw = fs.readFileSync(path.join(HERE, 'lib/approval-window.mjs'), 'utf8'), sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
   chk(() => !/Nothing is overwritten or deleted\./.test(aw) && /writesNote\(/.test(aw) && !/\\nNothing is overwritten or deleted\./.test(sv), () => 'F04-8. the approval page and the app\'s own prompt take their note from writesNote');
 }
