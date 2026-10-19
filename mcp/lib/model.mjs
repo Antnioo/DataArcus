@@ -209,7 +209,7 @@ const DATA_FILE = /\.(csv|tsv|xlsx|xlsm|xls|parquet)$/i;
 function notAModelFile(full) {
   if (/\.pbix$/i.test(full)) throw new ReadError('PBIX_FILE', {}, `This file was not opened: ${PBIX_WHY}`);
   const ext = (full.match(DATA_FILE) || [])[0];
-  if (ext) throw new ReadError('DATA_FILE', { ext: ext.toLowerCase() }, `This file was not opened: a ${ext.toLowerCase()} is a data file, not a Power BI model, and DataArcus reads no data. Point at a project folder, a model.bim or a .pbit (File > Export > Power BI template).`);
+  if (ext) throw new ReadError('DATA_FILE', { ext: ext.toLowerCase() }, `This file was not opened: a ${ext.toLowerCase()} is a data file, not a Power BI model, and DataArcus opens no data files. Point at a project folder, a model.bim or a .pbit (File > Export > Power BI template).`);
 }
 // A zip's directory, read alone: the end-of-central-directory record (the last 22 bytes; a zip with a comment after it:
 // the last 64 KB, where the format puts it), then the directory itself, bounded by the limits. Nothing else of the file.

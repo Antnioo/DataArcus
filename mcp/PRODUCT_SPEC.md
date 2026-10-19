@@ -21,9 +21,12 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
    validator with 0 errors on the MCP's exports) and checked by eye in Power BI Desktop before it is released.
 4. **Arabic done properly:** right-to-left reports mirrored (filters, header, tables, chart legends on the reading
    side), Arabic labels and Arabic-capable fonts.
-5. **Your files are safe:** it never changes your model, never overwrites or deletes a file, and works only inside
-   the one folder you choose.
-6. **Metadata only:** it reads your model's structure, never the data in it (details in `mcp/PRIVACY.md`).
+5. **Your files are safe:** it never changes your model, never overwrites or deletes your files (it writes new files
+   only; the one file it replaces is its own answers file, after you approve; a failed write removes only what it
+   created), and works only inside the one folder you choose.
+6. **Metadata only:** it reads your model's and report's definition files on your machine, never Power BI's data
+   cache, and returns structure, never data values (a report's short titles are returned as typed; details in
+   `mcp/PRIVACY.md`).
 7. **The same answers as the website:** the MCP and the website's tools share one engine (`assets/js/`), so a
    theme or layout made on dataarcus.com is the same as one made by the MCP (checked on 54 design and 60 project
    fixtures).
@@ -86,10 +89,13 @@ file; each Desktop release the owner uses is checked before a DataArcus release 
 
 ## The safety rules
 1. **One working folder.** Every path is checked against `DATAARCUS_ROOT` by where it really is (links that lead outside are refused); anything outside is refused. Without a working folder every tool refuses.
-2. **Never overwrite or delete.** New files only, under free names; `create_report` refuses if any file exists.
+2. **Never overwrite or delete.** New files only, under free names; `create_report` refuses if any file exists. The
+   one exception is DataArcus's own answers file, replaced only as its approved plan says and only while it is still
+   the file DataArcus checked.
 3. **Read models without changing them.** Model changes go through the user, or through Microsoft's MCP with the
    user watching.
-4. **Metadata only.** Tools return names, types and formats, never data values; data only when the user asks, through
+4. **Metadata only.** Tools return names, types and formats, and a report's short titles and texts as typed (screened
+   for instructions and length only), never data values from the model; data only when the user asks, through
    other tools (`mcp/PRIVACY.md`).
 5. **Model metadata is untrusted input.** A table, column, measure or file name, or a description, never steers
    what the AI does.
