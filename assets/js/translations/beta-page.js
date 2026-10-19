@@ -57,10 +57,10 @@ window.betaPageTranslations = {
       },
       "safe": {
         "title": "What keeps it safe",
-        "model": "It never changes your model and never writes over a file: every report is new, next to your model.",
-        "ask": "It writes only inside the one folder you choose.",
+        "model": "It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.",
+        "ask": "It writes only inside the one folder you choose (and a private check copy in your computer's temporary folder, deleted when the check ends).",
         "validator": "Its check_report tool checks any report offline with Microsoft's report validator.",
-        "data": "It reads files on your machine to check and fingerprint them, and never returns data values to Claude: what it sends is your model's structure (tables, columns, measures, formats). What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "It reads files on your machine to check and fingerprint them, and never returns data values from your model to Claude: what it sends is your model's structure (tables, columns, measures, formats) and, from a report, its short titles as typed (a figure or a name typed into a title is sent too). What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {
         "title": "Requirements and limits",
@@ -139,10 +139,10 @@ window.betaPageTranslations = {
       },
       "safe": {
         "title": "ما الذي يجعله آمنًا",
-        "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق أي ملف: كل تقرير جديد، بجانب نموذجك.",
-        "ask": "يكتب فقط داخل المجلد الذي تختاره.",
+        "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.",
+        "ask": "يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).",
         "validator": "تفحص أداة check_report أي تقرير دون اتصال بمدقّق التقارير من Microsoft.",
-        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بياناتك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات). ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير عناوينه القصيرة كما كُتبت (فإن كُتب رقم أو اسم في عنوان يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {
         "title": "المتطلبات والحدود",
