@@ -23,7 +23,7 @@ import { existingTheme, readReport, reportPrint } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
-import { planLint } from './lib/plan-lint.mjs';
+import { planLint, planPreview } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
 import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
@@ -1287,6 +1287,18 @@ server.registerTool('plan_layout', {
     if (!m0) planProblems.push('customVisualsFrom needs path (the report\'s model), so each replacement is checked against the model\'s types and formats.');
     else { const cv = planNative(a.customVisualsFrom, m0); cvEntries = cv.entries; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
   }
+  // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
+  // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
+  // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
+  const preview = (() => {
+    if (!m0 || planProblems.length || cvEntries) return null;
+    try {
+      const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
+      const lang = a.lang === 'ar' ? 'ar' : 'en';
+      return Object.assign({ lang }, planPreview({ m: m0, tables: sc.tables, design: r.design, lang, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+        second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }));
+    } catch (e) { return null; }
+  })();
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
@@ -1311,7 +1323,7 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, preview ? { preview } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => ({ role: x.role, layout: x.from, written: x.to })), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut. Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
