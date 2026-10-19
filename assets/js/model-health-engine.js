@@ -1167,7 +1167,7 @@
       score: { overall, perf: catScore.perf, maint: catScore.maint, bp: catScore.bp },
       findings,
       // questions for the user, never findings: not in the score (section 5)
-      confirm: pleaseConfirm(M),
+      confirm: pleaseConfirm(M, { userTables }),
       skipped,
       tables,
       measures,
@@ -1255,7 +1255,8 @@
   const CONCEPTS = { deaths: ['death', 'deaths', 'fatalities'], cases: ['case', 'cases', 'infections'], revenue: ['revenue'], cost: ['cost', 'costs', 'expense', 'expenses'],
     quantity: ['quantity', 'quantities', 'qty', 'units'], price: ['price', 'prices'] };
   const CONCEPT_AR = { deaths: 'الوفيات', cases: 'الحالات', revenue: 'الإيرادات', cost: 'التكاليف', quantity: 'الكمية', price: 'السعر' };
-  function pleaseConfirm(M) {
+  function pleaseConfirm(M, ctx) {
+    ctx = ctx || {};
     const out = [];
     const column = (r) => { const t = r && M.tables.find((x) => lc(x.name) === lc(r.table)); return t ? t.columns.find((c) => lc(c.name) === lc(r.column)) || null : null; };
     const measures = [];
@@ -1316,6 +1317,64 @@
         message: { en: `${from.name}[${cands[0].name}] has the key's name and type but is not used. Is the relationship on the right column?`,
           ar: `العمود ${from.name}[${cands[0].name}] يحمل اسم المفتاح ونوعه لكنه غير مستخدم. هل العلاقة على العمود الصحيح؟` },
         evidence: '', relationship: { fromTable: r.fromTable, fromColumn: r.fromColumn, toTable: r.toTable, toColumn: r.toColumn, candidateColumn: cands[0].name } });
+    });
+    // B-143: a date table or a fact table that no relationship touches (the owner's rc.21 test: Calendar and Sales with
+    // no relationship, and nothing said so). Tables that are meant to stand alone are never asked about: calculation
+    // groups, field parameters, what-if and other DAX helper tables, measure tables, hidden tables, one-column tables
+    // (pickers, lists), and a date table that DAX reads directly (a disconnected date slicer: MAX, SELECTEDVALUE, TREATAS)
+    const regular = (ctx.userTables || M.tables).filter((t) => {
+      const cols = t.columns.filter((c) => c.kind !== 'rowNumber');
+      if (t.calcGroup || t.hidden || cols.length < 2 || (t.measures.length && cols.every((c) => c.hidden))) return false;
+      if (cols.some((c) => c.relatedColumnDetails || /ParameterMetadata/.test(JSON.stringify(c.extendedProperties || '')))) return false;
+      return !(t.isCalcTable && /\b(GENERATESERIES|NAMEOF|DATATABLE|SELECTCOLUMNS|ROW|UNION)\s*\(/i.test(t.calcExpr));
+    });
+    const related = (t) => M.relationships.some((r) => lc(r.fromTable) === lc(t.name) || lc(r.toTable) === lc(t.name));
+    if (regular.length < 2) return out;
+    // where DAX reads a table, outside time-intelligence calls (those filter nothing through a table no relationship touches)
+    const TI = /^(SAMEPERIODLASTYEAR|DATEADD|DATESYTD|DATESQTD|DATESMTD|TOTALYTD|TOTALQTD|TOTALMTD|PARALLELPERIOD|PREVIOUSDAY|PREVIOUSMONTH|PREVIOUSQUARTER|PREVIOUSYEAR|NEXTDAY|NEXTMONTH|NEXTQUARTER|NEXTYEAR|DATESINPERIOD|DATESBETWEEN|OPENINGBALANCEYEAR|CLOSINGBALANCEYEAR|STARTOFYEAR|ENDOFYEAR|STARTOFMONTH|ENDOFMONTH|STARTOFQUARTER|ENDOFQUARTER|FIRSTDATE|LASTDATE)$/;
+    const daxOf = [];
+    M.tables.forEach((t) => {
+      t.measures.forEach((m) => daxOf.push(m.expr));
+      t.columns.forEach((c) => { if (c.expr) daxOf.push(c.expr); });
+      if (t.isCalcTable) daxOf.push(t.calcExpr);
+      if (t.calcGroup) t.calcGroup.items.forEach((ci) => daxOf.push(ci.expr));
+    });
+    const readOutsideTI = (t) => daxOf.some((e) => {
+      const ts = CF.lex(e), ti = CF.calls(ts).filter((c) => TI.test(c.name));
+      return ts.some((x, i) => (x.kind === 'table' || x.kind === 'word') && lc(x.value) === lc(t.name) && (!ts[i + 1] || ts[i + 1].kind === 'ref' || ts[i + 1].value !== '(') &&
+        !ti.some((c) => i > c.start && i < c.end));
+    });
+    const keyName = (n) => /(id|key|code|no|number)$/.test(flat(n)) && !GENERIC.includes(flat(n));
+    regular.filter((t) => !related(t)).forEach((t) => {
+      const cols = t.columns.filter((c) => c.kind !== 'rowNumber');
+      const dateLike = cols.some((c) => c.dataType === 'dateTime') && (lc(t.dataCategory) === 'time' || /^(dim[_ ]?)?(calendar|dates?|date\s*table|(ال)?تقويم)(?![\p{L}\p{N}_])/iu.test(t.name.trim()));
+      if (dateLike) {
+        if (!readOutsideTI(t)) out.push({ id: 'unrelatedTable', obj: t.name, evidence: '', table: { name: t.name, looksLike: 'date' },
+          message: { en: 'This date table has no relationship, so it filters nothing. Should it be related to the other tables?', ar: 'لا يرتبط جدول التاريخ هذا بأي علاقة، فلا يصفّي شيئًا. هل يجب أن يرتبط بالجداول الأخرى؟' } });
+        return;
+      }
+      // a fact table: a number column, and a key column whose name and type a dimension has (Sales[CustomerKey] and
+      // Customer[CustomerKey]); a role-qualified key, never a generic Id or Code. The other table must be a dimension (the
+      // key is its own: marked as the key, the one side of a relationship, or named after a table without numbers of its
+      // own, as CustomerKey is Customer's): two logs sharing an operation id, or a fact of stages and its comparer, are not
+      // meant to be related. A fact whose key DAX reads (TREATAS, FILTER on the key) is linked in DAX on purpose
+      const values = cols.filter((c) => /^(double|decimal|int64)$/.test(c.dataType) && !keyName(c.name));
+      if (cols.length < 3 || !values.length) return;
+      const namedAfter = (u, c) => { const base = flat(c.name).replace(/(id|key|code|no|number)$/, ''), n = flat(u.name).replace(/^dim/, '');
+        return !!base && (n === base || n === base + 's' || n === base + 'es'); };
+      const numbers = (u) => u.columns.some((c) => c.kind !== 'rowNumber' && /^(double|decimal|int64)$/.test(c.dataType) && !keyName(c.name));
+      const ownKey = (u, c) => c.isKey || M.relationships.some((r) => lc(r.toTable) === lc(u.name) && lc(r.toColumn) === lc(c.name) && r.toCard === 'one') || (namedAfter(u, c) && !numbers(u));
+      const keyRead = (k) => daxOf.some((e) => { const ts = CF.lex(e); return ts.some((x, i) => (x.kind === 'table' || x.kind === 'word') && lc(x.value) === lc(t.name) && ts[i + 1] && ts[i + 1].kind === 'ref' && lc(ts[i + 1].value) === lc(k.name)); });
+      const keys = cols.filter((c) => /^(int64|string|unknown)$/.test(c.dataType) && keyName(c.name) && !keyRead(c));
+      for (const k of keys) {
+        const other = regular.find((u) => u !== t && u.columns.some((c) => flat(c.name) === flat(k.name) && (c.dataType === k.dataType || c.dataType === 'unknown' || k.dataType === 'unknown') && ownKey(u, c)));
+        if (!other) continue;
+        const oc = other.columns.find((c) => flat(c.name) === flat(k.name) && ownKey(other, c));
+        out.push({ id: 'unrelatedTable', obj: t.name, evidence: '', table: { name: t.name, looksLike: 'fact', column: k.name, otherTable: other.name, otherColumn: oc.name },
+          message: { en: `${t.name}[${k.name}] and ${other.name}[${oc.name}] share a key, but no relationship links the tables. Should they be related?`,
+            ar: `يشترك ${t.name}[${k.name}] و ${other.name}[${oc.name}] في مفتاح، لكن لا توجد علاقة بين الجدولين. هل يجب أن يرتبطا؟` } });
+        return;
+      }
     });
     return out;
   }
