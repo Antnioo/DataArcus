@@ -44,6 +44,12 @@ Backlog B-168 (outside design card C01), the reviewer's brief under the owner's 
   report's name is fixed at plan time, so a report written under that name between plan and write makes the write
   refuse ("already there") instead of taking a free name; the approval window does not show exactCheck yet (#38 adds
   its "Checked before writing" section there); layouts suite's known defect (8 reports, lint labels) as on main.
+- The owner's decision (19 Oct, via the reviewer, "agree"): when Microsoft's validator or the reference check did not
+  run, no plan id; when only a size cap skipped part of the check (a file over the 8 MB it reads, e.g. a background up
+  to 10 MB), the plan keeps its id and the approval page lists what was not checked, above Approve. Done: `c9ee2a6`
+  (F-1, F-2, F-3 red first; E-16 replaced by F-1 as decided), `7b4006d` the build: test-j14 30/30; full run 5 shards:
+  test.mjs 1568, G-13 249 reports 0 with errors, shard 0 all PASS (j14 30). Rules or lint not run: incomplete, the plan
+  keeps its id, listed on the approval page too (the decision names only the validator and the references).
 - Next: the reviewer reviews the draft PR; it merges only after 0.2.9 testers report.
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
