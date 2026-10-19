@@ -188,6 +188,40 @@ layout (mobile.json, visualContainerMobileState 2.1.0, PW 323) for every report 
 - For the laptop (Desktop's mobile layout view, English and Arabic, smallest and largest page): (1) a report written with
   phoneLayout false opens with an empty phone canvas and no error; (2) the default report's phone layout as before; (3)
   if the owner says yes to the measured items: slicers in one row, tables last, 9pt axes/tables, each measured first.
+## B-148: confirmation memory (0.3 R&D, 18 Oct, cloud builder; branch `feat/0.3-confirm-memory` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The reviewer's brief (owner's go 18 Oct, J3): a "Please confirm" answer is remembered while the metadata the question was
+based on is unchanged, and the question comes back when it changes. Metadata only: no DAX text or data is stored.
+- **The record:** `{ questionId, object, answer, evidenceSignature, at, by: 'user' }`; answer `intended` | `mistake`;
+  evidenceSignature = SHA-256 of the question's id, object, a hash of its DAX piece, the measure's DAX text hash, format
+  string, table and measure names (a relationship's: its four columns, the candidate column and their types).
+- **One module, shared:** `assets/js/confirm-memory.js` (browser and Node; sync SHA-256 in plain JS, no network):
+  signature, fingerprint, apply (reused / asked again / stale dropped), record, and the browser's localStorage helpers.
+  model-health-engine.js is NOT touched (other 0.3 drafts change it).
+- **Website:** each question gets "Yes, intended" / "No, a mistake" (Dismiss stays, for the session); answers kept in
+  localStorage only, per model fingerprint (the model's table names, hashed); "Your earlier answers" list and "Forget my
+  answers" (removes every answer this browser holds).
+- **MCP:** check_model_health: items get `answerKey`; input `answers: [{ answerKey, answer }]` and `forgetAnswers`; the
+  file `<model>.dataarcus-answers.json` next to the model (where the fix scripts go) is written ONLY with an approved
+  plan that lists it (plan kind scripts, pinned records); read back on every check: answered questions under
+  `pleaseConfirm.answered`, not asked again; stale ones named as `answersForgotten`.
+- **Tests red first:** `mcp/test-confirm-memory.mjs` (in npm test): 16 run before the code, 15 red (the module did not
+  exist, so its 12 unit checks were not reached); now 28 of 28. `scripts/tests/model-health.mjs` "B-148": crashed red
+  before the page code (no answer button); now model-health 205 checks PASS (+10: 5 checks x EN 1440 / AR 390).
+- **Built:** `assets/js/confirm-memory.js` (+ .min); `mcp/lib/answers.mjs` (read; write = new file by link, or rename
+  over a DataArcus answers file only; anything else at the name is never replaced); check_model_health: `answers`,
+  `forgetAnswers`, items' `answerKey` (16 hex of the signature), `answered`, `answersForgotten`, `answersNotRecorded`,
+  `answersFileProblem`; the plan pins the records without their date. Website: "Yes, intended" / "No, a mistake",
+  "Your earlier answers on this model", "Forget my answers" (every answer in this browser); stale answers dropped
+  when a model is loaded. PRIVACY.md section 4 names the file (the one file DataArcus replaces, its own only).
+- Shared files touched: server.mjs (check_model_health only), model-health.js, the Health Check page and its /ar/ copy
+  (styles, the new script, ?v=20261018b148), mcp/package.json (the test script), PRIVACY.md.
+- **Arabic for the owner:** نعم، مقصود / لا، خطأ / إجاباتك السابقة على هذا النموذج / انسَ إجاباتي / مقصود / خطأ: لم يُصلح بعد /
+  لم يتغير منذ ذلك الحين / تبقى إجاباتك في هذا المتصفح فقط ولا تُرسل إلى أي مكان. يعود السؤال عندما يتغير المقياس أو العلاقة التي يخصها.
+- **Seen, not in scope:** the MCP has no other "confirm" questions with ids (the plan tools' asks, e.g. arabicNames
+  sayFirst, are instructions, not questions): only pleaseConfirm is remembered; the CSV/HTML/Markdown exports still list
+  every question (answers not in them); in the Arabic page the DAX evidence box looked right at 390 px but was not
+  checked character by character for mirrored brackets.
+- **Next:** the reviewer reviews the draft PR; the owner checks the Arabic texts; merges only after 0.2.9 reaches testers.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
