@@ -96,6 +96,28 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
   (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 6: phone layout" just below (draft), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 step 6: phone layout (18 Oct, cloud builder; branch `feat/0.3-phone-layout` from main `dcc0f1a`; DRAFT PR, not merged)
+The reviewer's brief (routine B6) said the writer writes desktop pages only. **Not so:** pbip-page.js has written a phone
+layout (mobile.json, visualContainerMobileState 2.1.0, PW 323) for every report page since round 11, tuned in Desktop
+(rounds 11, 12, 23; mcp/CLAUDE.md lines 92, 118). So no rewrite; what is new:
+- `mcp/test-phone.mjs` (in npm test): the layouts matrix (32 reports, EN ltr / AR rtl) checked for P1 every data visual
+  and the title has a phone position, P2 on the 323 canvas, P3 no overlap, P4 charts and tables in reading order, P5 the
+  Arabic report the English one mirrored, P6 no phone layout on tooltip pages, P7 validator 0 errors, P8 the option.
+  It passed on the writer as it was (828 boxes, 450 data visuals, 176 charts, 225 mirrored): 348 checks green before
+  any change; P8 (7 checks) red first.
+- `layout.phoneLayout` (design SCHEMA, repairState; default on, false writes no mobile.json); Pbip.build option
+  `phoneLayout`; plan_layout and create_report answer `phone: { written, canvas: 323, about }`.
+- Measured, NOT changed (they would change what Desktop shows; the owner decides): tables after the charts on 26 of 46
+  pages that have both (the brief wants all); slicers in one row on 0 of 40 (stacked full-width rows; the brief and
+  Microsoft's best practices say horizontal); phone axis and table text 8pt (PHONE in pbip-page.js:1150), Microsoft says
+  "Don't use fonts smaller than nine points".
+- For the laptop (Desktop's mobile layout view, English and Arabic, smallest and largest page): (1) a report written with
+  phoneLayout false opens with an empty phone canvas and no error; (2) the default report's phone layout as before; (3)
+  if the owner says yes to the measured items: slicers in one row, tables last, 9pt axes/tables, each measured first.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
