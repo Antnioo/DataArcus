@@ -210,8 +210,12 @@
   const tableTotal = (t, pad, font) => rowPitch(t, pad) + along(TABLE_ROWS.total[face(font)].map(([x, y]) => [x, y - pitch1(x)]), t);
   // the height that shows a table's n rows and its total whole
   const tableHeight = (n, t, title, pad, ht, font) => tableHead(ht || t, title, pad, font) + n * rowPitch(t, pad) + tableTotal(t, pad, font);
+  // a page tab on the phone layout (the 323-wide canvas): its name on one line at the phone's 10pt, bold (the current
+  // page is bold there), + 10; the one copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (0.3.0 D3)
+  const PHONE_TAB = { size: 10, gap: 8, w: 323 };
+  const phoneTabWidth = (name, font) => Math.min(PHONE_TAB.w, Math.ceil(textWidth(String(name), PHONE_TAB.size, true, font) + 10));
   const api = {
-    TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    PHONE_TAB, phoneTabWidth, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);

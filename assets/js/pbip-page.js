@@ -1147,7 +1147,7 @@
         const i = navBtns.indexOf(m);
         if (i === 0) {
           if (col) { y += 100 + GAP; col = 0; }
-          const need = navBtns.map((b) => Math.min(PW, Math.ceil(textWidth(String(b.v.visual.objects.text[1].properties.text.expr.Literal.Value).slice(1, -1), 10, true, font) + 10)));
+          const need = navBtns.map((b) => Z.phoneTabWidth(String(b.v.visual.objects.text[1].properties.text.expr.Literal.Value).slice(1, -1), font));
           let row = [], used = 0; const rows = [row];
           need.forEach((w, j) => { const add = (row.length ? GAP : 0) + w; if (row.length && used + add > PW) { row = [j]; rows.push(row); used = w; } else { row.push(j); used += add; } });
           // (round 12, #2; seen in Desktop 2.158, round 11: names centred in stretched buttons looked scattered): each

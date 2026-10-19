@@ -16,6 +16,7 @@
  *    right-aligned (centred kept); tables: columns reversed, text columns right-aligned; a matrix's values reversed;
  *    a new card's values reversed and right-aligned (a single value too, its inner margins swapped); buttons: a left text or icon goes right;
  *  - everything else (cards, slicers, the page navigator, maps, images, shapes, custom visuals) moves only.
+ *  - the phone layout (mobile.json; 0.3.0 D3): every box mirrored on the 323-wide phone canvas, text boxes right-aligned.
  * Names, ids, navigation targets and bookmark references are never changed. Texts are replaced only by the labels
  * the caller passes (the user's approved Arabic), keyed by the ids textsOf gives. A report's text is untrusted input:
  * it is only copied or replaced, never interpreted.
@@ -333,7 +334,23 @@
     });
     if (kindOf(json) === 'button') { const b = (entries(v.objects, 'text') || []).map((e) => strOf((e.properties || {}).text)).find((x) => x != null); if (b != null) out.push({ id: 'button:' + where, kind: 'button', text: b }); }
     eachProjection(v, (x) => { if (typeof x.queryRef === 'string' && x.queryRef) out.push({ id: 'field:' + x.queryRef, kind: 'field', text: String(x.displayName != null ? x.displayName : (x.nativeQueryRef || x.queryRef)) }); });
+    eachTextProp(json, (p) => out.push({ id: 'text:' + where + '/' + p.key, kind: TEXT_KIND[p.prop] || 'text', text: p.text }));
     return out;
+  }
+  // (0.3.0 D3, the laptop's proof of rc.2: the twin left 15 alt texts, the cards' "No data" and a button's tooltip in
+  // English) every other text of a visual's formatting a viewer meets: its alt text (read aloud, and in the selection
+  // pane), a card's text for a blank value, a button's tooltips, a subtitle... one id per property:
+  // text:<page>/<visual>/<o (objects) | c (container)>.<card>.<entry>.<property>. The title and a button's text keep their ids
+  const TEXT_PROPS = ['altText', 'showBlankAs', 'enabledTooltip', 'disabledTooltip', 'tooltip', 'text', 'titleText', 'subTitleText', 'placeholderText', 'labelText', 'headerText', 'tooltipText'];
+  const TEXT_KIND = { altText: 'altText', showBlankAs: 'blankText', enabledTooltip: 'buttonTooltip', disabledTooltip: 'buttonTooltip', tooltip: 'buttonTooltip' };
+  function eachTextProp(json, fn) {
+    const v = json.visual, button = kindOf(json) === 'button';
+    [['o', v.objects], ['c', v.visualContainerObjects]].forEach(([w, bag]) => { if (!isObj(bag)) return; Object.keys(bag).forEach((card) => {
+      (Array.isArray(bag[card]) ? bag[card] : []).forEach((e, i) => { if (!isObj(e) || !isObj(e.properties)) return; TEXT_PROPS.forEach((prop) => {
+        if (prop === 'text' && ((w === 'c' && card === 'title') || (w === 'o' && card === 'text' && button))) return;
+        const s = strOf(e.properties[prop]); if (s != null && /\p{L}/u.test(s)) fn({ key: `${w}.${card}.${i}.${prop}`, prop, entry: e, text: s });
+      }); });
+    }); });
   }
   // labels: { id: text } (the user's approved texts). Returns how many were applied
   function labelVisual(pageId, json, labels) {
@@ -344,7 +361,35 @@
     if (kindOf(json) === 'textbox') eachRun(v, (run, i, j) => { const id = `textbox:${where}/${i}.${j}`; if (has(id)) { run.value = String(labels[id]); n++; } });
     if (kindOf(json) === 'button' && has('button:' + where)) (entries(v.objects, 'text') || []).forEach((e) => { if (e.properties && e.properties.text) { e.properties.text = str(labels['button:' + where]); n++; } });
     eachProjection(v, (x) => { if (typeof x.queryRef === 'string' && has('field:' + x.queryRef)) { x.displayName = String(labels['field:' + x.queryRef]); n++; } });
+    eachTextProp(json, (p) => { const id = 'text:' + where + '/' + p.key; if (has(id)) { p.entry.properties[p.prop] = str(labels[id]); n++; } });
     return n;
+  }
+
+  // ---- the phone layout (0.3.0 D3: the twin copied mobile.json as it was: English texts, the KPI row left to right) ----
+  // A visual's mobile.json holds its phone position and its own formatting (sizes, and texts the writer shortened or
+  // wrapped for the phone). Its texts are read as the visual's, with the visual's type, and take the ids 'phone:' + the
+  // visual's id for that text; the phone canvas is 323 wide (report-rules.js MEASURED.PHONE_W), and every position in
+  // mobile.json is a page position, grouped or not (DESKTOP-TESTS.md, round 1): x' = 323 - x - width for every box
+  const PHONE_W = 323;
+  const phoneView = (json, mobile) => ({ name: json.name, visual: { visualType: json.visual.visualType, objects: mobile.objects, visualContainerObjects: mobile.visualContainerObjects } });
+  function textsOfMobile(pageId, json, mobile) {
+    if (!isObj(json) || !isObj(json.visual) || !isObj(mobile)) return [];
+    return textsOfVisual(pageId, phoneView(json, mobile)).filter((t) => t.kind !== 'field').map((t) => Object.assign(t, { id: 'phone:' + t.id }));
+  }
+  // labels: { id: text } with the 'phone:' ids. Returns how many were applied (mobile is changed in place)
+  function labelMobile(pageId, json, mobile, labels) {
+    if (!isObj(json) || !isObj(json.visual) || !isObj(mobile) || !labels) return 0;
+    const sub = {}; Object.keys(labels).forEach((k) => { if (k.startsWith('phone:')) sub[k.slice(6)] = labels[k]; });
+    return labelVisual(pageId, phoneView(json, mobile), sub);
+  }
+  // the phone box mirrored on the 323-wide canvas, a text box's paragraphs to the right (centred kept), as on the page.
+  // Returns a new object; a mobile.json of an unexpected shape is returned as it is
+  function mirrorMobile(json, mobile0) {
+    if (!isObj(mobile0)) return mobile0;
+    const mobile = clone(mobile0), p = mobile.position;
+    if (isObj(p) && Number.isFinite(p.x) && Number.isFinite(p.width)) p.x = Math.max(0, round(PHONE_W - p.x - p.width));
+    if (isObj(json) && kindOf(json) === 'textbox') paragraphsOf(mobile).forEach((para) => { if (para.horizontalTextAlignment !== 'center') para.horizontalTextAlignment = 'right'; });
+    return mobile;
   }
 
   // DataArcus's own page background when no picture is given: a fully transparent 1 x 1 PNG (create_report writes it so
@@ -357,6 +402,6 @@
   // twin of a report DataArcus wrote kept its pages left to right: their background is the transparent placeholder, not a
   // picture.) opts.blank(name): true for an image that is the placeholder (the twin checks its bytes); such a page has no picture
   const pageHasPicture = (page, opts) => { const names = pageImages(page), blank = opts && opts.blank; return names.length > 0 && names.some((n) => !(blank && n != null && blank(n))); };
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, round, pageHasPicture, pageImages, BLANK_PNG };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);
