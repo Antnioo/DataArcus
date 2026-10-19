@@ -29,6 +29,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - R3 A right-to-left waterfall reads from the right: the Arabic twin now mirrors a waterfall as the writer does (the
   value axis at the right, the steps reversed by the sort: the first category at the right); Power BI has no setting
   to invert a waterfall's category axis, so only its order is reversed.
+- R4 A failed write's clean-up removes only what that call created and still finds as it made it (a file or folder
+  another program put at one of its names, or a link put on the way, is left and named); folders made one level at a
+  time; nothing renamed over a name; `check_model_health`'s scripts and `create_report`'s format script follow the plan
+  rule (the outside audit's F01-F03, F06).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

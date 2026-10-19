@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
-import { freeFile, withPlan } from './lib/files.mjs';
+import { freeFile, planWrites, withPlan } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
@@ -93,6 +93,8 @@ const safe = (fn) => async (args) => { const mark = writtenSince(); try { const 
 // A fix script goes to a new file, never into an answer: a script rewrites whole objects, so it holds the user's own
 // expressions and descriptions, and everything a tool returns is read by the AI app (audit AUD-006). The file gets a
 // free name; asked again, the file that already holds exactly this script is named again instead of a second copy.
+// (R4) a script that was not written: the write's own words, which name exactly what it left on disk, if anything
+const notWrittenWhy = (dir, e) => 'The script could not be written to ' + dir + ' (' + String((e && e.code) || 'error') + ')' + (e && e.left ? ': ' + e.message : '.');
 const sameFile = (f, data) => { try { const st = fs.lstatSync(f); return st.isFile() && st.size === Buffer.byteLength(data) && fs.readFileSync(f, 'utf8') === data; } catch (e) { return false; } };
 function writeScript(dir, base, script) {
   for (let n = 1; n < 1000; n++) {
@@ -122,8 +124,9 @@ function scriptTables(m) {
 // (round 23: lang, the report's language, for the picker's language rule)
 // (round 23 part 5, the review's 10: one reader of relationships, the shared engine's, with both-directions ones)
 const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
-// write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it; afterGo says who writes it
-function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '') {
+// write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it; afterGo says who writes it;
+// pw: the plan policy of the call's writes (check_model_health's planWrites; create_report writes it inside its withPlan)
+function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '', pw = null) {
   const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
   if (!mine.length) return null;
@@ -133,8 +136,8 @@ function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '') {
   let file = {};
   if (s.script && !scriptDir) file = { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder as the working folder and ask again; until then set the formats by hand in Power BI Desktop (Measure tools or Column tools > Format).' };
   else if (s.script && !write) file = { scriptAfterGo: scriptBase + ' - fix formats.tmdl', notWrittenYet: 'Not written yet: ' + afterGo };
-  else if (s.script) { try { const f = writeScript(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
-    catch (e) { file = { scriptNotWritten: 'The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + '). Set the formats by hand in Power BI Desktop.' }; } }
+  else if (s.script) { try { const f = pw ? pw.step(() => writeScript(scriptDir, scriptBase + ' - fix formats', s.script)) : writeScript(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
+    catch (e) { file = { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Set the formats by hand in Power BI Desktop.' }; } }
   return Object.assign({ fields: list }, mine.length > cap ? { more: mine.length - cap } : {}, s.more ? { scriptCovers: `The script covers ${s.count} objects; ${s.more} more need the same fix (a script is kept under 30,000 characters): apply it, then check the model again.` } : {}, file);
 }
 // The DAX query that reads every column's type from the model open in Power BI Desktop (run it with Microsoft's
@@ -436,7 +439,7 @@ server.registerTool('check_model_health', {
     if (!script) return {};
     if (!scriptDir) return { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again; until then use the object names above and make the changes by hand in Power BI Desktop.' };
     if (!write) { wouldWrite.push(scriptBase + ' - fix ' + what + '.tmdl'); return { scriptAfterGo: scriptBase + ' - fix ' + what + '.tmdl', notWrittenYet: 'Not written yet: ' + AFTER_GO }; }
-    let file; try { file = writeScript(scriptDir, scriptBase + ' - fix ' + what, script); } catch (e) { return { scriptNotWritten: 'The script could not be written to ' + scriptDir + ' (' + String(e && e.code || e && e.message || e) + '). Use the object names above and make the changes by hand in Power BI Desktop.' }; }
+    let file; try { file = pw.step(() => writeScript(scriptDir, scriptBase + ' - fix ' + what, script)); } catch (e) { return { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Use the object names above and make the changes by hand in Power BI Desktop.' }; }
     return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", next to the project. ' + howToApply + (refresh ? refreshAfter : '') };
   };
   const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
@@ -451,6 +454,8 @@ server.registerTool('check_model_health', {
   // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
   const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
   const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelRef(m, p), pinH);
+  // (0.3.0 R4, F06: every write of this call follows the plan policy: files.mjs planWrites)
+  const pw = write ? planWrites(planId, 'check_model_health') : null;
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
   // AUD-032 (round 20): a name with a control character (a tab, a line break) is never written raw into a fix script:
@@ -504,7 +509,7 @@ server.registerTool('check_model_health', {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): every measure and column whose format is not the right
   // one by the shared rule, in one script; plan_layout and create_report hand over this same file
   {
-    const f = formatsAnswer(m, p, null, maxItems, write, AFTER_GO);
+    const f = formatsAnswer(m, p, null, maxItems, write, AFTER_GO, pw);
     if (f && f.scriptAfterGo) wouldWrite.push(f.scriptAfterGo);
     if (f) fixes.FORMATS = Object.assign({ note: 'Not a finding and not part of the score. The right format of each measure and column by one rule: a ratio 0.0%, a count or whole number #,0, money its own currency format, other numbers #,0.00, a date dd mmm yyyy; anything already well formatted is left alone. plan_layout and create_report name the same fixes and hand over the same file.' }, f);
   }
@@ -520,15 +525,15 @@ server.registerTool('check_model_health', {
   else if (writeAnswersFile && write) {
     const at = new Date().toISOString(), fresh = given.map((x) => Object.assign({}, x, { at }));
     const recs = forgetAnswers ? fresh : applied.keep.filter((k) => !fresh.some((x) => x.evidenceSignature === k.evidenceSignature)).concat(fresh);
-    try { const f = writeAnswers(scriptDir, scriptBase, recs); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
+    try { const f = pw.step(() => writeAnswers(scriptDir, scriptBase, recs)); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
     catch (e) { answersDone = { answersNotWritten: String(e && e.message || e).slice(0, 300) }; }
   }
-  if (write) Plans.consume(planId, 'check_model_health');   // (audit 6, A6-2)
+  const planUse = pw ? pw.done() : null;   // (audit 6, A6-2; R4: unused only when a write failed and the disk is as approved)
   // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}`} (hashes and the answer only, no DAX)`] : [];
   const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
   return text({
-    source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
+    source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
     ...(!m.report ? { reportNotRead: (m.reportsSeen && m.reportsSeen.notRead && m.reportsSeen.notRead.length ? `No report of this model could be read (${m.reportsSeen.notRead.map((x) => `"${x.report}": ${x.why}`).join('; ')}).` : m.reportsSeen && m.reportsSeen.counted.length === 0 ? 'No report of this model was found next to it (a .Report folder whose definition.pbir points at this model).' : 'No report was read: the model is not inside a project folder with its reports.') + ' So unused columns and measures were not checked (stats.unusedColumns and unusedMeasures are null): never tell the user that columns are unused.' } : {}),
     // (0.2.9 item 13) which reports beside the model were read: only this model's (lib/model.mjs, notThisModel)
@@ -963,7 +968,7 @@ function reportRun(a, mode) {
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
   // (anything at a name counts, a link whose target is missing included; each file is created with 'wx')
-  // (audit 6, A6-4: one writer, all or nothing: a temporary folder, moved into place when complete, the .pbip last;
+  // (audit 6, A6-4: one writer, all or nothing, the .pbip last (0.3.0 R4: written in place, each folder by its own mkdir);
   // anything at a name refuses the whole write, a link whose target is missing included)
   // 0.3.0 step 2, "Check before write" (the owner's go, 18 Oct): the shared check on the project in memory, before it is
   // written (the measured rules and the layout check; structure only, never data). It reports; it never writes or approves
@@ -974,7 +979,9 @@ function reportRun(a, mode) {
   if (!building) throw new Error(`Nothing was written: plan ${a.planId} holds no checked report to write (plan_layout builds and checks the report before the go, and create_report writes exactly that). Make the plan again with plan_layout and the same inputs, show it to the user and wait for their go.`);
   const finish = (planId) => {   // (the body keeps its indentation: the write and the answer, as before J14)
   // (0.3, B-153: the plan is used the moment the tree is in place, or left unused when a failed write left nothing)
-  withPlan(planId, 'create_report', () => writeTree(m.projectDir, r.files));
+  // (0.3.0 R4, F06: the format script the plan lists is written in the same write, after the report)
+  let fmt = null;
+  withPlan(planId, 'create_report', () => { writeTree(m.projectDir, r.files); fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))); });
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid
@@ -1127,7 +1134,6 @@ function reportRun(a, mode) {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (propose names, show them to the user, and pass only the ones they approve or edit: never show a name the user has not approved). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   // formats fixed at the source: said first, with the script (the report already shows the right formats)
-  const fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)));
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
   return Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, projectCheck ? { check: Object.assign({ tellUser: 'Checked before it was written (the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.' }, projectCheck) } : {}, extra, { panels },
     // (0.3.0) the phone layout: written for every page unless the design says phoneLayout false

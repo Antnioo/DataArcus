@@ -111,7 +111,7 @@ const fresh = (n) => { const d = path.join(ROOT, n); fs.rmSync(d, { recursive: t
 // S8. a folder freeFile made is replaced by another program's before the rollback: theirs survives
 {
   const D = fresh('s8'), made = [], f = F.freeFile('s8/new', 'T', '.json', made);
-  fs.rmdirSync(path.join(D, 'new')); fs.mkdirSync(path.join(D, 'new')); const theirs = ino(path.join(D, 'new'));
+  fs.renameSync(path.join(D, 'new'), path.join(D, 'kept')); fs.mkdirSync(path.join(D, 'new')); const theirs = ino(path.join(D, 'new'));   // (kept: so its inode is not reused)
   W.setIo(W.failingIo({ code: 'ENOSPC', how: 'open', n: 1 }));
   const e = threw(() => W.writeFileNew(f, data, { madeDirs: made }));
   W.setIo();

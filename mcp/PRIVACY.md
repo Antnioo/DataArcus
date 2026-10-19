@@ -147,7 +147,10 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   - Your logo and background images are copied into the new report; the originals are not changed.
 - **Nothing of yours is deleted.** No tool deletes a file it did not just create. When a write fails part-way, the
   tool removes only the files and folders that same call had created, so no half-written report, twin, theme or script
-  is left (each is written under a temporary name first); a file or folder that was there before is never touched. If
+  is left (a theme or a script is written under a temporary name first; a report or a twin is written folder by folder,
+  its `.pbip` last); a file or folder that was there before is never touched. Each is removed only while it is still
+  the one that call created: a file or folder another program put at one of its names, or a link put on the way, is
+  left where it is and named. No file is ever renamed over another. If
   something it created can't be removed, the answer names exactly what is left, and the approved plan can't be used
   again; when everything was removed, the same plan can be used again.
 - **Keep the folder clean.** Put in it only the models you are allowed to share with your AI app. Don't put employer
