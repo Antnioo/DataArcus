@@ -54,6 +54,14 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   the answers file's plain-text fields and unsalted hashes are said; `read_report`'s short titles are said to be
   returned as typed (screened for instructions and length only); the files read and hashed, the temporary check copy
   and the one log line are said. `test-release-text.mjs` checks these.
+- D3 (the owner's must-fix 1, "no English titles in Arabic reports"; the laptop's proof of 0.3.0-rc.2): the Arabic twin
+  lists and writes every text a person can see (the phone layout, alt texts, the empty state's "No data" and its
+  measure, button tooltips, every other text property of a visual), drafts every fixed report word from the shared
+  list, says before the go what stays English and why (notTranslated), and mirrors the phone layout like the pages,
+  each phone page tab as wide as its Arabic name by the writer's rule.
+- plan_layout and create_report write Power BI's waterfall, combo (line and clustered column) and small multiples when
+  the user asks (a slot kind, or `gallery`), where the fields fit; a combo of two measures in different units is two
+  panels, never a second axis; gallery titles are told apart by words, never "(2)"; never chosen silently. (D2)
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

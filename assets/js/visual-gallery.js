@@ -1,8 +1,9 @@
 /*! DataArcus visual gallery | (c) 2026 DataArcus, dataarcus.com | All rights reserved. Not licensed for copying or reuse. */
 // The visual gallery (0.3, J8): three of Power BI's own visuals the writer did not know, written only with the design
 // flag gallery: true, each where its fields' roles say it fits (never from the data: the tools never read it).
-//   combo       lineClusteredColumnComboChart: one measure as columns, a second as a line, over a time or ordered axis;
-//               the line gets the secondary axis only when the two measures' units differ (a percent beside an amount).
+//   combo       lineClusteredColumnComboChart: one measure as columns, a second as a line, over a time or ordered axis,
+//               on ONE shared axis: only when both measures' units are known and the same (0.3.0 D2, the outside audit's
+//               C13: no automatic secondary axis). Two units, or a unit not known: two panels, a line chart each (split).
 //   waterfall   waterfallChart: one additive measure by one category with few, known members (a stage, a quarter, a
 //               month name): each column is that member's part of the total.
 //   multiples   clusteredColumnChart with a small-multiples field (the Rows role): one column chart per member of a
@@ -12,7 +13,9 @@
 // PBIR schemas bundled in mcp/schemas (visualConfiguration 2.1.0 schema-embedded.json:8 visualType, :27 objects, :52
 // sortDefinition, :60 queryState, :139 ProjectionState). mcp/test-0.3-gallery.mjs checks every written property
 // against that list and runs Microsoft's validator on the written samples.
-// A gallery slot that does not fit (or a design without the flag) is written as its plain kind (fallback) and told.
+// A gallery slot that does not fit (or a design without the flag) is written as its plain kind (fallback; a designed slot
+// keeps its own kind, s.plain) and told. The MCP's tools name multiples "smallMultiples" (TOOL_NAMES); assign() puts the
+// kinds the user asked for on a designed page's slots (0.3.0 D2: never chosen silently).
 // Browser and Node (module.exports / window.DAGallery). Pure: no files.
 (function (root) {
   'use strict';
@@ -60,7 +63,8 @@
   // how many members a category has, from the picker's count or its kind (0: not known)
   const membersOf = (f) => { const k = catKind(f); return k && k.rows ? k.rows : f && f.rows != null && isFinite(+f.rows) ? +f.rows : 0; };
   // a column whose members are many by its name (an id, a code, a person's or product's name): never a split
-  const MANY = /\b(id|key|code|no|number|guid|email|phone|name|customer|client|product|item|sku|invoice|order)s?\b|معرف|رمز|رقم|اسم|العميل|المنتج|الفاتورة/i;
+  // (0.3.0 D2: a city, an address or a street, as the picker's manyValued: a panel per city is never few)
+  const MANY = /\b(id|key|code|no|number|guid|email|phone|name|customer|client|product|item|sku|invoice|order|city|cities|address|street)s?\b|معرف|رمز|رقم|اسم|العميل|المنتج|الفاتورة|المدينة|العنوان/i;
   const wordsOf = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_\-]+/g, ' ');
 
   // ---- the fields each kind takes, from the report's bound fields (B) ----
@@ -70,7 +74,9 @@
     if (kind === 'combo') {
       const axis = g.axis || B.date || cats.combo || null;
       let columns = g.columns || y.combo || B.measure || null;
-      let line = g.line || (B.kpis || []).filter(Boolean).find((f) => !same(f, columns) && unitOf(f) === 'percent') || (B.kpis || []).filter(Boolean).find((f) => !same(f, columns)) || null;
+      // (0.3.0 D2) the line in the columns' own unit first (one shared axis), then a percent, then any other measure
+      const others = (B.kpis || []).filter(Boolean).filter((f) => !same(f, columns)), u = unitOf(columns);
+      let line = g.line || (u && others.find((f) => unitOf(f) === u)) || others.find((f) => unitOf(f) === 'percent') || others[0] || null;
       // a percent reads as a line over amounts, never as columns that look like they add up
       if (!g.columns && columns && line && unitOf(columns) === 'percent' && unitOf(line) !== 'percent') { const t = columns; columns = line; line = t; }
       return { axis, columns, line };
@@ -90,7 +96,10 @@
       if (!ordered(F.axis)) return no('the axis is not time or ordered: a line across unordered categories reads as a trend that is not there');
       if (!F.columns || !F.line) return no('needs two measures');
       if (same(F.columns, F.line)) return no('the two measures are the same');
-      return { fits: true, why: unitsDiffer(F.columns, F.line) ? 'two measures over time, different units: the line on its own axis' : 'two measures over time, one unit: one shared axis', fields: F, secondary: unitsDiffer(F.columns, F.line) };
+      // (0.3.0 D2, C13) one shared axis only: two units, or a unit not known, are two panels (split), never a second axis
+      const uc = unitOf(F.columns), ul = unitOf(F.line);
+      if (!uc || !ul || uc !== ul) return { fits: false, split: true, fields: F, why: uc && ul ? `the two measures are in different units (${uc}, ${ul}): two panels, a line chart each, never a second axis` : 'the units of the two measures are not known to be the same: two panels, a line chart each, never a second axis' };
+      return { fits: true, why: `two measures in one unit (${uc}) over an ordered axis: one shared axis`, fields: F, secondary: false };
     }
     if (kind === 'waterfall') {
       if (!F.y || !F.cat) return no('needs one measure and one category');
@@ -115,13 +124,25 @@
   const pick = (B) => KIND_NAMES.map((k) => Object.assign({ kind: k }, fits(k, B))).filter((x) => x.fits).map((x) => ({ kind: x.kind, why: x.why }));
 
   // ---- a slot before the page is written: kept, or its plain kind with the reason (gallery: the design's flag) ----
-  function resolve(s, B, gallery) {
+  // (0.3.0 D2) a designed slot goes back to its own kind (s.plain: a bar chart asked to be small multiples stays a bar
+  // chart); a combo in two units is two panels (slots: the two line charts, split below), told as such
+  function resolve(s, B, gallery, rtl) {
     if (!s || !isKind(s.kind)) return { slot: s, note: null };
-    const plain = (why) => ({ slot: Object.assign({}, s, { kind: KINDS[s.kind].fallback, galleryFrom: s.kind }), note: { from: s.kind, to: KINDS[s.kind].fallback, title: s.title || null, why } });
+    const to = s.plain || KINDS[s.kind].fallback, base = Object.assign({}, s); delete base.plain;
+    const plain = (why) => ({ slot: Object.assign(base, { kind: to, galleryFrom: s.kind }), note: { from: s.kind, to, title: s.title || null, why } });
     if (!gallery) return plain('the design\'s gallery flag is off');
-    if (!B) return { slot: s, note: null };   // the sample download without a model: written by its role names
+    if (!B) return { slot: base, note: null };   // the sample download without a model: written by its role names
     const f = fits(s.kind, B);
-    return f.fits ? { slot: s, note: null } : plain(f.why);
+    if (f.split) { const two = split(base, f.fields, rtl); return { slot: two[0], slots: two, note: { from: s.kind, to: 'two panels', title: s.title || null, why: f.why } }; }
+    return f.fits ? { slot: base, note: null } : plain(f.why);
+  }
+  // a combo's two panels: its box in two (side by side, or one above the other in a box taller than wide), a line chart of
+  // each measure over the combo's axis, the columns' measure at the reading start; each panel carries its fields (bind)
+  const GAP = 16;
+  function split(s, F, rtl) {
+    const across = s.w >= s.h, g = GAP, a = across ? { w: (s.w - g) / 2, h: s.h } : { w: s.w, h: (s.h - g) / 2 };
+    const at = (i) => (across ? { x: s.x + (rtl ? 1 - i : i) * (a.w + g), y: s.y } : { x: s.x, y: s.y + i * (a.h + g) });
+    return [F.columns, F.line].map((m, i) => Object.assign({}, s, at(i), { w: Math.floor(a.w), h: Math.floor(a.h), kind: 'line', galleryFrom: s.kind, bind: { measure: m, date: F.axis } }));
   }
 
   // ---- the query of a gallery visual (null when a field it needs is not bound) ----
@@ -169,8 +190,8 @@
     if (!f.fits) return out;
     const va = {};
     if (kind === 'combo') {
-      // the line on its own axis only when the units differ; one shared axis otherwise (secShow, "Show secondary")
-      va.secShow = bool(!!f.secondary);
+      // one shared axis, always (0.3.0 D2, C13: a combo in two units is two panels; secShow, "Show secondary", off)
+      va.secShow = bool(false);
       // the line 3 wide, as the writer's line charts (P2)
       out.lineStyles = obj({ strokeWidth: num(3) });
     }
@@ -199,6 +220,54 @@
     clusteredColumnChart: { roles: ['Category', 'Y', 'Rows'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'], categoryAxis: ['invertAxis'] } }
   });
 
-  const api = { KINDS, KIND_NAMES, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, bindQuery, titleParts, title, objects, mirrorSort };
+  // (0.3.0 D2) the bound measures' units from the model's own format strings (the picker's fields carry the card's format
+  // only when it differs): f.unit, read by unitOf; tables: the model's (name, measures[{ name, formatString }]). Pure:
+  // the binding is copied; only the measures of kpis, measure and y are touched
+  function withUnits(B, tables) {
+    if (!B) return B;
+    const fmt = new Map(); (tables || []).forEach((t) => (t.measures || []).forEach((x) => fmt.set(t.name + '\u0000' + x.name, x.formatString || '')));
+    const one = (f) => { if (!f || f.m == null || f.unit) return f; const fs = fmt.get(f.t + '\u0000' + f.m), u = unitOf(Object.assign({}, f, fs ? { formatString: fs } : {})); return u ? Object.assign({}, f, { unit: u }) : f; };
+    return Object.assign({}, B, { kpis: (B.kpis || []).map(one), measure: one(B.measure), y: Object.fromEntries(Object.entries(B.y || {}).map(([k, f]) => [k, one(f)])) });
+  }
+
+  // ---- the tools' names and words (0.3.0 D2) ----
+  // the MCP's slot kinds: multiples is "smallMultiples" there
+  const TOOL_NAMES = Object.freeze({ combo: 'combo', waterfall: 'waterfall', multiples: 'smallMultiples' });
+  const fromTool = (k) => (k === 'smallMultiples' ? 'multiples' : k);
+  const toTool = (k) => TOOL_NAMES[k] || k;
+  // the visual's name as a plan shows it, English and Arabic (Power BI's own names for the visual types)
+  const LABELS = Object.freeze({ combo: { en: 'Line and clustered column chart (combo)', ar: 'مخطط خطي وعمودي (مركب)' }, waterfall: { en: 'Waterfall chart', ar: 'مخطط شلالي' },
+    multiples: { en: 'Column chart, small multiples', ar: 'مخطط أعمدة بمضاعفات صغيرة' } });
+  const labelOf = (k, lang) => { const L = LABELS[fromTool(k)]; return L ? L[lang === 'ar' ? 'ar' : 'en'] : null; };
+  // which slot of a designed page a kind asked for takes (ask: true, every kind; or a list of kinds, either name): combo
+  // the first line chart (the trend); waterfall the first column chart, else the line chart; multiples a column chart,
+  // else a bar chart. (0.3.0 D2, the reviewer's decision of 19 Oct) at most ONE gallery visual a page, on every designed
+  // page, and only where its fields suit (B, the bound fields: fits; a combo in two units does not suit a page it was not
+  // placed on by the person); a kind used on an earlier page (o.avoid) comes after the others. Each keeps its own kind
+  // (plain) for the writer to go back to. Pure: the slots are copied
+  const PLACES = { combo: ['line'], waterfall: ['column', 'line'], multiples: ['column', 'bar'] };
+  const askedKinds = (ask) => (ask === true ? KIND_NAMES.slice() : Array.isArray(ask) ? KIND_NAMES.filter((k) => ask.map(fromTool).includes(k)) : []);
+  function assign(slots, ask, o) {
+    const B = o && o.B, avoid = (o && o.avoid) || new Set(), want = askedKinds(ask), out = (slots || []).map((s) => Object.assign({}, s));
+    const order = want.filter((k) => !avoid.has(k)).concat(want.filter((k) => avoid.has(k)));
+    for (const k of order) {
+      if (B && !fits(k, B).fits) continue;
+      for (const kind of PLACES[k]) { const i = out.findIndex((s) => s.kind === kind); if (i >= 0) { out[i] = Object.assign(out[i], { kind: k, plain: kind }); return out; } }
+    }
+    return out;
+  }
+  // a gallery visual's title parts for the writer's "two charts read the same" rule (story-titles.js alternate, #57):
+  // the measure and the axis as the title says them, and the kind's own word for a page where no other sentence is left
+  // (an Arabic report on English names: no English word is added, so the kind is said in Arabic, as the table's «التفاصيل»)
+  const TAILS = { combo: { en: 'columns and line', ar: 'أعمدة وخط' }, waterfall: { en: 'step by step', ar: 'خطوة بخطوة' }, multiples: { en: 'small multiples', ar: 'مضاعفات صغيرة' } };
+  function storyOf(kind, B, by) {
+    const p = titleParts(kind, B);
+    if (!p) return null;
+    const inAr = AR_LETTERS.test(by || ''), m = nameOf(p.m, inAr), c = nameOf(p.c, inAr), m2 = p.m2 ? nameOf(p.m2, inAr) : null;
+    const ar = AR_LETTERS.test(m), both = m2 && AR_LETTERS.test(m2) === ar && (ar || !inAr) ? m + (ar ? AND.ar : AND.en) + m2 : m;
+    return { m: both, c, tail: TAILS[kind][inAr ? 'ar' : 'en'] };
+  }
+
+  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort };
   if (node) module.exports = api; else root.DAGallery = api;
 })(typeof self !== 'undefined' ? self : this);
