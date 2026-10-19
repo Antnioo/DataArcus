@@ -230,6 +230,5 @@ try {
   fs.rmSync(ROOT, { recursive: true, force: true });
 }
 
-console.log(`test-0.3.0-approval-disclosure: ${checks - problems.length}/${checks} checks passed`);
-if (problems.length) { problems.forEach((p) => console.log('FAIL ' + p)); process.exit(1); }
-console.log('PASS');
+if (problems.length) { console.log(`FAIL  r6-disclosure  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  r6-disclosure  ${checks} checks`);

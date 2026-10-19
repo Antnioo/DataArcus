@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R6" just below (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R5" (branch `fix/0.3.0-answers-safety`, PR into release/0.3.0); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R6" just below (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -47,6 +47,45 @@ Expected (written before the run): the new suite about 30 checks, all red on c05
 written) and the page's escaping of hostile names (already escaped): those stay green. After: all green; every listed
 suite green with no expectation changed except where this brief changes behaviour (listed in the PR); full npm test
 green. grep: no "never reads data values"/"not your data" claim left; no "Nothing is overwritten" where untrue.
+## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
+The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
+integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,
+write-io.mjs writeFileNew) with no check it is still what this call created; F02 freeFile snapshots missing folders, then a
+recursive mkdir, and counts all as created (another program's folder can be removed; a half-way mkdir failure leaves folders);
+F03 placeFile's no-hard-link fallback and writeTree's folder placement are check-then-rename (can replace); F06 check_model_health's
+scripts/answers and create_report's format script are written outside withPlan. Another builder has fix/0.3.0-answers-safety
+(lib/answers.mjs): this branch stays out of it (writeAnswers is only called through the plan policy).
+- Plan: (1) each created file's identity from its own handle (open 'wx', fstat dev+ino bigint, size after the write); each
+  created folder's from lstat right after its own mkdir. Cleanup lstats each path: removed only when it (and every folder this
+  call made on the way to it) still has its recorded identity and its real parent is inside the working folder; else left and
+  named in `left.foreign` ("not created by this call, or replaced since"). (2) freeFile makes folders one level at a time,
+  non-recursive io.mkdirSync; EEXIST = not ours; a failure half-way removes what it made and throws writeFailed. (3) No
+  check-then-rename anywhere: writeFileNew links its temporary file into place, and with no hard links writes straight to the
+  name with 'wx'; writeTree writes straight into place (each folder by an exclusive mkdir, each file 'wx', .pbip files last:
+  Desktop opens a project by its .pbip), no temporary folder, nothing renamed. (4) files.mjs `planWrites(planId, tool)`: the
+  withPlan policy for a tool whose writes are answer fields (each step through it; the plan stays unused only when every
+  write that failed left nothing and nothing was written); check_model_health's scripts and answers file go through it and the
+  answer says `planUse` when a write failed; create_report's format script is written inside its withPlan, after the tree;
+  a script's failure is said with the write's own message (the exact leftovers).
+- Test first: `mcp/test-0.3.0-write-safety.mjs` (in npm test), 32 checks, **21 red on release/0.3.0 1ae53f3** (S1 3, S2 2, S3 1,
+  S4 2, S5 2, S6 1, S7 2, S8 1, H1 2, H2 2, H3 2, C1 1). Expected after: 32/32; test-partial-writes 37, test-z unchanged; the
+  full `npm test` all PASS with the same counts as release/0.3.0.
+- **Done (commits 8c96ffe, da0e83e; see the PR):** write-safety 32/32. Full `npm test` on Linux, all PASS: release-text 4,
+  test.mjs 1581, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports; its 8 "labelled by
+  title" notes as before), rc22 26, rc23 51, rc24 28, preview 71, check 31, fidelity 38, 0291 17, b173 20, b146 32, phone 355,
+  b148 28, story-titles 94, approval-hardening 22, b153 37, a11y 121, gallery 44, waterfall-rtl 15, redesign 49,
+  label-limits 30, j14 30, r4 32. The first full run failed test.mjs's source check (it looks for `flag: 'wx'` in write-io):
+  createFile now names its flag `{ flag: 'wx' }` (no test changed). My S8 at first swapped a folder by rmdir + mkdir, which
+  reuses the inode on Linux: it now renames the old one aside (fixed before green, still red on 1ae53f3).
+- Decisions I made: the tree is written in place (no temporary folder renamed into place: a directory rename can replace an
+  empty folder on Linux, and Node has no no-replace rename), .pbip last; a file or folder whose identity changed is named
+  under "Left as found, not created by this call"; a failed write whose error says nothing of what it left (writeAnswers's
+  own) uses the plan; check_model_health says `planUse` only when a write failed.
+- Seen, not in scope: lib/answers.mjs writeAnswers still writes with fs directly (tmp, then link or rename over its own
+  answers file; the other builder's branch); lib/artifact.mjs (J14's private copy in the temp folder) makes folders with a
+  recursive mkdir; between removeOurs's lstat and its unlink a swap is still possible (Node has no unlinkat on a handle):
+  the window is one call, named in PRIVACY's "what these checks are not".
+- Next: the reviewer reviews the PR into release/0.3.0, CI green (mcp-windows runs S3 with a junction), the owner merges.
 
 ## R5: the answers file and memory, safe and truthful (19 Oct, cloud builder; branch `fix/0.3.0-answers-safety` from `release/0.3.0`; one PR into release/0.3.0, not merged)
 The reviewer's brief (the owner approved fixing every finding of the outside audit of 19 Oct before release; findings

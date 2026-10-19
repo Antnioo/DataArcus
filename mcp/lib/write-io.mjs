@@ -2,13 +2,18 @@
 // file is written under a temporary name in its own folder, then linked into place (a link fails when the name is taken,
 // so nothing is ever replaced); on any failure everything this call created is removed, and what could not be removed is
 // named exactly. Every path is recorded BEFORE the call that creates it, so a file cut off part-way is removed too.
+// (0.3.0 R4, the outside audit's F01-F03) The clean-up removes a path only while it is still what this call created: each
+// file's identity (dev + ino) is read from the handle it was written through, each folder's right after its own mkdir,
+// and a path is removed only when it, and every folder this call made on the way to it, still has its identity, and its
+// real folder is inside the working folder. Anything else (a file another program put at one of these names, a link put
+// on the way) is left and named. Nothing is ever renamed over a name.
 // The fs calls that write go through `io`, so a test can make one fail part-way (setIo in-process, or
 // DATAARCUS_TEST_WRITE_FAIL in a server it starts). writeTree (files.mjs) uses the same io and the same wording.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const REAL = { writeFileSync: fs.writeFileSync, mkdirSync: fs.mkdirSync, linkSync: fs.linkSync, renameSync: fs.renameSync, unlinkSync: fs.unlinkSync, rmdirSync: fs.rmdirSync };
+const REAL = { writeFileSync: fs.writeFileSync, mkdirSync: fs.mkdirSync, linkSync: fs.linkSync, renameSync: fs.renameSync, unlinkSync: fs.unlinkSync, rmdirSync: fs.rmdirSync, openSync: fs.openSync, closeSync: fs.closeSync };
 export const io = Object.assign({}, REAL);
 /** tests only: replaces some of the writing calls (missing ones are the real ones); setIo() puts them all back */
 export function setIo(stub) { Object.assign(io, REAL, stub || {}); }
@@ -21,11 +26,13 @@ const errOf = (code, what) => { const e = new Error(`${code}: ${what} (a test, D
  * It can only make a write fail, never make one succeed.
  */
 export function failingIo({ code, how, n, stuck }) {
-  let k = 0, bad = null;
+  let k = 0, bad = null; const fds = new Map();   // (a file is written through its handle: the handle's path)
   return {
+    openSync(f, flags, mode) { const fd = REAL.openSync(f, flags, mode); fds.set(fd, path.resolve(String(f))); return fd; },
+    closeSync(fd) { fds.delete(fd); return REAL.closeSync(fd); },
     writeFileSync(f, data, opts) {
       if (++k !== n) return REAL.writeFileSync(f, data, opts);
-      bad = path.resolve(String(f));
+      bad = typeof f === 'number' ? fds.get(f) : path.resolve(String(f));
       if (how === 'partial') { const b = Buffer.from(data); REAL.writeFileSync(f, b.subarray(0, Math.floor(b.length / 2)), opts); throw errOf(code, `the disk filled after ${Math.floor(b.length / 2)} of ${b.length} bytes`); }
       throw errOf(code, 'the file could not be created');
     },
@@ -72,38 +79,82 @@ export function writeFailed(e, what, ours, foreign) {
   return err;
 }
 
-// a file moved into place, never over anything: a hard link fails with EEXIST when the name is taken. A drive without
-// hard links (FAT32, exFAT, some network shares) gets a rename, checked just before (the only window, and only there)
-const NO_LINKS = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
-export function placeFile(from, to) {
-  try { io.linkSync(from, to); return 'link'; } catch (e) {
-    if (!NO_LINKS.has(e && e.code)) throw e;
-    try { fs.lstatSync(to); const x = new Error(`EEXIST: "${path.basename(to)}" is already there`); x.code = 'EEXIST'; throw x; } catch (x) { if (x.code !== 'ENOENT') throw x; }
-    io.renameSync(from, to); return 'rename';
-  }
+// ---------- what this call created, and its removal (R4) ----------
+const idOf = (st) => ({ dev: st.dev, ino: st.ino });
+const lstatOf = (p) => { try { return fs.lstatSync(p, { bigint: true }); } catch (e) { if (e && e.code === 'ENOENT') return null; throw e; } };
+const rootReal = () => { const r = String(process.env.DATAARCUS_ROOT || '').trim(); return r ? fs.realpathSync.native(path.resolve(r)) : null; };
+const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
+/**
+ * Creates the new file e.path ('wx': never over anything) and writes data through that handle. e = { path } is recorded
+ * by the caller BEFORE this call; it gets the file's identity as soon as the file exists (e.id), and its size once the
+ * data is all written (e.size).
+ */
+const NEW_FILE = { flag: 'wx' };   // (fails when anything is at the name: never over anything, never through a link)
+export function createFile(e, data) {
+  const fd = io.openSync(e.path, NEW_FILE.flag);
+  try { e.id = idOf(fs.fstatSync(fd, { bigint: true })); io.writeFileSync(fd, data); e.size = fs.fstatSync(fd, { bigint: true }).size; }
+  finally { io.closeSync(fd); }
 }
+/** Makes the one folder p (never a recursive mkdir; EEXIST: it is not ours) and returns its record { path, id, dir }. */
+export function makeDir(p) { io.mkdirSync(p); return { path: p, dir: true, id: idOf(fs.lstatSync(p, { bigint: true })) }; }
+/**
+ * Removes e (a record of createFile or makeDir; e.via: the folders this call made on the way to it) only while it is what
+ * this call created. Returns 'gone' (nothing there), 'removed', or 'changed' (left as it is: not ours any more); throws
+ * the removal's own error (EBUSY, ENOTEMPTY).
+ */
+export function removeOurs(e) {
+  const st = lstatOf(e.path);
+  if (!st) return 'gone';
+  if (!e.id || st.dev !== e.id.dev || st.ino !== e.id.ino || st.isSymbolicLink() || st.isDirectory() !== !!e.dir || (e.size != null && st.size !== e.size)) return 'changed';
+  for (const v of e.via || []) { const s = lstatOf(v.path); if (!s || !s.isDirectory() || s.dev !== v.id.dev || s.ino !== v.id.ino) return 'changed'; }
+  const root = rootReal(); if (root && !within(root, fs.realpathSync.native(path.dirname(e.path)))) return 'changed';
+  (e.dir ? io.rmdirSync : io.unlinkSync)(e.path);
+  return 'removed';
+}
+/**
+ * The clean-up of a failed write: records (createFile's and makeDir's, in the order they were made) removed newest first.
+ * Returns { ours: what this call created and could not remove, foreign: what it left because it is not (or no longer)
+ * what this call created, and what it found inside its folders } (absolute paths, each once).
+ */
+export function rollBack(records) {
+  const ours = [], foreign = [], mine = new Set(records.map((r) => r.path));
+  for (const r of records.slice().reverse()) {
+    try { if (removeOurs(r) === 'changed') foreign.push(r.path); } catch (x) {
+      ours.push(r.path);
+      if (r.dir && (x.code === 'ENOTEMPTY' || x.code === 'EEXIST')) { try { fs.readdirSync(r.path).forEach((n) => { const f = path.join(r.path, n); if (!mine.has(f)) foreign.push(f); }); } catch (y) { /* the folder is named */ } }
+    }
+  }
+  return { ours: [...new Set(ours)], foreign: [...new Set(foreign)] };
+}
+// the folders freeFile made (their records, by path), for writeFileNew's madeDirs
+const DIRS = new Map();
+export const noteDir = (r) => { DIRS.set(r.path, r); };
+
+// a drive without hard links (FAT32, exFAT, some network shares): the file is written straight to its name, 'wx'
+const NO_LINKS = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
 
 /**
- * Writes one new file at f, never over anything: data goes to a temporary name in f's folder ('wx'), which is then put in
- * place. opts.madeDirs: folders the caller created for this file (freeFile's), removed again on a failure when empty.
+ * Writes one new file at f, never over anything: data goes to a temporary name in f's folder ('wx'), which is then linked
+ * into place; with no hard links it is written straight to f ('wx') instead (never a rename: R4, F03). opts.madeDirs:
+ * folders the caller created for this file (freeFile's), removed again on a failure while empty and still theirs.
  * On any failure everything this call created is removed and the error (writeFailed) says what is left, if anything.
  */
 export function writeFileNew(f, data, opts) {
   const tmp = path.join(path.dirname(f), `.dataarcus-tmp-${crypto.randomBytes(5).toString('hex')}`);
-  const made = [];   // what this call created, recorded before the call that creates it
-  let placed = null;
+  const dirs = ((opts && opts.madeDirs) || []).map((d) => DIRS.get(d) || { path: d, dir: true, id: null });
+  const made = dirs.slice();   // what this call created, each recorded before the call that creates it
+  const create = (p) => { const e = { path: p, via: dirs }; made.push(e); try { createFile(e, data); } catch (x) { if (x && x.code === 'EEXIST') made.pop(); throw x; } return e; };   // (taken: not ours)
   try {
-    made.push(tmp);
-    try { io.writeFileSync(tmp, data, { flag: 'wx' }); } catch (e) { if (e && e.code === 'EEXIST') made.pop(); throw e; }   // (taken: not ours)
-    placed = placeFile(tmp, f);
-    if (placed === 'link') { made.push(f); io.unlinkSync(tmp); }
-    made.length = 0;
+    const t = create(tmp);
+    let linked = false;
+    try { io.linkSync(tmp, f); linked = true; } catch (x) { if (!NO_LINKS.has(x && x.code)) throw x; }
+    if (linked) { made.push({ path: f, id: t.id, size: t.size, via: dirs }); io.unlinkSync(tmp); }
+    else { if (removeOurs(t) !== 'changed') made.splice(made.indexOf(t), 1); create(f); }
+    dirs.forEach((d) => DIRS.delete(d.path));
   } catch (e) {
-    const ours = [];
-    // (placed by a rename: the temporary name is gone and f is complete, so only the link's second name is undone)
-    for (const x of made.slice().reverse()) { try { io.unlinkSync(x); } catch (y) { if (y.code !== 'ENOENT') ours.push(x); } }
-    for (const d of ((opts && opts.madeDirs) || []).slice().reverse()) { try { io.rmdirSync(d); } catch (y) { if (y.code !== 'ENOENT') ours.push(d); } }
-    if (e && e.code === 'EEXIST' && !ours.length) { const x = new Error(`EEXIST: "${path.basename(f)}" is already there`); x.code = 'EEXIST'; x.left = { ours: [], foreign: [] }; throw x; }
-    throw writeFailed(e, `the file "${shownWritePath(f)}"`, ours, []);
+    const { ours, foreign } = rollBack(made);
+    dirs.forEach((d) => DIRS.delete(d.path));
+    if (e && e.code === 'EEXIST' && !ours.length && !foreign.length) { const x = new Error(`EEXIST: "${path.basename(f)}" is already there`); x.code = 'EEXIST'; x.left = { ours: [], foreign: [] }; throw x; }
+    throw writeFailed(e, `the file "${shownWritePath(f)}"`, ours, foreign);
   }
 }
