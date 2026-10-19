@@ -53,7 +53,7 @@ export async function v029f({ call, check, ROOT }) {
   chk(() => /clusteredBarChart[^\n]*Category \(Y-axis\): Sales\[Region\][^\n]*Y \(X-axis, measure\): \[Total\]/.test(t1.t), () => `A5-7. a bar chart's roles named as Desktop names them, with their kind: ${t1.t && t1.t.split('\n').find((l) => /clusteredBarChart/.test(l))}`);
   const jb = j1.j && j1.j.pages[0].visuals.find((v) => v.type === 'clusteredBarChart');
   chk(() => jb && jb.roles && jb.roles.Category.name === 'Y-axis' && jb.roles.Category.kind === 'Grouping' && jb.roles.Y.kind === 'Measure', () => `A5-7. the JSON form gives each role's name and kind: ${JSON.stringify(jb && jb.roles)}`);
-  chk(() => /"@microsoft\/powerbi-core-visual-schema": "0\.1\.1"/.test(src('package.json')), () => 'A5-7. Microsoft\'s visual catalog is a direct dependency at an exact version');
+  chk(() => /"@microsoft\/powerbi-core-visual-schema": "0\.1\.3"/.test(src('package.json')), () => 'A5-7. Microsoft\'s visual catalog is a direct dependency at an exact version');
 
   // ---------- A5-10, A5-13: a custom visual's source and its formatting objects' names (never values) ----------
   const rep10 = mkReport('f10', [{ id: 'p1', name: 'One', visuals: [vis('cv', 'zoomStyleDonut0123456789ABCDEF0123456789ABCDEF', { category: [col('Sales', 'Region')] }, { objects: { slice: [{ properties: { color: L("'#ff0000'") } }], legend: [{ properties: { show: L('true') } }] } }), vis('org', 'orgVisualABCDEF0123456789ABCDEF0123456789', { values: [mea('Sales', 'Total')] })] }],
