@@ -25,6 +25,26 @@ Backlog B-168 (outside design card C01), the reviewer's brief under the owner's 
 - Expected (written before any run): test-j14-exact 25 checks, 20 red on main d76703c (E-1, E-5, E-8, E-11, E-18 green:
   they hold today); all 25 green after. Every other suite: same counts as main (the golden baseline unchanged; G-13 0
   reports with errors).
+- **Done** (`62274eb` red tests, `38a18e4` the build, `c527464` the writer fix): test-j14 27/27 (20 red before, as
+  expected; E-23/E-24 added red after the full run found the donut bug). Full run on Linux (5 shards as CI): test.mjs
+  32 + 584 + 620 + 332 = 1568, G-13 249 reports, 0 with errors; shard 0 all PASS (release-text 4, v029c 36, d 21, e 21,
+  f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51, rc24 28, j14 27). Website 19/19 suites,
+  check:min, site config pass.
+- Found by the exact check (first full run, sweep D11): a column chart turned donut by the two-valued rule kept the
+  bar's `valueAxis` (show false): Microsoft's validator error PBIR_FORMATTING_OBJECT_UNKNOWN, impact canBreak; fixed
+  in assets/js/pbip-page.js (only a bar gets it). Main writes it today (0.2.9 too).
+- Decisions I made: the validator runs on a private copy in the OS temp folder (it reads only folders), never in the
+  user's folder, deleted at once; blocking = validator errors after the known gaps, unresolved references, rule errors
+  (warnings, notes and lint findings are counted only); a plan whose build fails gets its plan id as before and
+  create_report gives the same refusal (and "make the plan again" if it would write); a given design is built as
+  given (keeps the small-page note), else the pinned design; designLint (page 1, kinds) stays as it is; the native
+  copy (customVisualsFrom) is outside J14; the model print is #58's `m.print` when that lands, else a hash of the
+  model as read; artifacts live in memory, newest 64.
+- Seen, not in scope: the format script (formats.scriptAfterGo) is still made at the write, outside the digest; the
+  report's name is fixed at plan time, so a report written under that name between plan and write makes the write
+  refuse ("already there") instead of taking a free name; the approval window does not show exactCheck yet (#38 adds
+  its "Checked before writing" section there); layouts suite's known defect (8 reports, lint labels) as on main.
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 testers report.
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
