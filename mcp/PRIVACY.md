@@ -1,7 +1,8 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against 0.2.9 (the release candidate; the build writes its version into the package, and the
-source's `mcp/package.json` says 0.1.0 until then) on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`,
+Plain English. Checked against 0.3.0 (the release candidate; the build writes its version into the package, and the
+source's `mcp/package.json` says 0.1.0 until then): each 0.3 change updated this page for what it changed; the whole page
+was last read against the code on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`,
 `mcp/lib/`, the report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page
 is checked again before the next release. What is not true yet is listed under "Known gaps" at the end.
 

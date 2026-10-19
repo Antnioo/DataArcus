@@ -4,6 +4,29 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]: 0.3.0
+The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the release candidate is branch
+`release/0.3.0`, merged after the laptop's Power BI Desktop proof. Each line is one merged pull request:
+- #37 Preview before Approve: the approval window draws the planned pages before the go.
+- #38 Check before write: the measured rules and the layout check on the report before it is written or downloaded.
+- #63 Preview fidelity: titles, cut tables, slanting labels, button names and the KPI value side as Desktop draws them.
+- #48 B-143: "Please confirm" on a date or fact table that no relationship touches.
+- #53 B-147: the format review as "Please confirm".
+- #51 B-146: the aggregation guard: non-additive values never stacked or summed, snapshots summed over time asked about.
+- #52 A theme from a logo in the Theme Generator (read in the browser only).
+- #54 The phone layout on every page (`layout.phoneLayout`, on by default).
+- #56 B-148: "Please confirm" answers remembered while the metadata is unchanged (an answers file, after a plan).
+- #57 Story titles (B-130, B-131): no "(2)" or "KPI n", long Arabic titles shortened by rule, alt text the full title.
+- #58 B-152, B-154: only the report's own files read and copied; every plan pins its model.
+- #59 B-153: a write that fails half-way leaves nothing half-written and says whether the plan was used.
+- #60 Accessibility of written reports, and `check_report`'s "a11y" rules.
+- #61 The visual gallery foundation: combo, waterfall and small multiples behind `gallery: true`.
+- #68 Redesign step 2: `plan_layout` with `redesignFrom`, every page as a lossless copy with allowlisted changes
+  (supersedes #62).
+- #64 Column or bar from the label limits measured in Desktop 2.159 (B-140 option B).
+- #69 B-168: `plan_layout` checks the exact report `create_report` writes, and the write is those bytes.
+- #70, #71 The 0.2.9.1 fixes (below), with main.
+
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
 - B-174, the plan says what the chart keeps: a chart planned as "Top 5" keeps its top 5 by its measure, or all of its
