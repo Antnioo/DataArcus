@@ -33,8 +33,9 @@ const SHOW = 'Show the user the plan (pages, visuals and their fields, page size
 // from a model pins its print; the write passes the print of the model it read again, and a model changed since the go
 // is refused. A key alone (a string) is a model without a print
 const modelOf = (m) => (m && typeof m === 'object' ? { key: m.key || null, print: m.print || null } : { key: m || null, print: null });
-/** (B-154) why a write is refused when the model changed after the go (the twin's writer says it too) */
-export const modelChanged = (id) => `Nothing was written: the model changed after you approved: make the plan again (plan ${id} was made from the model as it was then: call the tool without planId), show it to the user and wait for their go.`;
+/** (B-154) why a write is refused when the model changed after the go (the twin's writer says it too); report: the pinned
+ *  fingerprint covers the model's report too (a theme's: its colours' source, R6 F07), so the sentence names both (D6) */
+export const modelChanged = (id, report) => `Nothing was written: the model${report ? ' or its report' : ''} changed after you approved: make the plan again (plan ${id} was made from the model as it was then: call the tool without planId), show it to the user and wait for their go.`;
 
 /** A new proposed plan. kind: report | theme | scripts | calendar | twin | redesign; model: { key, print } (or the key alone) or
  *  null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
@@ -135,7 +136,7 @@ export function gate(tool, id, model0, pin, opts) {
   if (!p.model && model) throw new Error(`Nothing was written: plan ${p.id} was made without a model, and this call gives one (path): make a new plan with the model, show it to the user and wait for their go.`);
   // (B-154) the model as it was at the plan: read again by the write, the same, or nothing is written. A write that read
   // no print is refused too (fails closed); the twin's writer checks its model itself, with the plan's data (arabic-twin)
-  if (p.modelPrint && print && print !== p.modelPrint) throw new Error(modelChanged(p.id));
+  if (p.modelPrint && print && print !== p.modelPrint) throw new Error(modelChanged(p.id, p.kind === 'theme'));
   if (p.modelPrint && !print && tool !== 'create_arabic_twin') throw new Error(`Nothing was written: ${tool} did not read the model again to compare it with the approved plan ${p.id}. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
   const want = p.data && p.data.pins && p.data.pins[tool];
