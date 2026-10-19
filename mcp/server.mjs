@@ -1351,7 +1351,7 @@ server.registerTool('plan_layout', {
   const planPin = model && a.customVisualsFrom == null ? reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) : null;
   let exact = null;
   if (planPin && !planProblems.length) {
-    const ab = Object.assign({}, withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), { fields: a.planFields, planId: null }, planPin.design ? { design: planPin.design } : {});
+    const ab = Object.assign({}, withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), { fields: a.planFields, planId: null }, !a.design && planPin.design ? { design: planPin.design } : {});   // (a design given is built as create_report builds it: its small-page switch is said)
     exact = await exactArtifact(ab, planPin, a.lang);
     if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
   }

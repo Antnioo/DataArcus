@@ -134,6 +134,19 @@ for (const [p, o] of GOLDEN) {
   chk(() => r.j.plan.planId && e.status === 'pass' && e.checks.validator.errors === 0 && e.pages === e.checkedPages, () => `E-22 ${p}: the exact check passes with 0 validator errors on every page: ${JSON.stringify(e || null).slice(0, 400)}`);
 }
 
+// ---- E-23, E-24: a column chart by a two-valued category is written as a donut, with no value axis (the writer kept the
+// bar's "no value axis" setting on it: Microsoft's validator error PBIR_FORMATTING_OBJECT_UNKNOWN, found by this check) ----
+fs.mkdirSync(path.join(ROOT, 'items/M.SemanticModel'), { recursive: true });
+fs.writeFileSync(path.join(ROOT, 'items/M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+  { name: 'Items', partitions: mp('Items'), columns: [col('Amount', 'double'), col('Region', 'string'), Object.assign(col('Size Band', 'string'), { type: 'calculated', expression: 'IF ( Items[Amount] > 100, "Large", "Small" )' })],
+    measures: [{ name: 'Revenue', expression: 'SUM ( Items[Amount] )', formatString: '#,0' }] }] } }));
+const TWO = { measure: 'Items[Revenue]', category: 'Items[Size Band]', category2: 'Items[Region]' };
+const p5 = await ask(s, 'plan_layout', { path: 'items', name: 'Two', layout: 'exec', secondPage: false, planFields: TWO }), e5 = p5.j && p5.j.exactCheck;
+chk(() => p5.j.plan.planId && e5.status === 'pass' && e5.checks.validator.errors === 0, () => `E-23 a plan whose chart becomes a donut passes the exact check, 0 validator errors: ${JSON.stringify(e5 || null).slice(0, 500)}`);
+if (p5.j && p5.j.plan) { await ask(s, 'approve_plan', { planId: p5.j.plan.planId }); await ask(s, 'create_report', { path: 'items', name: 'Two', design: p5.j.design, secondPage: false, fields: TWO, planId: p5.j.plan.planId }); }
+const donuts = tree(path.join(ROOT, 'items/Two.Report')).filter((f) => /visual\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).filter((j) => j.visual && j.visual.visualType === 'donutChart');
+chk(() => donuts.length && donuts.every((j) => !((j.visual.objects || {}).valueAxis)), () => `E-24 the written donuts have no valueAxis: ${donuts.map((j) => Object.keys(j.visual.objects || {}).join('+')).join(', ')}`);
+
 await s.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  j14  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  j14  ${checks} checks`);

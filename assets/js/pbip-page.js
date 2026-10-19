@@ -723,8 +723,9 @@
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
-        // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
-        if (s.wasColumn && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
+        // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (J14: only a bar: a two-valued
+        // category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
+        if (s.wasColumn && s.kind === 'bar' && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
         // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
         // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
         // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
