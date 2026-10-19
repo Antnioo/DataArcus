@@ -47,5 +47,5 @@ export function planLint(a) {
   // (rc.22, B-140) the kinds the writer gave the plan's slots, where they differ (a column chart whose category names
   // can't stand level is a bar chart; a two-valued category a donut): kept off the answer (not enumerable), the plan
   // shows them on its slots
-  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false });
 }

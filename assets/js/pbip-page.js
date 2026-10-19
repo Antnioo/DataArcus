@@ -14,6 +14,9 @@
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
   const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
+  // (0.3, J11: B-140 option B) a column chart's labels by the measured limits (label-limits.js): optional in the browser;
+  // without it, and outside the measured table, the writer's own rule below
+  const LL = (typeof module !== 'undefined' && module.exports ? require('./label-limits.js') : root.DALabelLimits || null);
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -369,24 +372,31 @@
       // the label size, as its tables do; where its columns (the design's N, else as many as hold that name) can't each
       // hold it, it is written as a bar chart, names level (the share of barNameShare), where the slot holds 3 rows (22.2 a
       // row + 45 + 8 + 38, measured); in a slot too low for that it keeps its columns, as many as hold the name
+      // (0.3, J11) first the limits measured in Desktop 2.159 (label-limits.js: names that may wrap to 2 lines, never cut
+      // or slanted); a kept column chart or a bar chart says why (kindWhy, in the plan); outside the measured table the
+      // writer's rule as before
+      const limits = (o) => (LL ? LL.decide(Object.assign({ width: s.w, pageWidth: pg.page.w, labelPt: LABEL }, o)) : { kind: null });
       if (!list) {
         if (!own || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf) return s;
         const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), LABEL, false, font) + 6, fit = Math.max(3, Math.floor(plot / need));
-        const n = s.topN || fit;
-        if (plot / n >= need) return s;
+        const n = s.topN || fit, d = limits({ count: n, lang: null });
+        if (d.kind === 'column' || (!d.kind && plot / n >= need)) return s;
         const rows = Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2);
         if (rows < 3) return Object.assign({}, s, { topN: fit });
         barCharts.push({ page: pg.name || base, field: label(f) });
-        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows, kindWhy: d.kind ? d.why : `bar: ${n} categories at ${Math.round(s.w * 1920 / pg.page.w)} px, a 12-letter name wider than a column (outside the measured limits: the writer's own widths)` });
       }
       const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
+      // (a month column the model names short, "Month Short", shows Jan to Dec; Arabic and Hijri names have no short form)
+      const names = kind === 'month' && LL && list[0] === 'January' && /short|abbr|mmm/i.test(String(f.c)) ? LL.NAMES.monthShort.en : list;
+      const d = limits({ names, count: names.length, noun: kind === 'day' ? 'weekdays' : 'months' });
       // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
       // row is 22.2, the first starts 45 under the box's top and 8 stay under the last; the value axis and its room
       // take 38 more, and with it Saturday went behind a scrollbar. So: 23 a row + 54, and where the axis's 38 do not
       // fit as well the chart is written without its value axis, each bar's value beside it (rows, below).)
-      if (widest + 6 <= room || s.h < (list.length * 23 + 54) * k) return s;
+      if (d.kind === 'column' || (!d.kind && widest + 6 <= room) || s.h < (list.length * 23 + 54) * k) return s;
       barCharts.push({ page: pg.name || base, field: label(f) });
-      return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length });
+      return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length, kindWhy: d.kind ? d.why : `bar: ${list.length} ${kind === 'day' ? 'weekdays' : 'months'} at ${Math.round(s.w * 1920 / pg.page.w)} px, the widest name wider than a column (outside the measured limits: the writer's own widths)` });
     };
     // (design round 9, the re-score's D11: two bars across a wide slot on four reports) a bar or column chart by a
     // category the picker marks two-valued (true/false, an IF of two words) is a donut: two shares read at a glance.
@@ -396,14 +406,14 @@
     const byField = (s) => {
       const f = B && (s.kind === 'bar' || s.kind === 'column') && (B.cats || {})[s.kind];
       if (!f || f.c == null) return s;
-      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null });
+      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null, kindWhy: 'donut: a category with two values' });
       if (s.kind === 'column' && f.wide && !s.wasColumn) { const rows = Math.max(1, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
-        barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN }); }
+        barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN, kindWhy: 'bar: a category with many values (a lookup table\'s names), names level' }); }
       return s;
     };
     // (rc.22, B-140: the approved column chart was written as a bar chart, and the plan never said so) every kind changed
     // here is recorded, so the plan shows the kind written (plan_layout runs this writer on the plan's page)
-    const changed = (s0) => { const s1 = byField(asBar(s0)); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth: pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0), from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN }); return s1; };
+    const changed = (s0) => { const s1 = byField(asBar(s0)); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth: pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0), from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN, why: s1.kindWhy || null }); return s1; };
     const sorted = pg.slots.map(changed).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
