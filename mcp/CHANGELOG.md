@@ -4,6 +4,17 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [0.2.9.1]: unreleased
+Two fixes after 0.2.9 went to testers; nothing else changes.
+- B-174, the plan says what the chart keeps: a chart planned as "Top 5" keeps its top 5 by its measure, or all of its
+  categories when it has 7 or fewer (the report's "Keep:" measure, so a chart never leaves out one or two it could show).
+  The plan and `create_report`'s notes now say so for each chart ("Comparison: Top 5, all of them when it has 7 or
+  fewer"), from what the writer writes, and a chart the writer does not cut is not said to be cut. What Power BI shows
+  is unchanged: the laptop's 6 plan groups under "Top 5" were all shown, as now planned.
+- A column chart written as a donut (its category has two values) no longer carries a bar chart's hidden value axis,
+  which Microsoft's validator reported (PBIR_FORMATTING_OBJECT_UNKNOWN, a `check_report` "can break"). Found by
+  draft PR #69's check of the exact report.
+
 ## [0.2.9]: 2026-10-19 (the version for testers)
 Given to testers on 19 Oct 2026, after the Power BI Desktop release proof of rc.24 passed on the laptop (Desktop 2.159):
 the approval window names the chart kind that is written, the Arabic twin's title measures, buttons and KPI values,
