@@ -144,6 +144,68 @@ document.addEventListener('DOMContentLoaded', () => {
     state.data = generate($('brand').value, $('harmony').value); state.ui.accent = state.data[0]; state.preset = null;
     renderInputs(); renderAll(); track('theme_generate', { harmony: $('harmony').value });
   });
+  // ---------- a theme from a logo (0.3.0 step 6) ----------
+  // The file is drawn on a small canvas in this tab and only its pixels are read (an object URL, revoked at once): it is
+  // never uploaded, never saved, and no request is made. The engine finds the brand colours (logoColours) and builds the
+  // palette with the generator's own generate() (logoTheme), each colour at 3:1 on the visuals and ordered for
+  // colour-blind readers; it is applied like "Generate". Only the result is kept, in memory, to redraw on a language change.
+  if ($('logoFile') && $('logoOut')) {
+    const LOGO_SIDE = 128, LOGO_MAX = 5 * 1024 * 1024;
+    let logoRes = null;
+    const esc = (x) => String(x).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    const pixelsOf = (file) => new Promise((resolve, reject) => {
+      const src = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(src);
+        try {
+          const w0 = img.naturalWidth || 300, h0 = img.naturalHeight || 150, k = Math.min(1, LOGO_SIDE / Math.max(w0, h0));
+          const cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(w0 * k)); cv.height = Math.max(1, Math.round(h0 * k));
+          const g = cv.getContext('2d', { willReadFrequently: true }); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, cv.width, cv.height);
+          resolve(g.getImageData(0, 0, cv.width, cv.height).data);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('IMAGE')); };
+      img.src = src;
+    });
+    // hex codes and the file name read left to right inside Arabic text (else "#ffd84a" shows as "ffd84a#")
+    const hx = (h) => `<bdi dir="ltr">${h}</bdi>`;
+    const sw = (hex, extra) => `<span data-hex="${hex}"><i style="background:${hex}"></i>${hx(hex)}${extra || ''}</span>`;
+    const ratio = (r) => r.toFixed(1) + ':1';
+    const renderLogo = () => {
+      const out = $('logoOut'), r = logoRes; if (!r) return;
+      out.hidden = false; out.dataset.n = String(r.n);
+      if (r.error) { out.innerHTML = `<div class="warn tg-logo-error"><i class="bi bi-exclamation-triangle me-1"></i>${r.error === 'EMPTY' ? L('No colours found in this image: it looks empty or white.', 'لم نجد ألوانًا في هذه الصورة: تبدو فارغة أو بيضاء.') : L('This file could not be read as an image. Use a PNG, SVG or JPG under 5 MB.', 'تعذّرت قراءة هذا الملف كصورة. استخدم ملف PNG أو SVG أو JPG أقل من 5 ميجابايت.')}</div>`; return; }
+      const t = r.theme, yes = L('Yes', 'نعم'), no = L('No', 'لا');
+      out.innerHTML = `<div><span>${L(`Read from ${hx(esc(r.name))} in this tab; nothing was uploaded.`, `قُرئ من ${hx(esc(r.name))} داخل هذه الصفحة؛ لم يُرفع شيء.`)}</span></div>`
+        + `<div><b>${L('Logo colours', 'ألوان الشعار')}</b>${r.mono ? ' ' + L('(no hue: the palette starts from its dark colour)', '(بلا لون واضح: تبدأ اللوحة من لونه الداكن)') : ''}<div class="sw tg-logo-swatches">${r.colours.map((c) => sw(c.hex, ` <small>${Math.round(c.share * 100)}%</small>`)).join('')}</div></div>`
+        + `<div><b>${L('Palette, in order', 'اللوحة بالترتيب')}</b><div class="sw tg-logo-palette">${t.data.map((c) => sw(c)).join('')}</div></div>`
+        + t.adjusted.filter((a) => a.logo).map((a) => `<div class="warn tg-logo-adjusted"><i class="bi bi-info-circle me-1"></i><span>${L(`Your logo's ${hx(a.from)} stands ${ratio(a.before)} on the visual background, under the 3:1 bars and lines need; the palette uses ${hx(a.to)} (${ratio(a.after)}) instead. Your logo itself is unchanged.`, `لون شعارك ${hx(a.from)} يبلغ تباينه ${ratio(a.before)} على خلفية العنصر المرئي، أقل من 3:1 الذي تحتاجه الأعمدة والخطوط؛ لذلك تستخدم اللوحة ${hx(a.to)} ‏(${ratio(a.after)}) بدلًا منه. شعارك نفسه لم يتغيّر.`)}</span></div>`).join('')
+        + `<table class="tg-logo-table"><thead><tr><th>${L('Colour', 'اللون')}</th><th>${L('On visuals', 'على العناصر')}</th><th>${L('On page', 'على الصفحة')}</th><th>${L('Bars, lines (3:1)', 'أعمدة وخطوط (3:1)')}</th><th>${L('Text (4.5:1)', 'نص (4.5:1)')}</th></tr></thead><tbody>`
+        + t.table.map((x) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${x.hex}"></i> ${hx(x.hex)}</td><td>${ratio(x.onCard)}</td><td>${ratio(x.onPage)}</td><td class="${x.shapes ? 'ok' : 'warn'}">${x.shapes ? yes : no}</td><td class="${x.text ? 'ok' : 'warn'}">${x.text ? yes : no}</td></tr>`).join('') + '</tbody></table>'
+        + `<div class="tg-logo-cvd ${t.cvd.min >= 10 ? 'ok' : 'warn'}"><i class="bi ${t.cvd.min >= 10 ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${L(`Colour-blind check: neighbouring colours stay at least ${t.cvd.min.toFixed(1)} apart (CIEDE2000; deuteranopia ${t.cvd.deutan.toFixed(1)}, protanopia ${t.cvd.protan.toFixed(1)}, normal vision ${t.cvd.normal.toFixed(1)}).`, `فحص عمى الألوان: تبقى الألوان المتجاورة متباعدة بمقدار ${t.cvd.min.toFixed(1)} على الأقل (CIEDE2000؛ عمى الأخضر ${t.cvd.deutan.toFixed(1)}، عمى الأحمر ${t.cvd.protan.toFixed(1)}، الرؤية العادية ${t.cvd.normal.toFixed(1)}).`)}${t.cvd.min >= 10 ? '' : ' ' + L('Some neighbours are close: add data labels or a legend.', 'بعض الألوان المتجاورة قريبة: أضف تسميات البيانات أو وسيلة إيضاح.')}</div>`
+        + `<small class="text-white-50">${L('Text in a data colour needs 4.5:1; Power BI writes labels in the text colour unless you change it.', 'النص بلون من ألوان البيانات يحتاج 4.5:1؛ يكتب Power BI التسميات بلون النص ما لم تغيّره.')}</small>`;
+    };
+    let logoN = 0;
+    const readLogo = (file) => {
+      const n = ++logoN, done = (res) => { if (n !== logoN) return; logoRes = Object.assign({ n }, res); renderLogo(); };
+      if (!file || file.size > LOGO_MAX || !/^image\/(png|jpeg|svg\+xml)$/.test(file.type) && !/\.(png|jpe?g|svg)$/i.test(file.name || '')) return done({ error: 'FILE' });
+      pixelsOf(file).then((px) => {
+        const found = E.logoColours(px);
+        if (!found.colours.length) return done({ error: 'EMPTY' });
+        const theme = E.logoTheme(found.colours, { ui: state.ui, harmony: $('harmony').value });
+        state.data = theme.data.slice(); state.ui.accent = theme.accent; state.preset = null; $('brand').value = found.colours[0].hex;
+        document.querySelectorAll('.tg-preset').forEach((b) => b.classList.remove('active'));
+        renderInputs(); renderAll();
+        done({ name: file.name || 'logo', colours: found.colours, mono: found.mono, theme });
+      }).catch(() => done({ error: 'FILE' }));
+    };
+    $('logoFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; readLogo(f); });
+    const drop = $('logoDrop');
+    ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, () => drop.classList.remove('over')));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); readLogo(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
+    new MutationObserver(renderLogo).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  }
   $('themeName').addEventListener('input', (e) => { state.name = e.target.value.slice(0, 60); renderJson(); save(); });
   $('font').addEventListener('change', (e) => { state.font = e.target.value; renderAll(); });
   Object.entries(CHART_INPUTS).forEach(([id, k]) => $(id).addEventListener('change', (e) => {
