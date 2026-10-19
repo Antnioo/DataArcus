@@ -28,6 +28,9 @@ without it; question 2 (a) always offline with bundled schemas; question 3 (a) u
   (DESKTOP-TESTS.md, date, Desktop version, section). The numbers are main's (`report-check.mjs`); BUTTON_ONE_LINE
   keeps 0.45 em a character + icon + 6 until round 10's measured per-letter widths (M3) are merged.
   Fonts other than Segoe UI and Tahoma: the finding is a `note` marked as an estimate.
+  (0.2.9.1, B-173) TABLE_HEADER_CUT: a table column with a set width narrower than its header (`headerNeed`, the one
+  measure the Arabic twin widens columns with): a warning when cut; for an Arabic header a note "may be cut" between
+  0.7 of the measure (Desktop 2.159 drew one whole there) and the measure. Headers set to wrap are not checked.
 - **Safety:** findings carry numbers and ids only (test 3: planted values in a page filter, a slicer selection, a
   bookmark and a text box never come back, in five `checks` combinations); instruction-like page names give an
   `INSTRUCTION_TEXT` note without repeating the name; U+202E comes back as `\u202e`; caps (test 5: 300 findings ->

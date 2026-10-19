@@ -53,8 +53,12 @@ export function planLint(a) {
   const mt = modelOf(m.tmsl).tables || [];
   const measures = mt.flatMap((t) => (t.measures || []).map((x) => ({ table: t.name, name: x.name, expression: x.expression, formatString: x.formatString })));
   const aggregation = Agg.guard(inv.pages[0] || { visuals: [] }, { measures, tables: mt });
-  const ans = Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
-  return Object.defineProperty(ans, 'aggregation', { value: aggregation, enumerable: false });
+  // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
+  // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
+  return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
+    kinds: { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false },
+    tops: { value: (r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
+    aggregation: { value: aggregation, enumerable: false } });
 }
 
 // (B-146) plan_layout's `aggregation`, in the plan's language: what is not additive and where, and one question per
