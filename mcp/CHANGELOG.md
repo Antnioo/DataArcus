@@ -4,9 +4,12 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.2.9 (in main since 2026-10-16, rc.21; the package for testers after the owner's Power BI Desktop test)
-The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
-rc.21 passes; until then testers keep 0.2.8.
+## [0.2.9]: 2026-10-19 (the version for testers)
+Given to testers on 19 Oct 2026, after the Power BI Desktop release proof of rc.24 passed on the laptop (Desktop 2.159):
+the approval window names the chart kind that is written, the Arabic twin's title measures, buttons and KPI values,
+no network connection. The package is built on Windows with its release record (size and SHA-256), sent with the
+download. Known issues for testers: the twin can list a table header as cut when Desktop shows it whole; a chart
+planned as "Top 5" can show every category.
 - **rc.24, the gaps the Desktop release proof of rc.23 found** (18 Oct, Power BI Desktop 2.159; they finish B-140 and
   the Arabic twin, nothing else changes):
   - B-140: the approval window names each chart field by the kind it is written as, with the reason when it changed
@@ -86,7 +89,7 @@ rc.21 passes; until then testers keep 0.2.8.
   - every answer shows invisible and control characters as code points and stays under 40,000 characters.
 - MCP SDK 1.32.1; the runtime dependencies are pinned to exact versions.
 
-## [0.2.8]: 2026-10-08 (the version testers would get today)
+## [0.2.8]: 2026-10-08 (the version testers had before 0.2.9)
 - Arabic reports: the "Total" word in Arabic tables, and the report's language follows its columns (English columns
   in English reports, Arabic in Arabic reports).
 - Install guide fixes.

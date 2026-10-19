@@ -4,6 +4,14 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
+- The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
+  (engine `business/beta/rc24/PROOF-rc24.md`: B and E1-E3 pass, A/D/F pass, 0 network).
+- `mcp/CHANGELOG.md`: [Unreleased] becomes [0.2.9] 2026-10-19 with the two known issues (twin headersCut over-reports
+  one header, B-173; "Top 5" chart showing every category, B-174). No code change.
+- Next: the laptop builds 0.2.9 from this PR's merge commit (engine `release/0.2.9`, record `packaging/releases/0.2.9.json`),
+  installs it over rc.24 and calls the 11 tools once; the owner then publishes the download and sends the invitations.
+
 ## rc.24: the gaps of the laptop's Desktop release proof of rc.23 (18 Oct, cloud builder; branch `fix/0.2.9-rc24` from main `f09bf30`; one PR, not merged)
 The reviewer's brief (18 Oct): rc.23 + these gaps, found by the laptop's Desktop proof of rc.23 (Power BI Desktop 2.159).
 They finish features approved for 0.2.9 (B-140, the twin B-137/B-138); nothing else changes (0.2.9's scope frozen).
