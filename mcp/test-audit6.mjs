@@ -95,7 +95,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
       displayNames: { displayNames: { 'Sales[Region]': 'Zone' } }, text: { text: 'Something else.' }, subtitles: { subtitles: { Breakdown: 'Largest first' } },
       svgColumns: { svgColumns: [{ label: 'Bar', design: svg }] },
       // (A-02) the report's look and options
-      title: { title: 'Another title' }, smoothLines: { smoothLines: true }, kpiValues: { kpiValues: 'full' }
+      title: { title: 'Another title' }, smoothLines: { smoothLines: false }, kpiValues: { kpiValues: 'full' }
     };
     for (const [key, change] of Object.entries(variants)) {
       const before = files(), x = await call('create_report', Object.assign({}, cr, { name: 'A6 ' + key }, change));

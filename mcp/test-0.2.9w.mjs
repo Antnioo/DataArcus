@@ -524,16 +524,17 @@ export function v029w({ check }) {
     const slots = hand(1280, 720, [{ kind: 'line', title: 'L', x: 24, y: 80, w: 600, h: 300 }, { kind: 'donut', title: 'D', x: 640, y: 80, w: 500, h: 300 }]);
     const ls = (r) => { const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'lineChart') : null; return v ? ((v.visual.objects || {}).lineStyles || [])[0] : null; };
     const dn = (r) => { const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'donutChart' && x.position.x === 640) : null; return v ? ((v.visual.objects || {}).slices || [])[0] : null; };
-    const r = get(() => build(base({ date: mn }), { pages: slots })), rs = get(() => build(base({ date: mn }), { pages: slots, smoothLines: true }));
+    const r = get(() => build(base({ date: mn }), { pages: slots, smoothLines: false })), rs = get(() => build(base({ date: mn }), { pages: slots })), rt = get(() => build(base({ date: mn }), { pages: slots, smoothLines: true }));
     const P = (e) => (e && e.properties) || {};
-    // 1. the line 3 wide (rc.7's 1 px was the weakest mark on every page), no selector, as the lab wrote it; markers as today
+    // 1. the line 3 wide (rc.7's 1 px was the weakest mark on every page), no selector, as the lab wrote it; with smoothLines
+    // false straight and no markers (L1, 19 Oct: smooth with markers is the default now, test-0.3.0-smooth-lines.mjs)
     chk(() => ls(r) && !ls(r).selector && L(P(ls(r)).strokeWidth) === '3D' && P(ls(r)).lineChartType == null && P(ls(r)).showMarker == null,
-      () => `P2-1: every line chart's line is 3 wide, straight, markers untouched: ${r.threw || JSON.stringify(ls(r))}`);
+      () => `P2-1: with smoothLines false every line chart's line is 3 wide, straight, no markers: ${r.threw || JSON.stringify(ls(r))}`);
     // 2. the donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
     chk(() => dn(r) && L(P(dn(r)).innerRadiusRatio) === '68L', () => `P2-2: every donut's ring at 68: ${r.threw || JSON.stringify(dn(r))}`);
-    // 3. smooth lines only as an option: lineChartType 'smooth' with interpolationSmooth 'monotoneX' ("interpolation" is no property)
-    chk(() => ls(rs) && L(P(ls(rs)).lineChartType) === "'smooth'" && L(P(ls(rs)).interpolationSmooth) === "'monotoneX'" && L(P(ls(rs)).strokeWidth) === '3D' && !('interpolation' in P(ls(rs))),
-      () => `P2-3: smoothLines gives smooth monotone lines, 3 wide: ${rs.threw || JSON.stringify(ls(rs))}`);
+    // 3. smooth lines by default (L1) and with smoothLines true: lineChartType 'smooth' with interpolationSmooth 'monotoneX' ("interpolation" is no property)
+    chk(() => JSON.stringify(ls(rs)) === JSON.stringify(ls(rt)) && ls(rs) && L(P(ls(rs)).lineChartType) === "'smooth'" && L(P(ls(rs)).interpolationSmooth) === "'monotoneX'" && L(P(ls(rs)).strokeWidth) === '3D' && !('interpolation' in P(ls(rs))),
+      () => `P2-3: the default (and smoothLines true) gives smooth monotone lines, 3 wide: ${rs.threw || JSON.stringify(ls(rs))}`);
   }
 }
 

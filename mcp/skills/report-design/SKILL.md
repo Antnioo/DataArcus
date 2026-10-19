@@ -161,6 +161,9 @@ them from the same model open in Power BI Desktop:
   never a second axis; small multiples are one measure by a category, a panel per member of a second category with few
   members. Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
   fit), and say the preview draws them as placeholders.
+- **Line charts are smooth by default** (`smoothLines`, pinned by the plan): monotone curves that never swing past the
+  data, with a dot on each point so every value stays findable; the line of a combo too. Pass `smoothLines: false`
+  (straight, no dots) for a jagged series where every swing matters (daily stock, a sensor), and say it in the plan.
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.
