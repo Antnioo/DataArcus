@@ -88,6 +88,18 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   button («العربية» / "English") to its counterpart, desktop and phone; the Arabic pages hidden from the tabs (or the
   English, `tabsShown: "ar"`); each slicer pair synced (`syncGroup`); the original untouched. check_report: a page
   button whose page is not in the report is an error (PAGE_LINK_MISSING). The separate twin is unchanged (the default).
+- G1: a weekly GitHub routine (`.github/workflows/microsoft-watch.yml`, Mondays 05:17 UTC and by hand) checks
+  Microsoft's report schemas, report theme schema, validator and visual catalog on npm, and the Power BI blog's
+  Feature Summary posts against what DataArcus is built on, and opens one `microsoft-update` issue (or comments on the
+  open one) listing what changed and what in DataArcus it may touch; it never changes code (`scripts/microsoft-watch.mjs`,
+  `mcp/research/MICROSOFT-WATCH.md`).
+- R1 (research, no tool or default changed): `mcp/research/SEE-THE-RESULT.md` compares four ways to let the AI see what
+  Power BI Desktop draws (a shadow-data render on the user's machine, a calibrated in-browser renderer, real-data
+  screenshots on opt-in, the Power BI service) and designs the look-and-propose loop; two prototypes with tests:
+  `mcp/lib/shadow-model.mjs` (a throwaway copy of a model with made-up typed rows) and `mcp/lib/box-diff.mjs` (a
+  box-level score between two drawings of a page); `mcp/research/shadow-try.mjs` writes a fixture's shadow project for
+  the laptop. Recommendation: (a) as the v1 (S2), (b) as the fast first look grown by measured rules, (c) later as a
+  per-run opt-in, not (d).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
