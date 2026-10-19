@@ -69,17 +69,28 @@ const HEX = /^#[0-9a-f]{6}$/i;
 const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, c]) => `<span class="sw-i"><span class="sw" style="background:${c}"></span>${esc(n ? n + ' ' : '')}${esc(c)}</span>`).join(' ');
 const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${esc(x)}</li>`).join('')}</ul>` : esc(v)}</td></tr>`).join('')}</table></div>`;
 
+// (R6, the outside audit of 19 Oct, F09 c: the page named the report, not every file) every file a plan writes, by kind,
+// counted, each path folded under its group (no script: <details> opens without one)
+const GROUPS = [['Bookmarks', /(^|\/)bookmarks\//], ['Pages', /\/page\.json$/], ['Visuals', /\/visual\.json$/], ['Phone layouts', /\/mobile\.json$/], ['Theme', /RegisteredResources\/[^/]+\.json$/i],
+  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
+export function groupFiles(paths) {
+  const out = GROUPS.map(([label]) => ({ label, paths: [] }));
+  (paths || []).forEach((f) => { const i = GROUPS.findIndex(([, re]) => re.test(String(f))); out[i].paths.push(String(f)); });
+  return out.filter((g) => g.paths.length);
+}
+const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
+
 function askPage(w) {
   const s = w.show;
   const sections = s.sections.filter((x) => x.rows.length).map((x) => `<h2>${esc(x.heading)}</h2>${rows(x.rows)}`).join('');
   // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
   const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>What the report will look like</h2><div class="card preview">${s.previews.pages.map((p, i) => {
     const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
-    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">Page ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} to check: ${esc([...new Set(fl.map((f) => Preview.WORDS.en[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus never reads the model's rows.</p></div>` : '';
+    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">Page ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} to check: ${esc([...new Set(fl.map((f) => Preview.WORDS.en[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads files on your machine to check and fingerprint them, and never returns data values to Claude.</p></div>` : '';
   // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
   const ck = s.previews && s.previews.check, ckHtml = ck ? `<h2>Checked before writing</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `Page ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}<p class="note">The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.</p></div>` : '';
   return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">${esc(writesNote(w.plan.writes))}</p></div>
+${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files)}<p class="note">${esc(writesNote(w.plan.writes))}</p></div>
 ${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
 <form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
@@ -171,16 +182,19 @@ const KIND_A = { bar: 'a bar chart', column: 'a column chart', line: 'a line cha
  *  click approves). kind: the plan's kind; data: the plan's data (its pins, the twin's labels). */
 export function summary(kind, data) {
   const d = data || {}, pins = d.pins || {}, sections = [];
-  const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : cut(JSON.stringify(v), 600));
+  // (R6, F09 f: a long value was cut at 600 characters) every value in full
+  const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : JSON.stringify(v));
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs) : null;
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null };
+    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);
-    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
+    // (R6, F09 d) the lint's own measured why when the plan holds it (#64), else the general reason
+    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)])
       .concat(kinds.length ? [['Written as another kind', kinds.map((k) => `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`)]] : []) });
     // category is the bar chart's field, category2 the column chart's
@@ -199,11 +213,17 @@ export function summary(kind, data) {
     // the report's real data colours, as the theme will have them (the plan's design)
     const dc = p.design && Array.isArray(p.design.data) ? p.design.data : null;
     if (dc) look.push(['Data colours', { swatches: dc.map((c) => ['', String(c)]) }]);
+    // (R6, F13: the accessibility step changed a colour after the go, and said so only after the write) the colour the
+    // report is written with, from the plan's own build, and why, before the click
+    const cc = d.colours && Array.isArray(d.colours.changed) ? d.colours.changed : [];
+    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour (Power BI's accessibility basics; the hue is kept)`]));
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
     const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
     if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
-    if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
+    // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
+    if (Array.isArray(d.customVisualsShown)) sections.push({ heading: `Custom visuals replaced (${d.customVisualsShown.length})`, rows: d.customVisualsShown.map((x) => [String(x.line), (x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows']]) });
+    else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
     // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click
     const NC = { validator: 'Microsoft\'s validator', references: 'Fields against the model', rules: 'Measured rules', lint: 'Layout check' };
     const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
@@ -216,10 +236,12 @@ export function summary(kind, data) {
   if (kind === 'redesign') {
     const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
     const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
-    const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${cut(c.type, 40)}${c.title && typeof c.title === 'string' ? `, "${cut(c.title, 60)}"` : ''})`,
-      [c.from ? `moves from ${at(c.from)} to ${at(c.to)}` : null, c.title && typeof c.title === 'object' ? `title "${cut(c.title.from, 80)}" becomes "${cut(c.title.to, 80)}"` : null].filter(Boolean).join('; ')]));
+    // (R6, F08: a visual by its kind, fields and place, never its title text)
+    const of = (c) => `${cut(c.type, 40)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
+    const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
+      [c.from ? `moves from ${at(c.from)} to ${at(c.to)}` : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null].filter(Boolean).join('; ')]));
     if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
-    const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${cut(x.type, 40)})`, cut(x.why, 200)])));
+    const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${of(x)})`, cut(x.why, 200)])));
     const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
@@ -228,7 +250,7 @@ export function summary(kind, data) {
       n('visualFilters', 'visual filter', 'visual filters'), n('slicerSelections', 'slicer selection', 'slicer selections'), n('tooltipLinks', 'tooltip link', 'tooltip links'), n('tooltipPages', 'tooltip page', 'tooltip pages'), n('drillthroughPages', 'drillthrough page', 'drillthrough pages'),
       n('interactions', 'visual interaction', 'visual interactions'), n('groups', 'group', 'groups'), n('customVisuals', 'custom visual', 'custom visuals'), n('phoneLayouts', 'phone layout', 'phone layouts'), n('resources', 'resource file', 'resource files'),
       [['How', 'copied as they are: their contents (filter values, slicer selections, bookmark states) are not read']]) });
-    return { title: 'Redesign of a report', sections };
+    return { title: 'Redesign of a report', sections, files, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script and no theme file of its own.` : null };
   }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});
@@ -237,7 +259,9 @@ export function summary(kind, data) {
     return { title: 'Arabic twin of a report', sections };
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
-  const own = Object.values(pins)[0] || {};
-  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, val(v)]) });
-  return { title: titles[kind] || 'Plan', sections };
+  const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;
+  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers)).map(([k, v]) => [k, val(v)]) });
+  // (R6, F09 f: a long answers list was cut at 600 characters, as hashes) every question with the answer recorded for it
+  if (shownAnswers && shownAnswers.length) sections.push({ heading: `Answers to record (${shownAnswers.length})`, rows: shownAnswers.map((x) => [String(x.object || ''), `${x.answer === 'mistake' ? 'a mistake' : 'intended'} (the question: ${String(x.question || '')})`]) });
+  return { title: titles[kind] || 'Plan', sections, files };
 }

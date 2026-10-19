@@ -66,9 +66,9 @@ export function addGulfCalendar(m, a, env) {
   const taken = takenNames(raw), clash = taken.get(key(table));
   if (clash) refuse(`The model already has a ${clash.kind} named ${JSON.stringify(clash.name)}, so a table named ${JSON.stringify(table)} could replace or confuse it. A script never replaces anything: choose another name, for example ${freeNames(taken).map((n) => JSON.stringify(n)).join(' or ')}.`);
 
-  // the years: required (the tool reads no data); the generator's limits (Power BI's DATE, at most 60 years)
+  // the years: required (the tool returns no data values); the generator's limits (Power BI's DATE, at most 60 years)
   const fy = a.firstYear, ly = a.lastYear;
-  if (!Number.isInteger(fy) || !Number.isInteger(ly)) refuse('firstYear and lastYear are required whole years: ask the user which years their data covers (the tool reads no data).');
+  if (!Number.isInteger(fy) || !Number.isInteger(ly)) refuse('firstYear and lastYear are required whole years: ask the user which years their data covers (the tool returns no data values).');
   if (ly < fy) refuse(`lastYear (${ly}) is before firstYear (${fy}).`);
   if (ly - fy + 1 > 60) refuse(`${fy} to ${ly} is ${ly - fy + 1} years; the calendar takes at most 60.`);
   const start = `${String(fy).padStart(4, '0')}-01-01`, end = `${String(ly).padStart(4, '0')}-12-31`;

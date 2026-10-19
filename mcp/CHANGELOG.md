@@ -31,6 +31,17 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   to invert a waterfall's category axis, so only its order is reversed.
 - R2, the owner's must-fix: an Arabic report from an English-named model shows no English title words; the plan pins the
   fixed list's Arabic names and lists every field kept in English, with why, before the go.
+- R6 (the outside audit of 19 Oct, F07, F08, F09, F11, F13): the approval page shows everything the click approves, and
+  the theme pins its model. A theme planned from a model pins the model and the report theme its colours come from; the
+  gate refuses a model plan written without the model and the reverse; generate_theme and create_report read the model
+  again right before their first write and refuse a change, before any folder is made. The page lists every file a
+  plan writes, grouped and counted (pages, visuals, phone layouts, theme, images, format script, .pbip); a kind change
+  shows its measured reason; the first data colour made readable is shown as approved -> written, with its contrast,
+  before the click; the native copy's every replacement and loss, a long answers list and every other value in full,
+  never cut; the overwrite sentence is true for each plan. The redesign names a visual by its kind, fields and place,
+  never by its title text. The wording says what the code does: DataArcus reads files on your machine to check and
+  fingerprint them and never returns data values to Claude; the Theme Generator saves a logo's colours in the browser
+  like any theme (the image is never uploaded or saved).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

@@ -189,7 +189,7 @@ async function rest(pl, R, pages) {
   // ---------- C8: titles ----------
   { const p5 = await call(s, 'plan_layout', { path: MODEL, redesignFrom: FROM, titles: { 'p1overview/lineMonth': 'Monthly sales' } });
     const t = ((p5.j && p5.j.redesign && p5.j.redesign.pages) || []).flatMap((p) => p.changes).find((x) => x.visual === 'lineMonth');
-    chk(() => p5.j.plan && t && t.title && t.title.from === 'Sales by Month' && t.title.to === 'Monthly sales', () => `C8. an approved static title is a change of its own: ${short(p5)}`);
+    chk(() => p5.j.plan && t && t.title && t.title.from === undefined && !JSON.stringify(p5.j).includes('Sales by Month') && t.title.to === 'Monthly sales', () => `C8. an approved static title is a change of its own (R6, F08, changed on purpose: the old title text is no longer returned): ${short(p5)}`);
     await call(s, 'approve_plan', { planId: p5.j.plan.planId });
     const o5 = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p5.j.plan.planId, titles: { 'p1overview/lineMonth': 'Monthly sales' } });
     const r = 'definition/pages/p1overview/visuals/lineMonth/visual.json', ps = !o5.err ? diff(rd(path.join(ORIG, r)), rd(path.join(OUT, r))) : ['not written'];

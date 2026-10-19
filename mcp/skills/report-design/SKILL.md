@@ -57,7 +57,7 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    only", "the UAE only"), pass a page filter in `pageFilters` (`[{ field: "Calendar[Is Ramadan]", values: [true] }]`: a
    column and its values, never a measure), show it in the plan, and tell the user it is in the Filters pane. A filter
    on Is Ramadan keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar's Hijri year
-   and ask the user which Hijri year (the tools read no data values, so never guess it).
+   and ask the user which Hijri year (the tools never return data values, so never guess it).
    Experimental: `svgColumns` adds small pictures per table row (a progress bar, a ring, an arrow) from a declarative
    design; checked in Desktop only in tables, so say so in the plan. It writes a new report next to their
    model, never changing the model or an existing report: the pages (by default a second page in a complementary

@@ -58,7 +58,7 @@ window.themeGeneratorTranslations = {
       "logo": {
         "title": "Or start from your logo",
         "drop": "Drop a PNG, SVG or JPG logo here, or click to choose one",
-        "private": "Read in this tab only: never uploaded, never saved."
+        "private": "Read in this tab only: the image is never uploaded or saved. The colours taken from it are saved in this browser, like any theme you make here."
       },
       "generate": "Generate",
       "dataColors": "Data colors (used in order)",
@@ -175,7 +175,7 @@ window.themeGeneratorTranslations = {
       "logo": {
         "title": "أو ابدأ من شعارك",
         "drop": "أفلت شعارًا بصيغة PNG أو SVG أو JPG هنا، أو انقر لاختياره",
-        "private": "يُقرأ داخل هذه الصفحة فقط: لا يُرفع ولا يُحفظ أبدًا."
+        "private": "يُقرأ داخل هذه الصفحة فقط: لا تُرفع الصورة ولا تُحفظ أبدًا. أما الألوان المأخوذة منها فتُحفظ في هذا المتصفح، مثل أي سمة تصنعها هنا."
       },
       "generate": "إنشاء",
       "dataColors": "ألوان البيانات (تُستخدم بالترتيب)",

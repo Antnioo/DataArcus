@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // DataArcus MCP server: the engines behind dataarcus.com's Power BI tools, for an AI agent.
 // Pairs with Microsoft's Power BI Authoring MCP server (model edits, DAX) and the Desktop bridge (reload, screenshots).
-// Every path stays inside the working folder (DATAARCUS_ROOT; without it every tool refuses), and nothing is ever overwritten.
+// Every path stays inside the working folder (DATAARCUS_ROOT; without it every tool refuses), and nothing is ever overwritten (except DataArcus's own answers file, as its plan says).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -37,6 +37,7 @@ import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/ag
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
+import { testEditBeforeWrite } from './lib/write-io.mjs';
 import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
 // the version is in one place: mcp/package.json
@@ -61,6 +62,12 @@ const planIdInput = z.string().max(40).optional().describe('The approved plan id
 const modelKey = (m, p) => { const f = m.folder || inside(p); try { return fs.realpathSync.native(f); } catch (e) { return f; } };
 // (0.3, B-154) the model for the gate: its key and its fingerprint (loadModel's print), pinned by the plan, compared at the write
 const modelRef = (m, p) => ({ key: modelKey(m, p), print: m.print });
+// (R6, the outside audit of 19 Oct, F07) a theme planned from a model pins the model and the report theme its colours
+// come from (existingTheme): the model's print alone hashes the definition files, not the report's theme
+const themeRef = (m, p, from) => ({ key: modelKey(m, p), print: crypto.createHash('sha256').update(String(m.print) + '\0' + JSON.stringify(from == null ? null : from)).digest('hex') });
+// (R6, F07) right before a writer's first write (before any folder is made): the model read again, and its print the
+// approved one, or nothing is written (the gate's read can be seconds older than the write)
+const sameModelBeforeWrite = (planId, now, approved) => { testEditBeforeWrite(); if (now() !== approved) throw new Error(Plans.modelChanged(planId)); };
 const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 // Round 17 (the outside review's G-02, privacy): no answer or error sends an absolute local path to the AI. Paths in the
 // working folder become relative to it, the working folder itself is named by its last folder name, and the user's home
@@ -535,7 +542,7 @@ server.registerTool('check_model_health', {
   // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
   // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
-  const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
+  const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH }, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
@@ -609,7 +616,7 @@ const CREATE_REPORT_INPUTS = {
     pageFilters: z.array(z.object({
       field: z.string().describe('The column to filter, written as Table[Column] exactly as read_model lists it (a column, never a measure)'),
       values: z.array(z.union([z.string(), z.number(), z.boolean()])).min(1).max(50).describe('The values the pages keep, in the column\'s type: true or false, texts, or numbers')
-    }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]. That keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar\'s Hijri year, { "field": "Calendar[Hijri Year]", "values": [<year>] }, and ask the user which Hijri year, because the tools read no data values). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
+    }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]. That keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar\'s Hijri year, { "field": "Calendar[Hijri Year]", "values": [<year>] }, and ask the user which Hijri year, because the tools never return data values). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
     svgColumns: z.array(z.object({
       label: z.string().min(1).max(40).describe('The column\'s header (also the name of the report-level measure); not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb, or a colour of the report\'s theme by name: "theme:accent", "theme:text", "theme:muted", "theme:track", "theme:card", "theme:good", "theme:bad", "theme:neutral", "theme:data1" to "theme:data8"; a colour left out is the theme\'s, so the picture looks part of its card in light and dark designs), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
@@ -689,13 +696,13 @@ server.registerTool('create_report', {
     if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles and restyle if it has them.');
     if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles and restyle if it has them.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
-    return text(withPlan(a.planId, 'create_report', () => writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle })));
+    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }); }));
   }
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
-    return text(withPlan(a.planId, 'create_report', () => writeNative(a.customVisualsFrom, mm, p)));
+    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p); }));
   }
   // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
   // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
@@ -745,7 +752,7 @@ function reportRun(a, mode) {
     PF.filter((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true)).forEach((f) => {
       if (PF.some((g) => isHijriYear(g.c))) return;
       const own = m.tables.find((t) => t.name === f.t), t = [own].concat(m.tables).filter(Boolean).find((x) => x.columns.some((c) => isHijriYear(c.name))), c = t && t.columns.find((x) => isHijriYear(x.name));
-      f.note = `${f.key} is true keeps every Ramadan of the calendar, not one. For one Ramadan ("this Ramadan") add a second page filter on the Hijri year${c ? ` (${t.name}[${c.name}])` : ' (no Hijri year column was found by name in this model: ask the user which column holds it)'}, with the year the user gives: ask the user which Hijri year, because the tools read no data values.`;
+      f.note = `${f.key} is true keeps every Ramadan of the calendar, not one. For one Ramadan ("this Ramadan") add a second page filter on the Hijri year${c ? ` (${t.name}[${c.name}])` : ' (no Hijri year column was found by name in this model: ask the user which column holds it)'}, with the year the user gives: ask the user which Hijri year, because the tools never return data values.`;
     });
   }
   // SVG columns: each design checked against the model and compiled (nothing is written when one can't be used)
@@ -983,7 +990,7 @@ function reportRun(a, mode) {
   if (!building) throw new Error(`Nothing was written: plan ${a.planId} holds no checked report to write (plan_layout builds and checks the report before the go, and create_report writes exactly that). Make the plan again with plan_layout and the same inputs, show it to the user and wait for their go.`);
   const finish = (planId) => {   // (the body keeps its indentation: the write and the answer, as before J14)
   // (0.3, B-153: the plan is used the moment the tree is in place, or left unused when a failed write left nothing)
-  withPlan(planId, 'create_report', () => writeTree(m.projectDir, r.files));
+  withPlan(planId, 'create_report', () => { sameModelBeforeWrite(planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); return writeTree(m.projectDir, r.files); });
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid
@@ -1144,7 +1151,7 @@ function reportRun(a, mode) {
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {});
   };
-  return { files: r.files, finish, m };
+  return { files: r.files, finish, m, a11y: r.a11y || null };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
@@ -1173,7 +1180,7 @@ async function exactArtifact(ab, pin, lang) {
   try { built = reportRun(ab, 'build'); } catch (e) { return null; }
   const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check };
+  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
@@ -1240,7 +1247,9 @@ server.registerTool('generate_theme', {
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
-  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme: a.path ? existingTheme(loadModel(a.path), a.themeFrom) : null }));
+  const m = a.path ? loadModel(a.path) : null, reportTheme = m ? existingTheme(m, a.themeFrom) : null;
+  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme }));
+  const ref = m ? themeRef(m, a.path, reportTheme) : null;   // (R6, F07: null only for a theme made without a model)
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
   if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
   const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
@@ -1253,11 +1262,13 @@ server.registerTool('generate_theme', {
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-      plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+      plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
-  Plans.gate('generate_theme', a.planId, null, inputsPin(a));
+  Plans.gate('generate_theme', a.planId, ref, inputsPin(a));
   // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)
-  const file = withPlan(a.planId, 'generate_theme', () => { const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
+  const file = withPlan(a.planId, 'generate_theme', () => {
+    if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print);
+    const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
 }));
 
@@ -1301,7 +1312,8 @@ function redesignPlan(a) {
   const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
   const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
   return Object.assign({ redesign: R.answer }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: redesignPin(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown })) });
+    : { plan: Plans.proposal(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: redesignPin(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown,
+      outputs: R.files.map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), copied: R.files.length })) });
 }
 // (0.3.0 R2) what an Arabic plan says before the go: the proposed names it pins, the fields kept in English (with why)
 const NOT_TRANSLATED_WHY = 'No Arabic name: none was given (displayNames) and the fixed list of report words has none for it, so it shows under its English model name. Titles keep it alone, never joined with English words (a chart cut to its top N may begin with «أعلى N من M:», a table beside a chart of the same name ends with «: التفاصيل»).';
@@ -1512,7 +1524,7 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
@@ -1527,7 +1539,7 @@ server.registerTool('plan_layout', {
 
 server.registerTool('add_gulf_calendar', {
   title: 'Add a Gulf calendar table',
-  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project, only with an approved planId: called without one it checks everything, says what it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId). The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
+  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project, only with an approved planId: called without one it checks everything, says what it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId). The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool returns no data values). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
     firstYear: z.number().int().describe('First year of the calendar (1 January). Ask the user: the years their data covers'),

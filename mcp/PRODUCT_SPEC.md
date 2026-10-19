@@ -37,7 +37,7 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
 - **It doesn't translate.** In an Arabic report the labels DataArcus writes are Arabic, but the names from your
   model (measures, columns, values) stay as they are in the model. No made-up translations, ever. (Arabic display
   names given by you: planned, round 2.)
-- **It doesn't read data, run queries, refresh, publish or connect to Power BI Desktop or the Power BI service.**
+- **It never returns data values to Claude, and doesn't run queries, refresh, publish or connect to Power BI Desktop or the Power BI service.** It reads files on your machine to check and fingerprint them.
   Opening the report, screenshots and number checks are done with Microsoft's tools.
 - **It doesn't read a `.pbix` file.** Save it as a Power BI project (File > Save as > `.pbip`) or export a template
   (`.pbit`) first.
