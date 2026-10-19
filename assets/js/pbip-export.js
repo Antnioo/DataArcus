@@ -364,9 +364,10 @@
     const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
       .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
     // (0.3, J8) a gallery slot is written as its own visual only with o.gallery and where its fields fit (visual-gallery.js);
-    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why })
+    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why }); (0.3.0 D2) a combo in two units is
+    // two panels, two line charts in its box (to: 'two panels')
     const galleryNotes = [];
-    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slot; }); });
+    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = [].concat(...pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery, rtl); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slots || [r.slot]; })); });
     const files = [];
     // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
     const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });

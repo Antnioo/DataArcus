@@ -695,6 +695,8 @@
           const widest = Math.max(...namesOf(c0, 'day').map((d) => textWidth(d, LABEL, false, font)));   // (A3-7: the day names of its own family)
           if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
         }
+        // (0.3.0 D2) a combo in two units is two panels: each line chart carries its own measure and axis (visual-gallery.js split)
+        if (B && s.bind) Bt = Object.assign({}, Bt, s.bind.measure ? { measure: s.bind.measure } : {}, s.bind.date ? { date: s.bind.date } : {});
         const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
         if (B && CHARTS.includes(s.kind)) { const k = s.kind;
           hov = { m: k === 'line' ? Bt.measure : k === 'funnel' && Bt.y && 'funnel' in Bt.y ? Bt.y.funnel : (Bt.y || {})[k] || Bt.measure, cat: k === 'line' ? Bt.date : (Bt.cats || {})[k] }; }
@@ -777,7 +779,11 @@
           if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
         if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
           const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail } : null });
+          // (0.3.0 D2: a gallery visual had no story entry, so two charts that read the same were numbered "(2)") its measure
+          // and axis as its title says them, and its kind's word for a page where no other sentence is left
+          const gs = !told && B && query && isGallery(s.kind) ? G.storyOf(s.kind, Bt, W.by || 'by') : null;
+          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail }
+            : gs ? { m: gs.m, c: gs.c, ranked: false, full: { m: gs.m, c: gs.c }, alt: ttl, tail: gs.tail } : null });
           if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
         }
         // the title already names the KPI, so the card's own label under the number is not repeated
@@ -1268,7 +1274,8 @@
         // and alt text: the second and later are numbered, "Total Sales by City (2)")
         // (0.3, J4, B-130: "Total by Note (2)", "(2) (2)") the second and later say what they show in another true
         // sentence of their own measure and column, "Note ranked by Total", "Total per Note" (story-titles.js alternate)
-        const alt = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.m, st.c, n, st.ranked, W.by || 'by') : null; };
+        // (0.3.0 D2) a gallery visual whose sentences run out says its kind instead ("Sales: step by step"), never a number
+        const alt = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.m, st.c, n, st.ranked, W.by || 'by') || (st.tail ? k + ': ' + st.tail : null) : null; };
         // (19 Oct: the alt text says the same sentence with the full names)
         const altOf = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.full.m, st.full.c, n, st.ranked, W.by || 'by') : null; };
         const fullCore = () => { const st = (fitted.get(v.visual) || {}).story; return st ? st.alt : k; };
