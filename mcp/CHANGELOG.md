@@ -7,6 +7,21 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.2.9 (in main since 2026-10-16, rc.21; the package for testers after the owner's Power BI Desktop test)
 The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
 rc.21 passes; until then testers keep 0.2.8.
+- **rc.24, the gaps the Desktop release proof of rc.23 found** (18 Oct, Power BI Desktop 2.159; they finish B-140 and
+  the Arabic twin, nothing else changes):
+  - B-140: the approval window names each chart field by the kind it is written as, with the reason when it changed
+    ("Bar chart by Plan[Plan Group] (planned as a column chart: the names would slant or be cut)"), and lists every
+    visual written as another kind; it said "Column chart by".
+  - The twin translates chart titles given by the report's own title measures ("Top 9 of 16: ..." titles): each of
+    their texts is offered ("Chart title (from a title measure)", the counted numbers as {1} and {2}), and the twin gets
+    its own Arabic measures ("Title AR: ...") used by its charts only; the original report and the model are not changed.
+    A title measure that builds its text another way is listed as not translated, with why.
+  - The twin widens each button to its Arabic text (by `check_report`'s own measure), within its page or group, moving
+    the buttons beside it and the page's underline with it; a text with no room is said in the plan (`fitted.buttonsCut`).
+  - The twin's KPI cards (one value) have their value right-aligned under their right-aligned titles.
+  - The twin widens a table column to its Arabic header within the table's width (text columns give up width; numbers
+    never narrowed); what can't fit is said in the plan (`fitted.headersCut`).
+  - `PRIVACY.md`: the twin returns the fixed texts of the report's title measures (section 3 and its row).
 - **rc.23, three fixes from an outside audit of 0.2.9, so `PRIVACY.md` says exactly what the code does** (18 Oct):
   - F1: a `.pbix` (it holds Power BI's data cache) and data files (`.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.xls`, `.parquet`)
     are refused by their name before they are opened (a `.pbix` was read whole, then refused: "No model in this file").

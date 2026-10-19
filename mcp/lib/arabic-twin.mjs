@@ -22,6 +22,9 @@ import { writtenName } from './display-names.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
+// (rc.24) check_report's own measurement of a button's text, and the writer's text widths: the twin widens what its Arabic cuts
+const Rules = require('../../assets/js/report-rules.js');
+const { textWidth } = require('../../assets/js/text-measure.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -59,15 +62,113 @@ function readOriginal(loc) {
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
     visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
   const bookmarks = inv.bookmarks.filter((b) => isObj(b.raw) && (typeof b.raw.name === 'string' || typeof b.raw.name === 'number')).map((b) => ({ rel: b.file, json: b.raw }));
-  return { files, pages, bookmarks, pbir, unreadable, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
+  // (rc.24) the report's own measures (definition/reportExtensions.json), for the title measures; and the theme's text
+  // sizes, for what the Arabic texts need
+  let ext = null; if (files.includes(EXT)) { try { const j = readJson(path.join(loc.dir, ...EXT.split('/'))); ext = isObj(j) && Array.isArray(j.entities) ? j : null; } catch (e) { ext = null; } }
+  return { files, pages, bookmarks, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+const EXT = 'definition/reportExtensions.json';
 // definition.pbir's model folder, when it names one: { path } or null
 const byPathOf = (pbir) => { const d = isObj(pbir) && isObj(pbir.datasetReference) ? pbir.datasetReference : null, b = d && isObj(d.byPath) ? d.byPath : null; return b && typeof b.path === 'string' && b.path ? b : null; };
 const pageOf = (pg) => (isObj(pg.page) ? pg.page : {});
 // a page's size as numbers, never the file's own text (P3, P4 of the fuzz test: a width holding text went raw into the plan)
 const sizeOf = (pg) => { const w = pageOf(pg).width, h = pageOf(pg).height; return Number.isFinite(w) && Number.isFinite(h) ? `${w} x ${h}` : 'not a number in page.json'; };
+
+// ---- title measures (rc.24, the laptop's proof of rc.23: 4 chart titles stayed English in the twin) ----
+// A chart's "fx" title is a measure; one of the report's own (reportExtensions.json, as DataArcus writes "Title: ..." for a
+// chart cut to its Top N) is read, never run: its DAX is translated only when its text is fixed texts and the numbers
+// it counts, of the shape  [VARs, no text in them] RETURN IF ( <a condition, no text>, A, B )  or  A, each of A and B
+// texts and variables joined by &. Each branch is offered as one text, its variables as {1}, {2}: "Top {1} of {2}: Web
+// Orders Total Score by Coupon Region". Any other shape (a value of the model, FORMAT, a text in a variable, a measure of
+// the model) is listed as not translated, with why: it is never guessed.
+// the DAX read token by token: its string literals, names ('Table', [Column]) and comments, so a sign inside them is not code
+function daxScan(expr) {
+  const lits = []; let i = 0, depth = 0; const top = [];   // top: [index, char] of the top-level , & ( ) outside literals and names
+  while (i < expr.length) {
+    const c = expr[i];
+    if (c === '"') { let j = i + 1, t = ''; for (;;) { if (j >= expr.length) return null; if (expr[j] === '"') { if (expr[j + 1] === '"') { t += '"'; j += 2; continue; } break; } t += expr[j++]; } lits.push({ start: i, end: j + 1, text: t }); i = j + 1; continue; }
+    if (c === "'") { const j = expr.indexOf("'", i + 1); if (j < 0) return null; i = j + 1; while (expr[i] === "'") { const k = expr.indexOf("'", i + 1); if (k < 0) return null; i = k + 1; } continue; }
+    if (c === '[') { let j = i + 1; for (;;) { j = expr.indexOf(']', j); if (j < 0) return null; if (expr[j + 1] === ']') { j += 2; continue; } break; } i = j + 1; continue; }
+    if ((c === '/' && (expr[i + 1] === '/' || expr[i + 1] === '*')) || (c === '-' && expr[i + 1] === '-')) return { comment: true };
+    if (c === '(') depth++;
+    if (c === ')') depth--;
+    top.push({ i, c, depth });
+    i++;
+  }
+  return { lits, top };
+}
+const NOT_READ = 'its DAX builds the text in a way DataArcus does not read (only fixed texts and the numbers the report counts are translated)';
+function parseTitleDax(expr0) {
+  const expr = String(expr0 == null ? '' : expr0), sc = daxScan(expr);
+  if (!sc) return { why: 'its DAX could not be read (an unclosed text or name)' };
+  if (sc.comment) return { why: 'its DAX has comments: ' + NOT_READ };
+  const inLit = (i) => sc.lits.some((l) => i >= l.start && i < l.end);
+  // the last RETURN outside literals and names
+  let ret = -1; const re = /\bRETURN\b/gi; let m; while ((m = re.exec(expr))) { if (!inLit(m.index) && sc.top.some((t) => t.i === m.index)) ret = m.index; }
+  const bodyAt = ret >= 0 ? ret + 6 : 0, prefix = ret >= 0 ? expr.slice(0, ret) : '';
+  if (sc.lits.some((l) => l.start < bodyAt)) return { why: 'a text of it is kept in a variable: ' + NOT_READ };
+  const vars = new Set([...prefix.matchAll(/\bVAR\s+([A-Za-z_][A-Za-z0-9_]*)\s*=/gi)].map((x) => x[1]));
+  const body = expr.slice(bodyAt), lead = body.length - body.trimStart().length, b0 = bodyAt + lead, b1 = bodyAt + body.trimEnd().length;
+  // a branch: literals and variables joined by & (top level, depth of the branch)
+  const branch = (from, to) => {
+    const parts = [], cuts = sc.top.filter((t) => t.i >= from && t.i < to && t.c === '&' && t.depth === sc.top.filter((x) => x.i < from).reduce((d, x) => d + (x.c === '(' ? 1 : x.c === ')' ? -1 : 0), 0)).map((t) => t.i);
+    let at = from; [...cuts, to].forEach((c) => { parts.push([at, c]); at = c + 1; });
+    const out = { template: '', vars: [] };
+    for (const [a, z] of parts) {
+      const raw = expr.slice(a, z), t = raw.trim(), start = a + raw.indexOf(t);
+      const l = sc.lits.find((x) => x.start === start && x.end === start + t.length);
+      if (l) { if (/[{}]/.test(l.text)) return null; out.template += l.text; continue; }
+      if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(t) && vars.has(t)) { out.vars.push(t); out.template += '{' + out.vars.length + '}'; continue; }
+      return null;
+    }
+    return /\p{L}/u.test(out.template) ? out : null;
+  };
+  if (/^IF\s*\(/i.test(expr.slice(b0, b1)) && expr[b1 - 1] === ')') {
+    const open = expr.indexOf('(', b0), d = sc.top.find((t) => t.i === open).depth;
+    const commas = sc.top.filter((t) => t.i > open && t.i < b1 - 1 && t.c === ',' && t.depth === d).map((t) => t.i);
+    const close = sc.top.find((t) => t.i > open && t.c === ')' && t.depth === d - 1);
+    if (commas.length !== 2 || !close || close.i !== b1 - 1) return { why: NOT_READ };
+    if (sc.lits.some((l) => l.start > open && l.start < commas[0])) return { why: 'its condition compares texts: ' + NOT_READ };
+    const A = branch(commas[0] + 1, commas[1]), B = branch(commas[1] + 1, b1 - 1);
+    if (!A || !B) return { why: NOT_READ };
+    return { prefix, ret: ret >= 0, cond: expr.slice(open + 1, commas[0]).trim(), branches: [A, B] };
+  }
+  const A = branch(b0, b1);
+  return A ? { prefix, ret: ret >= 0, cond: null, branches: [A] } : { why: NOT_READ };
+}
+// the measure's DAX with the Arabic texts (one per branch, its {n} the branch's variables); a branch without a label keeps its own
+const daxText = (t) => '"' + String(t).replace(/"/g, '""') + '"';
+function arabicDax(pd, labels) {
+  const one = (b, label) => { if (label == null) label = b.template; const out = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) out.push(b.vars[+v[1] - 1]); else if (x) out.push(daxText(x)); }); return out.length ? out.join(' & ') : '""'; };
+  const bs = pd.branches.map((b, i) => one(b, labels[i]));
+  return (pd.ret ? pd.prefix + 'RETURN ' : '') + (pd.cond != null ? `IF ( ${pd.cond}, ${bs[0]}, ${bs[1]} )` : bs[0]);
+}
+// a label of a branch must keep each {n} of the branch once, and add none
+function placeholderProblem(template, label) {
+  const want = (template.match(/\{\d+\}/g) || []).sort(), got = (String(label).match(/\{\d+\}/g) || []).sort();
+  return JSON.stringify(want) === JSON.stringify(got) ? null : `the Arabic text must keep ${want.length ? want.join(' and ') + ' once each (the numbers the report counts)' : 'no {n}'}, and add none: not taken`;
+}
+// every title of the report given by a measure: the report's own (parsed), or the model's
+const extMeasureOf = (R, entity, name) => { const e = R.ext ? R.ext.entities.find((x) => isObj(x) && x.name === entity) : null; return e && Array.isArray(e.measures) ? e.measures.find((x) => isObj(x) && x.name === name) || null : null; };
+function titleMeasuresOf(R) {
+  const seen = new Map();
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => {
+    const vco = isObj(v.json) && isObj(v.json.visual) && isObj(v.json.visual.visualContainerObjects) ? v.json.visual.visualContainerObjects : {};
+    (Array.isArray(vco.title) ? vco.title : []).forEach((e) => {
+      const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null;
+      const src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+      if (!src || typeof ms.Property !== 'string' || typeof src.Entity !== 'string') return;
+      const key = (src.Schema === 'extension' ? 'ext' : 'model') + '\u0000' + src.Entity + '\u0000' + ms.Property;
+      if (seen.has(key)) return;
+      const own = src.Schema === 'extension', m = own ? extMeasureOf(R, src.Entity, ms.Property) : null;
+      const pd = !own ? { why: 'a measure of the model: the twin never changes the model, so this title stays as the model gives it' } : !m ? { why: 'the report\'s measure is not in its reportExtensions.json' } : typeof m.expression !== 'string' ? { why: 'its DAX is not a text in reportExtensions.json' } : parseTitleDax(m.expression);
+      seen.set(key, { entity: src.Entity, name: ms.Property, own, measure: m, pd });
+    });
+  }));
+  return [...seen.values()];
+}
 
 // ---- the texts a reader sees, for the user's Arabic (cleaned, capped, instruction-like withheld) ----
 // An id holds report names (a page, a visual, a field's queryRef). An id that reads like an instruction, holds an
@@ -85,9 +186,15 @@ function textsOf(R) {
     pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
   });
   R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
+  // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)
+  titleMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => x.pd.branches.forEach((b) => {
+    const id = 'titleText:' + b.template, had = all.find((t) => t.id === id), m = safeName(x.entity + '[' + x.name + ']');
+    if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
+    add({ id, kind: 'titleMeasure', text: b.template, what: 'Chart title (from a title measure)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
+  }));
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id }, t.goesTo ? { goesTo: safeId(t.goesTo) } : {});
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id }, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
     if (t.page) out.page = safeName(t.page);
     if (t.visual) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
@@ -169,6 +276,129 @@ function monthOffer(model, loc) {
     howToApply: 'Save a copy of the Power BI file first. Open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (one column is added to the date table, sorted by its month number), then Apply. DataArcus never applies it: the model is changed only when the user applies it. Then a chart or table can show the Arabic month names (يناير، فبراير...) by using that column.' };
 }
 
+
+// ---- what the Arabic texts need (rc.24, the laptop's proof of rc.23): buttons and table headers cut in the twin ----
+const num = (p) => (p && p.expr && p.expr.Literal ? parseFloat(p.expr.Literal.Value) : NaN);
+const posOf = (v) => (isObj(v) && isObj(v.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(v.position[k])) ? v.position : null);
+const typeOf = (v) => (isObj(v) && isObj(v.visual) ? String(v.visual.visualType || '') : isObj(v) && isObj(v.visualGroup) ? 'group' : '');
+// A button narrower than its Arabic text (check_report's buttonNeed) is widened: first toward its end (its left in the
+// twin), the visuals beside it in its row moving with it, then toward its start; inside its page or group, never over a
+// visual it did not overlap. A shape just under or over it (the page's underline) follows it. What can't fit is said.
+function fitButtons(page, visuals, ctx, at) {
+  const out = { buttons: [], buttonsCut: [] }, byName = {};
+  visuals.forEach((v) => { if (isObj(v) && v.name != null) byName[v.name] = v; });
+  const parentOf = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : '');
+  const widthOf = (v) => { const g = v.parentGroupName != null ? byName[v.parentGroupName] : null; return g ? (posOf(g) || {}).width : isObj(page) ? page.width : NaN; };
+  const vOver = (a, b) => a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5;
+  const attachedTo = (v) => { const p = posOf(v); return visuals.filter((s) => s !== v && /^(shape|basicShape)$/.test(typeOf(s)) && parentOf(s) === parentOf(v) && posOf(s)).filter((s) => { const q = posOf(s);
+    return !vOver(p, q) && q.x >= p.x - 2 && q.x + q.width <= p.x + p.width + 2 && q.width <= p.width && Math.min(Math.abs(q.y - (p.y + p.height)), Math.abs(p.y - (q.y + q.height))) <= 8; }); };
+  const shift = (v, d) => { posOf(v).x = Mirror.round(posOf(v).x + d); attachedTo(v).forEach((s) => { posOf(s).x = Mirror.round(posOf(s).x + d); }); };
+  visuals.forEach((v) => {
+    const p = posOf(v); if (typeOf(v) !== 'actionButton' || !p) return;
+    let b; try { b = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text); } catch (e) { b = null; }
+    if (!b || p.width + 0.5 >= b.needW) return;
+    const W = widthOf(v); if (!Number.isFinite(W)) return;
+    const grow = Math.ceil(b.needW - p.width), lines = attachedTo(v);
+    // the room: the container, or a panel it sits on (a sibling holding it whole); the row: siblings beside it
+    const sibs = visuals.filter((x) => x !== v && posOf(x) && parentOf(x) === parentOf(v) && !lines.includes(x));
+    const holds = sibs.filter((x) => { const q = posOf(x); return q.x <= p.x + 0.5 && q.x + q.width >= p.x + p.width - 0.5 && q.y <= p.y + 0.5 && q.y + q.height >= p.y + p.height - 0.5; });
+    const lo = Math.max(0, ...holds.map((x) => posOf(x).x)), hi = Math.min(W, ...holds.map((x) => posOf(x).x + posOf(x).width));
+    const row = sibs.filter((x) => !holds.includes(x) && vOver(p, posOf(x)));
+    const left = row.filter((x) => posOf(x).x + posOf(x).width <= p.x + 0.5), right = row.filter((x) => posOf(x).x >= p.x + p.width - 0.5);
+    const roomL = Math.max(0, (left.length ? Math.min(...left.map((x) => posOf(x).x)) : p.x) - lo), roomR = Math.max(0, hi - (right.length ? Math.max(...right.map((x) => posOf(x).x + posOf(x).width)) : p.x + p.width));
+    const firstL = ctx.rtl, a1 = Math.min(grow, Math.floor(firstL ? roomL : roomR)), a2 = Math.min(grow - a1, Math.floor(firstL ? roomR : roomL));
+    const dl = firstL ? a1 : a2, dr = firstL ? a2 : a1;
+    left.forEach((x) => shift(x, -dl)); right.forEach((x) => shift(x, dr));
+    p.x = Mirror.round(p.x - dl); p.width = Mirror.round(p.width + dl + dr);
+    lines.forEach((s) => { const q = posOf(s); q.x = Mirror.round(q.x - dl); q.width = Mirror.round(q.width + dl + dr); });
+    const what = { page: safeName(at), visual: safeName(String(v.name)), kind: b.page ? 'page button' : 'button', needs: b.needW, width: p.width };
+    const moved = (dl ? left.length : 0) + (dr ? right.length : 0);
+    if (dl + dr > 0) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
+    if (p.width + 0.5 < b.needW) out.buttonsCut.push(Object.assign({}, what, { room: p.width, why: `its Arabic text needs ${b.needW} wide; its ${v.parentGroupName != null ? 'group' : 'page'} and the visuals beside it leave ${p.width}: give a shorter Arabic text, or Power BI cuts it` }));
+  });
+  return out;
+}
+// A table column with a set width (DataArcus's tables) narrower than its Arabic header (bold, + 24 a page of 1080 high:
+// the writer's cellRoom) takes the table's spare width, then width from its text columns down to their own need; a
+// number column is never narrowed. What can't fit is said.
+function fitHeaders(page, visuals, origByName, ctx, at) {
+  const out = { headers: [], headersCut: [] }, sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
+  const th = ctx.theme && isObj(ctx.theme.visualStyles) && isObj(ctx.theme.visualStyles.tableEx) && isObj(ctx.theme.visualStyles.tableEx['*']) ? ctx.theme.visualStyles.tableEx['*'] : {};
+  const first = (list, k) => (Array.isArray(list) && isObj(list[0]) ? list[0][k] : undefined);
+  visuals.forEach((v) => {
+    const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
+    const o = v.visual.objects, q = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((x) => isObj(x) && typeof x.queryRef === 'string') : [];
+    const hp = (Array.isArray(o.columnHeaders) ? o.columnHeaders : []).filter((e) => isObj(e) && !e.selector && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
+    const T = num(hp.fontSize) || +first(th.columnHeaders, 'fontSize') || +first(th.values, 'fontSize') || 10, font = (isObj(hp.fontFamily) && hp.fontFamily.expr && hp.fontFamily.expr.Literal ? String(hp.fontFamily.expr.Literal.Value).replace(/^'|'$/g, '') : '') || ctx.text.font;
+    const entry = (ref) => o.columnWidth.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === ref && isObj(e.properties) && Number.isFinite(num(e.properties.value)));
+    const widthOf = (ref) => { const e = entry(ref); return e ? num(e.properties.value) : null; };
+    const setW = (ref, w) => { entry(ref).properties.value = { expr: { Literal: { Value: w + 'D' } } }; };
+    const head = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef || '');
+    const need = (x) => Math.ceil(textWidth(head(x), T, true, font) + 24 * sc);
+    // a text column: a column of the model left-aligned in the original (DataArcus aligns its numbers right)
+    const ov = origByName[v.name], oAlign = (ref) => { const cf = ov && isObj(ov.visual) && isObj(ov.visual.objects) && Array.isArray(ov.visual.objects.columnFormatting) ? ov.visual.objects.columnFormatting : [], e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === ref && isObj(y.properties));
+      return e && e.properties.alignment && e.properties.alignment.expr ? String(e.properties.alignment.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
+    const isText = (x) => isObj(x.field) && !!x.field.Column && !/^(Right|Center)$/i.test(String(oAlign(x.queryRef) || ''));
+    const cols = q.filter((x) => (widthOf(x.queryRef) || 0) > 1);
+    const ownNeed = (x) => Math.max(need(x), Math.ceil(12 * 0.55 * T * 4 / 3 + 24 * sc));
+    let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
+    cols.filter((x) => widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
+      let short = need(x) - Math.floor(widthOf(x.queryRef)), got = 0;
+      const take = Math.min(short, Math.max(0, spare)); spare -= take; got += take; short -= take;
+      cols.filter((d) => d !== x && isText(d)).forEach((d) => { if (short <= 0) return; const give = Math.min(short, Math.floor(widthOf(d.queryRef) - ownNeed(d))); if (give > 0) { setW(d.queryRef, Math.floor(widthOf(d.queryRef)) - give); got += give; short -= give; } });
+      if (got) setW(x.queryRef, Math.floor(widthOf(x.queryRef)) + got);
+      const what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: widthOf(x.queryRef) };
+      if (got) out.headers.push(what);
+      if (short > 0) out.headersCut.push(Object.assign({}, what, { why: `its Arabic header needs ${need(x)} wide; the table's other columns can give no more (numbers are never narrowed): give a shorter Arabic name, or Power BI cuts the header` }));
+    });
+  });
+  return out;
+}
+
+// ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
+// labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
+// applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
+function buildTwin(P, labels) {
+  const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, dateTables: P.dateTables, dateColumns: P.dateColumns };
+  const TC = P.R.theme && isObj(P.R.theme.textClasses) ? P.R.theme.textClasses : {}, lab = isObj(TC.label) ? TC.label : {};
+  const ctx = { text: { labelSize: +lab.fontSize || 10, font: lab.fontFace || 'Segoe UI' }, theme: R.theme };
+  let applied = 0;
+  // the title measures: the twin's own Arabic ones, named "Title AR: ...", beside the original's (which stay as they are)
+  const tms = titleMeasuresOf(R), ext = R.ext ? JSON.parse(JSON.stringify(R.ext)) : null, rename = new Map(), written = [];
+  const taken = (entity) => { const e = ext.entities.find((x) => isObj(x) && x.name === entity), t = P.model && (P.model.tables || []).find((x) => x.name === entity);
+    return new Set([].concat((e && Array.isArray(e.measures) ? e.measures : []).map((x) => isObj(x) ? x.name : ''), t ? (t.columns || []).map((c) => c.name).concat((t.measures || []).map((c) => c.name)) : []).map((n) => String(n).toLowerCase())); };
+  tms.filter((x) => x.pd.branches && ext).forEach((x) => {
+    const ls = x.pd.branches.map((b) => (labels['titleText:' + b.template] != null ? labels['titleText:' + b.template] : null));
+    if (ls.every((l) => l == null)) return;
+    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), base = /^Title: /.test(x.name) ? 'Title AR: ' + x.name.slice(7) : 'Title AR: ' + x.name, names = taken(x.entity);
+    let name = base; for (let k = 2; names.has(name.toLowerCase()); k++) name = base + ' (' + k + ')';
+    e.measures.push(Object.assign(JSON.parse(JSON.stringify(x.measure)), { name, expression: arabicDax(x.pd, ls) }));
+    rename.set(x.entity + '\u0000' + x.name, name); written.push(safeName(x.entity + '[' + name + ']'));
+  });
+  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [] };
+  const pages = R.pages.map((pg) => {
+    let page = pg.page;
+    if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
+    // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
+    const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
+    r.visuals.forEach((vj) => {
+      applied += Mirror.labelVisual(pg.id, vj, labels);
+      const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
+      t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+        if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
+    });
+    // (the fitting reads and changes only the twin's copies)
+    if (isObj(page)) {
+      const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
+      try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
+      try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
+    }
+    return { pg, page, visuals: r.visuals };
+  });
+  const notTranslated = tms.filter((x) => !x.pd.branches).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
+  return { pages, applied, ext: written.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null };
+}
+
 // ---- the plan ----
 const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
 const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
@@ -191,6 +421,9 @@ export function planTwin(a) {
   // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
   // the plan (labelFrom) and written with it; a label given for the button wins
   texts.forEach((t) => { if (t.kind === 'button' && t.goesTo && labels[t.id] == null && labels[t.goesTo] != null) { labels[t.id] = labels[t.goesTo]; t.labelFrom = 'the approved Arabic name of the page it goes to'; } });
+  // (rc.24) a title measure's text keeps each {n} it has, once: else it is not taken, and the plan says why
+  const problems = [];
+  texts.forEach((t) => { if (t.kind === 'titleMeasure' && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).slice('titleText:'.length), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
@@ -230,16 +463,21 @@ export function planTwin(a) {
   const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
   const ref = byPathOf(R.pbir);
-  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, answer: capAnswer({
+  // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
+  const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft }, rawLabels(texts, labels));
+  if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
+  const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it.' }) } : {};
+  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, built, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}),
+    pages, mirrors, cannot, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
     texts: texts.slice(0, TEXTS_MAX).map(({ rawId, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
-    labels: { given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length },
+    labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
@@ -263,24 +501,19 @@ export function writeTwin(a, plan) {
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
   const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages });
-  const { loc, R } = P, labels = rawLabels(P.texts, P.labels);
+  const { loc, R } = P;
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   real(twinDir); real(twinPbip);
-  // everything is built in memory first; then written, each file new
-  const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false, dateTables: P.dateTables, dateColumns: P.dateColumns };
-  let applied = 0;
-  R.pages.forEach((pg) => {
+  // everything is built in memory first (the plan's own build: buildTwin); then written, each file new
+  const out = new Map(), labels = rawLabels(P.texts, P.labels);
+  let applied = P.built.applied;
+  P.built.pages.forEach(({ pg, page, visuals }) => {
     // (a page.json that is not an object is copied as it is: there is nothing to label or mirror in it)
-    if (isObj(pg.page)) {
-      const page = JSON.parse(JSON.stringify(pg.page));
-      if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; }
-      out.set(pg.rel, json(page));
-    }
-    // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
-    const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
-    r.visuals.forEach((vj, i) => { applied += Mirror.labelVisual(pg.id, vj, labels); out.set(pg.visuals[i].rel, json(vj)); });
+    if (isObj(page)) out.set(pg.rel, json(page));
+    visuals.forEach((vj, i) => out.set(pg.visuals[i].rel, json(vj)));
   });
+  if (P.built.ext) out.set(EXT, json(P.built.ext));
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
   if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(twinDir) } }], settings: { enableAutoRecovery: true } };
@@ -298,5 +531,6 @@ export function writeTwin(a, plan) {
   writeTree(loc.project, tree);
   return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
+    ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
 }
