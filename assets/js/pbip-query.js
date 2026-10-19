@@ -322,6 +322,7 @@
     if (!a || !b) return a || null;
     const ar = AR_LETTERS.test(a);
     if (ar !== AR_LETTERS.test(b)) return a;
+    if (AR_LETTERS.test(by) && !ar) return a;   // (0.3.0 R2: an Arabic report never joins two English names with "by")
     return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
   };
   // 0.3, J4 (B-130, B-131): the title says what the visual answers, from its fields' metadata (story-titles.js): its
@@ -342,8 +343,9 @@
     return null;
   }
   function bindTitle(kind, B, by) { const v = bindStory(kind, B, by); return v ? v[0].text : null; }
-  // a KPI card's title: its measure's name, its time intelligence in words (a display name stays as given)
-  const kpiLabel = (f) => (f ? Story().nameOf(f, shown) : null);
+  // a KPI card's title: its measure's name, its time intelligence in words (a display name stays as given); by: the
+  // report's word (an Arabic report keeps an English name as it is, R2)
+  const kpiLabel = (f, by) => (f ? Story().nameOf(f, shown, AR_LETTERS.test(by || '')) : null);
   const PF_KINDS = { boolean: 'boolean', string: 'text', int64: 'whole', double: 'decimal' };
   // one page filter value as Power BI writes it, by the column's type (or, with none, the value's own), or null
   const pfLiteral = (v, type) => {

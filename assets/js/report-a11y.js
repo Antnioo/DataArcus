@@ -75,12 +75,12 @@
   const isValueProj = (p) => !!(p && p.field && (p.field.Measure || p.field.Aggregation));
   // a projection's name as Power BI shows it: the display name, else the native name ("Sum of Amount"), else the field's
   // own; a measure's time intelligence in words when the story titles are loaded (as its title says it)
-  function nameOf(p) {
+  function nameOf(p, ar) {
     if (!p) return '';
     if (typeof p.displayName === 'string' && p.displayName.trim()) return shown(p.displayName);
     const f = p.field || {}, m = f.Measure, raw = p.nativeQueryRef || (m && m.Property) || (f.Column && f.Column.Property) || ((f.Aggregation || {}).Expression || {}).Column && f.Aggregation.Expression.Column.Property || '';
     const s = shown(raw);
-    return m && ST && ST.timeWords ? ST.timeWords(s) : s;
+    return m && ST && ST.timeWords ? ST.timeWords(s, ar) : s;   // (ar: an Arabic report keeps an English name as it is, R2)
   }
   const uniq = (list) => list.filter((x, i) => x && list.indexOf(x) === i);
   const and = (list, ar) => (list.length < 2 ? list[0] || '' : ar ? list.join(' و') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]);
@@ -119,7 +119,7 @@
     const ar = lang === 'ar', S = ar ? SAY.ar : SAY.en, type = String(v.visualType || ''), R = roles(v);
     const all = [].concat(...Object.values(R));
     if (!all.length) return null;
-    const names = (ps) => uniq(ps.map(nameOf));
+    const names = (ps) => uniq(ps.map((p) => nameOf(p, ar)));
     const values = names(all.filter(isValueProj)), cols = names(all.filter((p) => !isValueProj(p)));
     if (SLICERS.test(type)) return capped([S.slicer(and(names(all), ar))]);
     if (CARDS.test(type)) return values.length || cols.length ? capped([S.card(and(values.length ? values : cols, ar))]) : null;

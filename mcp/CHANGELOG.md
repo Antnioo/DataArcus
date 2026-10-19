@@ -29,6 +29,8 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - R3 A right-to-left waterfall reads from the right: the Arabic twin now mirrors a waterfall as the writer does (the
   value axis at the right, the steps reversed by the sort: the first category at the right); Power BI has no setting
   to invert a waterfall's category axis, so only its order is reversed.
+- R2, the owner's must-fix: an Arabic report from an English-named model shows no English title words; the plan pins the
+  fixed list's Arabic names and lists every field kept in English, with why, before the go.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
