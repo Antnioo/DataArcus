@@ -78,6 +78,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   "Data colours" swatch shows the written colour, with both contrasts; the refusal after a theme's report changed says
   "the model or its report changed"; an Arabic plan's sentence counts the approved Arabic names; approve_plan's "waiting"
   says a later click still counts.
+- U1: Microsoft's October 2026 update (Desktop 2.159.883.0): Microsoft's visual catalog 0.1.3 (19 Oct) now lists the
+  dropdown slicer's rounded box, so the validator checks it instead of DataArcus marking it "known"; check_report's
+  bundled schemas follow Microsoft's September (SU09) release (visualContainer 2.13.0, the version Desktop saves); the
+  list slicer's new dropdown mode is researched and not written yet (preview, not measured in Desktop).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
