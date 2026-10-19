@@ -35,6 +35,7 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   another program put at one of its names, or a link put on the way, is left and named); folders made one level at a
   time; nothing renamed over a name; `check_model_health`'s scripts and `create_report`'s format script follow the plan
   rule (the outside audit's F01-F03, F06).
+- R5 The answers file is replaced only when it is still the file DataArcus read (another program's file is left and named); a failed write names what it left and says whether the plan was used; table questions fingerprinted; stale browser answers kept until "Forget my answers".
 - R6 (the outside audit of 19 Oct, F07, F08, F09, F11, F13): the approval page shows everything the click approves, and
   the theme pins its model. A theme planned from a model pins the model and the report theme its colours come from; the
   gate refuses a model plan written without the model and the reverse; generate_theme and create_report read the model
@@ -46,6 +47,13 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   never by its title text. The wording says what the code does: DataArcus reads files on your machine to check and
   fingerprint them and never returns data values to Claude; the Theme Generator saves a logo's colours in the browser
   like any theme (the image is never uploaded or saved).
+- R7 Every privacy and safety claim re-read against the code (PRIVACY.md sentence by sentence, the READMEs, the
+  product spec, the skill, the server's instructions and tool descriptions, the approval page, the beta page in English
+  and Arabic, the Theme Generator's logo line, the site's privacy page; the evidence in `mcp/work/R7-claims.md`) and
+  made true by wording: no page says DataArcus reads no data or never overwrites without naming its own answers file;
+  the answers file's plain-text fields and unsalted hashes are said; `read_report`'s short titles are said to be
+  returned as typed (screened for instructions and length only); the files read and hashed, the temporary check copy
+  and the one log line are said. `test-release-text.mjs` checks these.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

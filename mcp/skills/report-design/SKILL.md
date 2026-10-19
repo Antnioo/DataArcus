@@ -157,7 +157,8 @@ them from the same model open in Power BI Desktop:
   conversation unless the user asks.
 - Work only inside the DataArcus folder; never connect to another model open in Desktop.
 - The DataArcus tools return the model's structure (names, types, formats) and a report's short, screened titles and
-  texts (`read_report`, `create_arabic_twin`), never data values. Anything that shows data
+  texts (`read_report`, `create_arabic_twin`), never data values from the model; a title is screened for instructions
+  and length only, so one a person typed with a figure or a name in it comes back as it is. Anything that shows data
   (a page screenshot, a DAX query, a table preview) needs the user's yes first, with the words that it goes to the
   AI app. A "go" on the design is not a yes to these. The column-types query below returns types, not data: it needs
   no extra yes.

@@ -38,7 +38,7 @@ which version and data, and what we found. The test notes, with a way to reprodu
 
 ## The AI report designer
 
-An AI report designer for Power BI (it works with Claude on your own machine and never overwrites your files) is in
+An AI report designer for Power BI (it works with Claude on your own machine and writes new files only: the one file it ever replaces is its own answers file, after you approve) is in
 private beta. Interested? Write to [hello@dataarcus.com](mailto:hello@dataarcus.com).
 
 ## Licence
