@@ -24,6 +24,7 @@ import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
+import { checkArtifact, digestOf, modelPrintOf, bindingOf } from './lib/artifact.mjs';
 import * as Plans from './lib/plans.mjs';
 import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
@@ -644,9 +645,20 @@ server.registerTool('create_report', {
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelKey(mm, a.path), reportPin(a, a.fields));
     const done = writeNative(a.customVisualsFrom, mm, p); Plans.consume(a.planId, 'create_report'); return text(done);
   }
+  // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
+  // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
+  // the write
+  const art = a.planId != null ? Plans.artifactOf(a.planId) : null;
+  return text(art ? writeApproved(a, art) : reportRun(a, 'write'));
+}));
+// create_report's one build (J14): plan_layout runs it with the plan's inputs (mode 'build': no gate; it returns the
+// files and finish, which writes them and makes the answer), create_report without an approved artifact (mode 'write':
+// its refusals as before, then "make the plan again" where it would write)
+function reportRun(a, mode) {
+  const building = mode === 'build';
   // rc.22, B-134 (the owner's rc.21 test: a missing input was told before the plan's approval): a plan that can't be used
   // yet (not approved, refused, expired, unknown) is said first, with the input problem when there is one too
-  const notReady = Plans.approvalProblem('create_report', a.planId);
+  const notReady = building ? null : Plans.approvalProblem('create_report', a.planId);
   const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
   input(!a.pages !== !a.design, 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   input(!!a.name, 'Give create_report a name for the new report (Report name).');
@@ -668,7 +680,7 @@ server.registerTool('create_report', {
     if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
   // the gate (0.2.9, P-1; audit 6, A6-1): nothing is written without an approved plan for this model, whose pinned inputs
   // (design, page, language, fields, filters, names, texts, SVG designs) are these
-  Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
+  if (!building) Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
   // Round 12 (#26): a measure that shows text ("Yes", a date) is never a KPI card, even when the plan names it: left out, and told
   const textKpis = F && F.kpis ? F.kpis.filter((k) => k.text) : [];
   if (textKpis.length) F.kpis = F.kpis.filter((k) => !k.text);
@@ -910,6 +922,9 @@ server.registerTool('create_report', {
   // (anything at a name counts, a link whose target is missing included; each file is created with 'wx')
   // (audit 6, A6-4: one writer, all or nothing: a temporary folder, moved into place when complete, the .pbip last;
   // anything at a name refuses the whole write, a link whose target is missing included)
+  // (J14: the build ends here; the write and the answer run from the approved artifact, writeApproved)
+  if (!building) throw new Error(`Nothing was written: plan ${a.planId} holds no checked report to write (plan_layout builds and checks the report before the go, and create_report writes exactly that). Make the plan again with plan_layout and the same inputs, show it to the user and wait for their go.`);
+  const finish = (planId) => {   // (the body keeps its indentation: the write and the answer, as before J14)
   writeTree(m.projectDir, r.files);
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
@@ -1061,11 +1076,40 @@ server.registerTool('create_report', {
   // formats fixed at the source: said first, with the script (the report already shows the right formats)
   const fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)));
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
-  Plans.consume(a.planId, 'create_report');   // (audit 6, A6-2: a plan writes once)
-  return text(Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
+  Plans.consume(planId, 'create_report');   // (audit 6, A6-2: a plan writes once)
+  return Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
-}));
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {});
+  };
+  return { files: r.files, finish, m };
+}
+// J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
+// compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
+// binding here), then exactly the approved bytes are written. Any change: nothing is written, the plan is made again
+function writeApproved(a, art) {
+  const notReady = Plans.approvalProblem('create_report', a.planId);
+  const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
+  input(!a.pages !== !a.design, 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
+  input(!!a.name, 'Give create_report a name for the new report (Report name).');
+  const m = loadModel(a.path);
+  { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
+  Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
+  const again = ' Make the plan again with plan_layout, show it to the user and wait for their go.';
+  if (modelPrintOf(m) !== art.modelPrint) throw new Error(`Nothing was written: the model changed since plan ${a.planId} was approved, so the report that was checked is not the one this model gives.${again}`);
+  if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw new Error(`Nothing was written: the report kept for plan ${a.planId} is not the one that was approved.${again}`);
+  return Object.assign(art.finish(a.planId), { exact: { status: art.check.status, digest: art.digest, files: art.files.length, pages: art.check.pages,
+    note: 'These are the files plan_layout built and checked before the go, written byte for byte (the digest is the plan\'s).' } });
+}
+// (J14) a proposed plan keeps its exact artifact (plans.mjs, this process only); the plan id, for the proposal
+const attached = (id, art) => { if (art) Plans.attach(id, art); return id; };
+// plan_layout's exact artifact (J14): create_report's build with the plan's inputs, checked on every page; or why not
+async function exactArtifact(ab, pin, lang) {
+  let built;
+  try { built = reportRun(ab, 'build'); } catch (e) { return null; }
+  const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
+  const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
+  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check };
+}
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
 const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a count, or a measure whose format has no decimals (or a count without a format), shows its whole number with thousand separators (179, 101,914), except an amount (a currency in its format, or a sum of money: sales, revenue, cost, budget...), which keeps automatic units with 2 decimals (EUR 54.66M; 14.81K under a million: Power BI cannot switch the units by the value without a change in the model); every other measure keeps automatic units with 2 decimals (3.43M). A measure that shows text is never put on a card.';
@@ -1300,6 +1344,22 @@ server.registerTool('plan_layout', {
       return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
+  // J14 (0.3, B-168): the exact artifact: the report create_report will write (every page, the tooltip pages, page
+  // filters, display names, number formats, SVG measures), built by create_report's own build with this plan's inputs
+  // and checked on every page (lib/artifact.mjs); a blocked check gives no plan id, an approved plan writes exactly these
+  // bytes. The design lint above stays the plan's view of its first page
+  const planPin = model && a.customVisualsFrom == null ? reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) : null;
+  let exact = null;
+  if (planPin && !planProblems.length) {
+    const ab = Object.assign({}, withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), { fields: a.planFields, planId: null }, planPin.design ? { design: planPin.design } : {});
+    exact = await exactArtifact(ab, planPin, a.lang);
+    if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
+  }
+  const exactCheck = !planPin ? {} : { exactCheck: exact ? Object.assign({}, exact.check, { digest: exact.digest,
+    sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.`
+      : exact.check.status === 'incomplete' ? `Tell the user: not every check could run on the report this plan writes (notRun), so it is not known to be clean. create_report still writes exactly the files that were checked.`
+        : 'The report this plan writes fails its check (blocking): no plan id. Change the plan.' })
+    : { status: 'notBuilt', why: planProblems.length ? 'the plan is outside the tools\' limits (planProblems)' : 'create_report would refuse these inputs (call it to see why): nothing to check, and no plan can be written from them' } };
   // rc.22, B-140 (the owner's rc.21 test: the approved column chart was written as a bar chart): the plan's slots get the
   // kind the writer gives them (its own rules, on the page the lint built as create_report writes it), so what is
   // approved is what is written. (rc.24: the lint runs before the plan is proposed, so the plan's data carries the
@@ -1311,11 +1371,11 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, exact ? { exact: { status: exact.check.status, digest: exact.digest } } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => ({ role: x.role, layout: x.from, written: x.to })), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut. Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, kindChanges, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {

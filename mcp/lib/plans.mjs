@@ -59,6 +59,9 @@ export function approve(id, by) {
   if (p.status === 'approved') throw new Error(`Not approved again: plan ${p.id} is already approved (an approval is given once, and a plan is good for ${Math.round(TTL / 60000)} minutes from its proposal). Use it, or make a new plan.`);
   if (by !== 'user-in-browser' && by !== 'user-in-app') throw new Error('Not approved: only the person approves a plan, by a click on Approve in DataArcus\'s approval window (or in the app\'s own prompt).');
   p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by;
+  // (J14, B-168) the approval holds the binding of the exact artifact the person saw: its files' digest, the plan's pins
+  // and the model's print
+  const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;
   return approval(p.id);
 }
 
@@ -138,4 +141,15 @@ export function gate(tool, id, model, pin, opts) {
 export function pinned(id, tool, key) { const p = plans.get(String(id)), w = p && p.data && p.data.pins && p.data.pins[tool]; return w ? w[key] : undefined; }
 
 /** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
-export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } }
+export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } artifacts.delete(String(id)); }
+
+// J14 (0.3, B-168): the exact artifact of a report plan: the files plan_layout built and checked, kept in this process
+// only (never in the plan's data, never written before the go), with their digest, the binding and the check. The newest
+// ARTIFACTS_MAX are kept; a plan whose artifact was dropped is made again.
+const artifacts = new Map(), ARTIFACTS_MAX = 64;
+/** Keeps a proposed plan's artifact: { files, digest, binding, modelPrint, check, finish }. */
+export function attach(id, art) { if (!plans.has(String(id))) return; artifacts.set(String(id), art); while (artifacts.size > ARTIFACTS_MAX) artifacts.delete(artifacts.keys().next().value); }
+/** A live plan's artifact, or null. */
+export function artifactOf(id) { const p = plans.get(String(id)); return p && alive(p) ? artifacts.get(p.id) || null : null; }
+/** The binding the approval recorded (null before the approval, or for a plan with no artifact). */
+export function approvedBinding(id) { const p = plans.get(String(id)); return (p && p.approvedBinding) || null; }
