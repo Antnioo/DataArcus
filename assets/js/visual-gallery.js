@@ -23,7 +23,7 @@
   const Q = node ? require('./pbip-query.js') : root.DAPbipQuery;
   // the story titles (0.3 J4, a separate draft) are optional: with them a measure's name is said as its title says it
   const ST = () => { if (!node) return root.DAStoryTitles || null; try { return require('./story-titles.js'); } catch (e) { return null; } };
-  const { proj, q, sorted, isTime, catKind, label, byTitle, AR_LETTERS, bool, num, str, isValue, shown } = Q;
+  const { proj, q, sorted, isTime, catKind, label, byTitle, AR_LETTERS, bool, num, str, isValue, shown, lineStyle } = Q;
 
   const KINDS = Object.freeze({
     combo: { visualType: 'lineClusteredColumnComboChart', fallback: 'line' },
@@ -192,8 +192,8 @@
     if (kind === 'combo') {
       // one shared axis, always (0.3.0 D2, C13: a combo in two units is two panels; secShow, "Show secondary", off)
       va.secShow = bool(false);
-      // the line 3 wide, as the writer's line charts (P2)
-      out.lineStyles = obj({ strokeWidth: num(3) });
+      // the line as the writer's line charts: 3 wide (P2), smooth with a dot on each point unless ctx.smooth is false (L1)
+      out.lineStyles = obj(lineStyle(c.smooth !== false));
     }
     if (c.grid) va.gridlineColor = color(c.grid);
     // a right-to-left report: the value axis on the right (the waterfall has no invertAxis on its category axis: its
@@ -308,7 +308,7 @@
 
   // the formatting objects and properties written per kind, for the tests to check against Microsoft's capabilities
   const WRITES = Object.freeze({
-    lineClusteredColumnComboChart: { roles: ['Category', 'Y', 'Y2'], objects: { valueAxis: ['secShow', 'gridlineColor', 'switchAxisPosition'], lineStyles: ['strokeWidth'], categoryAxis: ['invertAxis'] } },
+    lineClusteredColumnComboChart: { roles: ['Category', 'Y', 'Y2'], objects: { valueAxis: ['secShow', 'gridlineColor', 'switchAxisPosition'], lineStyles: ['strokeWidth', 'lineChartType', 'interpolationSmooth', 'showMarker', 'markerShape', 'markerSize'], categoryAxis: ['invertAxis'] } },
     waterfallChart: { roles: ['Category', 'Y'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'] } },
     clusteredColumnChart: { roles: ['Category', 'Y', 'Rows'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'], categoryAxis: ['invertAxis'] } }
   });
