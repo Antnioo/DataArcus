@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
-import { freeFile } from './lib/files.mjs';
+import { freeFile, withPlan } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
@@ -34,7 +34,7 @@ const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../asse
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 import { Memory, answerKey, answersName, readAnswers, writeAnswers } from './lib/answers.mjs';
-import { writeTree, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
+import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
 // the version is in one place: mcp/package.json
@@ -670,7 +670,7 @@ server.registerTool('create_report', {
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
-    const done = writeNative(a.customVisualsFrom, mm, p); Plans.consume(a.planId, 'create_report'); return text(done);
+    return text(withPlan(a.planId, 'create_report', () => writeNative(a.customVisualsFrom, mm, p)));
   }
   // rc.22, B-134 (the owner's rc.21 test: a missing input was told before the plan's approval): a plan that can't be used
   // yet (not approved, refused, expired, unknown) is said first, with the input problem when there is one too
@@ -943,7 +943,8 @@ server.registerTool('create_report', {
   let projectCheck = null;
   try { projectCheck = checkSummary(checkFiles(r.files.filter((f) => /^[^/]+\.Report\//.test(f.path)), m, a.lang)); }
   catch (e) { projectCheck = { notChecked: 'the check could not read this project: ' + String(e && e.message || e).slice(0, 160) }; }
-  writeTree(m.projectDir, r.files);
+  // (0.3, B-153: the plan is used the moment the tree is in place, or left unused when a failed write left nothing)
+  withPlan(a.planId, 'create_report', () => writeTree(m.projectDir, r.files));
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid
@@ -1095,7 +1096,6 @@ server.registerTool('create_report', {
   // formats fixed at the source: said first, with the script (the report already shows the right formats)
   const fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)));
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
-  Plans.consume(a.planId, 'create_report');   // (audit 6, A6-2: a plan writes once)
   return text(Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, projectCheck ? { check: Object.assign({ tellUser: 'Checked before it was written (the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.' }, projectCheck) } : {}, extra, { panels },
     // (0.3.0) the phone layout: written for every page unless the design says phoneLayout false
     { phone: phoneAnswer(r.files.some((f) => /\/mobile\.json$/.test(f.path))) },
@@ -1183,9 +1183,8 @@ server.registerTool('generate_theme', {
       plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, null, inputsPin(a));
-  const file = freeFile(a.folder, fileBase(design.name), '.json');
-  writeNew(file, JSON.stringify(buildTheme(design, a.lang), null, 2)); noteWritten(file);
-  Plans.consume(a.planId, 'generate_theme');
+  // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)
+  const file = withPlan(a.planId, 'generate_theme', () => { const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
 }));
 
@@ -1412,7 +1411,7 @@ server.registerTool('add_gulf_calendar', {
   // the script's place, as check_model_health's fix scripts: next to the project, never inside the model folder
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
-  if (write) { const done = addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase }); Plans.consume(a.planId, 'add_gulf_calendar'); return text(done); }
+  if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase })));
   const named = (dir, base) => path.join(dir, base + '.tmdl');
   const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
@@ -1437,7 +1436,7 @@ server.registerTool('create_arabic_twin', {
 }, safe(async (a) => {
   if (a.labels && Object.keys(a.labels).length > 400) throw new Error('At most 400 labels in one plan.');
   const key = twinKey(a.path);
-  if (a.planId != null && a.planId !== '') { const done = writeTwin(a, Plans.gate('create_arabic_twin', a.planId, key)); Plans.consume(a.planId, 'create_arabic_twin'); return text(done); }
+  if (a.planId != null && a.planId !== '') { const P = Plans.gate('create_arabic_twin', a.planId, key); return text(withPlan(a.planId, 'create_arabic_twin', () => writeTwin(a, P))); }
   const P = planTwin(a);
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
