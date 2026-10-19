@@ -32,7 +32,7 @@ function build(a, o) {
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
   if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
-  const specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel });
+  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel });
   // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
   // A3-2: the picker keeps them, so nothing is rebuilt here)
   const n = Math.max(1, ...specs.map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
@@ -43,6 +43,10 @@ function build(a, o) {
   // (o.names: the plan's display names on the bound fields, as create_report puts them; the lint's page reads none)
   const names = new Map(Object.entries(o.names || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? [Bind.fieldKey(mk[1], mk[2]), String(v)] : null; }).filter(Boolean));
   if (names.size) bind = Bind.mapFields(bind, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m); return names.has(k) ? Object.assign({}, f, { name: names.get(k) }) : f; });
+  // (0.3, J4, B-130: the planned page showed cards titled "KPI 2", "KPI 3", "KPI 4" on a model with one measure) the cards
+  // the binding can fill, as create_report caps them (maxKpis): a card is never planned without its measure
+  const filled = (bind.kpis || []).filter(Boolean).length;
+  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel }); }
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   const pages = (o.second ? specs : specs.slice(0, 1)).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
@@ -75,7 +79,11 @@ export function planLint(a) {
   const measures = mt.flatMap((t) => (t.measures || []).map((x) => ({ table: t.name, name: x.name, expression: x.expression, formatString: x.formatString })));
   const aggregation = Agg.guard(inv.pages[0] || { visuals: [] }, { measures, tables: mt });
   const ans = Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
-  return Object.defineProperty(ans, 'aggregation', { value: aggregation, enumerable: false });
+  // (0.3, J4) the planned page's visual titles as written (the full title, its alt text), kept off the answer as kinds is
+  const page0 = b.r.files.filter((f) => /\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(f.path) && f.path.includes('/pages/' + (inv.pages[0] || {}).id + '/'));
+  const titles = page0.map((f) => { try { const v = JSON.parse(f.data).visual || {}, g = (((v.visualContainerObjects || {}).general || [])[0] || {}).properties || {}, t = (((v.visualContainerObjects || {}).title || [])[0] || {}).properties || {};
+    return t.show && t.show.expr && t.show.expr.Literal.Value === 'true' && g.altText ? String(g.altText.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; } catch (e) { return null; } }).filter(Boolean);
+  return Object.defineProperty(Object.defineProperty(ans, 'aggregation', { value: aggregation, enumerable: false }), 'titles', { value: titles, enumerable: false });
 }
 
 // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the pages of the plan as the shared renderer draws
