@@ -785,17 +785,24 @@ export default async function ({ browser, url }) {
       check(labels.length === 2 && (lang === 'en' ? labels.includes('intended:Yes, intended') && labels.includes('mistake:No, a mistake') : labels.includes('intended:نعم، مقصود') && labels.includes('mistake:لا، خطأ'))
         && !after.includes('[Units Doubled]') && after.includes('[Amount Doubled]') && answered.length === 1 && answered[0].includes('[Units Doubled]'), `${tag}: answered: ${JSON.stringify({ labels, after, answered })}`);
       const stored = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).map((k) => [k, localStorage.getItem(k)]));
-      check(stored.length === 1 && /^dataarcus-mh-answers:[0-9a-f]{64}$/.test(stored[0][0]) && !/SUM|Qty|Sales/.test(stored[0][1]) && JSON.parse(stored[0][1]).length === 1 && JSON.parse(stored[0][1])[0].by === 'user',
+      check(stored.length === 1 && /^dataarcus-mh-answers:[0-9a-f]{64}$/.test(stored[0][0]) && !/SUM|Qty|Sales|Units Doubled|duplicateAggregate/.test(stored[0][1]) && JSON.parse(stored[0][1]).length === 1 && JSON.parse(stored[0][1])[0].by === 'user',
         `${tag}: stored per model, hashes and the answer only: ${JSON.stringify(stored)}`);
       v.pg.off('request', onReq);
-      // the same model again (a new page): not asked again; the DAX changed: asked again
+      // the same model again (a new page): not asked again; the DAX changed: asked again, the old answer kept and marked
+      // as no longer applying (R5, F12: nothing is deleted without the click on "Forget my answers")
       await open(f1);
       const again = await qs();
       await open(f2);
-      const changed = await qs(), dropped = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).length);
-      check(!again.includes('[Units Doubled]') && again.includes('[Amount Doubled]') && changed.includes('[Units Doubled]') && dropped === 0, `${tag}: reused, then asked again (and the old answer dropped) after the DAX changed: ${JSON.stringify({ again, changed, dropped })}`);
-      // forget: every answer this browser holds is gone, the question is back
+      const changed = await qs(), kept = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).map((k) => JSON.parse(localStorage.getItem(k)).length));
+      const staleNote = await v.pg.$eval('#mhStale', (x) => x.textContent).catch(() => '');
+      check(!again.includes('[Units Doubled]') && again.includes('[Amount Doubled]') && changed.includes('[Units Doubled]') && JSON.stringify(kept) === '[1]'
+        && (lang === 'en' ? /1 earlier answer no longer applies.*Forget my answers/.test(staleNote) : /لم تعد تنطبق.*انسَ إجاباتي/.test(staleNote)), `${tag}: reused, then asked again after the DAX changed, the old answer kept and marked: ${JSON.stringify({ again, changed, kept, staleNote })}`);
+      // the DAX back as it was: the kept answer applies again
       await open(f1);
+      const restored = await qs();
+      check(!restored.includes('[Units Doubled]'), `${tag}: the DAX back as it was: the kept answer applies again: ${JSON.stringify(restored)}`);
+      // forget: every answer this browser holds is gone, the question is back
+      await open(f2);
       v.pg.on('request', onReq);
       await v.pg.click('.mh-q[data-q*="Units Doubled"] [data-qanswer="mistake"]');
       const mistake = await v.pg.$$eval('#mhAnswered li', (x) => x.map((l) => l.textContent));

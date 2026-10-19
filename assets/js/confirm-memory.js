@@ -1,8 +1,10 @@
 // "Please confirm" answers remembered (B-148, 0.3): an answer to one of the Health Check's questions (the engine's
 // confirm[]) is reused while the metadata the question was based on is unchanged, and the question comes back when it
 // changes. Shared by the website (answers in the visitor's browser only) and the MCP (a file next to the model, written
-// only through the approval gate). A record holds hashes and the answer, never DAX text or data:
-//   { questionId, object, answer, evidenceSignature, at, by: 'user' }
+// only through the approval gate). A record holds hashes, the answer and its date, never a name, DAX text or data:
+//   { questionHash, objectHash, answer, evidenceSignature, at, by: 'user' }
+// (R5, 0.3.0: the question's id and its object are hashed too; a record written before, with them in plain text, is read
+// and held hashed from then on. A stale answer is kept, not applied, until the person forgets their answers.)
 // No network: nothing here sends or loads anything.
 (function (root, factory) {
   const api = factory();
@@ -67,9 +69,17 @@
 
   /** The evidence signature of a question: a SHA-256 of the metadata it was based on. A measure's question: its id and
    *  object, a hash of its DAX piece, the measure's DAX text hash, format string, table and measure names. A
-   *  relationship's: its four columns, the candidate column and their types. The texts are hashed, never kept. */
+   *  relationship's: its four columns, the candidate column and their types. An unrelated table's (R5): the table, the
+   *  key column and the other table's key with their types; a date table's date columns. The texts are hashed, never kept. */
   function signature(q, rawTables) {
     let parts;
+    if (q.table) {
+      const t = q.table, raw = (rawTables || []).find((x) => lc(x.name) === lc(t.name));
+      const dates = raw ? (raw.columns || []).filter((c) => String(c.dataType) === 'dateTime').map((c) => String(c.name)).sort() : ['missing'];
+      parts = ['table', q.id, q.obj, t.looksLike, t.name, t.column || '', t.column ? columnType(rawTables, t.name, t.column) : '',
+        t.otherTable || '', t.otherColumn || '', t.otherColumn ? columnType(rawTables, t.otherTable, t.otherColumn) : ''].concat(t.looksLike === 'date' ? dates : []);
+      return sha256(JSON.stringify(['b148-table-v1'].concat(parts)));
+    }
     if (q.relationship) {
       const r = q.relationship;
       parts = ['rel', q.id, q.obj, r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.candidateColumn,
@@ -86,31 +96,47 @@
     return sha256(JSON.stringify(['b148-model-v1'].concat((rawTables || []).map((t) => String(t.name)).sort())));
   }
 
+  // the question's id and its object, hashed (R5): a record names nothing of the model
+  const questionHash = (id) => sha256(JSON.stringify(['b148-question', String(id)]));
+  const objectHash = (obj) => sha256(JSON.stringify(['b148-object', String(obj)]));
+
   /** A new answer record for a question. answer: 'intended' or 'mistake'; at: an ISO date (default now). */
   function record(q, answer, rawTables, at) {
     if (!ANSWERS.includes(answer)) throw new Error('An answer is "intended" or "mistake".');
-    return { questionId: String(q.id), object: String(q.obj), answer, evidenceSignature: signature(q, rawTables), at: at || new Date().toISOString(), by: 'user' };
+    return { questionHash: questionHash(q.id), objectHash: objectHash(q.obj), answer, evidenceSignature: signature(q, rawTables), at: at || new Date().toISOString(), by: 'user' };
   }
 
+  const HEX = /^[0-9a-f]{64}$/;
+  const keysAre = (r, k) => JSON.stringify(Object.keys(r).sort()) === JSON.stringify(k);
   /** A record as this module writes it, nothing more (a file or the browser's storage can hold anything). */
   function valid(r) {
-    return !!r && typeof r === 'object' && !Array.isArray(r) && JSON.stringify(Object.keys(r).sort()) === '["answer","at","by","evidenceSignature","object","questionId"]'
-      && typeof r.questionId === 'string' && typeof r.object === 'string' && ANSWERS.includes(r.answer) && /^[0-9a-f]{64}$/.test(r.evidenceSignature)
+    return !!r && typeof r === 'object' && !Array.isArray(r) && keysAre(r, ['answer', 'at', 'by', 'evidenceSignature', 'objectHash', 'questionHash'])
+      && HEX.test(r.questionHash) && HEX.test(r.objectHash) && ANSWERS.includes(r.answer) && HEX.test(r.evidenceSignature)
       && typeof r.at === 'string' && r.at.length <= 40 && r.by === 'user';
+  }
+  /** A record written before R5 (questionId and object in plain text), as it is held now: hashed. Anything else as it is. */
+  function upgrade(r) {
+    if (!r || typeof r !== 'object' || Array.isArray(r) || !keysAre(r, ['answer', 'at', 'by', 'evidenceSignature', 'object', 'questionId'])
+      || typeof r.questionId !== 'string' || typeof r.object !== 'string') return r;
+    return { questionHash: questionHash(r.questionId), objectHash: objectHash(r.object), answer: r.answer, evidenceSignature: r.evidenceSignature, at: r.at, by: r.by };
   }
 
   /** The questions with the answers given before. ask: the questions still to ask (each with its signature);
    *  answered: [{ question, record }] whose signature matches; keep: the records still good; stale: the records no
-   *  question of this model matches now (its metadata changed, or the object is gone), to drop. */
+   *  question of this model matches now (its metadata changed, or the object is gone): not applied, and kept until the
+   *  person forgets their answers (kept(a) is both). */
   function apply(questions, records, rawTables) {
-    const recs = (records || []).filter(valid), used = new Set(), ask = [], answered = [];
+    const recs = (records || []).map(upgrade).filter(valid), used = new Set(), ask = [], answered = [];
     for (const q of questions || []) {
-      const sig = signature(q, rawTables), i = recs.findIndex((r, k) => !used.has(k) && r.evidenceSignature === sig && r.questionId === q.id && r.object === q.obj);
+      const sig = signature(q, rawTables), qh = questionHash(q.id), oh = objectHash(q.obj);
+      const i = recs.findIndex((r, k) => !used.has(k) && r.evidenceSignature === sig && r.questionHash === qh && r.objectHash === oh);
       if (i >= 0) { used.add(i); answered.push({ question: Object.assign({}, q, { signature: sig }), record: recs[i] }); }
       else ask.push(Object.assign({}, q, { signature: sig }));
     }
     return { ask, answered, keep: recs.filter((r, k) => used.has(k)), stale: recs.filter((r, k) => !used.has(k)) };
   }
+  /** Every record an apply() result holds: the ones in use and the stale ones (nothing is dropped but by forget()). */
+  const kept = (a) => a.keep.concat(a.stale);
 
   // The browser's own storage, one entry per model fingerprint. Nothing leaves the browser. Every read and write is
   // guarded (a private window, blocked storage): without storage the answers last until the page is closed.
@@ -119,7 +145,7 @@
   const memory = {};
   function load(fp) {
     const s = store();
-    try { const v = s ? JSON.parse(s.getItem(PREFIX + fp) || '[]') : memory[fp] || []; return Array.isArray(v) ? v.filter(valid) : []; } catch (e) { return memory[fp] || []; }
+    try { const v = s ? JSON.parse(s.getItem(PREFIX + fp) || '[]') : memory[fp] || []; return Array.isArray(v) ? v.map(upgrade).filter(valid) : []; } catch (e) { return memory[fp] || []; }
   }
   function save(fp, records) {
     const list = (records || []).filter(valid), s = store();
@@ -133,5 +159,5 @@
     try { if (!s) return; const keys = []; for (let i = 0; i < s.length; i++) { const k = s.key(i); if (k && k.startsWith(PREFIX)) keys.push(k); } keys.forEach((k) => s.removeItem(k)); } catch (e) { /* nothing stored */ }
   }
 
-  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, apply, load, save, forget };
+  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget };
 });
