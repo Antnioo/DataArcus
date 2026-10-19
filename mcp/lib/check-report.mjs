@@ -25,7 +25,7 @@ const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = '8db0a64';
 const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
-const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
+export const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'a11y', 'lint'];
 
 // ---- untrusted text: the reading layer's rules (lib/read-report.mjs), one copy ----
@@ -47,7 +47,7 @@ const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(St
 // (A4-2, audit 4: a value that is not the object or list a rule expects, as null or a string, is read as none, never a crash)
 const arr = (v) => (Array.isArray(v) ? v : []);
 // (0.3.0 step 2: the one copy is the shared check's, assets/js/layout-check.js)
-const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the reading block's one custom-visual test)
+export const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the reading block's one custom-visual test)
 
 // ---- the bundled schemas ----
 let AJV = null;

@@ -5,6 +5,8 @@
 // writer's own fixes for O-3, O-4, O-6, O-13, O-14), the lint of the plan follows without a change here.
 // What is not the same as create_report's report: number formats, Arabic display names, SVG measures and page filters
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
+// (0.3, J14: the plan's gate is the exact check, lib/artifact.mjs: create_report's own build, every page and everything
+// above included, the bytes create_report writes. This lint stays the plan's view of its first page, and its kinds.)
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);

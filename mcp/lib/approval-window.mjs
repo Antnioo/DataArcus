@@ -201,6 +201,10 @@ export function summary(kind, data) {
     const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
     if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
     if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
+    // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click
+    const NC = { validator: 'Microsoft\'s validator', references: 'Fields against the model', rules: 'Measured rules', lint: 'Layout check' };
+    const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
+    if (nc.length) sections.unshift({ heading: 'Not checked before writing', rows: nc.map((n) => [NC[n.check] || 'A check', `not run: ${String(n.why || '')}. The rest of the report was checked (all ${d.exact.pages || 'its'} pages).`]) });
     return Object.assign(T, { sections });
   }
   // (0.3, J13 redesign step 2; the laptop's PROOF-rc24 block 2 (b): step 1's page showed the plan's fields, not what was

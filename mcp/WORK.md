@@ -49,6 +49,57 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
   (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J14" just below (branch `feat/0.3-exact-artifact`, one draft PR), then "0.2.9.1" just below (branch `fix/0.2.9.1`, one PR to main); before it "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J14: check the exact artifact before writing (19 Oct, cloud builder; branch `feat/0.3-exact-artifact` from main `d76703c`; ONE DRAFT PR, merges only after 0.2.9 testers report)
+Backlog B-168 (outside design card C01), the reviewer's brief under the owner's go for 0.3 R&D.
+- Problem: plan_layout's lint (lib/plan-lint.mjs) builds its own variant of the report in memory and lints page 1 only,
+  without number formats, Arabic display names, SVG measures, page filters; create_report rebuilds at write time (new
+  random page and visual ids), so what was checked is never byte-for-byte what is written.
+- Draft #38 (feat/0.3.0-check, stacked on #37) already: the measured rules + the layout lint on the project in memory
+  (assets/js/layout-check.js), shown before Approve and returned by create_report as `check`; it reports only, never
+  holds a write back, runs no validator, binds nothing to the approval, and create_report still rebuilds.
+- Plan (built beside #38, main has neither #37 nor #38): (1) create_report's build becomes one function (`reportRun`,
+  server.mjs) used by plan_layout (mode build) and create_report; (2) `lib/artifact.mjs`: the digest, the model print
+  (B-154's `m.print` when #58 is in, else a hash of the model as read), the binding, and `checkArtifact`: Microsoft's
+  validator offline on the exact bytes (a private folder in the OS temp, never the user's folder, removed at once), the
+  references to the model (REF_UNRESOLVED), the measured rules, the lint, for every page; a check that could not run =>
+  `incomplete`; validator errors, unresolved references, rule errors => `blocked` (no plan id); (3) the plan keeps the
+  built files in memory (plans.mjs `attach`), the approval records the binding (digest + pin + model print); (4)
+  create_report with an approved artifact rechecks the model print and the binding, then writes exactly those bytes; a
+  change => "Nothing was written ... make the plan again"; no artifact => it refuses at the write; (5) the answers carry
+  counts, rule ids, relative paths and the digest only.
+- Expected (written before any run): test-j14-exact 25 checks, 20 red on main d76703c (E-1, E-5, E-8, E-11, E-18 green:
+  they hold today); all 25 green after. Every other suite: same counts as main (the golden baseline unchanged; G-13 0
+  reports with errors).
+- **Done** (`62274eb` red tests, `38a18e4` the build, `c527464` the writer fix): test-j14 27/27 (20 red before, as
+  expected; E-23/E-24 added red after the full run found the donut bug). Full run on Linux (5 shards as CI): test.mjs
+  32 + 584 + 620 + 332 = 1568, G-13 249 reports, 0 with errors; shard 0 all PASS (release-text 4, v029c 36, d 21, e 21,
+  f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51, rc24 28, j14 27). Website 19/19 suites,
+  check:min, site config pass.
+- Found by the exact check (first full run, sweep D11): a column chart turned donut by the two-valued rule kept the
+  bar's `valueAxis` (show false): Microsoft's validator error PBIR_FORMATTING_OBJECT_UNKNOWN, impact canBreak; fixed
+  in assets/js/pbip-page.js (only a bar gets it). Main writes it today (0.2.9 too).
+- Decisions I made: the validator runs on a private copy in the OS temp folder (it reads only folders), never in the
+  user's folder, deleted at once; blocking = validator errors after the known gaps, unresolved references, rule errors
+  (warnings, notes and lint findings are counted only); a plan whose build fails gets its plan id as before and
+  create_report gives the same refusal (and "make the plan again" if it would write); a given design is built as
+  given (keeps the small-page note), else the pinned design; designLint (page 1, kinds) stays as it is; the native
+  copy (customVisualsFrom) is outside J14; the model print is #58's `m.print` when that lands, else a hash of the
+  model as read; artifacts live in memory, newest 64.
+- Seen, not in scope: the format script (formats.scriptAfterGo) is still made at the write, outside the digest; the
+  report's name is fixed at plan time, so a report written under that name between plan and write makes the write
+  refuse ("already there") instead of taking a free name; the approval window does not show exactCheck yet (#38 adds
+  its "Checked before writing" section there); layouts suite's known defect (8 reports, lint labels) as on main.
+- The owner's decision (19 Oct, via the reviewer, "agree"): when Microsoft's validator or the reference check did not
+  run, no plan id; when only a size cap skipped part of the check (a file over the 8 MB it reads, e.g. a background up
+  to 10 MB), the plan keeps its id and the approval page lists what was not checked, above Approve. Done: `c9ee2a6`
+  (F-1, F-2, F-3 red first; E-16 replaced by F-1 as decided), `7b4006d` the build: test-j14 30/30; full run 5 shards:
+  test.mjs 1568, G-13 249 reports 0 with errors, shard 0 all PASS (j14 30). Rules or lint not run: incomplete, the plan
+  keeps its id, listed on the approval page too (the decision names only the validator and the references).
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 testers report.
 
 ## 0.2.9.1: two fixes after 0.2.9 shipped (19 Oct, cloud builder; branch `fix/0.2.9.1` from main `d76703c`; one PR, not merged)
 The reviewer's brief (19 Oct): one normal PR, only these two fixes (no 0.3 code; drafts #37-#69 stay out). Test first:
