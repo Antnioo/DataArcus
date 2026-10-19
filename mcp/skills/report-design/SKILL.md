@@ -161,6 +161,9 @@ them from the same model open in Power BI Desktop:
   never a second axis; small multiples are one measure by a category, a panel per member of a second category with few
   members. Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
   fit), and say the preview draws them as placeholders.
+- **Line charts are smooth by default** (`smoothLines`, pinned by the plan): monotone curves that never swing past the
+  data, with a dot on each point so every value stays findable; the line of a combo too. Pass `smoothLines: false`
+  (straight, no dots) for a jagged series where every swing matters (daily stock, a sensor), and say it in the plan.
 - **Look options** (`slicerStyle`, `grid` in `plan_layout` and `create_report`; the plan pins them, show them with the
   plan): `slicerStyle: "pills"` writes Power BI's button slicer (rounded buttons on one row, a calm fill, the selected
   one in the accent) for a field whose 2-6 values the model's metadata makes known (true/false, a quarter, a calculated
