@@ -35,6 +35,9 @@ The owner's go (18 Oct, 0.3 R&D). Microsoft's "Design Power BI reports for acces
 - Shared files touched: pbip-export.js (2 calls), pbip-notes.js (`a11y` in the result), report-rules.js (rules, guide
   source, per-finding severity), server.mjs (check_report's checks description, one create_report note),
   check-report.mjs (CHECKS, page json, notChecked line, the dataarcusRule sentence), theme-generator.js (BUILDER + ?v=).
+- Runs (Linux, b1f5073): npm test all PASS (release-text 4, mcp 1569, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks
+  unchanged, fuzz 8199, layouts 226, rc22 26, rc23 51, a11y 121); website site 463, theme-generator 894, -lab 894, pbip
+  85, design-engine 598; check-min, test-site-config, csp, ar-pages PASS. Validator 0 errors on the written reports (W5).
 - Not yet seen in Desktop: the alt texts in the Selection pane / a screen reader, and the tab order after the decorative
   stops left it (the next laptop round).
 
