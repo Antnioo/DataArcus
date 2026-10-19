@@ -37,7 +37,8 @@ report title, the KPI value's side on Arabic pages).
   writer's bar, or the preview's own line when there is none); the card's value rect (`kv`) at its written side.
 - **Tests (Linux):** fidelity 0 -> 38 (27 of the first 37 red on #37's code; 1 added after: the planned dense table
   fits, see the decision below); preview 71, approval 28 unchanged; website pbip 92 and theme-generator 894 PASS; site
-  config, check:min PASS. Full npm test: see the PR.
+  config, check:min PASS. Full `cd mcp && npm test` all PASS (mcp 1577, v029c/d/e/f/g 36/21/21/20/21, golden 12
+  unchanged, fuzz 8199, layouts 226, rc22 26, preview 71, fidelity 38).
 - **Decisions made:** (1) the dense table: today's writer writes 3 of the 4 asked columns in a 507 slot at 10pt
   (106 + 94 + 217 = 417 of 471): not cut, so not flagged; the laptop's 4-column table needs 610 of 471 and is flagged
   (the test uses the dense page with the laptop's 4 columns). Ask the laptop which file its export came from.
