@@ -1,8 +1,32 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R3" just below (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R4" just below (branch `fix/0.3.0-write-safety`, PR into release/0.3.0); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
+The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
+integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,
+write-io.mjs writeFileNew) with no check it is still what this call created; F02 freeFile snapshots missing folders, then a
+recursive mkdir, and counts all as created (another program's folder can be removed; a half-way mkdir failure leaves folders);
+F03 placeFile's no-hard-link fallback and writeTree's folder placement are check-then-rename (can replace); F06 check_model_health's
+scripts/answers and create_report's format script are written outside withPlan. Another builder has fix/0.3.0-answers-safety
+(lib/answers.mjs): this branch stays out of it (writeAnswers is only called through the plan policy).
+- Plan: (1) each created file's identity from its own handle (open 'wx', fstat dev+ino bigint, size after the write); each
+  created folder's from lstat right after its own mkdir. Cleanup lstats each path: removed only when it (and every folder this
+  call made on the way to it) still has its recorded identity and its real parent is inside the working folder; else left and
+  named in `left.foreign` ("not created by this call, or replaced since"). (2) freeFile makes folders one level at a time,
+  non-recursive io.mkdirSync; EEXIST = not ours; a failure half-way removes what it made and throws writeFailed. (3) No
+  check-then-rename anywhere: writeFileNew links its temporary file into place, and with no hard links writes straight to the
+  name with 'wx'; writeTree writes straight into place (each folder by an exclusive mkdir, each file 'wx', .pbip files last:
+  Desktop opens a project by its .pbip), no temporary folder, nothing renamed. (4) files.mjs `planWrites(planId, tool)`: the
+  withPlan policy for a tool whose writes are answer fields (each step through it; the plan stays unused only when every
+  write that failed left nothing and nothing was written); check_model_health's scripts and answers file go through it and the
+  answer says `planUse` when a write failed; create_report's format script is written inside its withPlan, after the tree;
+  a script's failure is said with the write's own message (the exact leftovers).
+- Test first: `mcp/test-0.3.0-write-safety.mjs` (in npm test), 32 checks, **21 red on release/0.3.0 1ae53f3** (S1 3, S2 2, S3 1,
+  S4 2, S5 2, S6 1, S7 2, S8 1, H1 2, H2 2, H3 2, C1 1). Expected after: 32/32; test-partial-writes 37, test-z unchanged; the
+  full `npm test` all PASS with the same counts as release/0.3.0.
 
 ## R3: a right-to-left waterfall reads from the right (19 Oct, cloud builder; branch `fix/0.3.0-waterfall-rtl` from `release/0.3.0`; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct, the owner's must-fix: in an Arabic report the waterfall did not switch direction). Another
