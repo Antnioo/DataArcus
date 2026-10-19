@@ -255,7 +255,15 @@
         const vh = Math.min(ib.h * 0.8, v.valueSize ? +v.valueSize * 4 / 3 * 0.8 : ib.h * 0.45), vw = ib.w * 0.46;
         const vx = va === 'right' ? ib.x + ib.w - vw : va === 'center' ? ib.x + (ib.w - vw) / 2 : ib.x, vy = ib.y + Math.max(0, (ib.h - vh) * 0.35);
         inner = vh > 0 && vw > 0 ? `<rect class="kv" x="${n(vx)}" y="${n(vy)}" width="${n(vw)}" height="${n(vh)}" rx="${n(Math.min(vw, vh, 24 * u) * 0.2)}" fill="${GREY}"/>` : '';
-      } else inner = k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u);
+      } else if (k === 'slicer' && v.pills) {
+        // (L2) pills: rounded buttons on one row under the title, the first (at the reading start) in the accent
+        const nP = v.pills, gap = 6 * kk, ph = Math.min(ib.h, 30 * kk), pw = Math.max(1, (ib.w - gap * (nP - 1)) / nP);
+        inner = Array.from({ length: nP }, (x, j) => { const px0 = rtl ? ib.x + ib.w - pw - j * (pw + gap) : ib.x + j * (pw + gap);
+          return `<rect class="pill" x="${n(px0)}" y="${n(ib.y)}" width="${n(pw)}" height="${n(ph)}" rx="${n(ph / 2)}" fill="${j ? 'none' : col.accent}" stroke="${j ? GREY : col.accent}" stroke-width="${n(u)}"/>`; }).join('');
+      } else inner = (v.grid === 'dotted' && /^(bar|column|line)$/.test(k) ? [0.25, 0.5, 0.75].map((g) => (k === 'bar'
+        ? `<line class="grid" x1="${n(ib.x + ib.w * g)}" y1="${n(ib.y)}" x2="${n(ib.x + ib.w * g)}" y2="${n(ib.y + ib.h)}"`
+        : `<line class="grid" x1="${n(ib.x)}" y1="${n(ib.y + ib.h * g)}" x2="${n(ib.x + ib.w)}" y2="${n(ib.y + ib.h * g)}"`) + ` stroke="${GREY}" stroke-width="${n(u)}" stroke-dasharray="${n(u)} ${n(3 * u)}" opacity=".7"/>`).join('') : '')
+        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u));
       return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
@@ -351,6 +359,9 @@
         if (own != null && shortened(own, altOf(j) || full)) out.headerCut = true;
       } else out.header = '';
     }
+    // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
+    if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
+    { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
     if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
