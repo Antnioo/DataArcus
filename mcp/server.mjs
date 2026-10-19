@@ -34,7 +34,7 @@ const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/j
 const Mirror = require('../assets/js/report-mirror.js'), Gallery = require('../assets/js/visual-gallery.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
-import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
+import { planTwin, twinKey, twinOutputs, writeTwin } from './lib/arabic-twin.mjs';
 import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { testEditBeforeWrite } from './lib/write-io.mjs';
@@ -69,7 +69,7 @@ const modelRef = (m, p) => ({ key: modelKey(m, p), print: m.print });
 const themeRef = (m, p, from) => ({ key: modelKey(m, p), print: crypto.createHash('sha256').update(String(m.print) + '\0' + JSON.stringify(from == null ? null : from)).digest('hex') });
 // (R6, F07) right before a writer's first write (before any folder is made): the model read again, and its print the
 // approved one, or nothing is written (the gate's read can be seconds older than the write)
-const sameModelBeforeWrite = (planId, now, approved) => { testEditBeforeWrite(); if (now() !== approved) throw new Error(Plans.modelChanged(planId)); };
+const sameModelBeforeWrite = (planId, now, approved, report) => { testEditBeforeWrite(); if (now() !== approved) throw new Error(Plans.modelChanged(planId, report)); };
 const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 // Round 17 (the outside review's G-02, privacy): no answer or error sends an absolute local path to the AI. Paths in the
 // working folder become relative to it, the working folder itself is named by its last folder name, and the user's home
@@ -1298,12 +1298,14 @@ server.registerTool('generate_theme', {
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-      plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+      plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
+        // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
+        outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, ref, inputsPin(a));
   // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)
   const file = withPlan(a.planId, 'generate_theme', () => {
-    if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print);
+    if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print, true);
     const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
 }));
@@ -1353,7 +1355,10 @@ function redesignPlan(a) {
 }
 // (0.3.0 R2) what an Arabic plan says before the go: the proposed names it pins, the fields kept in English (with why)
 const NOT_TRANSLATED_WHY = 'No Arabic name: none was given (displayNames) and the fixed list of report words has none for it, so it shows under its English model name. Titles keep it alone, never joined with English words (a chart cut to its top N may begin with «أعلى N من M:», a table beside a chart of the same name ends with «: التفاصيل»).';
-const sayArabicPlan = (nP, nT) => `Say in the plan, before the go: ${nP ? `${nP} field${nP === 1 ? '' : 's'} will show under the proposed Arabic names in inThePlan (from the fixed list of report words; list each beside its model name, marked as proposed: the plan pins them, and approving the plan approves them)` : 'no field has a proposed Arabic name from the fixed list'}${nT ? `; ${nT} field${nT === 1 ? '' : 's'} (notTranslated) will show in English, under the model's names, with the reason (why). To show them in Arabic, propose a name for each (howToPropose), show the proposals, and call plan_layout again with the approved ones as displayNames` : ''}. Every other text of the report (titles' words, buttons, page names, the "no data" text, alt text) is Arabic. The model is never renamed.`;
+// (D6, the laptop's T1b: approved names passed as displayNames, «السنة» among them, made it say "no field has a proposed
+// Arabic name") nG: the Arabic names given in displayNames, counted beside the fixed list's proposals
+const sayArabicPlan = (nP, nT, nG) => `Say in the plan, before the go: ${[nP ? `${nP} field${nP === 1 ? '' : 's'} will show under the proposed Arabic names in inThePlan (from the fixed list of report words; list each beside its model name, marked as proposed: the plan pins them, and approving the plan approves them)` : '',
+  nG ? `${nG} field${nG === 1 ? '' : 's'} will show under the Arabic names approved in displayNames (list each beside its model name: the plan pins them)` : ''].filter(Boolean).join('; ') || 'no field has an Arabic name, from the fixed list or in displayNames'}${nT ? `; ${nT} field${nT === 1 ? '' : 's'} (notTranslated) will show in English, under the model's names, with the reason (why). To show them in Arabic, propose a name for each (howToPropose), show the proposals, and call plan_layout again with the approved ones as displayNames` : ''}. Every other text of the report (titles' words, buttons, page names, the "no data" text, alt text) is Arabic. The model is never renamed.`;
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
@@ -1530,7 +1535,7 @@ server.registerTool('plan_layout', {
       else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
     });
   }
-  if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length);
+  if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length, Object.values(a.displayNames || {}).filter((v) => /[\u0600-\u06FF]/.test(String(v))).length);
   const aggr = (designLint.designLint && designLint.designLint.aggregation) || null;
   (aggr ? aggr.problems : []).forEach((x) => planProblems.push(`${x.field}: ${a.lang === 'ar' ? x.ar : x.en}`));
   const aggregation = aggr && (aggr.nonAdditive.length || aggr.questions.length) ? { aggregation: aggregationAnswer(aggr, a.lang === 'ar' ? 'ar' : 'en') } : {};
@@ -1648,7 +1653,7 @@ server.registerTool('create_arabic_twin', {
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
+  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P) })) }));
 }));
 
 // (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
@@ -1693,7 +1698,7 @@ server.registerTool('approve_plan', {
   if (d === 'approve') return text(Plans.approval(plan.id));
   if (d === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
   return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: o.again ? 'opened again' : st ? 'open' : 'opened',
-    sayFirst: 'Not approved yet: DataArcus opened its approval window in the user\'s browser, with the plan and every file it writes. Tell the user to check it and click Approve there (or "Not now"). When they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
+    sayFirst: 'Not approved yet: still waiting for the click in DataArcus\'s approval window in the user\'s browser (it shows the plan and every file it writes). Tell the user to check it and click Approve there (or "Not now"); a click later still counts: when they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
 }));
 
 prepareRoot();

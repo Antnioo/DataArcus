@@ -12,6 +12,7 @@ import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { writesNote } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
+import { E } from './design.mjs';             // (D6: the written colour's own contrast, by the engine's rule)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -73,9 +74,10 @@ const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td
 // counted, each path folded under its group (no script: <details> opens without one)
 const GROUPS = [['Bookmarks', /(^|\/)bookmarks\//], ['Pages', /\/page\.json$/], ['Visuals', /\/visual\.json$/], ['Phone layouts', /\/mobile\.json$/], ['Theme', /RegisteredResources\/[^/]+\.json$/i],
   ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
-export function groupFiles(paths) {
-  const out = GROUPS.map(([label]) => ({ label, paths: [] }));
-  (paths || []).forEach((f) => { const i = GROUPS.findIndex(([, re]) => re.test(String(f))); out[i].paths.push(String(f)); });
+// own: a plan kind's groups, tried first (D6: the twin's month script, the theme file)
+export function groupFiles(paths, own) {
+  const G = (own || []).concat(GROUPS), out = G.map(([label]) => ({ label, paths: [] }));
+  (paths || []).forEach((f) => { const i = G.findIndex(([, re]) => re.test(String(f))); out[i].paths.push(String(f)); });
   return out.filter((g) => g.paths.length);
 }
 const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
@@ -213,12 +215,16 @@ export function summary(kind, data) {
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
     const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null).map((k) => [LK[k], k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
-    const dc = p.design && Array.isArray(p.design.data) ? p.design.data : null;
-    if (dc) look.push(['Data colours', { swatches: dc.map((c) => ['', String(c)]) }]);
     // (R6, F13: the accessibility step changed a colour after the go, and said so only after the write) the colour the
     // report is written with, from the plan's own build, and why, before the click
     const cc = d.colours && Array.isArray(d.colours.changed) ? d.colours.changed : [];
-    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour (Power BI's accessibility basics; the hue is kept)`]));
+    // (D6, the laptop proof of rc.2: the swatch showed the approved colour beside the line saying another is written) the
+    // swatches are the written colours; the line names the approved one
+    const written = (c, i) => { const x = i === 0 && cc.find((k) => String(k.from).toLowerCase() === String(c).toLowerCase()); return x ? String(x.to) : String(c); };
+    const dc = p.design && Array.isArray(p.design.data) ? p.design.data : null;
+    if (dc) look.push(['Data colours', { swatches: dc.map((c, i) => ['', written(c, i)]) }]);
+    const own = (c) => (HEX.test(String(c.to)) && HEX.test(String(d.colours.card)) ? `; the written colour's own contrast: ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '');
+    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (Power BI's accessibility basics; the hue is kept)`]));
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
     // (0.3.0 D2) each gallery visual the user asked for: what is written and why (the writer's rule on the fields), and
@@ -268,12 +274,21 @@ export function summary(kind, data) {
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
-    return { title: 'Arabic twin of a report', sections };
+    return { title: 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic month script', /\.tmdl$/i]]) : null };
+  }
+  // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
+  // their hex, and the report they come from
+  if (kind === 'theme' && d.colours && typeof d.colours === 'object') {
+    const C = d.colours, src = d.source && typeof d.source === 'object' ? d.source : null, one = (c) => ({ swatches: [['', String(c)]] });
+    const from = !src ? null : src.from === 'visuals' ? `from the colours on the visuals of report "${String(src.report)}"`
+      : `from the theme of report "${String(src.report)}" (${String(src.theme)})${src.from === 'theme and visuals' ? ' and the colours on its visuals' : ''}`;
+    sections.push({ heading: 'Colours', rows: [from ? ['Where they come from', from] : null, ['Data colours', { swatches: (Array.isArray(C.data) ? C.data : []).map((c, i) => [String(i + 1), String(c)]) }],
+      ['Page', one(C.page)], ['Visuals', one(C.visuals)], ['Text', one(C.text)], ['Accent', one(C.accent)], C.mode ? ['Mode', C.mode === 'dark' ? 'dark' : 'light'] : null].filter(Boolean) });
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
   const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;
   sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers)).map(([k, v]) => [k, val(v)]) });
   // (R6, F09 f: a long answers list was cut at 600 characters, as hashes) every question with the answer recorded for it
   if (shownAnswers && shownAnswers.length) sections.push({ heading: `Answers to record (${shownAnswers.length})`, rows: shownAnswers.map((x) => [String(x.object || ''), `${x.answer === 'mistake' ? 'a mistake' : 'intended'} (the question: ${String(x.question || '')})`]) });
-  return { title: titles[kind] || 'Plan', sections, files };
+  return { title: titles[kind] || 'Plan', sections, files: kind === 'theme' && Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Theme file', /\.json$/i]]) : files };
 }
