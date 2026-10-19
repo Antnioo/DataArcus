@@ -1,9 +1,28 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.2.9.1" just below (branch `fix/0.2.9.1`, one PR to main); before it "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.2.9.1: two fixes after 0.2.9 shipped (19 Oct, cloud builder; branch `fix/0.2.9.1` from main `d76703c`; one PR, not merged)
+The reviewer's brief (19 Oct): one normal PR, only these two fixes (no 0.3 code; drafts #37-#69 stay out). Test first:
+`mcp/test-0.2.9.1.mjs` (in npm test), 17 checks, 12 red on main `d76703c` (commit `780ea4a`).
+- FIX 1, B-174 (the laptop's Desktop proofs of rc.23/rc.24, Desktop 2.159: the plan's "Comparison: Top 5", the Plan Group
+  bar chart showed all 6 groups, EN and the Arabic twin). Cause: the writer keeps a chart's categories with its "Keep:"
+  report measure (pbip-query.js topSet, design round 10's N14, called with extra 2 in pbip-page.js fixVisual): the top N
+  by its measure, or every category when there are at most N + 2. 6 <= 5 + 2, so all 6 are shown with the plain title:
+  Desktop is right, the plan was not. Fix in the plan, not Desktop: the writer records each kept chart's `allUpTo` (N + 2
+  with Keep:, N with the fixed TopN filter) and its planned slot (from, nth, as kindChanges); plan-lint passes them;
+  plan_layout's `categoryCharts.tops[]` carry `allUpTo` and sayInPlan says "Comparison: Top 5, all of them when it has 7 or
+  fewer"; a slot the writer does not cut is no longer listed; `topCategories` and create_report's note say the same
+  (the note no longer says "a Top N visual filter" for the Keep: measure). Desktop unchanged.
+- FIX 2 (draft #69's E-23/E-24): pbip-page.js gives the "no value axis" setting only to a bar (a two-valued column chart
+  becomes a donut after it); D-1 no valueAxis on the written donut, D-2 Microsoft's validator offline 0 errors on it.
+- Stamps 20261019p2991: pbip-page (in theme-generator.js), theme-generator on the three generator pages; .min rebuilt.
+- CHANGELOG heading `## [Unreleased]: 0.2.9.1`: the package build's version rule (test-release-text.mjs, from the engine's
+  packaging/build.mjs) takes only x.y.z or [Unreleased]; "[0.2.9.1]" failed CI's release-text. For the owner: the
+  build cannot stamp a four-part 0.2.9.1; the release needs an x.y.z number (e.g. 0.2.10) or the build's rule changed.
+- Next: the reviewer reviews the PR, the laptop checks in Desktop (see the PR), the owner merges.
 ## 0.2.9.1, B-173: Arabic table headers, "cut" vs "may be cut", and check_report (19 Oct, cloud builder; branch `fix/0.2.9.1-headers` from main `d76703c`; one PR, not merged)
 The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Exec" (made-up model, 1920 page) in Desktop 2.159:
 `fitted.headersCut` listed "Total Value" (needs 275, given 208; page 2: 400 / 292) and "Total Score" (275 / 181; page 2:
