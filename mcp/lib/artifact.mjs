@@ -5,7 +5,8 @@
 // runs it, on a private copy in the OS temp folder, never the user's folder, removed at once), the references of every
 // visual, sort and filter to the model or the report's own measures, our measured rules (report-rules.js) and the design
 // lint, for every page (the tooltip pages too). A critical check that could not run makes the result `incomplete`,
-// never `pass`; a validator error (its known gaps aside), an unresolved reference or a rule error makes it `blocked`.
+// never `pass` (the owner, 19 Oct: plan_layout gives no plan id when the validator or the reference check did not run,
+// unless only a size cap skipped it: `capped`, listed on the approval page); a validator error (its known gaps aside), an unresolved reference or a rule error makes it `blocked`.
 // The answer holds counts, rule ids and paths inside the report only: never a name, a title or any other source text.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -40,8 +41,8 @@ const isPage = (s) => /^definition\/pages\/[^/]+\//.test(s);
 // known, byRule, files }, or { ran: false, why }
 async function validate(files, mem) {
   const big = files.filter((f) => (typeof f.data === 'string' ? Buffer.byteLength(f.data) : f.data.length) > REPORT_LIMITS.file).length;
-  if (big) return { ran: false, why: `${big} file${big === 1 ? ' is' : 's are'} over what DataArcus reads; the validator reads every file whole` };
-  if (files.length > REPORT_LIMITS.files) return { ran: false, why: 'more files than DataArcus reads' };
+  if (big) return { ran: false, capped: true, why: `${big} file${big === 1 ? ' is' : 's are'} over the ${Math.round(REPORT_LIMITS.file / 1048576)} MB DataArcus reads (a picture of the report); the validator reads every file whole` };
+  if (files.length > REPORT_LIMITS.files) return { ran: false, capped: true, why: 'more files than DataArcus reads' };
   const report = files.find((f) => /^[^/]+\.Report\/definition\.pbir$/.test(f.path));
   if (!report) return { ran: false, why: 'the project has no report folder' };
   const base = report.path.split('/')[0];
@@ -113,7 +114,7 @@ export async function checkArtifact(files, tables, lang, opts) {
   else {
     const v = await validate(files, mem);
     checks.validator = v.ran ? { ran: true, errors: v.errors, warnings: v.warnings, known: v.known } : { ran: false };
-    if (!v.ran) notRun.push({ check: 'validator', why: v.why });
+    if (!v.ran) notRun.push(Object.assign({ check: 'validator', why: v.why }, v.capped ? { capped: true } : {}));
     else { Object.entries(v.byRule).forEach(([k, n]) => count(k, n)); blocking.push(...v.files); if (v.errors > v.files.length) blocking.push({ rule: 'VALIDATOR', file: null }); }
   }
   if (inv) {
