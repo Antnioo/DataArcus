@@ -33,6 +33,7 @@ const Mirror = require('../assets/js/report-mirror.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
+import { Memory, answerKey, answersName, readAnswers, writeAnswers } from './lib/answers.mjs';
 import { writeTree, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
@@ -412,14 +413,16 @@ server.registerTool('check_model_health', {
     country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
     asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the gulfCalendar section counts as today (YYYY-MM-DD; default: today). For tests'),
     planId: planIdInput,
+    // (B-148) the user's answers to pleaseConfirm questions, remembered in a file next to the model (with an approved plan)
+    answers: z.array(z.object({ answerKey: z.string().max(64), answer: z.enum(['intended', 'mistake']) }).strict()).max(200).optional()
+      .describe('Only with the user\'s own answers to pleaseConfirm questions: { answerKey (from the question), answer: intended (the user says it is right) or mistake }. Recorded in "<model>.dataarcus-answers.json" next to the model (hashes and the answer only) after an approved plan, like the fix scripts; the question is not asked again until its measure or relationship changes. Never answer for the user'),
+    forgetAnswers: z.boolean().optional().describe('The user asked to forget their recorded answers: empties the answers file (after an approved plan)'),
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }, annotations: ADDS
-}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId }) => {
+}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers }) => {
   const m = loadModel(p);
-  // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
-  const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf };
-  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelKey(m, p), pinH), wouldWrite = [];
+  const wouldWrite = [];
   const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
   // where a fix script may go: next to the project (never inside the model folder), or beside a model file. When the
   // working folder is the model folder itself there is no such place inside it: no file, and the answer says why
@@ -434,6 +437,16 @@ server.registerTool('check_model_health', {
   };
   const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
   const r = Health.analyze(m.tmsl, m.report);
+  // (B-148) the answers given before (the file next to the model), and the new ones: each a record of hashes and the
+  // answer, pinned in the plan without its date, so the write records exactly what the user approved
+  const mem = readAnswers(scriptDir, scriptBase), applied = Memory.apply(r.confirm || [], mem.records, r.rawTables);
+  const byKey = new Map(applied.ask.concat(applied.answered.map((x) => x.question)).map((q) => [answerKey(q.signature), q]));
+  const answersNotRecorded = (answers || []).filter((a) => !byKey.has(a.answerKey)).map((a) => ({ answerKey: a.answerKey, why: 'No question with this answerKey is asked on this model now (the measure or relationship changed, or the key is wrong): nothing is recorded for it.' }));
+  const given = (answers || []).filter((a) => byKey.has(a.answerKey)).map((a) => { const x = Memory.record(byKey.get(a.answerKey), a.answer, r.rawTables); delete x.at; return x; });
+  const answerPin = given.length ? given : undefined, writeAnswersFile = !!forgetAnswers || given.length > 0;
+  // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
+  const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
+  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelKey(m, p), pinH);
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
   // AUD-032 (round 20): a name with a control character (a tab, a line break) is never written raw into a fix script:
@@ -497,9 +510,19 @@ server.registerTool('check_model_health', {
   // the same fix as add_gulf_calendar's inputs (the tool writes the generator's table as a script file)
   const addGulf = gulfFixInputs(gulfCalendar);
   if (addGulf) gulfCalendar.fixes.addGulfCalendar = addGulf;
+  // (B-148) the answers file: written only with the approved plan, which lists it; never without a place next to the model
+  let answersDone = {}, shown = applied;
+  if (writeAnswersFile && !scriptDir) answersDone = { answersNotWritten: 'The working folder is the model folder itself, and nothing is written inside a model folder: choose the project folder as the working folder to keep answers.' };
+  else if (writeAnswersFile && write) {
+    const at = new Date().toISOString(), fresh = given.map((x) => Object.assign({}, x, { at }));
+    const recs = forgetAnswers ? fresh : applied.keep.filter((k) => !fresh.some((x) => x.evidenceSignature === k.evidenceSignature)).concat(fresh);
+    try { const f = writeAnswers(scriptDir, scriptBase, recs); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
+    catch (e) { answersDone = { answersNotWritten: String(e && e.message || e).slice(0, 300) }; }
+  }
   if (write) Plans.consume(planId, 'check_model_health');   // (audit 6, A6-2)
-  // the plan for the scripts, when there are any to write and no approved plan was given
-  const plan = !write && wouldWrite.length ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`), { pins: { check_model_health: pinH } })) } : {};
+  // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
+  const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}`} (hashes and the answer only, no DAX)`] : [];
+  const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
@@ -518,8 +541,11 @@ server.registerTool('check_model_health', {
       return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], source: src, count: f.items.length, items: f.items.slice(0, maxItems) }; }),
     // (HC3) the engine's "Please confirm" questions: never findings, never in the score. The DAX piece the website shows
     // stays on the machine (PRIVACY.md section 3: expressions are not returned); the measure and the question are given
-    pleaseConfirm: (r.confirm || []).length ? { note: 'Questions for the user, not findings and not in the score: the check reads structure and DAX, not the numbers. Ask the user each question; never edit DAX because of them. The DAX piece behind a question is not returned: the user sees it in Power BI Desktop or in the website\'s Health Check.',
-      items: r.confirm.slice(0, maxItems).map((c) => Object.assign({ id: c.id, object: c.obj, question: c.message.en }, c.relationship ? { relationship: c.relationship } : {})), count: r.confirm.length } : undefined,
+    pleaseConfirm: (r.confirm || []).length || mem.problem || answersNotRecorded.length || answersDone.answersNotWritten ? Object.assign({ note: 'Questions for the user, not findings and not in the score: the check reads structure and DAX, not the numbers. Ask the user each question; never edit DAX because of them. The DAX piece behind a question is not returned: the user sees it in Power BI Desktop or in the website\'s Health Check. To remember the user\'s own answer, call again with answers [{ answerKey, answer }] (through a plan, like the fix scripts); answered questions are not asked again until their measure or relationship changes.',
+      items: shown.ask.slice(0, maxItems).map((c) => Object.assign({ id: c.id, object: c.obj, question: c.message.en, answerKey: answerKey(c.signature) }, c.relationship ? { relationship: c.relationship } : {})), count: (r.confirm || []).length },
+      shown.answered.length ? { answered: shown.answered.slice(0, maxItems).map((x) => ({ id: x.question.id, object: x.question.obj, answer: x.record.answer, at: x.record.at, answerKey: answerKey(x.question.signature) })), answeredNote: 'The user answered these before and the measure or relationship is unchanged: don\'t ask again. A "mistake" answer means the user still has to fix it.' } : {},
+      !answersDone.answersFile && applied.stale.length ? { answersForgotten: { count: applied.stale.length, note: 'Answers recorded before whose measure or relationship changed (or is gone): their questions are asked again. They are dropped from the file at its next approved write.' } } : {},
+      answersNotRecorded.length ? { answersNotRecorded } : {}, mem.problem ? { answersFileProblem: mem.problem } : {}, answersDone) : undefined,
     // checks that need a column type the files don't give (columns of DAX tables in a TMDL project): listed, not guessed
     skipped: r.skipped.length ? {
       why: 'The TMDL files give no data type for these columns: Power BI works out the types of a DAX table\'s columns from its DAX, and only the open model knows them. The checks below need the type, so they were not run for these objects and are not in the score.',
