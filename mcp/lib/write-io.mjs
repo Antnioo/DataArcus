@@ -76,8 +76,9 @@ const within = (root, p) => { const rel = path.relative(root, p); return !(rel.s
  * by the caller BEFORE this call; it gets the file's identity as soon as the file exists (e.id), and its size once the
  * data is all written (e.size).
  */
+const NEW_FILE = { flag: 'wx' };   // (fails when anything is at the name: never over anything, never through a link)
 export function createFile(e, data) {
-  const fd = io.openSync(e.path, 'wx');
+  const fd = io.openSync(e.path, NEW_FILE.flag);
   try { e.id = idOf(fs.fstatSync(fd, { bigint: true })); io.writeFileSync(fd, data); e.size = fs.fstatSync(fd, { bigint: true }).size; }
   finally { io.closeSync(fd); }
 }
