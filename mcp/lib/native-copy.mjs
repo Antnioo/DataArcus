@@ -10,7 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
-import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
 import { writeTree } from './files.mjs';
 
@@ -41,7 +41,7 @@ const keyOf = (entries) => JSON.stringify(entries.map((e) => ({ visual: e.visual
 // model: loadModel's answer for the report's model (its tables: data types and formats)
 export function planNative(reportPath, model) {
   const loc = locate(reportPath);
-  strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.' });
+  const left = []; strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.', left });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
@@ -50,6 +50,7 @@ export function planNative(reportPath, model) {
     report: pathOut(loc.dir), nativeReport: pathOut(loc.outDir), original: 'only read: never changed',
     replacements: replace.map((e) => ({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, guess: e.guess, lost: e.lost, tell: e.tell })),
     notReplaced: keep.map((e) => ({ line: replacementLine(e), why: e.htmlNeeded ? 'no native visual draws it: an HTML/SVG measure (a later step) or a table of its links; it stays the custom visual in the copy' : 'no native visual takes its fields: it stays the custom visual in the copy' })),
+    ...notCopiedOf(left),
     sayInPlan: 'Show the user every replacement line and what it loses (lost), before their go: nothing is replaced silently. The original report is not changed; the native copy is a new report next to it. A replacement marked a guess was matched by its fields\' kinds only.'
   };
   if (!entries.length) answer.none = 'This report has no custom visual: nothing to replace.';
