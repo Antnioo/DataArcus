@@ -100,6 +100,13 @@ try {
       chk(() => new Set(ts).size === ts.length, () => `ST-2c ${name} "${p.page.displayName}". every chart's and table's title unique on its page: ${JSON.stringify(ts)}`); });
     chk(() => all.every((x) => !/…/.test(x.t || '')), () => `ST-2e ${name}. no title cut with "…" on any page, the tooltip pages too: ${JSON.stringify(all.filter((x) => /…/.test(x.t || '')).slice(0, 4))}`);
     chk(() => all.every((x) => ST.NEVER[lang].every((w) => !String(x.t || '').toLowerCase().includes(w))), () => `ST-2d ${name}. no judgement word in a title`);
+    // ST-6 (the owner's decision, 19 Oct): a visual's alt text is the FULL story title, never the fitted one; the drawn
+    // title is the fitted one. Every chart and table of the Arabic model shows its long measure, so each alt text names it whole.
+    if (m === 'arabic') {
+      const LONG = 'إجمالي صافي المبيعات بعد الخصومات والمرتجعات', cv = all.filter((x) => /Chart$|^tableEx$/.test(x.type) && x.a);
+      chk(() => cv.length > 0 && cv.every((x) => x.a.startsWith(LONG)), () => `ST-6a ${name}. every chart's and table's alt text is the full title: ${JSON.stringify(cv.filter((x) => !x.a.startsWith(LONG)).map((x) => [x.type, x.t, x.a]).slice(0, 4))}`);
+      if (layout === 'ops') chk(() => cv.some((x) => x.t && x.t !== '[measure]' && x.t !== x.a && !x.t.startsWith(LONG)), () => `ST-6b ${name}. a drawn title is the shortened form while its alt text stays full: ${JSON.stringify(cv.map((x) => [x.t, x.a]).slice(0, 4))}`);
+    }
     if (m === 'arabic' && layout === 'ops') {
       const cut = all.filter((x) => /…/.test(x.t || ''));
       chk(() => !cut.length && !((r.j.chartTitles || {}).shortened || []).length && !((r.j.kpiTitles || {}).shortened || []).length,
