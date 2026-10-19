@@ -14,7 +14,7 @@ import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './m
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
-import { proposeArabic } from './arabic-names.mjs';
+import { draftText } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
 import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
@@ -25,6 +25,8 @@ const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 // (rc.24, 0.2.9.1) check_report's own measurements of a button's text and of a table header: the twin widens what its Arabic cuts
 const Rules = require('../../assets/js/report-rules.js');
+// (0.3.0 D3) the writer's phone tab rule (one copy, the writer's own), for the twin's phone page tabs
+const Sizing = require('../../assets/js/pbip-sizing.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -60,7 +62,7 @@ function readOriginal(loc) {
   // out here and copied as it is)
   let pbir = {}; try { const j = readJson(path.join(loc.dir, 'definition.pbir')); pbir = isObj(j) ? j : {}; } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
-    visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
+    visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json, mobile: mobileOf(loc, files, x.file) })) }));
   const bookmarks = inv.bookmarks.filter((b) => isObj(b.raw) && (typeof b.raw.name === 'string' || typeof b.raw.name === 'number')).map((b) => ({ rel: b.file, json: b.raw }));
   // (rc.24) the report's own measures (definition/reportExtensions.json), for the title measures; and the theme's text
   // sizes, for what the Arabic texts need
@@ -69,6 +71,12 @@ function readOriginal(loc) {
 }
 
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+// (0.3.0 D3: the twin copied the phone layout as it was) a visual's mobile.json beside its visual.json: { rel, json }, or
+// null (none, or not a JSON object: then it is copied as it is)
+function mobileOf(loc, files, rel) {
+  const m = rel.replace(/visual\.json$/, 'mobile.json'); if (m === rel || !files.includes(m)) return null;
+  try { const j = readJson(path.join(loc.dir, ...m.split('/'))); return isObj(j) ? { rel: m, json: j } : null; } catch (e) { return null; }
+}
 const EXT = 'definition/reportExtensions.json';
 // definition.pbir's model folder, when it names one: { path } or null
 const byPathOf = (pbir) => { const d = isObj(pbir) && isObj(pbir.datasetReference) ? pbir.datasetReference : null, b = d && isObj(d.byPath) ? d.byPath : null; return b && typeof b.path === 'string' && b.path ? b : null; };
@@ -100,7 +108,8 @@ function daxScan(expr) {
   return { lits, top };
 }
 const NOT_READ = 'its DAX builds the text in a way DataArcus does not read (only fixed texts and the numbers the report counts are translated)';
-function parseTitleDax(expr0) {
+function parseTitleDax(expr0, o) {
+  const allowEmpty = !!(o && o.allowEmpty);
   const expr = String(expr0 == null ? '' : expr0), sc = daxScan(expr);
   if (!sc) return { why: 'its DAX could not be read (an unclosed text or name)' };
   if (sc.comment) return { why: 'its DAX has comments: ' + NOT_READ };
@@ -123,8 +132,9 @@ function parseTitleDax(expr0) {
       if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(t) && vars.has(t)) { out.vars.push(t); out.template += '{' + out.vars.length + '}'; continue; }
       return null;
     }
-    return /\p{L}/u.test(out.template) ? out : null;
+    return /\p{L}/u.test(out.template) || (allowEmpty && out.template === '' && !out.vars.length) ? out : null;
   };
+  const some = (bs) => bs.some((b) => /\p{L}/u.test(b.template));
   if (/^IF\s*\(/i.test(expr.slice(b0, b1)) && expr[b1 - 1] === ')') {
     const open = expr.indexOf('(', b0), d = sc.top.find((t) => t.i === open).depth;
     const commas = sc.top.filter((t) => t.i > open && t.i < b1 - 1 && t.c === ',' && t.depth === d).map((t) => t.i);
@@ -132,11 +142,11 @@ function parseTitleDax(expr0) {
     if (commas.length !== 2 || !close || close.i !== b1 - 1) return { why: NOT_READ };
     if (sc.lits.some((l) => l.start > open && l.start < commas[0])) return { why: 'its condition compares texts: ' + NOT_READ };
     const A = branch(commas[0] + 1, commas[1]), B = branch(commas[1] + 1, b1 - 1);
-    if (!A || !B) return { why: NOT_READ };
+    if (!A || !B || !some([A, B])) return { why: NOT_READ };
     return { prefix, ret: ret >= 0, cond: expr.slice(open + 1, commas[0]).trim(), branches: [A, B] };
   }
   const A = branch(b0, b1);
-  return A ? { prefix, ret: ret >= 0, cond: null, branches: [A] } : { why: NOT_READ };
+  return A && some([A]) ? { prefix, ret: ret >= 0, cond: null, branches: [A] } : { why: NOT_READ };
 }
 // the measure's DAX with the Arabic texts (one per branch, its {n} the branch's variables); a branch without a label keeps its own
 const daxText = (t) => '"' + String(t).replace(/"/g, '""') + '"';
@@ -170,6 +180,23 @@ function titleMeasuresOf(R) {
   return [...seen.values()];
 }
 
+// (0.3.0 D3: the empty state's "No data for this selection" stayed English in the twin) a measure of the report that a
+// visual shows (in its fields, as the writer's "No data: ..." card does), its text read as a title measure's is (fixed
+// texts and the numbers the report counts; one branch may be the empty text ""), never run. The title measures are
+// above; a measure of the model is the model's (never changed)
+function textMeasuresOf(R) {
+  const seen = new Map(), titles = new Set(titleMeasuresOf(R).filter((x) => x.own).map((x) => x.entity + '\u0000' + x.name));
+  const walk = (o) => { if (Array.isArray(o)) { o.forEach(walk); return; } if (!isObj(o)) return;
+    const ms = isObj(o.Measure) ? o.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+    if (src && src.Schema === 'extension' && typeof src.Entity === 'string' && typeof ms.Property === 'string') {
+      const key = src.Entity + '\u0000' + ms.Property, m = extMeasureOf(R, src.Entity, ms.Property);
+      if (!seen.has(key) && !titles.has(key) && m && typeof m.expression === 'string' && /"(?:[^"]|"")*\p{L}/u.test(m.expression)) seen.set(key, { entity: src.Entity, name: ms.Property, measure: m, pd: parseTitleDax(m.expression, { allowEmpty: true }) });
+    }
+    Object.values(o).forEach(walk); };
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => walk(isObj(v.json) && isObj(v.json.visual) ? v.json.visual.query : null)));
+  return [...seen.values()];
+}
+
 // ---- the texts a reader sees, for the user's Arabic (cleaned, capped, instruction-like withheld) ----
 // An id holds report names (a page, a visual, a field's queryRef). An id that reads like an instruction, holds an
 // invisible character or is longer than 160 is replaced by an opaque one ("h:" and 16 hex digits of its hash), which
@@ -184,6 +211,8 @@ function textsOf(R) {
     const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
       return /PageNavigation/i.test(String(lit(p.type))) ? lit(p.navigationSection) : null; };
     pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
+    // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
+    pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
   R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
   // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)
@@ -192,14 +221,21 @@ function textsOf(R) {
     if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
     add({ id, kind: 'titleMeasure', text: b.template, what: 'Chart title (from a title measure)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
   }));
+  // (0.3.0 D3) each visible text of the report's other text measures a visual shows (the empty state), one per text
+  textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => x.pd.branches.filter((b) => b.template).forEach((b) => {
+    const id = 'measureText:' + b.template, had = all.find((t) => t.id === id), m = safeName(x.entity + '[' + x.name + ']');
+    if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
+    add({ id, kind: 'measureText', text: b.template, what: 'Text a report measure shows (such as the empty state\'s message)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
+  }));
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id }, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
-    if (t.page) out.page = safeName(t.page);
-    if (t.visual) out.visual = safeName(t.visual);
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
+    // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
+    if (t.page && out.id !== t.id) out.page = safeName(t.page);
+    if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
     const text = visible(raw);
-    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: proposeArabic(raw) });
+    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: draftText(raw) });
   });
 }
 // the labels by the ids the answer gave, as the mirror engine's ids (the report's own names)
@@ -356,6 +392,44 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
   return out;
 }
 
+// (0.3.0 D3, the laptop's proof of rc.2: «التفاصيل» kept the English tab's 55 wide on the phone and wrapped, "التفاصيـ / ل")
+// The page tabs of a phone row (page buttons with the same phone top), already mirrored: each as wide as its Arabic name
+// by the writer's phone rule (pbip-sizing.js phoneTabWidth: one line, bold, at the phone's 10pt), laid from the row's
+// right end (the mirror of where the original's row started) with the writer's gap, the first page at the right; the
+// line under a tab (a shape under it, 3 high at most) follows it with its own margins; a group holding them grows to
+// hold them. A row whose names can't all fit is shared in proportion, and said (tabsCut).
+function fitPhoneTabs(pg, visuals, mobiles, ctx, out) {
+  const W = Mirror.PHONE_W, G = Sizing.PHONE_TAB.gap, box = (m) => (m && isObj(m.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(m.position[k])) ? m.position : null);
+  const lit = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
+  const isTab = (v) => typeOf(v) === 'actionButton' && /PageNavigation/i.test(String(lit((((v.visual.visualContainerObjects || {}).visualLink || []).find((e) => isObj(e) && isObj(e.properties)) || { properties: {} }).properties.type)));
+  const textOf = (v) => { const es = isObj(v.visual.objects) && Array.isArray(v.visual.objects.text) ? v.visual.objects.text.filter((e) => isObj(e) && isObj(e.properties)) : [], t = es.map((e) => lit(e.properties.text)).find((x) => x != null), f = es.map((e) => lit(e.properties.fontFamily)).find((x) => x != null); return { text: t, font: f || ctx.text.font }; };
+  const tabs = visuals.map((v, i) => ({ v, m: mobiles[i], i })).filter((x) => isObj(x.v) && isObj(x.v.visual) && isTab(x.v) && box(x.m) && textOf(x.v).text != null);
+  const orig = (x) => box(pg.visuals[x.i].mobile.json);
+  const rows = [];
+  tabs.forEach((x) => { const row = rows.find((r) => Math.abs(orig(r[0]).y - orig(x).y) < 0.5); if (row) row.push(x); else rows.push([x]); });
+  rows.forEach((row) => {
+    row.sort((a, b) => orig(a).x - orig(b).x);   // the original's reading order: from its row's start
+    // the lines under the tabs, found on the original's phone layout
+    const lines = row.map((x) => { const o = orig(x); const j = pg.visuals.findIndex((v, k) => { const q = box(v.mobile && v.mobile.json); return q && k !== x.i && /^(shape|basicShape)$/.test(typeOf(v.json)) && q.height <= 3 && Math.abs(q.y - (o.y + o.height)) <= 1 && q.x >= o.x - 0.5 && q.x + q.width <= o.x + o.width + 0.5; }); return j < 0 ? null : { j, l: box(pg.visuals[j].mobile.json).x - orig(x).x, r: orig(x).x + orig(x).width - (box(pg.visuals[j].mobile.json).x + box(pg.visuals[j].mobile.json).width) }; });
+    const end = W - Math.min(...row.map((x) => orig(x).x)), need = row.map((x) => Sizing.phoneTabWidth(textOf(x.v).text, textOf(x.v).font));
+    const room = end - G * (row.length - 1), sum = need.reduce((a, b) => a + b, 0), k = sum > room ? room / sum : 1;
+    let at = end;
+    row.forEach((x, n) => {
+      const p = box(x.m), w = k < 1 ? Math.floor(need[n] * k) : need[n];
+      p.width = w; p.x = Mirror.round(Math.max(0, at - w)); at = p.x - G;
+      const ln = lines[n]; if (ln && mobiles[ln.j] && box(mobiles[ln.j])) { const q = box(mobiles[ln.j]); q.x = Mirror.round(p.x + ln.r); q.width = Mirror.round(Math.max(4, w - ln.l - ln.r)); }
+      const what = { page: safeName(pg.id), visual: safeName(String(x.v.name)), needs: need[n], width: w };
+      out.tabs.push(what);
+      if (w < need[n]) out.tabsCut.push(Object.assign({}, what, { why: `its Arabic name needs ${need[n]} wide on the phone; the row's ${row.length} tabs share ${Math.floor(end)}: give shorter Arabic page names, or the phone wraps or cuts it` }));
+    });
+  });
+  // a group's phone box holds its children (in mobile.json a grouped visual's position is a page position)
+  visuals.forEach((g, i) => { const gb = box(mobiles[i]); if (!gb || typeOf(g) !== 'group') return;
+    const kids = visuals.map((v, k) => (isObj(v) && v.parentGroupName != null && String(v.parentGroupName) === String(g.name) ? box(mobiles[k]) : null)).filter(Boolean); if (!kids.length) return;
+    const x0 = Math.min(gb.x, ...kids.map((q) => q.x)), x1 = Math.max(gb.x + gb.width, ...kids.map((q) => q.x + q.width));
+    gb.x = Mirror.round(x0); gb.width = Mirror.round(x1 - x0); });
+}
+
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
@@ -376,7 +450,16 @@ function buildTwin(P, labels) {
     e.measures.push(Object.assign(JSON.parse(JSON.stringify(x.measure)), { name, expression: arabicDax(x.pd, ls) }));
     rename.set(x.entity + '\u0000' + x.name, name); written.push(safeName(x.entity + '[' + name + ']'));
   });
-  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [] };
+  // (0.3.0 D3) the report's other text measures a visual shows (the empty state): rewritten in the twin's own copy of
+  // reportExtensions.json (the original's file is only read), each text as approved
+  let rewritten = 0;
+  if (ext) textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => {
+    const ls = x.pd.branches.map((b) => (b.template && labels['measureText:' + b.template] != null ? labels['measureText:' + b.template] : null));
+    if (ls.every((l) => l == null)) return;
+    const e = ext.entities.find((y) => isObj(y) && y.name === x.entity), m = e && Array.isArray(e.measures) ? e.measures.find((y) => isObj(y) && y.name === x.name) : null;
+    if (m) { m.expression = arabicDax(x.pd, ls); rewritten++; applied++; }
+  });
+  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -394,16 +477,61 @@ function buildTwin(P, labels) {
       try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
     }
-    return { pg, page, visuals: r.visuals };
+    // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
+    // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
+    const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
+      const m = P.keepLtr(pg) ? JSON.parse(JSON.stringify(v.mobile.json)) : Mirror.mirrorMobile(v.json, v.mobile.json);
+      applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels); return m; });
+    if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
+    return { pg, page, visuals: r.visuals, mobiles };
   });
   const notTranslated = tms.filter((x) => !x.pd.branches).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
-  return { pages, applied, ext: written.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null };
+  // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
+  const notShown = [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
+  return { pages, applied, phone, notShown, ext: written.length || rewritten ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null };
 }
 
 // ---- the plan ----
 const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
 const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
+
+// (0.3.0 D3) a text of the new kinds with no label of its own takes the approved Arabic of the same text, shown in the
+// plan (labelFrom) and pinned with it, as a page button takes its page's (B-138): a phone copy the label of the page's
+// same text on the same visual, an alt text, a card's blank text or a tooltip that of any listed text with exactly
+// its words (a chart's alt text is its title). A label given for it wins; a text with {n} is never shared
+const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text']);
+const KIND_SAID = { page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
+function sameTextLabels(texts, labels) {
+  const key = (t) => (t.text != null && !/\{\d+\}/.test(t.raw) ? t.raw.trim() : null), byText = new Map();
+  const learn = (t) => { const k = key(t); if (k && labels[t.id] != null && !byText.has(k)) byText.set(k, t); };
+  texts.forEach(learn);
+  const take = (t, from, said) => { labels[t.id] = labels[from.id]; t.labelFrom = said; learn(t); };
+  texts.filter((t) => !t.phone && SHARED.has(t.kind) && labels[t.id] == null && key(t)).forEach((t) => { const f = byText.get(key(t)); if (f && f !== t) take(t, f, `the approved Arabic of the same text (${KIND_SAID[f.kind] || f.kind})`); });
+  texts.filter((t) => t.phone && labels[t.id] == null && key(t)).forEach((t) => {
+    const own = texts.find((x) => x.rawId === t.rawId.slice('phone:'.length));
+    if (own && labels[own.id] != null && own.raw === t.raw) return take(t, own, 'the approved Arabic of the same text on the page');
+    const f = byText.get(key(t)); if (f && f !== t) take(t, f, `the approved Arabic of the same text (${KIND_SAID[f.kind] || f.kind})`);
+  });
+}
+// every listed text with Latin letters that the twin writes as it is (no approved Arabic), with why: one row per text
+// (the same words on several visuals, a field and the alt text that repeats it, are one row: where says each kind and
+// count; ids name them in texts), the why of its strongest reason
+function notTranslatedOf(texts, labels, problems) {
+  const rows = new Map(), RANK = ['withheld', 'problem', 'field', 'other'];
+  texts.filter((t) => labels[t.id] == null && /[A-Za-z]/.test(t.raw)).forEach((t) => {
+    const p = problems.find((x) => x.id === t.id);
+    const [rank, why] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
+      : p ? ['problem', 'its Arabic was not taken: ' + p.why]
+      : t.kind === 'field' ? ['field', 'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)']
+      : ['other', 'no Arabic was approved for it: the twin shows it as it is'];
+    const k = t.text == null ? '\u0000' + t.id : t.text, what = (t.phone ? 'phone layout: ' : '') + (KIND_SAID[t.kind] || t.kind);
+    if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why });
+    const r = rows.get(k); r.where[what] = (r.where[what] || 0) + 1; r.ids.push(t.id);
+    if (RANK.indexOf(rank) < RANK.indexOf(r.rank)) Object.assign(r, { rank, why });
+  });
+  return [...rows.values()].map((r) => ({ text: r.text, where: Object.entries(r.where).map(([w, n]) => (n > 1 ? `${w} (${n})` : w)).join(', '), why: r.why, ids: r.ids }));
+}
 
 export function planTwin(a) {
   const loc = locate(a.path), R = readOriginal(loc);
@@ -424,7 +552,8 @@ export function planTwin(a) {
   texts.forEach((t) => { if (t.kind === 'button' && t.goesTo && labels[t.id] == null && labels[t.goesTo] != null) { labels[t.id] = labels[t.goesTo]; t.labelFrom = 'the approved Arabic name of the page it goes to'; } });
   // (rc.24) a title measure's text keeps each {n} it has, once: else it is not taken, and the plan says why
   const problems = [];
-  texts.forEach((t) => { if (t.kind === 'titleMeasure' && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).slice('titleText:'.length), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
+  texts.forEach((t) => { if ((t.kind === 'titleMeasure' || t.kind === 'measureText') && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).replace(/^(titleText|measureText):/, ''), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
+  sameTextLabels(texts, labels);
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
@@ -451,7 +580,6 @@ export function planTwin(a) {
   if (R.pages.some((pg) => pg.visuals.some((v) => ['table', 'matrix'].includes(Mirror.kindOf(v.json))))) cannot.push({ what: 'data bars inside tables and matrices', why: 'they keep their direction (no right-to-left setting is proven for them); the columns themselves are reversed' });
   cannot.push({ what: 'Power BI\'s own words', why: '"All", "Select all", "Total", "(Blank)", the visual header menu, the filter pane, date and number formats follow the viewer\'s Power BI language and regional settings, not the report: an Arabic viewer sees them in Arabic' });
   cannot.push({ what: 'data values', why: 'category names, legend entries, slicer items and month names come from the model: Arabic columns are a model step (see arabicMonth)' });
-  cannot.push({ what: 'the phone layout', why: R.phone ? 'copied as it is (a phone shows one column; the phone layout is not mirrored)' : 'the report has none' });
   const checkInTwin = [];
   const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };
   const paired = new Set(together.bars.map((w) => w.split(' with ')[0]));
@@ -467,19 +595,27 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft }, rawLabels(texts, labels));
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
+  // (0.3.0 D3) what stays English in the twin, and why, said before the go (as create_report's plan does: R2, #75)
+  const notTranslated = notTranslatedOf(texts, labels, problems);
+  const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
+    how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
+    ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, built, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
+  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    pages, mirrors, cannot, phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
-    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
+    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, raw, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
     labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
+    notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
+    ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
+    sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
@@ -513,10 +649,11 @@ export function writeTwin(a, plan) {
   // everything is built in memory first (the plan's own build: buildTwin); then written, each file new
   const out = new Map(), labels = rawLabels(P.texts, P.labels);
   let applied = P.built.applied;
-  P.built.pages.forEach(({ pg, page, visuals }) => {
+  P.built.pages.forEach(({ pg, page, visuals, mobiles }) => {
     // (a page.json that is not an object is copied as it is: there is nothing to label or mirror in it)
     if (isObj(page)) out.set(pg.rel, json(page));
     visuals.forEach((vj, i) => out.set(pg.visuals[i].rel, json(vj)));
+    (mobiles || []).forEach((m, i) => { if (m) out.set(pg.visuals[i].mobile.rel, json(m)); });
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
@@ -535,7 +672,7 @@ export function writeTwin(a, plan) {
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
   writeTree(loc.project, tree);
   return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
-    labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
+    labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
 }

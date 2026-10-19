@@ -256,6 +256,8 @@ export function summary(kind, data) {
     const labels = Object.entries(d.labels || {});
     sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic month column', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)]] });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
+    // (0.3.0 D3) every text the twin shows in English, with why, before the click
+    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
     return { title: 'Arabic twin of a report', sections };
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
