@@ -837,7 +837,9 @@ function reportRun(a, mode) {
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
   const slicersDropped = [], byFlagDay = [];
-  const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
+  const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));
+  // (D1: a right-to-left waterfall's running total follows its category's order: the model's sort-by columns and types)
+  const modelColumns = Object.fromEntries(m.tables.map((t) => [t.name, Object.fromEntries((t.columns || []).map((c) => [c.name, Object.assign({ type: c.dataType || null }, c.sortBy ? { sortBy: String(c.sortBy) } : {})]))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
   // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
   // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
   // beside it (the same row, else the same column) takes its room; hand-placed positions are the caller's.
@@ -950,7 +952,7 @@ function reportRun(a, mode) {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -996,7 +998,7 @@ function reportRun(a, mode) {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: texts(a.lang),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
@@ -1093,8 +1095,10 @@ function reportRun(a, mode) {
   // a right-to-left report's charts (round 13): mirrored, or left as they are when asked
   const CA = r.chartAxes || {};
   const chartAxes = CA.rtl ? { chartAxes: CA.asked === 'mirrored'
-    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right; a waterfall (gallery) has its value axis at the right and its steps run from the right by the same sort (Power BI has no setting to invert its category axis). For charts left to right pass chartAxes: "standard".' }
+    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right; a waterfall (gallery) is written as a stacked column chart drawn as a waterfall, read from the right (Power BI draws a waterfall left to right only; waterfallRtl in reportNotes says what each became). For charts left to right pass chartAxes: "standard".' }
     : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
+  // (D1) a right-to-left report's waterfalls: what each was written as (the plan says it too, waterfallRtl)
+  (r.waterfallRtl || []).forEach((x) => reportNotes.push(`The waterfall${x.title ? ` "${visible(x.title)}"` : ''} on "${visible(x.page)}": ${x.written === 'columnChart' ? x.what : x.what + (x.why ? ` (${x.why})` : '')}.`));
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
   // 0.2.9 part 2 (the owner's own test of 0.2.8): what the report does to its axes, tables and tooltips, said once
@@ -1183,7 +1187,7 @@ function reportRun(a, mode) {
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
     galleryList ? { gallery: { slots: galleryList } } : {});
   };
-  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList };
+  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
@@ -1212,7 +1216,7 @@ async function exactArtifact(ab, pin, lang) {
   try { built = reportRun(ab, 'build'); } catch (e) { return null; }
   const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery };
+  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
@@ -1566,6 +1570,9 @@ server.registerTool('plan_layout', {
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; if (k.why) sl.kindWhy = k.why; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => Object.assign({ role: x.role, from: x.plannedAs, to: x.kind }, x.kindWhy ? { why: x.kindWhy } : {}));
   const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, page by page, each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units on a slot the user placed, or the slot\'s own kind when the fields don\'t fit) and why; on a design at most one goes on a page, only where its fields suit, and a kind no page took is listed as not placed, with why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
+  // (D1) a right-to-left plan's waterfalls, said before the go as the exact report writes them
+  const waterfallRtl = exact && exact.waterfallRtl && exact.waterfallRtl.length ? { waterfallRtl: { charts: exact.waterfallRtl.map((x) => Object.assign({ page: visible(x.page), title: x.title ? visible(x.title) : null, written: x.written === 'columnChart' ? 'stacked column chart drawn as a waterfall' : 'waterfall, left to right', what: x.what }, x.why ? { why: x.why } : {})),
+    sayInPlan: 'Say in the plan, for each waterfall, in the person\'s terms: "no Total column in Arabic: the last step on the left ends at the total" (labelled with the total, and every step\'s tooltip gives the running total), because Power BI draws a waterfall left to right only; or that it is kept a waterfall, left to right, and why.' } } : {};
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
@@ -1573,7 +1580,7 @@ server.registerTool('plan_layout', {
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, waterfallRtl, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
     // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
     // shows all; a slot the writer does not cut (a time or known category) is not said to be cut. No lint: the slot's N
     const lt = designLint.designLint && designLint.designLint.tops, written = new Map();

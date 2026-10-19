@@ -177,15 +177,19 @@ let RA = null;
 {
   const r = RA = get(() => build(ARB, { lang: 'ar', gallery: true, name: 'GA' }));
   // (in the order of the slots: a right-to-left page writes its visuals in its own reading order)
-  const ts = r.files ? [(v) => v.visual.visualType === 'lineClusteredColumnComboChart', (v) => v.visual.visualType === 'waterfallChart', (v) => !!(v.visual.query && v.visual.query.queryState.Rows)].map((f) => titleOf(visuals(r).find(f) || { visual: {} })) : [];
+  // (D1, changed on purpose: the right-to-left waterfall is a stacked column chart, columnChart, drawn as a waterfall)
+  const ts = r.files ? [(v) => v.visual.visualType === 'lineClusteredColumnComboChart', (v) => v.visual.visualType === 'columnChart', (v) => !!(v.visual.query && v.visual.query.queryState.Rows)].map((f) => titleOf(visuals(r).find(f) || { visual: {} })) : [];
   chk(() => JSON.stringify(ts) === JSON.stringify(['إجمالي المبيعات وإجمالي التكلفة حسب الربع', 'إجمالي المبيعات حسب الربع', 'إجمالي المبيعات حسب القناة، لكل المنطقة']),
     () => `T: Arabic titles («و», «، لكل»): ${r.threw || JSON.stringify(ts)}`);
   const mixed = G ? G.title('combo', Object.assign({}, ARB, { kpis: [ARB.measure, AED2] }), 'حسب') : null;
   chk(() => mixed === 'إجمالي المبيعات حسب الربع', () => `T: never half Arabic, half English: an English line measure is left out of an Arabic title: ${mixed}`);
   // right to left: mirrored as the other charts (value axis right, categories reversed); the waterfall by its sort
-  const vs = r.files ? visuals(r) : [], wf = vs.find((v) => v.visual.visualType === 'waterfallChart'), cb = vs.find((v) => v.visual.visualType === 'lineClusteredColumnComboChart');
+  // (D1, changed on purpose: Desktop 2.159 showed R3's Descending waterfall reverse time, not the direction; the waterfall
+  // is now the stacked column chart that reads from the right, sorted Descending by the quarter itself, A to Z being its
+  // order (test-0.3.0-waterfall-rtl2.mjs checks its measures and the order Desktop draws))
+  const vs = r.files ? visuals(r) : [], wf = vs.find((v) => v.visual.visualType === 'columnChart'), cb = vs.find((v) => v.visual.visualType === 'lineClusteredColumnComboChart');
   const va = (v) => (((v.visual.objects || {}).valueAxis || [])[0] || { properties: {} }).properties, ca = (v) => (((v.visual.objects || {}).categoryAxis || [])[0] || { properties: {} }).properties;
-  chk(() => cb && S(va(cb).switchAxisPosition) === 'true' && S(ca(cb).invertAxis) === 'true' && wf && S(va(wf).switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
+  chk(() => cb && S(va(cb).switchAxisPosition) === 'true' && S(ca(cb).invertAxis) === 'true' && wf && S(va(wf).switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending' && wf.visual.query.sortDefinition.sort[0].field.Column.Property === 'الربع',
     () => `T: a right-to-left report mirrors the gallery charts (the waterfall by its sort: its category axis has no invertAxis): ${JSON.stringify(cb && cb.visual.objects)} ${JSON.stringify(wf && [wf.visual.objects, wf.visual.query.sortDefinition])}`);
 }
 

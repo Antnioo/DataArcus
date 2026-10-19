@@ -185,7 +185,8 @@
    * @property {boolean} [sample]  the sample model and data (without model)
    * @property {{byPath: string, byConnection: string, names: Object<string, string[]>, taken: string[]}} [model]  the user's
    *   model: byPath (its .SemanticModel folder) or byConnection; names: each table's column and measure names (the
-   *   report's own measures never take one); taken: report and .pbip names already in the folder
+   *   report's own measures never take one); taken: report and .pbip names already in the folder; columns (D1): each
+   *   table's columns { name: { type, sortBy } }, for a right-to-left waterfall's order
    * @property {Bind} [bind]  the fields (the sample's own with sample)
    * @property {Object<string, string>} [texts]  the report's words (design-engine REPORT_TEXTS): reset, resetTip, pages,
    *   close, filterPanel, openFilters, closeFilters, filtersOpen, filtersClosed, header, kpis, filters, slicer, logo,
@@ -226,6 +227,7 @@
    * @property {Array} noPageButtons  pages without page buttons (no room)
    * @property {Array} tableColumns  tables that hold fewer fields than given
    * @property {Array} rowLabels  the Arabic tables' row-label measures
+   * @property {Array} [waterfallRtl]  D1: each waterfall of a mirrored right-to-left report: { page, title, written ('columnChart': drawn from the report's measures, read from the right; 'waterfallChart': kept left to right), what, why?, measures? }
    * @property {Array} rowLabelSkipped
    * @property {Array} extRenamed  report measures renamed because the model has the name
    * @property {Object} chartColors
@@ -494,7 +496,7 @@
     // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
     if (noData.length || rowLabels.length || timeExt.length) {
       const ents = extFile ? extFile.entities : [];
-      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }); });
+      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push(Object.assign({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }, c.formatString ? { formatString: String(c.formatString) } : {})); });
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
@@ -508,6 +510,7 @@
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
 

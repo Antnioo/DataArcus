@@ -91,7 +91,8 @@ try {
       pages: [{ name: 'الصفحة', page: { w: 1280, h: 720 }, slots: [{ kind: 'combo', x: 20, y: 20, w: 610, h: 330 }, { kind: 'waterfall', x: 650, y: 20, w: 610, h: 330 }, { kind: 'multiples', x: 20, y: 370, w: 1240, h: 330 }], panel: null, hand: true, png: new Uint8Array([1]) }] }));
     const files = {}; (r.files || []).filter((f) => /\.json$/.test(f.path)).forEach((f) => { try { files[f.path] = JSON.parse(String(f.data)); } catch (e) { /* not JSON */ } });
     const types = Object.values(files).map((j) => j.visual && j.visual.visualType).filter(Boolean);
-    chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
+    // (D1, changed on purpose: a mirrored right-to-left waterfall is written as the stacked column chart, columnChart, read from the right)
+    chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('columnChart') && !types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
     const bad = stray(shownTexts(files), names);
     chk(() => r.files && !bad.length, () => `AT-2d. the Arabic gallery page shows no English word but the fields' names: ${JSON.stringify(uniq(bad).slice(0, 12))}`);
   }
