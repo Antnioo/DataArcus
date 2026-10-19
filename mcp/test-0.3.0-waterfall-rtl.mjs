@@ -77,9 +77,13 @@ chk(() => !(td.json.visual.objects || {}).categoryAxis && sort0(td.json).directi
 // sorted by its measure (largest first): mirrored by Ascending, the largest at the right (as the column charts)
 const byY = JSON.parse(JSON.stringify(we)); byY.visual.query.sortDefinition = { sort: [{ field: JSON.parse(JSON.stringify(we.visual.query.queryState.Y.projections[0].field)), direction: 'Descending' }], isDefaultSort: true };
 chk(() => sort0(Mirror.mirrorVisual(byY, 1280, {}).json).direction === 'Ascending', () => 'M4: a waterfall sorted by its measure is mirrored by Ascending');
-// time kept left to right on request (timeRightToLeft: false): its sort stays, the value axis still goes right
+// time kept left to right on request (timeRightToLeft: false): the waterfall follows the column charts' rule exactly
+// (written first as "the sort stays Ascending"; the twin keeps only a sort by the category itself, and a column chart
+// sorted by Min of the month number is flipped too: listed in the PR under "Seen, not in scope", not changed here)
 const kept = Mirror.mirrorVisual(we, 1280, { timeRightToLeft: false, dateTables: [T] });
-chk(() => sort0(kept.json).direction === 'Ascending' && lit(props(kept.json, 'valueAxis').switchAxisPosition) === 'true', () => `M5: timeRightToLeft false keeps the month order: ${show(kept.json)}`);
+const asCol = JSON.parse(JSON.stringify(we)); asCol.visual.visualType = 'clusteredColumnChart';
+const keptCol = Mirror.mirrorVisual(asCol, 1280, { timeRightToLeft: false, dateTables: [T] });
+chk(() => JSON.stringify(kept.json.visual.query) === JSON.stringify(keptCol.json.visual.query) && lit(props(kept.json, 'valueAxis').switchAxisPosition) === 'true', () => `M5: timeRightToLeft false: the waterfall's sort as a column chart's: ${show(kept.json)} vs ${show(keptCol.json)}`);
 chk(() => /waterfall/i.test(Mirror.KIND_WHAT.waterfall || '') && /sort/.test(Mirror.KIND_WHAT.waterfall) && /no setting|has no/i.test(Mirror.KIND_WHAT.waterfall),
   () => `M6: the plan says what is done (the order reversed by the sort) and what Power BI has no setting for: ${Mirror.KIND_WHAT.waterfall}`);
 
