@@ -26,6 +26,8 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - #64 Column or bar from the label limits measured in Desktop 2.159 (B-140 option B).
 - #69 B-168: `plan_layout` checks the exact report `create_report` writes, and the write is those bytes.
 - #70, #71 The 0.2.9.1 fixes (below), with main.
+- R2, the owner's must-fix: an Arabic report from an English-named model shows no English title words; the plan pins the
+  fixed list's Arabic names and lists every field kept in English, with why, before the go.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
