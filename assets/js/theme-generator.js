@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261018b').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261019d5').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
       const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
         const files = P.build(input).files;
