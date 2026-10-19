@@ -27,11 +27,19 @@ const plans = new Map();
 const now = () => Date.now();
 const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, the report\'s name and title, theme, logo, colours and options, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id: it opens DataArcus\'s approval window in their browser, and only their click on Approve there approves the plan. Then call this tool again with planId.';
 
-/** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: the model's key (its folder's real path)
- *  or null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
+// (0.3, B-154, an outside audit of 0.2.9: an approval pinned the inputs, not the model) a model is given as { key, print }:
+// its key (its folder's real path) and its fingerprint (loadModel's print: a hash of its definition files). A plan made
+// from a model pins its print; the write passes the print of the model it read again, and a model changed since the go
+// is refused. A key alone (a string) is a model without a print
+const modelOf = (m) => (m && typeof m === 'object' ? { key: m.key || null, print: m.print || null } : { key: m || null, print: null });
+/** (B-154) why a write is refused when the model changed after the go (the twin's writer says it too) */
+export const modelChanged = (id) => `Nothing was written: the model changed after you approved: make the plan again (plan ${id} was made from the model as it was then: call the tool without planId), show it to the user and wait for their go.`;
+
+/** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: { key, print } (or the key alone) or
+ *  null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
 export function propose(kind, model, writes, data) {
-  const id = 'plan-' + crypto.randomBytes(6).toString('hex');
-  plans.set(id, { id, kind, model: model || null, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null });
+  const id = 'plan-' + crypto.randomBytes(6).toString('hex'), m = modelOf(model);
+  plans.set(id, { id, kind, model: m.key, modelPrint: m.print, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null });
   return id;
 }
 const alive = (p) => p && now() - p.created <= TTL;
@@ -39,7 +47,8 @@ const alive = (p) => p && now() - p.created <= TTL;
 /** The answer's plan block for a proposal: nothing was written, what to do next. */
 export function proposal(id, extra) {
   const p = plans.get(id);
-  return Object.assign({ planId: id, status: 'proposed', written: false, writesAfterGo: p.writes, sayFirst: 'Nothing was written. ' + SHOW, expiresInMinutes: Math.round(TTL / 60000) }, extra || {});
+  return Object.assign({ planId: id, status: 'proposed', written: false, writesAfterGo: p.writes, sayFirst: 'Nothing was written. ' + SHOW, expiresInMinutes: Math.round(TTL / 60000) },
+    p.modelPrint ? { modelPinned: 'The model as it was read for this plan (a hash of its definition files): if the model changes before the write, nothing is written and the plan must be made again.' } : {}, extra || {});
 }
 
 /** A plan that can still be approved (known, alive), or a throw with what to do: checked before the person is asked. */
@@ -104,7 +113,8 @@ function differences(want, got) {
 
 /** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model:
  *  its model's key (or null); pin: the write's own inputs in the form the plan pinned them (A6-1, A6-5). */
-export function gate(tool, id, model, pin, opts) {
+export function gate(tool, id, model0, pin, opts) {
+  const { key: model, print } = modelOf(model0);
   if (id == null || id === '') throw new Error(`Nothing was written: ${tool} writes a file only with an approved plan id (planId). ${tool === 'create_report' ? 'Call plan_layout with the model (path) and the plan\'s fields: it checks the plan against the tools\' limits and gives a plan id. ' : ''}${SHOW}`);
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
@@ -115,6 +125,10 @@ export function gate(tool, id, model, pin, opts) {
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (opts && opts.approvalOnly) return p;
+  // (B-154) the model as it was at the plan: read again by the write, the same, or nothing is written. A write that read
+  // no print is refused too (fails closed); the twin's writer checks its model itself, with the plan's data (arabic-twin)
+  if (p.modelPrint && print && print !== p.modelPrint) throw new Error(modelChanged(p.id));
+  if (p.modelPrint && !print && tool !== 'create_arabic_twin') throw new Error(`Nothing was written: ${tool} did not read the model again to compare it with the approved plan ${p.id}. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
   const want = p.data && p.data.pins && p.data.pins[tool];
   // (Z-01: the gate fails closed: a writing tool's plan must pin its inputs; the twin writes only from the plan's data)

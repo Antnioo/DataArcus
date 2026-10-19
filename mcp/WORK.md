@@ -194,6 +194,31 @@ The owner's go (18 Oct, R&D for 0.3): titles that say what the visual answers, f
 - **Decisions I made:** the owner's "Top N of M:" lead (design rounds 8/10) stays; the story is its core, so no "Top 10
   Customers by Sales" form. Rules apply only when a title doesn't fit (no "Total" dropped on a wide chart). KPI titles
   keep the wrap rule (none cut on the golden models). Tooltip pages' titles unchanged.
+## J5 (0.3 R&D): privacy and approval hardening B-152 + B-154 (18 Oct, cloud builder; branch `feat/0.3-approval-hardening` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, through the reviewer). From an outside audit of 0.2.9 (every write is gated; these were the gaps).
+- **B-152:** reportPrint, the Arabic twin and the native copy read EVERY file of a .Report folder. Plan: `strictFiles`
+  (lib/read-report.mjs) lists only the report's own file types: definition.pbir, .platform, semanticModelDiagramLayout.json,
+  mobileState.json, definition/**/*.json, StaticResources/** images and JSON (and .pbiviz), CustomVisuals/** (a private
+  visual's package files); any other file (a stray .csv/.xlsx, .pbi/localSettings.json) is never opened, hashed or copied
+  (only its name is seen), and the twin's and the native copy's plans name it (`notCopied`). Links still refuse the read.
+- **B-154:** an approval pinned inputs, not the model. Plan: loadModel returns `print` (sha256 of the definition files it
+  already reads: model.bim, the .tmdl files; a .pbit or model.bim file's own bytes; nothing else, never .pbi/cache.abf);
+  Plans.propose/gate take `{ key, print }`; a write after the model changed is refused "Nothing was written: the model
+  changed after you approved: make the plan again ...". Every plan that reads a model: scripts, report (and the native
+  copy), calendar, twin (its model through definition.pbir; checked in writeTwin, one small change, rc.24 touches the file).
+- Test first: `mcp/test-approval-hardening.mjs` (22 checks, in npm test): **18 red on main**. Expected after: 22 pass;
+  every other count of npm test unchanged.
+- **Done (`d902fc6`):** as planned. Full `npm test` (Linux): all PASS, counts unchanged (release-text 4, test.mjs 1569,
+  v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51) + approval-hardening 22.
+  No website file touched. Shared files touched: lib/read-report.mjs, lib/model.mjs, lib/plans.mjs, server.mjs (8 call
+  sites: modelKey -> modelRef), lib/arabic-twin.mjs (5 lines), lib/native-copy.mjs, PRIVACY.md, README.md.
+- Decisions made: the allowlist by place in the folder (Microsoft's report-folder doc), .pbi/localSettings.json left out
+  (user-local, Git ignores it); the print is computed from the bytes loadModel already reads (no second read); a write
+  that passes no print to a plan that pinned one is refused (fails closed); the twin checks the model in writeTwin from
+  the plan's data (as its source report). Seen, not in scope: read_report/check_report still walk every file name (they
+  read only known JSON paths); the model's report files are not in the model's print (a report edited after the go
+  is not a model change).
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 reaches testers.
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
