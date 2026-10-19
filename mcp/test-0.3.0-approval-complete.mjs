@@ -9,6 +9,7 @@ import './test-env.mjs';
 //   A4 a theme whose report's theme changed after the go: "the model or its report changed after you approved"
 //   A5 an Arabic plan whose approved displayNames hold a fixed-list name: the sentence counts them, never "no field"
 //   A6 approve_plan's "waiting" says a later click still counts and to call approve_plan again
+//   A1-5 the written twin: Microsoft's validator 0 errors, check_report 0 "can break"
 //   A7 hostile names on the new pages are escaped and shown as text
 //   node test-0.3.0-approval-complete.mjs
 import fs from 'node:fs';
@@ -85,6 +86,10 @@ try {
     const month = written.find((r) => /Arabic month.*\.tmdl$/.test(r));
     chk(() => month && said(H, 'Arabic month script', 1), () => `A1-4. the month script is its own group, named as what it is: ${month} ${section(H, 'Files that will be written', 800)}`);
     chk(() => html.length > 0 && !html.includes(HOSTILE) && !/<script>alert|<b>bold<\/b>/.test(html), () => 'A7-1. a hostile page name is escaped on the twin\'s page');
+    // the twin this test writes: Microsoft's validator 0 errors and check_report 0 "can break"
+    const c = await w.call('check_report', { path: 'tw/Twin Sales AR.pbip' }), j = c.j || {};
+    chk(() => !c.err && j.validator && j.validator.ran && j.validator.errors === 0 && j.impact.kinds.canBreak.count === 0,
+      () => `A1-5. the written twin: validator 0 errors, check_report 0 "can break": ${c.err ? c.t.slice(0, 300) : JSON.stringify({ v: j.validator, canBreak: j.impact && j.impact.kinds.canBreak.count })}`);
   }
 
   // ---------- A2 + A7: the theme's page, from a model's report ----------
