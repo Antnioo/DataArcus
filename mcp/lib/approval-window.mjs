@@ -206,6 +206,8 @@ export function summary(kind, data) {
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
     // (0.3.0 R2: an Arabic report's texts are Arabic, or listed here with why before the go) the fields kept in English
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic name)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
+    // (D1) a right-to-left report's waterfalls: what each is written as, before the click
+    if (Array.isArray(d.waterfallRtl) && d.waterfallRtl.length) sections.push({ heading: `Waterfalls, right to left (${d.waterfallRtl.length})`, rows: d.waterfallRtl.map((x) => [`${cut(String(x.page || ''), 60)}${x.title ? `: ${cut(String(x.title), 80)}` : ''}`, `${String(x.written || '')}: ${String(x.what || '')}${x.why ? ` (${String(x.why)})` : ''}`]) });
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
     const LK = { theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;

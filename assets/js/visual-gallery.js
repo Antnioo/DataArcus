@@ -192,6 +192,91 @@
     return query;
   }
 
+  // ---- a right-to-left waterfall (D1, the owner's must-fix 2; seen in Desktop 2.159 on R3's Descending waterfall) ----
+  // Power BI accumulates a waterfall in its sort order, left to right, and has no setting to invert its category axis:
+  // sorted Descending, December was the first step at the LEFT and the bars climbed to January. So a right-to-left
+  // waterfall is a stacked column chart (columnChart) drawn as one, from report-level measures (reportExtensions.json):
+  // an invisible base and the step, the running total in the ORIGINAL order (the time order), the axis sorted the other
+  // way (the first period at the RIGHT), the value axis at the right. A step that crosses zero is drawn in two parts:
+  // Power BI stacks positives up from 0 and negatives down from 0. No Total column: the category axis holds only the
+  // model's members. query: the waterfall's own (one Category column, one Y; Tooltips only for its sort);
+  // ctx: { extMeasure (t, want, expression, dataType, formatString) -> its free name, sortByOf (t, c) -> the model's
+  // sort-by column or null, typeOf (t, c) -> its data type or null, colours: { rise, fall } (fills) or null, grid, lang,
+  // formatString }. Returns { ok: true, visualType, query, objects, measures } or { ok: false, why }.
+  const WF_PARTS = ['base', 'rise', 'fall', 'rise below 0', 'fall below 0'];
+  const WF_WORDS = { en: ['Base', 'Rise', 'Fall', 'Rise below 0', 'Fall below 0', 'Running total'], ar: ['القاعدة', 'ارتفاع', 'انخفاض', 'ارتفاع تحت الصفر', 'انخفاض تحت الصفر', 'الإجمالي الجاري'] };
+  const WF_WHAT = {
+    columnChart: 'written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the report\'s own measures): the running total in time order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps; no Total column (Power BI\'s axis holds only the model\'s members: the total is where the leftmost step ends, and every step\'s tooltip gives the running total); no legend; hovering the empty space under a step shows its base',
+    waterfallChart: 'A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)'
+  };
+  const NUMERIC = /^(int64|integer|whole|double|decimal|number|currency|date|datetime|datetimezone)$/i;
+  function rtlWaterfall(query0, ctx) {
+    const c = ctx || {}, no = (why) => ({ ok: false, why });
+    const qs = query0 && query0.queryState;
+    if (!qs || !qs.Category || !qs.Y) return no('the waterfall has no category or value');
+    if (Object.keys(qs).some((r) => !['Category', 'Y', 'Tooltips'].includes(r))) return no('the waterfall has a breakdown');
+    const cp = qs.Category.projections || [], yp = qs.Y.projections || [];
+    if (cp.length !== 1 || yp.length !== 1) return no('the waterfall has more than one category or value');
+    const cat = cp[0].field && cp[0].field.Column, yf = yp[0].field || {};
+    if (!cat || !(yf.Measure && !yf.Measure.Expression.SourceRef.Schema || yf.Aggregation && yf.Aggregation.Expression.Column)) return no('the waterfall\'s category or value is not a column or a measure of the model');
+    const colOf = (f) => ({ t: f.Expression.SourceRef.Entity, c: f.Property });
+    const cc = colOf(cat), sd = query0.sortDefinition && query0.sortDefinition.sort && query0.sortDefinition.sort[0];
+    // the order the steps follow left to right in the original: its sort's column, or the category's own order
+    let order = null, sortField = null, textOrder = false;
+    const catType = c.typeOf ? c.typeOf(cc.t, cc.c) : null;
+    const dir = sd && sd.direction === 'Descending' ? 'Descending' : 'Ascending';
+    if (sd && sd.field && sd.field.Aggregation && sd.field.Aggregation.Expression.Column) { order = colOf(sd.field.Aggregation.Expression.Column); sortField = sd.field; }
+    else if (!sd || (sd.field && sd.field.Column && JSON.stringify(sd.field) === JSON.stringify(cp[0].field))) {
+      const by = c.sortByOf ? c.sortByOf(cc.t, cc.c) : null;
+      if (by) order = { t: cc.t, c: by }; else if (NUMERIC.test(String(catType || ''))) order = cc;
+      // a text with no sort-by column: A to Z, when that is known to be its order (sorted by itself, or the writer's own
+      // rule for a time text with no order, ctx.azText: timeAxisPlan's 'az')
+      else if (sd || c.azText) { order = cc; textOrder = true; }
+      else return no('its category is a text with no order of its own (no sort-by column, no sort): the running total has no order to follow');
+      sortField = cp[0].field;
+    } else return no('it is sorted by its value: the running total would follow the ranking, not time');
+    const yName = yf.Measure ? yf.Measure.Property : yf.Aggregation.Expression.Column.Property, t = yf.Measure ? yf.Measure.Expression.SourceRef.Entity : yf.Aggregation.Expression.Column.Expression.SourceRef.Entity;
+    let y, o, cn;
+    try { y = Q.valueDax({ field: yf }); o = Q.daxNames.column(order.t, order.c); cn = Q.daxNames.column(cc.t, cc.c); } catch (e) { return no('a name holds a control character, which no DAX may name'); }
+    // (no comparison sign, as the writer's other report measures: a <= b is MAX ( a, b ) = b; a text is compared with
+    // <= or >=, the sort's own A to Z: MAX of two texts is not proven)
+    const upTo = textOrder ? o + (dir === 'Descending' ? ' >= _o' : ' <= _o') : dir === 'Descending' ? 'MIN ( ' + o + ', _o ) = _o' : 'MAX ( ' + o + ', _o ) = _o';
+    const head = 'VAR _y = ' + y + ' VAR _o = MAX ( ' + o + ' ) VAR _e = CALCULATE ( ' + y + ', ' + (o === cn ? '' : 'REMOVEFILTERS ( ' + cn + ' ), ') + 'FILTER ( ALL ( ' + o + ' ), ' + upTo + ' ) ) VAR _s = _e - _y VAR _lo = MIN ( _s, _e ) VAR _hi = MAX ( _s, _e ) RETURN ';
+    const above = 'MIN ( _lo, 0 ) = 0', below = 'MAX ( _hi, 0 ) = 0', step = 'IF ( ' + above + ', _hi - _lo, IF ( ' + below + ', _lo - _hi, _hi ) )', cross = 'NOT ( ' + above + ' ) && NOT ( ' + below + ' )';
+    const DAX = [
+      'IF ( ISBLANK ( _y ), BLANK (), IF ( ' + above + ', _lo, IF ( ' + below + ', _hi, BLANK () ) ) )',
+      'IF ( SIGN ( _y ) = 1, ' + step + ' )',
+      'IF ( SIGN ( _y ) = -1, ' + step + ' )',
+      'IF ( SIGN ( _y ) = 1 && ' + cross + ', _lo )',
+      'IF ( SIGN ( _y ) = -1 && ' + cross + ', _lo )',
+      'IF ( ISBLANK ( _y ), BLANK (), _e )'
+    ];
+    const words = WF_WORDS[c.lang === 'en' ? 'en' : 'ar'], measures = [];
+    const projOf = (i) => {
+      const want = 'Waterfall ' + (i < 5 ? WF_PARTS[i] : 'running total') + ': ' + shown(yName);
+      const m = c.extMeasure(t, want, head + DAX[i], 'Double', c.formatString || null);
+      measures.push({ t, m, expression: head + DAX[i] });
+      return { field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m, displayName: words[i] };
+    };
+    const Y = [0, 1, 2, 3, 4].map(projOf), run = projOf(5);
+    const query = { queryState: { Category: JSON.parse(JSON.stringify(qs.Category)), Y: { projections: Y }, Tooltips: { projections: [run].concat(JSON.parse(JSON.stringify((qs.Tooltips || {}).projections || []))) } },
+      sortDefinition: { sort: [{ field: JSON.parse(JSON.stringify(sortField)), direction: dir === 'Descending' ? 'Ascending' : 'Descending' }], isDefaultSort: true } };
+    const sel = (i) => ({ metadata: Y[i].queryRef }), col = c.colours || {};
+    const fills = [1, 2, 3, 4].map((i) => (col[i % 2 ? 'rise' : 'fall'] ? { properties: { fill: col[i % 2 ? 'rise' : 'fall'] }, selector: sel(i) } : null)).filter(Boolean);
+    const objects = {
+      valueAxis: obj(Object.assign({ switchAxisPosition: bool(true) }, c.grid ? { gridlineColor: color(c.grid) } : {})),
+      legend: obj({ show: bool(false) }),
+      dataPoint: [{ properties: { fillTransparency: num(100) }, selector: sel(0) }].concat(fills),
+      labels: [{ properties: { show: bool(true) } }].concat([0, 3, 4].map((i) => ({ properties: { showSeries: bool(false) }, selector: sel(i) })))
+    };
+    // a column chart by a date or a number draws a continuous axis, which ignores the sort (the twin's T-2, round 13):
+    // one column per member, as the waterfall's own axis
+    if (NUMERIC.test(String(catType || ''))) objects.categoryAxis = obj({ axisType: str('Categorical') });
+    return { ok: true, visualType: 'columnChart', query, objects, measures };
+  }
+  // a fill from a colour (#rrggbb), for the callers' colours
+  const fillOf = (hex) => (typeof hex === 'string' && /^#[0-9a-f]{6}$/i.test(hex) ? color(hex) : null);
+
   // the formatting objects and properties written per kind, for the tests to check against Microsoft's capabilities
   const WRITES = Object.freeze({
     lineClusteredColumnComboChart: { roles: ['Category', 'Y', 'Y2'], objects: { valueAxis: ['secShow', 'gridlineColor', 'switchAxisPosition'], lineStyles: ['strokeWidth'], categoryAxis: ['invertAxis'] } },
@@ -199,6 +284,6 @@
     clusteredColumnChart: { roles: ['Category', 'Y', 'Rows'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'], categoryAxis: ['invertAxis'] } }
   });
 
-  const api = { KINDS, KIND_NAMES, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, bindQuery, titleParts, title, objects, mirrorSort };
+  const api = { KINDS, KIND_NAMES, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, bindQuery, titleParts, title, objects, mirrorSort, rtlWaterfall, fillOf, WF_WHAT, WF_WORDS };
   if (node) module.exports = api; else root.DAGallery = api;
 })(typeof self !== 'undefined' ? self : this);
