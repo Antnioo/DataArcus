@@ -57,6 +57,8 @@ const server = new McpServer({ name: 'dataarcus', version: VERSION }, { instruct
 const planIdInput = z.string().max(40).optional().describe('The approved plan id (from plan_layout, or from this tool\'s own answer without one, then approve_plan after the user\'s go). Without an approved planId this tool writes nothing and answers with what it would write and a proposed planId');
 // the model a plan is for: its folder's real path (a plan for one model never approves a write for another)
 const modelKey = (m, p) => { const f = m.folder || inside(p); try { return fs.realpathSync.native(f); } catch (e) { return f; } };
+// (0.3, B-154) the model for the gate: its key and its fingerprint (loadModel's print), pinned by the plan, compared at the write
+const modelRef = (m, p) => ({ key: modelKey(m, p), print: m.print });
 const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 // Round 17 (the outside review's G-02, privacy): no answer or error sends an absolute local path to the AI. Paths in the
 // working folder become relative to it, the working folder itself is named by its last folder name, and the user's home
@@ -446,7 +448,7 @@ server.registerTool('check_model_health', {
   const answerPin = given.length ? given : undefined, writeAnswersFile = !!forgetAnswers || given.length > 0;
   // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
   const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
-  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelKey(m, p), pinH);
+  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelRef(m, p), pinH);
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
   // AUD-032 (round 20): a name with a control character (a tab, a line break) is never written raw into a fix script:
@@ -522,7 +524,7 @@ server.registerTool('check_model_health', {
   if (write) Plans.consume(planId, 'check_model_health');   // (audit 6, A6-2)
   // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}`} (hashes and the answer only, no DAX)`] : [];
-  const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
+  const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
@@ -667,7 +669,7 @@ server.registerTool('create_report', {
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
-    const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelKey(mm, a.path), reportPin(a, a.fields));
+    const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
     const done = writeNative(a.customVisualsFrom, mm, p); Plans.consume(a.planId, 'create_report'); return text(done);
   }
   // rc.22, B-134 (the owner's rc.21 test: a missing input was told before the plan's approval): a plan that can't be used
@@ -694,7 +696,7 @@ server.registerTool('create_report', {
     if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
   // the gate (0.2.9, P-1; audit 6, A6-1): nothing is written without an approved plan for this model, whose pinned inputs
   // (design, page, language, fields, filters, names, texts, SVG designs) are these
-  Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
+  Plans.gate('create_report', a.planId, modelRef(m, a.path), reportPin(a, a.fields));
   // Round 12 (#26): a measure that shows text ("Yes", a date) is never a KPI card, even when the plan names it: left out, and told
   const textKpis = F && F.kpis ? F.kpis.filter((k) => k.text) : [];
   if (textKpis.length) F.kpis = F.kpis.filter((k) => !k.text);
@@ -1306,7 +1308,7 @@ server.registerTool('plan_layout', {
   if (m0) { const scL = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (scL.needsFocus) planProblems.push(`name an area first: ${scL.why} ${scL.how} Areas in this model: ${(scL.areas || []).map((x) => x.area).join(', ') || 'none (no measure display folders)'}.`); }
   if ((pf.slicers || []).length && !r.design.layout.filters) planProblems.push('slicers (planFields.slicers): this layout has no filters; plan them with filters "start", "end" or "top", or leave the slicers out.');
   let model = null, planned = null;
-  if (a.path) { const m = m0; model = modelKey(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
+  if (a.path) { const m = m0; model = modelRef(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
   else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
   // 0.2.9 part 2 (O-13): how the plan's month axis will be ordered, said before the plan is shown
   let timeAxis = {};
@@ -1406,7 +1408,7 @@ server.registerTool('add_gulf_calendar', {
 }, safe(async (a) => {
   const m = loadModel(a.path);
   // the gate (0.2.9): with an approved plan the script is written; without one every check runs and the file is only named
-  const write = a.planId != null && a.planId !== '' && !!Plans.gate('add_gulf_calendar', a.planId, modelKey(m, a.path), inputsPin(a));
+  const write = a.planId != null && a.planId !== '' && !!Plans.gate('add_gulf_calendar', a.planId, modelRef(m, a.path), inputsPin(a));
   // the script's place, as check_model_health's fix scripts: next to the project, never inside the model folder
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
@@ -1414,7 +1416,7 @@ server.registerTool('add_gulf_calendar', {
   const named = (dir, base) => path.join(dir, base + '.tmdl');
   const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
-    plan: Plans.proposal(Plans.propose('calendar', modelKey(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`], { pins: { add_gulf_calendar: inputsPin(a) } })) }));
+    plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`], { pins: { add_gulf_calendar: inputsPin(a) } })) }));
 }));
 
 // rc.22, B-139 (the twin's approval page listed internal ids): each approved text named by what it is and its own text,
@@ -1440,7 +1442,7 @@ server.registerTool('create_arabic_twin', {
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, names: twinNames(P), timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
+  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, modelPrint: P.modelPrint, names: twinNames(P), timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
 }));
 
 // (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
