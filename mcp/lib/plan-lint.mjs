@@ -49,5 +49,9 @@ export function planLint(a) {
   // (rc.22, B-140) the kinds the writer gave the plan's slots, where they differ (a column chart whose category names
   // can't stand level is a bar chart; a two-valued category a donut): kept off the answer (not enumerable), the plan
   // shows them on its slots
-  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
+  // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
+  return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
+    kinds: { value: (r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false },
+    tops: { value: (r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false } });
 }
