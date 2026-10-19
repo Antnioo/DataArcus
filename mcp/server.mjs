@@ -31,7 +31,7 @@ import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
 const require = createRequire(import.meta.url);
 const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
-const Mirror = require('../assets/js/report-mirror.js');
+const Mirror = require('../assets/js/report-mirror.js'), Gallery = require('../assets/js/visual-gallery.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
@@ -43,7 +43,9 @@ import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 // The visuals a report slot can be (audit 6, A6-16): one list for create_report's schema, the tools' limits and rule 6
-const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'];
+// (0.3.0 D2: the visual gallery's three, written only when the user asks: a slot of that kind, or create_report's gallery)
+const GALLERY_KINDS = Object.values(Gallery.TOOL_NAMES);
+const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'].concat(GALLERY_KINDS);
 // The tools' limits, given to the plan step so a plan is checked before it is shown (0.2.9, O-12: a plan with 4 slicers
 // was approved, then create_report refused it). create_report's own inputs use the same numbers.
 const LIMITS = { kpiCards: 6, slicers: 3, tableFields: 8, pageFilters: 8, svgColumns: 4, svgCards: 6, displayNameLength: 80, textLength: 400,
@@ -631,6 +633,7 @@ const CREATE_REPORT_INPUTS = {
       label: z.string().min(1).max(40).describe('The name of the report-level measure; not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
+    gallery: z.union([z.boolean(), z.array(z.enum(GALLERY_KINDS)).min(1).max(3)]).optional().describe('Power BI\'s waterfall, combo (line and clustered column) and small multiples, only when the user asks for one: true, every kind whose fields fit, or a list of kinds. On a design, combo takes the trend\'s line chart, waterfall the first column chart (else the trend), smallMultiples the next column chart (else the first bar chart); hand-placed pages name the kind in a slot instead. Each is written only where its fields fit (combo: two measures in ONE unit over a time or ordered axis, otherwise two panels, a line chart each, never a second axis; waterfall: one measure that adds up over a category of 2-12 known members, such as months; smallMultiples: one measure by a category, a panel per member of a second category with few members), else as the slot\'s own kind; the plan\'s gallery says each with why. Left out: none'),
     chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
     chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
     text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box ("What it means" in the focus layout), from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out and the chart beside it takes its room: a placeholder is never written'),
@@ -657,7 +660,7 @@ const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl'];
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery'];
 // (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
 // option left out of create_report takes the plan's value, not a schema default that differs from it)
 const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: false, font: 'Segoe UI' };
@@ -887,6 +890,19 @@ function reportRun(a, mode) {
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
+  // (0.3.0 D2) the visual gallery: on when the user asked (gallery, or a slot of a gallery kind); small multiples take the
+  // bar chart's category for their panels when the plan names no other (the writer's rules decide whether it fits)
+  const galleryOn = (pages) => !!a.gallery || pages.some((p) => (p.slots || []).some((s) => Gallery.isKind(s.kind)));
+  // (and the measures' units from the model's formats, for the combo's one-unit rule)
+  const withSplit = (b, pages) => { if (!b || !galleryOn(pages)) return b; const u = Gallery.withUnits(b, m.tables);
+    return !(u.cats || {}).split && (u.cats || {}).bar ? Object.assign({}, u, { cats: Object.assign({}, u.cats, { split: u.cats.bar }) }) : u; };
+  // what the plan and the answer say of each gallery slot: its kind, what is written (the kind, two panels, or the slot's
+  // own kind) and why, by the writer's own rule on the bound fields
+  const galleryOf = (pages, b) => { const out = [];
+    pages.forEach((p) => (p.slots || []).filter((s) => Gallery.isKind(s.kind)).forEach((s) => { const f = Gallery.fits(s.kind, b);
+      out.push(Object.assign({ page: p.name, kind: Gallery.toTool(s.kind) }, s.role ? { role: s.role } : {}, s.title ? { title: s.title } : {},
+        { written: f.fits ? Gallery.toTool(s.kind) : f.split ? 'two panels (two line charts)' : s.plain || Gallery.KINDS[s.kind].fallback, why: f.why })); }));
+    return out; };
   let r, bind, extra = {}, written, boundPages = null;
   let tinyPage = false, smallPageNote = null, designRepaired = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
@@ -919,6 +935,8 @@ function reportRun(a, mode) {
     // the binding is made first, on the pages' KPI count, which noTime doesn't change)
     const bound = bindFor(kpisOf(projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }))), noTime = !bound.date;
     let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    // (0.3.0 D2) the gallery kinds the user asked for, on the first page's slots (the page the plan shows)
+    if (a.gallery) pages = pages.map((p, i) => (i ? p : Object.assign({}, p, { slots: Gallery.assign(p.slots, a.gallery) })));
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
     if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
@@ -926,7 +944,7 @@ function reportRun(a, mode) {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = listFormats(named(bound))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withSplit(listFormats(named(bound)), pages)), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -939,7 +957,7 @@ function reportRun(a, mode) {
     // hand-placed pages: KPI slots beyond the measures are left out, and named
     const leftOut = [];
     a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nCards) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
-    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
+    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots.map((s) => (s.kind === 'smallMultiples' ? Object.assign({}, s, { kind: 'multiples' }) : s))), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
     let theme = a.theme ? themeOf(a.theme) : { name: a.name };   // (let: the design block's A2 scales it to the page below)
@@ -972,13 +990,14 @@ function reportRun(a, mode) {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = listFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: texts(a.lang),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
     });
   }
   if (!boundPages) boundPages = a.pages;
+  const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
@@ -1155,9 +1174,10 @@ function reportRun(a, mode) {
     // (0.3.0) the phone layout: written for every page unless the design says phoneLayout false
     { phone: phoneAnswer(r.files.some((f) => /\/mobile\.json$/.test(f.path))) },
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {});
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
+    galleryList ? { gallery: { slots: galleryList } } : {});
   };
-  return { files: r.files, finish, m, a11y: r.a11y || null };
+  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
@@ -1186,7 +1206,7 @@ async function exactArtifact(ab, pin, lang) {
   try { built = reportRun(ab, 'build'); } catch (e) { return null; }
   const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y };
+  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
@@ -1416,6 +1436,12 @@ server.registerTool('plan_layout', {
   const planNoTime = (() => { if (!m0) return false; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return false;
     return !(a.planFields || {}).timeAxis && !(Bind.suggest(sc.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; })();
   const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
+  // (0.3.0 D2) the gallery kinds the user asked for, on the designed page's slots as create_report puts them (each slot
+  // keeps its own kind in insteadOf; the writer's decision on the fields is said below, gallery)
+  if (a.gallery && !a.pages) {
+    r.slots = Gallery.assign(r.slots, a.gallery).map((x) => { if (!Gallery.isKind(x.kind)) return x; const y = Object.assign({}, x, { kind: Gallery.toTool(x.kind), visual: Gallery.labelOf(x.kind, a.lang), insteadOf: x.plain }); delete y.plain; return y; });
+    const byRole = new Map(r.slots.map((x) => [x.role, x])); r.forAuthoring.forEach((f) => { const x = byRole.get(f.role); if (x) f.kind = x.kind; });
+  }
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
@@ -1462,7 +1488,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
       const lang = a.lang === 'ar' ? 'ar' : 'en';
-      return Object.assign({ lang }, planPreview({ m: m0, tables: sc.tables, design: r.design, lang, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+      return Object.assign({ lang }, planPreview({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
         second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }));
     } catch (e) { return null; }
   })();
@@ -1476,7 +1502,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
       if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
-      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
+      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   // B-146, the aggregation guard (0.3): the planned page's values read by assets/js/aggregation.js (metadata only). A
@@ -1527,14 +1553,21 @@ server.registerTool('plan_layout', {
   const ofKind = (kd) => r.slots.filter((x) => (x.plannedAs || x.kind) === kd);   // (the layout's own kinds, before any change)
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; if (k.why) sl.kindWhy = k.why; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => Object.assign({ role: x.role, from: x.plannedAs, to: x.kind }, x.kindWhy ? { why: x.kindWhy } : {}));
+  // (0.3.0 D2) each gallery slot as create_report's own build writes it (the exact artifact): the kind, two panels, or the
+  // slot's own kind, with the writer's why; a designed slot shows what is written
+  const galleryPlan = exact && exact.gallery && exact.gallery.length ? exact.gallery : null;
+  if (galleryPlan && !a.pages) galleryPlan.forEach((g) => { const sl = r.slots.find((x) => x.role === g.title && x.kind === g.kind); if (!sl) return;
+    if (g.written !== g.kind) { const k = /^two panels/.test(g.written) ? 'line' : g.written; Object.assign(sl, { kind: k, visual: kindLabel(k, a.lang), galleryAsked: g.kind }); if (/^two panels/.test(g.written)) sl.panels = 2; }
+    sl.galleryWhy = g.why; });
+  const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, for each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units, or the slot\'s own kind when the fields don\'t fit) and why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
     // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
     // shows all; a slot the writer does not cut (a time or known category) is not said to be cut. No lint: the slot's N
     const lt = designLint.designLint && designLint.designLint.tops, written = new Map();
