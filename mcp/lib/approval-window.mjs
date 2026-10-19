@@ -192,6 +192,26 @@ export function summary(kind, data) {
     if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
     return Object.assign(T, { sections });
   }
+  // (0.3, J13 redesign step 2; the laptop's PROOF-rc24 block 2 (b): step 1's page showed the plan's fields, not what was
+  // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
+  // is copied as it is
+  if (kind === 'redesign') {
+    const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
+    const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
+    const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${cut(c.type, 40)}${c.title && typeof c.title === 'string' ? `, "${cut(c.title, 60)}"` : ''})`,
+      [c.from ? `moves from ${at(c.from)} to ${at(c.to)}` : null, c.title && typeof c.title === 'object' ? `title "${cut(c.title.from, 80)}" becomes "${cut(c.title.to, 80)}"` : null].filter(Boolean).join('; ')]));
+    if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
+    const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${cut(x.type, 40)})`, cut(x.why, 200)])));
+    const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
+    sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
+    sections.push({ heading: `Changes (${changes.length})`, rows: changes });
+    sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });
+    sections.push({ heading: 'Kept as it is', rows: [].concat(n('pages', 'page', 'pages'), n('bookmarks', 'bookmark', 'bookmarks'), n('buttons', 'button', 'buttons'), n('reportFilters', 'report filter', 'report filters'), n('pageFilters', 'page filter', 'page filters'),
+      n('visualFilters', 'visual filter', 'visual filters'), n('slicerSelections', 'slicer selection', 'slicer selections'), n('tooltipLinks', 'tooltip link', 'tooltip links'), n('tooltipPages', 'tooltip page', 'tooltip pages'), n('drillthroughPages', 'drillthrough page', 'drillthrough pages'),
+      n('interactions', 'visual interaction', 'visual interactions'), n('groups', 'group', 'groups'), n('customVisuals', 'custom visual', 'custom visuals'), n('phoneLayouts', 'phone layout', 'phone layouts'), n('resources', 'resource file', 'resource files'),
+      [['How', 'copied as they are: their contents (filter values, slicer selections, bookmark states) are not read']]) });
+    return { title: 'Redesign of a report', sections };
+  }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});
     sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic month column', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)]] });

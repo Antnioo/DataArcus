@@ -21,7 +21,7 @@ import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { existingTheme, readReport, reportPrint } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
-import { planRedesign } from './lib/redesign.mjs';
+import { planRedesign, writeRedesign } from './lib/redesign.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
@@ -595,8 +595,10 @@ const CREATE_REPORT_INPUTS = {
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
     // (0.2.9, custom visuals, step C: lib/native-copy.mjs)
     customVisualsFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) whose custom visuals are replaced by native Power BI visuals in a NEW report "<name> native" next to it (the original is only read). In plan_layout: lists each replacement and what it loses, for the user\'s go. In create_report: with the approved planId, path (the model) and no pages or design, writes exactly the approved replacements'),
-    // (0.3, J9 step 1: lib/redesign.mjs)
-    redesignFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) on this model, redesigned as a NEW report "<name> redesigned" next to it with the same fields laid out by the design engine; the original is only read, never changed. In plan_layout (with path): the plan\'s layout, fields, name and display names come from the original (anything given here wins), and redesign lists every visual of the original as kept, merged or not carried over (with why): show it all before the go. In create_report: the same redesignFrom with the approved planId, the plan\'s design and fields')
+    // (0.3, J13 redesign step 2: lib/redesign.mjs, copy-and-patch)
+    redesignFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) on this model, redesigned as a NEW report "<name> redesigned" next to it: a lossless copy of every page, bookmark, button, filter, tooltip page and custom visual, with only the allowlisted changes: the top-level native visuals placed on the grid (equal margins and gaps), the titles in titles, the theme\'s colours in restyle. The original is only read, never changed. In plan_layout (with path): redesign lists every change (page, visual, from, to) and every visual not changed with why: show it all before the go. In create_report: the same redesignFrom, titles and restyle with path and the approved planId, nothing else'),
+    titles: z.record(z.string().max(200), z.string().max(200)).optional().describe('With redesignFrom: new static titles the user approved, { "<page id>/<visual name>": "<title>" } as redesign.pages lists them; only a top-level visual\'s own static title is changed'),
+    restyle: z.object({ preset: z.string().max(40), brand: z.string().max(20), harmony: z.string().max(20), mode: z.enum(['light', 'dark']) }).partial().strict().optional().describe('With redesignFrom: new theme colours from the design engine (a preset, or a brand colour with a harmony; light or dark): only the colour tokens of the original\'s custom theme change (data colours, foreground, background, table accent, good, neutral, bad)'),
 };
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
 // language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores
@@ -612,7 +614,7 @@ const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 
 const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: false, font: 'Segoe UI' };
 const withLookDefaults = (a) => Object.assign({}, a, Object.fromEntries(Object.entries(LOOK_DEFAULTS).filter(([k]) => a[k] === undefined)));
 // (B-01: focus and tables decide which fields are picked when the plan names none, so they are pinned too)
-const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom', 'redesignFrom'].concat(REPORT_LOOK);
+const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
 // (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
 // its pin differ from create_report's)
 const resolvedDesign = (a) => (a.pages || a.customVisualsFrom != null ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme, colors: a.colors, theme: a.theme }).design);
@@ -625,8 +627,11 @@ const lookOf = (a) => Object.assign(Object.fromEntries(REPORT_LOOK.filter((k) =>
 const printOf = (p, kind, max) => { try { return crypto.createHash('sha256').update(readUserFile(p, { kind, max })).digest('hex'); } catch (e) { return 'unreadable'; } };
 const filesPin = (a) => ({ theme: a.theme ? printOf(a.theme, 'theme', THEME_MAX) : null, logo: a.logo ? printOf(a.logo, 'logo', LOGO_MAX) : null,
   backgrounds: (a.pages || []).map((p) => (p && p.background ? printOf(p.background, 'background image', BACKGROUND_MAX) : null)),
-  source: a.customVisualsFrom != null ? reportPrint(a.customVisualsFrom) : a.redesignFrom != null ? reportPrint(a.redesignFrom) : null });
+  source: a.customVisualsFrom != null ? reportPrint(a.customVisualsFrom) : null });
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a), files: filesPin(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
+// (0.3, J13) a redesign pins its own inputs and the original's contents (B-154: the write reads it again)
+const nonEmpty = (o) => (o && Object.keys(o).length ? o : null);
+const redesignPin = (a) => ({ redesignFrom: String(a.redesignFrom), titles: nonEmpty(a.titles), restyle: nonEmpty(a.restyle), files: { source: reportPrint(a.redesignFrom) } });
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
 server.registerTool('create_report', {
@@ -641,18 +646,18 @@ server.registerTool('create_report', {
   // (A-02) the same for the report's look and options the plan holds: left out, the plan's value is written
   if (a.planId != null) { const fill = {}; REPORT_LOOK.forEach((k) => { if (a[k] === undefined) { const v = Plans.pinned(a.planId, 'create_report', k); if (v !== undefined) fill[k] = v; } }); if (Object.keys(fill).length) a = Object.assign({}, a, fill); }
   a = withLookDefaults(a);
+  // (0.3, J13 redesign step 2) a redesign is a copy of the original with the approved patches only (lib/redesign.mjs)
+  if (a.redesignFrom != null || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'redesign')) {
+    if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles and restyle if it has them.');
+    if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles and restyle if it has them.');
+    const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelKey(mm, a.path), redesignPin(a));
+    const done = writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }); Plans.consume(a.planId, 'create_report'); return text(done);
+  }
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelKey(mm, a.path), reportPin(a, a.fields));
     const done = writeNative(a.customVisualsFrom, mm, p); Plans.consume(a.planId, 'create_report'); return text(done);
-  }
-  // (0.3, J9) a redesign is a design of the original's fields under the plan's name, next to the model: never hand-placed
-  // pages, never another name than the one approved (the writer would pick "<name> - New design" for a name taken)
-  if (a.redesignFrom != null) {
-    if (a.pages) throw new Error('Nothing was written: redesignFrom is written from the plan\'s design, not hand-placed pages. Call create_report with redesignFrom, path, the approved planId, the plan\'s design and fields.');
-    const mr = loadModel(a.path), nm = String(a.name || '').trim();
-    if (mr.projectDir && nm && (!nothingAt(path.join(mr.projectDir, nm + '.Report')) || !nothingAt(path.join(mr.projectDir, nm + '.pbip')))) throw new Error(`Nothing was written: "${visible(nm)}.Report" or its .pbip is already there. DataArcus never writes over a file: rename or move it, then plan the redesign again.`);
   }
   // rc.22, B-134 (the owner's rc.21 test: a missing input was told before the plan's approval): a plan that can't be used
   // yet (not approved, refused, expired, unknown) is said first, with the input problem when there is one too
@@ -1182,6 +1187,20 @@ server.registerTool('read_report', {
   }, annotations: READS
 }, safe(async (a) => { const r = readReport(a.path, { pages: a.pages, format: a.format, from: a.from }); return typeof r === 'string' ? text(r) : compact(r); }));
 
+// (0.3, J13 redesign step 2: lib/redesign.mjs) plan_layout with redesignFrom: every page of the original, copied with the
+// allowlisted patches; a plan of its own kind (redesign), written by create_report with the same inputs
+function redesignPlan(a) {
+  const problems = [];
+  if (!a.path) problems.push('redesignFrom needs path (the original\'s model), so the copy is checked to be on it.');
+  const other = ['pages', 'design', 'customVisualsFrom', 'planFields', 'fields', 'layout'].filter((k) => a[k] != null);
+  if (other.length) problems.push(`redesignFrom is a plan of its own (a copy of the original with the allowlisted changes): leave ${other.join(', ')} out.`);
+  if (problems.length) return { planProblems: problems, sayFirst: 'No plan id: change the call as each problem says, then call plan_layout again.' };
+  const m = loadModel(a.path), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle });
+  const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
+  const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
+  return Object.assign({ redesign: R.answer }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
+    : { plan: Plans.proposal(Plans.propose('redesign', modelKey(m, a.path), writes, { pins: { create_report: redesignPin(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown })) });
+}
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
   description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Give here, too, the report\'s name, title, theme, logo, colours and options as create_report will write them: they are approved with the plan (reportLook in the answer; show them), and create_report writes only those. Show the user the plan, wait for go, call approve_plan, then create_report with planId (a separate theme file has its own plan: generate_theme proposes it). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames gives an Arabic display name for each field without one (from a fixed list of report words) and lists the rest for you to propose: show every suggestion beside the model\'s name for the user to approve or edit before create_report, and pass only the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
@@ -1203,23 +1222,14 @@ server.registerTool('plan_layout', {
     themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
-    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom, redesignFrom: CREATE_REPORT_INPUTS.redesignFrom,
+    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
+    redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle,
     // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
     ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
   }, annotations: READS
 }, safe(async (a) => {
-  // (0.3, J9 step 1) a redesign of an existing report: its fields, layout, name and display names are the plan's defaults
-  // (lib/redesign.mjs); anything given here wins. The original is only read
-  let redesign = null;
-  if (a.redesignFrom != null && a.path && a.customVisualsFrom == null && !a.pages) {
-    const mR = loadModel(a.path), scR = scopeOf(mR, { focus: a.focus, tables: a.tables });
-    redesign = planRedesign(a.redesignFrom, mR, { lang: a.lang === 'ar' ? 'ar' : 'en', suggest: () => (scR.needsFocus ? null : Bind.suggest(scR.tables, 1, relsOf(mR, a.lang === 'ar' ? 'ar' : 'en'))) });
-    const d = { name: redesign.name, secondPage: false, themeFrom: redesign.loc.base };
-    if (!a.design) Object.assign(d, { layout: redesign.layout, kpis: redesign.kpis, filters: redesign.filters });
-    if (!a.planFields) d.planFields = redesign.planFields;
-    a = Object.assign({}, Object.fromEntries(Object.entries(d).filter(([k]) => a[k] === undefined)), a,
-      Object.keys(redesign.displayNames).length ? { displayNames: Object.assign({}, redesign.displayNames, a.displayNames || {}) } : {});
-  }
+  // (0.3, J13 redesign step 2) a redesign of an existing report is a plan of its own: a copy with allowlisted patches
+  if (a.redesignFrom != null) return text(redesignPlan(a));
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
   let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null;
@@ -1284,11 +1294,6 @@ server.registerTool('plan_layout', {
   // rc.22, B-133 (the owner's rc.21 test: a plan id on the 300-table model with no focus, when no field could be picked):
   // a large model needs an area first, as create_report does; no plan id until the user names one
   if (m0) { const scL = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (scL.needsFocus) planProblems.push(`name an area first: ${scL.why} ${scL.how} Areas in this model: ${(scL.areas || []).map((x) => x.area).join(', ') || 'none (no measure display folders)'}.`); }
-  if (a.redesignFrom != null) {
-    if (!a.path) planProblems.push('redesignFrom needs path (the original\'s model), so its fields are checked against it.');
-    else if (a.customVisualsFrom != null || a.pages) planProblems.push('redesignFrom is a plan of its own: leave customVisualsFrom and pages out.');
-    else redesign.problems.forEach((x) => planProblems.push(x));
-  }
   if ((pf.slicers || []).length && !r.design.layout.filters) planProblems.push('slicers (planFields.slicers): this layout has no filters; plan them with filters "start", "end" or "top", or leave the slicers out.');
   let model = null, planned = null;
   if (a.path) { const m = m0; model = modelKey(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
@@ -1335,15 +1340,14 @@ server.registerTool('plan_layout', {
   const ofKind = (kd) => r.slots.filter((x) => (x.plannedAs || x.kind) === kd);   // (the layout's own kinds, before any change)
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => ({ role: x.role, from: x.plannedAs, to: x.kind }));
-  const writes = redesign ? [`the new report "${visible(a.name)}.Report" and its "${visible(a.name)}.pbip" next to the model: the original "${redesign.answer.original.replace(/: only read, never changed$/, '')}" redesigned (create_report with redesignFrom); the original is not changed`]
-    : a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
+  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
     : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {}, writtenKinds.length ? { kinds: writtenKinds } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => ({ role: x.role, layout: x.from, written: x.to })), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut. Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, redesign ? { redesign: redesign.answer } : {}, plan, timeAxis, designLint, kindChanges, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, kindChanges, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.pageTint ? { pageTint: r.pageTint } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
