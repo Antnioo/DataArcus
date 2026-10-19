@@ -26,7 +26,7 @@ const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = '8db0a64';
 const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
 const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
-export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'lint'];
+export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'a11y', 'lint'];
 
 // ---- untrusted text: the reading layer's rules (lib/read-report.mjs), one copy ----
 // a validator message, without the report's own text: quoted parts and file paths are left out
@@ -104,7 +104,7 @@ export const DESKTOP_OPENS_SOURCE = { file: 'scripts/tests/DESKTOP-TESTS.md', da
 export const IMPACT = {
   desktopOpens: 'Power BI Desktop opens the report with these (seen on a working hand-built report): only Microsoft\'s strict validation, and Fabric when the report is published through it, would refuse them. Fix them before publishing through Fabric or Git; the report is not broken in Desktop.',
   canBreak: 'These can break the report in Power BI Desktop: a page or visual that does not open, or shows an error or nothing. Fix these first.',
-  dataarcusRule: 'DataArcus\'s own rules, measured in Power BI Desktop: the report opens, but a part may not look or work as meant (cut text, a setting Desktop ignores, a scrollbar in a tooltip).'
+  dataarcusRule: 'DataArcus\'s own rules, measured in Power BI Desktop, and Power BI\'s accessibility basics from Microsoft\'s guidance (the a11y rules): the report opens, but a part may not look or work as meant (cut text, a setting Desktop ignores, a scrollbar in a tooltip, a chart a screen reader or a keyboard cannot reach).'
 };
 // ---- what Microsoft's validator does not know yet and Power BI Desktop draws (polish round P2, the owner's rounded slicer
 // boxes, 12 Oct 2026) ----
@@ -254,6 +254,7 @@ export async function checkReport(p, opts) {
   // what the tool could not judge
   if (dir === 'rtl') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
+  if (checks.includes('a11y')) notChecked.push({ rule: 'A11Y (accessibility)', why: 'not judged: colours set by value (a gradient or rules), data drawn over a page picture, the 4.5:1 contrast of text, and what alt text says (only whether it is there); a page without any tabOrder keeps Power BI\'s own order' });
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
   if (sk.big.length) notChecked.push({ rule: 'files too large', why: `${sk.big.length} file${sk.big.length === 1 ? ' was' : 's were'} not read: over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads (the largest report files are well under 1 MB): ${sk.big.slice(0, 5).map((b) => `${b.file.split('/').map(safeName).join('/')} (${mbOf(b.size)})`).join('; ')}` });

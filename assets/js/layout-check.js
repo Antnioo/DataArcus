@@ -263,7 +263,7 @@
     const texts = [];   // the report's own words, only to tell the reading direction and instruction-like text (never returned)
     let customVisuals = 0;
     inv.pages.forEach((pg) => {
-      const page = { id: pg.id, name: pg.name, rawName: pg.rawName, w: pg.raw.width, h: pg.raw.height, tooltip: pg.kind === 'Tooltip', visuals: [] };
+      const page = { id: pg.id, name: pg.name, rawName: pg.rawName, w: pg.raw.width, h: pg.raw.height, tooltip: pg.kind === 'Tooltip', json: pg.raw, visuals: [] };   // (0.3, J7: the page's background, for the a11y contrast rule)
       pg.visuals.forEach((x) => {
         const j = x.json, type = j.visual ? String(j.visual.visualType || '') : j.visualGroup ? 'group' : 'unknown';
         if (j.visual && isCustom(type)) customVisuals++;
