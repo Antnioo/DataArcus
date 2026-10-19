@@ -14,6 +14,9 @@ import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { takenNames } from './report-names.mjs';
 const Preview = require('../../assets/js/page-preview.js');
+const LC = require('../../assets/js/layout-check.js');
+import { NAMES } from './design-lint.mjs';
+import { safeText } from './read-report.mjs';
 
 const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
@@ -49,6 +52,8 @@ function build(a, o) {
     logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
   return { r, pages, design };
 }
+/** The writer's report of a plan, in memory (0.3.0 step 2: the check's tests read it): { files, pages } or { skipped }. */
+export function plannedReport(a, o) { const b = build(a, o || {}); return b.skipped ? { skipped: b.skipped } : { files: b.r.files, pages: b.pages }; }
 const inReport = (r) => r.files.filter((f) => /^[^/]+\.Report\//.test(f.path)).map((f) => ({ path: f.path.replace(/^[^/]+\.Report\//, ''), data: f.data }));
 
 // a: { m (the model, from loadModel), tables (the part of the model to pick from), design (plan_layout's), lang,
@@ -93,5 +98,20 @@ export function planPreview(a) {
     }));
     p.flags = flags;
   });
-  return { pages, from: 'writer' };
+  // (step 2: the check of the planned pages, shown next to the preview before the person approves)
+  let check = null; try { check = checkSummary(checkFiles(files, a.m, lang), 8); } catch (e) { check = null; }
+  return Object.assign({ pages, from: 'writer' }, check ? { check } : {});
+}
+
+// 0.3.0 step 2, "Check before write" (the owner's go, 18 Oct): the shared check (assets/js/layout-check.js: the measured
+// rules and the layout check) on a project's files in memory, with the MCP's names (screened and capped, as the reading
+// layer shows them). m: the model (its tables give the column types and sort-by columns). Nothing is written.
+export function checkFiles(files, m, lang) { return LC.checkProject(files, { lang: lang === 'ar' ? 'ar' : 'en', model: m ? m.tables : null, names: NAMES, clean: safeText }); }
+// the check as an answer or the approval window shows it: the summary, the problems Desktop would show (at most cap),
+// and the rest counted by rule
+export function checkSummary(c, cap) {
+  const n = cap == null ? 12 : cap, one = (f) => ({ rule: f.rule, page: f.page ? f.page.n : null, visual: f.visual || null, what: f.what, fix: f.fix });
+  const worthByRule = {}; c.worthALook.forEach((f) => { worthByRule[f.rule] = (worthByRule[f.rule] || 0) + 1; });
+  return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
+    c.worth ? { worthALook: worthByRule } : {});
 }
