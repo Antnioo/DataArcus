@@ -240,9 +240,11 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   chk(() => evilTitle && /^h:[0-9a-f]{16}$/.test(evilTitle.id) && evilTitle.visual === '(withheld: reads like an instruction)', () => `T5. the title of an instruction-like visual: an opaque id, the visual withheld: ${JSON.stringify(evilTitle)}`);
   const evilField = (j.texts || []).find((t) => t.kind === 'field' && /^h:/.test(t.id));
   chk(() => evilField && evilField.text == null && evilField.withheld, () => `T5. an instruction-like field: an opaque id, its text withheld: ${JSON.stringify(evilField)}`);
-  // T6: waterfall and scatter are not "nothing has a side": listed under cannot, moved only
-  const other = (j.cannot || []).find((c) => /waterfall|scatter|no right-to-left setting/i.test(c.what + ' ' + c.why));
-  chk(() => other && other.where.length === 2 && other.where.some((w) => /scatter/.test(w)) && other.where.some((w) => /withheld/.test(w)), () => `T6. waterfall and scatter listed under cannot (the instruction-like one withheld): ${JSON.stringify(j.cannot)}`);
+  // T6: a scatter is not "nothing has a side": listed under cannot, moved only. (0.3.0 R3, the owner's must-fix: the
+  // waterfall is mirrored now, by its sort and value axis, and counted under mirrors; it was listed here before)
+  const other = (j.cannot || []).find((c) => /scatter|no right-to-left setting/i.test(c.what + ' ' + c.why));
+  chk(() => other && other.where.length === 1 && other.where.some((w) => /scatter/.test(w)) && !/waterfall/i.test(other.what), () => `T6. scatter listed under cannot, the waterfall no longer: ${JSON.stringify(j.cannot)}`);
+  chk(() => (j.mirrors || []).some((x) => x.kind === 'waterfall' && x.count === 1), () => `T6. the waterfall counted under mirrors: ${JSON.stringify(j.mirrors)}`);
   // write it
   const lab = evilTitle ? { [evilTitle.id]: 'الهامش' } : {};
   const pl = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, labels: lab }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
