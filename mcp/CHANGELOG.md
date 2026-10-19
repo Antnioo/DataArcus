@@ -4,9 +4,28 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.2.9 (in main since 2026-10-16, rc.21; the package for testers after the owner's Power BI Desktop test)
-The testers' package (built on Windows, with its release record) is given out once the owner's own Desktop test of
-rc.21 passes; until then testers keep 0.2.8.
+## [Unreleased]: 0.2.9.1
+Three fixes after 0.2.9; nothing else changes.
+- B-174, the plan says what the chart keeps: a chart planned as "Top 5" keeps its top 5 by its measure, or all of its
+  categories when it has 7 or fewer (the report's "Keep:" measure, so a chart never leaves out one or two it could show).
+  The plan and `create_report`'s notes now say so for each chart ("Comparison: Top 5, all of them when it has 7 or
+  fewer"), from what the writer writes, and a chart the writer does not cut is not said to be cut. What Power BI shows
+  is unchanged: the laptop's 6 plan groups under "Top 5" were all shown, as now planned.
+- A column chart written as a donut (its category has two values) no longer carries a bar chart's hidden value axis,
+  which Microsoft's validator reported (PBIR_FORMATTING_OBJECT_UNKNOWN, a `check_report` "can break"). Found by
+  draft PR #69's check of the exact report.
+- **B-173, Arabic table headers** (Desktop 2.159 on the laptop: the twin listed a header as cut that Desktop draws
+  whole, and `check_report` said nothing about one Desktop cuts): one measure of a header for the twin and
+  `check_report` (`headerNeed`). Under 0.7 of it an Arabic header is cut (`fitted.headersCut`, `cut: "cut"`; a
+  `check_report` warning, TABLE_HEADER_CUT); from there up to the measure it may be cut (`cut: "may be cut"`, with why;
+  a `check_report` note). The twin still widens each column to the full measure.
+
+## [0.2.9]: 2026-10-19 (the version for testers)
+Given to testers on 19 Oct 2026, after the Power BI Desktop release proof of rc.24 passed on the laptop (Desktop 2.159):
+the approval window names the chart kind that is written, the Arabic twin's title measures, buttons and KPI values,
+no network connection. The package is built on Windows with its release record (size and SHA-256), sent with the
+download. Known issues for testers: the twin can list a table header as cut when Desktop shows it whole; a chart
+planned as "Top 5" can show every category.
 - **rc.24, the gaps the Desktop release proof of rc.23 found** (18 Oct, Power BI Desktop 2.159; they finish B-140 and
   the Arabic twin, nothing else changes):
   - B-140: the approval window names each chart field by the kind it is written as, with the reason when it changed
@@ -86,7 +105,7 @@ rc.21 passes; until then testers keep 0.2.8.
   - every answer shows invisible and control characters as code points and stays under 40,000 characters.
 - MCP SDK 1.32.1; the runtime dependencies are pinned to exact versions.
 
-## [0.2.8]: 2026-10-08 (the version testers would get today)
+## [0.2.8]: 2026-10-08 (the version testers had before 0.2.9)
 - Arabic reports: the "Total" word in Arabic tables, and the report's language follows its columns (English columns
   in English reports, Arabic in Arabic reports).
 - Install guide fixes.

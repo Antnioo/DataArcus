@@ -22,9 +22,8 @@ import { writtenName } from './display-names.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
-// (rc.24) check_report's own measurement of a button's text, and the writer's text widths: the twin widens what its Arabic cuts
+// (rc.24, 0.2.9.1) check_report's own measurements of a button's text and of a table header: the twin widens what its Arabic cuts
 const Rules = require('../../assets/js/report-rules.js');
-const { textWidth } = require('../../assets/js/text-measure.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -318,28 +317,27 @@ function fitButtons(page, visuals, ctx, at) {
   });
   return out;
 }
-// A table column with a set width (DataArcus's tables) narrower than its Arabic header (bold, + 24 a page of 1080 high:
-// the writer's cellRoom) takes the table's spare width, then width from its text columns down to their own need; a
-// number column is never narrowed. What can't fit is said.
+// A table column with a set width (DataArcus's tables) narrower than its Arabic header (check_report's own measure,
+// report-rules.js headerNeed: bold, + 24 a page of 1080 high, the writer's cellRoom) takes the table's spare width, then
+// width from its text columns down to their own need; a number column is never narrowed. What can't fit is said in
+// headersCut: cut: 'cut' under the share of the measure Desktop has drawn an Arabic header whole in, else 'may be cut'
+// (0.2.9.1, B-173: Desktop 2.159 drew one whole that the measure called cut). Headers set to wrap: none.
 function fitHeaders(page, visuals, origByName, ctx, at) {
   const out = { headers: [], headersCut: [] }, sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
-  const th = ctx.theme && isObj(ctx.theme.visualStyles) && isObj(ctx.theme.visualStyles.tableEx) && isObj(ctx.theme.visualStyles.tableEx['*']) ? ctx.theme.visualStyles.tableEx['*'] : {};
-  const first = (list, k) => (Array.isArray(list) && isObj(list[0]) ? list[0][k] : undefined);
   visuals.forEach((v) => {
     const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
-    const o = v.visual.objects, q = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((x) => isObj(x) && typeof x.queryRef === 'string') : [];
-    const hp = (Array.isArray(o.columnHeaders) ? o.columnHeaders : []).filter((e) => isObj(e) && !e.selector && isObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
-    const T = num(hp.fontSize) || +first(th.columnHeaders, 'fontSize') || +first(th.values, 'fontSize') || 10, font = (isObj(hp.fontFamily) && hp.fontFamily.expr && hp.fontFamily.expr.Literal ? String(hp.fontFamily.expr.Literal.Value).replace(/^'|'$/g, '') : '') || ctx.text.font;
+    const o = v.visual.objects, H = Rules.tableHeaders(v, ctx.theme, ctx.text.font, sc), T = H.t, font = H.font;
+    if (!H.cols.length) return;
     const entry = (ref) => o.columnWidth.find((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === ref && isObj(e.properties) && Number.isFinite(num(e.properties.value)));
     const widthOf = (ref) => { const e = entry(ref); return e ? num(e.properties.value) : null; };
     const setW = (ref, w) => { entry(ref).properties.value = { expr: { Literal: { Value: w + 'D' } } }; };
     const head = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef || '');
-    const need = (x) => Math.ceil(textWidth(head(x), T, true, font) + 24 * sc);
+    const m = (x) => Rules.headerNeed(head(x), T, font, sc), need = (x) => m(x).needW;
     // a text column: a column of the model left-aligned in the original (DataArcus aligns its numbers right)
     const ov = origByName[v.name], oAlign = (ref) => { const cf = ov && isObj(ov.visual) && isObj(ov.visual.objects) && Array.isArray(ov.visual.objects.columnFormatting) ? ov.visual.objects.columnFormatting : [], e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === ref && isObj(y.properties));
       return e && e.properties.alignment && e.properties.alignment.expr ? String(e.properties.alignment.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
     const isText = (x) => isObj(x.field) && !!x.field.Column && !/^(Right|Center)$/i.test(String(oAlign(x.queryRef) || ''));
-    const cols = q.filter((x) => (widthOf(x.queryRef) || 0) > 1);
+    const cols = H.cols.map((c) => c.p);
     const ownNeed = (x) => Math.max(need(x), Math.ceil(12 * 0.55 * T * 4 / 3 + 24 * sc));
     let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
     cols.filter((x) => widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
@@ -347,9 +345,11 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
       const take = Math.min(short, Math.max(0, spare)); spare -= take; got += take; short -= take;
       cols.filter((d) => d !== x && isText(d)).forEach((d) => { if (short <= 0) return; const give = Math.min(short, Math.floor(widthOf(d.queryRef) - ownNeed(d))); if (give > 0) { setW(d.queryRef, Math.floor(widthOf(d.queryRef)) - give); got += give; short -= give; } });
       if (got) setW(x.queryRef, Math.floor(widthOf(x.queryRef)) + got);
-      const what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: widthOf(x.queryRef) };
+      const w = widthOf(x.queryRef), what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: w };
       if (got) out.headers.push(what);
-      if (short > 0) out.headersCut.push(Object.assign({}, what, { why: `its Arabic header needs ${need(x)} wide; the table's other columns can give no more (numbers are never narrowed): give a shorter Arabic name, or Power BI cuts the header` }));
+      if (short <= 0) return;
+      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide by our measure, and the table's other columns can give no more (numbers are never narrowed); Desktop 2.159 drew Arabic headers whole in about 0.7 of our measure (from ${m(x).lowW} here), so Power BI may cut it: look at it in Desktop, or give a shorter Arabic name` }));
+      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide; the table's other columns can give no more (numbers are never narrowed): give a shorter Arabic name, or Power BI cuts the header` }));
     });
   });
   return out;
@@ -466,7 +466,7 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft }, rawLabels(texts, labels));
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
-  const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it.' }) } : {};
+  const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, built, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },

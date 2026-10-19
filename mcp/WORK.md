@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -49,6 +49,70 @@ The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can jo
   engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
   "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
   (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+
+## 0.2.9.1: two fixes after 0.2.9 shipped (19 Oct, cloud builder; branch `fix/0.2.9.1` from main `d76703c`; one PR, not merged)
+The reviewer's brief (19 Oct): one normal PR, only these two fixes (no 0.3 code; drafts #37-#69 stay out). Test first:
+`mcp/test-0.2.9.1.mjs` (in npm test), 17 checks, 12 red on main `d76703c` (commit `780ea4a`).
+- FIX 1, B-174 (the laptop's Desktop proofs of rc.23/rc.24, Desktop 2.159: the plan's "Comparison: Top 5", the Plan Group
+  bar chart showed all 6 groups, EN and the Arabic twin). Cause: the writer keeps a chart's categories with its "Keep:"
+  report measure (pbip-query.js topSet, design round 10's N14, called with extra 2 in pbip-page.js fixVisual): the top N
+  by its measure, or every category when there are at most N + 2. 6 <= 5 + 2, so all 6 are shown with the plain title:
+  Desktop is right, the plan was not. Fix in the plan, not Desktop: the writer records each kept chart's `allUpTo` (N + 2
+  with Keep:, N with the fixed TopN filter) and its planned slot (from, nth, as kindChanges); plan-lint passes them;
+  plan_layout's `categoryCharts.tops[]` carry `allUpTo` and sayInPlan says "Comparison: Top 5, all of them when it has 7 or
+  fewer"; a slot the writer does not cut is no longer listed; `topCategories` and create_report's note say the same
+  (the note no longer says "a Top N visual filter" for the Keep: measure). Desktop unchanged.
+- FIX 2 (draft #69's E-23/E-24): pbip-page.js gives the "no value axis" setting only to a bar (a two-valued column chart
+  becomes a donut after it); D-1 no valueAxis on the written donut, D-2 Microsoft's validator offline 0 errors on it.
+- Stamps 20261019p2991: pbip-page (in theme-generator.js), theme-generator on the three generator pages; .min rebuilt.
+- CHANGELOG heading `## [Unreleased]: 0.2.9.1`: the package build's version rule (test-release-text.mjs, from the engine's
+  packaging/build.mjs) takes only x.y.z or [Unreleased]; "[0.2.9.1]" failed CI's release-text. For the owner: the
+  build cannot stamp a four-part 0.2.9.1; the release needs an x.y.z number (e.g. 0.2.10) or the build's rule changed.
+- Next: the reviewer reviews the PR, the laptop checks in Desktop (see the PR), the owner merges.
+## 0.2.9.1, B-173: Arabic table headers, "cut" vs "may be cut", and check_report (19 Oct, cloud builder; branch `fix/0.2.9.1-headers` from main `d76703c`; one PR, not merged)
+The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Exec" (made-up model, 1920 page) in Desktop 2.159:
+`fitted.headersCut` listed "Total Value" (needs 275, given 208; page 2: 400 / 292) and "Total Score" (275 / 181; page 2:
+400 / 260); Desktop cut Total Score, drew Total Value WHOLE on both pages; check_report said nothing. Another builder has
+`fix/0.2.9.1` (Top-5 filter + donut valueAxis, pbip-page.js and the writer): this branch stays out of those lines.
+- Cause looked for (code + Microsoft's + our measured facts): the 275 is report-rules/twin `need` = bold text (text-measure.js,
+  Arabic 0.62 em bold, measured in Tahoma) + 24 at 1080 (the writer's cellRoom padding). The headers' font size is read
+  right (10pt summary table, 15pt details: 275 - 24 = 251 and 400 - 24 = 376, 1.5 x). Not shown: neither the bold weight
+  nor the Segoe UI Arabic widths nor a header wrap explain 208 (our narrowest measured Arabic, Segoe UI 311 of our 364,
+  still gives 214 for the text alone); Microsoft's capabilities give no defaults (columnHeaders.wordWrap, fontFamily, bold).
+  So no calibration: the measure stays as it is (the twin still widens to it), and the band Desktop showed is said.
+- Plan: report-rules.js `headerNeed(text, t, font, sc)` -> { needW (as today), lowW }: for a header with Arabic letters
+  lowW = the share of our measure Desktop 2.159 has drawn an Arabic header whole in (0.70, under the smallest seen:
+  (292-24)/376 = 0.71); a Latin header lowW = needW. Under lowW: cut; lowW..needW: may be cut. `tableHeaders(json, theme,
+  font, sc)` reads a table's set column widths and header size/font (the twin's reading, moved). New rule TABLE_HEADER_CUT
+  (sizes): warning when cut, a note when it may be cut (the reason: Desktop drew Arabic headers whole in about 0.7 of
+  the measure); headers set to wrap are skipped; never quotes a header. The twin's fitHeaders uses the same function:
+  `fitted.headersCut` keeps every header under the measure (the rc.24 contract), each with `cut: "cut" | "may be cut"` and lowW.
+- Test first: `mcp/test-b173.mjs` (in npm test), 20 checks, **12 red on main d76703c** (H-1 4, H-2 4, H-3 band 1,
+  H-3 plan = check_report 1, H-2 through the tool at 181 / 208 2); all green after. Other suites: same counts, except
+  where a fixture has a cut header (to be listed in the PR, never a changed expectation).
+- **Done (see the PR):** test-b173 20/20 (12 red on main, as expected). One change on the way, decided before the PR: a
+  separate `headersMayBeCut` list broke rc.24's T-4 contract (every header under the measure is in `headersCut`), so the
+  twin keeps one list and each entry says `cut: "cut" | "may be cut"` (my own new test followed; rc24's untouched).
+  CHANGELOG: the bullet sits under `## [Unreleased]` with a line "0.2.9.1, not built yet": release-text refuses a newest
+  section naming a version PRIVACY.md isn't checked against (`## [0.2.9.1]: unreleased` failed it); the other 0.2.9.1
+  builder will meet the same check. Full run on Linux: release-text 4, test.mjs 1569 (as main), v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports; its 8 "labelled by title" notes are on main too), rc22 26, rc23 51, rc24 28, b173 20. Website: pbip 85, site config PASS.
+- Decisions I made: no calibration of the measure (cause not shown); the band's edge 0.70 is under the smallest share
+  Desktop drew an Arabic header whole in (0.71, page 2); a Latin header has no band; a header set to wrap is not checked
+  (twin and check_report alike); the "may be cut" finding is a note, the cut one a warning; findings name the column by
+  its position, never its text.
+- For the laptop (Desktop 2.159): the twin of "Teal Exec" again: the plan's headersCut says Total Score "cut" and Total
+  Value "may be cut" on both pages (or whatever the plan says: compare it with Desktop header by header); check_report on
+  the twin: a TABLE_HEADER_CUT warning for Total Score, a note for Total Value; crop each Arabic header at full size and
+  read its drawn width at 10pt and 15pt (the cause), the header font in the format pane, and whether a header wraps.
+- Next: the reviewer reviews the PR, the laptop re-checks in Desktop, the owner merges.
+
+## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
+- The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
+  (engine `business/beta/rc24/PROOF-rc24.md`: B and E1-E3 pass, A/D/F pass, 0 network).
+- `mcp/CHANGELOG.md`: [Unreleased] becomes [0.2.9] 2026-10-19 with the two known issues (twin headersCut over-reports
+  one header, B-173; "Top 5" chart showing every category, B-174). No code change.
+- Next: the laptop builds 0.2.9 from this PR's merge commit (engine `release/0.2.9`, record `packaging/releases/0.2.9.json`),
+  installs it over rc.24 and calls the 11 tools once; the owner then publishes the download and sends the invitations.
 
 ## rc.24: the gaps of the laptop's Desktop release proof of rc.23 (18 Oct, cloud builder; branch `fix/0.2.9-rc24` from main `f09bf30`; one PR, not merged)
 The reviewer's brief (18 Oct): rc.23 + these gaps, found by the laptop's Desktop proof of rc.23 (Power BI Desktop 2.159).
