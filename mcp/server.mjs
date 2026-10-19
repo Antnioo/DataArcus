@@ -35,7 +35,7 @@ const Mirror = require('../assets/js/report-mirror.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
-import { Memory, answerKey, answersName, readAnswers, writeAnswers } from './lib/answers.mjs';
+import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
@@ -419,14 +419,14 @@ server.registerTool('check_model_health', {
     planId: planIdInput,
     // (B-148) the user's answers to pleaseConfirm questions, remembered in a file next to the model (with an approved plan)
     answers: z.array(z.object({ answerKey: z.string().max(64), answer: z.enum(['intended', 'mistake']) }).strict()).max(200).optional()
-      .describe('Only with the user\'s own answers to pleaseConfirm questions: { answerKey (from the question), answer: intended (the user says it is right) or mistake }. Recorded in "<model>.dataarcus-answers.json" next to the model (hashes and the answer only) after an approved plan, like the fix scripts; the question is not asked again until its measure or relationship changes. Never answer for the user'),
+      .describe('Only with the user\'s own answers to pleaseConfirm questions: { answerKey (from the question), answer: intended (the user says it is right) or mistake }. Recorded in "<model>.dataarcus-answers.json" next to the model (hashes, the answer and its date; no name, no DAX) after an approved plan, like the fix scripts; the question is not asked again until its measure or relationship changes. Never answer for the user'),
     forgetAnswers: z.boolean().optional().describe('The user asked to forget their recorded answers: empties the answers file (after an approved plan)'),
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }, annotations: ADDS
 }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers }) => {
   const m = loadModel(p);
-  const wouldWrite = [];
+  const wouldWrite = [], mark = writtenSince();   // (R5, F05: what this call wrote, for whether its plan was used)
   const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
   // where a fix script may go: next to the project (never inside the model folder), or beside a model file. When the
   // working folder is the model folder itself there is no such place inside it: no file, and the answer says why
@@ -520,12 +520,21 @@ server.registerTool('check_model_health', {
   else if (writeAnswersFile && write) {
     const at = new Date().toISOString(), fresh = given.map((x) => Object.assign({}, x, { at }));
     const recs = forgetAnswers ? fresh : applied.keep.filter((k) => !fresh.some((x) => x.evidenceSignature === k.evidenceSignature)).concat(fresh);
-    try { const f = writeAnswers(scriptDir, scriptBase, recs); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
-    catch (e) { answersDone = { answersNotWritten: String(e && e.message || e).slice(0, 300) }; }
+    // (R5, F04) replaced only if it is still the file read at the start of this call (mem.checked)
+    try { const f = writeAnswers(scriptDir, scriptBase, recs, mem); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
+    catch (e) {
+      // (R5, F05) what the failed write left is named; the plan is not used when nothing of this call is on disk
+      const left = (e && e.left && e.left.ours) || [];
+      answersDone = { answersNotWritten: String(e && e.message || e).slice(0, 600) };
+      if (left.length) answersDone.answersLeftOnDisk = left.map((f) => path.relative(ROOT || '.', f).split(path.sep).join('/'));
+      if (!left.length && !writtenSince(mark).length) answersDone.answersPlan = `The plan ${planId} was not used: nothing of it is on disk. Once the cause is fixed, call check_model_health again with the same planId and answers.`;
+      else answersDone.answersPlan = `The plan ${planId} is now used: ${left.length ? 'part of this write is still on disk (named in answersLeftOnDisk: delete it first)' : 'its fix scripts were written'}. For the answers, make a new plan, show it to the user and wait for their go.`;
+    }
   }
-  if (write) Plans.consume(planId, 'check_model_health');   // (audit 6, A6-2)
+  if (write && !(answersDone.answersPlan && / was not used/.test(answersDone.answersPlan))) Plans.consume(planId, 'check_model_health');   // (audit 6, A6-2)
   // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
-  const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}`} (hashes and the answer only, no DAX)`] : [];
+  // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
+  const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
   const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH } })) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
@@ -1568,7 +1577,7 @@ server.registerTool('approve_plan', {
     let r;
     try {
       r = await server.server.elicitInput({ mode: 'form',
-        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${P.writes.join('\n- ')}\nNothing is overwritten or deleted.`,
+        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${P.writes.join('\n- ')}\n${writesNote(P.writes)}`,
         requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
       { timeout: 10 * 60 * 1000 });
     } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
