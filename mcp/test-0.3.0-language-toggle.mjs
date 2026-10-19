@@ -138,18 +138,18 @@ try {
     if (!o.text.some((e) => !e.selector && e.properties && lit(e.properties.show) === 'true') || o.text.some((e) => e.selector && e.properties && 'show' in e.properties)) bad.push(`${pid}: the text's show is not in its own entry without a selector`);
     if (!o.text.some((e) => e.selector && e.selector.id === 'default' && e.properties && e.properties.text)) bad.push(`${pid}: the look is not in the default selector`);
     // in the header group, beside the page tabs, at its free end
-    const tabs = vs.filter((x) => isPage(x) && x !== b && x.v.parentGroupName === b.v.parentGroupName), g = vs.find((x) => x.v.name === b.v.parentGroupName);
+    const tabs = vs.filter((x) => isPage(x) && x.n !== b.n && x.v.parentGroupName === b.v.parentGroupName), g = vs.find((x) => x.v.name === b.v.parentGroupName);
     if (!g || !tabs.length) bad.push(`${pid}: not in the header group with the page tabs`);
     else {
       const gp = g.v.position, p = b.v.position;
       if (p.x < -0.5 || p.x + p.width > gp.width + 0.5 || p.y < -0.5 || p.y + p.height > gp.height + 0.5) bad.push(`${pid}: outside its group`);
       if (end === 'right' ? !tabs.every((x) => x.v.position.x + x.v.position.width <= p.x + 0.5) : !tabs.every((x) => x.v.position.x >= p.x + p.width - 0.5)) bad.push(`${pid}: not at the ${end} of the page tabs`);
     }
-    const A = abs(vs, b), hit = vs.filter((x) => x !== b && !x.v.visualGroup && over(abs(vs, x), A) && !holds(abs(vs, x), A));
+    const A = abs(vs, b), hit = vs.filter((x) => x.n !== b.n && !x.v.visualGroup && over(abs(vs, x), A) && !holds(abs(vs, x), A));
     if (hit.length) bad.push(`${pid}: covers ${hit.map((x) => x.v.visual.visualType).join(', ')}`);
     // the phone
     if (!b.m) { phoneBad.push(`${pid}: no phone box`); return; }
-    const m = b.m.position, others = vs.filter((x) => x !== b && x.m && !x.v.visualGroup);
+    const m = b.m.position, others = vs.filter((x) => x.n !== b.n && x.m && !x.v.visualGroup);
     if (m.x < -0.5 || m.x + m.width > 323.5 || (end === 'right' ? Math.abs(m.x + m.width - 323) > 0.5 : Math.abs(m.x) > 0.5)) phoneBad.push(`${pid}: phone ${JSON.stringify(m)} not at the ${end} end`);
     const ph = others.filter((x) => over(x.m.position, m)); if (ph.length) phoneBad.push(`${pid}: the phone box overlaps ${ph.length}`);
   }));
@@ -184,8 +184,10 @@ try {
   {
     const sl = (pid) => visualsOf(COPY, pid).filter((x) => x.v.visual && x.v.visual.visualType === 'slicer');
     const en1 = sl(REPORT[1]), ar1 = sl(arOf[REPORT[1]]), byG = (x) => (x.v.visual.syncGroup || {}).groupName;
+    // (the Arabic slicer shows its field under its approved Arabic name: the fields, not their display names)
+    const fields = (x) => JSON.stringify(Object.values(x.v.visual.query.queryState).flatMap((r) => r.projections.map((p) => p.field)));
     chk(() => en1.length === 3 && ar1.length === 3 && en1.every((x) => byG(x) && x.v.visual.syncGroup.fieldChanges === true && x.v.visual.syncGroup.filterChanges === true) && new Set(en1.map(byG)).size === 3
-      && ar1.every((x) => en1.filter((y) => byG(y) === byG(x)).length === 1 && JSON.stringify(x.v.visual.query) === JSON.stringify(en1.find((y) => byG(y) === byG(x)).v.visual.query)),
+      && ar1.every((x) => en1.filter((y) => byG(y) === byG(x)).length === 1 && fields(x) === fields(en1.find((y) => byG(y) === byG(x)))),
       () => `L5. each slicer pair shares its own sync group (both flags on), the same field: ${JSON.stringify(en1.map(byG))} ${JSON.stringify(ar1.map(byG))}`);
   }
 
