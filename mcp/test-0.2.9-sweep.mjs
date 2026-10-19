@@ -298,12 +298,15 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const say = String(an.sayFirst || '') + ' ' + String(an.howToPropose || '');
     chk(() => /approve or edit/i.test(say) && /beside/i.test(say) && /suggestion/i.test(say) && /الميزانية المخططة/.test(say) && /only the approved/i.test(say) && /never renamed/i.test(say) && /never show a name the user has not approved/i.test(say),
       () => `B-88: the plan asks the user to approve or edit every proposal, beside the model's names, marked as suggestions: ${say.slice(0, 600)}`);
-    // create_report still writes only the names it is given; an English plan is unchanged (no arabicNames)
+    // create_report writes only the names it is given and the ones its plan pinned; an English plan is unchanged (no arabicNames)
+    // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic report's texts are Arabic or listed in the plan: the
+    // plan pins the fixed list's names, «إجمالي المبيعات» and «المنطقة» here, and approving the plan approves them;
+    // before, only the given name was written)
     const cr = await ask('create_report', { path: 's-b88', name: 'B88', lang: 'ar', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false,
       fields: { kpis: ['Fin[Planned Budget]', 'Fin[Total Sales]'], category: 'Fin[Region]', measure: 'Fin[Planned Budget]' }, displayNames: { 'Fin[Planned Budget]': 'الميزانية المخططة' } });
     const shown = new Set(); visualsOf(cr, 's-b88').forEach((v) => { const st = ((v.visual || {}).query || {}).queryState || {}; Object.values(st).forEach((r) => (r.projections || []).forEach((p) => { if (p.displayName) shown.add(p.displayName); })); });
-    chk(() => !cr.err && shown.has('الميزانية المخططة') && [...shown].filter((n) => /[\u0600-\u06FF]/.test(n)).every((n) => n === 'الميزانية المخططة'),
-      () => `B-88: create_report writes only the names it is given: ${[...shown]} ${short(cr)}`);
+    chk(() => !cr.err && shown.has('الميزانية المخططة') && [...shown].filter((n) => /[\u0600-\u06FF]/.test(n)).every((n) => ['الميزانية المخططة', 'إجمالي المبيعات', 'المنطقة'].includes(n)),
+      () => `B-88: create_report writes only the names it is given and the plan's pinned ones: ${[...shown]} ${short(cr)}`);
     const pe = await ask('plan_layout', { layout: 'exec', path: 's-b88', lang: 'en', fields: ['Fin[Planned Budget]'] });
     chk(() => !pe.err && !pe.j.arabicNames, () => `B-88: an English plan has no Arabic names: ${short(pe)}`);
   }

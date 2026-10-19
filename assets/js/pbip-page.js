@@ -434,7 +434,7 @@
     // wrong): the largest, down to 8pt, at which the longest title of the row fits its card.
     let kpiTitle = TITLE;
     sorted.filter((s) => s.kind === 'kpi').forEach((s, i) => {
-      const f = B && B.kpis ? B.kpis[i] : null, text = f ? kpiLabel(f) : s.title;
+      const f = B && B.kpis ? B.kpis[i] : null, text = f ? kpiLabel(f, W.by) : s.title;
       const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(f));
       while (kpiTitle > 8 && text != null && textWidth(text, kpiTitle, true, font) > s.w - c.S - c.P) kpiTitle--;
     });
@@ -463,9 +463,9 @@
     // #9 (seen in Desktop 2.158, round 11: one 15pt value among 14pt ones): one value size for the row, the smallest
     // that fits every card
     let rowV = null;
-    const rowValue = () => (rowV == null ? (rowV = Math.min(...kpiSlots.map((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f) : s.title, f).c.V; }))) : rowV);
+    const rowValue = () => (rowV == null ? (rowV = Math.min(...kpiSlots.map((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f, W.by) : s.title, f).c.V; }))) : rowV);
     let rowWrap = null;
-    const rowWraps = () => (rowWrap == null ? (rowWrap = sorted.filter((s) => s.kind === 'kpi').some((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f) : s.title, f).fit.mode === 'wrapped'; })) : rowWrap);
+    const rowWraps = () => (rowWrap == null ? (rowWrap = sorted.filter((s) => s.kind === 'kpi').some((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? kpiLabel(f, W.by) : s.title, f).fit.mode === 'wrapped'; })) : rowWrap);
     // Round 12 (#24; seen in Desktop 2.158, 5 Oct 2026: long Arabic chart titles and a slicer header were cut at their
     // start, "...عات حسب اسم الفرع التجاري الرئيسي", so the measure's name was lost). A chart's or table's title too
     // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
@@ -710,7 +710,8 @@
         // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
         let topOf = null, topLead = '', tail = '', told = null;
         { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { topLead = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
-        if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
+        // (0.3.0 R2: an Arabic report's word is Arabic even after an English field name, as its «أعلى» is)
+        if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (AR_LETTERS.test(ttl) || lang === 'ar' ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         // (0.3, J4, B-131: a long title was cut at a word, "...حسب قناة البيع المستخدمة في…") the first form whose title
         // fits its box on two lines, with its "Top 999 of 999: " (the report measure's longest lead) and its ": detail";
         // the writer's word cut below is left for a title no rule shortens enough
@@ -722,7 +723,7 @@
         // (0.3, J4, the owner's decision of 19 Oct: the alt text is the FULL story title, never the fitted one; a screen
         // reader has no box to fit)
         const altFull = story && ttl && s.kind !== 'kpi' ? topLead + story[0].text + tail : null;
-        if (s.kind === 'kpi') { if (B && query) ttl = kpiLabel(B.kpis[kpiIndex]); kpiIndex++; }
+        if (s.kind === 'kpi') { if (B && query) ttl = kpiLabel(B.kpis[kpiIndex], W.by); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
         if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(shown(ttl)), alignment: str(align), bold: bool(true) });
         // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;

@@ -1,0 +1,14 @@
+{
+  "recorded": "integration/0.3-preview ce8335b, before the R2 fix",
+  "titles": [
+    "Details",
+    "Executive summary",
+    "Web Orders Average Score",
+    "Web Orders Count",
+    "Web Orders Total Score",
+    "Web Orders Total Score by Month Short",
+    "Web Orders Total Score by Plan Group: detail",
+    "Web Orders Total Value",
+    "  Reset filters"
+  ]
+}
