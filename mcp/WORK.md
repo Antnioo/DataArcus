@@ -1,8 +1,38 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R6" just below (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R7" just below (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## R7: every privacy and safety claim re-read against the code (19 Oct, cloud builder; branch `fix/0.3.0-privacy-reread` from `fix/0.3.0-approval-disclosure` e4ae1cd = R6, PR #79; the reviewer opens the PR into release/0.3.0 after #79 merges; the owner merges)
+The reviewer's brief (the owner, 19 Oct: beta testers get 0.3.0; every outside-audit finding fixed first; this full
+privacy re-read last, after R2-R6; the last full read was 11 Oct). Rules: the MCP returns metadata only, never data
+values; public claims must be true; fix claims by WORDING; a claim that only code can make true is listed under "Needs
+code" (file + proposed fix), the code is not changed. Out of scope: new features, Gulf dates, terminology, axis units.
+When #79 merges into release/0.3.0: merge origin/release/0.3.0 into this branch.
+Plan (in order):
+1. This plan, pushed first.
+2. `mcp/work/R7-claims.md`: every sentence of mcp/PRIVACY.md (sections 1-5, Coming, Known gaps) a row (claim, where,
+   true?, evidence file:function, action); then the claims of mcp/README.md, README.md, mcp/PRODUCT_SPEC.md,
+   mcp/skills/report-design/SKILL.md, mcp/lib/agent-text.mjs, mcp/lib/approval-window.mjs, power-bi-mcp/ (EN, AR), the
+   beta page and its translations, the Theme Generator logo line, any site privacy page.
+3. Checked in the code: what each tool returns (no data values; which titles/names, how screened), what is read
+   (whole files hashed), what is written (new files only, except the answers file; a failed write removes what that call
+   created and names what it could not), the browser (logo bytes never stored or sent; derived colours in localStorage;
+   answers until "Forget my answers"), network (the MCP none; the site's analytics/consent as they are).
+4. Known items: PRIVACY section 4 heading "never overwritten" and "DataArcus reads no data to find them"; read_report's
+   short static titles (screened for instructions and length only) said exactly in PRIVACY and the tool description,
+   "Needs code: read_report returns no static title text, or only screened"; the confirmation memory's plain-text
+   fields (audit F10) said wherever "only hashes" is claimed (checked against the code: what R5 actually stores).
+5. Wording fixed; agent-text caps and tests; site: test-site-config, build:min if a translation .js changes, ?v= bump,
+   sitemap-lastmod --write (after git fetch --unshallow).
+6. A text test for the rules a grep can check ("never reads" data, "never overwritten" without the answers-file
+   exception), in test-release-text.mjs.
+7. Suites: release-text, agent/description tests, website suites touched, site-config, check:min; full mcp npm test once.
+8. CHANGELOG [Unreleased] R5 line (given), R6 line if missing, R7 line; this section's done part; push. No PR.
+Expected (before any run): every PRIVACY.md sentence in the table with evidence; zero untrue claims left in the listed
+files; the new release-text checks red on e4ae1cd (the known "never overwritten"/"reads no data" lines), green after;
+every other suite unchanged in count except release-text; full npm test green.
 
 ## R6: the approval page shows everything the click approves; the theme pins its model (19 Oct, cloud builder; branch `fix/0.3.0-approval-disclosure` from `release/0.3.0` c058e87; one PR into release/0.3.0, not merged)
 The reviewer's brief (B28; the owner's decision of 19 Oct: every finding of the outside audit of 19 Oct is fixed before
