@@ -66,6 +66,10 @@ const roles = (v) => Object.fromEntries(Object.entries(((v.visual.query || {}).q
 const objp = (v, o) => ((((v.visual.objects || {})[o]) || [])[0] || { properties: {} }).properties;
 const titleOf = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text; return S(t) != null ? S(t) : t && t.expr && t.expr.Measure ? String(t.expr.Measure.Property).replace(/^Title: /, '') : null; };
 const isMultiples = (v) => v.visual.visualType === 'clusteredColumnChart' && !!((v.visual.query || {}).queryState || {}).Rows;
+// (D1, when it met D2 in the wave: a right-to-left waterfall is written as a stacked column chart drawn as a waterfall,
+// its Y the report's measures "Waterfall base/rise/fall/rise below 0/fall below 0: <measure>"; test-0.3.0-waterfall-rtl2.mjs
+// checks it in full)
+const rtlWaterfall = (v) => v.visual.visualType === 'columnChart' && ((((v.visual.query || {}).queryState || {}).Y || {}).projections || []).map((p) => p.field && p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' ? p.field.Measure.Property.replace(/:.*$/, '') : '').join() === 'Waterfall base,Waterfall rise,Waterfall fall,Waterfall rise below 0,Waterfall fall below 0';
 const KIND_OF = { combo: (v) => v.visual.visualType === 'lineClusteredColumnComboChart', waterfall: (v) => v.visual.visualType === 'waterfallChart', smallMultiples: isMultiples };
 const check = async (pbip) => { const r = await w.call('check_report', { path: pbip, checks: ['validator'] }); return r; };
 const clean = (r) => !r.err && r.j.validator && r.j.validator.ran && r.j.validator.errors === 0;
@@ -119,11 +123,12 @@ try {
   // ---------- HA: Arabic, hand-placed, right to left ----------
   {
     const AR = await write({ name: 'Gallery Arabic', lang: 'ar', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES });
-    const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(KIND_OF.waterfall) || vs.find((v) => v.visual.visualType === 'columnChart'), sm = vs.find(KIND_OF.smallMultiples);
+    const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
     chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === 'true' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
       () => `HA combo: mirrored (value axis right, categories inverted): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
-    chk(() => wf && S(objp(wf, 'valueAxis').switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
-      () => `HA waterfall: mirrored by its sort (value axis right, Descending, no categoryAxis): ${JSON.stringify(wf && [wf.visual.objects, wf.visual.query.sortDefinition])}`);
+    // (changed on purpose when D1 met D2: the waterfall is the stacked column chart that reads from the right, D1)
+    chk(() => wf && !vs.some(KIND_OF.waterfall) && S(objp(wf, 'valueAxis').switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
+      () => `HA waterfall: the stacked column chart read from the right (value axis right, Descending, no categoryAxis.invertAxis): ${JSON.stringify(vs.map((v) => v.visual.visualType))} ${JSON.stringify(wf && [wf.visual.objects, wf.visual.query.sortDefinition])}`);
     chk(() => sm && S(objp(sm, 'valueAxis').switchAxisPosition) === 'true' && JSON.stringify(roles(sm).Rows) === '["Region"]', () => `HA small multiples: mirrored, a panel per region: ${JSON.stringify(sm && sm.visual.objects)}`);
     const c = AR.r && !AR.r.err ? await check(AR.pbip) : null;
     chk(() => c && clean(c), () => `HA: Microsoft's validator: 0 errors on the Arabic gallery report: ${AR.err || short(c || AR.r)}`);
@@ -183,10 +188,12 @@ try {
     const p0 = EN && EN.r && !EN.r.err ? await w.call('create_arabic_twin', { path: EN.pbip }) : null, id = p0 && p0.j && p0.j.plan && p0.j.plan.planId;
     if (id) await approve(id);
     const tw = id ? await w.call('create_arabic_twin', { path: EN.pbip, planId: id }) : null, twinDir = path.join(ROOT, 'g', 'Gallery Hand AR.Report');
-    const vs = fs.existsSync(twinDir) ? allVisuals(twinDir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(KIND_OF.waterfall), sm = vs.find(KIND_OF.smallMultiples);
-    // (changed on purpose when D1 met D2 in the wave: a right-to-left waterfall is written as a stacked column chart drawn as a waterfall)
-    chk(() => cb && wf && sm && [cb, wf, sm].every((v) => S(objp(v, 'valueAxis').switchAxisPosition) === 'true') && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
-      () => `TW: the twin mirrors the combo, the waterfall (by its sort) and the small multiples: ${short(tw || p0)} ${JSON.stringify(vs.map((v) => v.visual.visualType))}`);
+    const vs = fs.existsSync(twinDir) ? allVisuals(twinDir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
+    // (changed on purpose when D1 met D2 in the wave: the twin writes the waterfall as the stacked column chart that reads
+    // from the right, D1; the twin's mirrors names it so)
+    chk(() => cb && wf && sm && !vs.some(KIND_OF.waterfall) && [cb, wf, sm].every((v) => S(objp(v, 'valueAxis').switchAxisPosition) === 'true') && wf.visual.query.sortDefinition.sort[0].direction === 'Descending'
+      && ((tw && tw.j && tw.j.mirrors) || []).some((m) => m.kind === 'waterfall' && /no Total column in Arabic/.test(m.what)),
+      () => `TW: the twin mirrors the combo, the waterfall (the stacked column chart read from the right, D1) and the small multiples: ${short(tw || p0)} ${JSON.stringify(vs.map((v) => v.visual.visualType))}`);
     const twPbip = fs.existsSync(twinDir) ? 'g/' + path.basename(twinDir).replace(/\.Report$/, '.pbip') : null, c = twPbip ? await check(twPbip) : null;
     chk(() => c && clean(c), () => `TW: validator 0 errors on the twin: ${short(c || tw || p0)}`);
   }
