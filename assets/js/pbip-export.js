@@ -203,7 +203,7 @@
    *   data type: boolean, string, int64 or double), or literals already written as Power BI writes them (checked)
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
-   * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
+   * @property {boolean} [smoothLines]  false: straight line charts without markers; smooth (monotone) with a dot on each point by default (L1)
    * @property {boolean} [phoneLayout]  false: no phone layout (no mobile.json); every page has one by default (0.3.0)
    * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
    *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
