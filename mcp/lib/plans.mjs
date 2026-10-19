@@ -21,7 +21,8 @@ export const ALLOWS = {
   theme: ['generate_theme'],                      // generate_theme's own proposal: the theme file
   scripts: ['check_model_health'],                // check_model_health's fix scripts
   calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
-  twin: ['create_arabic_twin']                    // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
+  twin: ['create_arabic_twin'],                   // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
+  redesign: ['create_report']                     // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
 };
 const plans = new Map();
 const now = () => Date.now();
@@ -35,7 +36,7 @@ const modelOf = (m) => (m && typeof m === 'object' ? { key: m.key || null, print
 /** (B-154) why a write is refused when the model changed after the go (the twin's writer says it too) */
 export const modelChanged = (id) => `Nothing was written: the model changed after you approved: make the plan again (plan ${id} was made from the model as it was then: call the tool without planId), show it to the user and wait for their go.`;
 
-/** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: { key, print } (or the key alone) or
+/** A new proposed plan. kind: report | theme | scripts | calendar | twin | redesign; model: { key, print } (or the key alone) or
  *  null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
 export function propose(kind, model, writes, data) {
   const id = 'plan-' + crypto.randomBytes(6).toString('hex'), m = modelOf(model);
