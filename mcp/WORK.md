@@ -65,7 +65,7 @@ green. grep: no "never reads data values"/"not your data" claim left; no "Nothin
 - Full mcp npm test on db31959 + this note: every script PASS (test.mjs 1581, G-13 inside, r6-disclosure 37). Website: theme-logo 753,
   site 463, anchors 128, tools 341, lang-switcher 1368, theme-generator 894, theme-generator-lab 894; site-config, check-min,
   csp, ar-pages PASS (test-sitemap-lastmod cannot run here: the shallow clone lacks an old commit, not this change).
-- PR into release/0.3.0 not opened yet: it waits for the owner's go in this session. Next: PR, review, merge; R7 re-reads PRIVACY.md.
+- PR #79 into release/0.3.0 opened on the owner's go (not merged). Next: review, CI, the owner merges; R7 re-reads PRIVACY.md.
 ## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
 integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,
