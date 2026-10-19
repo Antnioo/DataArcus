@@ -1,8 +1,26 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-146" just below (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3.0 release branch" just below (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 release branch (19 Oct, cloud builder; branch `release/0.3.0` from main `d76703c`; DRAFT PR #74 to main, the owner merges after the laptop proof)
+The owner's decision (19 Oct): beta testers get 0.3.0, the 0.3 drafts as they are. One `git merge --no-ff` per branch,
+in the briefed order, conflicts resolved as draft #65's integration check did (both behaviours kept, no test dropped
+or loosened); generated files rebuilt with the repo's scripts (build:min, ar-pages --write, csp --write,
+sitemap-lastmod --write), `?v=` stamp `20261019r030` where both sides bumped.
+- Merged: #37, #38, #63 | #48, #53 | #51, #52, #54, #56 | #57 (2047862), #58, #59 | #60, #61 | #68 (not #62), #64,
+  #69 (4dec207) | main (#70, #71, #72, #73). CHANGELOG `## [Unreleased]: 0.3.0` (one line per PR); PRIVACY.md
+  "Checked against 0.3.0" (test-release-text needs both together).
+- New conflicts (not in #65): #68's redesign path and plan follow #58 (modelRef) and #59 (withPlan) like the native
+  copy; #69's build/write split keeps #38's check (made in the build, said at the write), #59's withPlan inside
+  finish, #58's modelRef in both gates, #37's preview next to #69's exact in the plan, #51's guard before the exact
+  build; check-report.mjs exports #38's rulesInput for #69's artifact.mjs.
+- Results: CI on f5455c9 green: mcp 11264, website 10997, mcp-windows, scan. Locally (Linux) every npm test script
+  PASS (test.mjs 32 + 584 + 631 + 332, G-13 249 reports, 0 with errors); a11y 121/121 (W1 passes: #57's alt text is
+  the full title); site scripts all pass.
+- Next: the laptop proves 0.3.0 in Power BI Desktop (list in PR #74); fix jobs open PRs into `release/0.3.0`
+  (Arabic titles from an English-named model; waterfall right to left; Codex safety findings); the owner merges.
 
 ## B-146: the aggregation guard (18 Oct, cloud builder; branch `feat/0.3-aggregation-guard` from main `4a837f9`; DRAFT PR, merges after 0.2.9 reaches testers)
 The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can join our product"); the reviewer's brief.
