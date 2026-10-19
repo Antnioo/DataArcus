@@ -46,17 +46,57 @@
     MIN_CARD: { value: [70, 40], source: 'chosen, not measured: a card smaller than this (720 grid)' },
     MIN_SLICER: { value: [70, 28], source: 'chosen, not measured: a slicer smaller than this (720 grid)' }
   };
+  // J12 (19 Oct 2026, the laptop's comparison with Desktop's PDF export of the same written reports): what Desktop draws
+  // that the picture must show too. The title's line height was measured there (~36 a line at 18pt = 24); the slant rule
+  // is the laptop's rough one; the room for a title and a table's columns are the report writer's own (pbip-page.js) and
+  // the Arabic twin's (rc.24, fitHeaders), on the 1080 grid, scaled with the page's height
+  Object.assign(LIMITS, {
+    TITLE_LINE: { value: 1.5, source: 'measured (the laptop, Desktop\'s PDF export, 19 Oct): a title line takes about 36 at 18pt (24), 1.5 x its size' },
+    TITLE_SIDE: { value: 16, source: 'the report writer\'s room for a chart\'s title: the box less 16 a side (1080 grid)' },
+    TITLE_TOP: { value: 10, source: 'chosen, not measured: the room above a title where the visual sets none (1080 grid)' },
+    TABLE_COLUMN: { value: 24, source: 'the Arabic twin\'s header room (rc.24 fitHeaders): a column needs its header\'s width (bold) and 24 (1080 grid)' },
+    TABLE_SIDE: { value: 36, source: 'the Arabic twin\'s (rc.24 fitHeaders): a table\'s columns have its width less 36 (1080 grid)' },
+    SLANT: { value: [40, 8.5, 15], source: 'the laptop\'s rough rule (Desktop 2.158, 19 Oct): category labels slant when the room a category has is under 40 + 8.5 a letter, at 15pt (scaled with the label size)' },
+    // a category's labels, where their count and longest length are known from the column's name: months, quarters and
+    // weekdays; a full name is never taken as shorter than "September" / "Wednesday" (9), a quarter as "Quarter 1" (9)
+    LABELS: { value: { month: [12, 3, 9, 2], quarter: [4, 2, 9, 1], weekday: [7, 3, 9, 1] }, source: 'known lengths: [count, short name, full name, number]; anything else is unknown (never assumed to fit)' }
+  });
   const V = (k) => LIMITS[k].value;
+  // the report writer's own text measure (text-measure.js: the browser loads it before the writer, so before a preview of
+  // its download); without it, an estimate on the wide side
+  const measure = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
+  const tw = (s, pt, bold, font) => { const M = measure(); return M && M.textWidth ? M.textWidth(s, pt, bold, font) : String(s).length * pt * 4 / 3 * 0.62 * (bold ? 1.09 : 1); };
+  // words split into lines that fit the room (as the writer's wrapLines: a word longer than the room keeps its own line)
+  const wrap = (text, pt, room, bold, font) => { const out = []; let cur = ''; String(text).split(/\s+/).filter(Boolean).forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, pt, bold, font) <= room) cur = t; else { out.push(cur); cur = w; } }); if (cur) out.push(cur); return out; };
+  // the known labels of a category, from its column's name: { what, count, len } or null (unknown)
+  function labelsOf(name) {
+    const s = String(name == null ? '' : name).toLowerCase(), L = V('LABELS');
+    if (!s || /\b(year|yr|fy)\b|\d{4}|سنة|عام/.test(s)) return null;   // (with the year: the count is the data's)
+    const what = /\bmonths?\b|\bmon\b|شهر/.test(s) ? 'month' : /\bquarters?\b|\bqtr\b|ربع/.test(s) ? 'quarter' : /\bweek\s*days?\b|\bday\s*(of\s*(the\s*)?week|name)\b|\bdow\b|يوم/.test(s) ? 'weekday' : null;
+    if (!what) return null;
+    const [count, short, full, num] = L[what], len = /\b(number|num|no|index)\b|رقم/.test(s) ? num : /\b(short|abbr|abbrev|abbreviation|mmm|ddd)\b|^(mon|qtr|dow)$|مختصر/.test(s) ? short : full;
+    return /\b(key|sort|id)\b/.test(s) ? null : { what, count, len };
+  }
 
-  /** The flags of a page's layout: [{ i (the visual's index), kind: 'cut' | 'overlap' | 'small', other? }]. */
+  /** The flags of a page's layout: [{ i (the visual's index), kind: 'cut' | 'overlap' | 'small', other?, why? }]. */
   function check(page) {
-    const W = +page.w || 0, H = +page.h || 0, s = H ? H / 720 : 1, out = [], vs = page.visuals || [];
-    const add = (i, kind, other) => { if (!out.some((f) => f.i === i && f.kind === kind)) out.push(other == null ? { i, kind } : { i, kind, other }); };
+    const W = +page.w || 0, H = +page.h || 0, s = H ? H / 720 : 1, kk = H ? H / 1080 : 1, out = [], vs = page.visuals || [];
+    const add = (i, kind, other, why) => { if (!out.some((f) => f.i === i && f.kind === kind)) out.push(Object.assign({ i, kind }, other == null ? {} : { other }, why ? { why } : {})); };
     vs.forEach((v, i) => {
       const k = kindOf(v), sl = V('PAGE_SLACK');
-      if (k !== 'panel' && W && H && (v.x < -sl || v.y < -sl || v.x + v.w > W + sl || v.y + v.h > H + sl)) add(i, 'cut');
+      if (k !== 'panel' && W && H && (v.x < -sl || v.y < -sl || v.x + v.w > W + sl || v.y + v.h > H + sl)) add(i, 'cut', null, 'off the page');
       const min = CHARTS.has(k) ? V('MIN_CHART') : k === 'card' ? V('MIN_CARD') : k === 'slicer' ? V('MIN_SLICER') : null;
       if (min && (v.w < min[0] * s || v.h < min[1] * s)) add(i, 'small');
+      // J12: a table whose column headers, at its header size, need more than its width (Desktop shows fewer columns)
+      if (k === 'table' && Array.isArray(v.columns) && v.columns.length) {
+        const need = v.columns.reduce((a, c) => a + Math.ceil(tw(c.name, +v.headerSize || 10, true, v.headerFont) + V('TABLE_COLUMN') * kk), 0), room = Math.floor(v.w - V('TABLE_SIDE') * kk);
+        if (need > room) add(i, 'cut', null, `table columns: their headers need ${need}, the table has ${room}`);
+      }
+      // J12: a column or line chart whose category labels will slant (their count and length known from the field)
+      if ((k === 'column' || k === 'line') && v.category) {
+        const L = labelsOf(v.category), [b0, per, at] = V('SLANT');
+        if (L) { const room = v.w / L.count, need = (b0 + per * L.len) * (+v.labelSize || 9) / at; if (room < need) add(i, 'cut', null, `labels slant: ${Math.round(room)} a ${L.what}, ${Math.round(need)} needed`); }
+      }
     });
     const data = vs.map((v, i) => ({ v, i, k: kindOf(v) })).filter((x) => DATA.has(x.k));
     const near = (a, b) => Math.abs(a - b) <= V('COVER_NEAR');
@@ -71,9 +111,15 @@
     return out;
   }
 
+  /** What the picture can't tell (J12): [{ i, kind: 'labels' }], a column or line chart whose category's labels have no
+   *  known length (their count and length are the data's): said, never a flag and never assumed to fit. */
+  function notes(page) {
+    return (page.visuals || []).map((v, i) => ({ v, i, k: kindOf(v) })).filter(({ v, k }) => (k === 'column' || k === 'line') && v.category && !labelsOf(v.category)).map(({ i }) => ({ i, kind: 'labels' }));
+  }
+
   const WORDS = {
-    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check' },
-    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة' }
+    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'label length unknown' },
+    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'طول التسميات غير معروف' }
   };
   const GREY = '#A3ACBB', WARN = '#B7791F';
 
@@ -114,26 +160,63 @@
     const width = Math.max(160, Math.round(+o.width || 800)), height = Math.round(width * H / W), u = W / width;   // u: page units per pixel
     const c = Object.assign({ background: '#F4F6FA', card: '#FFFFFF', ink: '#14213D', accent: '#0F7C90' }, page.colors || {});
     const col = { background: hex(c.background, '#F4F6FA'), card: hex(c.card, '#FFFFFF'), ink: hex(c.ink, '#14213D'), accent: hex(c.accent, '#0F7C90') };
-    const fs = 11 * u, pad = 8 * u, vs = page.visuals || [];
+    const fs = 11 * u, pad = 8 * u, vs = page.visuals || [], kk = H / 1080;
     const flags = check(page);
     (page.flags || []).concat(o.flags || []).forEach((f) => { if (f && vs[f.i] && /^(cut|overlap|small)$/.test(f.kind) && !flags.some((g) => g.i === f.i && g.kind === f.kind)) flags.push({ i: f.i, kind: f.kind }); });
-    // (a title shortened with "…" by an estimate of its width: a picture, not a measurement)
-    const fit = (s, room) => { const t = clean(s), max = Math.max(1, Math.floor(room / (fs * 0.56))); return t.length > max ? t.slice(0, Math.max(1, max - 1)) + '…' : t; };
+    // (one line of a title that may not wrap, shortened with "…" by the writer's measure: a picture, not a measurement)
+    const fit = (t, pt, room, bold, f) => { if (tw(t, pt, bold, f) <= room) return t; let k = t.length; while (k > 1 && tw(t.slice(0, k) + '…', pt, bold, f) > room) k--; return t.slice(0, k) + '…'; };
     const order = vs.map((v, i) => i).sort((a, b) => ((+vs[a].z || 0) - (+vs[b].z || 0)) || a - b);
     const font = `font-family="'Segoe UI', Tahoma, Arial, sans-serif"`;
+    const anchor = (al) => (al === 'center' ? 'middle' : al === 'right' ? 'end' : 'start');
+    const at = (al, b, l, r) => (al === 'center' ? b.x + b.w / 2 : al === 'right' ? b.x + b.w - r : b.x + l);
+    const side = (al) => (/^(left|right|center)$/.test(String(al || '')) ? al : rtl ? 'right' : 'left');
+    // (J12: the writer's thin bar under a page button is Desktop's underline of the current page)
+    const barUnder = (v) => vs.some((q) => kindOf(q) === 'shape' && +q.h <= 6 && q.y >= v.y + v.h - 4 && q.y <= v.y + v.h + 12 && q.x < v.x + v.w && q.x + q.w > v.x);
     const body = order.map((i) => {
       const v = vs[i], k = kindOf(v), b = { x: +v.x || 0, y: +v.y || 0, w: Math.max(0, +v.w || 0), h: Math.max(0, +v.h || 0) };
       const title = clean(v.title), boxed = !/^(text|image|button|shape)$/.test(k);
       const panel = boxed ? `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}" stroke="${GREY}" stroke-opacity=".35" stroke-width="${n(u)}"/>`
         : `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" fill="none"/>`;
-      if (k === 'panel') return `<g class="v" data-i="${i}" data-kind="panel">${panel}</g>`;
-      const showTitle = title && b.h >= fs * 1.6 && b.w >= fs * 3;
-      const head = showTitle ? fs * 1.9 : 0, tx = rtl ? b.x + b.w - pad : b.x + pad;
-      const t = showTitle ? `<text class="t" x="${n(tx)}" y="${n(b.y + pad + fs * 0.9)}" ${font} font-size="${n(fs)}" font-weight="600" fill="${col.ink}" text-anchor="${rtl ? 'end' : 'start'}">${esc(fit(title, b.w - 2 * pad))}</text>` : '';
-      // (the shape below the title, inside the box's padding; a text box or a button is only its title or its outline)
-      const inner = k === 'text' && showTitle ? '' : k === 'image' || k === 'button' || k === 'shape' ? shape(k, b, rtl, col, u)
-        : shape(k, { x: b.x + pad, y: b.y + head + pad * 0.5, w: Math.max(0, b.w - 2 * pad), h: Math.max(0, b.h - head - pad * 1.5) }, rtl, col, u);
-      return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}</g>`;
+      const end = '</g><!--/v-->';
+      if (k === 'panel') return `<g class="v" data-i="${i}" data-kind="panel">${panel}${end}`;
+      // a text box (the report's title) and a button (a page's name): their own text at their own size, never a value
+      if (k === 'text' || k === 'button') {
+        const raw = clean(k === 'button' ? (v.text != null ? v.text : v.title) : v.title), pt = +(k === 'button' ? v.textSize : v.textSize) || 12, px = pt * 4 / 3, bold = !!v.textBold;
+        const al = k === 'button' ? (/^(left|right|center)$/.test(String(v.textAlign || '')) ? v.textAlign : 'center') : side(v.textAlign);
+        const sp = k === 'button' ? (v.nav ? 4 * kk : b.h * 0.4) : 0, room = Math.max(1, b.w - 2 * sp), shown = raw ? fit(raw, pt, room, bold, v.font) : '';
+        // (a text box is top-aligned: its text's middle about 1.2 x pt below its top, measured in round 1; a button's middle)
+        const mid = k === 'text' ? b.y + 1.2 * pt : b.y + b.h / 2, x = at(al, b, sp, sp), y = mid + px * 0.35;
+        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(px)}" font-weight="${bold ? 'bold' : 'normal'}" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(shown)}</text>` : '';
+        let line = '';
+        const cur = !!(v.current || (k === 'button' && v.nav && page.id && v.nav === page.id));
+        if (k === 'button' && cur && shown && !barUnder(v)) {
+          const lw = Math.min(room, tw(shown, pt, bold, v.font)), x0 = al === 'center' ? x - lw / 2 : al === 'right' ? x - lw : x;
+          line = `<line class="u" x1="${n(x0)}" y1="${n(y + px * 0.25)}" x2="${n(x0 + lw)}" y2="${n(y + px * 0.25)}" stroke="${col.accent}" stroke-width="${n(Math.max(2 * kk, u))}"/>`;
+        }
+        const outline = k === 'button' && !v.nav ? shape(k, b, rtl, col, u) : '';
+        return `<g class="v" data-i="${i}" data-kind="${k}"${cur ? ' data-current="1"' : ''}>${panel}${outline ? `<g class="ph">${outline}</g>` : ''}${t}${line}${end}`;
+      }
+      // the title: at the visual's own size (pt; the theme's where the visual sets none), wrapped at the box's inner width
+      // by the writer's measure (bold, as the writer measures it), on as many lines as the box holds
+      const pt = +v.titleSize || 12, px = pt * 4 / 3, lh = px * V('TITLE_LINE'), bold = v.titleBold !== false;
+      const pd = v.pad || {}, pl = pd.left != null ? +pd.left : V('TITLE_SIDE') * kk, pr = pd.right != null ? +pd.right : V('TITLE_SIDE') * kk, pt0 = pd.top != null ? +pd.top : V('TITLE_TOP') * kk;
+      const room = Math.max(1, b.w - pl - pr), fits = Math.max(0, Math.floor((b.h - pt0) / lh));
+      let lines = title && fits && b.w >= px * 2 ? (v.titleWrap === false ? [fit(title, pt, room, bold, v.font)] : wrap(title, pt, room, bold, v.font)) : [];
+      if (lines.length > fits) lines = lines.slice(0, fits).map((l, j, all) => (j === all.length - 1 ? fit(l + '…', pt, room, bold, v.font) : l));
+      const al = side(v.titleAlign), tx = at(al, b, pl, pr), head = pt0 + lines.length * lh;
+      const t = lines.map((l, j) => `<text class="t" x="${n(tx)}" y="${n(b.y + pt0 + j * lh + (lh + px * 0.7) / 2)}" ${font} font-size="${n(px)}" font-weight="600" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(l)}</text>`).join('');
+      // (the placeholder below the title's lines, inside the box's padding: it shrinks by the lines the title takes)
+      const ib = { x: b.x + pl, y: b.y + head + (lines.length ? 4 * kk : pad * 0.5), w: Math.max(0, b.w - pl - pr), h: Math.max(0, b.h - head - (lines.length ? 4 * kk : pad * 0.5) - pad) };
+      let inner;
+      if (k === 'card') {
+        // a card's value where its file aligns it (J12: the writer writes 'right' on an Arabic page, as the Arabic twin
+        // does from rc.24, PR #55); a page from the slots has none: the reading start
+        const va = /^(left|right|center)$/.test(String(v.valueAlign || '')) ? v.valueAlign : rtl ? 'right' : 'left';
+        const vh = Math.min(ib.h * 0.8, v.valueSize ? +v.valueSize * 4 / 3 * 0.8 : ib.h * 0.45), vw = ib.w * 0.46;
+        const vx = va === 'right' ? ib.x + ib.w - vw : va === 'center' ? ib.x + (ib.w - vw) / 2 : ib.x, vy = ib.y + Math.max(0, (ib.h - vh) * 0.35);
+        inner = vh > 0 && vw > 0 ? `<rect class="kv" x="${n(vx)}" y="${n(vy)}" width="${n(vw)}" height="${n(vh)}" rx="${n(Math.min(vw, vh, 24 * u) * 0.2)}" fill="${GREY}"/>` : '';
+      } else inner = k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u);
+      return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
     const marks = flags.map((f) => {
@@ -144,10 +227,17 @@
         + `<rect x="${n(x0)}" y="${n(by + stack)}" width="${n(tw)}" height="${n(th)}" rx="${n(th / 2)}" fill="#FFF7E6" stroke="${WARN}" stroke-width="${n(u)}"/>`
         + `<text x="${n(x0 + tw / 2)}" y="${n(by + stack + th * 0.7)}" ${font} font-size="${n(fs * 0.9)}" fill="#7A4E00" text-anchor="middle">${esc(word)}</text></g>`;
     }).join('');
+    // the notes (J12): what can't be told from the plan, in a quiet grey tag at the box's bottom corner (not a flag)
+    const said = notes(page).map((f) => {
+      const v = vs[f.i], word = T[f.kind], tw2 = word.length * fs * 0.52 + 2 * pad * 0.7, th = fs * 1.4;
+      const x0 = rtl ? Math.min(W - tw2, Math.max(0, +v.x + 4 * u)) : Math.min(W - tw2, Math.max(0, +v.x + +v.w - tw2 - 4 * u)), y0 = Math.min(H - th, Math.max(0, +v.y + +v.h - th - 4 * u));
+      return `<g class="note" data-i="${f.i}" data-note="${f.kind}"><rect x="${n(x0)}" y="${n(y0)}" width="${n(tw2)}" height="${n(th)}" rx="${n(th / 2)}" fill="#F1F3F6" stroke="${GREY}" stroke-width="${n(u)}"/>`
+        + `<text x="${n(x0 + tw2 / 2)}" y="${n(y0 + th * 0.7)}" ${font} font-size="${n(fs * 0.85)}" fill="#5B6472" text-anchor="middle">${esc(word)}</text></g>`;
+    }).join('');
     const tag = `<text class="pv" x="${n(rtl ? 6 * u : W - 6 * u)}" y="${n(H - 6 * u)}" ${font} font-size="${n(fs)}" fill="${GREY}" text-anchor="${rtl ? 'start' : 'end'}" font-style="italic">${esc(T.preview)}</text>`;
     const label = `${T.page} ${clean(page.name)}: ${vs.filter((v) => kindOf(v) !== 'panel').length} ${T.visuals}${flags.length ? `, ${flags.length} ${T.flags}` : ''}`;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(W)} ${n(H)}" width="${width}" height="${height}" role="img" aria-label="${esc(label)}">`
-      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>${body}${marks}${tag}</svg>`;
+      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>${body}${marks}${said}${tag}</svg>`;
   }
 
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
@@ -161,6 +251,55 @@
     const m = p.text && p.text.expr && p.text.expr.Measure; return m && /^Title: /.test(String(m.Property || '')) ? String(m.Property).slice(7) : '';
   };
   const textOf = (j) => ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs ? j.visual.objects.general[0].properties.paragraphs.map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' ') : '';
+  // J12: what Desktop draws from a visual's own settings (else the theme's): its title's size, font, weight, side, wrap and
+  // padding; a text box's and a button's text and size; a card's value side; a table's columns and header size; a
+  // chart's category and label size. Settings only, never a value.
+  const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+  const numOf = (p) => { const v = litOf(p); const x = parseFloat(String(v == null ? '' : v).replace(/[DLM]$/, '')); return Number.isFinite(x) ? x : null; };
+  const strOf = (p) => { const v = litOf(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
+  const boolOf = (p) => { const v = litOf(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
+  // the properties of a card's entries with no selector (or the default one), merged
+  const props = (list, def) => (Array.isArray(list) ? list : []).filter((e) => e && e.properties && (!e.selector || (def && e.selector.id === 'default'))).reduce((a, e) => Object.assign(a, e.properties), {});
+  const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };
+  const nameOfProj = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef != null ? x.nativeQueryRef : (((x.field || {}).Column || (x.field || {}).Measure || {}).Property) || '');
+  function settingsOf(j, type, theme, pageId) {
+    const vis = j.visual || {}, vco = vis.visualContainerObjects || {}, ob = vis.objects || {}, tc = (theme && theme.textClasses) || {}, out = {};
+    const tp = props(vco.title), pad = props(vco.padding);
+    out.titleSize = numOf(tp.fontSize) || +th1(theme, type, 'title', 'fontSize') || +(tc.title || {}).fontSize || 12;
+    out.font = strOf(tp.fontFamily) || (tc.title || {}).fontFace || 'Segoe UI';
+    if (boolOf(tp.bold) === false) out.titleBold = false;
+    if (boolOf(tp.titleWrap) != null) out.titleWrap = boolOf(tp.titleWrap);
+    if (strOf(tp.alignment)) out.titleAlign = strOf(tp.alignment);
+    if (['left', 'right', 'top'].some((k) => numOf(pad[k]) != null)) out.pad = { left: numOf(pad.left), right: numOf(pad.right), top: numOf(pad.top) };
+    if (out.pad) Object.keys(out.pad).forEach((k) => { if (out.pad[k] == null) delete out.pad[k]; });
+    if (type === 'textbox') {
+      const para = ((((ob.general || [])[0] || {}).properties || {}).paragraphs || [])[0] || {}, run = (para.textRuns || []).find((r) => r && String(r.value || '').trim()) || {}, st = run.textStyle || {};
+      const sz = parseFloat(String(st.fontSize || '')); if (Number.isFinite(sz)) out.textSize = sz;
+      if (/bold|^[6-9]00$/.test(String(st.fontWeight || ''))) out.textBold = true;
+      if (para.horizontalTextAlignment) out.textAlign = String(para.horizontalTextAlignment);
+      if (st.fontFamily) out.font = String(st.fontFamily);
+    }
+    if (type === 'actionButton') {
+      const t = props(ob.text, true), link = props(vco.visualLink);
+      if (strOf(t.text) != null) out.text = strOf(t.text);
+      out.textSize = numOf(t.fontSize) || 12; if (boolOf(t.bold)) out.textBold = true; if (strOf(t.horizontalAlignment)) out.textAlign = strOf(t.horizontalAlignment);
+      if (strOf(t.fontFamily)) out.font = strOf(t.fontFamily);
+      if (strOf(link.type) === 'PageNavigation' && strOf(link.navigationSection)) { out.nav = strOf(link.navigationSection); if (out.nav === pageId) out.current = true; }
+    }
+    if (/^(card|cardVisual)$/.test(type)) { const vp = props(ob.value, true); out.valueAlign = strOf(vp.horizontalAlignment) || 'center'; if (numOf(vp.fontSize)) out.valueSize = numOf(vp.fontSize); }
+    const qs = (vis.query || {}).queryState || {};
+    if (type === 'tableEx') {
+      const hp = props(ob.columnHeaders), cw = Array.isArray(ob.columnWidth) ? ob.columnWidth : [];
+      out.columns = (((qs.Values || {}).projections) || []).filter((x) => x && x.field).map((x) => { const e = cw.find((y) => y && y.selector && y.selector.metadata === x.queryRef); return Object.assign({ name: nameOfProj(x) }, e ? { width: numOf((e.properties || {}).value) } : {}); });
+      out.headerSize = numOf(hp.fontSize) || +th1(theme, 'tableEx', 'columnHeaders', 'fontSize') || +th1(theme, 'tableEx', 'values', 'fontSize') || 10;
+      out.headerFont = strOf(hp.fontFamily) || (tc.label || {}).fontFace || out.font;
+    }
+    if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+      const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
+      if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
+    }
+    return out;
+  }
   const hasFields = (j) => Object.values(((j.visual || {}).query || {}).queryState || {}).some((r) => r && Array.isArray(r.projections) && r.projections.length);
 
   /** The pages a report shows, from the files the report writer gives ([{ path, data }], PBIR): page order, size,
@@ -169,9 +308,15 @@
    *  the header band, the filter rail). The visuals in their drawing
    *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors }. */
   function fromFiles(files, opts) {
-    const o = opts || {}, by = new Map();
-    (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); });
+    const o = opts || {}, by = new Map(), res = [];
+    (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); else if (/(?:^|\/)StaticResources\/RegisteredResources\/[^/]+\.json$/.test(String(f.path || '')) || /(?:^|\/)definition\/report\.json$/.test(String(f.path || ''))) res.push(f); });
     const json = (rel) => { try { return by.has(rel) ? JSON.parse(txt(by.get(rel))) : null; } catch (e) { return null; } };
+    const parse = (f) => { try { return JSON.parse(txt(f.data)); } catch (e) { return null; } };
+    // the report's theme (the one report.json names, else any registered theme with text classes): its sizes
+    const rep = res.find((f) => /definition\/report\.json$/.test(f.path)), rj = rep ? parse(rep) : null;
+    const want = rj && rj.themeCollection && rj.themeCollection.customTheme ? String(rj.themeCollection.customTheme.name || '') : '';
+    const themes = res.filter((f) => f !== rep).map((f) => ({ f, j: parse(f) })).filter((x) => x.j && x.j.textClasses);
+    const theme = ((want && themes.find((x) => x.f.path.endsWith('/' + want))) || themes[0] || {}).j || null;
     const order = ((json('pages.json') || {}).pageOrder || []).map(String);
     return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
       const list = [...by.keys()].filter((k) => k.startsWith(id + '/visuals/') && /\/visual\.json$/.test(k)).map((k) => json(k)).filter(Boolean)
@@ -180,10 +325,10 @@
       const at = (j) => { let x = +(j.position || {}).x || 0, y = +(j.position || {}).y || 0, g = j.parentGroupName, hid = !!j.isHidden, d = 0; while (g && byName.has(g) && d++ < 10) { const q = byName.get(g); x += +(q.position || {}).x || 0; y += +(q.position || {}).y || 0; hid = hid || !!q.isHidden; g = q.parentGroupName; } return { x, y, hid }; };
       const visuals = list.filter((j) => !j.visualGroup && j.visual).map((j) => {
         const p = at(j), type = String(j.visual.visualType || 'unknown'), title = type === 'textbox' ? textOf(j) : titleOf(j);
-        return p.hid ? null : Object.assign({ type, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0, z: +(j.position || {}).z || 0, title },
+        return p.hid ? null : Object.assign({ type, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0, z: +(j.position || {}).z || 0, title }, settingsOf(j, type, theme, id),
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
-      return { name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals };
+      return { id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals };
     });
   }
 
@@ -196,6 +341,6 @@
       visuals: (slots || []).map((s) => ({ type: SLOT[s.kind] || String(s.kind || 'unknown'), x: +s.x || 0, y: +s.y || 0, w: +s.w || 0, h: +s.h || 0, title: s.title || s.role || '' })) };
   }
 
-  const api = { render, check, fromFiles, fromSlots, kindOf, LIMITS, WORDS };
+  const api = { render, check, notes, fromFiles, fromSlots, kindOf, labelsOf, LIMITS, WORDS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPagePreview = api;
 })(typeof self !== 'undefined' ? self : this);
