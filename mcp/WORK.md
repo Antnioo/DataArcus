@@ -4,6 +4,28 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## J12: preview fidelity fixes (19 Oct, cloud builder; branch `feat/0.3-preview-fidelity` from `feat/0.3.0-preview` `269983b` = draft PR #37; a draft PR stacked on #37, merged only after 0.2.9 reaches testers)
+The laptop compared #37's preview (page-preview.js fromFiles + render) with Desktop's PDF export of the same written
+reports (English exec, its Arabic twin, a dense ops page with 6 KPIs): every box placed right (within 4 units); wrong:
+titles (one line at 11 px; Desktop: the visual's own size, 18pt = 24 on 1920 for charts and tables, 9-10pt for KPI
+cards, wrapping: 7 of 14 took 2 lines, ~36 units from the plot), cut content no flag reports (a 507-wide 4-column
+table shows 3 columns; a 509-wide line chart's 12 months slant), and words that carry meaning (page-button names, the
+report title, the KPI value's side on Arabic pages).
+- **Plan (the reviewer's brief):** (1) fromFiles reads each visual's title size (its own, else the theme's), font, wrap;
+  render draws titles at that size in page units, wrapped at the inner width (w less 16k a side, as the writer) by
+  text-measure.js's textWidth (bold, as the writer measures), and the placeholder plot starts under the lines.
+  (2) check() flags `cut` for a table whose headers at its header size (+24k each, as rc.24's fitHeaders) need more
+  than w - 36k, and for a column/line chart whose category labels slant: px per category < (40 + 8.5 x letters) x
+  size/15 (the laptop's rule), with known lengths only (months 12, quarters 4, weekdays 7; short or full by name; full
+  is never assumed shorter than 9); an unknown category is a quiet note ("label size unknown"), never a flag.
+  (3) page buttons drawn with their names, the current page (navigationSection = the page) underlined (the writer's bar,
+  or the preview's own line); text boxes at their own size and weight; a KPI value drawn where its file aligns it
+  (the writer writes 'right' on Arabic pages; rc.24, PR #55, makes the twin write 'right' too: the preview reads the
+  file, so it follows #55 when it lands; a file still saying 'left' is drawn left, as Desktop shows it).
+- **Expected (before any run):** `test-0.3-preview-fidelity.mjs` 37 checks, 27 red on #37's code, all green after;
+  preview 71 and approval 28 unchanged; the website pbip suite's lab preview checks green; full npm test all PASS.
+- **Shared files touched:** assets/js/page-preview.js (+ .min.js), assets/js/theme-generator.js only if its loader must change.
+
 ## 0.3.0 step 1: Preview before Approve (18 Oct, cloud builder; branch `feat/0.3.0-preview` from main `6d88fe4`; draft PR, not merged)
 The owner's go (18 Oct) on the 0.3.0 plan approved 17 Oct ("yes B and the promise stays"): step 1 first, merged only after
 0.2.9 reaches testers. Out of scope: step 2 (check before download), the visual gallery, story titles, anything the
