@@ -10,8 +10,11 @@
  *  - column, line, area and combo charts: the value axis at the right, and the category order reversed BY THE SORT
  *    (an existing sort flipped, else Descending by the category). categoryAxis.invertAxis is never written: on a
  *    categorical axis Desktop ignored it. Mirroring time is the owner's choice (opts.timeRightToLeft, default true);
- *  - waterfall charts (0.3.0 R3): the same value axis and sort. Microsoft's capabilities give a waterfall's
- *    categoryAxis no invertAxis, so the order is the only mirror: its steps run right to left, the first at the right;
+ *  - waterfall charts (D1; R3's Descending sort was seen in Desktop 2.159 to reverse time, not the direction: Power BI
+ *    accumulates a waterfall left to right and has no setting to invert its category axis): written as a stacked
+ *    column chart drawn as a waterfall from the twin's own report measures (visual-gallery.js rtlWaterfall; the
+ *    caller writes them, opts.waterfall), the first period at the right; one the measures can't order is kept a
+ *    waterfall, left to right, with its value axis at the right (kind 'waterfallKept');
  *  - legends: left and right swapped, TopRight when none is set; titles right-aligned (centred kept); text boxes
  *    right-aligned (centred kept); tables: columns reversed, text columns right-aligned; a matrix's values reversed;
  *    a new card's values reversed and right-aligned (a single value too, its inner margins swapped); buttons: a left text or icon goes right;
@@ -46,6 +49,8 @@
   // type at all is treated as custom too: moved only
   const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
   const isCustom = (type) => !type || VT.isCustom(type);
+  // the right-to-left waterfall's builder, shared with the report writer (D1)
+  const Gallery = () => (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
   function kindOf(json) {
     if (!isObj(json)) return 'unreadable';
     if (isObj(json.visualGroup)) return 'group';
@@ -66,7 +71,9 @@
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
-    waterfall: 'waterfall charts: value axis at the right, steps right to left by the sort (the first at the right); Power BI has no setting to invert a waterfall\'s category axis, so only its order is reversed',
+    waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps, no legend; hovering the empty space under a step shows its base. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
+    waterfallTime: 'waterfall charts over time, kept left to right as asked (timeRightToLeft false): still waterfalls, their order as it is, the value axis at the right',
+    waterfallKept: 'waterfall charts the running total can\'t follow (a breakdown, a sort by the value, a text category with no order): A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)',
     bar: 'bar charts: names at the right, bars growing from the right',
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned',
     matrix: 'matrices: values in reverse order (rows keep their order)',
@@ -123,7 +130,8 @@
   function mirrorVisual(json0, W, opts) {
     const o = opts || {};
     if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
-    const json = clone(json0), kind = kindOf(json), changes = [];
+    const json = clone(json0), changes = [];
+    let kind = kindOf(json), measures = null, why = null;
     const p = isObj(json.position) ? json.position : {};
     if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
     const v = json.visual;
@@ -139,7 +147,36 @@
       plainEntry(objects(), 'valueAxis').properties.invertAxis = mk('true');
       changes.push('axes');
     }
-    if (kind === 'column' || kind === 'waterfall') {
+    // (D1) a waterfall: the stacked column chart that reads from the right, or kept left to right
+    // (time kept left to right on request, opts.timeRightToLeft false: a waterfall over time stays one, its order as it is)
+    if (kind === 'waterfall' && o.timeRightToLeft === false && isTime((first(projections(v.query, 'Category')) || {}).field, o.dateTables)) {
+      plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
+      changes.push('value axis'); kind = 'waterfallTime';
+    }
+    if (kind === 'waterfall') {
+      const wo = o.waterfall || {}, G = Gallery(), sc = (entries(v.objects, 'sentimentColors') || []).find((e) => !e.selector && isObj(e.properties)), th = isObj(wo.theme) ? wo.theme : {};
+      const fill = (k, hex) => (sc && isObj(sc.properties[k]) ? clone(sc.properties[k]) : G && G.fillOf(hex));
+      const y0 = first(projections(v.query, 'Y')), ym = y0 && isObj(y0.field) && isObj(y0.field.Measure) ? y0.field.Measure : null;
+      let wf;
+      try {
+        wf = G ? G.rtlWaterfall(v.query, { extMeasure: wo.extMeasure || ((t, want) => want), sortByOf: wo.sortByOf, lang: 'ar',
+          typeOf: (t, c) => (wo.typeOf && wo.typeOf(t, c)) || ((o.dateColumns || []).includes(t + '.' + c) ? 'dateTime' : null), colours: { rise: fill('increaseFill', th.good), fall: fill('decreaseFill', th.bad) },
+          formatString: ym && wo.formatOf && isObj(ym.Expression) && isObj(ym.Expression.SourceRef) ? wo.formatOf(ym.Expression.SourceRef.Entity, ym.Property) : null }) : { ok: false, why: 'the visual gallery is not loaded' };
+      } catch (e) { wf = { ok: false, why: 'its query has a shape not expected' }; }
+      if (wf.ok) {
+        // the original's own axes and plot area kept (their properties are the column chart's too); its legend, labels,
+        // sentiment colours and breakdown are the waterfall's own: replaced
+        const kept = {}; ['general', 'categoryAxis', 'valueAxis', 'plotArea', 'y1AxisReferenceLine'].forEach((k) => { if (isObj(v.objects) && Array.isArray(v.objects[k])) kept[k] = v.objects[k]; });
+        // (the original's axis entries keep their properties; the builder's go into their plain entry)
+        v.visualType = wf.visualType; v.query = wf.query; v.objects = Object.assign({}, kept, wf.objects);
+        ['valueAxis', 'categoryAxis'].forEach((k) => { if (kept[k] && wf.objects[k]) { v.objects[k] = kept[k]; Object.assign(plainEntry(v.objects, k).properties, wf.objects[k][0].properties); } });
+        measures = wf.measures; changes.push('waterfall', 'value axis', 'sort');
+      } else {
+        plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
+        changes.push('value axis'); kind = 'waterfallKept'; why = wf.why;
+      }
+    }
+    if (kind === 'column') {
       plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
       changes.push('value axis');
       const q = v.query, c0 = first(projections(q, 'Category'));
@@ -158,7 +195,7 @@
       const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
       const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
       const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
-      if (kind === 'column' && cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
+      if (cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
     // (charts only: the labs saw it there; a donut's or a map's legend is left as it is)
@@ -236,7 +273,7 @@
       const e = plainEntry(vco(), 'title'), a = strOf(e.properties.alignment);
       if (a !== 'center' && a !== 'right') { e.properties.alignment = str('right'); changes.push('title'); }
     }
-    return { json, kind, changes };
+    return Object.assign({ json, kind, changes }, measures ? { measures } : {}, why ? { why } : {});
   }
 
   // ---- one page: every visual mirrored, W from its parent group ----
@@ -302,7 +339,7 @@
       const hx = at[u.host] != null ? at[u.host] : W - h.x - h.w;
       at[u.visual] = round(hx + a.x - h.x);
     });
-    const kinds = {}, custom = [], unreadable = [], out = list.map((v) => {
+    const kinds = {}, custom = [], unreadable = [], measures = [], waterfallsKept = [], out = list.map((v) => {
       const W = widthOf(v), n = nameOf(v);
       // (the backstop: whatever the file holds, a visual that can't be mirrored is copied as it is and listed)
       let r; try { r = mirrorVisual(v, W, keepBars.has(n) ? Object.assign({}, opts, { keepDirection: true }) : opts); } catch (e) { r = { json: v, kind: 'unreadable', changes: [] }; }
@@ -310,9 +347,11 @@
       kinds[r.kind] = (kinds[r.kind] || 0) + 1;
       if (r.kind === 'custom') custom.push(String(v.name));
       if (r.kind === 'unreadable') unreadable.push(isObj(v) && v.name != null ? String(v.name) : '(no name)');
+      if (r.measures) measures.push(...r.measures);
+      if (r.kind === 'waterfallKept') waterfallsKept.push({ name: String(v.name), why: r.why });
       return r.json;
     });
-    return { visuals: out, kinds, custom, unreadable, units };
+    return { visuals: out, kinds, custom, unreadable, units, measures, waterfallsKept };
   }
 
   // ---- texts: what a reader sees that the report itself says (the model's data values are not here) ----

@@ -66,6 +66,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   visual under it: they move and resize as one, the plan and the approval page name them once, and no overlay takes a
   slot of its own (the laptop's rc.1/rc.2 proof on "Dense Ops": the overlays stood beside their charts, which were
   squeezed to 240 wide).
+- D1 (the owner's must-fix 2): a waterfall in a right-to-left report (create_report in Arabic, create_arabic_twin) is
+  written as a stacked column chart drawn as a waterfall from report-level measures: the running total in the time
+  order, January at the right, the steps rising from the right, the value axis at the right; no Total column (Power BI's
+  axis holds only the model's members), the running total in every step's tooltip; English unchanged.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

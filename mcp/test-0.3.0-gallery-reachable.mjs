@@ -119,7 +119,7 @@ try {
   // ---------- HA: Arabic, hand-placed, right to left ----------
   {
     const AR = await write({ name: 'Gallery Arabic', lang: 'ar', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES });
-    const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(KIND_OF.waterfall), sm = vs.find(KIND_OF.smallMultiples);
+    const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(KIND_OF.waterfall) || vs.find((v) => v.visual.visualType === 'columnChart'), sm = vs.find(KIND_OF.smallMultiples);
     chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === 'true' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
       () => `HA combo: mirrored (value axis right, categories inverted): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
     chk(() => wf && S(objp(wf, 'valueAxis').switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
@@ -184,6 +184,7 @@ try {
     if (id) await approve(id);
     const tw = id ? await w.call('create_arabic_twin', { path: EN.pbip, planId: id }) : null, twinDir = path.join(ROOT, 'g', 'Gallery Hand AR.Report');
     const vs = fs.existsSync(twinDir) ? allVisuals(twinDir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(KIND_OF.waterfall), sm = vs.find(KIND_OF.smallMultiples);
+    // (changed on purpose when D1 met D2 in the wave: a right-to-left waterfall is written as a stacked column chart drawn as a waterfall)
     chk(() => cb && wf && sm && [cb, wf, sm].every((v) => S(objp(v, 'valueAxis').switchAxisPosition) === 'true') && wf.visual.query.sortDefinition.sort[0].direction === 'Descending',
       () => `TW: the twin mirrors the combo, the waterfall (by its sort) and the small multiples: ${short(tw || p0)} ${JSON.stringify(vs.map((v) => v.visual.visualType))}`);
     const twPbip = fs.existsSync(twinDir) ? 'g/' + path.basename(twinDir).replace(/\.Report$/, '.pbip') : null, c = twPbip ? await check(twPbip) : null;

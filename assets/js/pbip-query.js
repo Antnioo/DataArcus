@@ -383,10 +383,11 @@
       freeExt, timeExt
     } = c;
     // (the cross-review's G4: the writer's own daxNames and valueDax, one DAX for a visual's value everywhere)
-    const extMeasure = (t, want, expression, dataType) => {
+    // (D1: with the value's format, formatString, for the right-to-left waterfall's measures)
+    const extMeasure = (t, want, expression, dataType, formatString) => {
       const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
       let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
-      timeExt.push({ t, m, expression, dataType }); return m;
+      timeExt.push(Object.assign({ t, m, expression, dataType }, formatString ? { formatString } : {})); return m;
     };
     const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
     // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
