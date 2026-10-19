@@ -657,6 +657,15 @@ function scriptName(dir, base, text) {
   }
   throw new Error('no free file name for the month script');
 }
+/** (D6, the laptop proof of rc.2: the twin's approval page said one sentence) every file the twin writes, by its path in
+ *  the folder it is written in, as writeTwin writes them: the copied report's files, its own reportExtensions.json when
+ *  the original has none, the month script when offered and not already there, and the .pbip */
+export function twinOutputs(P) {
+  const { loc, R } = P, dir = loc.base + ' AR.Report', out = R.files.map((rel) => dir + '/' + rel);
+  if (P.built.ext && !R.files.includes(EXT)) out.push(dir + '/' + EXT);
+  if (P.month.offered) { const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
+  return out.concat([loc.base + ' AR.pbip']);
+}
 export function writeTwin(a, plan) {
   const d = plan.data || {};
   // (B-02) the original as it was when the plan was approved: changed since, nothing is written

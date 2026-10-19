@@ -91,6 +91,7 @@ const pageOf = async (planId, approve) => {
 };
 const added = (before) => rels(ROOT).filter((r) => !before.includes(r) && r !== 'links.txt');
 
+// (D6: T07-2, T07-3 and T07-9 expect "the model or its report changed": a theme's pinned print covers both)
 try {
   // ---------- T07: the theme pins its model ----------
   {
@@ -100,13 +101,13 @@ try {
     await call(s, 'approve_plan', { planId: id });
     const t = rd(THEME('th')); t.dataColors[0] = '#123456'; wr(THEME('th'), t);
     const before = rels(ROOT), x = await call(s, 'generate_theme', Object.assign({ planId: id }, args));
-    chk(() => x.err && /^Nothing was written: the model changed after you approved/.test(x.t) && !added(before).length, () => `T07-2. the report's palette changed after the go: refused, nothing on disk: ${short(x)} ${JSON.stringify(added(before))}`);
+    chk(() => x.err && /^Nothing was written: the model or its report changed after you approved/.test(x.t) && !added(before).length, () => `T07-2. the report's palette changed after the go: refused, nothing on disk: ${short(x)} ${JSON.stringify(added(before))}`);
     // the model's definition changed after the go (th2): refused too
     const p2 = await call(s, 'generate_theme', { path: TWIN('th2'), name: 'Pinned Theme 2' }), id2 = p2.j && p2.j.plan && p2.j.plan.planId;
     await call(s, 'approve_plan', { planId: id2 });
     const b = rd(BIM('th2')); b.model.tables[0].description = 'changed after the go'; wr(BIM('th2'), b);
     const before2 = rels(ROOT), x2 = await call(s, 'generate_theme', { path: TWIN('th2'), name: 'Pinned Theme 2', planId: id2 });
-    chk(() => x2.err && /model changed after you approved/.test(x2.t) && !added(before2).length, () => `T07-3. the model's definition changed after the go: refused, nothing on disk: ${short(x2)}`);
+    chk(() => x2.err && /model or its report changed after you approved/.test(x2.t) && !added(before2).length, () => `T07-3. the model's definition changed after the go: refused, nothing on disk: ${short(x2)}`);
     // the same inputs, nothing changed: written (the pin does not refuse a good write)
     const p3 = await call(s, 'generate_theme', { path: TWIN('th3'), name: 'Pinned Theme 3' }), id3 = p3.j && p3.j.plan && p3.j.plan.planId;
     await call(s, 'approve_plan', { planId: id3 });
@@ -136,7 +137,7 @@ try {
     try {
       const p = await h.call('generate_theme', { path: TWIN('th4'), name: 'Late Edit' }); await h.call('approve_plan', { planId: p.j.plan.planId });
       const before = rels(ROOT), x = await h.call('generate_theme', { path: TWIN('th4'), name: 'Late Edit', planId: p.j.plan.planId }); answers.push(x.t);
-      chk(() => x.err && /^Nothing was written: the model changed/.test(x.t) && !added(before).length, () => `T07-9. generate_theme: an edit between the last read and the first write is refused, nothing on disk: ${short(x)} ${JSON.stringify(added(before))}`);
+      chk(() => x.err && /^Nothing was written: the model or its report changed/.test(x.t) && !added(before).length, () => `T07-9. generate_theme: an edit between the last read and the first write is refused, nothing on disk: ${short(x)} ${JSON.stringify(added(before))}`);
     } finally { await h.close(); }
     const h2 = await hook('hp2/Health Test.SemanticModel/model.bim');
     try {
