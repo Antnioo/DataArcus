@@ -140,6 +140,18 @@
     .tg-table td { padding: 6px 8px; color: inherit; }
     .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
     .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
+    /* theme from a logo (0.3.0 step 6): read in the tab only */
+    .tg-drop { display: flex; flex-direction: column; gap: 2px; border: 1px dashed var(--glass-border); border-radius: 12px; padding: 12px 14px; cursor: pointer; color: #cbd5e1; font-size: .85rem; margin: 0; }
+    .tg-drop:hover, .tg-drop.over, .tg-drop:focus-within { border-color: var(--accent); }
+    .tg-drop small { color: #94a3b8; }
+    .tg-logo-out { margin-top: 10px; font-size: .82rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 8px; }
+    .tg-logo-out .sw { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tg-logo-out .sw span { display: inline-flex; align-items: center; gap: 5px; font: 500 .75rem ui-monospace, Consolas, monospace; }
+    .tg-logo-out .sw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--glass-border); display: inline-block; }
+    .tg-logo-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .tg-logo-table th, .tg-logo-table td { padding: 3px 6px; text-align: start; border-bottom: 1px solid var(--glass-border); }
+    .tg-logo-table td:first-child { font: 500 .75rem ui-monospace, Consolas, monospace; }
+    .tg-logo-out .ok { color: #22c55e; } .tg-logo-out .warn { color: #f59e0b; }
     .tg-json { margin: 0; background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
     .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
@@ -324,6 +336,15 @@
                 </select>
                 <button class="tg-btn2" id="genBtn" type="button" data-i18n="tg.generate">Generate</button>
               </div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.logo.title">Or start from your logo</span>
+              <label class="tg-drop" id="logoDrop" for="logoFile">
+                <input type="file" id="logoFile" class="visually-hidden" accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg">
+                <span><i class="bi bi-image me-1" aria-hidden="true"></i><span data-i18n="tg.logo.drop">Drop a PNG, SVG or JPG logo here, or click to choose one</span></span>
+                <small data-i18n="tg.logo.private">Read in this tab only: never uploaded, never saved.</small>
+              </label>
+              <div class="tg-logo-out" id="logoOut" role="status" hidden></div>
             </div>
             <div>
               <span class="tg-label" data-i18n="tg.dataColors">Data colors (used in order)</span>
@@ -529,12 +550,12 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
-  <script src="../assets/js/translations/theme-generator.min.js?v=20261018b" defer></script>
+  <script src="../assets/js/translations/theme-generator.min.js?v=20261019r030" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261018ar3" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js?v=20261018ar3" defer></script>
-  <script src="../assets/js/design-engine.min.js?v=20261013p4" defer></script>
+  <script src="../assets/js/design-engine.min.js?v=20261019r030" defer></script>
   <script src="../assets/js/theme-generator.min.js?v=20261019r030" defer></script>
 </body>
 </html>

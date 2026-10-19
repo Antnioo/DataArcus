@@ -30,6 +30,7 @@ Each test prints `PASS` or `FAIL` with the problems it found. The command fails 
 | `consent` | Cookie banner only in Europe, Reject stops analytics, privacy page button, phone layout |
 | `lang-switcher` | Every page: the language switcher's label is in the other language, the Arabic label gets the Arabic font (its letters load on English pages), joined letters and its optical lift, so it sits level with the globe |
 | `theme-generator` | Saved-design upgrades, accent bars and corners, page sizes, theme JSON, download reminders, example and Undo |
+| `theme-logo` | Theme from a logo (0.3.0 step 6): CIEDE2000 and the colour-blind simulation, the brand colours of tiny synthetic logos, the palette (3:1 on the visuals, colour-blind order), real files dropped on both generator pages in English and Arabic, no network request, nothing saved |
 | `pbip` | Power BI project download with your own model: a local project's model folder or a published model, the report never replaces files in their folder, every field a visual uses exists in their model; the sample download keeps its model |
 | `dax` | DAX Measure Builder and Calendar Generator: Ramadan vs last Ramadan is right on cards and totals, bad inputs never give broken DAX or stale output, odd saved settings don't break the page |
 | `layout` | 512 layout combinations: every visual on the page, usable size, no overlaps |
