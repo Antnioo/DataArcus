@@ -8,7 +8,8 @@
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js');
+const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js'), Agg = require('../../assets/js/aggregation.js');
+import { modelOf } from './model.mjs';
 import { E, absorb } from './design.mjs';   // (A2-3: the slot rules are the design engine's)
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
@@ -68,7 +69,17 @@ export function planLint(a) {
   // (rc.22, B-140) the kinds the writer gave the plan's slots, where they differ (a column chart whose category names
   // can't stand level is a bar chart; a two-valued category a donut): kept off the answer (not enumerable), the plan
   // shows them on its slots
-  return Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  // (B-146) the aggregation guard on the same page: which values are not additive, which snapshots are summed over time
+  // (assets/js/aggregation.js; metadata only); kept off the answer like the kinds, plan_layout says it in its own words
+  const mt = modelOf(a.m.tmsl).tables || [];
+  const measures = mt.flatMap((t) => (t.measures || []).map((x) => ({ table: t.name, name: x.name, expression: x.expression, formatString: x.formatString })));
+  const aggregation = Agg.guard(inv.pages[0] || { visuals: [] }, { measures, tables: mt });
+  // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
+  // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
+  return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
+    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false },
+    tops: { value: (b.r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
+    aggregation: { value: aggregation, enumerable: false } });
 }
 
 // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the pages of the plan as the shared renderer draws
@@ -114,4 +125,27 @@ export function checkSummary(c, cap) {
   const worthByRule = {}; c.worthALook.forEach((f) => { worthByRule[f.rule] = (worthByRule[f.rule] || 0) + 1; });
   return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
     c.worth ? { worthALook: worthByRule } : {});
+}
+
+// (B-146) plan_layout's `aggregation`, in the plan's language: what is not additive and where, and one question per
+// snapshot summed over time. Never a piece of the DAX (PRIVACY.md section 3): what a value is, in words.
+export function aggregationAnswer(g, lang) {
+  const ar = lang === 'ar', out = {}, list = (xs) => xs.map((x) => `"${x.name}"`).join(ar ? ' و' : ', ');
+  if (g.nonAdditive.length) {
+    const na = g.nonAdditive, inTable = na.filter((x) => x.in.some((w) => w === 'table' || w === 'matrix'));
+    out.nonAdditive = na.map((x) => ({ field: x.field, is: ar ? Agg.whyAr(x.why) : x.why, in: x.in, confidence: x.confidence }));
+    const en = `${list(na)} ${na.length > 1 ? 'are' : 'is'} not additive (${[...new Set(na.map((x) => x.why))].join(', ')}): the report never stacks or sums ${na.length > 1 ? 'them' : 'it'}; each card and chart shows the measure as the model calculates it.`
+      + (inTable.length ? ` A table's total row is Power BI's own total, which recalculates ${list(inTable)} for all the rows: it is not the sum of the rows.` : '');
+    const arText = `${list(na)} ${na.length > 1 ? 'قيم لا تُجمع' : 'قيمة لا تُجمع'} (${[...new Set(na.map((x) => Agg.whyAr(x.why)))].join('، ')}): لا يكدّسها التقرير ولا يجمعها، وتعرض كل بطاقة وكل مخطط القيمة كما يحسبها النموذج.`
+      + (inTable.length ? ` وسطر الإجمالي في الجدول هو إجمالي Power BI نفسه، يعيد حساب ${list(inTable)} لكل الصفوف، وليس مجموع الصفوف.` : '');
+    out.text = ar ? arText : en;
+    out.sayInPlan = 'Say this sentence in the plan (text), in the plan\'s language: ' + en;
+  }
+  if (g.questions.length) {
+    out.pleaseConfirm = g.questions.map((q) => ({ field: q.field, in: q.in, question: ar ? q.ar : q.en,
+      why: ar ? 'اسمها يدل على رصيد في لحظة (رصيد، عدد موظفين، مخزون، إجمالي حتى تاريخه)، ولا شيء في صيغتها يأخذ نهاية الفترة، فيجمعها Power BI عبر التواريخ على محور الزمن وفي البطاقة.'
+        : 'Its name reads as a snapshot (a balance, a headcount, an inventory, a to-date total) and nothing in its DAX takes the period end, so on a time axis and on a card Power BI adds it up over the dates.' }));
+    out.askFirst = 'Ask the user each pleaseConfirm question before the plan is approved, as a question, not a finding. The report is written as planned either way: when the answer is yes, the measure needs period-end logic in the model (for example CLOSINGBALANCEMONTH, or CALCULATE with LASTDATE), which DataArcus does not write or change.';
+  }
+  return out;
 }
