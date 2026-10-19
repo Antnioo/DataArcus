@@ -73,6 +73,11 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - D5: the approval window's preview draws what Power BI Desktop draws: every title as the report create_report writes
   it (a Top N title by the text its measure shows, no "(2)"), a title or table header marked cut only when the
   writer's and check_report's own measure says so, and each slicer with its header.
+- D6: the Arabic twin's and the theme's approval pages list every file they write, grouped and counted, as
+  create_report's does; the theme page shows its colours (swatches and hex) and the report they come from; create_report's
+  "Data colours" swatch shows the written colour, with both contrasts; the refusal after a theme's report changed says
+  "the model or its report changed"; an Arabic plan's sentence counts the approved Arabic names; approve_plan's "waiting"
+  says a later click still counts.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
