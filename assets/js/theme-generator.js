@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     };
     pbipBtn.addEventListener('click', () => {
-      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => {
+      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => loadCheck().catch(() => null).then((Ck) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
         // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
         // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
@@ -613,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Promise.all(specs.map((sp, i) => pngBlob(sp.layout, (sl) => E.fitSlots(sl, E.fitScale(fo[i], 1 / page(sp.layout).s)).slots).then((b) => b.arrayBuffer()))).then((bufs) => {
         bufs.forEach((b, i) => { pages[i].png = new Uint8Array(b); });
         const r = P.build(input);
+        if (Ck) showCheck(Ck, r.files, m);   // (0.3.0 step 2: checked before it is offered; the list stays in view)
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {
           const e = own.local, at = e.dir ? ` (${e.dir})` : '';
@@ -621,19 +622,43 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
         });
-      });
+      }));
       if (!run) return;
       pbipBtn.disabled = true;
       run.catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
     });
+    // 0.3.0 step 2, "Check before download" (the owner's go, 18 Oct): the measured rules and the layout check
+    // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
+    // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
+    // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261018c', '../assets/js/report-rules.min.js?v=20261018c', '../assets/js/layout-check.min.js?v=20261018c'];
+    const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
+    const ckBox = $('pbipCheck');
+    const showCheck = (C, files, m) => {
+      if (!ckBox) return null;
+      const tables = (m === 'local' || m === 'service') && own[m] && own[m].tables && own[m].tables.length ? own[m].tables : null;
+      const r = C.checkProject(files, { lang: isAr() ? 'ar' : 'en', model: tables });
+      ckBox.textContent = '';
+      const head = document.createElement('p'); head.className = 'tg-ck-sum ' + (r.desktop ? 'tg-warn' : 'tg-ok'); head.textContent = r.summary; ckBox.appendChild(head);
+      if (r.problems.length) {
+        const ul = document.createElement('ul');
+        r.problems.slice(0, 12).forEach((f) => { const li = document.createElement('li'); li.textContent = `${f.page && f.page.n ? L(`Page ${f.page.n}`, `الصفحة ${f.page.n}`) + ': ' : ''}${f.visual ? f.visual + ': ' : ''}${f.what}. ${f.fix}`; li.dir = 'auto'; ul.appendChild(li); });
+        ckBox.appendChild(ul);
+      }
+      const note = document.createElement('small'); note.textContent = L('Checked by the measured rules of what Power BI Desktop draws and the layout check, on the project as it is set now. Structure only, never data.', 'فحصته قواعد مقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على المشروع بإعداداته الحالية. البنية فقط، دون أي بيانات.');
+      ckBox.appendChild(note); ckBox.hidden = false;
+      return r;
+    };
     // 0.3.0 step 1, "Preview before Approve": a picture of each page the download contains, drawn by the renderer the
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
     const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261018b').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
-      const run = withProject((P, input) => loadPreview().then((PV) => {
-        const u = state.ui, pages = PV.fromFiles(P.build(input).files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
+      const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+        const files = P.build(input).files;
+        if (Ck) showCheck(Ck, files, m);
+        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
         pvBox.textContent = '';
         pages.forEach((pg, i) => {
           const fig = document.createElement('figure'), cap = document.createElement('figcaption');

@@ -163,6 +163,11 @@
     .tg-lab { display: flex; gap: 10px; align-items: center; background: rgba(253, 203, 110, .12); border: 1px solid rgba(253, 203, 110, .45); color: #fde68a; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
     .tg-file-pbip { border-color: rgba(108, 92, 231, .6); }
     .tg-pv-box { margin-bottom: 10px; }
+    .tg-ck-box { margin-bottom: 10px; font-size: .85rem; }
+    .tg-ck-box .tg-ck-sum { font-weight: 600; margin: 0 0 4px; }
+    .tg-ck-box .tg-ok { color: #55efc4; }
+    .tg-ck-box ul { margin: 0 0 4px; padding-inline-start: 18px; color: rgba(255, 255, 255, .8); }
+    .tg-ck-box small { display: block; color: rgba(255, 255, 255, .55); }
     .tg-pv-box figure { margin: 0 0 10px; }
     .tg-pv-box svg { display: block; width: 100%; height: auto; border-radius: 6px; }
     .tg-pv-box figcaption, .tg-pv-box p { font-size: .8rem; color: rgba(255, 255, 255, .6); margin: 4px 0 0; }
@@ -456,6 +461,7 @@
             </div>
             <button class="tg-btn2 w-100 mb-2" id="pbipPreviewBtn" type="button"><i class="bi bi-eye me-1" aria-hidden="true"></i><span data-i18n="tg.dl.pbipPreview">Preview the download</span></button>
             <div id="pbipPreview" class="tg-pv-box" hidden></div>
+            <div id="pbipCheck" class="tg-ck-box" role="status" hidden></div>
             <button class="btn btn-accent w-100" id="pbipBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.pbipBtn">Download project</span></button>
           </div>
           <div class="tg-file" data-file="csv">
@@ -579,6 +585,6 @@
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js?v=20261018ar3" defer></script>
   <script src="../assets/js/design-engine.min.js?v=20261013p4" defer></script>
-  <script src="../assets/js/theme-generator.min.js?v=20261018m" defer></script>
+  <script src="../assets/js/theme-generator.min.js?v=20261018n" defer></script>
 </body>
 </html>
