@@ -204,9 +204,9 @@
   // sort-by column or null, typeOf (t, c) -> its data type or null, colours: { rise, fall } (fills) or null, grid, lang,
   // formatString }. Returns { ok: true, visualType, query, objects, measures } or { ok: false, why }.
   const WF_PARTS = ['base', 'rise', 'fall', 'rise below 0', 'fall below 0'];
-  const WF_WORDS = { en: ['Base', 'Rise', 'Fall', 'Rise below 0', 'Fall below 0', 'Running total'], ar: ['القاعدة', 'ارتفاع', 'انخفاض', 'ارتفاع تحت الصفر', 'انخفاض تحت الصفر', 'الإجمالي الجاري'] };
+  const WF_WORDS = { en: ['Base', 'Rise', 'Fall', 'Rise below 0', 'Fall below 0', 'Running total', 'Total'], ar: ['القاعدة', 'ارتفاع', 'انخفاض', 'ارتفاع تحت الصفر', 'انخفاض تحت الصفر', 'الإجمالي الجاري', 'الإجمالي'] };
   const WF_WHAT = {
-    columnChart: 'written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the report\'s own measures): the running total in time order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps; no Total column (Power BI\'s axis holds only the model\'s members: the total is where the leftmost step ends, and every step\'s tooltip gives the running total); no legend; hovering the empty space under a step shows its base',
+    columnChart: 'no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the report\'s own measures), because Power BI draws a waterfall left to right only and its axis holds only the model\'s members: the first period at the right, each step rising or falling from the one at its right, the value axis at the right, labels on the steps, no legend; hovering the empty space under a step shows its base',
     waterfallChart: 'A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)'
   };
   const NUMERIC = /^(int64|integer|whole|double|decimal|number|currency|date|datetime|datetimezone)$/i;
@@ -249,16 +249,20 @@
       'IF ( SIGN ( _y ) = -1, ' + step + ' )',
       'IF ( SIGN ( _y ) = 1 && ' + cross + ', _lo )',
       'IF ( SIGN ( _y ) = -1 && ' + cross + ', _lo )',
-      'IF ( ISBLANK ( _y ), BLANK (), _e )'
+      'IF ( ISBLANK ( _y ), BLANK (), _e )',
+      // the total, as text, on the last step only (the leftmost): the step whose order is the last with a value
+      null
     ];
+    const lastOf = (dir === 'Descending' ? 'MINX' : 'MAXX') + ' ( FILTER ( ALL ( ' + o + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + o + ' )';
+    DAX[6] = 'VAR _last = CALCULATE ( ' + lastOf + (o === cn ? '' : ', REMOVEFILTERS ( ' + cn + ' )') + ' ) RETURN IF ( NOT ISBLANK ( _y ) && _o = _last, ' + Q.daxNames.string(WF_WORDS[c.lang === 'en' ? 'en' : 'ar'][6] + ' ') + ' & FORMAT ( _e, ' + Q.daxNames.string(c.formatString || '#,0') + ' ) )';
     const words = WF_WORDS[c.lang === 'en' ? 'en' : 'ar'], measures = [];
     const projOf = (i) => {
-      const want = 'Waterfall ' + (i < 5 ? WF_PARTS[i] : 'running total') + ': ' + shown(yName);
-      const m = c.extMeasure(t, want, head + DAX[i], 'Double', c.formatString || null);
+      const want = 'Waterfall ' + (i < 5 ? WF_PARTS[i] : i === 5 ? 'running total' : 'total label') + ': ' + shown(yName);
+      const m = c.extMeasure(t, want, head + DAX[i], i === 6 ? 'Text' : 'Double', i === 6 ? null : c.formatString || null);
       measures.push({ t, m, expression: head + DAX[i] });
       return { field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m, displayName: words[i] };
     };
-    const Y = [0, 1, 2, 3, 4].map(projOf), run = projOf(5);
+    const Y = [0, 1, 2, 3, 4].map(projOf), run = projOf(5), total = projOf(6);
     const query = { queryState: { Category: JSON.parse(JSON.stringify(qs.Category)), Y: { projections: Y }, Tooltips: { projections: [run].concat(JSON.parse(JSON.stringify((qs.Tooltips || {}).projections || []))) } },
       sortDefinition: { sort: [{ field: JSON.parse(JSON.stringify(sortField)), direction: dir === 'Descending' ? 'Ascending' : 'Descending' }], isDefaultSort: true } };
     const sel = (i) => ({ metadata: Y[i].queryRef }), col = c.colours || {};
@@ -267,7 +271,11 @@
       valueAxis: obj(Object.assign({ switchAxisPosition: bool(true) }, c.grid ? { gridlineColor: color(c.grid) } : {})),
       legend: obj({ show: bool(false) }),
       dataPoint: [{ properties: { fillTransparency: num(100) }, selector: sel(0) }].concat(fills),
-      labels: [{ properties: { show: bool(true) } }].concat([0, 3, 4].map((i) => ({ properties: { showSeries: bool(false) }, selector: sel(i) })))
+      // (the reviewer's ask of 19 Oct: the total readable on the leftmost step) the rise and fall labels carry a detail
+      // line, the total measure, which has a value on the last step only (Power BI's custom detail label, labels'
+      // dynamicLabelDetail; not yet seen in Desktop)
+      labels: [{ properties: { show: bool(true) } }].concat([0, 3, 4].map((i) => ({ properties: { showSeries: bool(false) }, selector: sel(i) })),
+        [1, 2].map((i) => ({ properties: { enableDetailDataLabel: bool(true), detailContentType: str('Custom'), dynamicLabelDetail: { expr: { Measure: total.field.Measure } } }, selector: sel(i) })))
     };
     // a column chart by a date or a number draws a continuous axis, which ignores the sort (the twin's T-2, round 13):
     // one column per member, as the waterfall's own axis

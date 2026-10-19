@@ -82,7 +82,7 @@ chk(() => { const tt = wa.visual.query.queryState.Tooltips.projections; return t
   () => `A3: Tooltips hold Min of Month Number (the sort) and the running total: ${show(wa)}`);
 chk(() => sort0(wa).direction === 'Descending' && JSON.stringify(sort0(wa).field) === MIN_MONTH, () => `A4: sorted Descending by Min of Month Number: January at the RIGHT: ${show(wa)}`);
 const exts = ext ? ext.entities.flatMap((e) => e.measures.filter((m) => /^Waterfall /.test(m.name)).map((m) => Object.assign({ entity: e.name }, m))) : [];
-chk(() => exts.length === 6 && exts.every((m) => m.entity === T && m.dataType === 'Double' && m.formatString === '#,0'), () => `A5: six measures in reportExtensions.json, under Sales, Double, the measure's format: ${JSON.stringify(exts).slice(0, 600)}`);
+chk(() => exts.length === 7 && exts.filter((m) => !/^Waterfall total label/.test(m.name)).every((m) => m.entity === T && m.dataType === 'Double' && m.formatString === '#,0') && exts.some((m) => m.name === 'Waterfall total label: Total Sales' && m.dataType === 'Text'), () => `A5: seven measures in reportExtensions.json, under Sales: six Double with the measure's format, the total's label Text: ${JSON.stringify(exts).slice(0, 600)}`);
 const runDax = (measureOf(ext, 'Waterfall running total: Total Sales') || {}).expression || '';
 chk(() => /VAR _o = MAX \( 'Sales'\[Month Number\] \)/.test(runDax) && runDax.includes("CALCULATE ( 'Sales'[Total Sales], REMOVEFILTERS ( 'Sales'[Month Name] ), FILTER ( ALL ( 'Sales'[Month Number] ), MAX ( 'Sales'[Month Number], _o ) = _o ) )"),
   () => `A6: the running total is in the TIME order (every month up to this one by Month Number, the month name's filter removed): ${runDax}`);
@@ -101,6 +101,15 @@ chk(() => Object.entries(wa.visual.objects || {}).every(([o, es]) => CC[o] && es
 // the result says what was written
 chk(() => Array.isArray(AR.waterfallRtl) && AR.waterfallRtl.length === 1 && AR.waterfallRtl[0].written === 'columnChart' && /no Total column/i.test(AR.waterfallRtl[0].what) && /right/.test(AR.waterfallRtl[0].what),
   () => `A13: the build's notes say what was written (a stacked column chart read from the right, no Total column): ${JSON.stringify(AR.waterfallRtl)}`);
+// (the reviewer's decision of 19 Oct) the total readable on the leftmost step: a detail label on the rise and fall
+// series, a Text measure with a value on the last step only; the wording in the person's terms
+const totDax = (measureOf(ext, 'Waterfall total label: Total Sales') || {}).expression || '';
+chk(() => totDax.includes("VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( 'Sales'[Month Number] ), NOT ISBLANK ( 'Sales'[Total Sales] ) ), 'Sales'[Month Number] ), REMOVEFILTERS ( 'Sales'[Month Name] ) ) RETURN IF ( NOT ISBLANK ( _y ) && _o = _last, \"الإجمالي \" & FORMAT ( _e, \"#,0\" ) )"),
+  () => `A17: the total's label: the running total, as text after «الإجمالي», on the last month with a value only: ${totDax}`);
+chk(() => [1, 2].every((i) => { const l = bySel(wa, 'labels', refOf(i)); return lit(l.enableDetailDataLabel) === 'true' && lit(l.detailContentType) === "'Custom'" && l.dynamicLabelDetail.expr.Measure.Property === 'Waterfall total label: Total Sales' && l.dynamicLabelDetail.expr.Measure.Expression.SourceRef.Schema === 'extension'; }),
+  () => `A18: the rise and fall labels carry the total's label as their detail line: ${JSON.stringify(entriesOf(wa, 'labels'))}`);
+chk(() => [AR.waterfallRtl[0].what, Mirror.KIND_WHAT.waterfall].every((t) => /^(waterfall charts: )?no Total column in Arabic: the last step on the left ends at the total/.test(t)),
+  () => `A19: the notes and the twin's mirrors say it in the person's terms first: ${AR.waterfallRtl[0].what} / ${Mirror.KIND_WHAT.waterfall}`);
 // a name the model already has: the free name
 const AR2 = get(() => build('ar', null, { Sales: ['Waterfall base: Total Sales', 'Total Sales'] })), wa2 = AR2.files && typed(AR2, 'columnChart');
 chk(() => nameOfProj(ys(wa2)[0]) === 'Waterfall base: Total Sales (2)' && measureOf(extOf(AR2), 'Waterfall base: Total Sales (2)') && !measureOf(extOf(AR2), 'Waterfall base: Total Sales'),
@@ -188,7 +197,7 @@ const twinOfEn = (r) => {
 const TW = EN.files ? get(() => twinOfEn(EN)) : null, wt = TW && TW.files && typed(TW, 'columnChart');
 chk(() => wt && JSON.stringify(wt.visual.query) === JSON.stringify(wa.visual.query) && JSON.stringify(wt.visual.objects) === JSON.stringify(Object.assign({}, wa.visual.objects)),
   () => `T0: the twin of the English report writes the same visual as the direct Arabic report (query and formatting): ${TW && TW.threw || show(wt)} vs ${show(wa)}`);
-chk(() => TW.measures.length === 6 && TW.measures.every((m) => (measureOf(ext, m.m) || {}).expression === m.expression), () => `T0b: and the same measures, the same DAX: ${JSON.stringify(TW && TW.measures).slice(0, 400)}`);
+chk(() => TW.measures.length === 7 && TW.measures.every((m) => (measureOf(ext, m.m) || {}).expression === m.expression), () => `T0b: and the same measures, the same DAX: ${JSON.stringify(TW && TW.measures).slice(0, 400)}`);
 chk(() => /stacked column chart/.test(Mirror.KIND_WHAT.waterfall) && /no Total column/i.test(Mirror.KIND_WHAT.waterfall) && /right/.test(Mirror.KIND_WHAT.waterfall) && /left to right in Power BI: its order is not mirrored/.test(Mirror.KIND_WHAT.waterfallKept || ''),
   () => `T0c: the twin's "mirrors" says exactly what is written: ${Mirror.KIND_WHAT.waterfall} / ${Mirror.KIND_WHAT.waterfallKept}`);
 
@@ -200,7 +209,7 @@ chk(() => /stacked column chart/.test(Mirror.KIND_WHAT.waterfall) && /no Total c
   chk(() => sec && /Overview: Sales bridge/.test(sec.rows[0][0]) && /stacked column chart/.test(sec.rows[0][1]) && /no Total column/.test(sec.rows[0][1]),
     () => `P1: the approval page lists each waterfall and what it is written as: ${JSON.stringify(page).slice(0, 600)}`);
   const sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
-  chk(() => /waterfall \(gallery\) is written as a stacked column chart drawn as a waterfall, read from the right/.test(sv) && /sayInPlan: 'Say in the plan, for each waterfall: what it is written as and why/.test(sv) && /reportNotes\.push\(`The waterfall/.test(sv),
+  chk(() => /waterfall \(gallery\) is written as a stacked column chart drawn as a waterfall, read from the right/.test(sv) && /no Total column in Arabic: the last step on the left ends at the total/.test(sv) && /reportNotes\.push\(`The waterfall/.test(sv),
     () => 'P2: create_report\'s chartAxes note, its report notes and plan_layout\'s waterfallRtl say what is written');
 }
 
@@ -257,8 +266,8 @@ try {
     () => `T4: the twin's waterfall by month: a stacked column chart, the 5 report measures, sorted Descending by Month Name (the model orders it by Month Number), value axis right, no legend, mirrored place: ${show(vm)}`);
   const trun = te && measureOf(te, 'Waterfall running total: Total Sales');
   chk(() => trun && trun.entity === 'Sales' && trun.expression.includes("CALCULATE ( 'Sales'[Total Sales], REMOVEFILTERS ( 'Calendar'[Month Name] ), FILTER ( ALL ( 'Calendar'[Month Number] ), MAX ( 'Calendar'[Month Number], _o ) = _o ) )") && trun.formatString === '#,0'
-    && te.entities.flatMap((e) => e.measures).filter((m) => /^Waterfall /.test(m.name)).length === 6,
-    () => `T5: the twin's own reportExtensions.json holds the six measures, the running total by the model's sort-by column (Month Number), the measure's format: ${JSON.stringify(te).slice(0, 700)}`);
+    && te.entities.flatMap((e) => e.measures).filter((m) => /^Waterfall /.test(m.name)).length === 7,
+    () => `T5: the twin's own reportExtensions.json holds the seven measures, the running total by the model's sort-by column (Month Number), the measure's format: ${JSON.stringify(te).slice(0, 700)}`);
   chk(() => vr.visual.visualType === 'waterfallChart' && sort0(vr).direction === 'Descending' && JSON.stringify(sort0(vr).field) === JSON.stringify(mea('Sales', 'Total Sales').field) && lit(plainOf(vr, 'valueAxis').switchAxisPosition) === 'true',
     () => `T6: the waterfall sorted by its measure is kept a waterfall, its order as the original's (left to right), the value axis at the right: ${show(vr)}`);
   chk(() => !fs.existsSync(path.join(P, 'Twin Sales.Report/definition/reportExtensions.json')), () => 'T7: the original report is not given measures (the twin only)');
