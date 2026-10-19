@@ -64,6 +64,37 @@ builder has `fix/0.3.0-arabic-titles` (titles in pbip-page.js / story titles): t
   its English report: the first month at the right, the running total building right to left, the Total column at the
   left end, the value axis at the right; the English report unchanged (January at the left, axis at the left).
 - Next: the reviewer reviews the PR, the laptop checks in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3.0 R2" just below (branch `fix/0.3.0-arabic-titles`, normal PR #75 to `release/0.3.0`); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 R2: English titles in an Arabic report from an English-named model (19 Oct, cloud builder; branch `fix/0.3.0-arabic-titles` from `release/0.3.0` f5455c9; normal PR #75 to `release/0.3.0`, not merged)
+The owner's must-fix after testing 0.3: create_report / plan_layout with lang 'ar' on a model with English names showed
+English titles ("Web Orders Total Score by Plan Group"). Rule: every text an Arabic report shows is Arabic, or the plan
+lists it as not translated, with why, before the person approves.
+- Causes found (probe: the golden model, focus Web Orders, exec + ops, tooltip page, no displayNames):
+  (a) story-titles.js join / pbip-query.js byTitle chose the joiner by the measure's script, not the report's language:
+  two English names gave "M by C" (and the Top-N title measures' DAX strings «أعلى N من M: ... by ...»); alternate gave
+  "ranked by", "per", "breakdown by"; timeWords said an English name's PY/YTD in English words ("Sales last year") on
+  KPI labels (kpiLabel), titles and alt text (report-a11y nameOf). (b) visual-gallery.js title: " and ", ", per " and
+  "by" with English names. (c) the plan never pinned the fixed list's Arabic names (only suggested them; create_report
+  wrote names only when the assistant passed them back) and never listed what stays English; the table's ": detail"
+  tail followed the title's script. (d) none found: buttons, page names, "No data", the table total, header subtitle
+  are Arabic already (REPORT_TEXTS.ar); the report name is the user's.
+- Fix: the report's word («حسب» / "by") decides: an Arabic report never joins English names with English words (the
+  measure's name alone; repeated titles get "(column)"), no English alternates, English names kept as they are (no
+  "last year"); gallery the same; the table's tail «: التفاصيل» in an Arabic report. plan_layout (Arabic): the fixed
+  list's names are pinned with the plan (arabicNames.inThePlan, as an English plan's readable names), every other shown
+  field is listed in arabicNames.notTranslated { field, shownAs, why } with sayInPlan; the fields come from the
+  planned page itself (plan-lint fields: the ops layout's 5th/6th cards, a third category); the approval window has a
+  section "Shown in English (n, no Arabic name)". The model is never renamed.
+- Test first: mcp/test-0.3-arabic-titles.mjs (in npm test), 27 checks, 17 red on integration/0.3-preview ce8335b and on
+  release/0.3.0 f5455c9; all green after. AT-4 (English titles unchanged) recorded in test-models/arabic-titles-en.json.
+- Expectations changed (dated notes, listed in the PR for the owner): test.mjs Round0 AR planName, display names (Last
+  Ramadan's pinned name, used 6), the table title in Arabic, the 960x720 Arabic table share (keeps the model's names via
+  displayNames), round 20 repeated titles (Arabic now unique); test-round22 (keeps English names via displayNames),
+  test-round23 (row label header «المنطقة»); test-0.2.9-sweep B-88 (the plan's pinned names written too).
+- Next: the reviewer reviews the PR, the laptop checks in Desktop (list in the PR), the owner merges into release/0.3.0.
 
 ## 0.3.0 release branch (19 Oct, cloud builder; branch `release/0.3.0` from main `d76703c`; DRAFT PR #74 to main, the owner merges after the laptop proof)
 The owner's decision (19 Oct): beta testers get 0.3.0, the 0.3 drafts as they are. One `git merge --no-ff` per branch,
