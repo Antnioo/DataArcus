@@ -359,6 +359,33 @@ write reuses create_report.
 - **Next (step 2, needs the owner's go):** write every page (create_report from several designs, or one design per page);
   carry page filters file to file (never through the chat), bookmarks and drillthrough pages; a Desktop check of the
   written redesign (English and Arabic, smallest and largest page).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J11" just below (0.3 R&D draft, branch `feat/0.3-label-limits`); before it (18 Oct): "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J11: label limits keep column charts (19 Oct, cloud builder; branch `feat/0.3-label-limits` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+B-140 option B (the owner's go for 0.3 R&D, 18 Oct): the writer decides column vs bar from the limits the laptop measured
+in Desktop 2.159 (108 charts: en/ar, 400/600/900 px on a 1920 page, 5/8/12 categories; longest name level, and longest
+never cut when it may wrap to 2 lines), not from its own 12-letter guess. Metadata only: names' lengths only where the
+model says what the axis is (months, weekdays, quarters, a "Month Short" column), else the 12-letter stand-in.
+- `assets/js/label-limits.js` (new, browser + Node, `DALabelLimits`): `MEASURED` (the table; "<4" is 0), `limitAt(lang,
+  width, count)` (the measured row with the most room a category at or below the chart's; outside: < 400 px or > 12
+  categories), `decide({ lang, width, pageWidth, labelPt, count, names | axis | nameLength, noun })` -> { kind, why, limit }.
+  Known names: the wrap limit; unknown names (stand-in): the LEVEL limit (D15: real names can be longer than 12). Between
+  rows a name fits also where the laptop's rule (40 + 8.5 a letter) says level AND the next measured row up holds it
+  level. Count unknown: 12 (the worst row), said in why. Script unknown: the lower of en/ar. Labels larger than 15pt
+  (scaled to 1920): outside. Outside: kind null, the writer's rule as before.
+- `pbip-page.js` asBar (shared file, small hook): the table first, the old rule only where it gives null; every kind
+  change carries `why` (kindChanges[].why; donut and many-valued bar too). `lib/plan-lint.mjs` passes why;
+  `server.mjs` plan_layout: slot `kindWhy`, kindChanges.slots[].why. `theme-generator.js` loads label-limits.min.js
+  before pbip-page (?v= bumped; its pages' ?v= too).
+- Test first: `mcp/test-0.3-label-limits.mjs` (in npm test), 23 of its first 26 red on main.
+- Golden models: the Comparison column chart (text category, 927 px, Top 8, 116 a category) stays a bar chart (unknown
+  names held to the level limit, 8 letters), now with the measured reason in the plan.
+- Decision for the owner: may unknown names use the wrap limit (16 at 113 a category)? Then the golden Comparison chart
+  stays a column chart, but test-0.2.9w's D15 check (8 columns in 600 of 1280, bank's 17-letter names) turns column too.
+- Open: Desktop proof on the laptop of the new column charts (12 short months at 900; Arabic weekdays at 840 of 1920;
+  Arabic months at 1200 of 1920, the rule-interpolated case).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
