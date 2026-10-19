@@ -70,6 +70,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   written as a stacked column chart drawn as a waterfall from report-level measures: the running total in the time
   order, January at the right, the steps rising from the right, the value axis at the right; no Total column (Power BI's
   axis holds only the model's members), the running total in every step's tooltip; English unchanged.
+- D5: the approval window's preview draws what Power BI Desktop draws: every title as the report create_report writes
+  it (a Top N title by the text its measure shows, no "(2)"), a title or table header marked cut only when the
+  writer's and check_report's own measure says so, and each slicer with its header.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
