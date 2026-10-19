@@ -123,6 +123,26 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   for (const f of tr.concat(files.map((f) => 'ar/' + f))) ok(read(f).includes(AR), `${f}: the Arabic must say "${AR}" (B-155)`);
 }
 
+// AUD-040 (night audit, 19 Oct): a .pbit also keeps values saved in the report's filters, slicers and formatting (Microsoft
+// Learn, desktop-templates: "the value 'Contoso' is persisted as part of the metadata"). The same four pages name them next
+// to Enter data and DATATABLE, and the audit page no longer says the data "never leaves your machine".
+{
+  const EN = "values saved in the report's filters, slicers and formatting", AR = 'محفوظة في فلاتر التقرير والـ slicers والتنسيق';
+  const old = /The data Power BI loaded never leaves|البيانات التي حمّلها Power BI لا تغادر/;
+  const files = ['tools/power-bi-model-health-check.html', 'articles/article-power-bi-model-health-check.html', 'articles/article-power-bi-model-ai-ready.html', 'services/copilot-readiness-audit.html'];
+  const tr = ['model-health', 'article-power-bi-model-health-check', 'article-power-bi-model-ai-ready', 'copilot-audit'].map((n) => `assets/js/translations/${n}.js`);
+  for (const f of files.concat(files.map((f) => 'ar/' + f), tr, tr.map((f) => f.replace(/\.js$/, '.min.js')))) {
+    const t = read(f), say = f.startsWith('ar/') ? AR : EN;
+    ok(!old.test(t), `${f}: still says the loaded data never leaves the machine (AUD-040)`);
+    ok(t.includes(say), `${f}: must name "${say}" among what a .pbit keeps (AUD-040)`);
+  }
+  for (const f of tr) ok(read(f).includes(AR), `${f}: the Arabic must say "${AR}" (AUD-040)`);
+  for (const f of ['services/copilot-readiness-audit.html', 'tools/power-bi-model-health-check.html']) {
+    const ld = read(f).match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g).join('');
+    ok(ld.includes(EN) || ld.includes("values saved in the report's filters"), `${f}: the FAQ JSON-LD must name the filter values (AUD-040)`);
+  }
+}
+
 // The Arabic copies at /ar/ (mcp/plans/ARABIC-INDEXING.md, option 2): each page in scripts/ar-pages.mjs's PAIRS and its
 // copy name each other (hreflang en, ar, x-default = English, fully qualified), each names itself as canonical, the copy
 // is lang="ar" dir="rtl" with its title, description and Open Graph in Arabic within the limits search results show,
