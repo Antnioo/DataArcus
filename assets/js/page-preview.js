@@ -66,8 +66,23 @@
   // its download); without it, an estimate on the wide side
   const measure = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
   const tw = (s, pt, bold, font) => { const M = measure(); return M && M.textWidth ? M.textWidth(s, pt, bold, font) : String(s).length * pt * 4 / 3 * 0.62 * (bold ? 1.09 : 1); };
+  // D5 (19 Oct 2026, the laptop's proof of rc.2: «مقطوع» on titles Desktop drew whole): what is cut is said by the
+  // measures the writer and check_report use, never by one of the preview's own: the writer's titleFit and wrapLines
+  // (pbip-sizing.js; the browser loads it with the writer) and check_report's table header measure (report-rules.js
+  // headerNeed, TABLE_HEADER_CUT's). Without them nothing is called cut (the preview never guesses a cut).
+  const node = typeof module !== 'undefined' && module.exports;
+  const shared = (file, name) => { try { return node ? require(file) : root[name]; } catch (e) { return null; } };
+  const fitters = new Map();
+  const sizing = (font) => { const f = String(font || 'Segoe UI'); if (!fitters.has(f)) { const Z = shared('./pbip-sizing.js', 'DAPbipSizing'); fitters.set(f, Z && Z.make ? Z.make({ font: f, LABEL: 10 }) : null); } return fitters.get(f); };
+  const rules = () => shared('./report-rules.js', 'DARules');
+  // the room the writer fits a chart's or table's title to: the box less 16 a side on the 1080 grid (pbip-page.js)
+  const titleRoom = (w, kk) => w - 2 * Math.round(16 * kk);
+  // the writer's verdict on a title: { mode: 'one' | 'wrapped' | 'shortened' }, or null without the writer's sizes
+  const titleVerdict = (text, pt, room, font) => { const Z = sizing(font); return Z ? Z.titleFit(text, pt, room) : null; };
+  // a title the writer shortened: it wrote the shortened text, with its "…" (and a right-to-left mark after Arabic)
+  const shortened = (shown, full) => /…\u200F?$/.test(String(shown || '')) && full != null && String(full) !== String(shown);
   // words split into lines that fit the room (as the writer's wrapLines: a word longer than the room keeps its own line)
-  const wrap = (text, pt, room, bold, font) => { const out = []; let cur = ''; String(text).split(/\s+/).filter(Boolean).forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, pt, bold, font) <= room) cur = t; else { out.push(cur); cur = w; } }); if (cur) out.push(cur); return out; };
+  const wrap = (text, pt, room, bold, font) => { const Z = bold !== false ? sizing(font) : null; if (Z && Z.wrapLines) return Z.wrapLines(text, pt, room); const out = []; let cur = ''; String(text).split(/\s+/).filter(Boolean).forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, pt, bold, font) <= room) cur = t; else { out.push(cur); cur = w; } }); if (cur) out.push(cur); return out; };
   // the known labels of a category, from its column's name: { what, count, len } or null (unknown)
   function labelsOf(name) {
     const s = String(name == null ? '' : name).toLowerCase(), L = V('LABELS');
@@ -87,15 +102,19 @@
       if (k !== 'panel' && W && H && (v.x < -sl || v.y < -sl || v.x + v.w > W + sl || v.y + v.h > H + sl)) add(i, 'cut', null, 'off the page');
       const min = CHARTS.has(k) ? V('MIN_CHART') : k === 'card' ? V('MIN_CARD') : k === 'slicer' ? V('MIN_SLICER') : null;
       if (min && (v.w < min[0] * s || v.h < min[1] * s)) add(i, 'small');
-      // J12: a table whose column headers, at its header size, need more than its width (Desktop shows fewer columns)
-      if (k === 'table' && Array.isArray(v.columns) && v.columns.length) {
-        const need = v.columns.reduce((a, c) => a + Math.ceil(tw(c.name, +v.headerSize || 10, true, v.headerFont) + V('TABLE_COLUMN') * kk), 0), room = Math.floor(v.w - V('TABLE_SIDE') * kk);
-        if (need > room) add(i, 'cut', null, `table columns: their headers need ${need}, the table has ${room}`);
+      // D5: a title is cut when the writer shortened it, or when the writer's titleFit can't hold it on two lines (a
+      // title the writer did not fit); a slicer's header when the writer shortened it
+      if (v.titleCut || v.headerCut) add(i, 'cut', null, v.titleCut ? 'title shortened by the writer' : 'slicer header shortened by the writer');
+      else if (CHARTS.has(k) && clean(v.title)) {
+        const f = titleVerdict(clean(v.title), +v.titleSize || 12, titleRoom(+v.w || 0, kk), v.font);
+        if (f && f.mode === 'shortened') add(i, 'cut', null, 'title: the writer\'s measure fits it on no two lines');
       }
-      // J12: a column or line chart whose category labels will slant (their count and length known from the field)
-      if ((k === 'column' || k === 'line') && v.category) {
-        const L = labelsOf(v.category), [b0, per, at] = V('SLANT');
-        if (L) { const room = v.w / L.count, need = (b0 + per * L.len) * (+v.labelSize || 9) / at; if (room < need) add(i, 'cut', null, `labels slant: ${Math.round(room)} a ${L.what}, ${Math.round(need)} needed`); }
+      // D5: a table's column is cut by check_report's own measure (TABLE_HEADER_CUT: a column with a set width, its
+      // header on one line; "may be cut" is check_report's note, not a cut); a wrapping header is not judged, as there
+      const Rr = rules();
+      if (k === 'table' && Array.isArray(v.columns) && !v.headerWrap && Rr && Rr.headerNeed) {
+        const cut = v.columns.filter((c) => +c.width > 1 && +c.width + 0.5 < Rr.headerNeed(String(c.name || ''), +v.headerSize || 10, v.headerFont || v.font || 'Segoe UI', kk).lowW);
+        if (cut.length) add(i, 'cut', null, `table columns: ${cut.length} header${cut.length === 1 ? '' : 's'} wider than ${cut.length === 1 ? 'its column' : 'their columns'} (check_report's measure)`);
       }
     });
     const data = vs.map((v, i) => ({ v, i, k: kindOf(v) })).filter((x) => DATA.has(x.k));
@@ -113,13 +132,23 @@
 
   /** What the picture can't tell (J12): [{ i, kind: 'labels' }], a column or line chart whose category's labels have no
    *  known length (their count and length are the data's): said, never a flag and never assumed to fit. */
+  // D5: labels that may slant (J12's rough rule, kept as a note: slanted labels are not cut, and check_report has no such
+  // finding), [{ i, kind: 'slant', why }]
   function notes(page) {
-    return (page.visuals || []).map((v, i) => ({ v, i, k: kindOf(v) })).filter(({ v, k }) => (k === 'column' || k === 'line') && v.category && !labelsOf(v.category)).map(({ i }) => ({ i, kind: 'labels' }));
+    const kk = +page.h ? +page.h / 1080 : 1, out = [];
+    (page.visuals || []).forEach((v, i) => {
+      const k = kindOf(v); if (!((k === 'column' || k === 'line') && v.category)) return;
+      const L = labelsOf(v.category);
+      if (!L) { out.push({ i, kind: 'labels' }); return; }
+      const [b0, per, at] = V('SLANT'), room = v.w / L.count, need = (b0 + per * L.len) * (+v.labelSize || 9) / at;
+      if (room < need) out.push({ i, kind: 'slant', why: `labels may slant: ${Math.round(room)} a ${L.what}, ${Math.round(need)} needed` });
+    });
+    return out;
   }
 
   const WORDS = {
-    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'label length unknown' },
-    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'طول التسميات غير معروف' }
+    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'label length unknown', slant: 'labels may slant' },
+    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'طول التسميات غير معروف', slant: 'قد تميل التسميات' }
   };
   const GREY = '#A3ACBB', WARN = '#B7791F';
 
@@ -196,10 +225,21 @@
         const outline = k === 'button' && !v.nav ? shape(k, b, rtl, col, u) : '';
         return `<g class="v" data-i="${i}" data-kind="${k}"${cur ? ' data-current="1"' : ''}>${panel}${outline ? `<g class="ph">${outline}</g>` : ''}${t}${line}${end}`;
       }
+      // D5: a slicer's header (its own text, or the field's name; off when the file says so), on one line above its
+      // dropdown box, at its own size: Desktop draws it, the slicer's title stays off
+      if (k === 'slicer' && v.header != null) {
+        const hpt = +v.headerSize || 10, hpx = hpt * 4 / 3, side8 = Math.round(8 * kk), al = side(null), head = clean(v.header);
+        const shown = head ? fit(head, hpt, Math.max(1, b.w - 2 * side8), false, v.headerFont || v.font) : '';
+        const band = shown ? Math.min(b.h * 0.5, hpx * 1.6) : 0, x = at(al, b, side8 / 2, side8 / 2), y = b.y + 1.2 * hpt + hpx * 0.35;
+        const t = shown ? `<text class="t" x="${n(x)}" y="${n(y)}" ${font} font-size="${n(hpx)}" font-weight="normal" fill="${col.ink}" text-anchor="${anchor(al)}">${esc(shown)}</text>` : '';
+        const db = { x: b.x, y: b.y + band, w: b.w, h: Math.max(0, b.h - band) }, bw = db.w * 0.5, bx = rtl ? db.x + db.w - 6 * kk - bw : db.x + 6 * kk;
+        const box = db.h > 0 ? `<rect x="${n(db.x)}" y="${n(db.y)}" width="${n(db.w)}" height="${n(db.h)}" rx="${n(8 * kk)}" fill="none" stroke="${GREY}" stroke-width="${n(u)}"/><rect x="${n(bx)}" y="${n(db.y + db.h * 0.36)}" width="${n(bw)}" height="${n(db.h * 0.28)}" rx="${n(db.h * 0.1)}" fill="${GREY}"/>` : '';
+        return `<g class="v" data-i="${i}" data-kind="${k}"><rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" fill="none"/>${box ? `<g class="ph">${box}</g>` : ''}${t}${end}`;
+      }
       // the title: at the visual's own size (pt; the theme's where the visual sets none), wrapped at the box's inner width
       // by the writer's measure (bold, as the writer measures it), on as many lines as the box holds
       const pt = +v.titleSize || 12, px = pt * 4 / 3, lh = px * V('TITLE_LINE'), bold = v.titleBold !== false;
-      const pd = v.pad || {}, pl = pd.left != null ? +pd.left : V('TITLE_SIDE') * kk, pr = pd.right != null ? +pd.right : V('TITLE_SIDE') * kk, pt0 = pd.top != null ? +pd.top : V('TITLE_TOP') * kk;
+      const pd = v.pad || {}, pl = pd.left != null ? +pd.left : Math.round(V('TITLE_SIDE') * kk), pr = pd.right != null ? +pd.right : Math.round(V('TITLE_SIDE') * kk), pt0 = pd.top != null ? +pd.top : V('TITLE_TOP') * kk;
       const room = Math.max(1, b.w - pl - pr), fits = Math.max(0, Math.floor((b.h - pt0) / lh));
       let lines = title && fits && b.w >= px * 2 ? (v.titleWrap === false ? [fit(title, pt, room, bold, v.font)] : wrap(title, pt, room, bold, v.font)) : [];
       if (lines.length > fits) lines = lines.slice(0, fits).map((l, j, all) => (j === all.length - 1 ? fit(l + '…', pt, room, bold, v.font) : l));
@@ -243,12 +283,16 @@
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
   const txt = (d) => (typeof d === 'string' ? d : new TextDecoder().decode(d));
   const lit = (p) => { const v = p && p.expr && p.expr.Literal && p.expr.Literal.Value; return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
-  // a visual's title as the plan sets it: its text, or the report measure a Top N title is made by ("Title: <title>")
-  const titleOf = (j) => {
+  // a visual's title as Desktop shows it: its text, or what the report measure a Top N title is made by shows when every
+  // category shows (D5: the measure's NAME is made unique, "Title: X (2)"; its DAX returns "X": the writer's
+  // IF ( _s = _n, "<title>", ... )); a measure we can't read keeps the name's title
+  const shownBy = (expr) => { const m = /\bIF \( _s = _n, "((?:[^"]|"")*)"/.exec(String(expr || '')); return m ? m[1].replace(/""/g, '"') : null; };
+  const titleOf = (j, ext) => {
     const t = ((((j.visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties) || {}, p = t.properties || {};
     if (p.show && p.show.expr && p.show.expr.Literal && String(p.show.expr.Literal.Value) === 'false') return '';
     const l = lit(p.text); if (l != null) return l;
-    const m = p.text && p.text.expr && p.text.expr.Measure; return m && /^Title: /.test(String(m.Property || '')) ? String(m.Property).slice(7) : '';
+    const m = p.text && p.text.expr && p.text.expr.Measure; if (!(m && /^Title: /.test(String(m.Property || '')))) return '';
+    const by = ext && ext.get(String(m.Property)); return by != null ? by : String(m.Property).slice(7);
   };
   const textOf = (j) => ((((j.visual || {}).objects || {}).general || [])[0] || { properties: {} }).properties.paragraphs ? j.visual.objects.general[0].properties.paragraphs.map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' ') : '';
   // J12: what Desktop draws from a visual's own settings (else the theme's): its title's size, font, weight, side, wrap and
@@ -262,6 +306,7 @@
   const props = (list, def) => (Array.isArray(list) ? list : []).filter((e) => e && e.properties && (!e.selector || (def && e.selector.id === 'default'))).reduce((a, e) => Object.assign(a, e.properties), {});
   const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };
   const nameOfProj = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef != null ? x.nativeQueryRef : (((x.field || {}).Column || (x.field || {}).Measure || {}).Property) || '');
+  const altOf = (j) => strOf(props(((j.visual || {}).visualContainerObjects || {}).general).altText);
   function settingsOf(j, type, theme, pageId) {
     const vis = j.visual || {}, vco = vis.visualContainerObjects || {}, ob = vis.objects || {}, tc = (theme && theme.textClasses) || {}, out = {};
     const tp = props(vco.title), pad = props(vco.padding);
@@ -293,6 +338,18 @@
       out.columns = (((qs.Values || {}).projections) || []).filter((x) => x && x.field).map((x) => { const e = cw.find((y) => y && y.selector && y.selector.metadata === x.queryRef); return Object.assign({ name: nameOfProj(x) }, e ? { width: numOf((e.properties || {}).value) } : {}); });
       out.headerSize = numOf(hp.fontSize) || +th1(theme, 'tableEx', 'columnHeaders', 'fontSize') || +th1(theme, 'tableEx', 'values', 'fontSize') || 10;
       out.headerFont = strOf(hp.fontFamily) || (tc.label || {}).fontFace || out.font;
+      if (boolOf(hp.wordWrap) === true) out.headerWrap = true;
+    }
+    // D5: a slicer's header (Desktop draws it; its title is off): its text, else the field's display name, its size
+    if (type === 'slicer') {
+      const hp = props(ob.header), first = (((qs.Values || {}).projections) || []).find((x) => x && x.field);
+      if (boolOf(hp.show) !== false) {
+        const full = first ? nameOfProj(first) : '', own = strOf(hp.text);
+        out.header = own != null ? own : full;
+        out.headerSize = numOf(hp.textSize) || +th1(theme, 'slicer', 'header', 'textSize') || 10;
+        if (strOf(hp.fontFamily)) out.headerFont = strOf(hp.fontFamily);
+        if (own != null && shortened(own, altOf(j) || full)) out.headerCut = true;
+      } else out.header = '';
     }
     if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
@@ -309,13 +366,16 @@
    *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors }. */
   function fromFiles(files, opts) {
     const o = opts || {}, by = new Map(), res = [];
-    (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); else if (/(?:^|\/)StaticResources\/RegisteredResources\/[^/]+\.json$/.test(String(f.path || '')) || /(?:^|\/)definition\/report\.json$/.test(String(f.path || ''))) res.push(f); });
+    (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); else if (/(?:^|\/)StaticResources\/RegisteredResources\/[^/]+\.json$/.test(String(f.path || '')) || /(?:^|\/)definition\/(report|reportExtensions)\.json$/.test(String(f.path || ''))) res.push(f); });
     const json = (rel) => { try { return by.has(rel) ? JSON.parse(txt(by.get(rel))) : null; } catch (e) { return null; } };
     const parse = (f) => { try { return JSON.parse(txt(f.data)); } catch (e) { return null; } };
     // the report's theme (the one report.json names, else any registered theme with text classes): its sizes
     const rep = res.find((f) => /definition\/report\.json$/.test(f.path)), rj = rep ? parse(rep) : null;
+    // the report's own measures: what a Top N title measure shows (D5)
+    const xf = res.find((f) => /definition\/reportExtensions\.json$/.test(f.path)), xj = xf ? parse(xf) : null, ext = new Map();
+    ((xj && xj.entities) || []).forEach((e) => ((e && e.measures) || []).forEach((m) => { const t = m && shownBy(m.expression); if (t != null) ext.set(String(m.name), t); }));
     const want = rj && rj.themeCollection && rj.themeCollection.customTheme ? String(rj.themeCollection.customTheme.name || '') : '';
-    const themes = res.filter((f) => f !== rep).map((f) => ({ f, j: parse(f) })).filter((x) => x.j && x.j.textClasses);
+    const themes = res.filter((f) => f !== rep && f !== xf).map((f) => ({ f, j: parse(f) })).filter((x) => x.j && x.j.textClasses);
     const theme = ((want && themes.find((x) => x.f.path.endsWith('/' + want))) || themes[0] || {}).j || null;
     const order = ((json('pages.json') || {}).pageOrder || []).map(String);
     return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
@@ -324,8 +384,9 @@
       const byName = new Map(list.map((j) => [String(j.name), j]));
       const at = (j) => { let x = +(j.position || {}).x || 0, y = +(j.position || {}).y || 0, g = j.parentGroupName, hid = !!j.isHidden, d = 0; while (g && byName.has(g) && d++ < 10) { const q = byName.get(g); x += +(q.position || {}).x || 0; y += +(q.position || {}).y || 0; hid = hid || !!q.isHidden; g = q.parentGroupName; } return { x, y, hid }; };
       const visuals = list.filter((j) => !j.visualGroup && j.visual).map((j) => {
-        const p = at(j), type = String(j.visual.visualType || 'unknown'), title = type === 'textbox' ? textOf(j) : titleOf(j);
+        const p = at(j), type = String(j.visual.visualType || 'unknown'), title = type === 'textbox' ? textOf(j) : titleOf(j, ext);
         return p.hid ? null : Object.assign({ type, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0, z: +(j.position || {}).z || 0, title }, settingsOf(j, type, theme, id),
+          type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
       return { id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals };
