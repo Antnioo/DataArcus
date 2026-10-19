@@ -1312,7 +1312,7 @@ server.registerTool('plan_layout', {
       if (todo.length) {
         if (Object.keys(prop).length) planNames = Object.assign({}, prop, a.displayNames || {});
         notTranslated = none.map((k) => ({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why: NOT_TRANSLATED_WHY }));
-        Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: prop } : {}, { notTranslated });
+        Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: Object.assign({}, prop) } : {}, { notTranslated });
       }
     }
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
@@ -1408,8 +1408,8 @@ server.registerTool('plan_layout', {
     const an = arabicNames.arabicNames, why = NOT_TRANSLATED_WHY;
     designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))).forEach((k) => {
       const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1'));
-      if (p) { planNames = Object.assign(planNames || {}, { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); an.suggestedDisplayNames = Object.assign(an.suggestedDisplayNames || {}, { [k]: p }); }
-      else { notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why }); an.proposeYourself = (an.proposeYourself || []).concat(k); }
+      if (p) { planNames = Object.assign(planNames || {}, { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
+      else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
     });
   }
   if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length);
