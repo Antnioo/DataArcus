@@ -900,8 +900,11 @@ function reportRun(a, mode) {
   // own kind) and why, by the writer's own rule on the bound fields
   const galleryOf = (pages, b) => { const out = [];
     pages.forEach((p) => (p.slots || []).filter((s) => Gallery.isKind(s.kind)).forEach((s) => { const f = Gallery.fits(s.kind, b);
-      out.push(Object.assign({ page: p.name, kind: Gallery.toTool(s.kind) }, s.role ? { role: s.role } : {}, s.title ? { title: s.title } : {},
+      out.push(Object.assign({ page: p.name, kind: Gallery.toTool(s.kind) }, s.role ? { role: s.role } : {}, s.title ? { title: s.title } : {}, s.plain ? { insteadOf: s.plain } : {},
         { written: f.fits ? Gallery.toTool(s.kind) : f.split ? 'two panels (two line charts)' : s.plain || Gallery.KINDS[s.kind].fallback, why: f.why })); }));
+    // (a design: each kind asked for that no page took, with why: its fields don't suit, or no page had its chart left)
+    if (a.design && a.gallery) Gallery.askedKinds(a.gallery).filter((k) => !out.some((g) => g.kind === Gallery.toTool(k))).forEach((k) => { const f = Gallery.fits(k, b);
+      out.push({ page: null, kind: Gallery.toTool(k), written: 'not placed', why: f.fits ? 'every page\'s chart it can take was given to another gallery visual (one a page)' : f.why + (f.split ? ' (on a designed page a combo is placed only where its units match)' : '') }); });
     return out; };
   let r, bind, extra = {}, written, boundPages = null;
   let tinyPage = false, smallPageNote = null, designRepaired = null;
@@ -935,8 +938,11 @@ function reportRun(a, mode) {
     // the binding is made first, on the pages' KPI count, which noTime doesn't change)
     const bound = bindFor(kpisOf(projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }))), noTime = !bound.date;
     let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
-    // (0.3.0 D2) the gallery kinds the user asked for, on the first page's slots (the page the plan shows)
-    if (a.gallery) pages = pages.map((p, i) => (i ? p : Object.assign({}, p, { slots: Gallery.assign(p.slots, a.gallery) })));
+    // (0.3.0 D2; the reviewer's decision of 19 Oct) the gallery kinds the user asked for, on every designed page: at most
+    // one a page, only where the bound fields suit it, a kind not used on an earlier page first (the tooltip pages, which
+    // the writer makes, keep their plain kinds)
+    const B0 = withSplit(listFormats(named(bound)), pages);
+    if (a.gallery) { const used = new Set(); pages = pages.map((p) => { const sl = Gallery.assign(p.slots, a.gallery, { B: B0, avoid: used }); sl.forEach((x) => { if (Gallery.isKind(x.kind)) used.add(x.kind); }); return Object.assign({}, p, { slots: sl }); }); }
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
     if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
@@ -944,7 +950,7 @@ function reportRun(a, mode) {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withSplit(listFormats(named(bound)), pages)), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -1438,10 +1444,7 @@ server.registerTool('plan_layout', {
   const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
   // (0.3.0 D2) the gallery kinds the user asked for, on the designed page's slots as create_report puts them (each slot
   // keeps its own kind in insteadOf; the writer's decision on the fields is said below, gallery)
-  if (a.gallery && !a.pages) {
-    r.slots = Gallery.assign(r.slots, a.gallery).map((x) => { if (!Gallery.isKind(x.kind)) return x; const y = Object.assign({}, x, { kind: Gallery.toTool(x.kind), visual: Gallery.labelOf(x.kind, a.lang), insteadOf: x.plain }); delete y.plain; return y; });
-    const byRole = new Map(r.slots.map((x) => [x.role, x])); r.forAuthoring.forEach((f) => { const x = byRole.get(f.role); if (x) f.kind = x.kind; });
-  }
+
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
@@ -1549,17 +1552,20 @@ server.registerTool('plan_layout', {
   // kind the writer gives them (its own rules, on the page the lint built as create_report writes it), so what is
   // approved is what is written. (rc.24: the lint runs before the plan is proposed, so the plan's data carries the
   // changes too: the approval page said "Column chart by" for the chart written as a bar chart)
+  // (0.3.0 D2) each gallery slot as create_report's own build writes it (the exact artifact): the kind, two panels, or the
+  // slot's own kind, with the writer's why; a designed slot shows what is written
+  const galleryPlan = exact && exact.gallery && exact.gallery.length ? exact.gallery : null;
+  // (the plan's slots are its first page's: the entries of that page, by the slot's role and its own kind)
+  const firstPage = exact && exact.gallery && exact.gallery.find((g) => g.page) ? (exact.gallery.find((g) => g.page) || {}).page : null;
+  if (galleryPlan && !a.pages) galleryPlan.filter((g) => g.page && g.page === firstPage && g.insteadOf).forEach((g) => { const sl = r.slots.find((x) => x.role === g.title && x.kind === g.insteadOf); if (!sl) return;
+    const k = g.written === g.kind ? g.kind : /^two panels/.test(g.written) ? 'line' : g.written;
+    Object.assign(sl, { kind: k, visual: Gallery.isKind(Gallery.fromTool(k)) ? Gallery.labelOf(k, a.lang) : kindLabel(k, a.lang), insteadOf: g.insteadOf, galleryWhy: g.why });
+    const fa = r.forAuthoring.find((f) => f.role === sl.role); if (fa) fa.kind = k; });
   const kinds = (designLint.designLint && designLint.designLint.kinds) || [];
   const ofKind = (kd) => r.slots.filter((x) => (x.plannedAs || x.kind) === kd);   // (the layout's own kinds, before any change)
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; if (k.why) sl.kindWhy = k.why; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => Object.assign({ role: x.role, from: x.plannedAs, to: x.kind }, x.kindWhy ? { why: x.kindWhy } : {}));
-  // (0.3.0 D2) each gallery slot as create_report's own build writes it (the exact artifact): the kind, two panels, or the
-  // slot's own kind, with the writer's why; a designed slot shows what is written
-  const galleryPlan = exact && exact.gallery && exact.gallery.length ? exact.gallery : null;
-  if (galleryPlan && !a.pages) galleryPlan.forEach((g) => { const sl = r.slots.find((x) => x.role === g.title && x.kind === g.kind); if (!sl) return;
-    if (g.written !== g.kind) { const k = /^two panels/.test(g.written) ? 'line' : g.written; Object.assign(sl, { kind: k, visual: kindLabel(k, a.lang), galleryAsked: g.kind }); if (/^two panels/.test(g.written)) sl.panels = 2; }
-    sl.galleryWhy = g.why; });
-  const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, for each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units, or the slot\'s own kind when the fields don\'t fit) and why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
+  const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, page by page, each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units on a slot the user placed, or the slot\'s own kind when the fields don\'t fit) and why; on a design at most one goes on a page, only where its fields suit, and a kind no page took is listed as not placed, with why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
