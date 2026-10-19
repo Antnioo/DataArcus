@@ -12,7 +12,7 @@
  *    categorical axis Desktop ignored it. Mirroring time is the owner's choice (opts.timeRightToLeft, default true);
  *  - legends: left and right swapped, TopRight when none is set; titles right-aligned (centred kept); text boxes
  *    right-aligned (centred kept); tables: columns reversed, text columns right-aligned; a matrix's values reversed;
- *    a new card's values reversed and right-aligned; buttons: a left text or icon goes right;
+ *    a new card's values reversed and right-aligned (a single value too, its inner margins swapped); buttons: a left text or icon goes right;
  *  - everything else (cards, slicers, the page navigator, maps, images, shapes, custom visuals) moves only.
  * Names, ids, navigation targets and bookmark references are never changed. Texts are replaced only by the labels
  * the caller passes (the user's approved Arabic), keyed by the ids textsOf gives. A report's text is untrusted input:
@@ -63,7 +63,7 @@
     bar: 'bar charts: names at the right, bars growing from the right',
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned',
     matrix: 'matrices: values in reverse order (rows keep their order)',
-    newCard: 'new cards: values in reverse order, right-aligned',
+    newCard: 'new cards: values in reverse order, right-aligned (one value too), their inner margins swapped',
     textbox: 'text boxes: right-aligned (centred kept)',
     button: 'buttons: a left-aligned text or icon goes right; links unchanged',
     navigator: 'page navigators: moved only',
@@ -193,6 +193,17 @@
         if (e && isObj(e.properties)) e.properties.horizontalAlignment = str('right');
         changes.push('values');
       }
+      // (rc.24, the laptop's proof of rc.23: a card with one value, as DataArcus writes its KPI cards, kept its value
+      // left-aligned under its right-aligned title) a value aligned left goes right (centred kept), and the card's inner
+      // left and right margins (its padding card, as the writer sets them) swap sides with it
+      (entries(v.objects, 'value') || []).forEach((e) => { if (strOf((e.properties || {}).horizontalAlignment) === 'left') { e.properties.horizontalAlignment = str('right'); changes.push('value'); } });
+      (entries(v.objects, 'padding') || []).forEach((e) => {
+        if (!isObj(e.properties) || (e.properties.leftMargin === undefined && e.properties.rightMargin === undefined)) return;
+        const l = e.properties.leftMargin, r = e.properties.rightMargin;
+        if (r === undefined) delete e.properties.leftMargin; else e.properties.leftMargin = r;
+        if (l === undefined) delete e.properties.rightMargin; else e.properties.rightMargin = l;
+        changes.push('margins');
+      });
     }
     // text
     if (kind === 'textbox') {
