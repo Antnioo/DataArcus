@@ -1,0 +1,20 @@
+{
+  "about": "What the weekly Microsoft watch (scripts/microsoft-watch.mjs) compares with, for what is NOT already in the repo. The bundled schemas (mcp/schemas), the writer's schema versions (assets/js/pbip-query.js, assets/js/pbip-export.js) and the validator and catalog pins (mcp/package.json) are read from where they live. Update this file when DataArcus has been checked against something newer (see mcp/research/MICROSOFT-WATCH.md).",
+  "themeSchema": {
+    "newest": "2.159",
+    "file": "reportThemeSchema-2.159.json",
+    "checked": "2026-10-19",
+    "note": "U1: DataArcus's written themes validate against 2.158 and 2.159 (mcp/research/POWERBI-2026-10.md)"
+  },
+  "featureSummary": {
+    "title": "Power BI October 2026 Feature Summary",
+    "url": "https://community.fabric.microsoft.com/t5/Power-BI-Updates-Blog/Power-BI-October-2026-Feature-Summary/ba-p/5374650",
+    "id": 5374650,
+    "checked": "2026-10-19",
+    "note": "U1 read it (mcp/research/POWERBI-2026-10.md)"
+  },
+  "unbundledReportFolders": {
+    "definition/definitionStructure": { "seen": "3.3.0", "why": "a description of the folder, not a schema of a file (mcp/schemas/SOURCE.md)" },
+    "localSettings": { "seen": "1.0.0", "why": "a user's local settings file, which DataArcus neither writes nor checks" }
+  }
+}

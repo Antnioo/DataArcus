@@ -44,6 +44,9 @@ jobs:
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
+      - name: The weekly Microsoft watch compares and writes its issue correctly (fixed answers, no network)
+        run: node scripts/test-microsoft-watch.mjs
+
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
