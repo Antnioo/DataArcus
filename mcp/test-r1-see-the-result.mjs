@@ -272,9 +272,34 @@ try {
       const calc = (r.back.tables.find((t) => t.name === 'Sales').columns || []).find((c) => c.name === 'Amount Doubled');
       chk(() => calc && calc.type === 'calculated' && /\[Amount\] \* 2/.test(calc.expression), () => 'S-3 made-up. a calculated column keeps its DAX');
       const fp = r.back.tables.find((t) => t.name === 'Pick a measure'), fpc = fp && fp.columns.find((c) => c.name === 'Pick a measure Fields');
-      chk(() => fpc && JSON.stringify(fpc.extendedProperties) === JSON.stringify([{ type: 'json', name: 'ParameterMetadata', value: { version: 3, kind: 2 } }]) && fp.columns[0].relatedColumnDetails, () => 'S-6 made-up. a field parameter keeps its DAX, ParameterMetadata and its group-by column');
+      chk(() => fpc && fpc.extendedProperties.length === 1 && fpc.extendedProperties[0].name === 'ParameterMetadata' && fpc.extendedProperties[0].type === 'json' && JSON.stringify(fpc.extendedProperties[0].value) === JSON.stringify({ version: 3, kind: 2 }) && fp.columns[0].relatedColumnDetails, () => 'S-6 made-up. a field parameter keeps its DAX, ParameterMetadata and its group-by column');
       const amt = r.rows.get('Sales').get('Margin %');
       chk(() => amt.every((v) => v.v >= 0 && v.v <= 1), () => 'S-7 made-up. a % column gets values between 0 and 1');
+    }
+  }
+
+  // ---------- S-16: the DAX form (a DATATABLE a table: Desktop computes it on open, no refresh needed) ----------
+  if (S) {
+    const DT = { int64: 'INTEGER', double: 'DOUBLE', decimal: 'CURRENCY', dateTime: 'DATETIME', string: 'STRING', boolean: 'BOOLEAN' };
+    for (const [label, tm, fp] of [['twin', models.twin.tmsl, []], ['arabic', models.arabic.tmsl, []], ['made-up', made, ['Pick a measure']]]) {
+      let sh = null, back = null;
+      chk(() => { sh = S.shadowModel(tm, { form: 'dax' }); back = Tmdl.fromFiles(sh.files.filter((f) => /\.tmdl$/.test(f.path)).map((f) => ({ path: f.path, text: f.text }))).model; return back.tables.length === (tm.model || tm).tables.length; }, () => `S-16 ${label}. the DAX form parses with the repo's reader`);
+      if (!back) continue;
+      const bad = [], keys = new Map();
+      back.tables.filter((t) => !fp.includes(t.name)).forEach((t) => {
+        const e = String(((t.partitions || [])[0] || { source: {} }).source.expression || ''), head = [...e.slice(0, e.indexOf('{')).matchAll(/"((?:[^"]|"")*)"\s*,\s*([A-Z]+)/g)].map((m) => [m[1].replace(/""/g, '"'), m[2]]);
+        if (!/^\s*DATATABLE\s*\(/.test(e) || t.partitions[0].source.type !== 'calculated') { bad.push(`${t.name}: not a DATATABLE`); return; }
+        const data = (t.columns || []).filter((c) => c.type !== 'calculated');
+        if (head.map((h) => h[0]).join('|') !== data.map((c) => c.name).join('|')) bad.push(`${t.name}: header ${head.map((h) => h[0])} is not the columns`);
+        data.forEach((c, k) => { if (head[k] && head[k][1] !== DT[c.dataType]) bad.push(`${t.name}[${c.name}] ${c.dataType} declared ${head[k][1]}`); });
+        const rows = [...e.slice(e.indexOf('{') + 1).matchAll(/\{([^{}]*)\}/g)].map((m) => [...m[1].matchAll(/"((?:[^"]|"")*)"|(-?\d+(?:\.\d+)?)|\b(TRUE|FALSE)\b/g)].map((v) => (v[1] != null ? v[1] : v[2] != null ? v[2] : v[3])));
+        if (!rows.length || rows.some((r) => r.length !== head.length)) bad.push(`${t.name}: ${rows.length} rows, not all of ${head.length} values`);
+        data.forEach((c, k) => { keys.set(t.name + '\0' + c.name, rows.map((r) => r[k])); if (DT[c.dataType] === 'DATETIME' && rows.some((r) => !/^\d{4}-\d{2}-\d{2}$/.test(r[k]))) bad.push(`${t.name}[${c.name}]: a date not written yyyy-mm-dd`); });
+      });
+      chk(() => !bad.length, () => `S-16 ${label}. every table is a DATATABLE with the columns' own types and full rows: ${bad.slice(0, 4).join('; ')}`);
+      const rb = [];
+      (back.relationships || []).filter((r) => (r.toCardinality || 'one') === 'one' && r.fromCardinality !== 'one').forEach((r) => { const f = keys.get(r.fromTable + '\0' + r.fromColumn), t = new Set(keys.get(r.toTable + '\0' + r.toColumn) || []); if (!f || f.some((v) => !t.has(v))) rb.push(`${r.fromTable}[${r.fromColumn}]`); });
+      chk(() => !rb.length, () => `S-16 ${label}. the DAX form's keys match too: ${rb.join(', ')}`);
     }
   }
 
