@@ -763,6 +763,54 @@ export default async function ({ browser, url }) {
   }
 
   {
+    // B-148 (0.3): an answer to a "Please confirm" question is kept in this browser only (localStorage, per model), reused
+    // while the measure is unchanged, asked again when its DAX changes, and forgotten with "Forget my answers"; no request
+    // is made while answering or forgetting, and nothing of the DAX is stored
+    const c = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const aModel = (expr) => ({ name: 'a', compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Sales', columns: [c('Qty'), c('Amount', 'decimal')], partitions: mpart('Sales'),
+        measures: [{ name: 'Units Doubled', expression: expr, formatString: '#,0' }, { name: 'Amount Doubled', expression: 'SUM(Sales[Amount]) + SUM(Sales[Amount])', formatString: '#,0' }] }] } });
+    const f1 = pbit({ DataModelSchema: JSON.stringify(aModel('SUM(Sales[Qty]) + SUM(Sales[Qty])')), Version: '1.28' });
+    const f2 = pbit({ DataModelSchema: JSON.stringify(aModel('SUM(Sales[Qty]) + SUM(Sales[Qty]) + 0')), Version: '1.28' });
+    for (const [lang, w] of [['en', 1440], ['ar', 390]]) {
+      const v = await visitor(browser, { viewport: [w, 900] });
+      const tag = `B-148 page (${lang}, ${w} px)`;
+      const open = async (file) => { await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' }); await v.pg.setInputFiles('#mhFile', { name: 'answers.pbit', mimeType: 'application/octet-stream', buffer: file }); await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 }); };
+      const qs = () => v.pg.$$eval('.mh-q', (x) => x.map((q) => q.querySelector('code').textContent));
+      await open(f1);
+      const requests = []; const onReq = (rq) => requests.push(rq.url()); v.pg.on('request', onReq);
+      const labels = await v.pg.$$eval('.mh-q[data-q*="Units Doubled"] [data-qanswer]', (b) => b.map((x) => x.dataset.qanswer + ':' + x.textContent.trim()));
+      await v.pg.click('.mh-q[data-q*="Units Doubled"] [data-qanswer="intended"]');
+      const after = await qs(), answered = await v.pg.$$eval('#mhAnswered li', (x) => x.map((l) => l.textContent));
+      check(labels.length === 2 && (lang === 'en' ? labels.includes('intended:Yes, intended') && labels.includes('mistake:No, a mistake') : labels.includes('intended:نعم، مقصود') && labels.includes('mistake:لا، خطأ'))
+        && !after.includes('[Units Doubled]') && after.includes('[Amount Doubled]') && answered.length === 1 && answered[0].includes('[Units Doubled]'), `${tag}: answered: ${JSON.stringify({ labels, after, answered })}`);
+      const stored = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).map((k) => [k, localStorage.getItem(k)]));
+      check(stored.length === 1 && /^dataarcus-mh-answers:[0-9a-f]{64}$/.test(stored[0][0]) && !/SUM|Qty|Sales/.test(stored[0][1]) && JSON.parse(stored[0][1]).length === 1 && JSON.parse(stored[0][1])[0].by === 'user',
+        `${tag}: stored per model, hashes and the answer only: ${JSON.stringify(stored)}`);
+      v.pg.off('request', onReq);
+      // the same model again (a new page): not asked again; the DAX changed: asked again
+      await open(f1);
+      const again = await qs();
+      await open(f2);
+      const changed = await qs(), dropped = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).length);
+      check(!again.includes('[Units Doubled]') && again.includes('[Amount Doubled]') && changed.includes('[Units Doubled]') && dropped === 0, `${tag}: reused, then asked again (and the old answer dropped) after the DAX changed: ${JSON.stringify({ again, changed, dropped })}`);
+      // forget: every answer this browser holds is gone, the question is back
+      await open(f1);
+      v.pg.on('request', onReq);
+      await v.pg.click('.mh-q[data-q*="Units Doubled"] [data-qanswer="mistake"]');
+      const mistake = await v.pg.$$eval('#mhAnswered li', (x) => x.map((l) => l.textContent));
+      const noOverflow = await v.pg.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+      await v.pg.click('#mhForget');
+      const back = await qs(), left = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).length);
+      v.pg.off('request', onReq);
+      check(mistake.length === 1 && (lang === 'en' ? /mistake/.test(mistake[0]) : /خطأ/.test(mistake[0])) && back.includes('[Units Doubled]') && left === 0 && noOverflow, `${tag}: a mistake answer, then forget: ${JSON.stringify({ mistake, back, left, noOverflow })}`);
+      check(requests.length === 0, `${tag}: requests while answering or forgetting: ${JSON.stringify(requests.slice(0, 5))}`);
+      if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  {
     // "Fix these first": the points on each button are what the score really gains when that check is fixed
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
