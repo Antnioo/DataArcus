@@ -34,6 +34,23 @@ Expected (before any run): every PRIVACY.md sentence in the table with evidence;
 files; the new release-text checks red on e4ae1cd (the known "never overwritten"/"reads no data" lines), green after;
 every other suite unchanged in count except release-text; full npm test green.
 
+- Done (commits 67c6585 wording + claims table + checks, 76a61cf the beta page's English lines; then this note and the
+  CHANGELOG): `mcp/work/R7-claims.md`: 118 PRIVACY.md claims, 93 true, 25 reworded (untrue 4: the redesign "short
+  titles", "full paths stay in the local log", section 4's heading, "no file renamed over another"; overstated 7; stale or
+  incomplete 14), 1 needs code; 28 rows for the other files. Wording only; code changed only in texts (read_report's
+  description and NOTE, model.mjs's data-file message, agent-text's last line at the same 2,200 cap).
+- Found in the code: R5 already hashes the question id and object name (the brief's F10 "plain text" was the pre-R5
+  shape); plain text are the answer, the date and time and "user"; the hashes are unsalted SHA-256; the file name holds
+  the model's name. The only log line is the start line. plan_layout's J14 copy is the one write outside the folder.
+- Needs code (not changed): N1 read_report returns a short static title or text box as typed (read-report.mjs:safeText):
+  return none by default, or only when asked; N2 check_model_health's `destructiveHint: false` while it replaces or
+  empties its own answers file.
+- Tests: release-text 4 -> 36 (15 of the new checks red on e4ae1cd); test-rc23 F3 expected sentence changed on purpose
+  ("it reads none of your tables' data"), 51/51; v029agent 23, r6-disclosure 37, r5-answers 33, redesign 49,
+  approval-hardening 22, b148 28; site config, check:min, csp, ar-pages, sitemap-lastmod (+ its test), analytics events
+  PASS.
+- Next: the reviewer reviews; when #79 merges into release/0.3.0, merge origin/release/0.3.0 here; the reviewer opens
+  the PR into release/0.3.0; the owner checks the Arabic sentences of the beta page and merges.
 ## R6: the approval page shows everything the click approves; the theme pins its model (19 Oct, cloud builder; branch `fix/0.3.0-approval-disclosure` from `release/0.3.0` c058e87; one PR into release/0.3.0, not merged)
 The reviewer's brief (B28; the owner's decision of 19 Oct: every finding of the outside audit of 19 Oct is fixed before
 0.3.0 reaches beta testers; R4 write safety = PR #78, R5 done, R7 = PRIVACY.md's full re-read, not this branch).
