@@ -78,7 +78,7 @@ export function planLint(a) {
   const mt = modelOf(a.m.tmsl).tables || [];
   const measures = mt.flatMap((t) => (t.measures || []).map((x) => ({ table: t.name, name: x.name, expression: x.expression, formatString: x.formatString })));
   const aggregation = Agg.guard(inv.pages[0] || { visuals: [] }, { measures, tables: mt });
-  const ans = Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN }) => ({ nth, from, to, topN })), enumerable: false });
+  const ans = Object.defineProperty(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), 'kinds', { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false });
   // (0.3, J4) the planned page's visual titles as written (the full title, its alt text), kept off the answer as kinds is
   const page0 = b.r.files.filter((f) => /\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(f.path) && f.path.includes('/pages/' + (inv.pages[0] || {}).id + '/'));
   const titles = page0.map((f) => { try { const v = JSON.parse(f.data).visual || {}, g = (((v.visualContainerObjects || {}).general || [])[0] || {}).properties || {}, t = (((v.visualContainerObjects || {}).title || [])[0] || {}).properties || {};
