@@ -4,6 +4,28 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.2.9.1, B-173: Arabic table headers, "cut" vs "may be cut", and check_report (19 Oct, cloud builder; branch `fix/0.2.9.1-headers` from main `d76703c`; one PR, not merged)
+The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Exec" (made-up model, 1920 page) in Desktop 2.159:
+`fitted.headersCut` listed "Total Value" (needs 275, given 208; page 2: 400 / 292) and "Total Score" (275 / 181; page 2:
+400 / 260); Desktop cut Total Score, drew Total Value WHOLE on both pages; check_report said nothing. Another builder has
+`fix/0.2.9.1` (Top-5 filter + donut valueAxis, pbip-page.js and the writer): this branch stays out of those lines.
+- Cause looked for (code + Microsoft's + our measured facts): the 275 is report-rules/twin `need` = bold text (text-measure.js,
+  Arabic 0.62 em bold, measured in Tahoma) + 24 at 1080 (the writer's cellRoom padding). The headers' font size is read
+  right (10pt summary table, 15pt details: 275 - 24 = 251 and 400 - 24 = 376, 1.5 x). Not shown: neither the bold weight
+  nor the Segoe UI Arabic widths nor a header wrap explain 208 (our narrowest measured Arabic, Segoe UI 311 of our 364,
+  still gives 214 for the text alone); Microsoft's capabilities give no defaults (columnHeaders.wordWrap, fontFamily, bold).
+  So no calibration: the measure stays as it is (the twin still widens to it), and the band Desktop showed is said.
+- Plan: report-rules.js `headerNeed(text, t, font, sc)` -> { needW (as today), lowW }: for a header with Arabic letters
+  lowW = the share of our measure Desktop 2.159 has drawn an Arabic header whole in (0.70, under the smallest seen:
+  (292-24)/376 = 0.71); a Latin header lowW = needW. Under lowW: cut; lowW..needW: may be cut. `tableHeaders(json, theme,
+  font, sc)` reads a table's set column widths and header size/font (the twin's reading, moved). New rule TABLE_HEADER_CUT
+  (sizes): warning when cut, a note when it may be cut (the reason: Desktop drew Arabic headers whole in about 0.7 of
+  the measure); headers set to wrap are skipped; never quotes a header. The twin's fitHeaders uses the same function:
+  `fitted.headersCut` (cut) and new `fitted.headersMayBeCut`, with lowW.
+- Test first: `mcp/test-b173.mjs` (in npm test), 20 checks, **12 red on main d76703c** (H-1 4, H-2 4, H-3 band 1,
+  H-3 plan = check_report 1, H-2 through the tool at 181 / 208 2); all green after. Other suites: same counts, except
+  where a fixture has a cut header (to be listed in the PR, never a changed expectation).
+
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
   (engine `business/beta/rc24/PROOF-rc24.md`: B and E1-E3 pass, A/D/F pass, 0 network).
