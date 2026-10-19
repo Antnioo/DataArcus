@@ -169,7 +169,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // (changed in round 22b, the reviewer's second review, item 8: two charts with the same measure and column kept the
     // same title and alt text; they are now numbered after the first, "(2)", like the charts of a bracket group)
     const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
-    chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales by Region (2)' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second numbered, "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
+    // (changed in 0.3 J4, B-130, the owner's go of 18 Oct: no "(2)"; the second says another true sentence of its own
+    // measure and column, story-titles.js alternate: "Total Sales per Region" for a chart not sorted by its measure)
+    chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales per Region' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second told apart without "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
   }
   // f. data labels above the columns only where the columns are four: "Quarter", never "Year Quarter" (8 to 40 values)
   {
@@ -391,7 +393,10 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const c = await ask('create_report', { path: 'r22-long', name: 'R22d titles', fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, category2: `Sales[${long1}]` },
       pages: [{ name: 'P', width: 1920, height: 1080, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 400, h: 400 }, { kind: 'column', x: 500, y: 100, w: 1380, h: 400 }] }] });
     const n = notes(c);
-    chk(() => !c.err && /shortened/.test(n) && n.includes(`${long2} by ${long1}\\"`), () => `3rd-4. the first chart's shortened title is still told: ${c.err ? c.t.slice(0, 200) : n.slice(0, 600)}`);
+    // (changed in 0.3 J4, B-131: the first chart's title is shortened by rule, "Net sales by Sales channel", not cut with
+    // "…", so no entry is owed; what stays checked: every "shortened" entry the notes tell names a title a chart shows)
+    const shownNow = vis(c, 'r22-long').map(titleOf).filter(Boolean), told = [...n.matchAll(/as \\"([^\\]*)\\"/g)].map((x) => x[1]);
+    chk(() => !c.err && shownNow.every((t) => !/…/.test(t)) && told.every((t) => shownNow.includes(t)), () => `3rd-4. no title cut, and every shortened title told is one a chart shows: ${c.err ? c.t.slice(0, 200) : JSON.stringify([shownNow, told, n.slice(0, 400)])}`);
   }
   // final item 4: DAX allows spaces between a table and its column: 'Sales' [Quantity] and Sales [Quantity] are columns
   {
