@@ -27,6 +27,22 @@ scripts/answers and create_report's format script are written outside withPlan. 
 - Test first: `mcp/test-0.3.0-write-safety.mjs` (in npm test), 32 checks, **21 red on release/0.3.0 1ae53f3** (S1 3, S2 2, S3 1,
   S4 2, S5 2, S6 1, S7 2, S8 1, H1 2, H2 2, H3 2, C1 1). Expected after: 32/32; test-partial-writes 37, test-z unchanged; the
   full `npm test` all PASS with the same counts as release/0.3.0.
+- **Done (commits 8c96ffe, da0e83e; see the PR):** write-safety 32/32. Full `npm test` on Linux, all PASS: release-text 4,
+  test.mjs 1581, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports; its 8 "labelled by
+  title" notes as before), rc22 26, rc23 51, rc24 28, preview 71, check 31, fidelity 38, 0291 17, b173 20, b146 32, phone 355,
+  b148 28, story-titles 94, approval-hardening 22, b153 37, a11y 121, gallery 44, waterfall-rtl 15, redesign 49,
+  label-limits 30, j14 30, r4 32. The first full run failed test.mjs's source check (it looks for `flag: 'wx'` in write-io):
+  createFile now names its flag `{ flag: 'wx' }` (no test changed). My S8 at first swapped a folder by rmdir + mkdir, which
+  reuses the inode on Linux: it now renames the old one aside (fixed before green, still red on 1ae53f3).
+- Decisions I made: the tree is written in place (no temporary folder renamed into place: a directory rename can replace an
+  empty folder on Linux, and Node has no no-replace rename), .pbip last; a file or folder whose identity changed is named
+  under "Left as found, not created by this call"; a failed write whose error says nothing of what it left (writeAnswers's
+  own) uses the plan; check_model_health says `planUse` only when a write failed.
+- Seen, not in scope: lib/answers.mjs writeAnswers still writes with fs directly (tmp, then link or rename over its own
+  answers file; the other builder's branch); lib/artifact.mjs (J14's private copy in the temp folder) makes folders with a
+  recursive mkdir; between removeOurs's lstat and its unlink a swap is still possible (Node has no unlinkat on a handle):
+  the window is one call, named in PRIVACY's "what these checks are not".
+- Next: the reviewer reviews the PR into release/0.3.0, CI green (mcp-windows runs S3 with a junction), the owner merges.
 
 ## R3: a right-to-left waterfall reads from the right (19 Oct, cloud builder; branch `fix/0.3.0-waterfall-rtl` from `release/0.3.0`; one PR into release/0.3.0, not merged)
 The reviewer's brief (19 Oct, the owner's must-fix: in an Arabic report the waterfall did not switch direction). Another
