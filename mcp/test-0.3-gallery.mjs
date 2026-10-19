@@ -45,13 +45,14 @@ if (G) {
     () => `R: a measure's unit from its format and role: ${[AED, PCT, PLAIN].map(G.unitOf)}`);
   // combo
   let r = fit('combo', base());
-  chk(() => r.fits && r.secondary === true && r.fields.columns === AED && r.fields.line === PCT && r.fields.axis === MONTH, () => `R combo: an amount and a percent over months fit, the percent as the line on its own axis: ${JSON.stringify(r)}`);
+  // (0.3.0 D2, the outside audit's C13, changed on purpose: no automatic secondary axis) an amount and a percent are two panels
+  chk(() => !r.fits && r.split === true && /different units/.test(r.why) && r.fields.columns === AED && r.fields.line === PCT && r.fields.axis === MONTH, () => `R combo: an amount and a percent over months are two panels, never a second axis: ${JSON.stringify(r)}`);
   r = fit('combo', base({ kpis: [AED, AED2] }));
   chk(() => r.fits && r.secondary === false, () => `R combo: two amounts in one currency share one axis: ${JSON.stringify(r)}`);
   r = fit('combo', base({ kpis: [AED, PLAIN] }));
-  chk(() => r.fits && r.secondary === false, () => `R combo: a unit not known never gets the secondary axis: ${JSON.stringify(r)}`);
+  chk(() => !r.fits && r.split === true && /not known/.test(r.why), () => `R combo: a unit not known is two panels (D2, C13), never a second axis: ${JSON.stringify(r)}`);
   r = fit('combo', base({ measure: PCT, kpis: [PCT, AED] }));
-  chk(() => r.fits && r.fields.columns === AED && r.fields.line === PCT, () => `R combo: a percent is the line, never the columns: ${JSON.stringify(r.fields)}`);
+  chk(() => r.fields.columns === AED && r.fields.line === PCT, () => `R combo: a percent is the line, never the columns: ${JSON.stringify(r.fields)}`);
   r = fit('combo', base({ date: null, cats: { combo: CITY } }));
   chk(() => !r.fits && /not time or ordered/.test(r.why), () => `R combo: a line across unordered categories (City) does not fit: ${JSON.stringify(r)}`);
   r = fit('combo', base({ kpis: [AED] }));
@@ -77,8 +78,9 @@ if (G) {
   chk(() => !fit('multiples', base({ cats: { column: QUARTER, split: C('Customer Name') } })).fits && !fit('multiples', base({ cats: { column: QUARTER, split: C('ProductID') } })).fits && !fit('multiples', base({ cats: { column: QUARTER, split: C('اسم العميل') } })).fits,
     () => 'R multiples: a name or an id (English or Arabic) has many members: no panels');
   chk(() => fit('multiples', base({ cats: { column: QUARTER, split: C('Segment') } })).fits, () => 'R multiples: a grouping category without a known count (Segment) fits');
-  chk(() => JSON.stringify(G.pick(base()).map((x) => x.kind)) === '["combo","waterfall","multiples"]' && JSON.stringify(G.pick(base({ date: C('Order Date', { type: 'dateTime', time: true }), cats: { column: CITY } })).map((x) => x.kind)) === '["combo"]',
-    () => `R: pick lists the kinds that fit a report's fields: ${JSON.stringify(G.pick(base()))}`);
+  // (D2: the combo's two measures in one unit)
+  chk(() => JSON.stringify(G.pick(base({ kpis: [AED, AED2] })).map((x) => x.kind)) === '["combo","waterfall","multiples"]' && JSON.stringify(G.pick(base({ kpis: [AED, AED2], date: C('Order Date', { type: 'dateTime', time: true }), cats: { column: CITY } })).map((x) => x.kind)) === '["combo"]',
+    () => `R: pick lists the kinds that fit a report's fields: ${JSON.stringify(G.pick(base({ kpis: [AED, AED2] })))}`);
   // never data: the rules read no rows (the module names no query, no DAX evaluation, no file)
   const src = fs.readFileSync(GPATH, 'utf8');
   chk(() => !/EVALUATE|executeQuery|readFile|fetch\(|XMLHttpRequest/.test(src), () => 'R: the gallery reads no data and no file');
@@ -99,7 +101,8 @@ const S = (p) => { const v = p && p.expr && p.expr.Literal ? String(p.expr.Liter
 const titleOf = (v) => S((((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text);
 const altOf = (v) => S((((v.visual.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText);
 const types = (r) => visuals(r).map((v) => v.visual.visualType);
-const BW = base({ date: QUARTER, cats: { bar: CITY, column: C('Channel', { kind: 'channel', rows: 4 }), donut: C('Channel'), split: REGION } });   // the waterfall by quarter; the multiples by channel per region
+// (D2: the combo's two measures in one unit, so it is one chart; two units are two panels)
+const BW = base({ kpis: [AED, AED2], date: QUARTER, cats: { bar: CITY, column: C('Channel', { kind: 'channel', rows: 4 }), donut: C('Channel'), split: REGION } });   // the waterfall by quarter; the multiples by channel per region
 
 // W1: the flag off: the plain kinds, each told with its reason
 {
@@ -119,10 +122,11 @@ let RW = null;
   const combo = r.files && by('lineClusteredColumnComboChart'), wf = r.files && by('waterfallChart'), sm = r.files && visuals(r).find((v) => v.visual.query && v.visual.query.queryState.Rows);
   chk(() => combo && wf && sm && sm.visual.visualType === 'clusteredColumnChart' && r.gallery.length === 0, () => `W2: with gallery: true, the three native visuals: ${r.threw || JSON.stringify(types(r))} ${JSON.stringify(r.gallery)}`);
   const qs = (v) => v.visual.query.queryState, name = (v, role) => qs(v)[role].projections.map((p) => p.nativeQueryRef);
-  chk(() => JSON.stringify(name(combo, 'Category')) === '["Quarter"]' && JSON.stringify(name(combo, 'Y')) === '["Total Sales"]' && JSON.stringify(name(combo, 'Y2')) === '["Margin %"]',
-    () => `W2 combo: the amount as columns (Y), the percent as the line (Y2), by quarter: ${JSON.stringify(qs(combo))}`);
+  chk(() => JSON.stringify(name(combo, 'Category')) === '["Quarter"]' && JSON.stringify(name(combo, 'Y')) === '["Total Sales"]' && JSON.stringify(name(combo, 'Y2')) === '["Total Cost"]',
+    () => `W2 combo: one amount as columns (Y), the other as the line (Y2), by quarter: ${JSON.stringify(qs(combo))}`);
   const va = (v) => (((v.visual.objects || {}).valueAxis || [])[0] || { properties: {} }).properties;
-  chk(() => S(va(combo).secShow) === 'true', () => `W2 combo: different units: the secondary axis shown (valueAxis.secShow): ${JSON.stringify(combo.visual.objects)}`);
+  // (D2, C13, changed on purpose: the secondary axis is never shown; two units are two panels, U below)
+  chk(() => S(va(combo).secShow) === 'false', () => `W2 combo: one shared axis (valueAxis.secShow false): ${JSON.stringify(combo.visual.objects)}`);
   const same = get(() => build(base({ kpis: [AED, AED2], date: QUARTER }), { gallery: true, slots: [SLOTS[0]] })), c2 = same.files && visuals(same).find((v) => v.visual.visualType === 'lineClusteredColumnComboChart');
   chk(() => c2 && S(va(c2).secShow) === 'false', () => `W2 combo: one unit: one shared axis (secShow false): ${same.threw || JSON.stringify(c2 && c2.visual.objects)}`);
   chk(() => JSON.stringify(name(wf, 'Category')) === '["Quarter"]' && JSON.stringify(name(wf, 'Y')) === '["Total Sales"]' && !qs(wf).Breakdown, () => `W2 waterfall: one measure by one category: ${JSON.stringify(qs(wf))}`);
@@ -145,6 +149,14 @@ let RW = null;
   chk(() => r.gallery && r.gallery.length === 3 && /two measures/.test(r.gallery[0].why) && /not known/.test(r.gallery[1].why) && /no second category/.test(r.gallery[2].why) && !types(r).some((t) => /Combo|waterfall/.test(t)),
     () => `W3: gallery slots whose fields don't fit are written plain, each with the rule: ${r.threw || JSON.stringify(r.gallery)}`);
 }
+// W5 (0.3.0 D2, C13): a combo slot in two units is two panels: two line charts in its box, one measure each, no combo
+{
+  const r = get(() => build(base({ date: QUARTER }), { gallery: true, slots: [SLOTS[0]] })), ls = r.files ? visuals(r).filter((v) => v.visual.visualType === 'lineChart') : [];
+  const pos = ls.map((v) => [v.position.x, v.position.width]).sort((a, b) => a[0] - b[0]);
+  chk(() => ls.length === 2 && !types(r).includes('lineClusteredColumnComboChart') && JSON.stringify(ls.map((v) => v.visual.query.queryState.Y.projections[0].nativeQueryRef).sort()) === '["Margin %","Total Sales"]'
+    && pos[0][0] === 20 && pos[1][0] + pos[1][1] <= 630 && pos[0][0] + pos[0][1] < pos[1][0] && r.gallery[0].to === 'two panels' && /different units/.test(r.gallery[0].why),
+    () => `W5: two panels in the combo's box, told: ${r.threw || JSON.stringify(pos)} ${JSON.stringify(r.gallery)}`);
+}
 // W4: build's checks: the gallery kinds are known slot kinds; any other is still refused
 {
   const bad = get(() => build(BW, { slots: [{ kind: 'sankey', x: 0, y: 0, w: 100, h: 100 }] }));
@@ -154,11 +166,11 @@ let RW = null;
 // ---------- T: titles and alt text ----------
 if (RW && RW.files) {
   const ts = visuals(RW).filter((v) => /Combo|waterfall/.test(v.visual.visualType) || (v.visual.query && v.visual.query.queryState.Rows)).map(titleOf);
-  chk(() => JSON.stringify(ts) === JSON.stringify(['Total Sales and Margin % by Quarter', 'Total Sales by Quarter', 'Total Sales by Channel, per Region']),
+  chk(() => JSON.stringify(ts) === JSON.stringify(['Total Sales and Total Cost by Quarter', 'Total Sales by Quarter', 'Total Sales by Channel, per Region']),
     () => `T: the titles say what each shows: ${JSON.stringify(ts)}`);
   chk(() => visuals(RW).filter((v) => /Combo|waterfall/.test(v.visual.visualType)).every((v) => altOf(v) === titleOf(v)), () => 'T: the alt text is the full title, as the writer\'s other charts');
 }
-const ARB = { kpis: [M('إجمالي المبيعات', { cardFormat: '"AED" #,0' }), M('نسبة الهامش', { pct: true })], measure: M('إجمالي المبيعات', { cardFormat: '"AED" #,0' }),
+const ARB = { kpis: [M('إجمالي المبيعات', { cardFormat: '"AED" #,0' }), M('إجمالي التكلفة', { cardFormat: '"AED" #,0' })], measure: M('إجمالي المبيعات', { cardFormat: '"AED" #,0' }),
   date: C('الربع', { kind: 'quarter' }), cats: { bar: C('المدينة'), column: C('القناة', { kind: 'channel', rows: 4 }), donut: C('القناة'), split: C('المنطقة', { kind: 'region', rows: 5 }) }, y: {},
   table: [C('المدينة'), M('إجمالي المبيعات')], slicers: [C('المدينة'), null, null], tip: { card: M('إجمالي المبيعات'), cat: C('المدينة'), y: M('إجمالي المبيعات') } };
 let RA = null;
@@ -166,9 +178,9 @@ let RA = null;
   const r = RA = get(() => build(ARB, { lang: 'ar', gallery: true, name: 'GA' }));
   // (in the order of the slots: a right-to-left page writes its visuals in its own reading order)
   const ts = r.files ? [(v) => v.visual.visualType === 'lineClusteredColumnComboChart', (v) => v.visual.visualType === 'waterfallChart', (v) => !!(v.visual.query && v.visual.query.queryState.Rows)].map((f) => titleOf(visuals(r).find(f) || { visual: {} })) : [];
-  chk(() => JSON.stringify(ts) === JSON.stringify(['إجمالي المبيعات ونسبة الهامش حسب الربع', 'إجمالي المبيعات حسب الربع', 'إجمالي المبيعات حسب القناة، لكل المنطقة']),
+  chk(() => JSON.stringify(ts) === JSON.stringify(['إجمالي المبيعات وإجمالي التكلفة حسب الربع', 'إجمالي المبيعات حسب الربع', 'إجمالي المبيعات حسب القناة، لكل المنطقة']),
     () => `T: Arabic titles («و», «، لكل»): ${r.threw || JSON.stringify(ts)}`);
-  const mixed = G ? G.title('combo', Object.assign({}, ARB, { kpis: [ARB.measure, PCT] }), 'حسب') : null;
+  const mixed = G ? G.title('combo', Object.assign({}, ARB, { kpis: [ARB.measure, AED2] }), 'حسب') : null;
   chk(() => mixed === 'إجمالي المبيعات حسب الربع', () => `T: never half Arabic, half English: an English line measure is left out of an Arabic title: ${mixed}`);
   // right to left: mirrored as the other charts (value axis right, categories reversed); the waterfall by its sort
   const vs = r.files ? visuals(r) : [], wf = vs.find((v) => v.visual.visualType === 'waterfallChart'), cb = vs.find((v) => v.visual.visualType === 'lineClusteredColumnComboChart');

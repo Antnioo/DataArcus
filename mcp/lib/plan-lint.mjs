@@ -10,7 +10,7 @@
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js'), Agg = require('../../assets/js/aggregation.js');
+const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js'), Agg = require('../../assets/js/aggregation.js'), Gallery = require('../../assets/js/visual-gallery.js');
 import { modelOf } from './model.mjs';
 import { E, absorb } from './design.mjs';   // (A2-3: the slot rules are the design engine's)
 import { inventory, memorySource } from './read-report.mjs';
@@ -50,13 +50,21 @@ function build(a, o) {
   const filled = (bind.kpis || []).filter(Boolean).length;
   if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel }); }
   // a text slot without a text is left out by create_report and its room given to the visual beside it
+  // (0.3.0 D2) the gallery kinds the plan asks for (a.gallery), on the first page, as create_report puts them; small
+  // multiples take the bar chart's category for their panels, as there
+  if (a.gallery) bind = Gallery.withUnits(bind, m.tables);
+  if (a.gallery && !(bind.cats || {}).split && (bind.cats || {}).bar) bind = Object.assign({}, bind, { cats: Object.assign({}, bind.cats, { split: bind.cats.bar }) });
+  const used = new Set();
   const pages = (o.second ? specs : specs.slice(0, 1)).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
+    // (one a page, where the fields suit, as create_report: the pages before this one count, so the lint's first page
+    // and the preview's pages are create_report's)
+    if (a.gallery) { slots = Gallery.assign(slots, a.gallery, { B: bind, avoid: used }); slots.forEach((x) => { if (Gallery.isKind(x.kind)) used.add(x.kind); }); }
     return { name: p.name, page: p.page, slots, png: PNG1, panel: p.panel, grow: true };
   });
   const r = Pbip.build({ name: 'Plan', title: o.title || 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
     theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
-    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
+    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages, gallery: !!a.gallery });
   return { r, pages, design };
 }
 /** The writer's report of a plan, in memory (0.3.0 step 2: the check's tests read it): { files, pages } or { skipped }. */
