@@ -698,6 +698,9 @@
           told = ST.fit(story, (t) => titleFit(lead + t + tail, TITLE, room).mode !== 'shortened'); ttl = told.text;
         }
         if (ttl) ttl = topLead + ttl + tail;
+        // (0.3, J4, the owner's decision of 19 Oct: the alt text is the FULL story title, never the fitted one; a screen
+        // reader has no box to fit)
+        const altFull = story && ttl && s.kind !== 'kpi' ? topLead + story[0].text + tail : null;
         if (s.kind === 'kpi') { if (B && query) ttl = kpiLabel(B.kpis[kpiIndex]); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
         if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(shown(ttl)), alignment: str(align), bold: bool(true) });
@@ -705,7 +708,7 @@
         // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
         // counted by the caller.
         if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
-        visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
+        visual = { visualType: type, visualContainerObjects: frame(ttl, altFull || ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
         // the second of a page fades from a chosen second colour (polish round P1, B-71: colour 2 was never used; P1+: secondColour);
@@ -747,7 +750,7 @@
           if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
         if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
           const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf } : null });
+          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail } : null });
           if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
         }
         // the title already names the KPI, so the card's own label under the number is not repeated
@@ -1223,11 +1226,12 @@
       // tells them apart, as their measure and column are the same)
       const order = (a, b) => a.position.y - b.position.y || (rtl ? b.position.x - a.position.x : a.position.x - b.position.x);
       // the new title fitted like any title, the alt text the same name, the titles report following
-      const rename = (v, k, name) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+      const rename = (v, k, name, altName) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
         if (f) f.final = name;
         tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
-        if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
+        if (g && g.properties && g.properties.altText) g.properties.altText = str(altName || name);
+        if (f && f.story) f.story.alt = String(altName || name).replace(TOPPED, '');
         // (the reviewer's third review, item 4: the entry this visual's title gave, not the first with the same title,
         // which may be another chart's)
         if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].indexOf(f.entry); if (i >= 0) titles[m].splice(i, 1); });
@@ -1238,13 +1242,18 @@
         // (0.3, J4, B-130: "Total by Note (2)", "(2) (2)") the second and later say what they show in another true
         // sentence of their own measure and column, "Note ranked by Total", "Total per Note" (story-titles.js alternate)
         const alt = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.m, st.c, n, st.ranked, W.by || 'by') : null; };
-        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, prefix(v) + (alt(nth['']) || k + ' (' + nth[''] + ')')); return; }
+        // (19 Oct: the alt text says the same sentence with the full names)
+        const altOf = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.full.m, st.full.c, n, st.ranked, W.by || 'by') : null; };
+        const fullCore = () => { const st = (fitted.get(v.visual) || {}).story; return st ? st.alt : k; };
+        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) { const a = alt(nth['']); rename(v, k, prefix(v) + (a || k + ' (' + nth[''] + ')'), a ? prefix(v) + (altOf(nth['']) || a) : null); } return; }
         // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
         // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
         const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
         if (!c || adds(k)) return;
         nth[c] = (nth[c] || 0) + 1;
-        rename(v, k, prefix(v) + (nth[c] > 1 && alt(nth[c]) ? alt(nth[c]) + ' (' + c + ')' : k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')')); }); });
+        const two = nth[c] > 1 && alt(nth[c]);
+        rename(v, k, prefix(v) + (two ? alt(nth[c]) + ' (' + c + ')' : k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'),
+          prefix(v) + (two ? (altOf(nth[c]) || alt(nth[c])) + ' (' + c + ')' : fullCore() + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')')); }); });
       // (design round 8, the re-score's N2 and N3: "Top 8:" stood over charts of 2, 4 or 6 bars, and a chart that left
       // categories out did not say how many there were) a chart cut to its Top N takes its title from a report-level
       // measure: "Top N of M: <title>" when more than N of its categories have a value under the page's filters (M counted
@@ -1261,7 +1270,7 @@
         let m; try { m = set.title('Title: ' + core, word, rest, plain.shown); } catch (e) { return; }   // (a control character: the text title stays)
         const tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         tp.text = { expr: extField(f.top.cat.t, m) };
-        if (g && g.properties && g.properties.altText) g.properties.altText = str(core);   // (the alt text promises no cut either)
+        if (g && g.properties && g.properties.altText) g.properties.altText = str(f.story ? f.story.alt : core);   // (the alt text promises no cut either; 19 Oct: the full story title)
         // (the titles report tells the plain title's fit, the one shown when nothing is cut)
         ['wrapped', 'shortened'].forEach((md) => { const i = titles[md].indexOf(f.entry); if (i >= 0) titles[md].splice(i, 1); });
         f.entry = plain.mode !== 'one' ? { page: f.page, title: core, shown: plain.shown } : null; if (f.entry) titles[plain.mode].push(f.entry);
@@ -1321,7 +1330,8 @@
     // the Top-N lead where its category is cut to its top 6 (the same rules as the page's charts, story-titles.js)
     const tipStory = (m, c) => { const lead = c && c.c != null && c.agg == null && !isTime(c) ? (lang === 'ar' ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
       return ST.fit(ST.variants(m, c, W.by || 'by', shown), (x) => titleFit(lead + x, TIP_TITLE, 296 - 16).mode !== 'shortened').text; };
-    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(shown(tipTitle(t))), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
+    const tipFull = (m, c) => ST.variants(m, c, W.by || 'by', shown)[0].text;   // (19 Oct: the alt text, whole)
+    const tipFrame = (t, alt) => { const f = frame(t, alt || t); f.title = obj({ show: bool(true), text: str(shown(tipTitle(t))), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
     // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
@@ -1394,12 +1404,12 @@
         tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card, topW),
           tipTop({ x: 12, y: 92, w: topW, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
             objects: tipLook(card, topW),
-            visualContainerObjects: tipFrame(tipStory(t.m, t.cat)) }) }, t.cat, t.m, tipStory(t.m, t.cat))], 92 + tipSix + 8, TOP_W);
+            visualContainerObjects: tipFrame(tipStory(t.m, t.cat), tipFull(t.m, t.cat)) }) }, t.cat, t.m, tipStory(t.m, t.cat))], 92 + tipSix + 8, TOP_W);
         return;
       }
       const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),
         objects: tipLook(card),
-        visualContainerObjects: tipFrame(tipStory(t.m, tip.date)) }) };
+        visualContainerObjects: tipFrame(tipStory(t.m, tip.date), tipFull(t.m, tip.date)) }) };
       // (rc1, DETAIL-2 T1: the month tooltip showed "(Blank)" first and 13 rows: it gets the chart's "is not blank" filter)
       tv.filters = [notBlankOf(tip.date)];
       if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(t.m).field, 6); if (lf) tv.filters.push(lf); }
