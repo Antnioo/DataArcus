@@ -290,7 +290,11 @@
         if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
       } }
   ];
-  const GROUPS = ['sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl'];
+  // (0.3, J7) Power BI's accessibility basics, the family "a11y": report-a11y.js, sourced to Microsoft's guidance (not
+  // measured: each finding's source names the page)
+  const A11y = typeof module !== 'undefined' && module.exports ? require('./report-a11y.js') : root.DAA11y;
+  if (A11y) RULES.push(...A11y.RULES);
+  const GROUPS = ['sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl'].concat(A11y ? ['a11y'] : []);
 
   // R: { pages: [{ id, visuals: [x] }], visuals: [x], textSize, labelSize, slicerSize, font, theme: { file, ref, json },
   //      hasPlatform }, x: { name, type, file, mobileFile, json (visual.json), mobile (mobile.json or null), x, y, w, h }
@@ -314,10 +318,10 @@
       const mine = [];
       try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : e.page || null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
-          source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
+          source: source.guide ? `Microsoft's guidance: ${source.title}, "${source.section}": ${source.url}` : `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
       }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
     return { findings, ran, failed };
