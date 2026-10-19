@@ -82,6 +82,12 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   dropdown slicer's rounded box, so the validator checks it instead of DataArcus marking it "known"; check_report's
   bundled schemas follow Microsoft's September (SU09) release (visualContainer 2.13.0, the version Desktop saves); the
   list slicer's new dropdown mode is researched and not written yet (preview, not measured in Desktop).
+- X1 (the owner, 19 Oct: "add the toggle, I think this one will be a niche"): `create_arabic_twin` with `into: "same"`
+  writes a copy "<name> (EN-AR)" holding the English pages as they are and their Arabic pages mirrored as the twin
+  does (D1's right-to-left waterfall, D3's phone layout, empty state and alt texts), every page with a small language
+  button («العربية» / "English") to its counterpart, desktop and phone; the Arabic pages hidden from the tabs (or the
+  English, `tabsShown: "ar"`); each slicer pair synced (`syncGroup`); the original untouched. check_report: a page
+  button whose page is not in the report is an error (PAGE_LINK_MISSING). The separate twin is unchanged (the default).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
