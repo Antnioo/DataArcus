@@ -105,6 +105,80 @@ The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Ex
   the twin: a TABLE_HEADER_CUT warning for Total Score, a note for Total Value; crop each Arabic header at full size and
   read its drawn width at 10pt and 15pt (the cause), the header font in the format pane, and whether a header wraps.
 - Next: the reviewer reviews the PR, the laptop re-checks in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J13 redesign step 2" just below (branch `feat/0.3-redesign-step2`, ONE DRAFT PR to main, supersedes #62; merges only after 0.2.9 testers report), then "J9 step 1" (its history), then "AUD-040" (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J13 redesign step 2: every page, as a copy with allowlisted patches (19 Oct, cloud builder; branch `feat/0.3-redesign-step2` = #62's `feat/0.3-redesign` rebased on main `d76703c`; ONE DRAFT PR, supersedes #62)
+The owner's decisions (19 Oct): step 2 = all pages + page filters, built as a LOSSLESS COPY + ALLOWLISTED PATCHES ("copy-and-patch",
+approved), never a rebuild from the inventory. Why: the laptop's Desktop look at #62 (engine `business/beta/rc24/PROOF-rc24.md`, block 2):
+(a) the branch predated rc.24 ("Column chart by" for a bar): the rebase fixes it; (b) the approval page showed the plan's fields, not what
+was dropped; (c) a 2-page report got no plan id; (d) the rebuilt table drew a needless vertical scrollbar (771 x 311 at 1920, 6 rows +
+total). A rebuild of the lab's 2-page "Dense Ops" lost 2 bookmarks, 2 page buttons + 1 bookmark button per page, the header text box and
+underline shape, page 2, the page name, 2 tooltip pages and 8 visual filters. Spec: the outside design, Codex card C09.
+- **Where:** `lib/redesign.mjs` rewritten (step 1's rebuild code removed; `nameFor` and the model check kept); `server.mjs`:
+  `redesignPlan` (plan_layout with redesignFrom returns before any design), create_report's early dispatch, `redesignPin`, inputs
+  `titles` and `restyle`; `lib/plans.mjs`: plan kind `redesign` (allows create_report); `lib/approval-window.mjs`: the redesign page
+  (Changes, Not changed with why, Kept as it is). Shared files touched: server.mjs, plans.mjs, approval-window.mjs, README.md, PRIVACY.md.
+- **How:** (1) strictFiles + every JSON file under definition/, definition.pbir and .platform must name a known schema family at a
+  known major version (report 3, page 2, visualContainer 2, ...): else no plan id. (2) every file read as bytes into memory.
+  (3) ALLOW: a visual.json's /position/x|y|width|height and its static title's Literal; .platform's displayName and logicalId; the
+  custom theme's dataColors/foreground/background/tableAccent/good/neutral/bad. (4) patches by page id + visual name. The grid: each
+  page's top-level native visuals in rows (60% shared height), 16 margin and gap and 8 a step on the 720-tall grid (x h/720), heights
+  equal in a row; a row keeps its place when a table would shrink (scrollbar, (d)), it would leave the page, or it would newly overlap
+  anything. Never moved: groups and their visuals, custom visuals, buttons, navigators, text boxes, shapes, images, hidden visuals,
+  tooltip pages. (6) verifyCopy: same file set, every changed file only at its plan's pointers with the plan's values, no new dangling
+  reference (page order, active page, bookmark pages/visuals/targets, bookmark list, button pages and bookmarks, tooltip links, groups,
+  theme), opaque payloads equal (bookmarks whole; filters, bindings, objects, interactions, links, tooltip, drillthrough binding). (7)
+  pin `{ redesignFrom, titles, restyle, files.source: reportPrint }`; the write: gate, recompute the patches (must equal the plan's),
+  read the bytes, recheck the print, build, verify, writeTree (exclusive; .pbip last). Every page, any count, gets a plan id.
+- **Tests:** `test-0.3-redesign.mjs` replaced (C1-C10, 49 checks; step 1's 30 rebuild checks retired by the owner's decision, its name,
+  other-model and gate checks carried over). Red first on step 1's code: 11 of 11 C1 checks failed, C2-C10 could not run (no plan id).
+- **For the laptop (Desktop, EN + AR):** open "Twin Sales redesigned" or the lab's "Dense Ops redesigned": every page there with its
+  name; page buttons and the bookmark button go where they went; both bookmarks (Reset filters per page) apply; cross-highlight and the
+  edited interactions as in the original; drillthrough from a chart; the tooltip pages on hover; the Top-N "Keep:" visual filters, the
+  month filter and the blank exclusions in the filter pane; the moved visuals on equal margins, no new scrollbar on tables; the original
+  opens unchanged. Then an Arabic report (and its twin) the same way.
+- **Next:** the reviewer reviews the draft PR; the laptop's Desktop check above; merges only after 0.2.9 testers report.
+
+## J9 step 1: a redesign that keeps the original (19 Oct, cloud builder; branch `feat/0.3-redesign` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D): `plan_layout` gains a redesign mode. Given an existing report, plan a cleaner page with the
+design engine (same fields, same pages, better layout: grid, header, KPI row, the theme's fonts and colours) and write it as
+a NEW report "<name> redesigned" next to the original, which is never touched (only after approval). Step 1 = the plan and
+the field mapping (every visual of the original accounted for: kept, merged, or not carried over with why) + tests; the
+write reuses create_report.
+- **Where:** `mcp/lib/redesign.mjs` (new: reads the original through read-report.mjs's strictFiles/inventory, maps it, picks
+  the layout); `server.mjs` only wires it: the `redesignFrom` input (create_report's inputs, so plan_layout takes it too),
+  pinned (`REPORT_PINNED`) with the original's contents (`filesPin.source`: reportPrint), plan_layout's defaults and its
+  `redesign` block, create_report's refusals (pages; a name already taken). Shared files touched: server.mjs, README.md,
+  PRIVACY.md, package.json (the test script). Not touched: pbip-page.js, design.mjs, model-health-engine.js, read-report.mjs.
+- **Rules (decisions made by the builder, for the owner):** a slot per field kind, as the writer binds them (measured:
+  analysis's column chart takes `category2`; ops's donut and exceptions bar take `category`). Cards (card, new card,
+  multi-row card, KPI, gauge) -> KPI cards, at most 6; the charts' measure = the one the original's charts show most; a
+  chart's other measure becomes a KPI card while the row has room; line/area/combo -> the trend; bar/funnel/pie/donut/
+  treemap -> `category`; column/ribbon/map -> `category2`; table/matrix -> one table of at most 8 fields (a second table's
+  fields join it); slicers -> at most 3. A second visual of a field already shown -> merged. Not carried over, with why:
+  text boxes, shapes, images, buttons, navigators, custom visuals, hidden visuals, other charts, report-level measures,
+  hierarchy levels; at the report level the tooltip/drillthrough/hidden pages, bookmarks, page/report/visual filters (their
+  values are never read into a plan). Layout: the one that keeps the most and adds the fewest (exec, analysis, focus; a
+  bar chart with no trend or column chart goes to analysis's main chart); a slot the original has no field for gets the
+  picker's field, listed in `added`. Display names the original shows (not instruction-like, <= 80) are the plan's
+  proposal. Name: "<name> redesigned" within the writer's 30 characters (the original's name cut at a whole word, so the
+  suffix stays); `secondPage` false; colours from the original's theme (`themeFrom`).
+- **Step 1 writes one report page only.** A report with more pages is mapped page by page (each its own layout) and gets
+  no plan id: planProblems says writing every page is step 2.
+- **Combines with:** #58 (B-152: strictFiles reads only the report's own files: redesign.mjs calls strictFiles, so it gets
+  that; B-154: plans pin a model print: the redesign goes through create_report's own gate, `modelRef`, unchanged);
+  #59 (B-153 writes through withPlan: the redesign's write is create_report's ordinary write); #37/#38 (preview and check
+  before write in plan-lint.mjs: plan_layout's designLint runs on the redesign's planned page as on any plan).
+- **Tests:** `test-0.3-redesign.mjs` (R1-R8, 30 checks; 24 red with main's server.mjs). Expected before the run: the
+  one-page fixture (twin Overview + Details' table, bar and custom visual + a second Total Sales card + a page filter): 13
+  visuals = 7 kept, 1 merged, 5 not carried over; fields kpis [Total Sales, Orders], measure Total Sales, timeAxis
+  Calendar[Month Name], category Sales[Product], category2 Sales[Region], table [Product, Amount, Total Sales], slicers
+  [Region]; exec + filters start; nothing added; the original byte for byte the same after the write; two pages: no plan id.
+- **Next (step 2, needs the owner's go):** write every page (create_report from several designs, or one design per page);
+  carry page filters file to file (never through the chat), bookmarks and drillthrough pages; a Desktop check of the
+  written redesign (English and Arabic, smallest and largest page).
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
