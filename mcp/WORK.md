@@ -1,8 +1,40 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J13 redesign step 2" just below (branch `feat/0.3-redesign-step2`, ONE DRAFT PR to main, supersedes #62; merges only after 0.2.9 testers report), then "J9 step 1" (its history), then "AUD-040" (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J13 redesign step 2: every page, as a copy with allowlisted patches (19 Oct, cloud builder; branch `feat/0.3-redesign-step2` = #62's `feat/0.3-redesign` rebased on main `d76703c`; ONE DRAFT PR, supersedes #62)
+The owner's decisions (19 Oct): step 2 = all pages + page filters, built as a LOSSLESS COPY + ALLOWLISTED PATCHES ("copy-and-patch",
+approved), never a rebuild from the inventory. Why: the laptop's Desktop look at #62 (engine `business/beta/rc24/PROOF-rc24.md`, block 2):
+(a) the branch predated rc.24 ("Column chart by" for a bar): the rebase fixes it; (b) the approval page showed the plan's fields, not what
+was dropped; (c) a 2-page report got no plan id; (d) the rebuilt table drew a needless vertical scrollbar (771 x 311 at 1920, 6 rows +
+total). A rebuild of the lab's 2-page "Dense Ops" lost 2 bookmarks, 2 page buttons + 1 bookmark button per page, the header text box and
+underline shape, page 2, the page name, 2 tooltip pages and 8 visual filters. Spec: the outside design, Codex card C09.
+- **Where:** `lib/redesign.mjs` rewritten (step 1's rebuild code removed; `nameFor` and the model check kept); `server.mjs`:
+  `redesignPlan` (plan_layout with redesignFrom returns before any design), create_report's early dispatch, `redesignPin`, inputs
+  `titles` and `restyle`; `lib/plans.mjs`: plan kind `redesign` (allows create_report); `lib/approval-window.mjs`: the redesign page
+  (Changes, Not changed with why, Kept as it is). Shared files touched: server.mjs, plans.mjs, approval-window.mjs, README.md, PRIVACY.md.
+- **How:** (1) strictFiles + every JSON file under definition/, definition.pbir and .platform must name a known schema family at a
+  known major version (report 3, page 2, visualContainer 2, ...): else no plan id. (2) every file read as bytes into memory.
+  (3) ALLOW: a visual.json's /position/x|y|width|height and its static title's Literal; .platform's displayName and logicalId; the
+  custom theme's dataColors/foreground/background/tableAccent/good/neutral/bad. (4) patches by page id + visual name. The grid: each
+  page's top-level native visuals in rows (60% shared height), 16 margin and gap and 8 a step on the 720-tall grid (x h/720), heights
+  equal in a row; a row keeps its place when a table would shrink (scrollbar, (d)), it would leave the page, or it would newly overlap
+  anything. Never moved: groups and their visuals, custom visuals, buttons, navigators, text boxes, shapes, images, hidden visuals,
+  tooltip pages. (6) verifyCopy: same file set, every changed file only at its plan's pointers with the plan's values, no new dangling
+  reference (page order, active page, bookmark pages/visuals/targets, bookmark list, button pages and bookmarks, tooltip links, groups,
+  theme), opaque payloads equal (bookmarks whole; filters, bindings, objects, interactions, links, tooltip, drillthrough binding). (7)
+  pin `{ redesignFrom, titles, restyle, files.source: reportPrint }`; the write: gate, recompute the patches (must equal the plan's),
+  read the bytes, recheck the print, build, verify, writeTree (exclusive; .pbip last). Every page, any count, gets a plan id.
+- **Tests:** `test-0.3-redesign.mjs` replaced (C1-C10, 49 checks; step 1's 30 rebuild checks retired by the owner's decision, its name,
+  other-model and gate checks carried over). Red first on step 1's code: 11 of 11 C1 checks failed, C2-C10 could not run (no plan id).
+- **For the laptop (Desktop, EN + AR):** open "Twin Sales redesigned" or the lab's "Dense Ops redesigned": every page there with its
+  name; page buttons and the bookmark button go where they went; both bookmarks (Reset filters per page) apply; cross-highlight and the
+  edited interactions as in the original; drillthrough from a chart; the tooltip pages on hover; the Top-N "Keep:" visual filters, the
+  month filter and the blank exclusions in the filter pane; the moved visuals on equal margins, no new scrollbar on tables; the original
+  opens unchanged. Then an Arabic report (and its twin) the same way.
+- **Next:** the reviewer reviews the draft PR; the laptop's Desktop check above; merges only after 0.2.9 testers report.
 
 ## J9 step 1: a redesign that keeps the original (19 Oct, cloud builder; branch `feat/0.3-redesign` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
 The owner's go (18 Oct, 0.3 R&D): `plan_layout` gains a redesign mode. Given an existing report, plan a cleaner page with the

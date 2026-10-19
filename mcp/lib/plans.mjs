@@ -21,13 +21,14 @@ export const ALLOWS = {
   theme: ['generate_theme'],                      // generate_theme's own proposal: the theme file
   scripts: ['check_model_health'],                // check_model_health's fix scripts
   calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
-  twin: ['create_arabic_twin']                    // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
+  twin: ['create_arabic_twin'],                   // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
+  redesign: ['create_report']                     // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
 };
 const plans = new Map();
 const now = () => Date.now();
 const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, the report\'s name and title, theme, logo, colours and options, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id: it opens DataArcus\'s approval window in their browser, and only their click on Approve there approves the plan. Then call this tool again with planId.';
 
-/** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: the model's key (its folder's real path)
+/** A new proposed plan. kind: report | theme | scripts | calendar | twin | redesign; model: the model's key (its folder's real path)
  *  or null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
 export function propose(kind, model, writes, data) {
   const id = 'plan-' + crypto.randomBytes(6).toString('hex');

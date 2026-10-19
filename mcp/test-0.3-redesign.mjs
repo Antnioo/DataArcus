@@ -108,7 +108,7 @@ try {
 async function rest(pl, R, pages) {
   const pageBy = (id) => pages.find((p) => p.id === id) || { changes: [], notChanged: [] };
   // ---------- C2: the approval page ----------
-  { const n = links().length; await call(w, 'approve_plan', { planId: pl.j.plan.planId }); const page = await get(await linkAt(n));
+  { const pw = await call(w, 'plan_layout', { path: MODEL, redesignFrom: FROM }), n = links().length; await call(w, 'approve_plan', { planId: pw.j.plan.planId }); const page = await get(await linkAt(n));
     chk(() => /Changes/.test(page) && /lineMonth/.test(page) && /Overview/.test(page) && /moves from/.test(page), () => `C2. the approval page lists each change (page, visual, what moves): ${page.slice(0, 800)}`);
     chk(() => /Not changed/.test(page) && /customGauge/.test(page) && /custom visual/.test(page) && /grpKpi/.test(page) && /Tooltip/.test(page), () => `C2. the approval page lists what is not changed and why: ${page.slice(0, 800)}`);
     chk(() => /Kept as it is/.test(page) && /2 bookmarks/.test(page) && !/Column chart by|Bar chart by|KPI cards/.test(page), () => `C2. the approval page says what is kept as it is, and no field list of a rebuild: ${page.slice(0, 800)}`); }
