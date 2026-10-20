@@ -65,17 +65,9 @@ const approve = async (label, planAns) => {
 const relOf = (dir, rep) => (rep ? path.posix.join(dir, String(rep).split(/[\\/]/).pop()) : null);
 // every report written: read (text, json) and checked (validator 0 errors, 0 "can break")
 const reports = [];
-// (the health fixture's own report has no .platform file, made by hand before the validator was run on it: its twin
-// copies the report as it is; those two are held to "no error but PBIR_PLATFORM_MISSING", said in the notes)
-const verify = async (label, rel, inputHasNoPlatform) => {
+const verify = async (label, rel) => {
   if (!rel) return;
   reports.push(label);
-  if (inputHasNoPlatform) {
-    const c = await call(`check_report ${label}`, 'check_report', { path: rel, maxFindings: 200 }), f = ((c.j || {}).findings || []).filter((x) => x.impact === 'canBreak');
-    chk(() => !c.err && f.length === 1 && f[0].rule === 'PBIR_PLATFORM_MISSING', () => `${label}: the only "can break" is the input's missing .platform: ${short(c)}`);
-    notes.push(`${label}: validator ${c.j && c.j.validator.errors} errors, all from the missing .platform the fixture's own report lacks`);
-    return;
-  }
   await call(`read_report ${label}`, 'read_report', { path: rel });
   await call(`read_report json ${label}`, 'read_report', { path: rel, format: 'json' });
   const c = await call(`check_report ${label}`, 'check_report', { path: rel, maxFindings: 200 }), j = c.j || {};
@@ -100,10 +92,10 @@ try {
     chk(() => !hp.err, () => `check_model_health ${f.id}: ${short(hp)}`);
     if (pid(hp)) { const a = await approve(`check_model_health ${f.id}`, hp); const hw = await call(`check_model_health ${f.id} written`, 'check_model_health', { path: dir, country: 'uae', asOf: '2026-10-20', planId: a.id }); chk(() => !hw.err, () => `check_model_health ${f.id} with its plan: ${short(hw)}`); }
     if (f.report) {
-      await verify(`${f.id} own report`, f.report, f.id === 'health');
+      await verify(`${f.id} own report`, f.report);
       const tp = await call(`create_arabic_twin ${f.id} own report`, 'create_arabic_twin', { path: f.report });
       if (pid(tp)) { const b = snap(dir), a = await approve(`twin ${f.id} own`, tp); const tw = await call(`create_arabic_twin ${f.id} own written`, 'create_arabic_twin', { path: f.report, planId: a.id });
-        chk(() => !tw.err && tw.j.written, () => `twin of ${f.id}'s own report: ${short(tw)}`); if (!tw.err) { listed(`twin ${f.id} own`, a.html, b, dir); await verify(`twin of ${f.id} own`, relOf(dir, tw.j.pbip), f.id === 'health'); } }
+        chk(() => !tw.err && tw.j.written, () => `twin of ${f.id}'s own report: ${short(tw)}`); if (!tw.err) { listed(`twin ${f.id} own`, a.html, b, dir); await verify(`twin of ${f.id} own`, relOf(dir, tw.j.pbip)); } }
       else chk(() => false, () => `create_arabic_twin ${f.id} own report gives no plan: ${short(tp)}`);
     }
     for (const lang of ['en', 'ar']) {
