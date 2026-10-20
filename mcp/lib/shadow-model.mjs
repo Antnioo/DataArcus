@@ -1,14 +1,21 @@
-// R1 prototype (20 Oct 2026, mcp/research/SEE-THE-RESULT.md, option (a)): a SHADOW of a model, to let Power BI Desktop
-// draw a written report without the model's data. Not a tool and not loaded by the server: research code.
+// S2 (20 Oct 2026, mcp/research/SEE-THE-RESULT.md, option (a); R1's prototype, promoted): a SHADOW of a model, to let
+// Power BI Desktop draw a written report without the model's data. Loaded by render_report only (experimental, off
+// unless DATAARCUS_EXPERIMENTAL_RENDER=1; lib/render-tool.mjs).
 // The shadow keeps what a report binds to and what decides how Desktop draws it (tables, columns and their types,
 // formats, sort-by columns, hierarchies, relationships, measures and calculated columns with their DAX), and replaces
 // every row by MADE-UP rows: one Power Query partition a table, a typed #table (the owner's measured rule, 6-7 Oct:
-// an untyped row set loads every column as text and every SUM fails). The model's own partitions (its sources, its
+// an untyped row set loads every column as text and every SUM fails), or a DATATABLE (form 'dax': opens with its data,
+// measured in round 2). The model's own partitions (its sources, its
 // DATATABLE and "Enter data" rows), roles, translations, shared expressions, descriptions and annotations are left out.
 // The rows are deterministic (seeded by the model's names): the same model gives the same copy, so two renders of the
 // same plan are the same picture. Keys match (one pool a connected key group), a date table gets a year of days and
 // its year, month and day columns follow the date, every sort-by column gives one sort value per value.
+// The DAX keeps the model's constants (a target, a name in a SWITCH): daxLiterals lists the objects that hold one, by
+// name and count only, and literals 'stub' replaces them by made-up ones, only when the person chose it (S2-2).
 // The copy is written to a temporary folder on the user's machine and opened there; nothing of it goes to the AI app.
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const P = require('../../assets/js/page-preview.js');
 // ---- sizes (chosen, not measured: small enough for Desktop to load in a second, big enough for a chart's shape) ----
 export const ROWS = { dim: 8, fact: 120, date: 365, alone: 120, max: 400 };
 const YEAR = 2025, DAY = 86400000, BASE = Date.UTC(YEAR, 0, 1), TODAY = Date.UTC(YEAR, 11, 31);
@@ -132,6 +139,25 @@ export function shadowModel(tmsl, opts) {
   const o = opts || {}, R = Object.assign({}, ROWS, o.rows || {}), src = modelOf(tmsl), notes = [], guessed = [], dax = o.form === 'dax';
   const tables = (src.tables || []).filter((t) => t && t.name != null);
   const kept = new Set(tables.filter((t) => isFieldParameter(t) || isCalcGroup(t)).map((t) => t.name));
+  // (S2-2) the model's constants in the DAX written: kept, or replaced by made-up ones when the person chose 'stub'
+  const stubbed = { count: 0, objects: new Set() };
+  const dx = (tn, n, expr, part) => {
+    if (o.literals !== 'stub') return expr;
+    const r = stubDax(textOf(expr), tn + '\0' + n + '\0' + (part || ''));
+    if (r.count) { stubbed.count += r.count; stubbed.objects.add(tn + '\0' + n); }
+    return r.text;
+  };
+  // (S2-2) amounts sized by the unit the format string shows (#,0,,"M": millions), the column's own, else the largest of
+  // the measures that sum it, else the magnitude the person gave; a scale of 1,000 or more makes the row values that
+  // scale over 1,000, so a total of 120 rows shows in that unit
+  const unitBy = new Map();
+  tables.forEach((t) => (t.measures || []).forEach((m) => { const sc = formatScale(m.formatString); if (sc > 1) refsOf(textOf(m.expression)).forEach((k) => unitBy.set(k, Math.max(unitBy.get(k) || 1, sc))); }));
+  const sized = [];
+  const factorOf = (tn, c) => {
+    const own = formatScale(c.formatString), sc = own > 1 ? own : unitBy.get(tn + '\0' + c.name) || SCALE[o.magnitude] || 1;
+    if (sc >= 1000) sized.push(`${tn}[${c.name}]`);
+    return sc >= 1000 ? sc / 1000 : 1;
+  };
   const weekendFriSat = /^ar\b/i.test(String(src.culture || '')) || tables.some((t) => AR.test(t.name));
   // the columns that hold made-up rows: every column but a calculated one (its DAX is kept), and a calculated column a
   // relationship or a sort-by needs (the keys and sort values must be ours to match)
@@ -216,7 +242,7 @@ export function shadowModel(tmsl, opts) {
           return Array.from({ length: N }, () => 1 + skew(r, 60));
         case 'double': case 'decimal':
           if (isRate(x.c)) return Array.from({ length: N }, () => Math.round(r() * 1000) / 1000);
-          return Array.from({ length: N }, () => Math.round(20 * Math.pow(250, r()) * 100) / 100);
+          { const f = factorOf(tn, x.c); return Array.from({ length: N }, () => Math.round(20 * Math.pow(250, r()) * f * 100) / 100); }
         default: {
           if (isCode(nm)) return Array.from({ length: N }, (z, i) => `C-${String(1001 + i)}`);
           // a dimension's name column: one word a row; anything else: a few categories, some bigger than others
@@ -257,20 +283,20 @@ export function shadowModel(tmsl, opts) {
     if (isCalcGroup(t)) {
       lines.push('', T1 + 'calculationGroup');
       if (t.calculationGroup.precedence != null) lines.push(T2 + 'precedence: ' + t.calculationGroup.precedence);
-      (t.calculationGroup.calculationItems || []).forEach((it) => { lines.push(''); lines.push(...fenced(T2 + 'calculationItem ' + q(it.name), it.expression, 2)); if (it.ordinal != null) lines.push(T3 + 'ordinal: ' + it.ordinal); if (it.formatStringDefinition) lines.push(...fenced(T3 + 'formatStringDefinition', it.formatStringDefinition.expression, 3)); });
+      (t.calculationGroup.calculationItems || []).forEach((it) => { lines.push(''); lines.push(...fenced(T2 + 'calculationItem ' + q(it.name), dx(t.name, it.name, it.expression), 2)); if (it.ordinal != null) lines.push(T3 + 'ordinal: ' + it.ordinal); if (it.formatStringDefinition) lines.push(...fenced(T3 + 'formatStringDefinition', dx(t.name, it.name, it.formatStringDefinition.expression, 'f'), 3)); });
     }
     (t.measures || []).forEach((m) => {
-      lines.push('', ...fenced(T1 + 'measure ' + q(m.name), m.expression, 1));
+      lines.push('', ...fenced(T1 + 'measure ' + q(m.name), dx(t.name, m.name, m.expression), 1));
       if (m.formatString != null) lines.push(T2 + 'formatString: ' + val(m.formatString));
       flag('isHidden', m.isHidden, T2, lines);
       if (m.displayFolder) lines.push(T2 + 'displayFolder: ' + val(m.displayFolder));
-      if (m.formatStringDefinition) lines.push(...fenced(T2 + 'formatStringDefinition', m.formatStringDefinition.expression, 2));
+      if (m.formatStringDefinition) lines.push(...fenced(T2 + 'formatStringDefinition', dx(t.name, m.name, m.formatStringDefinition.expression, 'f'), 2));
     });
     const p = plan.get(t.name);
     (t.columns || []).filter((c) => c && c.type !== 'rowNumber').forEach((c) => {
       const x = p && p.cols.find((y) => y.c === c), type = x ? x.type : TYPES.has(c.dataType) ? c.dataType : null;
       lines.push('');
-      if (x && !x.data) lines.push(...fenced(T1 + 'column ' + q(c.name), c.expression, 1));
+      if (x && !x.data) lines.push(...fenced(T1 + 'column ' + q(c.name), dx(t.name, c.name, c.expression), 1));
       else lines.push(T1 + 'column ' + q(c.name));
       if (type && (!x || x.data || TYPES.has(c.dataType))) lines.push(T2 + 'dataType: ' + (x && x.data ? (M_TYPE[type] ? type : 'string') : type));
       if (c.formatString != null) lines.push(T2 + 'formatString: ' + val(c.formatString));
@@ -338,6 +364,8 @@ export function shadowModel(tmsl, opts) {
     if ((src[k] || []).length) notes.push(`left out: ${(src[k] || []).length} ${why}`);
   });
   if (tables.some((t) => (t.columns || []).some((c) => c.description) || (t.measures || []).some((m) => m.description) || t.description)) notes.push('left out: descriptions');
+  if (stubbed.objects.size) notes.push(`${stubbed.count} constant(s) in ${stubbed.objects.size} measure(s), calculated column(s) or calculation item(s) replaced by made-up ones (literals: 'stub')`);
+  if (sized.length) notes.push(`made-up amounts sized by a format string's unit${o.magnitude ? ' or the magnitude given (' + o.magnitude + ')' : ''}: ${sized.slice(0, 20).join(', ')}${sized.length > 20 ? ` and ${sized.length - 20} more` : ''}`);
   return { files, tables: out, guessed, notes };
 }
 
@@ -358,3 +386,113 @@ export function shadowProject(tmsl, opts) {
   return { files, tables: sh.tables, guessed: sh.guessed, notes: sh.notes };
 }
 
+
+// ---- S2-2: the model's constants in its DAX ----
+// A DAX text read token by token: comments, texts ("..."), table names ('...'), columns ([...]), names, numbers. Only
+// the texts and numbers that stand on their own are constants: digits inside a name ('Year 2024', [Value 99], LOG10) and
+// anything in a comment are not.
+export function daxTokens(src) {
+  const s = String(src == null ? '' : src), out = [];
+  let i = 0;
+  const until = (close) => { while (i < s.length) { if (s[i] === close) { if (s[i + 1] === close) { i += 2; continue; } i++; return; } i++; } };
+  while (i < s.length) {
+    const c = s[i], st = i;
+    if ((c === '/' && s[i + 1] === '/') || (c === '-' && s[i + 1] === '-')) { while (i < s.length && s[i] !== '\n') i++; out.push({ k: 'comment', st, en: i }); continue; }
+    if (c === '/' && s[i + 1] === '*') { const e = s.indexOf('*/', i + 2); i = e < 0 ? s.length : e + 2; out.push({ k: 'comment', st, en: i }); continue; }
+    if (c === '"') { i++; until('"'); out.push({ k: 'text', st, en: i, v: s.slice(st + 1, i - 1).replace(/""/g, '"') }); continue; }
+    if (c === "'") { i++; until("'"); out.push({ k: 'table', st, en: i, v: s.slice(st + 1, i - 1).replace(/''/g, "'") }); continue; }
+    if (c === '[') { i++; until(']'); out.push({ k: 'column', st, en: i, v: s.slice(st + 1, i - 1).replace(/\]\]/g, ']') }); continue; }
+    if (/[A-Za-z_\u0080-￿]/.test(c)) { while (i < s.length && /[A-Za-z0-9_.\u0080-￿]/.test(s[i])) i++; out.push({ k: 'name', st, en: i, v: s.slice(st, i) }); continue; }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(s[i + 1] || ''))) { const m = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/.exec(s.slice(i)); i += m[0].length; out.push({ k: 'number', st, en: i, v: m[0] }); continue; }
+    i++;
+  }
+  return out;
+}
+// a text that is only a format pattern ("#,0.0", "dd MMM yyyy", " - ") shows no value of the model
+const FORMAT_TEXT = /^(?:[0#.,%‰\s;:\-+()/\\$€£¥_*]|AM\/PM|A\/P|y{1,4}|m{1,4}|d{1,4}|h{1,2}|n{1,2}|s{1,2}|q|w{1,2}|E[+-])+$/i;
+const isConstant = (t) => (t.k === 'number' && Number(t.v) !== 0 && Number(t.v) !== 1) || (t.k === 'text' && t.v !== '' && !FORMAT_TEXT.test(t.v));
+// the columns a DAX text names with their table ('Sales'[Amount], Sales[Amount]), as "table\0column"
+export function refsOf(src) {
+  const t = daxTokens(src), out = new Set();
+  t.forEach((x, k) => { const y = t[k + 1]; if ((x.k === 'name' || x.k === 'table') && y && y.k === 'column' && y.st === x.en) out.add(x.v + '\0' + y.v); });
+  return out;
+}
+
+/** The measures, calculated columns and calculation items whose DAX holds a constant (a number other than 0 and 1, a
+ *  text other than "" or a format pattern): [{ table, name, kind: 'measure' | 'column' | 'calculationItem', numbers,
+ *  texts }]. A constant computes on the made-up rows as it is, so it can show in a captured image: the person decides
+ *  (keep, or 'stub'). Names and counts only: a constant's value is never in the list. A field parameter's texts are
+ *  the names it shows (kept). */
+export function daxLiterals(tmsl) {
+  const src = modelOf(tmsl), out = [];
+  const count = (table, name, kind, exprs) => {
+    let numbers = 0, texts = 0;
+    exprs.filter((e) => e != null).forEach((e) => daxTokens(textOf(e)).forEach((t) => { if (isConstant(t)) { if (t.k === 'number') numbers++; else texts++; } }));
+    if (numbers || texts) out.push({ table, name, kind, numbers, texts });
+  };
+  (src.tables || []).filter((t) => t && t.name != null && !isFieldParameter(t)).forEach((t) => {
+    (t.measures || []).forEach((m) => count(t.name, m.name, 'measure', [m.expression, m.formatStringDefinition && m.formatStringDefinition.expression]));
+    (t.columns || []).filter((c) => c && c.type === 'calculated').forEach((c) => count(t.name, c.name, 'column', [c.expression]));
+    ((t.calculationGroup || {}).calculationItems || []).forEach((it) => count(t.name, it.name, 'calculationItem', [it.expression, it.formatStringDefinition && it.formatStringDefinition.expression]));
+  });
+  return out;
+}
+
+// a made-up constant for a model's one, seeded by the object's name: a number keeps its digit count, its decimals and
+// its sign (the minus is not part of the number); a text gets a made-up word of about its length (Arabic for Arabic)
+function stubNumber(v, r) {
+  const m = /^(\d*)(\.?)(\d*)(.*)$/.exec(v);
+  for (let k = 0; k < 20; k++) {
+    const ip = m[1] === '0' || m[1] === '' ? m[1] : m[1].split('').map((d, j) => String(j === 0 ? 1 + Math.floor(r() * 9) : Math.floor(r() * 10))).join('');
+    const out = ip + m[2] + m[3].split('').map(() => String(Math.floor(r() * 10))).join('') + m[4];
+    if (out !== v && Number(out) !== 0 && Number(out) !== 1) return out;
+  }
+  return v === '2' ? '3' : '2';
+}
+function stubText(v, r) {
+  const words = AR.test(v) ? WORDS_AR : WORDS, n = [...v].length;
+  const near = words.filter((w) => w !== v).sort((a, b) => Math.abs(a.length - n) - Math.abs(b.length - n) || (a < b ? -1 : 1)).slice(0, 4);
+  return near[Math.floor(r() * near.length)];
+}
+/** A DAX text with every constant replaced by a made-up one: { text, count }; everything else byte for byte. */
+export function stubDax(src, seed) {
+  const s = String(src == null ? '' : src), r = rng('lit\0' + seed), hits = daxTokens(s).filter(isConstant);
+  let text = '', at = 0;
+  hits.forEach((t) => { text += s.slice(at, t.st) + (t.k === 'number' ? stubNumber(t.v, r) : '"' + stubText(t.v, r).replace(/"/g, '""') + '"'); at = t.en; });
+  return { text: text + s.slice(at), count: hits.length };
+}
+
+// ---- S2-2: magnitude ----
+const SCALE = { thousands: 1e3, millions: 1e6, billions: 1e9 };
+export const MAGNITUDES = Object.keys(SCALE);
+/** The unit a format string shows its number in: each comma right after the last digit placeholder divides by 1,000
+ *  ("#,0,," shows millions: 1e6); 1 for none. Quoted and escaped text is not read. */
+export function formatScale(fmt) {
+  if (fmt == null) return 1;
+  const s = String(fmt).split(';')[0].replace(/"[^"]*"/g, '').replace(/\\./g, ''), m = /[0#](?:\.[0#]*)?(,+)(?![0#])/.exec(s);
+  return m ? Math.pow(1000, Math.min(4, m[1].length)) : 1;
+}
+
+/** What render_report opens (S2-3): the shadow project in the DAX form (a DATATABLE opens with its data: measured in
+ *  round 2) with the written report pointed at it, its first page to capture made the active one; the pages to capture
+ *  ({ n: the page's place in the report's order, id, name, w, h, boxes: [{ i, type, kind, x, y, w, h }] }, tooltip and
+ *  hidden pages left out, no title text); the constants found (daxLiterals). report: [{ path (inside the .Report
+ *  folder), data }]. opts: { name, literals ('keep' | 'stub'), magnitude, pages (numbers) }. */
+export function renderProject(tmsl, report, opts) {
+  const o = opts || {}, name = String(o.name || 'DataArcus render'), files = report || [];
+  const pjFile = files.find((f) => String(f.path) === 'definition/pages/pages.json');
+  let order = [];
+  try { order = ((JSON.parse(Buffer.from(pjFile.data).toString('utf8')) || {}).pageOrder || []).map(String); } catch (e) { order = []; }
+  const shown = P.fromFiles(files.map((f) => ({ path: String(f.path), data: f.data })));
+  const pages = shown.map((p) => ({ n: order.indexOf(p.id) + 1, id: p.id, name: p.name, w: p.w, h: p.h,
+    boxes: p.visuals.map((v, i) => ({ i, type: v.type, kind: P.kindOf(v), x: v.x, y: v.y, w: v.w, h: v.h })).filter((b) => b.kind !== 'panel') }))
+    .filter((p) => !o.pages || o.pages.includes(p.n));
+  if (o.pages && files.length && !pages.length) throw new Error(`No page ${o.pages.join(', ')} to capture: the report's pages that can be captured are ${shown.map((p) => order.indexOf(p.id) + 1).join(', ') || 'none'} (tooltip and hidden pages are not).`);
+  const rep = files.map((f) => {
+    if (f !== pjFile || !pages.length) return f;
+    const j = JSON.parse(Buffer.from(f.data).toString('utf8')); j.activePageName = pages[0].id;
+    return { path: f.path, data: Buffer.from(JSON.stringify(j, null, 2) + '\n', 'utf8') };
+  });
+  const pj = shadowProject(tmsl, { name, report: rep, form: 'dax', literals: o.literals, magnitude: o.magnitude });
+  return { files: pj.files, name: pj.files[0].path.replace(/\.pbip$/, ''), pages, literals: daxLiterals(tmsl), tables: pj.tables, guessed: pj.guessed, notes: pj.notes };
+}

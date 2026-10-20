@@ -189,6 +189,40 @@ approves. Never a silent rewrite.
 - **S2-6 learning**: each laptop render's images scored against the preview with `box-diff.mjs`; a gap becomes a
   measured rule in page-preview.js.
 
+## Microsoft's preview command (S2, 20 Oct: what the driver uses)
+The report authoring CLI that `mcp/package.json` pins (`powerbi-report-author`, read here in its installed `dist/`) has
+`preview [folder] --host desktop|service`: "Render an edited PBIR report with live data, in the browser (service host)
+or in Power BI Desktop". Microsoft's Power BI Report skill uses it to check rendered output. On the Desktop host it goes
+through Microsoft's Desktop bridge (`@microsoft/powerbi-desktop-bridge-cli`, the `powerbi-desktop` CLI the laptop
+already uses, installed with it):
+- **What it does, and S2 uses:** `--screenshot <file> --page <id> --scale 1` attaches to the Desktop instance whose open
+  report is that folder, captures that page (by id or display name; a retry budget for a page still drawing) and
+  answers a JSON envelope (`{ data: { ok, screenshots: [{ page, path, pid }] } }` or `{ error: { code, message,
+  retryable } }`), the capture's Desktop process id included. It is a WARM capture: the window as it is, no reload.
+- **What it does not do (so DataArcus keeps the smallest driver of its own, `lib/desktop-render.ps1`):**
+  - it never **starts** Desktop: the host is attach-only ("anything launched could not be cleaned up"). DataArcus opens
+    its shadow project itself and keeps the pid;
+  - it never **closes** Desktop: on the Desktop host `--close` is refused (`CAPABILITY_UNSUPPORTED`: "it attaches to a
+    window the user owns and must never terminate it"). DataArcus closes the Desktop it started by its pid, in
+    `finally`, after checking the process's command line names its project;
+  - it does not tell when the visuals have **finished drawing**: DataArcus captures until two captures in a row are the
+    same (R1: a capture right after opening caught empty cards);
+  - it does not refuse when the **user's own Desktop** is in front, or see a **dialog**: DataArcus's helper does both.
+- **Never used:** `--host service` (it binds a dataset in the user's Fabric workspace through `--group`/`--dataset`: the
+  data would leave the machine, PRIVACY section 1), `--close`/`--close-all`, `--reload`/`--reload-with-model` (a reload
+  re-reads files into the window; not needed on a freshly opened copy), `--all-pages` (the lab's quirk:
+  `screenshot-all` fails on generated projects with REPORT_DIR_REQUIRED, so one page at a time), `--headless`.
+- **What DataArcus adds:** the shadow model with made-up rows (no real data is ever rendered), the copy in a temporary
+  folder and its deletion, the refusal rules (never the user's own report, model or Desktop window; a capture whose pid
+  is not ours stops the render and nothing of it is returned), the box list, the image answer, the DAX-constant choice
+  and the look-and-propose loop. Every preview call is checked before it runs: `preview <the shadow's .Report folder>
+  --host desktop --screenshot <file> --page <id> --scale 1`, nothing else (tested on a fake preview,
+  `fixtures/fake-preview-cli.mjs`).
+- **To prove on the laptop:** that the bridge attaches to a Desktop DataArcus started on a temporary-folder project
+  (the bridge's own discovery), how long after the window it first answers (the driver asks again while the answer is
+  "retryable"), whether a capture is the page alone or with the Filters pane, and whether 2.159's "not loaded after
+  45 s" comes back through it.
+
 ## For the laptop: try (a) by hand on one fixture
 Preconditions: the laptop free (no work model open in Desktop), branch `research/see-the-result` checked out in
 `C:\DataArcus\DataArcus`, `cd mcp && npm ci`.
