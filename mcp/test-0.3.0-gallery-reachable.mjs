@@ -50,6 +50,8 @@ fs.writeFileSync(path.join(ROOT, 'g/Shop.pbip'), JSON.stringify({ version: '1.0'
 const MP = 'g';
 const SAME_UNIT = { kpis: ['Sales[Total Sales]', 'Sales[Total Cost]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month Name]', category: 'Sales[Region]', category2: 'Sales[Channel]' };
 const MIXED = Object.assign({}, SAME_UNIT, { kpis: ['Sales[Total Sales]', 'Sales[Margin %]'] });
+// (0.3.0 J19, changed on purpose: two amounts in one currency share a combo's axis only with the person's confirmation)
+const CONFIRMED = [{ measures: ['Sales[Total Sales]', 'Sales[Total Cost]'], answer: 'comparable' }];
 const HAND = (kinds, w, h) => [{ name: 'Gallery', width: w || 1280, height: h || 720, slots: kinds.map((k, i) => ({ kind: k, x: 20 + (i % 2) * 630, y: 20 + Math.floor(i / 2) * 350, w: 610, h: 330 })) }];
 const AR_NAMES = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Sales[Total Cost]': 'إجمالي التكلفة', 'Sales[Margin %]': 'نسبة الهامش', 'Calendar[Month Name]': 'الشهر', 'Sales[Region]': 'المنطقة', 'Sales[Channel]': 'القناة', 'Sales[Orders]': 'الطلبات', 'Calendar[Quarter]': 'الربع' };
 
@@ -104,7 +106,7 @@ try {
   // ---------- H: English, hand-placed ----------
   let EN = null;
   {
-    EN = await write({ name: 'Gallery Hand', lang: 'en', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT });
+    EN = await write({ name: 'Gallery Hand', lang: 'en', sharedAxes: CONFIRMED, pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT });
     const vs = EN.dir && fs.existsSync(EN.dir) ? allVisuals(EN.dir) : [], g = galleryOf(EN.pl), H = unesc(EN.html || '');
     const find = (k) => vs.find(KIND_OF[k]);
     const want = { combo: { Category: ['Month Name'], Y: ['Total Sales'], Y2: ['Total Cost'] }, waterfall: { Category: ['Month Name'], Y: ['Total Sales'] }, smallMultiples: { Category: ['Channel'], Y: ['Total Sales'], Rows: ['Region'] } };
@@ -123,7 +125,7 @@ try {
   // ---------- HA: Arabic, hand-placed, right to left ----------
   {
     // (D7: the default became waterfallRtl "native"; this report asks for "mirror", D1's chart, as written)
-    const AR = await write({ name: 'Gallery Arabic', lang: 'ar', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES, waterfallRtl: 'mirror' });
+    const AR = await write({ name: 'Gallery Arabic', lang: 'ar', sharedAxes: CONFIRMED, pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES, waterfallRtl: 'mirror' });
     const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
     chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === 'true' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
       () => `HA combo: mirrored (value axis right, categories inverted): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
@@ -141,7 +143,7 @@ try {
   {
     // (the reviewer's decision of 19 Oct: every designed page, at most one gallery visual a page, only where its fields
     // suit; the tooltip pages keep their plain kinds)
-    D = await write({ name: 'Gallery Design', lang: 'en', layout: 'exec', gallery: true, secondPage: true, planFields: SAME_UNIT });
+    D = await write({ name: 'Gallery Design', lang: 'en', sharedAxes: CONFIRMED, layout: 'exec', gallery: true, secondPage: true, planFields: SAME_UNIT });
     const kinds = (D.pl.j && D.pl.j.slots || []).map((x) => x.kind), G3 = ['combo', 'waterfall', 'smallMultiples'];
     chk(() => kinds.filter((k) => G3.includes(k)).length === 1 && kinds.includes('combo') && !kinds.includes('line'), () => `D: the plan's first page takes one gallery visual, the combo in the trend's place: ${D.err || JSON.stringify(kinds)}`);
     chk(() => /Visual gallery<\/td><td[^>]*>[^<]*(yes|every kind)/i.test(unesc(D.html || '')), () => `D: the approval page shows the gallery the plan pins: ${(unesc(D.html || '').match(/<h2>Look and options[\s\S]*?<\/table>/) || [''])[0].slice(0, 500)}`);
@@ -203,7 +205,7 @@ try {
   {
     const numbered = (t) => /\(\d+\)|\s\d+\)$/.test(String(t));
     for (const lang of ['en', 'ar']) {
-      const T = await write({ name: 'Titles ' + lang, lang, pages: HAND(['line', 'waterfall', 'combo', 'column']), planFields: SAME_UNIT, displayNames: lang === 'ar' ? AR_NAMES : undefined });
+      const T = await write({ name: 'Titles ' + lang, lang, sharedAxes: CONFIRMED, pages: HAND(['line', 'waterfall', 'combo', 'column']), planFields: SAME_UNIT, displayNames: lang === 'ar' ? AR_NAMES : undefined });
       const ts = (T.dir && fs.existsSync(T.dir) ? allVisuals(T.dir) : []).filter((v) => v.visual.query && v.visual.query.queryState.Category).map(titleOf);
       chk(() => ts.length === 4 && new Set(ts).size === 4 && !ts.some(numbered), () => `TT ${lang}: every chart title its own sentence, never "(2)": ${T.err || short(T.r)} ${JSON.stringify(ts)}`);
     }
@@ -217,7 +219,7 @@ try {
     chk(() => tg && t0 && JSON.stringify(tg.dataColors) === JSON.stringify(t0.dataColors) && tg.background === t0.background && lum(tg.background) > 0.45,
       () => `TH: the gallery report has the plan's theme (light by default, as the same plan without gallery): ${JSON.stringify(tg && [tg.background, tg.dataColors])} vs ${JSON.stringify(t0 && [t0.background, t0.dataColors])}`);
     const dark = await w.call('generate_theme', { mode: 'dark', name: 'Dark Shop' });
-    const DK = dark.j && dark.j.design ? await write({ name: 'Gallery Dark', lang: 'en', layout: 'exec', gallery: true, secondPage: false, planFields: SAME_UNIT, design: dark.j.design }) : null;
+    const DK = dark.j && dark.j.design ? await write({ name: 'Gallery Dark', lang: 'en', sharedAxes: CONFIRMED, layout: 'exec', gallery: true, secondPage: false, planFields: SAME_UNIT, design: dark.j.design }) : null;
     const td = themeOf(DK && DK.dir);
     chk(() => td && lum(td.background) < 0.45 && allVisuals(DK.dir).some((v) => KIND_OF.combo(v) || KIND_OF.waterfall(v) || isMultiples(v)), () => `TH: dark only when the design asks for it: ${short(dark)} ${DK ? DK.err || short(DK.r) : ''} ${td && td.background}`);
   }

@@ -156,11 +156,16 @@ them from the same model open in Power BI Desktop:
   waterfall chart and small multiples) is used only when the user asks for one, never proposed or chosen unasked: a
   hand-placed slot of that kind, or `gallery` in `plan_layout` and `create_report` (`true`, or a list of kinds) on a
   design. Each is written only where its fields fit: a waterfall is one measure that adds up over an ordered category
-  of few members (months, quarters, stages); a combo is two measures over one time axis in ONE unit (two amounts in
-  the same currency), and two measures in different units (an amount and a percent) are two panels, a line chart each,
+  of few members (months, quarters, stages); a combo is two measures over one time axis in ONE unit, scale and ISO
+  currency that the user confirmed compare (`sharedAxes`), and any other pair (an amount and a percent, SAR and AED,
+  minutes and hours, or the same unit not yet confirmed) is two panels, a line chart each with its unit on its axis,
   never a second axis; small multiples are one measure by a category, a panel per member of a second category with few
   members. Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
   fit), and say the preview draws them as placeholders.
+- **Shared axes** (`sharedAxes`): two measures share one chart axis only in the same unit, scale and ISO currency AND
+  when the user says they compare; never a secondary axis, never a currency converted. Show the plan's `sharedAxes`:
+  each split with its reason (English and Arabic), and ask the user each question in `ask` (for two percentages it
+  names their denominators). Pass back only the user's own answer (`comparable` or `separate`), then plan again.
 - **Line charts are smooth by default** (`smoothLines`, pinned by the plan): monotone curves that never swing past the
   data, with a dot on each point so every value stays findable; the line of a combo too. Pass `smoothLines: false`
   (straight, no dots) for a jagged series where every swing matters (daily stock, a sensor), and say it in the plan.

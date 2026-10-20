@@ -11,6 +11,10 @@
  *    is a drill hierarchy: its first level is the active one unless one already is;
  *  - the custom visual's own formatting (visual.objects) is dropped and named in `lost`, as are projections no native
  *    role takes; a sort is kept only when its field is still in the query.
+ * (0.3.0 J19, B-172) mapping.panels: [{ native, roles, unit }]: the values may not share one axis (axis-units.js), so the
+ * visual becomes one native chart per group in its own box, side by side (one above the other in a box taller than
+ * wide), the first keeping its name, the others "<name>_2", "_3" (more: [{ name, json }]); each value axis titled with
+ * its unit. A combo is never written with a second axis: mapping.secShowOff writes valueAxis.secShow false.
  * dropUnusedCustomVisuals(report.json, used types): the report stops declaring custom visuals no visual uses any more,
  * so Power BI does not ask to sign in for them. Browser and Node (module.exports / window.DAReplace). */
 (function (root) {
@@ -55,6 +59,9 @@
   function replaceVisual(json, mapping) {
     if (!json || typeof json !== 'object' || json.visualGroup || !json.visual) throw new Error('only a visual is replaced (not a group, not a file without a visual)');
     if (!mapping || typeof mapping.native !== 'string' || !mapping.native) throw new Error('the mapping has no native visual type');
+    // (0.3.0 J19) a mapping with panels is written as its panels (the first here, the others in more): never one visual
+    // with the roles of a chart its values may not share
+    if (Array.isArray(mapping.panels) && mapping.panels.length) return replacePanels(json, mapping, []);
     const v = json.visual, st = ((v.query || {}).queryState) || {};
     const byRef = {};
     Object.values(st).forEach((r) => list(r && r.projections).forEach((p) => { if (p && p.queryRef != null && !(p.queryRef in byRef)) byRef[p.queryRef] = p; }));
@@ -107,6 +114,8 @@
       qs.Category.projections.forEach((p, i) => { if (i <= mapping.expand) p.active = true; else delete p.active; });
       visual.expansionStates = [{ roles: ['Category'], levels: qs.Category.projections.slice(0, mapping.expand + 1).map((p) => ({ queryRefs: [p.queryRef], isCollapsed: true, isPinned: true })), root: { isToggled: true } }];
     }
+    // (J19) a combo the person confirmed keeps one shared axis: its secondary axis off
+    if (mapping.native === 'lineClusteredColumnComboChart') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.secShow = lit('false'); }
     const out = clone(json); out.visual = visual;
     const objs = Object.keys(v.objects || {}), named = objs.map(plainName).filter(Boolean);
     const lost = [];
@@ -114,6 +123,31 @@
     if (dropped.length) lost.push(`${dropped.length} field(s) no native role takes`);
     if (sort && !keepSort) lost.push('its sort (its field is no longer in the visual)');
     return { json: out, dropped, lost };
+  }
+  // (0.3.0 J19) the panels of a visual whose values may not share one axis: { json, more: [{ name, json }], dropped, lost }.
+  // taken: names already used on the page (a new panel never takes one)
+  const GAP = 8;
+  const quote = (t) => "'" + String(t).replace(/'/g, "''") + "'";
+  function replacePanels(json, mapping, taken) {
+    const P = list(mapping.panels), n = P.length, pos = json.position || {}, across = (pos.width || 0) >= (pos.height || 0);
+    const w = across ? ((pos.width || 0) - GAP * (n - 1)) / n : pos.width || 0, h = across ? pos.height || 0 : ((pos.height || 0) - GAP * (n - 1)) / n;
+    const used = new Set(list(taken).map(String)), base = String(json.name || 'visual').slice(0, 44);
+    const nameAt = (i) => { if (!i) return json.name; let k = i + 1, nm = base + '_' + k; while (used.has(nm)) nm = base + '_' + (++k); used.add(nm); return nm; };
+    const all = { dropped: new Set(), lost: [] }, outs = P.map((p, i) => {
+      const r = replaceVisual(json, Object.assign({}, mapping, { native: p.native, roles: p.roles, panels: undefined }));
+      r.dropped.forEach((d) => all.dropped.add(d)); r.lost.forEach((x) => { if (!all.lost.includes(x)) all.lost.push(x); });
+      const j = r.json; j.name = nameAt(i);
+      j.position = Object.assign({}, pos, { x: (pos.x || 0) + (across ? i * (w + GAP) : 0), y: (pos.y || 0) + (across ? 0 : i * (h + GAP)), width: Math.floor(w), height: Math.floor(h) },
+        pos.z != null ? { z: pos.z + i } : {}, pos.tabOrder != null ? { tabOrder: pos.tabOrder + i } : {});
+      if (p.unit) { const o = j.visual.objects = j.visual.objects || {}, va = o.valueAxis || (o.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, { showAxisTitle: lit('true'), titleText: lit(quote(p.unit)) }); }
+      return j;
+    });
+    // a field kept in another panel is not lost
+    const kept = new Set(P.flatMap((p) => Object.values(p.roles || {}).flat()));
+    const dropped = Array.from(all.dropped).filter((d) => !kept.has(d)), lost = all.lost.filter((x) => !/field\(s\) no native role takes/.test(x));
+    if (dropped.length) lost.push(`${dropped.length} field(s) no native role takes`);
+    lost.push(`one chart with ${n} groups of values in units that may not share one axis: ${n} separate charts in its box, each with its unit on its axis`);
+    return { json: outs[0], more: outs.slice(1).map((j) => ({ name: j.name, json: j })), dropped, lost };
   }
 
   // report: report.json; usedTypes: every visual type the report still uses after the replacements
@@ -125,6 +159,6 @@
     return { json: out, dropped };
   }
 
-  const api = { replaceVisual, dropUnusedCustomVisuals, formatFacts };
+  const api = { replaceVisual, replacePanels, dropUnusedCustomVisuals, formatFacts };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAReplace = api;
 })(typeof self !== 'undefined' ? self : this);

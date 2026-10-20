@@ -799,10 +799,13 @@
           typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(G.sentimentOf(o.theme, 'good', u)), fall: G.fillOf(G.sentimentOf(o.theme, 'bad', u)) } }) : null;   // (D7: the written theme's, as the English waterfall's)
         if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
           waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
-        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR && !WF_NATIVE, smooth: SMOOTH }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR && !WF_NATIVE, smooth: SMOOTH, lang }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
           if (WF_NATIVE) waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.native, native: true });
           else if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
           else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
+        // (0.3.0 J19) a panel split from a combo shows its unit as its value axis's title (AED, %; isolated in Arabic)
+        if (query && s.unitLabel && s.kind === 'line') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
+          Object.assign(va[0].properties, { showAxisTitle: bool(true), titleText: str(lang === 'ar' ? s.unitLabel.ar : s.unitLabel.en) }); }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // (0.3.0 L2, the lab's "keep as option") o.grid 'dotted': the value axis's gridlines dotted, in the quiet grey (also
