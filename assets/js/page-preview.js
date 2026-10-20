@@ -71,10 +71,10 @@
   // (pbip-sizing.js; the browser loads it with the writer) and check_report's table header measure (report-rules.js
   // headerNeed, TABLE_HEADER_CUT's). Without them nothing is called cut (the preview never guesses a cut).
   const node = typeof module !== 'undefined' && module.exports;
-  const shared = (file, name) => { try { return node ? require(file) : root[name]; } catch (e) { return null; } };
+  const shared = (load, name) => { try { return node ? load() : root[name]; } catch (e) { return null; } };   // load: a literal require, so packaging can name the file
   const fitters = new Map();
-  const sizing = (font) => { const f = String(font || 'Segoe UI'); if (!fitters.has(f)) { const Z = shared('./pbip-sizing.js', 'DAPbipSizing'); fitters.set(f, Z && Z.make ? Z.make({ font: f, LABEL: 10 }) : null); } return fitters.get(f); };
-  const rules = () => shared('./report-rules.js', 'DARules');
+  const sizing = (font) => { const f = String(font || 'Segoe UI'); if (!fitters.has(f)) { const Z = shared(() => require('./pbip-sizing.js'), 'DAPbipSizing'); fitters.set(f, Z && Z.make ? Z.make({ font: f, LABEL: 10 }) : null); } return fitters.get(f); };
+  const rules = () => shared(() => require('./report-rules.js'), 'DARules');
   // the room the writer fits a chart's or table's title to: the box less 16 a side on the 1080 grid (pbip-page.js)
   const titleRoom = (w, kk) => w - 2 * Math.round(16 * kk);
   // the writer's verdict on a title: { mode: 'one' | 'wrapped' | 'shortened' }, or null without the writer's sizes
