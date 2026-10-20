@@ -146,6 +146,21 @@ try {
     const p2 = await w.call('plan_layout', Object.assign({ displayNames: dn }, a)), say = (p2.j && p2.j.arabicNames && p2.j.arabicNames.sayInPlan) || '';
     chk(() => say && !/no field has/.test(say) && new RegExp(`${Object.keys(dn).length} fields will show under the Arabic names approved`).test(say), () => `A5. the sentence counts the approved Arabic names (${Object.keys(dn).length}): ${say.slice(0, 400)}`);
   }
+  // ---------- A8: the Gulf calendar's page names the file its click writes (0.3.0 A1: a second, different calendar
+  // was planned as "... - add Gulf calendar.tmdl" and written as "... - add Gulf calendar 2.tmdl") ----------
+  {
+    const cal = async (lang) => {
+      const a = { path: 'hp', firstYear: 2024, lastYear: 2026, country: 'uae', lang, name: 'Gulf Calendar ' + lang.toUpperCase(), asOf: '2026-10-20' };
+      const p = await w.call('add_gulf_calendar', a), id = p.j && p.j.plan && p.j.plan.planId;
+      const H = id ? unesc((await pageOf(id, true)).html) : '', out = id ? await w.call('add_gulf_calendar', Object.assign({ planId: id }, a)) : { err: true, t: 'no plan: ' + short(p) };
+      return { p, H, out, file: out.j && out.j.scriptFile ? path.basename(String(out.j.scriptFile)) : null };
+    };
+    for (const lang of ['en', 'ar']) {
+      const c = await cal(lang);
+      chk(() => !c.out.err && c.file && c.p.j.scriptAfterGo === c.file && c.H.includes(c.file) && fs.existsSync(path.join(ROOT, 'hp', c.file)),
+        () => `A8 ${lang}. the plan and its approval page name the file the click writes: planned ${c.p.j && c.p.j.scriptAfterGo}, written ${c.file}: ${short(c.out)}`);
+    }
+  }
 } finally {
   await w.close();
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* a temp folder */ }
