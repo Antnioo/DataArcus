@@ -136,6 +136,16 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   Power BI's waterfallChart in the Arabic report too, left to right, exactly as the English one, and the plan says "the
   waterfall reads left to right, as Power BI draws it"; "mirror" keeps D1's stacked column chart, now with the English
   waterfall's own increase and decrease colours and its falls labelled negative. The rest of the Arabic report stays mirrored.
+- Every DataArcus theme (generate_theme, create_report, the website's Theme Generator) carries three status icons in
+  its `icons` block, "daGood" (a tick in a circle), "daWarn" (a triangle with "!") and "daBad" (a cross in a rounded
+  square): they differ in shape as well as colour, coloured from the theme's good / neutral / bad (taken to 3:1 on the
+  visuals' background, hue kept), unused unless a rule names them. plan_layout and create_report take `statusIcons`
+  (off by default): `true` puts an icon before each table or matrix measure that is a rate or ratio whose target the
+  model's metadata names (a measure "<name> Target / Goal / Budget"), by a status measure written as a TMDL script next to
+  the project ("<report> - status icons.tmdl", at or above the target good, below it bad; the model never changed by
+  DataArcus); `[{ measure, good: ">= 0.97", bad: "< 0.94" }]` uses the user's own thresholds as rules (no measure, no
+  script). Thresholds are never guessed. Pinned by the plan, on the approval page; check_report knows the icons (a note
+  until the script is applied; the shapes carry the meaning, said in the a11y notes). (L5)
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
