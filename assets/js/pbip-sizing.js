@@ -106,7 +106,9 @@
     // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
     // low for). 140 at 15pt, scaled with the text size, never less: 75 at 8pt, 94 at 10pt, 140 at 15pt. PILL_PAD: the
     // tiles' padding, written
-    const PILL_PAD = 4, pillH = (t) => Math.ceil(140 * t / 15);
+    // (0.3.0 F3) and a floor: on 2.159 a pill slicer 76 high cuts its 8pt text, 88 draws 9pt whole (PILLS-F2.md, 20 Oct
+    // 2026): the header and Power BI's own tile spacing do not shrink with the text. Never below 88
+    const PILL_PAD = 4, pillH = (t) => Math.max(88, Math.ceil(140 * t / 15));
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:

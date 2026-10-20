@@ -516,8 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let logo = null;
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/pbip-query.min.js?v=20261020s1', '/assets/js/pbip-sizing.min.js?v=20261020f2', '/assets/js/pbip-notes.min.js?v=20261019l2',
-      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261020f2', '/assets/js/report-a11y.min.js?v=20261020w8', '/assets/js/pbip-export.min.js?v=20261019w5'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/pbip-query.min.js?v=20261020s1', '/assets/js/pbip-sizing.min.js?v=w12', '/assets/js/pbip-notes.min.js?v=20261019l2',
+      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=w12', '/assets/js/report-a11y.min.js?v=20261020w8', '/assets/js/pbip-export.min.js?v=20261019w5'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
