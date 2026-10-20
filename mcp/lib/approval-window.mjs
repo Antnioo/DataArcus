@@ -13,6 +13,7 @@ import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { writesNote } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
 import { E } from './design.mjs';             // (D6: the written colour's own contrast, by the engine's rule)
+import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -245,7 +246,7 @@ export function summary(kind, data) {
     const FC = d.flipCards && Array.isArray(d.flipCards.cards) ? d.flipCards : null;
     if (FC && FC.cards.length) sections.push({ heading: `Flip cards (${FC.cards.length})`, rows: FC.cards.map((c) => [`${cut(String(c.page || ''), 60)}: card ${c.card}`, `${cut(String(c.title || ''), 80)}: the front shows its title and value; the back shows the measure's name and one line: ${String((c.back || {}).description || '')}; ${String((c.back || {}).value || '')}; year on year: ${String((c.back || {}).yearOnYear || '')}`])
       .concat([['Bookmarks', `${FC.bookmarks} display-only bookmarks (two a card: one shows the back, one the front); they touch no slicer or filter`],
-        ['Model change', `${FC.newMeasures} new measures (the pictures) in the script "${String(FC.scriptAfterGo || '')}" next to the project. The model is not changed by DataArcus: apply the script first, in TMDL view (Preview, then Apply); until then the cards are empty pictures`],
+        ['Model change', `${FC.newMeasures} new measures (the pictures) in the script "${String(FC.scriptAfterGo || '')}" next to the project. The model is not changed by DataArcus: apply the script first, in TMDL view (Preview, then Apply); until then ${FLIP_BEFORE}`],
         ['How it turns', 'a click turns the card (Ctrl+click while editing in Desktop), in 0.3 s; the backdrop in the card colour stays behind both faces']],
       (FC.notFlipped || []).map((x) => [`Card ${x.card}`, `not flipped: ${String(x.why || '')}`])) });
     // (0.3.0 L5) the status icons: which columns, how each is decided (the user's thresholds as given, or the target the
