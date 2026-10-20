@@ -61,11 +61,15 @@ function walkVisual(o, change) {
   }
 }
 const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
-export function isolateFiles(files, names) {
+// o.all (F1, the owner's decision of 20 Oct: the held-back line): EVERY mixed Arabic/Latin text isolated (isolateLatin),
+// a name kept in English inside an Arabic text too, page and tooltip tab names included (the proof: «تلميح · Month Short»
+// read with the English first)
+export function isolateFiles(files, names, o) {
   // names: the approved Arabic names with a Latin run (the others need nothing), longest first
   const list = [...new Set((names || []).map(String).filter((x) => ARABIC.test(x) && /[A-Za-z]/.test(x) && !ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
-  if (!list.length) return 0;
-  let n = 0; const change = (s) => { const out = isolateNames(s, list); if (out !== s) n++; return out; };
+  const all = !!(o && o.all);
+  if (!list.length && !all) return 0;
+  let n = 0; const change = (s) => { const out = all ? isolateLatin(s) : isolateNames(s, list); if (out !== s) n++; return out; };
   for (const f of files || []) {
     if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
     const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
