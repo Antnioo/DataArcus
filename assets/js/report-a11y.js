@@ -343,6 +343,33 @@
             out(x, 'its parts are told apart by colour alone: the legend is off', 'Switch the legend on, or label each part by its name (data labels with the category).');
         }));
       } }
+    ,
+    // (0.3.0 L5) status icons on a table or matrix: the theme's icons that a rule names, or the theme's DataArcus icons
+    // when a measure names them, are told apart by their shape as well as their colour (a note), or by colour alone (two
+    // that differ only in colour: a warning). An icon the theme does not carry (Power BI's own sets) is not judged
+    { id: 'A11Y_ICON_SHAPES', group: 'a11y', severity: 'note', source: SRC(GUIDE.checklist, 'Report accessibility checklist'),
+      about: 'status icons on a table or matrix differ in shape as well as colour, so colour is never the only signal',
+      run(R, out) {
+        const ic = (((R.theme || {}).json || {}).icons) || {};
+        const shape = (n) => { const u = ic[n] && typeof ic[n].url === 'string' ? ic[n].url : null; return u == null ? null : u.replace(/rgba?\([^)]*\)|%23[0-9a-f]{3,8}|#[0-9a-f]{3,8}|\b(fill|stroke)='[a-z]+'/gi, 'C'); };
+        const own = ['daGood', 'daWarn', 'daBad'];
+        mainPages(R).forEach((pg) => pg.visuals.forEach((x) => {
+          if (hidden(x) || !(TABLES.test(x.type) || MATRIX.test(x.type))) return;
+          const icons = entries(((x.json.visual || {}).objects || {}).values).map((e) => e && e.properties && e.properties.icon).filter(Boolean);
+          if (!icons.length) return;
+          const names = new Set();
+          let byMeasure = false;
+          icons.forEach((i) => { const ex = i.value && i.value.expr; if (!ex) return; if (ex.Measure) byMeasure = true;
+            entries(ex.Conditional && ex.Conditional.Cases).forEach((c) => { const v = c && c.Value && c.Value.Literal ? String(c.Value.Literal.Value).replace(/^'|'$/g, '') : null; if (v) names.add(v); });
+            if (ex.Literal) names.add(String(ex.Literal.Value).replace(/^'|'$/g, '')); });
+          if (byMeasure && own.every((n) => shape(n))) own.forEach((n) => names.add(n));
+          const mine = [...names].filter((n) => shape(n) != null);
+          if (mine.length < 2) return;
+          const kinds = new Set(mine.map(shape));
+          if (kinds.size === mine.length) out(x, `its ${mine.length} status icons differ in shape as well as colour, so colour is not the only signal`, 'Nothing to change; keep the shapes when the theme changes (a legend in the title or a text box helps first-time readers).');
+          else out(x, `${mine.length - kinds.size + 1} of its status icons differ only in colour`, 'Use icons that differ in shape too (DataArcus\'s theme icons: a tick in a circle, a triangle, a cross in a square), so colour is not the only signal.', { severity: 'warning' });
+        }));
+      } }
   ];
 
   const api = { GUIDE, ALT_MAX, MIN_CONTRAST, describe, readingOrder, inversions, readable, apply, RULES, roles, nameOf, backgroundOf, SAY, PER };
