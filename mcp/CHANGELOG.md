@@ -190,6 +190,15 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   flip cards' script was listed as a "Format script"; the 3:1 rule is WCAG 2.1's; PRIVACY names the wave's answers, its
   model scripts and the session-only memory). `mcp/test-0.3.0-claims.mjs`: a check per fixed sentence and the
   forbidden-words scan.
+- A3 (the owner's must-fix 1 for 0.3.0, "no English in Arabic reports"): every report DataArcus writes in Arabic
+  (directly, as a twin, as the EN-AR copy), with every wave option on, read text by text from the written files by
+  `test-0.3.0-arabic-sweep.mjs`: no Latin run on an Arabic page that the plan does not list as kept in English, with why.
+  Fixed: plan_layout no longer drops the approved Arabic names when the only fixed-list name comes from the lint's
+  fields; the terminology sheet lists the measures shown only on flip cards and the metric switcher's measures (a
+  declined one or one without an Arabic name is listed as kept, with why); the twin's plan keeps its texts whole
+  (answered compact, texts cut last), names the metric switcher's choices under cannot, lists the EN-AR copy's
+  «English» button as kept with why, and lists and labels a button's own title; an Arabic report's flip cards write their
+  units as Arabic words after a Western-digit number (3.43 ألف، 1.20 مليون، 2.05 مليار; English keeps K, M, B).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

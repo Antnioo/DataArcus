@@ -23,20 +23,23 @@ export function out(o) {
 // 300-table model answered 166,053). Over it, the longest list is halved until the answer fits, each cut list named in
 // truncated.cut with what was kept, and truncated.how says how to get the rest.
 export const ANSWER_MAX = 40000;
-export function capAnswer(o, size) {
+// (0.3.0 A3) opts.last: top-level lists cut only when no other list is left to cut (the Arabic twin's texts: a text cut
+// from its plan could not be given an Arabic label, so it stayed English)
+export function capAnswer(o, size, opts) {
   if (!o || typeof o !== 'object' || size(o) <= ANSWER_MAX) return o;
-  const c = JSON.parse(JSON.stringify(o)), cut = {};
+  const c = JSON.parse(JSON.stringify(o)), cut = {}, last = new Set((opts && opts.last) || []);
   const longest = () => {
-    let best = null;
+    let best = null, held = null;
     const walk = (x, p) => {
       if (Array.isArray(x)) {
         const len = JSON.stringify(x).length;
-        if (x.length > 1 && (!best || len > best.len)) best = { x, p, len };
+        if (x.length > 1 && last.has(p)) { if (!held || len > held.len) held = { x, p, len }; }
+        else if (x.length > 1 && (!best || len > best.len)) best = { x, p, len };
         x.forEach((y, i) => walk(y, p + '[' + i + ']'));
       } else if (x && typeof x === 'object') Object.entries(x).forEach(([k, v]) => { if (k !== 'truncated') walk(v, p ? p + '.' + k : k); });
     };
     walk(c, '');
-    return best;
+    return best || held;
   };
   // the backstop when no list is left to cut: the longest string, shortened (a single string of 200,000 characters;
   // the fuzz test's F-TP), named in cut with what was kept

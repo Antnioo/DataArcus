@@ -23,6 +23,7 @@ import { capAnswer, fitLists, out } from './answer.mjs';
 import { AIM } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
+import { fieldParametersOf } from './metric-switcher.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js'), Gallery = require('../../assets/js/visual-gallery.js');
@@ -934,6 +935,10 @@ export function planTwin(a) {
   // turning by their bookmarks, and drawn as those measures draw them
   const flipFaces = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, vco = isObj(vis.visualContainerObjects) ? vis.visualContainerObjects : {};
     return vis.visualType === 'image' && Array.isArray(vco.visualLink) && vco.visualLink.some((e) => isObj(e) && isObj(e.properties) && litStr(e.properties.type) === 'Bookmark'); }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+  // (0.3.0 A3) the metric switcher's choices are the rows of a field parameter table of the model (its script, made for
+  // the English report, names them): the twin's slicer still switches, and its choices read as that table names them
+  const switchers = fieldParametersOf(R.pages.flatMap((pg) => pg.visuals.map((v) => ({ file: safeName(pg.id) + '/' + safeName(isObj(v.json) ? v.json.name : ''), json: v.json }))));
+  if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (the metric switcher script made for the English report names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher`, where: [...new Set(switchers.map((x) => x.file))].slice(0, 30) });
   if (flipFaces.length) cannot.push({ what: 'flip cards\' faces', why: 'their text is drawn by picture measures of the model (the flip cards script made for the English report): the twin\'s cards are mirrored as one box and still turn, but their faces read as those measures draw them; for Arabic faces, make the report in Arabic with create_report and flipCards', where: flipFaces.slice(0, 30) });
   const checkInTwin = [];
   const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };
@@ -961,6 +966,9 @@ export function planTwin(a) {
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
   // (0.3.0 D3) what stays English in the twin, and why, said before the go (as create_report's plan does: R2, #75)
   const notTranslated = notTranslatedOf(texts, labels, problems);
+  // (0.3.0 A3) the copy's language button on each Arabic page reads "English": listed with why, as every kept text is
+  const toEnglish = copy ? copy.buttons.filter((b) => b.placed && b.on === LANG.ar.on).length : 0;
+  if (toEnglish) notTranslated.push({ text: LANG.ar.text, where: `language button (${toEnglish})`, why: 'the button on each Arabic page that opens its English page: a language switch names the language it opens in that language, as the English pages\' button reads «العربية»', ids: [] });
   // (0.3.0 J18) the terminology sheet: each field's places on the twin's own pages, as built
   const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }), Terms.isolateLatin);
   const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
@@ -992,7 +1000,7 @@ export function planTwin(a) {
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
-  }, textsFrom), (x) => JSON.stringify(x).length) };
+  }, textsFrom), (x) => JSON.stringify(x).length, { last: ['texts'] }) };   // (A3: the texts cut last)
 }
 
 // ---- the write ----
