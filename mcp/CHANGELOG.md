@@ -130,6 +130,12 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   colour (B-183); read_report no longer returns static visual titles (B-184); check_report's validator findings no
   longer quote report names (B-211); repo checks for non-literal requires (B-196) and for every npm test script's
   result line (B-198); the smooth-lines suite reads its source files line-ending blind (PR #81's Windows job).
+- D7 (the owner, 20 Oct: "the same design of waterfall ... mirrored rtl ... if not then just leave it normal"):
+  `waterfallRtl: "mirror" | "native"` on plan_layout, create_report and create_arabic_twin, pinned by the plan and shown
+  on the approval page. "native" (the default: Power BI cannot draw its own waterfall's design right to left) writes
+  Power BI's waterfallChart in the Arabic report too, left to right, exactly as the English one, and the plan says "the
+  waterfall reads left to right, as Power BI draws it"; "mirror" keeps D1's stacked column chart, now with the English
+  waterfall's own increase and decrease colours and its falls labelled negative. The rest of the Arabic report stays mirrored.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
