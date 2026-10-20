@@ -1093,9 +1093,10 @@ function reportRun(a, mode) {
   if (a.sharedAxes) { const ap = axesProblems(m, a.sharedAxes); input(!ap.length, `Nothing was written. ${ap.join(' ')}`); }
   const icons = applyIcons(r.files, { opt: a.statusIcons, raw: modelOf(m.tmsl).tables || [], base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0icons', ui: look && look.ui });
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
-  // (0.3.0 J18, B-171 item 5) an Arabic report's approved names: each Latin run of one (an acronym, a code) isolated
-  // wherever the report shows it, in the files the plan checks and writes (a model name kept in English is not touched)
-  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name));
+  // (0.3.0 J18, B-171 item 5; F1: every mixed text) an Arabic report's texts: each Latin run inside Arabic text (an
+  // acronym, a code, a model name kept in English) isolated wherever the report shows it, in the files the plan checks
+  // and writes
+  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name), { all: true });
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
