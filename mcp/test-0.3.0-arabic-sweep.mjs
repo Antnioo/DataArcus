@@ -246,10 +246,16 @@ try {
       if (w.err || !fs.existsSync(dir)) continue;
       const F = readReport(dir), { texts, other } = shownTexts(F, null);
       const scripts = tmdlIn(projectDir).filter((f) => !before.has(f));
+      // (the reviewer's decision, 20 Oct: an Arabic flip card's front says its units in Arabic words, 3.43 ألف, 1.20 مليون,
+      // 2.05 مليار, Western digits, the word after the number; English keeps K, M, B): nothing kept in English for them
+      const flipScript = scripts.find((f) => /flip cards\.tmdl$/.test(f));
+      if (flipScript) { const t = fs.readFileSync(flipScript, 'utf8'), enc = (x) => x.replace(/[^\x20-\x7E]/gu, (c) => encodeURIComponent(c));   // (the picture's rule: flip-cards.mjs enc)
+        chk(() => !/& "[KMB]"/.test(t) && [' ألف', ' مليون', ' مليار'].every((u) => t.includes(enc(u))) && /FORMAT \( _v \/ 1E3, "#,0\.00" \)/.test(t),
+          () => `${fx.id} ar/${wf}: the flip cards' front writes Arabic unit words (ألف، مليون، مليار) after a Western-digit number, never K, M, B: ${(t.match(/VAR _[tu] = [^\n]*1E3[^\n]*/g) || []).join(' | ').slice(0, 500)}`);
+        chk(() => !((w.pl.j || {}).flipCards || {}).keptInEnglish, () => `${fx.id} ar/${wf}: no flip card unit is kept in English: ${JSON.stringify(((w.pl.j || {}).flipCards || {}).keptInEnglish)}`); }
       scripts.forEach((f) => texts.push(...scriptTexts(f)));
       const j = w.pl.j || {}, an = j.arabicNames || {};
       const kept = (an.notTranslated || []).map((x) => x.shownAs).concat(((j.terminology || {}).sheet || []).filter((x) => x.status === 'kept').map((x) => x.en))
-        .concat(((j.flipCards || {}).keptInEnglish || []).flatMap((x) => String(x.text).split(/,\s*/)))
         .concat(((j.terminology || {}).sheet || []).filter((x) => x.status === 'approved' && x.ar).map((x) => x.ar));   // a name the person approved, as written
       structure(fx, `ar (${wf})`, F, null, j);
       const r = classify(fx, `ar (${wf})`, texts, kept, []);
@@ -261,6 +267,8 @@ try {
     // ---------------------------------------------------------------- the English original, then twin and enar -------
     const en = await write(Object.assign({}, base, opt, { lang: 'en', name: 'Report EN', waterfallRtl: undefined }));
     chk(() => !en.err && fs.existsSync(path.join(projectDir, 'Report EN.Report')), () => `${fx.id} en: the English original written: ${en.err}`);
+    { const ef = tmdlIn(projectDir).find((f) => /Report EN - flip cards\.tmdl$/.test(f));
+      if (ef) chk(() => /& "K"/.test(fs.readFileSync(ef, 'utf8')) && !fs.readFileSync(ef, 'utf8').includes(encodeURIComponent('ألف')), () => `${fx.id} en: the English flip cards keep K, M, B`); }
     const sources = en.err ? [] : [['Report EN', `${fx.dir}/Report EN.pbip`]];
     if (fx.own) sources.push(['own report', fx.own]);
     for (const [label, pbip] of sources) {

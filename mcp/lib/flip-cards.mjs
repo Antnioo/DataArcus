@@ -31,8 +31,8 @@ const SUFFIX = { front: 'flip front', back: 'flip back', backdrop: 'flip backdro
 export const TURN = { seconds: 0.3, degrees: 25, opacity: 0.6, perspective: 700 };
 const DESC_MAX = 90;
 const W = {
-  en: { yoy: ' vs last year', front: (t) => `${t}, KPI card: select to see what it means`, back: (t) => `${t}: what it means; select to turn back`, bmFront: (t) => `Flip ${t}: front`, bmBack: (t) => `Flip ${t}: back` },
-  ar: { yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
+  en: { units: null, yoy: ' vs last year', front: (t) => `${t}, KPI card: select to see what it means`, back: (t) => `${t}: what it means; select to turn back`, bmFront: (t) => `Flip ${t}: front`, bmBack: (t) => `Flip ${t}: back` },
+  ar: { units: { K: ' ألف', M: ' مليون', B: ' مليار' }, yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
 };
 
 // ---- text for the picture: XML-escaped, then every %, # and " and every non-ASCII character URL-encoded (a data URL) ----
@@ -53,13 +53,21 @@ const cssColor = (c, d) => (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(String(c || '')
 const cssFont = (f) => String(f || 'Segoe UI').replace(/[^A-Za-z0-9 -]/g, '').trim() || 'Segoe UI';
 
 // the KPI rule's shapes for the front (pbip-bind's card rule, as DAX): a percent, a whole count, else automatic units
-function frontValue(m, mref) {
+// (0.3.0 A3, the reviewer's decision of 20 Oct: no English in Arabic reports) units: null writes K, M, B after the number
+// (English, as before); { K, M, B } the Arabic unit words: the number (Western digits) is _t, the word is _u, already
+// encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number
+function frontValue(m, mref, units) {
   const f = String(m.formatString || ''), pct = /%/.test(f) || /%|\b(rate|ratio|share|margin)\b/i.test(String(m.name));
-  if (pct) return `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )`;
-  if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )`;
-  const u = (n, s) => `FORMAT ( _v / ${n}, "#,0.00" ) & "${s}"`;
-  return `IF ( ISBLANK ( _v ), "--", IF ( ABS ( _v ) >= 1E9, ${u('1E9', 'B')}, IF ( ABS ( _v ) >= 1E6, ${u('1E6', 'M')}, IF ( ABS ( _v ) >= 1E3, ${u('1E3', 'K')}, FORMAT ( _v, "#,0.00" ) ) ) ) )`;
+  if (pct) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )` };
+  if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )` };
+  const u = (n, s) => `FORMAT ( _v / ${n}, "#,0.00" )` + (units ? '' : ` & "${s}"`);
+  const t = `IF ( ISBLANK ( _v ), "--", IF ( ABS ( _v ) >= 1E9, ${u('1E9', 'B')}, IF ( ABS ( _v ) >= 1E6, ${u('1E6', 'M')}, IF ( ABS ( _v ) >= 1E3, ${u('1E3', 'K')}, FORMAT ( _v, "#,0.00" ) ) ) ) )`;
+  if (!units) return { t };
+  return { t, u: `IF ( ISBLANK ( _v ), "", IF ( ABS ( _v ) >= 1E9, ${lt(units.B)}, IF ( ABS ( _v ) >= 1E6, ${lt(units.M)}, IF ( ABS ( _v ) >= 1E3, ${lt(units.K)}, "" ) ) ) )` };
 }
+// the value's DAX lines (VAR _t, and VAR _u with units) and its text in the picture
+const valueVars = (fv) => ['VAR _t = ' + fv.t].concat(fv.u ? ['VAR _u = ' + fv.u] : []);
+const valueText = (fv) => safeDax('_t') + (fv.u ? ' & _u' : '');
 const keyframes = (deg) => `@keyframes flipin{from{transform:perspective(${TURN.perspective}px) rotateY(${deg}deg);opacity:${String(TURN.opacity).replace(/^0/, '')}}to{transform:perspective(${TURN.perspective}px) rotateY(0deg);opacity:1}}`;
 // the picture around the card's own HTML: an SVG of the card's size with one foreignObject
 const svgOpen = (w, h) => `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><foreignObject x='0' y='0' width='${w}' height='${h}'>`;
@@ -78,15 +86,16 @@ const CLOSE = '</div></foreignObject></svg>';
 // date key reached from the measure's table, or null
 function measuresOf(c, t, m, cal, words) {
   const mref = dax.column(t, m.name), name = xml(c.title), fd = c.rtl ? TURN.degrees : -TURN.degrees, bd = -fd;
-  const front = ['VAR _v = ' + mref, 'VAR _t = ' + frontValue(m, mref), 'RETURN',
-    [lt(svgOpen(c.w, c.h) + divOpen(c, fd) + `<div class='t'>${name}</div><div class='v'>`), safeDax('_t'), lt('</div>' + CLOSE)].join(' & ')].join('\n');
+  const fv = frontValue(m, mref, words.units);
+  const front = ['VAR _v = ' + mref, ...valueVars(fv), 'RETURN',
+    [lt(svgOpen(c.w, c.h) + divOpen(c, fd) + `<div class='t'>${name}</div><div class='v'>`), valueText(fv), lt('</div>' + CLOSE)].join(' & ')].join('\n');
   const desc = cleanDescription(m.description), fs = m.formatString ? String(m.formatString) : null;
-  const value = fs ? `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, ${dax.string(fs)} ) )` : frontValue(m, mref);
-  const lines = ['VAR _v = ' + mref, 'VAR _t = ' + value];
+  const bv = fs ? { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, ${dax.string(fs)} ) )` } : fv;
+  const lines = ['VAR _v = ' + mref, ...valueVars(bv)];
   let yoy = null;
   if (cal) { lines.push(`VAR _p = CALCULATE ( ${mref}, SAMEPERIODLASTYEAR ( ${dax.column(cal.t, cal.c)} ) )`, 'VAR _y = IF ( ISBLANK ( _v ) || ISBLANK ( _p ) || _p = 0, BLANK (), DIVIDE ( _v - _p, ABS ( _p ) ) )');
     yoy = `IF ( ISBLANK ( _y ), "", ${lt(' · ')} & ${safeDax('FORMAT ( _y, "+0.0%;-0.0%;0.0%" )')} & ${lt(words.yoy)} )`; }
-  lines.push('RETURN', [lt(svgOpen(c.w, c.h) + divOpen(c, bd) + `<div class='t'>${xml(c.full)}</div><div class='l'>` + (desc ? xml(desc) + ' · ' : '')), safeDax('_t')].concat(yoy ? [yoy] : [], [lt('</div>' + CLOSE)]).join(' & '));
+  lines.push('RETURN', [lt(svgOpen(c.w, c.h) + divOpen(c, bd) + `<div class='t'>${xml(c.full)}</div><div class='l'>` + (desc ? xml(desc) + ' · ' : '')), valueText(bv)].concat(yoy ? [yoy] : [], [lt('</div>' + CLOSE)]).join(' & '));
   const backdrop = lt(`data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${c.w}' height='${c.h}' viewBox='0 0 ${c.w} ${c.h}'><rect x='0' y='0' width='${c.w}' height='${c.h}' rx='${c.r}' ry='${c.r}' fill='${c.card}'/></svg>`);
   return { front, back: lines.join('\n'), backdrop, description: !!desc, descriptionDropped: m.description != null && !desc, format: fs, yoy: !!cal };
 }
