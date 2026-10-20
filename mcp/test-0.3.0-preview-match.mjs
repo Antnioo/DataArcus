@@ -136,7 +136,10 @@ try {
         chk(() => G.length && !lost.length && !drawn.length, () => `PM-5 ${c.id} page ${k + 1}: the picture's boxes are the written visuals': ${lost.length} drawn boxes not written, ${drawn.length} written visuals not drawn (${drawn.map((v) => v.type).join(', ')})`);
         // PM-1: titles, exactly
         const titled = G.map((g) => ({ g, v: at(g) })).filter(({ g, v }) => v && v.title && /^(line|bar|column|donut|table|card|map|chart)$/.test(g.kind));
-        const wrong = titled.filter(({ g, v }) => g.texts.join(' ') !== v.title).map(({ g, v }) => `${g.kind}: drawn "${g.texts.join(' | ')}", written "${v.title}"`);
+        // (F1: every mixed Arabic/Latin text is written with isolation marks, which the preview leaves out on purpose,
+        // page-preview.js clean(): the written title compared without them, changed on purpose)
+        const noMarks = (t) => String(t).replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '');
+        const wrong = titled.filter(({ g, v }) => g.texts.join(' ') !== noMarks(v.title)).map(({ g, v }) => `${g.kind}: drawn "${g.texts.join(' | ')}", written "${v.title}"`);
         chk(() => titled.length >= 4 && !wrong.length, () => `PM-1 ${c.id} page ${k + 1}: ${wrong.length} of ${titled.length} titles differ from the written report: ${JSON.stringify(wrong)}`);
         chk(() => !G.some((g) => g.texts.some((t) => /\(\d\)$/.test(t))), () => `PM-1 ${c.id} page ${k + 1}: no title ends with a measure name's "(2)": ${JSON.stringify(G.filter((g) => g.texts.some((t) => /\(\d\)$/.test(t))).map((g) => g.texts))}`);
         // PM-3: slicer headers
