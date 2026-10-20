@@ -50,8 +50,12 @@ const fieldKey = (f) => { if (!f || typeof f !== 'object') return null; const c 
 const projections = (files) => { const out = []; for (const [f, j] of Object.entries(files)) { if (!/visual\.json$/.test(f)) continue; const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return;
   if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = p && fieldKey(p.field); if (k) out.push({ file: f, key: k, displayName: p.displayName }); }); Object.values(o).forEach(walk); }; walk(j.visual && j.visual.query); } return out; };
 // every visible text: formatting literals, text runs, projection display names, page and bookmark names, report measures' DAX texts
+// the report measures a visual uses (by "Entity\0Name"): only those are shown (the twin keeps the original's title measures, unused)
+const usedMeasures = (files) => { const used = new Set(); const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return;
+  if (o.Measure && o.Measure.Expression && o.Measure.Expression.SourceRef && o.Measure.Expression.SourceRef.Schema === 'extension') used.add(o.Measure.Expression.SourceRef.Entity + '\u0000' + o.Measure.Property);
+  Object.values(o).forEach(walk); }; Object.entries(files).filter(([f]) => /visual\.json$/.test(f)).forEach(([, j]) => walk(j)); return used; };
 function shownTexts(files, only) {
-  const out = [];
+  const out = [], used = usedMeasures(files);
   const walk = (o, where) => { if (Array.isArray(o)) { o.forEach((x) => walk(x, where)); return; } if (!o || typeof o !== 'object') return;
     for (const [k, v] of Object.entries(o)) {
       if (k === 'properties' && v && typeof v === 'object') Object.entries(v).forEach(([pk, pv]) => { const s = TEXT_KEYS.has(pk) ? lit(pv) : null; if (s && /\p{L}/u.test(s)) out.push({ where, what: pk, s }); });
@@ -63,7 +67,7 @@ function shownTexts(files, only) {
     if (only && !only(f)) continue;
     if (/page\.json$/.test(f) && j.displayName) out.push({ where: f, what: 'page name', s: j.displayName });
     if (/(visual|mobile|page)\.json$/.test(f)) walk(j, f);
-    if (/reportExtensions\.json$/.test(f)) (j.entities || []).forEach((e) => (e.measures || []).forEach((m) => { if (m.dataType === 'Text' && typeof m.expression === 'string') (m.expression.match(/"(?:[^"]|"")*"/g) || []).forEach((s) => { const t = s.slice(1, -1).replace(/""/g, '"'); if (/\p{L}/u.test(t)) out.push({ where: f + ' ' + m.name, what: 'measure text', s: t }); }); }));
+    if (/reportExtensions\.json$/.test(f)) (j.entities || []).forEach((e) => (e.measures || []).forEach((m) => { if (m.dataType === 'Text' && used.has(e.name + '\u0000' + m.name) && typeof m.expression === 'string') (m.expression.match(/"(?:[^"]|"")*"/g) || []).forEach((s) => { const t = s.slice(1, -1).replace(/""/g, '"'); if (/\p{L}/u.test(t)) out.push({ where: f + ' ' + m.name, what: 'measure text', s: t }); }); }));
   }
   return out;
 }
@@ -167,8 +171,8 @@ try {
   {
     const p = await plan({ displayNames: DN }), id = p.j && p.j.plan && p.j.plan.planId; sheet1 = (p.j && p.j.terminology && p.j.terminology.sheet) || [];
     const cr = rowOf(sheet1, 'Coupon[Coupon Region]'), where = (cr && cr.where) || [];
-    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && cr.en === 'Coupon Region' && uniq(where.map((x) => x.page)).length >= 3
-      && ['slicer header', 'tooltip', 'title', 'alt text'].every((r) => where.some((x) => x.role === r)),
+    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && cr.en === 'Coupon Region' && uniq(where.map((x) => String(x).replace(/: .*$/, ''))).length >= 3
+      && ['slicer header', 'tooltip', 'title', 'alt text'].every((r) => where.some((x) => String(x).includes(r))),
       () => `TS-1a. the sheet lists the field's places (3 pages, slicer header, tooltip, title, alt text): ${JSON.stringify(cr)}`);
     chk(() => Object.keys(DN).every((k) => rowOf(sheet1, k) && rowOf(sheet1, k).ar === DN[k] && rowOf(sheet1, k).where.length) && sheet1.every((r) => r.status !== 'approved' || r.consistent === true),
       () => `TS-1b. every approved term is in the sheet with its places, consistent: ${JSON.stringify(sheet1.map((r) => [r.field, r.status, r.consistent]))}`);
@@ -202,18 +206,22 @@ try {
   const p0 = await twinPlan({}), T0 = (p0.j && p0.j.texts) || [];
   const L = {}; T0.filter((t) => t.draftArabic && t.kind !== 'field').forEach((t) => { L[t.id] = t.draftArabic; });
   T0.filter((t) => t.text === 'Orders EN').forEach((t) => { L[t.id] = 'تقرير الطلبات'; });
-  const TERMS = Object.assign({}, DN);
+  // (Month Short is left out: the twin takes the term the person confirmed on the Arabic report, unchanged since)
+  const TERMS = Object.assign({}, DN); delete TERMS['Calendar[Month Short]'];
   {
     const p1 = await twinPlan({ labels: L, terms: TERMS }), J = p1.j || {}, T1 = J.texts || [];
     const fieldsOf = (k) => T1.filter((t) => t.kind === 'field' && (t.field === k));
     chk(() => !p1.err && Object.keys(DN).every((k) => fieldsOf(k).length && fieldsOf(k).every((t) => t.label === DN[k] && /term/i.test(String(t.labelFrom || '')))),
       () => `TS-2a. each field header of the twin takes its term (field, labelFrom): ${p1.err ? short(p1) : JSON.stringify(T1.filter((t) => t.kind === 'field').map((t) => [t.id, t.field, t.label, t.labelFrom]).slice(0, 8))}`);
+    chk(() => !J.truncated, () => `TS-2 the twin's plan is answered whole (no cut), the sheet in it: ${JSON.stringify(J.truncated)}`);
     const tm = T1.find((t) => t.kind === 'titleMeasure' && t.text === 'Top {1} of {2}: Web Orders Total Score by Coupon Region'), al = T1.find((t) => t.kind === 'altText' && t.text === 'Web Orders Total Score by Plan Group: detail');
     chk(() => tm && tm.label === `أعلى {1} من {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
       () => `TS-2b. a title and an alt text made of the fields' names take the terms (derived): ${JSON.stringify([tm, al].map((t) => t && [t.text, t.label, t.labelFrom]))}`);
     const sh = (J.terminology && J.terminology.sheet) || [], cr = rowOf(sh, 'Coupon[Coupon Region]');
-    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => x.page)).length >= 3 && rowOf(sh, 'Calendar[Year]') && rowOf(sh, 'Calendar[Year]').status === 'approved' && rowOf(sh, 'Calendar[Year]').earlier === true,
-      () => `TS-2c. the twin's sheet: the given terms, and the term confirmed with the Arabic report (Year, earlier): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
+    const ms = rowOf(sh, 'Calendar[Month Short]'), yr = rowOf(sh, 'Calendar[Year]');
+    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => String(x).replace(/: .*$/, ''))).length >= 3 && ms && ms.status === 'approved' && ms.earlier === true && ms.ar === DN['Calendar[Month Short]']
+      && yr && yr.status === 'draft' && !yr.earlier,
+      () => `TS-2c. the twin's sheet: the given terms, the term the person confirmed on the Arabic report (Month Short, earlier), and a draft approved only with that plan still a draft (Year): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
     // TS-7b: the twin's plan pins its terms
     const id = J.plan && J.plan.planId;
     if (id) await s.call('approve_plan', { planId: id });
