@@ -80,6 +80,24 @@ export function groupFiles(paths, own) {
   (paths || []).forEach((f) => { const i = G.findIndex(([, re]) => re.test(String(f))); out[i].paths.push(String(f)); });
   return out.filter((g) => g.paths.length);
 }
+// (0.3.0 S1, B-183: the app's own prompt showed the writes and the overwrite sentence only) the same as the approval page
+// says, in short, for the app's prompt (MCP elicitation): the files counted per group, and each colour the plan writes
+// other than the one approved. At most PROMPT_SUMMARY_CAP characters: groups past it are counted, never cut mid-word
+export const PROMPT_SUMMARY_CAP = 600;
+export function promptSummary(kind, data) {
+  const d = data || {}, groups = summary(kind, d).files || [], lines = [];
+  if (groups.length) {
+    const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${g.label} (${g.paths.length})`);
+    let line = `${n} file${n === 1 ? '' : 's'}: `, k = 0;
+    while (k < parts.length && line.length + parts[k].length + 40 <= PROMPT_SUMMARY_CAP / 2) { line += (k ? ', ' : '') + parts[k]; k++; }
+    if (k < parts.length) line += `${k ? ', ' : ''}and ${parts.length - k} more group${parts.length - k === 1 ? '' : 's'}`;
+    lines.push(line + '.');
+  }
+  const cc = kind === 'report' && d.colours && Array.isArray(d.colours.changed) ? d.colours.changed.filter((c) => HEX.test(String(c.from)) && HEX.test(String(c.to))) : [];
+  const card = d.colours && HEX.test(String(d.colours.card)) ? ` against ${d.colours.card}` : '';
+  cc.forEach((c) => { const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
+  return lines.join('\n');
+}
 const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
 
 function askPage(w) {

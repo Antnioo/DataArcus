@@ -105,7 +105,7 @@ try {
       const args = { path: 'hp', name: 'Prompt', layout: 'exec', colors: { accent: '#F4B183' } };
       const pl = await app.call('plan_layout', args), id = pl.j && pl.j.plan && pl.j.plan.planId;
       const r = await app.call('approve_plan', { planId: id }), msg = String((app.seen[0] || {}).message || '');
-      chk(() => !r.err && /\bVisuals \(\d+\)/.test(msg) && /\bPages \(\d+\)/.test(msg) && /\bProject file \(1\)/.test(msg) && /\d+ files:/.test(msg), () => `D1. the app's prompt for a report plan counts the files per group: ${msg.slice(0, 900)}`);
+      chk(() => !r.err && !msg.includes('<name>') && /\bVisuals \(\d+\)/.test(msg) && /\bPages \(\d+\)/.test(msg) && /\bProject file \(1\)/.test(msg) && /\d+ files:/.test(msg), () => `D1. the app's prompt for a report plan counts the files per group and names the report: ${msg.slice(0, 900)}`);
       chk(() => /approved colour #f4b183 -> written colour #[0-9a-f]{6}/i.test(msg), () => `D2. the app's prompt names the changed colour (approved -> written): ${msg.slice(0, 900)}`);
       const th = await app.call('generate_theme', { brand: '#0F766E', name: 'Prompt Theme' }), tid = th.j && th.j.plan && th.j.plan.planId;
       await app.call('approve_plan', { planId: tid });

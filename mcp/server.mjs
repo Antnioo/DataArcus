@@ -1731,10 +1731,12 @@ server.registerTool('approve_plan', {
   // person answers the app's own prompt, which lists what will be written
   const caps = server.server.getClientCapabilities() || {};
   if (caps.elicitation && (caps.elicitation.form || !caps.elicitation.url)) {
-    let r;
+    // (0.3.0 S1, B-183) what the approval page shows, in short: the files per group, a colour written other than approved
+    let r; const data = (Plans.planOf(P.id) || {}).data, inShort = Approval.promptSummary(P.kind, data), nm = Approval.summary(P.kind, data).name;
+    const writes = P.writes.map((x) => (nm ? String(x).split('<name>').join(nm) : x));   // (the report's name, as the page shows it)
     try {
       r = await server.server.elicitInput({ mode: 'form',
-        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${P.writes.join('\n- ')}\n${writesNote(P.writes)}`,
+        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${writes.join('\n- ')}\n${inShort ? inShort + '\n' : ''}${writesNote(P.writes)}`,
         requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
       { timeout: 10 * 60 * 1000 });
     } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
