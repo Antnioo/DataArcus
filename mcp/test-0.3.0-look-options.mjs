@@ -185,13 +185,16 @@ try {
         if (S(pd.paddingSelection) !== 'Custom') out.push('padding.paddingSelection');
         if (!z(sp, 'verticalSpacing')) out.push('spacing.verticalSpacing');
         if (S(ly.customizePadding) !== 'true') out.push('layout.customizePadding');
-        ['cellPadding', 'rowPadding', 'columnPadding', 'topOuterMargin', 'bottomOuterMargin', 'leftOuterMargin', 'rightOuterMargin'].forEach((k) => { if (!z(ly, k)) out.push('layout.' + k); });
+        ['cellPadding', 'rowPadding', 'topOuterMargin', 'bottomOuterMargin', 'leftOuterMargin', 'rightOuterMargin'].forEach((k) => { if (!z(ly, k)) out.push('layout.' + k); });
+        // (F5, the owner: "nothing touches or breaks") the gap between two pills stays: columnPadding 6, never 0 (it is
+        // across, so it costs no height)
+        if (S(ly.columnPadding) !== '6L') out.push('layout.columnPadding (the gap between pills: 6)');
         ['top', 'bottom', 'left', 'right'].forEach((k) => { if (!z(cp, k)) out.push('container padding.' + k); });
         if (S(cs.customizeSpacing) !== 'true' || !z(cs, 'spaceBelowTitle') || !z(cs, 'spaceBelowTitleArea')) out.push('container spacing');
         return out;
       };
       const pv = pills(allVisuals(EN.dir));
-      chk(() => pv.length === 2 && pv.every((v) => !bad(v).length), () => `P7. every margin of the pill slicer written 0: ${JSON.stringify(pv.map(bad))}`);
+      chk(() => pv.length === 2 && pv.every((v) => !bad(v).length), () => `P7. every margin of the pill slicer written 0, the gap between pills 6: ${JSON.stringify(pv.map(bad))}`);
     }
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
     chk(() => band && ents(band, 'value').length && ents(band, 'value').every((e) => e.selector) && S(P(band, 'value', 'default').show) === 'true' && P(band, 'value', 'default').fontSize && P(band, 'value', 'default').fontColor
@@ -294,7 +297,7 @@ try {
     const GP = r && r.gridId ? path.join(out, 'pills/Pills Variants.Report/definition/pages', r.gridId) : '';
     const gv = GP && fs.existsSync(path.join(GP, 'visuals')) ? fs.readdirSync(path.join(GP, 'visuals')).map((v) => rd(path.join(GP, 'visuals', v, 'visual.json'))) : [];
     const gp = gv.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), gl = gv.filter((v) => v.visual.visualType === 'textbox');
-    const m0 = (v) => S(P(v, 'padding', 'default').topMargin) === '0L' && S(P(v, 'layout').columnPadding) === '0L', ptOf = (v) => S(P(v, 'value', 'default').fontSize);
+    const m0 = (v) => S(P(v, 'padding', 'default').topMargin) === '0L' && S(P(v, 'layout').customizePadding) === 'true', ptOf = (v) => S(P(v, 'value', 'default').fontSize);
     const hsOf = (pt, ctl) => gp.filter((v) => ptOf(v) === pt + 'D' && m0(v) !== ctl).map((v) => v.position.height).sort((a, b) => a - b).join();
     const order = r && r.gridId ? rd(path.join(out, 'pills/Pills Variants.Report/definition/pages/pages.json')) : {};
     chk(() => gp.length === 29 && gl.length === 29 && order.activePageName === r.gridId && order.pageOrder[0] === r.gridId && gp.every((v) => !v.parentGroupName)
