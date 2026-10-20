@@ -1,0 +1,20 @@
+Copyright (c) 2025-2026 Abdelrahman Mohammed, trading as DataArcus (dataarcus.com).
+All rights reserved.
+
+This repository contains the source of the DataArcus website, its free online tools,
+their engines, and the DataArcus MCP. It is public so it can be read and reviewed.
+
+You may:
+- use the tools on dataarcus.com, and use the themes, reports, scripts and other files
+  they generate for you, for any purpose, including commercial work;
+- read this code, and link to it.
+
+You may not, without written permission from DataArcus:
+- copy, modify, or reuse this code or its parts in another product, website, tool,
+  service, or AI model training set;
+- redistribute it, or offer it (or a copy of it) as your own tool or service.
+
+The articles, texts and images are also copyright DataArcus.
+Third-party libraries keep their own licences.
+
+For permission or commercial licensing: hello@dataarcus.com
