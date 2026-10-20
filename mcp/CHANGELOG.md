@@ -183,6 +183,13 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   cuts its per-page lists (`redesignPages`), read_model `tables` names every table not shown, check_report says how many
   findings are not listed; an answer over 34,000 characters indented is sent without indentation. New suite
   `large-model-caps`; the golden baseline prints the largest answer per tool.
+- A2: the claims re-check of the 0.3.0 wave: every sentence DataArcus says about itself (PRIVACY.md, README.md, the
+  tool descriptions, the server's instructions, the skill, the approval pages, the beta page in English and Arabic)
+  checked against the code; 24 untrue or overstated sentences reworded at their source (read_report sends no static
+  title since S1; approval in the app's own prompt; the EN-AR button where there is room; check_report checks PBIR; the
+  flip cards' script was listed as a "Format script"; the 3:1 rule is WCAG 2.1's; PRIVACY names the wave's answers, its
+  model scripts and the session-only memory). `mcp/test-0.3.0-claims.mjs`: a check per fixed sentence and the
+  forbidden-words scan.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
