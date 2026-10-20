@@ -210,6 +210,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - F2: the button-slicer pills get the height Desktop 2.159 was measured to need (140 at 15pt, scaled with the text):
   the layout gives a pill slicer that height where the rail has room, else a smaller text, else the dropdown with why;
   the laptop's variants report opens in Desktop and measures 120, 130 and 140.
+- F4: the button-slicer pills write every margin they have at 0 (the tiles' padding and spacing, the layout's cell, row,
+  column padding and outer margins, the container's padding and the space below its title), leaving the tiles the room;
+  a measurement grid for the laptop (8, 9, 10, 15pt at several heights, with the earlier shape as a control).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
