@@ -84,6 +84,8 @@
   const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: shown(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? shown(f.name ? f.name : fname(f)) : null);
+  // (S1, B-181) a name whose letters are all Latin (a helper named in English stays in one script)
+  const latinOnly = (x) => !/[^\P{L}\p{Script=Latin}]/u.test(String(x));
   // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
   // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
   const hasControl = (x) => /\p{Cc}/u.test(String(x));
@@ -456,7 +458,11 @@
       let c; try { c = daxNames.column(f.t, f.c); } catch (e) { return null; }
       const y = 'CALCULATE ( ' + y0 + ' )', cap = n + extra + 1;
       const head = 'VAR _t = CALCULATETABLE ( FILTER ( VALUES ( ' + c + ' ), NOT ISBLANK ( ' + c + ' ) && NOT ISBLANK ( ' + y + ' ) ), REMOVEFILTERS ( ' + c + ' ) ) VAR _n = COUNTROWS ( _t ) VAR _k = IF ( MIN ( _n, ' + cap + ' ) = ' + cap + ', ' + n + ', _n )';
-      const keep = () => { const keepName = extMeasure(f.t, 'Keep: ' + shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property) + ' by ' + label(f), head + ' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
+      // (0.3.0 S1, B-181: "Keep: Web Orders Total Score by مجموعة الخطة" in the Fields pane) the hidden helper's name in one
+      // script, plain English: the measure by the shown name, else by the model's names, else "Keep: top categories"
+      const yName = shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property);
+      const keepWant = ['Keep: ' + yName + ' by ' + label(f), 'Keep: ' + yName + ' by ' + shown(f.c)].find(latinOnly) || 'Keep: top categories';
+      const keep = () => { const keepName = extMeasure(f.t, keepWant, head +' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
       const filter = { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, keepName),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: keepName } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
