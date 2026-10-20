@@ -498,14 +498,19 @@
         objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true };
       const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
       if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
+      // (0.3.0 F1, the laptop proof on Desktop 2.159: every pill drawn with no text) the button slicer's item text is its
+      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/CLAUDE.md): everything
+      // under the default selector, show included, never an entry without one; the outline likewise. The fill's show
+      // stays without a selector (the card's fillCustom.show: measured). Other shapes for the laptop: mcp/lab/pills-variants.mjs
       const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];
+      const keyed = (look, picked) => [{ properties: look, selector: DEF }, { properties: picked, selector: SEL }];
       const full = label(f), shownT = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
       if (shownT !== full) titles.slicers.push({ page: pg.name || base, field: full, shown: shownT });
       return { visualType: 'advancedSlicerVisual', query,
         objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n) }),
           fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
-          value: states({ show: bool(true) }, { fontFamily: str(font), fontSize: num(SLICER_TEXT), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
-          outline: states({ show: bool(true) }, { lineColor: color(edge) }, { lineColor: color(acc) }) },
+          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(SLICER_TEXT), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
+          outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }) },
         visualContainerObjects: frame(shownT, full), drillFilterOtherVisuals: true };
     };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
