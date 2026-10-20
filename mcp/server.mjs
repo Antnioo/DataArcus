@@ -26,6 +26,7 @@ import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint, planPreview, checkFiles, checkSummary, aggregationAnswer } from './lib/plan-lint.mjs';
 import { checkArtifact, digestOf, modelPrintOf, bindingOf } from './lib/artifact.mjs';
+import { applyFlip, flipScript, flipHow } from './lib/flip-cards.mjs';
 import * as Plans from './lib/plans.mjs';
 import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
@@ -644,6 +645,8 @@ const CREATE_REPORT_INPUTS = {
     // (0.3.0 L2: the polish lab's look options, 12-13 Oct, Desktop 2.158)
     slicerStyle: z.enum(['dropdown', 'pills']).optional().describe('(Default "dropdown".) The slicers\' look. "dropdown": a dropdown with a rounded box. "pills": Power BI\'s button slicer, rounded buttons on one row with a calm fill and the selected one in the accent, only for a field whose 2-6 values the model\'s metadata makes known (true/false, a quarter, a calculated column of 2-6 texts); every other slicer stays a dropdown. Pills fit a short choice the user flips often (online or not, a size band); a dropdown fits a long or unknown list. The answer\'s slicerStyle says each slicer\'s style with why'),
     grid: z.enum(['solid', 'dotted', 'none']).optional().describe('(Default "solid".) The value-axis gridlines of the line, bar, column and gallery charts. "solid": quiet solid lines, as before. "dotted": dotted light grey lines, calmer behind dense bars. "none": no gridlines, for charts with data labels'),
+    // (0.3.0 L4: the flip-card labs of 10 Oct, Desktop 2.158)
+    flipCards: z.union([z.boolean(), z.array(z.number().int().min(1).max(6)).min(1).max(6)]).optional().describe('(Default false: off.) KPI cards that turn over to a one-line description when clicked: true for every KPI card, or a list of 1-6 card numbers in reading order (the same cards on every page). Each becomes three Image visuals in the card\'s box (a backdrop, the front with the value, the back with the measure\'s name, its description from the model, its value and, with a marked date table, the change on last year) and two bookmarks; the pictures are measures the model does not have yet: create_report writes them as a TMDL script next to the project ("<model> - flip cards.tmdl"), which the user applies in TMDL view first (the model is never changed by DataArcus). Fits a report read by people who need a KPI explained; a plain card stays simpler'),
     smoothLines: z.boolean().optional().describe('(Default true.) ' + 'Line charts, and the line of a combo, drawn as smooth curves that never swing past the data (monotone), with a small dot in the series\' colour on each point so every value stays findable. false: straight lines without dots, for a jagged series where every swing matters (daily stock, a sensor).'),
     noDataMessage: z.boolean().optional().describe('(Default true.) ' + 'Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
@@ -663,10 +666,10 @@ const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid'];
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'flipCards'];
 // (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
 // option left out of create_report takes the plan's value, not a schema default that differs from it)
-const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid' };
+const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid', flipCards: false };
 const withLookDefaults = (a) => Object.assign({}, a, Object.fromEntries(Object.entries(LOOK_DEFAULTS).filter(([k]) => a[k] === undefined)));
 // (B-01: focus and tables decide which fields are picked when the plan names none, so they are pinned too)
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
@@ -911,7 +914,7 @@ function reportRun(a, mode) {
     if (a.design && a.gallery) Gallery.askedKinds(a.gallery).filter((k) => !out.some((g) => g.kind === Gallery.toTool(k))).forEach((k) => { const f = Gallery.fits(k, b);
       out.push({ page: null, kind: Gallery.toTool(k), written: 'not placed', why: f.fits ? 'every page\'s chart it can take was given to another gallery visual (one a page)' : f.why + (f.split ? ' (on a designed page a combo is placed only where its units match)' : '') }); });
     return out; };
-  let r, bind, extra = {}, written, boundPages = null;
+  let r, bind, extra = {}, written, boundPages = null, look = null;   // (look: the colours, font and direction the cards are written with, L4)
   let tinyPage = false, smallPageNote = null, designRepaired = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
@@ -953,6 +956,7 @@ function reportRun(a, mode) {
     if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
       other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
+    look = { ui: design.ui, font: design.font, rtl: designRtl(design.layout, a.lang) };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
       theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
@@ -998,6 +1002,7 @@ function reportRun(a, mode) {
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
     }
     written = theme;
+    look = { ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}), font: a.font, rtl: rtlHand };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
@@ -1008,6 +1013,11 @@ function reportRun(a, mode) {
     });
   }
   if (!boundPages) boundPages = a.pages;
+  // (0.3.0 L4) the chosen KPI cards as flip cards, on the built files (create_report's one build: the plan's artifact holds
+  // them); the measures they show go into a script file next to the project, written with the report
+  const radius = +((((((written || {}).visualStyles || {})['*'] || {})['*'] || {}).border || [{}])[0] || {}).radius;
+  const flip = applyFlip(r.files, { flip: a.flipCards, lang: a.lang, rtl: look && look.rtl, ui: look && look.ui, font: look && look.font, radius: Number.isFinite(radius) ? radius : 8, tmsl: m.tmsl });
+  const flipBase = path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') + ' - flip cards';
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
@@ -1026,8 +1036,10 @@ function reportRun(a, mode) {
   // (0.3, B-153: the plan is used the moment the tree is in place, or left unused when a failed write left nothing)
   // (0.3.0 R4, F06: the format script the plan lists is written in the same write, after the report)
   // (R6, F07: the model read again right before the first write)
-  let fmt = null;
-  withPlan(planId, 'create_report', () => { sameModelBeforeWrite(planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); writeTree(m.projectDir, r.files); fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))); });
+  let fmt = null, flipFile = null;
+  withPlan(planId, 'create_report', () => { sameModelBeforeWrite(planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); writeTree(m.projectDir, r.files); fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)));
+    // (L4) the flip cards' measures: a script file next to the project, never applied (a failed write is told, the report stays)
+    if (flip && flip.measures.length) { try { flipFile = path.basename(writeScript(m.projectDir, flipBase, flipScript(flip.measures))); } catch (e) { flipFile = { scriptNotWritten: notWrittenWhy(m.projectDir, e) }; } } });
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid
@@ -1102,6 +1114,8 @@ function reportRun(a, mode) {
     : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
   // (0.3.0 L2) the slicers' style asked, and what each slicer was written as with why; the gridlines asked
   const looks = Object.assign(r.slicerStyle ? { slicerStyle: r.slicerStyle } : {}, r.grid ? { grid: r.grid } : {});
+  // (L4) the flip cards: which cards, their bookmarks, the script and how to apply it first
+  if (flip) looks.flipCards = Object.assign(flipAnswer(flip), typeof flipFile === 'string' ? { scriptFile: flipFile, howToApply: flipHow(flipFile) } : flipFile && flipFile.scriptNotWritten ? { scriptNotWritten: flipFile.scriptNotWritten + ' The flip cards stay empty pictures until their measures exist: ask again, or remove the flip cards with a new plan.' } : {});
   // (D1) a right-to-left report's waterfalls: what each was written as (the plan says it too, waterfallRtl)
   (r.waterfallRtl || []).forEach((x) => reportNotes.push(`The waterfall${x.title ? ` "${visible(x.title)}"` : ''} on "${visible(x.page)}": ${x.written === 'columnChart' ? x.what : x.what + (x.why ? ` (${x.why})` : '')}.`));
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
@@ -1192,7 +1206,7 @@ function reportRun(a, mode) {
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
     galleryList ? { gallery: { slots: galleryList } } : {});
   };
-  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null };
+  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flipBase + '.tmdl' }) : null };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
@@ -1219,14 +1233,20 @@ const attached = (id, art) => { if (art) Plans.attach(id, art); return id; };
 async function exactArtifact(ab, pin, lang) {
   let built;
   try { built = reportRun(ab, 'build'); } catch (e) { return null; }
-  const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
+  // (L4) the flip cards' measures are written with the report, as a script the user applies first: counted as there
+  const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en', built.flip ? { pending: built.flip.pending } : undefined);
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl };
+  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl, flip: built.flip };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
 // (0.2.9.1, B-174) a category chart's kept categories as the plan and the report notes say them: "Top 5, all of them
 // when it has 7 or fewer" (the writer's Keep: measure), "Top 5" (a fixed Top N filter)
+// (0.3.0 L4) the flip cards as the plan and the answer say them: names screened, no description text, no value
+const flipAnswer = (f) => Object.assign({ cards: f.cards.map((c) => ({ page: shownName(c.page, 80), card: c.card, title: shownName(c.title, 80), measure: shownName(c.measure, 120), measures: c.measures.map((x) => shownName(x, 120)), back: c.back })),
+  bookmarks: f.bookmarks, newMeasures: f.measures.length,
+  how: 'Each card is three Image visuals in its box: a backdrop in the card colour, the front (its title and value) and the back (the measure\'s name and one line: its description from the model, its value, the change on last year where the model has a marked date table), hidden until the card is clicked; each face goes to the other through a display-only bookmark of its own (two a card), which touches no slicer or filter. The turn takes 0.3 s. The pictures are measures the model does not have yet: they are written as a TMDL script next to the project, applied by the user first.' },
+  f.notFlipped.length ? { notFlipped: f.notFlipped } : {}, f.skipped.length ? { skipped: f.skipped.map((x) => ({ page: shownName(x.page, 80), card: x.card, why: x.why })) } : {});
 const topSaid = (x) => `Top ${x.top}` + (x.allUpTo > x.top ? `, all of them when it has ${x.allUpTo} or fewer` : '');
 const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a count, or a measure whose format has no decimals (or a count without a format), shows its whole number with thousand separators (179, 101,914), except an amount (a currency in its format, or a sum of money: sales, revenue, cost, budget...), which keeps automatic units with 2 decimals (EUR 54.66M; 14.81K under a million: Power BI cannot switch the units by the value without a change in the model); every other measure keeps automatic units with 2 decimals (3.43M). A measure that shows text is never put on a card.';
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
@@ -1586,14 +1606,16 @@ server.registerTool('plan_layout', {
   // (D1) a right-to-left plan's waterfalls, said before the go as the exact report writes them
   const waterfallRtl = exact && exact.waterfallRtl && exact.waterfallRtl.length ? { waterfallRtl: { charts: exact.waterfallRtl.map((x) => Object.assign({ page: visible(x.page), title: x.title ? visible(x.title) : null, written: x.written === 'columnChart' ? 'stacked column chart drawn as a waterfall' : 'waterfall, left to right', what: x.what }, x.why ? { why: x.why } : {})),
     sayInPlan: 'Say in the plan, for each waterfall, in the person\'s terms: "no Total column in Arabic: the last step on the left ends at the total" (labelled with the total, and every step\'s tooltip gives the running total), because Power BI draws a waterfall left to right only; or that it is kept a waterfall, left to right, and why.' } } : {};
-  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
+  const flipPlan = exact && exact.flip ? exact.flip : null;
+  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''}${flipPlan ? `, and the flip cards' script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, never applied: the user applies it in TMDL view)` : ''} (create_report)`];
+  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then the cards are empty pictures). Editing in Desktop, a card turns with Ctrl+click.` }) } : {};
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : [], flipPlan ? [flipPlan.scriptAfterGo] : []) } : {}, flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined }) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, waterfallRtl, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, waterfallRtl, flipCards, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
     // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
     // shows all; a slot the writer does not cut (a time or known category) is not said to be cut. No lint: the slot's N
     const lt = designLint.designLint && designLint.designLint.tops, written = new Map();

@@ -222,10 +222,16 @@
         R.pages.forEach((pg) => {
           const pos = (x) => { const p = x.mobile.position, b = { x: n(p.x), y: n(p.y), width: n(p.width), height: n(p.height) }; return Object.values(b).every(Number.isFinite) ? b : null; };
           const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup && pos(x));
+          // (0.3.0 L4) a flip card is image visuals stacked in one box on purpose, the page's and the phone's, its faces
+          // going to each other by bookmarks (the flip-card labs, Desktop 2.158, 10 Oct 2026): not an overlap
+          const same = (a, b) => a.parent === b.parent && ['x', 'y', 'width', 'height'].every((k) => n((a.json.position || {})[k]) === n((b.json.position || {})[k])) && JSON.stringify(pos(a)) === JSON.stringify(pos(b));
+          const linked = (x) => x.type === 'image' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'Bookmark';
+          const flipPair = (a, b) => a.type === 'image' && b.type === 'image' && same(a, b) && boxes.some((x) => linked(x) && same(x, a));
           boxes.forEach((a, i) => {
             const A = pos(a);
             if (A.x < -0.5 || A.x + A.width > 323.5) out(a, `the phone box is outside the 323-wide canvas (x ${A.x}, width ${A.width})`, 'Move or narrow it on the phone layout.', { file: a.mobileFile });
             boxes.slice(i + 1).forEach((b) => {
+              if (flipPair(a, b)) return;
               const B = pos(b);
               if (A.x < B.x + B.width - 0.5 && B.x < A.x + A.width - 0.5 && A.y < B.y + B.height - 0.5 && B.y < A.y + A.height - 0.5)
                 out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps another visual's phone box at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });

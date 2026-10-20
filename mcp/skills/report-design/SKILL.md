@@ -172,6 +172,13 @@ them from the same model open in Power BI Desktop:
   with why: tell the user. `grid: "dotted"` makes the charts' value-axis gridlines dotted and light grey (calmer
   behind dense bars), `"none"` removes them (for charts with data labels), `"solid"` is the default. In Arabic the pills
   read from the right; the Arabic twin keeps both.
+- **Flip cards** (`flipCards`, off by default; `true` or a list of 1-6 card numbers; pinned by the plan): a KPI card
+  that turns over, on a click, to its measure's name and one line (its description from the model, its value, the
+  change on last year where a marked date table is related). Offer it only when readers need a KPI explained; never by
+  default. Each card is three Image visuals and two bookmarks; the pictures are measures the model does not have yet,
+  so `create_report` writes them as a TMDL script next to the project (`flipCards.scriptFile`): tell the user to apply
+  the script first, in TMDL view (`howToApply`), and that a card turns with Ctrl+click while editing. Never write the
+  measures yourself and never apply the script.
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.
