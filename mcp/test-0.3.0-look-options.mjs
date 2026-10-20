@@ -17,6 +17,8 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+const req0 = createRequire(import.meta.url);
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -152,7 +154,9 @@ try {
     // 140 draws it whole) the height measured to work, 140 at 15pt, scaled with the text size
     // (F3, changed on purpose: PILLS-F2.md on Desktop 2.159: 76 high at 8pt cuts the text, 88 at 9pt draws it whole: the
     // height has a floor, it does not shrink with the text) never below 88
-    const need = (t) => Math.max(88, Math.ceil(140 * t / 15));
+    // (F6, changed on purpose: FINAL-ship030.md, Desktop 2.159: margins 0 draw the text whole from 56 at 8-9pt and 72 at
+    // 10-15pt; the header row gets the room the eraser (21 px) and a descender need) the grid's minimum + that room
+    const room = (t) => Math.max(4, 21 - Math.ceil(t * 4 / 3)), need = (t) => (t <= 9 ? 56 : t <= 15 ? 72 : Math.ceil(72 * t / 15)) + room(t);
     chk(() => pills0.length === 2 && pills0.every((v) => parseFloat(String(S(tit(v).fontSize))) === szOf(v) && v.position.height >= need(szOf(v))
 ),   // (F4, changed on purpose: the padding is now 0, the owner's decision; P7 checks every margin)
       () => `P6. each pill slicer: header at the tiles' text size, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
@@ -167,7 +171,8 @@ try {
       // a pill slicer the rail cannot give the measured height (88 at least) is a dropdown, and the answer says why; here
       // the rail holds three slicers at 15pt in 228, so both are dropdowns
       const why = /the slicer is \d+ high, the pills need \d+ at their smallest text/.test(JSON.stringify((RL.r && RL.r.slicerStyles) || RL.r || ''));
-      chk(() => rp.every((v) => v.position.height >= need(szOf(v)) && parseFloat(String(S(tit(v).fontSize))) === szOf(v)) && (rp.length === 2 || (rp.length === 0 && why)) && !overlap,
+      // (F6, changed on purpose: with the measured heights the rail's 76 holds the pills again)
+      chk(() => rp.every((v) => v.position.height >= need(szOf(v)) && parseFloat(String(S(tit(v).fontSize))) === szOf(v)) && rp.length === 2 && !overlap,
         () => `P6b. the rail's pill slicers as high as measured, or dropdowns with why (pills ${rp.length}, why ${why}) (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
       const c = RL.r && !RL.r.err ? await check(RL.pbip) : null;
       chk(() => clean(c) && noBreak(c), () => `P6b. validator 0 errors, 0 "can break" on the rail report: ${valErr(c)}`);
@@ -190,10 +195,16 @@ try {
         // across, so it costs no height)
         if (S(ly.columnPadding) !== '6L') out.push('layout.columnPadding (the gap between pills: 6)');
         ['top', 'bottom', 'left', 'right'].forEach((k) => { if (!z(cp, k)) out.push('container padding.' + k); });
-        if (S(cs.customizeSpacing) !== 'true' || !z(cs, 'spaceBelowTitle') || !z(cs, 'spaceBelowTitleArea')) out.push('container spacing');
+        // (F6, changed on purpose: FINAL-ship030.md, an Arabic header's descenders sat on the pills and the eraser over the
+        // first pill) the space below the title: the eraser's measured 21 px less the header's line, 4 at least
+        const pt = parseFloat(String(S(P(v, 'value', 'default').fontSize)));
+        if (S(cs.customizeSpacing) !== 'true' || S(cs.spaceBelowTitle) !== room(pt) + 'D' || !z(cs, 'spaceBelowTitleArea')) out.push(`container spacing (spaceBelowTitle ${S(cs.spaceBelowTitle)}, want ${room(pt)} at ${pt}pt)`);
         return out;
       };
       const pv = pills(allVisuals(EN.dir));
+      // P8 (F6): the heights written, from the sizing helper (pbip-sizing.js make().pillH): 8pt 66, 9pt 65, 10pt 79, 15pt 76
+      const Zs = req0('../assets/js/pbip-sizing.js').make({ font: 'Segoe UI', LABEL: 10 });
+      chk(() => [8, 9, 10, 15].map((t) => Zs.pillH(t)).join() === '66,65,79,76' && [8, 9, 10, 15].every((t) => Zs.pillH(t) === need(t)), () => `P8. pillH at 8, 9, 10, 15pt: ${[8, 9, 10, 15].map((t) => Zs.pillH(t)).join()} (want 66,65,79,76)`);
       chk(() => pv.length === 2 && pv.every((v) => !bad(v).length), () => `P7. every margin of the pill slicer written 0, the gap between pills 6: ${JSON.stringify(pv.map(bad))}`);
     }
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
@@ -300,10 +311,14 @@ try {
     const m0 = (v) => S(P(v, 'padding', 'default').topMargin) === '0L' && S(P(v, 'layout').customizePadding) === 'true', ptOf = (v) => S(P(v, 'value', 'default').fontSize);
     const hsOf = (pt, ctl) => gp.filter((v) => ptOf(v) === pt + 'D' && m0(v) !== ctl).map((v) => v.position.height).sort((a, b) => a - b).join();
     const order = r && r.gridId ? rd(path.join(out, 'pills/Pills Variants.Report/definition/pages/pages.json')) : {};
-    chk(() => gp.length === 29 && gl.length === 29 && order.activePageName === r.gridId && order.pageOrder[0] === r.gridId && gp.every((v) => !v.parentGroupName)
-      && hsOf(8, false) === '56,56,64,64,72,72,80,80,88,88' && hsOf(9, false) === '56,64,72,80,88' && hsOf(10, false) === '72,80,88,96,104,120' && hsOf(15, false) === '72,80,88,96,104,120' && hsOf(8, true) === '76,88'
-      && gp.some((v) => v.visual.query.queryState.Values.projections[0].queryRef === 'Calendar.Quarter') && gp.some((v) => v.visual.query.queryState.Values.projections[0].queryRef === 'Sales.Is Online'),
-      () => `VAR-3. the measurement grid (first page): ${gp.length} slicers, ${gl.length} labels, 8pt ${hsOf(8, false)}, 9pt ${hsOf(9, false)}, 10pt ${hsOf(10, false)}, 15pt ${hsOf(15, false)}, control ${hsOf(8, true)}`);
+    // (F6, changed on purpose: the grid now holds the shipped shape at the height pillH gives each pt, one with an Arabic
+    // header, and four reports follow: the strip and the rail, EN and AR, each checked; the rails write pills again)
+    const hAt = (pt) => gp.filter((v) => ptOf(v) === pt + 'D').map((v) => v.position.height).sort((a, b) => a - b).join();
+    const rs = (r && r.reports) || [];
+    chk(() => gp.length === 6 && gl.length === 6 && order.activePageName === r.gridId && order.pageOrder[0] === r.gridId && gp.every((v) => !v.parentGroupName)
+      && hAt(8) === '66,66' && hAt(9) === '65,65' && hAt(10) === '79' && hAt(15) === '76' && gp.every((v) => S(((v.visual.visualContainerObjects.spacing || [{ properties: {} }])[0].properties).spaceBelowTitle) === Math.max(4, 21 - Math.ceil(parseFloat(ptOf(v)) * 4 / 3)) + 'D')
+      && rs.length === 4 && rs.every((x) => x.check && x.check.validator === 0 && x.check.canBreak === 0 && x.slicers.filter((y) => /: pills$/.test(y)).length === 2),
+      () => `VAR-3. the grid (first page): ${gp.length} slicers, ${gl.length} labels, 8pt ${hAt(8)}, 9pt ${hAt(9)}, 10pt ${hAt(10)}, 15pt ${hAt(15)}; the four reports: ${JSON.stringify(rs.map((x) => [x.name, x.slicers, x.check]))}`);
     fs.rmSync(out, { recursive: true, force: true });
   }
 

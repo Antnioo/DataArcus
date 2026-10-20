@@ -213,6 +213,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - F4: the button-slicer pills write every margin they have at 0 (the tiles' padding and spacing, the layout's cell, row,
   column padding and outer margins, the container's padding and the space below its title), leaving the tiles the room;
   a measurement grid for the laptop (8, 9, 10, 15pt at several heights, with the earlier shape as a control).
+- F6: the pill slicers keep room between their header and the pills (no Arabic descender on a pill, no "clear
+  selections" eraser over the first pill), and their height is the one measured on Desktop 2.159 with margins 0 (56 at
+  8-9pt, 72 at 10-15pt) plus that room, so the filter rail draws pills again.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
