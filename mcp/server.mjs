@@ -1861,6 +1861,10 @@ server.registerTool('approve_plan', {
     sayFirst: 'Not approved yet: still waiting for the click in DataArcus\'s approval window in the user\'s browser (it shows the plan and every file it writes). Tell the user to check it and click Approve there (or "Not now"); a click later still counts: when they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
 }));
 
+// (S2, experimental, not in 0.3.0) render_report: registered from its own module, and that module loaded, only with
+// DATAARCUS_EXPERIMENTAL_RENDER=1; without it the tools and the instructions are as above
+if (process.env.DATAARCUS_EXPERIMENTAL_RENDER === '1') (await import('./lib/render-tool.mjs')).registerRender(server, { safe, text, z, untrusted: REPORT_UNTRUSTED });
+
 prepareRoot();
 await server.connect(new StdioServerTransport());
 console.error(rootProblem() ? `DataArcus MCP started, but no tool will work: ${rootProblem()}` : `DataArcus MCP ready. Folder: ${ROOT}`);
