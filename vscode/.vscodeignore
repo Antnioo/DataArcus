@@ -1,0 +1,12 @@
+# Only the extension, its docs and the staged server go into the .vsix (checked by test/package.test.mjs).
+test/**
+scripts/**
+RESEARCH.md
+node_modules/**
+.gitignore
+.vscodeignore
+*.vsix
+.vscode/**
+**/*.map
+e2e/**
+.vscode-test/**

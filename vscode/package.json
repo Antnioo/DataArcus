@@ -1,0 +1,85 @@
+{
+  "name": "dataarcus-powerbi",
+  "displayName": "DataArcus for Power BI",
+  "description": "Design and check Power BI reports on your own model from VS Code's chat: the DataArcus MCP server, bundled. Runs on your computer; no telemetry.",
+  "version": "0.0.1",
+  "publisher": "dataarcus",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://dataarcus.com/power-bi-mcp/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Antnioo/DataArcus.git",
+    "directory": "vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/Antnioo/DataArcus/issues"
+  },
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#0a0f1c",
+    "theme": "dark"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Data Science"
+  ],
+  "keywords": [
+    "power bi",
+    "pbip",
+    "pbir",
+    "mcp",
+    "report design",
+    "arabic"
+  ],
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "DataArcus reads the Power BI projects in your folder and writes new reports beside them: it runs only in a folder you trust."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "dataarcus",
+        "label": "DataArcus for Power BI"
+      }
+    ],
+    "configuration": {
+      "title": "DataArcus for Power BI",
+      "properties": {
+        "dataarcus.workingFolder": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "markdownDescription": "The folder DataArcus reads and writes in (`DATAARCUS_ROOT`): the folder that holds your `.pbip` projects. Empty: the first folder open in VS Code. A relative path is inside that folder. DataArcus never reads or writes outside it."
+        },
+        "dataarcus.nodePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "The Node.js program (20.10 or later) that runs the DataArcus server. Empty: VS Code's own runtime, so nothing else has to be installed."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "stage": "node scripts/stage.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "package": "vsce package --out dataarcus-powerbi.vsix",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0"
+  }
+}
