@@ -9,6 +9,9 @@
 //   V3  V1 with room for the text: padding 2 on every side and a smaller text (9)
 // V1-V3 at 140. (F2, the laptop's recheck: the project now opens in Desktop: definition.pbism, a V3 model with a culture,
 // three typed rows a table so the tiles have values, and no slicer kept in a group that is not on the page.)
+// (F4) a first page, "Measurement grid": the shipped shape (every margin 0) at 56-88 for 8pt and 9pt, 72-120 for 10pt
+// and 15pt, on Calendar[Quarter] (Q1..Q4) and, at 8pt, Sales[Is Online] (False, True); the F3 shape (padding 4) at 76 and
+// 88 for 8pt as the control: the laptop reads, for each pt, the smallest height whose every tile's text is whole.
 // Microsoft's validator and check_report run on the report. Nothing outside the folder given is touched.
 //   node lab/pills-variants.mjs <empty folder>      (from mcp/; prints the .pbip to open in Power BI Desktop)
 import '../test-env.mjs';
@@ -21,10 +24,11 @@ import { serverClient } from '../test-0.2.9.mjs';
 
 export async function writeVariants(out) {
   const ROOT = fs.realpathSync.native(path.resolve(out));
-  // three typed rows a table (made up), so every pill has a value to show (Small / Medium / Large; online true / false)
+  // four typed rows a table (made up), so every pill has a value to show (Small / Medium / Large; online true / false;
+  // Q1..Q4)
   const ROWS = {
-    Sales: 'let Source = #table(type table [Amount = number, Region = text, Channel = text, #"Is Online" = logical, Date = datetime], {{50, "North", "Web", true, #datetime(2026, 1, 5, 0, 0, 0)}, {500, "South", "Store", false, #datetime(2026, 2, 5, 0, 0, 0)}, {5000, "East", "Web", true, #datetime(2026, 3, 5, 0, 0, 0)}}) in Source',
-    Calendar: 'let Source = #table(type table [Date = datetime, #"Month Name" = text, #"Month Number" = Int64.Type, Quarter = text], {{#datetime(2026, 1, 5, 0, 0, 0), "January", 1, "Q1"}, {#datetime(2026, 2, 5, 0, 0, 0), "February", 2, "Q1"}, {#datetime(2026, 3, 5, 0, 0, 0), "March", 3, "Q1"}}) in Source' };
+    Sales: 'let Source = #table(type table [Amount = number, Region = text, Channel = text, #"Is Online" = logical, Date = datetime], {{50, "North", "Web", true, #datetime(2026, 1, 5, 0, 0, 0)}, {500, "South", "Store", false, #datetime(2026, 4, 5, 0, 0, 0)}, {5000, "East", "Web", true, #datetime(2026, 7, 5, 0, 0, 0)}, {700, "West", "Store", false, #datetime(2026, 10, 5, 0, 0, 0)}}) in Source',
+    Calendar: 'let Source = #table(type table [Date = datetime, #"Month Name" = text, #"Month Number" = Int64.Type, Quarter = text], {{#datetime(2026, 1, 5, 0, 0, 0), "January", 1, "Q1"}, {#datetime(2026, 4, 5, 0, 0, 0), "April", 4, "Q2"}, {#datetime(2026, 7, 5, 0, 0, 0), "July", 7, "Q3"}, {#datetime(2026, 10, 5, 0, 0, 0), "October", 10, "Q4"}}) in Source' };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: ROWS[n] } }];
   const col = (name, dataType, x) => Object.assign({ name, dataType, sourceColumn: name }, x || {});
   fs.mkdirSync(path.join(ROOT, 'pills/Shop.SemanticModel'), { recursive: true });
@@ -81,9 +85,35 @@ export async function writeVariants(out) {
         wr(path.join(PD, 'visuals', nm, 'visual.json'), Object.assign({}, pill0, { name: nm, position: { x, y: y + 44, z: i * 2 + 1, width: 560, height: H, tabOrder: i * 2 + 1 },
         visual: Object.assign({}, pill.visual, { objects: V[k] }, { visualContainerObjects: /^V0/.test(k) ? vco15 : noTitleSize(pill.visual.visualContainerObjects) }) }));
     });
-    order.pageOrder.unshift(pageId); order.activePageName = pageId; wr(path.join(P, 'pages.json'), order);
+    // (F4) the measurement grid: the shipped shape (every margin 0) at several heights a text size, and the F3 shape
+    // (padding 4, no other margin written) at 76 and 88 for 8pt as the control; each slicer labelled with its pt, height
+    // and margins; Calendar[Quarter] (Q1..Q4) and Sales[Is Online] (False, True)
+    const gridId = crypto.createHash('sha256').update('pills-grid').digest('hex').slice(0, 20), GD = path.join(P, gridId);
+    const FIELD = { Q: { t: 'Calendar', c: 'Quarter', n: 4 }, TF: { t: 'Sales', c: 'Is Online', n: 2 } };
+    const f3 = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.spacing; c.padding = [{ properties: { topMargin: L('4L'), bottomMargin: L('4L'), leftMargin: L('4L'), rightMargin: L('4L') }, selector: { id: 'default' } }];
+      ['customizePadding', 'cellPadding', 'rowPadding', 'columnPadding', 'topOuterMargin', 'bottomOuterMargin', 'leftOuterMargin', 'rightOuterMargin'].forEach((k) => delete c.layout[0].properties[k]); return c; };
+    const cellOf = (pt, h, fk, shape) => {
+      const F = FIELD[fk], o = JSON.parse(JSON.stringify(shape === 'F3' ? f3(pill.visual.objects) : pill.visual.objects)), vco = JSON.parse(JSON.stringify(pill.visual.visualContainerObjects));
+      o.value.find((e) => e.selector && e.selector.id === 'default').properties.fontSize = L(pt + 'D'); o.layout[0].properties.columnCount = L(F.n + 'L');
+      vco.title[0].properties.fontSize = L(pt + 'D'); vco.title[0].properties.text = L("'" + F.c + "'");
+      if (shape === 'F3') { delete vco.padding; delete vco.spacing; }
+      const q = JSON.parse(JSON.stringify(pill.visual.query)), pr = q.queryState.Values.projections[0];
+      pr.field = { Column: { Expression: { SourceRef: { Entity: F.t } }, Property: F.c } }; pr.queryRef = F.t + '.' + F.c; pr.nativeQueryRef = F.c; delete pr.displayName; delete q.sortDefinition;
+      return { pt, h, label: `${pt}pt · ${h} high · ${shape === 'F3' ? 'margins as F3 (control)' : 'margins 0'} · ${F.c}`, visual: Object.assign({}, pill.visual, { query: q, objects: o, visualContainerObjects: vco }) };
+    };
+    const COLS = [[8, 'Q', [56, 64, 72, 80, 88]], [8, 'TF', [56, 64, 72, 80, 88]], [9, 'Q', [56, 64, 72, 80, 88]], [10, 'Q', [72, 80, 88, 96, 104, 120]], [15, 'Q', [72, 80, 88, 96, 104, 120]]];
+    const cols = COLS.map(([pt, fk, hs]) => hs.map((h) => cellOf(pt, h, fk))).concat([[cellOf(8, 76, 'Q', 'F3'), cellOf(8, 88, 'Q', 'F3')]]);
+    wr(path.join(GD, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: gridId, displayName: 'Measurement grid', displayOption: 'FitToPage', width: 1920, height: 1080 });
+    let zg = 0;
+    cols.forEach((col, ci) => { let y = 16; col.forEach((cell, ri) => {
+      const x = 16 + ci * 316, id = `g${ci}${ri}`;
+      wr(path.join(GD, 'visuals', 'l' + id, 'visual.json'), { $schema: pill.$schema, name: 'l' + id, position: { x, y, z: zg, width: 300, height: 44, tabOrder: zg++ },
+        visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: cell.label, textStyle: { fontSize: '10pt' } }] }] } }] } } });
+      wr(path.join(GD, 'visuals', 'p' + id, 'visual.json'), Object.assign({}, pill0, { name: 'p' + id, position: { x, y: y + 46, z: zg, width: 300, height: cell.h, tabOrder: zg++ }, visual: cell.visual }));
+      y += 46 + cell.h + 12; }); });
+    order.pageOrder.unshift(gridId, pageId); order.activePageName = gridId; wr(path.join(P, 'pages.json'), order);
     const c = await s.call('check_report', { path: 'pills/Pills Variants.pbip' });
-    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
+    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, gridId, grid: cols.flat().map((c) => c.label), variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
   } finally { await s.close(); }
 }
 

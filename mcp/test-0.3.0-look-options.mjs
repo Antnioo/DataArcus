@@ -154,8 +154,8 @@ try {
     // height has a floor, it does not shrink with the text) never below 88
     const need = (t) => Math.max(88, Math.ceil(140 * t / 15));
     chk(() => pills0.length === 2 && pills0.every((v) => parseFloat(String(S(tit(v).fontSize))) === szOf(v) && v.position.height >= need(szOf(v))
-      && ['topMargin', 'bottomMargin'].every((m) => S(P(v, 'padding', 'default')[m]) === '4D')),
-      () => `P6. each pill slicer: header at the tiles' text size, padding 4 written, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
+),   // (F4, changed on purpose: the padding is now 0, the owner's decision; P7 checks every margin)
+      () => `P6. each pill slicer: header at the tiles' text size, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
     // P6b (F2): in a stacked filter rail the layout gives each pill slicer the height measured for it at the slicer text
     // size (the strip above keeps its height and lowers the text instead); nothing overlaps; the reason said
     {
@@ -171,6 +171,27 @@ try {
         () => `P6b. the rail's pill slicers as high as measured, or dropdowns with why (pills ${rp.length}, why ${why}) (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
       const c = RL.r && !RL.r.err ? await check(RL.pbip) : null;
       chk(() => clean(c) && noBreak(c), () => `P6b. validator 0 errors, 0 "can break" on the rail report: ${valErr(c)}`);
+    }
+    // P7 (F4, the owner: "remove the margins in the pills"): every margin the pill slicer has, from Microsoft's
+    // capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0: the tiles' padding and spacing
+    // (state-keyed: default), the layout's cell, row and column padding and outer margins, the container's padding and the
+    // space below its title
+    {
+      const z = (p, k) => S(p[k]) === '0D' || S(p[k]) === '0L' || S(p[k]) === '0';
+      const vco = (v, o) => (((v.visual.visualContainerObjects || {})[o] || [{ properties: {} }])[0].properties);
+      const bad = (v) => {
+        const out = [], pd = P(v, 'padding', 'default'), sp = P(v, 'spacing', 'default'), ly = P(v, 'layout'), cp = vco(v, 'padding'), cs = vco(v, 'spacing');
+        ['topMargin', 'bottomMargin', 'leftMargin', 'rightMargin'].forEach((k) => { if (!z(pd, k)) out.push('padding.' + k); });
+        if (S(pd.paddingSelection) !== 'Custom') out.push('padding.paddingSelection');
+        if (!z(sp, 'verticalSpacing')) out.push('spacing.verticalSpacing');
+        if (S(ly.customizePadding) !== 'true') out.push('layout.customizePadding');
+        ['cellPadding', 'rowPadding', 'columnPadding', 'topOuterMargin', 'bottomOuterMargin', 'leftOuterMargin', 'rightOuterMargin'].forEach((k) => { if (!z(ly, k)) out.push('layout.' + k); });
+        ['top', 'bottom', 'left', 'right'].forEach((k) => { if (!z(cp, k)) out.push('container padding.' + k); });
+        if (S(cs.customizeSpacing) !== 'true' || !z(cs, 'spaceBelowTitle') || !z(cs, 'spaceBelowTitleArea')) out.push('container spacing');
+        return out;
+      };
+      const pv = pills(allVisuals(EN.dir));
+      chk(() => pv.length === 2 && pv.every((v) => !bad(v).length), () => `P7. every margin of the pill slicer written 0: ${JSON.stringify(pv.map(bad))}`);
     }
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
     chk(() => band && ents(band, 'value').length && ents(band, 'value').every((e) => e.selector) && S(P(band, 'value', 'default').show) === 'true' && P(band, 'value', 'default').fontSize && P(band, 'value', 'default').fontColor
@@ -268,6 +289,18 @@ try {
       && Object.values(v2.visual.objects).every((es) => es.length === 1 && !es[0].selector) && shipped && JSON.stringify(Object.keys(v0.visual.objects).sort()) === JSON.stringify(Object.keys(shipped.visual.objects).sort()) && v0.visual.objects.padding && v0.visual.visualContainerObjects.title[0].properties.fontSize
       && !pl.find((v) => v.name === 'pillv1').visual.objects.padding && !pl.find((v) => v.name === 'pillv1').visual.visualContainerObjects.title[0].properties.fontSize,
       () => `VAR. one page, six labelled pill slicers (V0 the shipped shape at 140, 130, 120; V1 its text only, V2 no selectors, V3 with room), validator 0 and 0 "can break": ${JSON.stringify(r).slice(0, 400)} ${pl.length} pills, ${lb.length} labels`);
+    // VAR-3 (F4): the measurement grid opens first: the shipped shape (every margin 0) at 56-88 for 8 and 9pt, 72-120 for
+    // 10 and 15pt, on Quarter (4 tiles) and Is Online (2), the F3 shape at 76 and 88 for 8pt as the control, each labelled
+    const GP = r && r.gridId ? path.join(out, 'pills/Pills Variants.Report/definition/pages', r.gridId) : '';
+    const gv = GP && fs.existsSync(path.join(GP, 'visuals')) ? fs.readdirSync(path.join(GP, 'visuals')).map((v) => rd(path.join(GP, 'visuals', v, 'visual.json'))) : [];
+    const gp = gv.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), gl = gv.filter((v) => v.visual.visualType === 'textbox');
+    const m0 = (v) => S(P(v, 'padding', 'default').topMargin) === '0L' && S(P(v, 'layout').columnPadding) === '0L', ptOf = (v) => S(P(v, 'value', 'default').fontSize);
+    const hsOf = (pt, ctl) => gp.filter((v) => ptOf(v) === pt + 'D' && m0(v) !== ctl).map((v) => v.position.height).sort((a, b) => a - b).join();
+    const order = r && r.gridId ? rd(path.join(out, 'pills/Pills Variants.Report/definition/pages/pages.json')) : {};
+    chk(() => gp.length === 29 && gl.length === 29 && order.activePageName === r.gridId && order.pageOrder[0] === r.gridId && gp.every((v) => !v.parentGroupName)
+      && hsOf(8, false) === '56,56,64,64,72,72,80,80,88,88' && hsOf(9, false) === '56,64,72,80,88' && hsOf(10, false) === '72,80,88,96,104,120' && hsOf(15, false) === '72,80,88,96,104,120' && hsOf(8, true) === '76,88'
+      && gp.some((v) => v.visual.query.queryState.Values.projections[0].queryRef === 'Calendar.Quarter') && gp.some((v) => v.visual.query.queryState.Values.projections[0].queryRef === 'Sales.Is Online'),
+      () => `VAR-3. the measurement grid (first page): ${gp.length} slicers, ${gl.length} labels, 8pt ${hsOf(8, false)}, 9pt ${hsOf(9, false)}, 10pt ${hsOf(10, false)}, 15pt ${hsOf(15, false)}, control ${hsOf(8, true)}`);
     fs.rmSync(out, { recursive: true, force: true });
   }
 
