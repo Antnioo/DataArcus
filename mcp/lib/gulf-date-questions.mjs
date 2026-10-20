@@ -31,6 +31,7 @@ const ROLE = {
 };
 const SEASON_COL = /ramadan|رمضان|(^|[^a-z])eid([^a-z]|$)|عيد|hijri|هجري/i;
 const CONFIRMED = [], MAX = 5000;
+export const STRICT = false;   // true: no plan id for a seasonal page until every question is answered (Decision needed, J17)
 
 // ---- the questions, neutral, in English and Arabic ----
 const Q = {
@@ -200,7 +201,10 @@ export function gulfDateQuestions(m, a, opts) {
       scopeNote = `One ${season}: Hijri year ${answers.year}, as the person gave it.`;
     }
   }
-  if (seasonal && open.length) problems.push(`A seasonal page with an open question (gulfDates.askNext: ${open[0].id}): ask the person, one question at a time, then call plan_layout again with gulfDates. No plan id until the date, the grain and the scope are answered.`);
+  // (an unanswered question does not withhold the plan id: the existing Ramadan plans and the golden tasks make plans
+  // without answers; STRICT, held for the owner's go, would. Answers that contradict the plan always do, above)
+  const sayFirst = seasonal && open.length ? `A seasonal page with ${open.length} open question${open.length === 1 ? '' : 's'}: before showing this plan, ask the person askNext (${open[0].id}), one question at a time, and call plan_layout again with gulfDates. Until then the plan follows ${using && using.field ? using.field : 'the model\'s active relationship'} and keeps every ${season} the filters keep: the approval page says each answer is missing.` : null;
+  if (STRICT && sayFirst) problems.push(sayFirst);
   blocked.forEach((b) => problems.push(b));
 
   // 5. the dates' status: announced or estimated, and the country's limits (the Gulf calendar's own notes)
@@ -217,7 +221,7 @@ export function gulfDateQuestions(m, a, opts) {
   const answer = Object.assign({
     candidates: candidates.slice(0, 12).map((x) => ({ field: shown(x.key), relationship: x.rel ? `${shown(x.key)} -> ${shown(x.rel.to)}` : null, active: x.rel ? x.rel.active : null, status: answers.dateRole === x.key ? 'confirmed' : 'candidate' })),
     ambiguous, seasonal, using, answers: shownAnswers, pleaseConfirm, askNext, remaining: open.length
-  }, earlier.length ? { earlier } : {}, blocked.length ? { blocked } : {}, grain ? { grain } : {}, scopeNote ? { scope: scopeNote } : {},
+  }, sayFirst ? { sayFirst } : {}, earlier.length ? { earlier } : {}, blocked.length ? { blocked } : {}, grain ? { grain } : {}, scopeNote ? { scope: scopeNote } : {},
   cal ? { calendar: { table: shown(C), declared: !!gen, columns: Object.fromEntries(Object.entries(columns).map(([k, v]) => [k, v ? { field: shown(v.field), by: v.by } : null])) } } : { calendar: null },
   status ? { status } : {}, offer ? { offer } : {}, { how: HOW, sayInPlan: SAY });
   const SCOPE_SAID = answers.scope === 'all' ? `every ${season} of the calendar together` : answers.scope === 'year' ? (answers.year != null ? `${season} of Hijri year ${answers.year} only` : `one ${season} (the year not given yet)`) : 'not answered';
