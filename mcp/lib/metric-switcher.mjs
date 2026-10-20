@@ -117,19 +117,38 @@ export function addSwitch(r, o) {
     query.queryState.Y.fieldParameters = [param];
     sorted(query, f, false);
     const v = { visualType: type, query, objects: kind === 'line' ? { lineStyles: obj(lineStyle(o.smooth !== false)) } : {},
-      visualContainerObjects: { title: obj({ show: bool(true), text: { expr: P } }), subTitle: obj({ show: bool(true), text: str(BY[lang](label(f))) }),
+      // (0.3.0 A1: in a right-to-left report the title and subtitle are aligned right, where an Arabic reader starts: RTL_MIRROR)
+      visualContainerObjects: { title: obj(Object.assign({ show: bool(true), text: { expr: P } }, o.rtl ? { alignment: str('right') } : {})), subTitle: obj(Object.assign({ show: bool(true), text: str(BY[lang](label(f))) }, o.rtl ? { alignment: str('right') } : {})),
         general: obj({ altText: str(`${KIND_WORD[lang][kind]}: ${lang === 'ar' ? 'المؤشر المختار' : 'the chosen metric'} ${BY[lang](label(f))}`) }) } };
     if (o.rtl) mirrorChart(v, kind);
+    if (grid) { const va = v.objects.valueAxis || (v.objects.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, JSON.parse(JSON.stringify(grid))); gridded++; }
     if (!Object.keys(v.objects).length) delete v.objects;
     vs.push(visual('metric' + kind + pageId.slice(0, 8), x, m, cw, H - 2 * m, z, v));
   };
+  // the gridlines of the report's own charts (grid: dotted, none, or the quiet grey), on this page's charts too (0.3.0 A1:
+  // they kept the theme's solid gridlines), counted in the answer's grid.charts when a grid was asked
+  const ownVisuals = r.files.filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f.path)).map((f) => JSON.parse(f.data));
+  const gv = ownVisuals.map((v) => (((((v.visual || {}).objects || {}).valueAxis || [])[0] || {}).properties || {})).find((p) => p.gridlineShow || p.gridlineStyle || p.gridlineColor);
+  const grid = gv ? Object.fromEntries(['gridlineShow', 'gridlineStyle', 'gridlineColor'].filter((k) => gv[k]).map((k) => [k, gv[k]])) : null;
+  let gridded = 0;
   let cx = x0, z = 1000;
   charts.forEach((kind) => { chart(kind, kind === 'bar' ? cat : date, cx, z); cx += cw + gap; z += 1000; });
   // the report's page filters (pageFilters: the same on each of its pages) hold on this page too, each under a name of
   // its own (0.3.0 A1: the Metric page of a Ramadan report showed every date)
-  const ownPage = r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(f.data)).find((p) => p.type !== 'Tooltip' && p.filterConfig && (p.filterConfig.filters || []).length);
+  const ownPages = r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(f.data)).filter((p) => p.type !== 'Tooltip');
+  const ownPage = ownPages.find((p) => p.filterConfig && (p.filterConfig.filters || []).length), ownPage0 = ownPages[0];
   const filterConfig = ownPage ? { filters: ownPage.filterConfig.filters.map((x, i) => Object.assign({}, x, { name: 'Filter' + crypto.createHash('sha256').update(pageId + '\0filter' + i).digest('hex').slice(0, 24) })) } : null;
-  files.push({ path: `${D}/pages/${pageId}/page.json`, data: json(Object.assign({ $schema: SCHEMA.page, name: pageId, displayName: PAGE_NAME[lang], displayOption: 'FitToPage', width: W, height: H }, filterConfig ? { filterConfig } : {})) });
+  // the report's page background and outspace (0.3.0 A1: the page had none): the first page's own when its image is the
+  // one-pixel colour of a solid design; a page image that draws panels is that page's layout, so its outspace colour then
+  const firstObj = ownPage0 && ownPage0.objects, img = firstObj && firstObj.background && (((firstObj.background[0].properties.image || {}).image || {}).url || {}).expr;
+  const imgFile = img && img.ResourcePackageItem ? r.files.find((f) => f.path.endsWith('/RegisteredResources/' + img.ResourcePackageItem.ItemName)) : null;
+  const onePixel = (d) => { try { const b = Buffer.from(d); return b.length > 24 && b.readUInt32BE(16) === 1 && b.readUInt32BE(20) === 1; } catch (e) { return false; } };
+  const outColour = firstObj && firstObj.outspace && firstObj.outspace[0].properties.color;
+  const objects = !firstObj ? null : !img || (imgFile && onePixel(imgFile.data)) ? JSON.parse(JSON.stringify({ background: firstObj.background, outspace: firstObj.outspace }))
+    : outColour ? { background: [{ properties: { color: outColour, transparency: { expr: { Literal: { Value: '0D' } } } } }], outspace: firstObj.outspace } : null;
+  if (objects) Object.keys(objects).forEach((k) => objects[k] === undefined && delete objects[k]);
+  files.push({ path: `${D}/pages/${pageId}/page.json`, data: json(Object.assign({ $schema: SCHEMA.page, name: pageId, displayName: PAGE_NAME[lang], displayOption: 'FitToPage', width: W, height: H }, objects && Object.keys(objects).length ? { objects } : {}, filterConfig ? { filterConfig } : {})) });
+  if (gridded && r.grid && typeof r.grid.charts === 'number') r.grid.charts += gridded;
   vs.forEach((v) => files.push({ path: `${D}/pages/${pageId}/visuals/${v.name}/visual.json`, data: json(v) }));
   // the page goes after the report's own pages, before the tooltip pages (pages.json keeps every other page as it is)
   const pagesFile = r.files.find((f) => f.path === `${D}/pages/pages.json`), pj = JSON.parse(pagesFile.data), own = r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(f.data)).filter((p) => p.type !== 'Tooltip').map((p) => p.name);

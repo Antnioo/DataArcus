@@ -197,6 +197,20 @@ try {
     chk(() => clean(c) && noBreak(c), () => `TW3. validator 0 errors, 0 "can break" on the twin: ${valErr(c)}`);
   }
 
+  // ---------- MS: the Metric page's charts follow grid too (0.3.0 A1: they kept the theme's solid gridlines) ----------
+  {
+    for (const g of ['dotted', 'none']) {
+      const M = await write({ name: 'Look Metric ' + g, lang: 'en', ...DES, planFields: FIELDS, grid: g, metricSwitcher: ['Sales[Total Sales]', 'Sales[Orders]'] });
+      const ps = M.dir && fs.existsSync(M.dir) ? shownPages(M.dir) : [], mpg = ps.find((p) => p.visuals.some((v) => JSON.stringify(v.visual.query || {}).includes('fieldParameters')));
+      const own = ps.filter((p) => p !== mpg).flatMap((p) => charts(p.visuals)), mc = mpg ? charts(mpg.visuals) : [];
+      const ga = (v) => JSON.stringify(['gridlineShow', 'gridlineStyle', 'gridlineColor'].map((k) => P(v, 'valueAxis')[k] || null));
+      chk(() => M.r && !M.r.err && mc.length === 2 && own.length && mc.every((v) => ga(v) === ga(own[0])) && (g === 'none' ? S(P(own[0], 'valueAxis').gridlineShow) === 'false' : S(P(own[0], 'valueAxis').gridlineStyle) === 'dotted'),
+        () => `MS-1 ${g}. the Metric page's two charts have the gridlines of the report's other charts: ${M.err || short(M.r)} own ${own.length && ga(own[0])} metric ${JSON.stringify(mc.map(ga))}`);
+      chk(() => M.r && M.r.j && M.r.j.grid && M.r.j.grid.charts === own.length + mc.length, () => `MS-2 ${g}. create_report's grid.charts counts the Metric page's charts (${own.length} + ${mc.length}): ${JSON.stringify(M.r && M.r.j && M.r.j.grid)}`);
+      const c = M.r && !M.r.err ? await check(M.pbip) : null;
+      chk(() => clean(c) && noBreak(c), () => `MS-3 ${g}. validator 0 errors and check_report 0 "can break": ${valErr(c)}`);
+    }
+  }
   // ---------- SEL: the pills' entries both ways ----------
   {
     const src = EN && EN.dir;
