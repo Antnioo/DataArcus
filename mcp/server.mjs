@@ -1588,7 +1588,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
       const lang = a.lang === 'ar' ? 'ar' : 'en';
-      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
         second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
     } catch (e) { return null; }
   };
@@ -1602,7 +1602,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
       if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
-      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
+      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   // B-146, the aggregation guard (0.3): the planned page's values read by assets/js/aggregation.js (metadata only). A
