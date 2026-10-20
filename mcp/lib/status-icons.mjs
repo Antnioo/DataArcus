@@ -81,12 +81,16 @@ const icon = (name) => ({ Literal: { Value: `'${name}'` } });
 export function rulesValue(t, m, g, b) {
   const M = measureRef(t, m);
   return { expr: { Conditional: { Cases: [
+    // (F1, the laptop proof: a blank row got the bad icon) a blank value first: no icon (blank, as Power BI's filters write it)
+    { Condition: { Comparison: { ComparisonKind: 0, Left: M, Right: { Literal: { Value: 'null' } } } }, Value: { Literal: { Value: "''" } } },
     { Condition: cmp(g.kind, M, g.n), Value: icon(ICONS.good) },
     { Condition: cmp(b.kind, M, b.n), Value: icon(ICONS.bad) },
     { Condition: { And: { Left: cmp(NOT[g.kind], M, g.n), Right: cmp(NOT[b.kind], M, b.n) } }, Value: icon(ICONS.neutral) }] } } };
 }
 /** The lab's entry in a table's or matrix's values, for the column queryRef. */
-export const iconEntry = (queryRef, value) => ({ properties: { icon: { kind: 'Icon', layout: lit("'Before'"), verticalAlignment: lit("'Middle'"), value } },
+// (F1, the laptop proof: 'Before', "left of the value", put the icon at the far left of a wide right-aligned cell, beside
+// the previous column's number) right of the value ('After') in English, left of it ('Before') in a right-to-left report
+export const iconEntry = (queryRef, value, rtl) => ({ properties: { icon: { kind: 'Icon', layout: lit(rtl ? "'Before'" : "'After'"), verticalAlignment: lit("'Middle'"), value } },
   selector: { data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata: queryRef } });
 /** The status measure's DAX (Way C): the target the model names; no number of DataArcus's own. */
 export const statusDax = (x) => [`VAR _v = ${dax.column(x.t, x.m)}`, `VAR _t = ${dax.column(x.target.t, x.target.m)}`,
@@ -138,7 +142,7 @@ export function applyIcons(files, o) {
         if (!name) { name = free(m + SUFFIX); made.set(key, name); measures.push({ t, name, expression: statusDax(x), of: `${t}[${m}]` }); }
         value = { expr: measureRef(t, name) };
       }
-      entries.push(iconEntry(p.queryRef || `${t}.${m}`, value));
+      entries.push(iconEntry(p.queryRef || `${t}.${m}`, value, o.rtl));
       columns.push(Object.assign({ page: pg, visual: type === 'tableEx' ? 'table' : 'matrix', measure: `${t}[${m}]`, way: x.way, rule: ruleSaid(x) }, x.way === 'measure' ? { statusMeasure: `${t}[${made.get(key)}]`, target: `${x.target.t}[${x.target.m}]` } : { thresholds: x.given }));
     });
     if (!entries.length) return;

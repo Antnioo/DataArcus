@@ -84,8 +84,10 @@ const tablesOf = (dir) => visualsOf(dir).filter((v) => v.visual && /^(tableEx|pi
 const iconsOf = (v) => (((v.visual || {}).objects || {}).values || []).filter((e) => e && e.properties && e.properties.icon).map((e) => ({ metadata: e.selector && e.selector.metadata, selector: e.selector, icon: e.properties.icon }));
 const allIcons = (dir) => tablesOf(dir).flatMap(iconsOf);
 const lit = (v) => ({ expr: { Literal: { Value: v } } });
-const labShape = (e, metadata) => !!e && JSON.stringify(e.selector) === JSON.stringify({ data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata })
-  && e.icon.kind === 'Icon' && JSON.stringify(e.icon.layout) === JSON.stringify(lit("'Before'")) && JSON.stringify(e.icon.verticalAlignment) === JSON.stringify(lit("'Middle'"))
+// (F1, the laptop proof: "left of the value" put the icon beside the previous column's number in a wide right-aligned
+// cell) the icon right of its value in English ('After'), left of it in Arabic ('Before'); changed on purpose
+const labShape = (e, metadata, layout = "'After'") => !!e && JSON.stringify(e.selector) === JSON.stringify({ data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata })
+  && e.icon.kind === 'Icon' && JSON.stringify(e.icon.layout) === JSON.stringify(lit(layout)) && JSON.stringify(e.icon.verticalAlignment) === JSON.stringify(lit("'Middle'"))
   && Object.keys(e.icon).sort().join() === 'kind,layout,value,verticalAlignment';
 const check = async (pbip) => w.call('check_report', { path: pbip });
 const clean = (r) => !!r && !r.err && r.j.validator && r.j.validator.ran && r.j.validator.errors === 0;
@@ -202,10 +204,14 @@ try {
     const cs = e && e.icon.value.expr.Conditional && e.icon.value.expr.Conditional.Cases;
     const isM = (x) => x && x.Measure && x.Measure.Property === 'Fill Rate' && x.Measure.Expression.SourceRef.Entity === 'Sales';
     const cmp = (c, kind, v, icon) => c && c.Condition.Comparison && c.Condition.Comparison.ComparisonKind === kind && isM(c.Condition.Comparison.Left) && JSON.stringify(c.Condition.Comparison.Right) === JSON.stringify({ Literal: { Value: v } }) && JSON.stringify(c.Value) === JSON.stringify({ Literal: { Value: `'${icon}'` } });
+    // (F1, the proof: a blank row got the bad icon) the first case: a blank value, no icon (Power BI's blank literal)
+    chk(() => Array.isArray(cs) && cs[0].Condition.Comparison && cs[0].Condition.Comparison.ComparisonKind === 0 && isM(cs[0].Condition.Comparison.Left) && JSON.stringify(cs[0].Condition.Comparison.Right) === JSON.stringify({ Literal: { Value: 'null' } }) && JSON.stringify(cs[0].Value) === JSON.stringify({ Literal: { Value: "''" } }),
+      () => `E2b. a blank value gets no icon (the first case): ${JSON.stringify(cs && cs[0]).slice(0, 400)}`);
+    const cs0 = cs; { const cs = cs0 && cs0.slice(1);
     chk(() => Array.isArray(cs) && cmp(cs[0], 2, '0.97D', 'daGood') && cmp(cs[1], 3, '0.94D', 'daBad'), () => `E2. Way E: >= 0.97 daGood (kind 2), < 0.94 daBad (kind 3), the user's numbers exactly: ${JSON.stringify(cs).slice(0, 600)}`);
     const warn = cs && cs[2], and = warn && warn.Condition.And;
     chk(() => warn && JSON.stringify(warn.Value) === JSON.stringify({ Literal: { Value: "'daWarn'" } }) && and && and.Left.Comparison.ComparisonKind === 3 && and.Left.Comparison.Right.Literal.Value === '0.97D' && and.Right.Comparison.ComparisonKind === 2 && and.Right.Comparison.Right.Literal.Value === '0.94D' && cs.length === 3,
-      () => `E3. between the two, daWarn (< 0.97 and >= 0.94), and nothing else: ${JSON.stringify(warn).slice(0, 500)}`);
+      () => `E3. between the two, daWarn (< 0.97 and >= 0.94), and nothing else: ${JSON.stringify(warn).slice(0, 500)}`); }
     chk(() => !fs.existsSync(scriptOf('Icons Rules')) && X.r.j.statusIcons && X.r.j.statusIcons.columns[0].way === 'rules' && !X.r.j.statusIcons.scriptFile, () => `E4. rules need no script: ${JSON.stringify(X.r && X.r.j && X.r.j.statusIcons).slice(0, 400)}`);
     const H = unesc((X.html || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
     chk(() => /Status icons \(1\)/.test(H) && />= 0\.97/.test(H) && /< 0\.94/.test(H) && /your thresholds|the user's thresholds|as given/i.test(H), () => `E5. the approval page shows the thresholds as given: ${(H.match(/Status icons[\s\S]{0,600}/) || [''])[0]}`);
@@ -213,7 +219,7 @@ try {
     chk(() => clean(c) && noBreak(c) && !rules(c).includes('ICON_MEASURE_PENDING'), () => `E6. validator 0 errors, 0 "can break", no pending note: ${valErr(c)}`);
     // lower is better: good "<= 0.03", bad "> 0.05"
     const L = await write({ name: 'Icons Lower', lang: 'en', ...DES, planFields: FIELDS, statusIcons: [{ measure: 'Sales[Fill Rate]', good: '<= 0.03', bad: '> 0.05' }] });
-    const lc = L.dir && fs.existsSync(L.dir) ? (allIcons(L.dir)[0] || {}).icon : null, lcs = lc && lc.value.expr.Conditional.Cases;
+    const lc = L.dir && fs.existsSync(L.dir) ? (allIcons(L.dir)[0] || {}).icon : null, lcs = lc && lc.value.expr.Conditional.Cases.slice(1);
     chk(() => lcs && lcs[0].Condition.Comparison.ComparisonKind === 4 && lcs[1].Condition.Comparison.ComparisonKind === 1 && lcs[2].Condition.And.Left.Comparison.ComparisonKind === 1 && lcs[2].Condition.And.Right.Comparison.ComparisonKind === 4,
       () => `E7. lower is better: <= 0.03 good (4), > 0.05 bad (1), between warn: ${L.err || JSON.stringify(lcs).slice(0, 400)}`);
   }
@@ -248,7 +254,7 @@ try {
   {
     const A = await write({ name: 'Icons AR', lang: 'ar', ...DES, planFields: FIELDS, displayNames: AR_NAMES, statusIcons: true });
     const ic = A.dir && fs.existsSync(A.dir) ? allIcons(A.dir) : [];
-    chk(() => ic.length === 2 && labShape(ic.find((e) => e.metadata === 'Sales.On-time Rate'), 'Sales.On-time Rate'), () => `A1. the Arabic report's table carries the icons, 'Before' (the proven value): ${A.err || short(A.r)} ${JSON.stringify(ic).slice(0, 300)}`);
+    chk(() => ic.length === 2 && labShape(ic.find((e) => e.metadata === 'Sales.On-time Rate'), 'Sales.On-time Rate', "'Before'"), () => `A1. the Arabic report's table carries the icons, 'Before' (left of the value, where an Arabic reader ends it): ${A.err || short(A.r)} ${JSON.stringify(ic).slice(0, 300)}`);
     const c = A.r && !A.r.err ? await check(A.pbip) : null;
     chk(() => clean(c) && noBreak(c), () => `A2. validator 0 errors, 0 "can break" on the Arabic report: ${valErr(c)}`);
   }
@@ -260,7 +266,7 @@ try {
     if (id) await approve(id);
     const tw = id ? await w.call('create_arabic_twin', { path: EN.pbip, planId: id }) : null, twinDir = path.join(ROOT, 'g', 'Icons EN AR.Report');
     const ic = fs.existsSync(twinDir) ? allIcons(twinDir) : [];
-    chk(() => ic.length === 2 && ic.every((e) => labShape(e, e.metadata)) && JSON.stringify(ic.map((e) => e.icon.value)) === JSON.stringify(allIcons(ENDIR).map((e) => e.icon.value)), () => `TW1. the twin keeps both icon entries as they are: ${short(tw || p0)} ${JSON.stringify(ic).slice(0, 300)}`);
+    chk(() => ic.length === 2 && ic.every((e) => labShape(e, e.metadata, "'Before'")) && JSON.stringify(ic.map((e) => e.icon.value)) === JSON.stringify(allIcons(ENDIR).map((e) => e.icon.value)), () => `TW1. the twin keeps both icon entries, left of the value as in an Arabic report: ${short(tw || p0)} ${JSON.stringify(ic).slice(0, 300)}`);
     const th = fs.existsSync(twinDir) ? themeOf(twinDir) : null;
     chk(() => th && th.json.icons && th.json.icons.daGood && th.json.name === th.ref, () => 'TW2. the twin\'s theme keeps the icons and its name');
     const c = fs.existsSync(twinDir) ? await check('g/Icons EN AR.pbip') : null;
