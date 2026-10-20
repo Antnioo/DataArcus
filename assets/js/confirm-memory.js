@@ -5,7 +5,8 @@
 //   { questionHash, objectHash, answer, evidenceSignature, at, by: 'user' }
 // (R5, 0.3.0: the question's id and its object are hashed too; a record written before, with them in plain text, is read
 // and held hashed from then on. A stale answer is kept, not applied, until the person forgets their answers.)
-// No network: nothing here sends or loads anything.
+// (0.3.0 J18) The terminology sheet's confirmed terms are records of their own (termRecord below): hashes, and the Arabic
+// name the person approved for a field. No network: nothing here sends or loads anything.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -138,6 +139,59 @@
   /** Every record an apply() result holds: the ones in use and the stale ones (nothing is dropped but by forget()). */
   const kept = (a) => a.keep.concat(a.stale);
 
+  // ---- (0.3.0 J18, B-171) the terminology sheet's confirmed terms: the Arabic display name a person approved for one
+  // field (or the model's own name they kept), reused only for the same model (modelKey, given by the caller), the same
+  // field (objectKey: its table and name, hashed), the same scope (the language) and the same metadata: its kind, type
+  // and description (evidenceHash) and what it is computed from (dependencyHashes: its DAX, its source column, its
+  // sort-by column). A renamed field, a changed description or DAX, another model: the term is asked again. A record
+  // holds hashes, the alias the person approved and its date, never the field's name, its DAX or data.
+  //   { modelKey, objectKey, scope, evidenceHash, dependencyHashes, alias, decision, at, by: 'user' }
+  const TERM_SCOPES = ['ar'], DECISIONS = ['approved', 'kept'];
+  const termKeyOf = (key) => { const m = /^'?(.+?)'?\[(.+)\]$/.exec(String(key == null ? '' : key).trim()); return m ? { table: m[1], field: m[2] } : null; };
+  const termObject = (k) => sha256(JSON.stringify(['term-object', k.table, k.field]));
+  const dep = (what, v) => sha256(JSON.stringify(['term-dep-v1', what, text(v)]));
+  /** The evidence of a field ("Table[Field]", its names exactly as the model has them) in the model's tables (model.bim
+   *  JSON): { evidenceHash, dependencyHashes }, or null when the model has no such field. */
+  function termEvidence(rawTables, key) {
+    const k = termKeyOf(key); if (!k) return null;
+    const t = (rawTables || []).find((x) => String(x.name) === k.table); if (!t) return null;
+    const c = (t.columns || []).find((x) => String(x.name) === k.field), m = c ? null : (t.measures || []).find((x) => String(x.name) === k.field), o = c || m;
+    if (!o) return null;
+    const deps = [];
+    if (o.expression != null) deps.push(dep('expression', o.expression));
+    if (c && c.sourceColumn != null) deps.push(dep('source', c.sourceColumn));
+    if (c && c.sortByColumn != null) deps.push(dep('sortBy', c.sortByColumn));
+    if (!deps.length) deps.push(dep('none', ''));
+    return { evidenceHash: sha256(JSON.stringify(['term-evidence-v1', k.table, k.field, c ? 'column' : 'measure', String(o.dataType || ''), text(o.description)])), dependencyHashes: deps.sort() };
+  }
+  /** A term record: { modelKey (64 hex), key ("Table[Field]"), scope ('ar'), evidence (termEvidence's), alias (the
+   *  approved text; null when kept), decision ('approved' | 'kept'), at (ISO date, default now) }. */
+  function termRecord(o) {
+    const k = termKeyOf(o && o.key), ev = o && o.evidence;
+    if (!k || !ev || !HEX.test(String(o.modelKey)) || !TERM_SCOPES.includes(o.scope) || !DECISIONS.includes(o.decision)) throw new Error('A term needs a model key, a field (Table[Field]) the model has, a scope and a decision.');
+    const alias = o.decision === 'kept' ? null : String(o.alias == null ? '' : o.alias);
+    if (alias !== null && (!alias.trim() || alias.length > 200)) throw new Error('An approved term has an alias of 1-200 characters.');
+    return { modelKey: o.modelKey, objectKey: termObject(k), scope: o.scope, evidenceHash: ev.evidenceHash, dependencyHashes: ev.dependencyHashes.slice().sort(), alias, decision: o.decision, at: o.at || new Date().toISOString(), by: 'user' };
+  }
+  function validTerm(r) {
+    return !!r && typeof r === 'object' && !Array.isArray(r) && keysAre(r, ['alias', 'at', 'by', 'decision', 'dependencyHashes', 'evidenceHash', 'modelKey', 'objectKey', 'scope'])
+      && HEX.test(r.modelKey) && HEX.test(r.objectKey) && HEX.test(r.evidenceHash) && TERM_SCOPES.includes(r.scope) && DECISIONS.includes(r.decision)
+      && Array.isArray(r.dependencyHashes) && r.dependencyHashes.length > 0 && r.dependencyHashes.length <= 8 && r.dependencyHashes.every((h) => HEX.test(h))
+      && (r.decision === 'kept' ? r.alias === null : typeof r.alias === 'string' && r.alias.length > 0 && r.alias.length <= 200)
+      && typeof r.at === 'string' && r.at.length <= 40 && r.by === 'user';
+  }
+  /** The confirmed term of each item ({ key, evidence }): a Map key -> record, only where a record matches the model
+   *  key, the field, the scope, the evidence and every dependency; the latest record wins. */
+  function applyTerms(items, records, modelKey, scope) {
+    const out = new Map(), recs = (records || []).filter(validTerm);
+    for (const it of items || []) {
+      const k = termKeyOf(it && it.key), ev = it && it.evidence; if (!k || !ev) continue;
+      const ok = termObject(k), deps = JSON.stringify(ev.dependencyHashes.slice().sort());
+      for (const r of recs) if (r.modelKey === modelKey && r.scope === scope && r.objectKey === ok && r.evidenceHash === ev.evidenceHash && JSON.stringify(r.dependencyHashes) === deps) out.set(it.key, r);
+    }
+    return out;
+  }
+
   // The browser's own storage, one entry per model fingerprint. Nothing leaves the browser. Every read and write is
   // guarded (a private window, blocked storage): without storage the answers last until the page is closed.
   const PREFIX = 'dataarcus-mh-answers:';
@@ -159,5 +213,5 @@
     try { if (!s) return; const keys = []; for (let i = 0; i < s.length; i++) { const k = s.key(i); if (k && k.startsWith(PREFIX)) keys.push(k); } keys.forEach((k) => s.removeItem(k)); } catch (e) { /* nothing stored */ }
   }
 
-  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget };
+  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget, termEvidence, termRecord, validTerm, applyTerms };
 });
