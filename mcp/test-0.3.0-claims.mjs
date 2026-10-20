@@ -1,0 +1,91 @@
+// node test-0.3.0-claims.mjs
+// (0.3.0 A2, the claims re-check of the 0.3.0 wave, 20 Oct 2026; mcp/work/A2.md) every sentence DataArcus says about
+// itself must be true in the code. One check per sentence A2 found untrue and fixed (each failed before its fix), and the
+// forbidden-words scan over every file that speaks for DataArcus (English and Arabic).
+import fs from 'node:fs';
+import { groupFiles, summary, promptSummary } from './lib/approval-window.mjs';
+const read = (f) => fs.readFileSync(new URL(f, import.meta.url), 'utf8');
+const flat = (f) => read(f).replace(/\s+/g, ' ');
+const problems = [];
+let checks = 0;
+const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+
+// the beta page's two languages, from their one source (the HTML pages are rendered from it: ar-pages.mjs)
+const bp = read('../assets/js/translations/beta-page.js');
+// (a key's section first: "validator" is a key of beta.run and of beta.safe)
+const SECTION = { data: 'safe', validator: 'safe', approve_plan: 'tools', l3: 'new', t3: 'new' };
+const keyOf = (lang, key) => { const L = bp.slice(bp.indexOf(lang === 'en' ? '"en"' : '"ar"')), part = L.slice(L.indexOf(`"${SECTION[key]}": {`)); const m = new RegExp(`"${key}": "((?:[^"\\\\]|\\\\.)*)"`).exec(part); return m ? m[1] : ''; };
+const EN = { html: flat('../power-bi-mcp/index.html') }, AR = { html: flat('../ar/power-bi-mcp/index.html') };
+for (const k of ['data', 'approve_plan', 'l3', 't3', 'validator']) { EN[k] = keyOf('en', k); AR[k] = keyOf('ar', k); }
+
+// S1 (since 0.3.0 S1 read_report returns no static title; the twin returns titles, up to 200 characters, for their Arabic)
+check(!/short titles as typed/.test(EN.data) && /text boxes/.test(EN.data) && /twin/.test(EN.data), `A2-S1. beta-page en safe.data says read_report's titles are sent: "${EN.data.slice(0, 200)}"`);
+check(!/عناوينه القصيرة/.test(AR.data) && /مربعات النص/.test(AR.data) && /النسخة العربية/.test(AR.data), 'A2-S1. beta-page ar safe.data says the same as the English (text boxes; titles for the twin)');
+// S2 (an app with MCP elicitation asks in its own prompt: no browser window opens)
+check(/own approval prompt/.test(EN.approve_plan), 'A2-S2. beta-page en approve_plan says an app with its own approval prompt asks there instead');
+check(/نافذة موافقة خاصة به/.test(AR.approve_plan), 'A2-S2. beta-page ar approve_plan says the same');
+// S3 (the EN-AR copy's language button is placed where the header has room; the plan names a page without one)
+check(!/on every page, desktop and phone/.test(EN.l3) && /names any page left without one/.test(EN.l3), 'A2-S3. beta-page en new.l3 promises a language button on every page');
+check(!/وفي كل صفحة زر/.test(AR.l3) && /دونه/.test(AR.l3), 'A2-S3. beta-page ar new.l3 says the same');
+// S4 (the EN-AR switch is a new copy; the original report is not changed)
+check(!/in the same report/.test(EN.t3) && /copy/.test(EN.t3), 'A2-S4. beta-page en new.t3 says the twin goes into the same report');
+check(!/داخل التقرير نفسه/.test(AR.t3) && /نسخة/.test(AR.t3), 'A2-S4. beta-page ar new.t3 says the same');
+// S5 (check_report checks PBIR reports)
+check(/any PBIR report/.test(EN.validator) && /بصيغة PBIR/.test(AR.validator), 'A2-S5. beta-page safe.validator says check_report checks any report (it checks PBIR)');
+// the pages carry the source's sentences (rendered again)
+check(EN.html.includes('own approval prompt') && EN.html.includes('any PBIR report') && !EN.html.includes('short titles as typed'), 'A2-S. power-bi-mcp/index.html does not carry the fixed English sentences (scripts/ar-pages.mjs --write and the page)');
+check(AR.html.includes('نافذة موافقة خاصة به') && AR.html.includes('بصيغة PBIR') && !AR.html.includes('عناوينه القصيرة'), 'A2-S. ar/power-bi-mcp/index.html does not carry the fixed Arabic sentences (scripts/ar-pages.mjs --write)');
+
+// A1 the approval page's file list: the flip cards' script is not a format script (L4)
+const g = groupFiles(['Sales - flip cards.tmdl', 'Sales - fix formats.tmdl']);
+check(g.some((x) => x.label === 'Flip cards script' && x.paths.length === 1) && g.some((x) => x.label === 'Format script' && x.paths.length === 1), `A2-A1. the approval page groups the flip cards' script as a format script: ${JSON.stringify(g.map((x) => [x.label, x.paths.length]))}`);
+const sm = summary('report', { outputs: ['R.Report/definition/report.json', 'R - flip cards.tmdl'], pins: { create_report: {} } }).files || [];
+check(sm.some((x) => x.label === 'Flip cards script') && !sm.some((x) => x.label === 'Format script'), 'A2-A1. the report page\'s file list says "Format script" for the flip cards\' script');
+// A2 the 3:1 rule for a data colour is WCAG 2.1's non-text contrast (1.4.11); Power BI's accessibility page states none
+const aw = read('./lib/approval-window.mjs');
+check(!/Power BI's accessibility basics/.test(aw) && /WCAG 2\.1/.test(aw), 'A2-A2. the approval page credits the 3:1 rule for data colours to "Power BI\'s accessibility basics"');
+// A3 the app's prompt: the contrast it gives is the approved colour's, said as such, with the written colour's own
+const ps = promptSummary('report', { colours: { changed: [{ from: '#f4b183', to: '#c55a11', contrast: 1.9 }], card: '#ffffff' } });
+check(/approved colour #f4b183 -> written colour #c55a11/.test(ps) && /the approved colour's contrast 1\.9:1/.test(ps) && /the written colour's own [\d.]+:1/.test(ps), `A2-A3. the app's prompt gives the approved colour's contrast after the written colour, as if it were the written one's: ${ps}`);
+
+// K the skill (the twin's EN-AR copy, its choices; the slicers' answer only with pills)
+const sk = flat('./skills/report-design/SKILL.md');
+check(!/Ask the two choices the plan names/.test(sk) && /waterfallRtl/.test(sk) && /\(EN-AR\)/.test(sk), 'A2-K1. SKILL.md: the twin\'s plan has more than two choices (waterfallRtl, into "same": the EN-AR copy)');
+check(!/The answer's `slicerStyle` says each slicer's style with why/.test(sk), 'A2-K2. SKILL.md says the answer\'s slicerStyle is always there (only with pills)');
+
+// P PRIVACY.md (the wave's answers and memories)
+const pv = flat('./PRIVACY.md');
+check(!/`read_report` returns a title or a text box/.test(pv), 'A2-P1. PRIVACY.md section 3 says read_report returns a title (no static title since 0.3.0 S1)');
+const row = (tool) => (pv.match(new RegExp(`\\| \`${tool}\` \\|([^|]*)\\|`)) || [])[1] || '';
+const pl = row('plan_layout'), cr = row('create_report'), tw = row('create_arabic_twin');
+check(['terminology', 'gulfDates', 'sharedAxes', 'waterfallRtl', 'metricSwitcher', 'flipCards', 'statusIcons', 'gallery'].every((k) => pl.includes(k)), 'A2-P2. PRIVACY.md\'s plan_layout row names the wave\'s answers (terminology, gulfDates, sharedAxes, waterfallRtl, metricSwitcher, flipCards, statusIcons, gallery)');
+check(['metricSwitcher', 'flipCards', 'statusIcons', 'gallery', 'slicerStyle'].every((k) => cr.includes(k)), 'A2-P3. PRIVACY.md\'s create_report row names the wave\'s answers (metricSwitcher, flipCards, statusIcons, gallery, slicerStyle)');
+check(/EN-AR/.test(tw) && /terminology/.test(tw), 'A2-P4. PRIVACY.md\'s create_arabic_twin row names the EN-AR copy and the terminology sheet');
+check(/kept in the server's memory for this session only/.test(pv) && /never written to a file/.test(pv), 'A2-P5. PRIVACY.md says the approved terms and the Gulf date answers are kept in memory for the session only');
+check(/flip cards/i.test(pv) && /descriptions/.test(pv.slice(pv.indexOf('What a new report\'s files hold'))), 'A2-P6. PRIVACY.md says the flip cards\' script holds the measures\' descriptions (what a new report\'s files hold)');
+
+// R README.md: the MCP runs Microsoft's validator on the reports it writes
+check(!/It does not run on the reports you make\./.test(flat('../README.md')), 'A2-R1. README.md says Microsoft\'s validator does not run on the reports you make (the MCP runs it on each report before writing it)');
+
+// The forbidden words, in every file that speaks for DataArcus (EN and AR): no "first"/"only" of its kind, no
+// official, certified, partner, AI-powered; nothing on Microsoft's Power BI Report skill comparison; nothing of 0.3.1
+const SPEAK = ['./PRIVACY.md', './README.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',
+  './lib/approval-window.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
+const BANNED = [
+  [/\b(?:world'?s|our) first\b|\bthe first (?:MCP|tool|Power BI tool|of its kind)\b|\bfirst of its kind\b|\bonly (?:tool|MCP) (?:that|to|for)\b|\bthe only (?:tool|MCP|one that)\b/i, 'a first-of-kind or only-one claim'],
+  [/\bofficial\b(?! (?:weekend|announcement|Ramadan|dates?|Microsoft))/i, '"official" said of DataArcus'],
+  [/\bcertified\b|\bpartner(?:ed|ship)?\b|\bAI[- ]powered\b/i, 'certified, partner or AI-powered'],
+  [/الأول من نوعه|الوحيد من نوعه|الأداة الوحيدة|شريك|معتمد من|مدعوم بالذكاء/, 'the same in Arabic'],
+  [/Power BI Report skill|powerbi-report skill/i, 'Microsoft\'s Power BI Report skill (the comparison is not approved)', 'skip-skill'],
+  [/(?:unlike|compared (?:to|with)|better than|instead of) Microsoft'?s? (?:Power BI )?Report skill/i, 'a comparison with Microsoft\'s Power BI Report skill (not approved)'],
+  [/render_report|VS Code|DAX function librar|Skills for Fabric|see the result/i, 'a 0.3.1 feature']
+];
+// (SKILL.md names Microsoft's skill as the companion tool for edits, older text: a reference, not a comparison; the
+// comparison pattern below still runs on it)
+for (const f of SPEAK) {
+  const t = flat(f);
+  for (const [re, what, skip] of BANNED) { if (skip && f.includes('SKILL')) continue; const m = re.exec(t); check(!m, `A2-W. ${f}: ${what}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`); }
+}
+
+if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  0.3.0-claims  ${checks} checks`);
