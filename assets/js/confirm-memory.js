@@ -81,6 +81,13 @@
         t.otherTable || '', t.otherColumn || '', t.otherColumn ? columnType(rawTables, t.otherTable, t.otherColumn) : ''].concat(t.looksLike === 'date' ? dates : []);
       return sha256(JSON.stringify(['b148-table-v1'].concat(parts)));
     }
+    // (0.3.0 J19) an axis question (axis-units.js): may two measures share one chart axis; both measures' DAX and
+    // format strings, so a confirmation stops applying when either changes
+    if (q.axis) {
+      parts = ['axis', q.id, q.obj].concat(...(q.axis.measures || []).map((x) => { const hit = measureOf({ obj: x.name }, rawTables);
+        return [x.table, x.name, hit && lc(hit.table) === lc(x.table) ? sha256(text(hit.m.expression)) : 'missing', hit && lc(hit.table) === lc(x.table) ? text(hit.m.formatString) : '']; }));
+      return sha256(JSON.stringify(['b148-axis-v1'].concat(parts)));
+    }
     if (q.relationship) {
       const r = q.relationship;
       parts = ['rel', q.id, q.obj, r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.candidateColumn,

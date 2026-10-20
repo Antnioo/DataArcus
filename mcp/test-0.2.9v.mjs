@@ -264,21 +264,28 @@ export async function v029visuals({ check }) {
     const inv = RR.inventory(RR.diskSource({ reportDir: RD }, { big: [], deep: 0 }), 'Twin Sales');
     const reps = M.replacementsOf(inv, { typeOf: M.typeOfModel(model.tables) });
     const byId = Object.fromEntries(reps.map((e) => [e.visual, e]));
-    chk(() => reps.length === 5 && byId.cvPie.native === 'pieChart' && byId.cvCombo.native === 'lineClusteredColumnComboChart' && byId.cvTile.native === 'cardVisual' && byId.cvNet.native === null && byId.cvNet.htmlNeeded
+    // (0.3.0 J19, changed on purpose: two values whose units are not known to match never share one axis, and a combo is
+    // never written with a second axis: the combo is two column charts in its box, the meaning's roles kept)
+    chk(() => reps.length === 5 && byId.cvPie.native === 'pieChart' && byId.cvCombo.native === 'clusteredColumnChart' && byId.cvCombo.panels.length === 2 && byId.cvTile.native === 'cardVisual' && byId.cvNet.native === null && byId.cvNet.htmlNeeded
       && JSON.stringify(byId.cvCombo.roles) === JSON.stringify({ Category: ['Calendar.Year', 'Calendar.Month Name'], Y: ['Sales.Total Sales'], Y2: ['Sales.Orders'] }) && byId.cvPie.page === 1 && byId.cvPie.from === 'acmeDrillPie',
       () => `C: one entry per custom visual (the fixture's own custom gauge too), its native visual and roles by queryRef: ${JSON.stringify(reps).slice(0, 900)}`);
     const line = M.replacementLine(byId.cvCombo), nline = M.replacementLine(byId.cvNet);
-    chk(() => /^custom visual acmeDrillDownCombo on page 1 at 900,100 -> line and clustered column chart \(lineClusteredColumnComboChart\) \[a guess\]: /.test(line) && /HTML\/SVG/.test(nline) && !/Sales|Region|Orders/.test(line + nline),
+    chk(() => /^custom visual acmeDrillDownCombo on page 1 at 900,100 -> 2 separate clustered column charts \(clusteredColumnChart\) in its box, one axis each \[a guess\]: .*separate visuals, never a second axis$/.test(line) && /HTML\/SVG/.test(nline) && !/Sales|Region|Orders/.test(line + nline),
       () => `C: the plan's line, "custom visual X -> native Y (why)", without any field name: ${line} || ${nline}`);
     // the writer: each replaceable one written as its native visual
     const before = {}; Object.keys(CV).forEach((id) => { before[id] = J(path.join(PG, id, 'visual.json')); });
-    const done = reps.filter((e) => e.native && CV[e.visual]).map((e) => { const f = path.join(PG, e.visual, 'visual.json'), r = R.replaceVisual(J(f), e); W(f, r.json); return [e.visual, r]; });
+    // (0.3.0 J19: a replacement in panels writes its other panels beside it, r.more)
+    const done = reps.filter((e) => e.native && CV[e.visual]).map((e) => { const f = path.join(PG, e.visual, 'visual.json'), r = R.replaceVisual(J(f), e); W(f, r.json); (r.more || []).forEach((x) => W(path.join(PG, x.name, 'visual.json'), x.json)); return [e.visual, r]; });
     const r2 = R.dropUnusedCustomVisuals(J(path.join(RD, 'definition/report.json')), inv.pages.flatMap((p) => p.visuals.map((v) => (CV[v.id] && byId[v.id].native ? byId[v.id].native : v.type))));
     W(path.join(RD, 'definition/report.json'), r2.json);
     const after = Object.fromEntries(Object.keys(CV).map((id) => [id, J(path.join(PG, id, 'visual.json'))]));
     const projs = (j) => Object.values(j.visual.query.queryState).flatMap((r) => r.projections.map((p) => JSON.stringify(Object.assign({}, p, { active: undefined }))));
-    chk(() => done.length === 3 && after.cvPie.visual.visualType === 'pieChart' && after.cvCombo.visual.visualType === 'lineClusteredColumnComboChart' && after.cvTile.visual.visualType === 'cardVisual' && after.cvNet.visual.visualType === CV.cvNet
-      && ['cvPie', 'cvCombo', 'cvTile'].every((id) => JSON.stringify(projs(after[id]).sort()) === JSON.stringify(projs(before[id]).sort()) && JSON.stringify(after[id].position) === JSON.stringify(before[id].position) && after[id].name === id),
+    // (0.3.0 J19, changed on purpose: the combo's projections are carried byte for byte across its two panels, which
+    // share its box: the first keeps its name, x, y and height)
+    const p2 = J(path.join(PG, 'cvCombo_2', 'visual.json')), both = Array.from(new Set(projs(after.cvCombo).concat(projs(p2))));
+    chk(() => done.length === 3 && after.cvPie.visual.visualType === 'pieChart' && after.cvCombo.visual.visualType === 'clusteredColumnChart' && p2.visual.visualType === 'clusteredColumnChart' && after.cvTile.visual.visualType === 'cardVisual' && after.cvNet.visual.visualType === CV.cvNet
+      && ['cvPie', 'cvTile'].every((id) => JSON.stringify(projs(after[id]).sort()) === JSON.stringify(projs(before[id]).sort()) && JSON.stringify(after[id].position) === JSON.stringify(before[id].position) && after[id].name === id)
+      && JSON.stringify(both.sort()) === JSON.stringify(projs(before.cvCombo).sort()) && after.cvCombo.name === 'cvCombo' && after.cvCombo.position.x === before.cvCombo.position.x && p2.position.x + p2.position.width <= before.cvCombo.position.x + before.cvCombo.position.width,
       () => `C: replaceVisual writes the native type, the same projections (byte for byte), the same name and place; the network is left for step D: ${JSON.stringify(after).slice(0, 900)}`);
     // (changed after the laptop proof: the native visual now gets its own settings, axis titles off; no custom object stays)
     chk(() => !Object.keys(after.cvCombo.visual.objects || {}).some((k) => /vendor/.test(k)) && after.cvCombo.visual.visualContainerObjects.title && after.cvCombo.visual.query.queryState.Category.projections[0].active === true && !after.cvCombo.visual.query.queryState.Category.projections[1].active
@@ -463,8 +470,8 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const cv = pl.j && pl.j.customVisuals, reps = (cv && cv.replacements) || [];
   const byFrom = (f) => reps.find((r) => r.from === f) || {};
   // (9: the fixture's own custom gauge is replaced too, as in step C's pure test; the proof's donut and maps; the timeline)
-  chk(() => reps.length === 9 && reps.filter((r) => r.native === 'azureMap').length === 2 && reps.some((r) => r.from === 'vendorDrillDownTimelinePro' && /Expand all/.test(r.lost.join(' '))) && byFrom('vendorPieChartPaid').native === 'donutChart' && byFrom('vendorDrillDownMapPro').native === 'azureMap' && byFrom('vendorFacetChartPaid').native === 'clusteredColumnChart' && byFrom('vendorDrillDownComboBarPro').native === 'lineClusteredColumnComboChart' && byFrom('vendorDrillDownBubblePro').native === 'scatterChart' && byFrom('Gantt0123456789012').native === 'tableEx',
-    () => `C1: plan_layout lists the 9 replaceable custom visuals with their native visual (facet -> column, a percentage with amounts -> combo, a bubble -> scatter, a schedule -> table): ${short(pl)}`);
+  chk(() => reps.length === 9 && reps.filter((r) => r.native === 'azureMap').length === 2 && reps.some((r) => r.from === 'vendorDrillDownTimelinePro' && /Expand all/.test(r.lost.join(' '))) && byFrom('vendorPieChartPaid').native === 'donutChart' && byFrom('vendorDrillDownMapPro').native === 'azureMap' && byFrom('vendorFacetChartPaid').native === 'clusteredColumnChart' && byFrom('vendorDrillDownComboBarPro').native === 'clusteredBarChart' && byFrom('vendorDrillDownComboBarPro').axes.panels === 2 && byFrom('vendorDrillDownBubblePro').native === 'scatterChart' && byFrom('Gantt0123456789012').native === 'tableEx',
+    () => `C1: plan_layout lists the 9 replaceable custom visuals with their native visual (facet -> column, a percentage with amounts -> two bar charts, J19: never one axis or a second axis, a bubble -> scatter, a schedule -> table): ${short(pl)}`);
   chk(() => reps.every((r) => /^custom visual \S+ on page \d+ at \d+,\d+ -> /.test(r.line) && r.lost.length > 0 && /It loses/.test(r.tell)) && (cv.notReplaced || []).length >= 1 && cv.notReplaced.some((x) => /HTML\/SVG/.test(x.line + x.why)),
     () => `C2: each replacement has its plan line and what it loses; the network is listed as not replaced (HTML/SVG later): ${short(pl)}`);
   chk(() => !JSON.stringify(cv).match(/Total Sales|Margin %|Region\b/), () => `C3: the plan's replacement lines carry no field name (the report's names are untrusted; the fields are read_report's): ${JSON.stringify(cv).slice(0, 400)}`);
@@ -478,7 +485,7 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const made = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
   const ND = path.join(P, 'Twin Sales native.Report'), NPG = path.join(ND, 'definition/pages/p1overview/visuals');
   const vt = (id2) => { try { return J(path.join(NPG, id2, 'visual.json')).visual.visualType; } catch (e) { return null; } };
-  chk(() => made.j && made.j.written && made.j.replaced === 9 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'lineClusteredColumnComboChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
+  chk(() => made.j && made.j.written && made.j.replaced === 9 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'clusteredBarChart' && vt('cvBars_2') === 'clusteredBarChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
     && fs.existsSync(path.join(P, 'Twin Sales native.pbip')), () => `C7: create_report wrote "Twin Sales native" with the 9 approved replacements; the network stays the custom visual: ${short(made)}`);
   chk(() => hashOf(RD) === before, () => 'C8: the original report is byte for byte as it was');
   let nrj = {}; try { nrj = J(path.join(ND, 'definition/report.json')); } catch (e) { nrj = {}; }

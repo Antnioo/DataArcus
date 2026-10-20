@@ -2,8 +2,9 @@
 // The visual gallery (0.3, J8): three of Power BI's own visuals the writer did not know, written only with the design
 // flag gallery: true, each where its fields' roles say it fits (never from the data: the tools never read it).
 //   combo       lineClusteredColumnComboChart: one measure as columns, a second as a line, over a time or ordered axis,
-//               on ONE shared axis: only when both measures' units are known and the same (0.3.0 D2, the outside audit's
-//               C13: no automatic secondary axis). Two units, or a unit not known: two panels, a line chart each (split).
+//               on ONE shared axis: only when both measures' units, scale and currency are known and the same AND the
+//               person confirmed they compare (0.3.0 J19, axis-units.js; D2, the outside audit's C13: no automatic
+//               secondary axis). Otherwise two panels, a line chart each with its unit on its axis (split).
 //   waterfall   waterfallChart: one additive measure by one category with few, known members (a stage, a quarter, a
 //               month name): each column is that member's part of the total.
 //   multiples   clusteredColumnChart with a small-multiples field (the Rows role): one column chart per member of a
@@ -21,6 +22,8 @@
   'use strict';
   const node = typeof module !== 'undefined' && module.exports;
   const Q = node ? require('./pbip-query.js') : root.DAPbipQuery;
+  // (0.3.0 J19) which measures may share an axis: the one rule (units, scale, ISO currency, the person's confirmation)
+  const AX = node ? require('./axis-units.js') : root.DAAxisUnits;
   // the story titles (0.3 J4, a separate draft) are optional: with them a measure's name is said as its title says it
   const ST = () => { if (!node) return root.DAStoryTitles || null; try { return require('./story-titles.js'); } catch (e) { return null; } };
   const { proj, q, sorted, isTime, catKind, label, byTitle, AR_LETTERS, bool, num, str, isValue, shown, lineStyle } = Q;
@@ -74,9 +77,11 @@
     if (kind === 'combo') {
       const axis = g.axis || B.date || cats.combo || null;
       let columns = g.columns || y.combo || B.measure || null;
-      // (0.3.0 D2) the line in the columns' own unit first (one shared axis), then a percent, then any other measure
-      const others = (B.kpis || []).filter(Boolean).filter((f) => !same(f, columns)), u = unitOf(columns);
-      let line = g.line || (u && others.find((f) => unitOf(f) === u)) || others.find((f) => unitOf(f) === 'percent') || others[0] || null;
+      // (0.3.0 D2) the line in the columns' own unit first (one shared axis), then a percent, then any other measure;
+      // (J19) the same unit is the same identity: currency code and scale too (SAR is not AED)
+      const others = (B.kpis || []).filter(Boolean).filter((f) => !same(f, columns)), u = unitOf(columns), T = (B.axes || {}).tables;
+      const idKey = (f) => { const i = AX.identityIn(f, T); return i.known ? [i.dim, i.code, i.scale].join('|') : null; }, ku = columns ? idKey(columns) : null;
+      let line = g.line || (ku && others.find((f) => idKey(f) === ku)) || (u && others.find((f) => unitOf(f) === u)) || others.find((f) => unitOf(f) === 'percent') || others[0] || null;
       // a percent reads as a line over amounts, never as columns that look like they add up
       if (!g.columns && columns && line && unitOf(columns) === 'percent' && unitOf(line) !== 'percent') { const t = columns; columns = line; line = t; }
       return { axis, columns, line };
@@ -96,10 +101,12 @@
       if (!ordered(F.axis)) return no('the axis is not time or ordered: a line across unordered categories reads as a trend that is not there');
       if (!F.columns || !F.line) return no('needs two measures');
       if (same(F.columns, F.line)) return no('the two measures are the same');
-      // (0.3.0 D2, C13) one shared axis only: two units, or a unit not known, are two panels (split), never a second axis
-      const uc = unitOf(F.columns), ul = unitOf(F.line);
-      if (!uc || !ul || uc !== ul) return { fits: false, split: true, fields: F, why: uc && ul ? `the two measures are in different units (${uc}, ${ul}): two panels, a line chart each, never a second axis` : 'the units of the two measures are not known to be the same: two panels, a line chart each, never a second axis' };
-      return { fits: true, why: `two measures in one unit (${uc}) over an ordered axis: one shared axis`, fields: F, secondary: false };
+      // (0.3.0 D2, C13; J19) one shared axis only for a pair axis-units.js lets share: the same unit, scale and currency,
+      // confirmed comparable by the person (B.axes: { tables, confirmed }); otherwise two panels (split), never a
+      // second axis, the reason in English and Arabic and the question when it waits on the person
+      const ax = AX.decide([F.columns, F.line], B.axes || {});
+      if (!ax.share) return { fits: false, split: true, fields: F, why: ax.why.en, whyAr: ax.why.ar, ask: ax.ask, labels: ax.labels };
+      return { fits: true, why: ax.why.en + ', over an ordered axis', whyAr: ax.why.ar, fields: F, secondary: false, labels: ax.labels };
     }
     if (kind === 'waterfall') {
       if (!F.y || !F.cat) return no('needs one measure and one category');
@@ -133,16 +140,17 @@
     if (!gallery) return plain('the design\'s gallery flag is off');
     if (!B) return { slot: base, note: null };   // the sample download without a model: written by its role names
     const f = fits(s.kind, B);
-    if (f.split) { const two = split(base, f.fields, rtl); return { slot: two[0], slots: two, note: { from: s.kind, to: 'two panels', title: s.title || null, why: f.why } }; }
+    if (f.split) { const two = split(base, f.fields, rtl, f.labels); return { slot: two[0], slots: two, note: Object.assign({ from: s.kind, to: 'two panels', title: s.title || null, why: f.why, whyAr: f.whyAr }, f.ask && f.ask.length ? { ask: f.ask } : {}) }; }
     return f.fits ? { slot: base, note: null } : plain(f.why);
   }
   // a combo's two panels: its box in two (side by side, or one above the other in a box taller than wide), a line chart of
   // each measure over the combo's axis, the columns' measure at the reading start; each panel carries its fields (bind)
+  // and (J19) its unit, for its value axis's title (unitLabel: { en, ar })
   const GAP = 16;
-  function split(s, F, rtl) {
+  function split(s, F, rtl, labels) {
     const across = s.w >= s.h, g = GAP, a = across ? { w: (s.w - g) / 2, h: s.h } : { w: s.w, h: (s.h - g) / 2 };
     const at = (i) => (across ? { x: s.x + (rtl ? 1 - i : i) * (a.w + g), y: s.y } : { x: s.x, y: s.y + i * (a.h + g) });
-    return [F.columns, F.line].map((m, i) => Object.assign({}, s, at(i), { w: Math.floor(a.w), h: Math.floor(a.h), kind: 'line', galleryFrom: s.kind, bind: { measure: m, date: F.axis } }));
+    return [F.columns, F.line].map((m, i) => Object.assign({}, s, at(i), { w: Math.floor(a.w), h: Math.floor(a.h), kind: 'line', galleryFrom: s.kind, bind: { measure: m, date: F.axis } }, labels && labels[i] && labels[i].en ? { unitLabel: labels[i] } : {}));
   }
 
   // ---- the query of a gallery visual (null when a field it needs is not bound) ----
@@ -190,8 +198,11 @@
     if (!f.fits) return out;
     const va = {};
     if (kind === 'combo') {
-      // one shared axis, always (0.3.0 D2, C13: a combo in two units is two panels; secShow, "Show secondary", off)
+      // one shared axis, always (0.3.0 D2, C13: a combo in two units is two panels; secShow, "Show secondary", off),
+      // titled with the pair's one unit (J19: AED, %, isolated in Arabic)
       va.secShow = bool(false);
+      const L = f.labels && f.labels[0];
+      if (L && L.en) { va.showAxisTitle = bool(true); va.titleText = str(c.lang === 'ar' ? L.ar : L.en); }
       // the line as the writer's line charts: 3 wide (P2), smooth with a dot on each point unless ctx.smooth is false (L1)
       out.lineStyles = obj(lineStyle(c.smooth !== false));
     }
@@ -326,7 +337,7 @@
 
   // the formatting objects and properties written per kind, for the tests to check against Microsoft's capabilities
   const WRITES = Object.freeze({
-    lineClusteredColumnComboChart: { roles: ['Category', 'Y', 'Y2'], objects: { valueAxis: ['secShow', 'gridlineColor', 'switchAxisPosition'], lineStyles: ['strokeWidth', 'lineChartType', 'interpolationSmooth', 'showMarker', 'markerShape', 'markerSize'], categoryAxis: ['invertAxis'] } },
+    lineClusteredColumnComboChart: { roles: ['Category', 'Y', 'Y2'], objects: { valueAxis: ['secShow', 'showAxisTitle', 'titleText', 'gridlineColor', 'switchAxisPosition'], lineStyles: ['strokeWidth', 'lineChartType', 'interpolationSmooth', 'showMarker', 'markerShape', 'markerSize'], categoryAxis: ['invertAxis'] } },
     waterfallChart: { roles: ['Category', 'Y'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'] } },
     clusteredColumnChart: { roles: ['Category', 'Y', 'Rows'], objects: { valueAxis: ['gridlineColor', 'switchAxisPosition'], categoryAxis: ['invertAxis'] } }
   });

@@ -32,7 +32,9 @@ const T = 'Sales', M = (m, x) => Object.assign({ t: T, m }, x || {}), C = (c, x)
 const AED = M('Total Sales', { cardFormat: '"AED" #,0' }), AED2 = M('Total Cost', { cardFormat: '"AED" #,0' });
 const MONTH = C('Month Name', { kind: 'month', sortBy: { t: T, c: 'Month Number' } }), CITY = C('City');
 const BIND = { kpis: [AED, AED2], measure: AED, date: MONTH, cats: { bar: CITY, column: C('Channel', { kind: 'channel', rows: 4 }), donut: C('Channel') }, y: {},
-  table: [CITY, AED], slicers: [CITY, null, null], tip: { card: AED, cat: CITY, y: AED } };
+  table: [CITY, AED], slicers: [CITY, null, null], tip: { card: AED, cat: CITY, y: AED },
+  // (0.3.0 J19, changed on purpose: one currency shares a combo's axis only when the person confirmed the pair compares)
+  axes: { confirmed: [req('../assets/js/axis-units.js').record(AED, AED2, 'comparable', [])] } };
 const SLOTS = [{ kind: 'line', x: 20, y: 20, w: 610, h: 330 }, { kind: 'combo', x: 650, y: 20, w: 610, h: 330 }];
 const build = (lang, extra) => {
   const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma';

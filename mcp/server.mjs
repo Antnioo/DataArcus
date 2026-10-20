@@ -35,7 +35,7 @@ import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
 const require = createRequire(import.meta.url);
 const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
-const Mirror = require('../assets/js/report-mirror.js'), Gallery = require('../assets/js/visual-gallery.js');
+const Mirror = require('../assets/js/report-mirror.js'), Gallery = require('../assets/js/visual-gallery.js'), Axes = require('../assets/js/axis-units.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { planTwin, twinKey, twinOutputs, writeTwin } from './lib/arabic-twin.mjs';
@@ -640,6 +640,9 @@ const CREATE_REPORT_INPUTS = {
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
     gallery: z.union([z.boolean(), z.array(z.enum(GALLERY_KINDS)).min(1).max(3)]).optional().describe('Power BI\'s waterfall, combo (line and clustered column) and small multiples, only when the user asks for one: true, every kind whose fields fit, or a list of kinds. On a design, combo takes the trend\'s line chart, waterfall the first column chart (else the trend), smallMultiples the next column chart (else the first bar chart); hand-placed pages name the kind in a slot instead. Each is written only where its fields fit (combo: two measures in ONE unit over a time or ordered axis, otherwise two panels, a line chart each, never a second axis; waterfall: one measure that adds up over a category of 2-12 known members, such as months; smallMultiples: one measure by a category, a panel per member of a second category with few members), else as the slot\'s own kind; the plan\'s gallery says each with why. Left out: none'),
+    // (0.3.0 J19, B-172) the person's own answers on which measures may share one chart axis
+    sharedAxes: z.array(z.object({ measures: z.array(z.string().max(300)).length(2).describe('Two measures as Table[Measure], exactly as read_model lists them'), answer: z.enum(['comparable', 'separate']) }).strict()).max(20).optional()
+      .describe('Only the user\'s own answer to a sharedAxes question of the plan: two measures in the same unit, scale and currency share one chart axis (a combo, a chart of several values) only when the user says they compare ("comparable"); "separate" keeps them in separate visuals. Never answer for the user. Measures in different units (SAR and AED, minutes and hours, a percentage and an amount) are always separate visuals, whatever the answer; there is never a secondary axis, and no currency is converted. Left out: every pair in the same unit is separate visuals and the plan asks'),
     chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
     chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
     waterfallRtl: WATERFALL_RTL_INPUT(),
@@ -676,7 +679,18 @@ const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'metricSwitcher', 'flipCards', 'waterfallRtl', 'statusIcons'];
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'metricSwitcher', 'flipCards', 'waterfallRtl', 'statusIcons', 'sharedAxes'];
+// (0.3.0 J19, B-172) sharedAxes: the person's answers as the confirmation memory's records (axis-units.js), on the
+// model's own measures; problems: each name that is not a measure of the model (the call is refused)
+const refParts = (x) => { const r = /^(.+?)\[(.+)\]$/.exec(String(x || '').trim()); return r ? { t: r[1].replace(/^'|'$/g, ''), m: r[2] } : null; };
+function axesProblems(m, list) {
+  const raw = modelOf(m.tmsl).tables || [], has = (r) => !!r && raw.some((t) => t.name === r.t && (t.measures || []).some((x) => x.name === r.m));
+  return (list || []).flatMap((e) => e.measures.filter((x) => !has(refParts(x))).map((x) => `sharedAxes names "${String(x).slice(0, 120)}", which is not a measure of the model (Table[Measure] as read_model lists it).`));
+}
+function axesOf(m, list) {
+  const raw = modelOf(m.tmsl).tables || [];
+  return { tables: raw, confirmed: (list || []).map((e) => { const [x, y] = e.measures.map(refParts); return x && y ? Axes.record(x, y, e.answer, raw) : null; }).filter(Boolean) };
+}
 // (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
 // option left out of create_report takes the plan's value, not a schema default that differs from it)
 const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid', flipCards: false, waterfallRtl: Gallery.WATERFALL_RTL_DEFAULT, statusIcons: false };
@@ -725,7 +739,7 @@ server.registerTool('create_report', {
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
-    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p); }));
+    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes)); }));
   }
   // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
   // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
@@ -912,14 +926,16 @@ function reportRun(a, mode) {
   // bar chart's category for their panels when the plan names no other (the writer's rules decide whether it fits)
   const galleryOn = (pages) => !!a.gallery || pages.some((p) => (p.slots || []).some((s) => Gallery.isKind(s.kind)));
   // (and the measures' units from the model's formats, for the combo's one-unit rule)
-  const withSplit = (b, pages) => { if (!b || !galleryOn(pages)) return b; const u = Gallery.withUnits(b, m.tables);
+  // (0.3.0 J19) and the model's measures with the person's answers on shared axes (sharedAxes), as the confirmation
+  // memory's records, for the one rule of axis-units.js
+  const withSplit = (b, pages) => { if (!b || !galleryOn(pages)) return b; const u = Object.assign(Gallery.withUnits(b, m.tables), { axes: axesOf(m, a.sharedAxes) });
     return !(u.cats || {}).split && (u.cats || {}).bar ? Object.assign({}, u, { cats: Object.assign({}, u.cats, { split: u.cats.bar }) }) : u; };
   // what the plan and the answer say of each gallery slot: its kind, what is written (the kind, two panels, or the slot's
   // own kind) and why, by the writer's own rule on the bound fields
   const galleryOf = (pages, b) => { const out = [];
     pages.forEach((p) => (p.slots || []).filter((s) => Gallery.isKind(s.kind)).forEach((s) => { const f = Gallery.fits(s.kind, b);
       out.push(Object.assign({ page: p.name, kind: Gallery.toTool(s.kind) }, s.role ? { role: s.role } : {}, s.title ? { title: s.title } : {}, s.plain ? { insteadOf: s.plain } : {},
-        { written: f.fits ? Gallery.toTool(s.kind) : f.split ? 'two panels (two line charts)' : s.plain || Gallery.KINDS[s.kind].fallback, why: f.why })); }));
+        { written: f.fits ? Gallery.toTool(s.kind) : f.split ? 'two panels (two line charts)' : s.plain || Gallery.KINDS[s.kind].fallback, why: f.why }, f.whyAr ? { whyAr: f.whyAr } : {}, f.ask && f.ask.length ? { ask: f.ask } : {})); }));
     // (a design: each kind asked for that no page took, with why: its fields don't suit, or no page had its chart left)
     if (a.design && a.gallery) Gallery.askedKinds(a.gallery).filter((k) => !out.some((g) => g.kind === Gallery.toTool(k))).forEach((k) => { const f = Gallery.fits(k, b);
       out.push({ page: null, kind: Gallery.toTool(k), written: 'not placed', why: f.fits ? 'every page\'s chart it can take was given to another gallery visual (one a page)' : f.why + (f.split ? ' (on a designed page a combo is placed only where its units match)' : '') }); });
@@ -1043,6 +1059,7 @@ function reportRun(a, mode) {
   // (0.3.0 L5) the status icons on the built tables and matrices (the plan's artifact holds them); a status measure goes
   // into its own TMDL script next to the project (model-script.mjs), rules need none
   if (Array.isArray(a.statusIcons)) { const ri = resolveIcons(modelOf(m.tmsl).tables || [], a.statusIcons); input(!ri.problems.length, `Nothing was written. ${ri.problems.join(' ')}`); }
+  if (a.sharedAxes) { const ap = axesProblems(m, a.sharedAxes); input(!ap.length, `Nothing was written. ${ap.join(' ')}`); }
   const icons = applyIcons(r.files, { opt: a.statusIcons, raw: modelOf(m.tmsl).tables || [], base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0icons', ui: look && look.ui });
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
   // (0.3.0 J18, B-171 item 5) an Arabic report's approved names: each Latin run of one (an acronym, a code) isolated
@@ -1556,10 +1573,10 @@ server.registerTool('plan_layout', {
   }
   // (0.2.9, custom visuals, step C) the replacements of an existing report's custom visuals, each with what it loses; the
   // plan pins the approved mapping, and create_report writes only that, in a new "<name> native" report
-  let customVisuals = {}, cvEntries = null;
+  let customVisuals = {}, cvEntries = null, cvAsk = [];
   if (a.customVisualsFrom != null) {
     if (!m0) planProblems.push('customVisualsFrom needs path (the report\'s model), so each replacement is checked against the model\'s types and formats.');
-    else { const cv = planNative(a.customVisualsFrom, m0); cvEntries = cv.entries; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
+    else { const cv = planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes)); cvEntries = cv.entries; cvAsk = cv.ask || []; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
   }
   // (L3) the metric switcher's measures: each a measure of the model, 2 to 5, before the plan is shown
   if (a.metricSwitcher) {
@@ -1573,6 +1590,8 @@ server.registerTool('plan_layout', {
     else if (a.customVisualsFrom != null) planProblems.push('statusIcons is for a new report; a native copy of custom visuals writes the replacements alone.');
     else if (Array.isArray(a.statusIcons)) resolveIcons(modelOf(m0.tmsl).tables || [], a.statusIcons).problems.forEach((x) => planProblems.push(x));
   }
+  // (0.3.0 J19) the person's answers on shared axes name the model's own measures
+  if (a.sharedAxes) { if (!m0) planProblems.push('sharedAxes needs path (the model), so its measures can be checked against it.'); else axesProblems(m0, a.sharedAxes).forEach((x) => planProblems.push(x)); }
   // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
   // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
   // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
@@ -1583,7 +1602,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
       const lang = a.lang === 'ar' ? 'ar' : 'en';
-      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
         second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
     } catch (e) { return null; }
   };
@@ -1597,7 +1616,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
       if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
-      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
+      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   // B-146, the aggregation guard (0.3): the planned page's values read by assets/js/aggregation.js (metadata only). A
@@ -1660,6 +1679,12 @@ server.registerTool('plan_layout', {
   const ofKind = (kd) => r.slots.filter((x) => (x.plannedAs || x.kind) === kd);   // (the layout's own kinds, before any change)
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; if (k.why) sl.kindWhy = k.why; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => Object.assign({ role: x.role, from: x.plannedAs, to: x.kind }, x.kindWhy ? { why: x.kindWhy } : {}));
+  // (0.3.0 J19, B-172) which measures stay off one axis, why (English and Arabic), and the questions for the person
+  const axSplits = (galleryPlan || []).filter((g) => g.whyAr && /two panels/.test(g.written || '')).map((g) => ({ page: g.page, visual: 'combo', why: { en: g.why, ar: g.whyAr } }))
+    .concat((cvEntries || []).filter((e) => e.panels).map((e) => ({ page: e.page, visual: 'custom visual ' + e.from, panels: e.panels.length, why: e.axes.why })));
+  const axAsk = (galleryPlan || []).flatMap((g) => g.ask || []).concat(cvAsk);
+  const sharedAxesAns = axSplits.length || axAsk.length || a.sharedAxes ? { sharedAxes: Object.assign({ splits: axSplits }, axAsk.length ? { ask: axAsk } : {}, a.sharedAxes ? { answered: a.sharedAxes } : {},
+    { sayInPlan: 'Say in the plan, for each chart whose measures stay apart, that they are separate visuals and why (the reason is given in English and Arabic): measures share one axis only in the same unit, scale and currency, and only when the user says they compare; there is never a second axis, and no currency is converted. Ask the user each question in ask, in their words; pass only their own answer back as sharedAxes, then make the plan again.' }) } : {};
   const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, page by page, each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units on a slot the user placed, or the slot\'s own kind when the fields don\'t fit) and why; on a design at most one goes on a page, only where its fields suit, and a kind no page took is listed as not placed, with why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
   // (D1) a right-to-left plan's waterfalls, said before the go as the exact report writes them
   const waterfallRtl = exact && exact.waterfallRtl && exact.waterfallRtl.length ? { waterfallRtl: { charts: exact.waterfallRtl.map((x) => Object.assign({ page: visible(x.page), title: x.title ? visible(x.title) : null, written: x.written === 'columnChart' ? 'stacked column chart drawn as a waterfall' : x.native ? 'Power BI\'s waterfall, left to right' : 'waterfall, left to right', what: x.what }, x.why ? { why: x.why } : {})),
@@ -1670,7 +1695,7 @@ server.registerTool('plan_layout', {
   const switchPlan = exact && exact.metricSwitcher ? switchSaid(exact.metricSwitcher) : null;
   const flipPlan = exact && exact.flip ? exact.flip : null;
   const iconsPlan = exact && exact.icons ? exact.icons : null;
-  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, never applied by DataArcus: the user applies it in TMDL view)` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''} (create_report)`];
+  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes)).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, never applied by DataArcus: the user applies it in TMDL view)` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''} (create_report)`];
   const statusIcons = iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined, sayInPlan: `Say in the plan: which table or matrix columns get a status icon (columns), how each is decided (rule: the user's thresholds as given, or the target the model names), that the icons differ in shape${iconsPlan.scriptAfterGo ? `, and the model change: ${iconsPlan.newMeasures} new status measures in the script "${iconsPlan.scriptAfterGo}" next to the project: the user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then no icon shows)` : ''}${(iconsPlan.notShown || []).length ? '; and each measure left without an icon, with why (notShown)' : ''}.` }) } : {};
   // (0.3.0 J18, B-171) the terminology sheet of an Arabic plan: every field the report shows (read from the exact
   // artifact's files when there is one), where it shows, its English name and its Arabic and their status, and the one
@@ -1699,7 +1724,7 @@ server.registerTool('plan_layout', {
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
   const metricSwitcher = switchPlan ? { metricSwitcher: Object.assign({ sayInPlan: 'Say in the plan: the Metric page, its slicer and the charts that switch, each measure with its label, and the model change: a new table as a TMDL script file next to the project that the user applies in TMDL view (DataArcus never changes the model); until it is applied only that page shows Power BI\'s error. Show howToApply after the write.' }, switchPlan) } : {};
-  return text(Object.assign(formats, arabicNames, terminology, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, waterfallRtl, flipCards, statusIcons, aggregation, metricSwitcher, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
+  return text(Object.assign(formats, arabicNames, terminology, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, sharedAxesAns, waterfallRtl, flipCards, statusIcons, aggregation, metricSwitcher, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
     // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
     // shows all; a slot the writer does not cut (a time or known category) is not said to be cut. No lint: the slot's N
     const lt = designLint.designLint && designLint.designLint.tops, written = new Map();
