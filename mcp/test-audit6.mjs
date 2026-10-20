@@ -205,7 +205,9 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   {
     fs.cpSync(path.join(HERE, 'test-models/large-synthetic'), path.join(ROOT, 'a6big'), { recursive: true });
     const x = await call('check_model_health', { path: 'a6big', maxItems: 200 });
-    chk(() => !x.err && x.t.length <= 40000 && x.j.truncated && /maxItems|focus|tables/.test(x.j.truncated.how) && Object.keys(x.j.truncated.cut || {}).length, () => `A6-8. check_model_health at maxItems 200 on the 300-table model: ${x.t.length} characters, truncated ${JSON.stringify(x.j && x.j.truncated).slice(0, 200)}`);
+    // (0.3.0 Q1, changed on purpose: the cut is now made at its cause, listsCut, every finding kept with its count; the
+    // backstop's truncated no longer has to cut it)
+    chk(() => !x.err && x.t.length <= 40000 && !x.j.truncated && x.j.listsCut && /only: \[/.test(x.j.listsCut.how) && x.j.findings.every((f) => f.count >= f.items.length), () => `A6-8. check_model_health at maxItems 200 on the 300-table model: ${x.t.length} characters, listsCut ${JSON.stringify(x.j && (x.j.listsCut || x.j.truncated) || null).slice(0, 200)}`);
     const y = await call('check_model_health', { path: 'a6big' });
     chk(() => !y.err && y.t.length <= 40000 && !y.j.truncated, () => `A6-8. the default answer is whole (no cut needed): ${y.t.length}`);
   }
