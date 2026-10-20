@@ -184,7 +184,13 @@
       const sd = isObj(q) && isObj(q.sortDefinition) && Array.isArray(q.sortDefinition.sort) && isObj(q.sortDefinition.sort[0]) ? q.sortDefinition : null;
       const time = c0 && isTime(c0.field, o.dateTables), keepTime = o.timeRightToLeft === false && time;
       if (sd) {
-        const s = sd.sort[0], byCategory = c0 && sameField(s.field, c0.field);
+        // (0.3.0 S1, B-180) a sort by the category's own order key counts as a sort by the category: a helper of the
+        // category's table in the visual's Tooltips role (the writer's Min of the month number, round 2; its "Month
+        // start (sort)" report measure, O-13). Kept with time left to right, as a sort by the category itself is
+        const s = sd.sort[0], entityOf = (f) => (isObj(f) && isObj(f.Column) ? f.Column : isObj(f) && isObj(f.Measure) ? f.Measure : isObj(f) && isObj(f.Aggregation) && isObj(f.Aggregation.Expression) ? f.Aggregation.Expression.Column : null);
+        const ref = (f) => { const x = entityOf(f); return isObj(x) && isObj(x.Expression) && isObj(x.Expression.SourceRef) ? x.Expression.SourceRef.Entity : null; };
+        const orderKey = c0 && ref(s.field) != null && ref(s.field) === ref(c0.field) && (projections(q, 'Tooltips') || []).some((t) => isObj(t) && sameField(t.field, s.field));
+        const byCategory = c0 && (sameField(s.field, c0.field) || orderKey);
         if (!(keepTime && byCategory)) { s.direction = s.direction === 'Descending' ? 'Ascending' : 'Descending'; changes.push('sort'); }
       } else if (c0 && c0.field !== undefined && !keepTime && (q.sortDefinition === undefined)) {
         q.sortDefinition = { sort: [{ field: clone(c0.field), direction: 'Descending' }], isDefaultSort: true };
