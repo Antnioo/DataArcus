@@ -309,12 +309,12 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
-      iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
+      iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
       kpiTitleFit, titleFit, oneLine
     };
   }
@@ -327,7 +327,7 @@
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
-      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
+      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
       trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
@@ -490,23 +490,34 @@
     // Right to left: sorted descending by the field on its one row, so the first value is at the right.
     const PILLS = o.slicerStyle === 'pills', int = (x) => lit(Math.round(x) + 'L');
     const valuesKnown = (f) => (!f ? null : f.two ? { n: 2, why: 'two values (true/false, or a formula of two texts)' } : f.cal && f.cal.rows ? { n: f.cal.rows, why: f.cal.rows + ' values (a ' + f.cal.kind + ')' } : f.few ? { n: f.few, why: f.few + ' values (a formula of ' + f.few + ' texts)' } : null);
-    const slicerVisual = (f, ttl, w) => {
-      const kv = valuesKnown(f), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6;
+    const slicerVisual = (f, ttl, w, h) => {
+      const kv = valuesKnown(f);
+      // (0.3.0 F1) the pills' text size: the slicer text, a size smaller at a time (to 8) until the header and one row of
+      // tiles fit the visual's height (pillH); a slot too low even at 8 keeps the dropdown, said with why
+      let pt0 = SLICER_TEXT; while (h && pt0 > 8 && pillH(pt0) > h) pt0 = Math.max(8, Math.ceil(pt0) - 1);
+      const low = !!(h && pillH(pt0) > h), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6 && !low;
       if (PILLS && f) slicerStyles.push({ page: pg.name || base, field: f.t + '[' + f.c + ']', written: pill ? 'pills' : 'dropdown',
-        why: pill ? kv.why + ', known from the model' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
+        why: pill ? kv.why + ', known from the model' + (pt0 < SLICER_TEXT ? '; text ' + pt0 + 'pt so the header and the pills fit the slicer\'s height' : '') : kv && kv.n >= 2 && kv.n <= 6 ? 'the slicer is ' + Math.round(h) + ' high, the pills need ' + pillH(8) + ' at their smallest text (8pt): a dropdown' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
       if (!pill) return { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
         objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true };
       const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
       if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
+      // (0.3.0 F1, the laptop proof on Desktop 2.159: every pill drawn with no text) the button slicer's item text is its
+      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/CLAUDE.md): everything
+      // under the default selector, show included, never an entry without one; the outline likewise. The fill's show
+      // stays without a selector (the card's fillCustom.show: measured). Other shapes for the laptop: mcp/lab/pills-variants.mjs
       const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];
-      const full = label(f), shownT = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
+      const keyed = (look, picked) => [{ properties: look, selector: DEF }, { properties: picked, selector: SEL }];
+      const full = label(f), shownT = oneLine(full, pt0, w - 2 * Math.round(8 * k));
       if (shownT !== full) titles.slicers.push({ page: pg.name || base, field: full, shown: shownT });
       return { visualType: 'advancedSlicerVisual', query,
         objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n) }),
           fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
-          value: states({ show: bool(true) }, { fontFamily: str(font), fontSize: num(SLICER_TEXT), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
-          outline: states({ show: bool(true) }, { lineColor: color(edge) }, { lineColor: color(acc) }) },
-        visualContainerObjects: frame(shownT, full), drillFilterOtherVisuals: true };
+          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
+          outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }),
+          padding: obj({ topMargin: num(PILL_PAD), bottomMargin: num(PILL_PAD), leftMargin: num(PILL_PAD), rightMargin: num(PILL_PAD) }, DEF) },
+        // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
+        visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) }); return fr; })(), drillFilterOtherVisuals: true };
     };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
@@ -621,7 +632,7 @@
           const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
-            visual: slicerVisual(f, ttl, Math.round(sw)) });
+            visual: slicerVisual(f, ttl, Math.round(sw), Math.round(sh)) });
           slicerNames.push(v.name);
           z += 1000;
         });
@@ -1157,7 +1168,7 @@
       fields.forEach((f, i) => {
         const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
         const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
-          visual: slicerVisual(f, ttl, Math.round(sw)) });
+          visual: slicerVisual(f, ttl, Math.round(sw), Math.round(sh)) });
         names.push(v.name);
       });
       const rb = rnd();

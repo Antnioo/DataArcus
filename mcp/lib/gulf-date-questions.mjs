@@ -31,7 +31,7 @@ const ROLE = {
 };
 const SEASON_COL = /ramadan|رمضان|(^|[^a-z])eid([^a-z]|$)|عيد|hijri|هجري/i;
 const CONFIRMED = [], MAX = 5000;
-export const STRICT = false;   // true: no plan id for a seasonal page until every question is answered (Decision needed, J17)
+export const STRICT = true;   // no plan id for a seasonal page until its grain and scope are answered (the owner's decision, 20 Oct: F1)
 
 // ---- the questions, neutral, in English and Arabic ----
 const Q = {
@@ -204,7 +204,10 @@ export function gulfDateQuestions(m, a, opts) {
   // (an unanswered question does not withhold the plan id: the existing Ramadan plans and the golden tasks make plans
   // without answers; STRICT, held for the owner's go, would. Answers that contradict the plan always do, above)
   const sayFirst = seasonal && open.length ? `A seasonal page with ${open.length} open question${open.length === 1 ? '' : 's'}: before showing this plan, ask the person askNext (${open[0].id}), one question at a time, and call plan_layout again with gulfDates. Until then the plan follows ${using && using.field ? using.field : 'the model\'s active relationship'} and keeps every ${season} the filters keep: the approval page says each answer is missing.` : null;
-  if (STRICT && sayFirst) problems.push(sayFirst);
+  // (F1, STRICT) the grain and the scope (with its year) decide the numbers, so they are never left to a default; the date
+  // followed may stay the active relationship's, said in the plan
+  const mustAnswer = open.filter((q) => ['grain', 'scope', 'year'].includes(q.id));
+  if (STRICT && seasonal && mustAnswer.length) problems.push(`No plan id yet: a seasonal page needs its ${mustAnswer.map((q) => q.id === 'year' ? 'Hijri year' : q.id).join(' and ')} answered first, because a guessed grain or scope (Gregorian months instead of the season's days, every ${season} instead of one) shows other numbers than the person means. Ask askNext, one question at a time, and call plan_layout again with gulfDates.${sayFirst ? ' ' + sayFirst : ''}`);
   blocked.forEach((b) => problems.push(b));
 
   // 5. the dates' status: announced or estimated, and the country's limits (the Gulf calendar's own notes)

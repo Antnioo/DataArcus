@@ -201,6 +201,15 @@ try {
   const tools = (await w.c.listTools()).tools, en = (n) => { const t = tools.find((x) => x.name === n); return JSON.stringify((((t || {}).inputSchema || {}).properties || {}).waterfallRtl || {}); };
   chk(() => ['plan_layout', 'create_report', 'create_arabic_twin'].every((n) => /"enum":\["mirror","native"\]/.test(en(n)) && /left to right, as Power BI draws it/.test(en(n))),
     () => `S1: plan_layout, create_report and create_arabic_twin take waterfallRtl "mirror" | "native", described: ${en('create_report').slice(0, 400)}`);
+  // S2 (F1, the owner's decision of 20 Oct after the laptop proof: Desktop 2.159 draws no total label on the mirror)
+  chk(() => ['plan_layout', 'create_report', 'create_arabic_twin'].every((n) => /no Total column/.test(en(n)) && /no total label/.test(en(n)) && !/labelled with the total/.test(en(n))),
+    () => `S2: the description says "mirror" has no Total column and no total label: ${en('create_report').slice(0, 600)}`);
+  {
+    const pm = await plan({ name: 'Bridge AR S2', lang: 'ar', pages: HAND, displayNames: AR_NAMES, waterfallRtl: 'mirror' }), W = pm.j && pm.j.waterfallRtl;
+    const pn2 = await plan({ name: 'Bridge AR S2n', lang: 'ar', pages: HAND, displayNames: AR_NAMES }), Wn = pn2.j && pn2.j.waterfallRtl;
+    chk(() => W && /no total label/.test(W.sayInPlan) && /no total label/.test(W.charts[0].what) && !/labelled/.test(W.sayInPlan + W.charts[0].what) && Wn && /no total label/.test(Wn.sayInPlan) && /no total label/.test(Mirror.KIND_WHAT.waterfall),
+      () => `S3: the mirror's plan text, its chart line, the native plan's "other choice" and the twin's line say no total label: ${JSON.stringify([W, Wn && Wn.sayInPlan]).slice(0, 900)}`);
+  }
 } finally { await w.close(); fs.rmSync(ROOT, { recursive: true, force: true }); }
 
 if (problems.length) { console.log(`FAIL  waterfall-native-look  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }

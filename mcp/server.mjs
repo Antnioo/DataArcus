@@ -27,7 +27,7 @@ import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint, planPreview, checkFiles, checkSummary, aggregationAnswer } from './lib/plan-lint.mjs';
 import { checkArtifact, digestOf, modelPrintOf, bindingOf } from './lib/artifact.mjs';
-import { applyFlip, flipHow } from './lib/flip-cards.mjs';
+import { applyFlip, flipHow, BEFORE_APPLIED as FLIP_BEFORE } from './lib/flip-cards.mjs';
 import { applyIcons, iconsHow, iconsSaid, resolveIcons, LIST_MAX as ICONS_MAX } from './lib/status-icons.mjs';
 import * as Plans from './lib/plans.mjs';
 import * as Terms from './lib/terminology.mjs';
@@ -51,7 +51,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta
 // (0.3.0 D2: the visual gallery's three, written only when the user asks: a slot of that kind, or create_report's gallery)
 const GALLERY_KINDS = Object.values(Gallery.TOOL_NAMES);
 // (D7, the owner of 20 Oct) a right-to-left report's waterfall: Power BI's own ("native", the default) or the mirrored look-alike
-const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional().describe(`(Default "${Gallery.WATERFALL_RTL_DEFAULT}".) Only for a right-to-left (Arabic) report\'s waterfall. "native": Power BI\'s own waterfall, exactly as in English: ${Gallery.WF_WHAT.native}; the rest of the report stays mirrored. "mirror": a stacked column chart drawn as a waterfall that reads from the right (the first period at the right), but not Power BI\'s waterfall design: no Total column (the leftmost step is labelled with the total), no legend, the empty space under a step shows its base in the tooltip. Power BI cannot draw its own waterfall right to left. The user\'s choice; say it in the plan`);
+const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional().describe(`(Default "${Gallery.WATERFALL_RTL_DEFAULT}".) Only for a right-to-left (Arabic) report\'s waterfall. "native": Power BI\'s own waterfall, exactly as in English: ${Gallery.WF_WHAT.native}; the rest of the report stays mirrored. "mirror": a stacked column chart drawn as a waterfall that reads from the right (the first period at the right), but not Power BI\'s waterfall design: no Total column and no total label (Power BI 2.159 does not draw it), no legend, the empty space under a step shows its base in the tooltip. Power BI cannot draw its own waterfall right to left. The user\'s choice; say it in the plan`);
 const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'].concat(GALLERY_KINDS);
 // The tools' limits, given to the plan step so a plan is checked before it is shown (0.2.9, O-12: a plan with 4 slicers
 // was approved, then create_report refused it). create_report's own inputs use the same numbers.
@@ -1091,11 +1091,12 @@ function reportRun(a, mode) {
   // into its own TMDL script next to the project (model-script.mjs), rules need none
   if (Array.isArray(a.statusIcons)) { const ri = resolveIcons(modelOf(m.tmsl).tables || [], a.statusIcons); input(!ri.problems.length, `Nothing was written. ${ri.problems.join(' ')}`); }
   if (a.sharedAxes) { const ap = axesProblems(m, a.sharedAxes); input(!ap.length, `Nothing was written. ${ap.join(' ')}`); }
-  const icons = applyIcons(r.files, { opt: a.statusIcons, raw: modelOf(m.tmsl).tables || [], base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0icons', ui: look && look.ui });
+  const icons = applyIcons(r.files, { opt: a.statusIcons, raw: modelOf(m.tmsl).tables || [], base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0icons', ui: look && look.ui, rtl: !!(look && look.rtl) });
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
-  // (0.3.0 J18, B-171 item 5) an Arabic report's approved names: each Latin run of one (an acronym, a code) isolated
-  // wherever the report shows it, in the files the plan checks and writes (a model name kept in English is not touched)
-  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name));
+  // (0.3.0 J18, B-171 item 5; F1: every mixed text) an Arabic report's texts: each Latin run inside Arabic text (an
+  // acronym, a code, a model name kept in English) isolated wherever the report shows it, in the files the plan checks
+  // and writes
+  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name), { all: true });
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
@@ -1751,8 +1752,8 @@ server.registerTool('plan_layout', {
   // (D1) a right-to-left plan's waterfalls, said before the go as the exact report writes them
   const waterfallRtl = exact && exact.waterfallRtl && exact.waterfallRtl.length ? { waterfallRtl: { charts: exact.waterfallRtl.map((x) => Object.assign({ page: visible(x.page), title: x.title ? visible(x.title) : null, written: x.written === 'columnChart' ? 'stacked column chart drawn as a waterfall' : x.native ? 'Power BI\'s waterfall, left to right' : 'waterfall, left to right', what: x.what }, x.why ? { why: x.why } : {})),
     mode: Gallery.waterfallRtlOf(a.waterfallRtl),
-    sayInPlan: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `Say in the plan, in the person's terms: "${Gallery.WF_WHAT.native}" (Power BI's own waterfall, its Total column, legend and colours as in English; the rest of the report is mirrored). The other choice is waterfallRtl "mirror": a look-alike read from the right, with no Total column and no legend.`
-      : 'Say in the plan, for each waterfall, in the person\'s terms: "no Total column in Arabic: the last step on the left ends at the total" (labelled with the total, and every step\'s tooltip gives the running total), no legend, the base shown in the tooltip, because Power BI draws a waterfall left to right only; or that it is kept a waterfall, left to right, and why. The other choice is waterfallRtl "native": Power BI\'s own waterfall, left to right.' } } : {};
+    sayInPlan: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `Say in the plan, in the person's terms: "${Gallery.WF_WHAT.native}" (Power BI's own waterfall, its Total column, legend and colours as in English; the rest of the report is mirrored). The other choice is waterfallRtl "mirror": a look-alike read from the right, with no Total column, no total label and no legend.`
+      : 'Say in the plan, for each waterfall, in the person\'s terms: "no Total column in Arabic: the last step on the left ends at the total", with no total label either (Power BI 2.159 does not draw it; every step\'s tooltip gives the running total), no legend, the base shown in the tooltip, because Power BI draws a waterfall left to right only; or that it is kept a waterfall, left to right, and why. The other choice is waterfallRtl "native": Power BI\'s own waterfall, left to right.' } } : {};
   // (L3) the switch as the exact build writes it: its measures, labels, charts, script and the model change
   const switchPlan = exact && exact.metricSwitcher ? switchSaid(exact.metricSwitcher) : null;
   const flipPlan = exact && exact.flip ? exact.flip : null;
@@ -1787,7 +1788,7 @@ server.registerTool('plan_layout', {
         .concat(switchKeys.includes(k) ? [`${switchPlan.page}: a choice of the metric switcher (its slicer and its charts' title)`] : []))]; });
     terminology = { terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW }) };
   }
-  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then the cards are empty pictures). Editing in Desktop, a card turns with Ctrl+click.` }) } : {};
+  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then ${FLIP_BEFORE}). Editing in Desktop, a card turns with Ctrl+click.` }) } : {};
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
     : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, switchPlan ? { metricSwitcher: switchPlan } : {}, flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined }) } : {}, iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined }) } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, termRows ? { terminology: termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })) } : {}, gulfDateRows ? { gulfDates: gulfDateRows } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }

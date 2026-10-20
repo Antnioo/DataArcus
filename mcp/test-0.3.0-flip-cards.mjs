@@ -205,6 +205,10 @@ try {
     const H = unesc(EN.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     chk(() => /Flip cards \(3\)/.test(H) && /bookmarks?/i.test(H.match(/Flip cards \(3\)[\s\S]{0,1500}/)[0]) && /flip cards\.tmdl/.test(H) && /apply the script first/i.test(H) && /model is not changed/i.test(H),
       () => `F21. the approval page lists the cards, the back, the bookmarks and the model change: ${(H.match(/Flip cards[\s\S]{0,700}/) || [''])[0]}`);
+    // F21b (F1, the laptop proof: before the script each card shows Power BI's own message, not an empty picture)
+    const DS = /Data shapes must contain at least one group or calculation that outputs data/;
+    chk(() => DS.test(H) && DS.test((EN.pl.j.flipCards || {}).sayInPlan || '') && DS.test(fa.howToApply || '') && !/empty pictures/.test(H + JSON.stringify(EN.pl.j.flipCards) + JSON.stringify(fa)),
+      () => `F21b. the plan, the approval page and the answer say each card shows Power BI's "Data shapes must contain..." until the script is applied: ${((EN.pl.j.flipCards || {}).sayInPlan || '').slice(0, 400)}`);
     const svg = (unesc(EN.html || '').match(/<svg[\s\S]*?<\/svg>/g) || []).join('');
     chk(() => /Total Sales/.test(svg) && /Orders/.test(svg) && !/fill="none" stroke="[^"]+" stroke-dasharray/.test(svg), () => `F21b. the approval page's preview draws each flip card's front as its KPI card (no empty picture box): ${svg.slice(0, 300)}`);
     chk(() => modelHash() === MODEL0, () => 'F22. the model is never changed');

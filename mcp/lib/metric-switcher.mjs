@@ -105,11 +105,16 @@ export function addSwitch(r, o) {
   const first = items[0];
   const visual = (name, x, y, w, h, z, v) => ({ $schema: SCHEMA.visual, name, position: { x: at(x, w), y, z, height: h, width: w, tabOrder: z }, visual: v });
   const vs = [];
-  // the slicer: one metric at a time; its header in the report's language. No saved selection: the schema types a
-  // formatting property as anything (no checkable place for general.filter) and no Desktop run has shown its shape for a
-  // field parameter, so nothing is written for it ("For the laptop"); with nothing chosen the title asks for one
+  // the slicer: one metric at a time; its header in the report's language; with nothing chosen the title asks for one
+  // (F1, the owner's decision of 20 Oct) the switch opens on its FIRST metric: general.filter in the shape Desktop 2.159
+  // saved for it (the laptop proof, out/L3-saved-general.json): the field column In the first measure's NAMEOF text, with
+  // the display column and the item's label in the annotations
+  const nameText = "'" + String(first.t).replace(/'/g, "''") + "'[" + String(first.m).replace(/\]/g, ']]') + ']', nameLit = { Literal: { Value: "'" + nameText.replace(/'/g, "''") + "'" } };
+  const colOf = (src, c) => ({ Column: { Expression: { SourceRef: src }, Property: c } });
+  const firstChosen = { filter: { Version: 2, From: [{ Name: 'm', Entity: names.table, Type: 0 }], Where: [{ Condition: { In: { Expressions: [colOf({ Source: 'm' }, names.fields)], Values: [[nameLit]] } },
+    Annotations: { filterExpressionMetadata: { expressions: [colOf({ Entity: names.table }, names.display)], decomposedIdentities: { values: [[{ 0: [nameLit] }]], columns: [{ value: colOf({ Entity: names.table }, names.fields) }] }, valueMap: [{ 0: first.label }] } } }] } };
   vs.push(visual('metricslicer' + pageId.slice(0, 8), m, m, sw, sh, 0, { visualType: 'slicer', query: q({ Values: [proj({ t: names.table, c: names.display, name: HEADER[lang] })] }),
-    objects: { data: obj({ mode: str('Basic') }), selection: obj({ singleSelect: bool(true) }) },
+    objects: { data: obj({ mode: str('Basic') }), selection: obj({ singleSelect: bool(true) }), general: obj({ filter: firstChosen }) },
     visualContainerObjects: { general: obj({ altText: str(lang === 'ar' ? 'اختيار المؤشر الذي تعرضه المخططات' : 'Choose the metric the charts show') }) } }));
   const chart = (kind, f, x, z) => {
     const type = kind === 'bar' ? 'clusteredBarChart' : 'lineChart';
@@ -120,7 +125,9 @@ export function addSwitch(r, o) {
       // (0.3.0 A1: in a right-to-left report the title and subtitle are aligned right, where an Arabic reader starts: RTL_MIRROR)
       visualContainerObjects: { title: obj(Object.assign({ show: bool(true), text: { expr: P } }, o.rtl ? { alignment: str('right') } : {})), subTitle: obj(Object.assign({ show: bool(true), text: str(BY[lang](label(f))) }, o.rtl ? { alignment: str('right') } : {})),
         general: obj({ altText: str(`${KIND_WORD[lang][kind]}: ${lang === 'ar' ? 'المؤشر المختار' : 'the chosen metric'} ${BY[lang](label(f))}`) }) } };
-    if (o.rtl) mirrorChart(v, kind);
+    // (F1, the proof: the Arabic line kept Jan at the left) the mirrored sort is the report's own, not a default sort a
+    // field-parameter visual may work out again
+    if (o.rtl) { mirrorChart(v, kind); if (query.sortDefinition) delete query.sortDefinition.isDefaultSort; }
     if (grid) { const va = v.objects.valueAxis || (v.objects.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, JSON.parse(JSON.stringify(grid))); gridded++; }
     if (!Object.keys(v.objects).length) delete v.objects;
     vs.push(visual('metric' + kind + pageId.slice(0, 8), x, m, cw, H - 2 * m, z, v));
@@ -167,7 +174,7 @@ export function switchSaid(s) {
   return { measures: s.items, page: s.page, charts: s.charts, notSwitched: s.notSwitched, fallbackTitle: s.fallback, table: s.names.table, script: s.scriptFile,
     modelChange: MODEL_CHANGE(s.names.table), beforeApplied: BEFORE_APPLIED,
     howToApply: `Save a copy of your Power BI file first. Open "${s.scriptFile}" (next to the project) in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste into a new tab, choose Preview: it shows one new table ${JSON.stringify(s.names.table)}; then Apply. On the ${JSON.stringify(s.page)} page choose one metric in the slicer: both charts and their titles switch, each measure in its own format. With nothing chosen the title says ${JSON.stringify(s.fallback)}.`,
-    savedSelection: `Not written: the slicer opens with nothing chosen, so the charts show every metric together until one is chosen, and the titles say ${JSON.stringify(s.fallback)}. A saved first choice needs its file shape seen in Power BI Desktop first.` };
+    savedSelection: `The slicer opens with the first metric chosen (${JSON.stringify(s.items[0].label)}), in the shape Power BI Desktop saves; with nothing chosen the titles say ${JSON.stringify(s.fallback)}.` };
 }
 
 // ---- check_report: a field parameter on a report's visuals, and a title measure that reads its display column alone ----

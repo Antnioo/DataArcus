@@ -1293,7 +1293,8 @@ if (part('round6')) {
   {
     const fields = { kpis: RAM.kpis, measure: SALES('Total Sales Last Ramadan'), timeAxis: 'Calendar[Hijri Month Name]', category: 'Calendar[Day Name]', category2: 'Calendar[Quarter]',
       table: ['Calendar[Quarter]', SALES('Total Sales'), SALES('Total Sales vs Last Ramadan %')], slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] };
-    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields });
+    // (F1, STRICT: the Ramadan slicers and measures make it seasonal: the person's grain and scope)
+    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields, gulfDates: { grain: 'hijri', scope: 'all' } });
     const vs = x.err ? [] : visualsOf(path.join(ROOT, 'dax-project', x.j.report)), p1 = vs.filter((v) => v.page === 'Executive summary');
     const cards = p1.filter((v) => v.type === 'cardVisual' && !v.fields.some((f) => /\.No data: /.test(f))).sort((a, b) => a.x - b.x).map((v) => v.fields.join());   // (round 22: without the "No data" message cards)
     chk(() => cards.join('|') === 'Sales.Total Sales|Sales.Total Sales Last Ramadan|Sales.Total Sales vs Last Ramadan %', () => `fields.kpis: the cards must be the three given, in order (3 cards for 3 fields): ${cards.join(' | ')} ${short(x)}`);
@@ -1565,7 +1566,8 @@ if (part('round8')) {
 
   // 1. a boolean column: Calendar[Is Ramadan] = true on every report page (not on the tooltip pages), in Microsoft's shape.
   //    The Ramadan model's Calendar is a DAX table, so its files give the column no type: the value's own type is used
-  const ram = await ask('create_report', { path: 'dax-project', name: 'R8 Ramadan', design, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+  // (F1, STRICT: a seasonal page needs the person's grain and scope; here every Ramadan, by month)
+  const ram = await ask('create_report', { path: 'dax-project', name: 'R8 Ramadan', design, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
   const ramDir = ram.err ? null : path.join(ROOT, 'dax-project', ram.j.report), ramPages = ramDir ? pagesOf(ramDir) : [];
   chk(() => ramPages.filter((p) => !p.tooltip).length >= 1 && ramPages.filter((p) => !p.tooltip).every((p) => p.filters.length === 1 && wellFormed(p.filters[0]) && p.filters[0].field.Column.Expression.SourceRef.Entity === 'Calendar'
       && p.filters[0].field.Column.Property === 'Is Ramadan' && lit(p.filters[0]).join() === 'true') && ramPages.some((p) => p.tooltip) && ramPages.filter((p) => p.tooltip).every((p) => p.filters.length === 0),
@@ -1589,7 +1591,8 @@ if (part('round8')) {
   // 4. a model with no such column: the answer says the model has no column of that name and what to do, nothing written
   {
     const before = reportsIn('tmdl-project');
-    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 No column', design, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    // (F1, STRICT: the person's grain and scope given, so the refusal tested is the missing column's)
+    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 No column', design, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
     chk(() => x.err && /Nothing was written/.test(x.t) && /Calendar\[Is Ramadan\] is not in the model/.test(x.t) && /read_model/.test(x.t) && /page filter/i.test(x.t) && reportsIn('tmdl-project') === before, () => `a page filter on a column the model has not must give a clear message: ${short(x)}`);
   }
 
@@ -1679,12 +1682,14 @@ if (part('round9')) {
 
   // ----- R9.2: "this Ramadan only" is two page filters: the Ramadan flag and the Hijri year the user gives -----
   {
-    const both = await ask('create_report', { path: 'dax-project', name: 'R9 This Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    // (F1, STRICT: the person's grain and scope, this Ramadan: the year they gave)
+    const both = await ask('create_report', { path: 'dax-project', name: 'R9 This Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }], gulfDates: { grain: 'gregorian', scope: 'year', year: 1447 } });
     const pg = both.err ? [] : report(path.join(ROOT, 'dax-project', both.j.report)).filter((p) => !p.tooltip);
     const lits = (f) => f.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value).join();
     chk(() => pg.length === 1 && pg[0].filters.length === 2 && pg[0].filters[0].field.Column.Property === 'Is Ramadan' && lits(pg[0].filters[0]) === 'true' && pg[0].filters[1].field.Column.Property === 'Hijri Year' && lits(pg[0].filters[1]) === '1447L'
       && !(both.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)), () => `Is Ramadan = true and Hijri Year = 1447 on the page, with no "every Ramadan" note: ${JSON.stringify(pg.map((p) => p.filters.map(lits)))} ${JSON.stringify(both.j && both.j.reportNotes)} ${short(both)}`);
-    const one = await ask('create_report', { path: 'dax-project', name: 'R9 Every Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    // (F1, STRICT: the person chose every Ramadan; the note still says it keeps every one and how to get one)
+    const one = await ask('create_report', { path: 'dax-project', name: 'R9 Every Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
     chk(() => !one.err && (one.j.reportNotes || []).some((n) => /every Ramadan/i.test(n) && /Calendar\[Hijri Year\]/.test(n) && /ask the user/i.test(n)) && /every Ramadan/i.test(one.j.pageFilters[0].note),
       () => `a filter on Is Ramadan alone must say it keeps every Ramadan, name Calendar[Hijri Year] and say to ask the user for the year: ${JSON.stringify(one.j && [one.j.reportNotes, one.j.pageFilters])} ${short(one)}`);
     const other = await ask('create_report', { path: 'filter-project', name: 'R9 Open', design: focus, secondPage: false, pageFilters: [{ field: 'Shop Sales[Is Open]', values: [true] }] });
@@ -3500,13 +3505,18 @@ if (part('round12')) {
   // #22 and #21: one Ramadan (page filters on the Ramadan flag and the Hijri year): no slicer on a column a page filter
   //   fixes, and the line chart by Ramadan Day (1 to 30), not by month (two points); both told
   {
-    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'] },
-      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    // (F1, STRICT: the person's grain is the season's days, so the plan takes its axis, Calendar[Ramadan Day], as given)
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'], timeAxis: 'Calendar[Ramadan Day]' },
+      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }],
+      // (F1, STRICT: the person's grain and scope: one Ramadan, 1447, by its days)
+      gulfDates: { grain: 'seasonDay', scope: 'year', year: 1447 } });
     const vs = pageVisuals(x, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].queryRef);
     const line = vs.find((v) => type(v) === 'lineChart'), notes = JSON.stringify((x.j || {}).reportNotes || []);
     chk(() => !x.err && sl.length >= 1 && !sl.includes('Calendar.Is Ramadan') && !sl.includes('Calendar.Hijri Year') && /slicer/i.test(notes),
-      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)}`);
-    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day' && /Ramadan Day/.test(notes),
+      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)} ${x.err ? x.t.slice(0, 600) : ''}`);
+    // (F1, STRICT: the person now gives the season-day axis, so the writer has no change of its own to tell: the note's
+    // part of this check is left out on purpose)
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day',
       () => `#21: one Ramadan's line chart by Ramadan Day: ${line && line.visual.query.queryState.Category.projections[0].queryRef}`);
   }
   // #16: month labels stay level: the line chart's axis takes the model's short month names ("Jan") where it has them

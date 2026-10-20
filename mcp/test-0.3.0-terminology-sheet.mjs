@@ -54,6 +54,9 @@ const projections = (files) => { const out = []; for (const [f, j] of Object.ent
 const usedMeasures = (files) => { const used = new Set(); const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return;
   if (o.Measure && o.Measure.Expression && o.Measure.Expression.SourceRef && o.Measure.Expression.SourceRef.Schema === 'extension') used.add(o.Measure.Expression.SourceRef.Entity + '\u0000' + o.Measure.Property);
   Object.values(o).forEach(walk); }; Object.entries(files).filter(([f]) => /visual\.json$/.test(f)).forEach(([, j]) => walk(j)); return used; };
+// (F1, the owner's decision of 20 Oct: isolate EVERY mixed Arabic/Latin text) a shown text with Arabic letters and a
+// Latin run not inside an isolate
+const notIsolated = (texts) => texts.filter((t) => /[\u0600-\u06FF]/.test(t.s) && /[A-Za-z]/.test(t.s.replace(/\u2068[^\u2069]*\u2069/g, '')));
 function shownTexts(files, only) {
   const out = [], used = usedMeasures(files);
   const walk = (o, where) => { if (Array.isArray(o)) { o.forEach((x) => walk(x, where)); return; } if (!o || typeof o !== 'object') return;
@@ -192,6 +195,8 @@ try {
     const used = shownTexts(A).filter((t) => t.s.includes('KPI'));
     chk(() => used.length >= 5 && used.every((t) => t.s.includes(FSI + 'KPI 2024' + PDI)) && used.some((t) => t.what === 'measure text') && used.some((t) => t.what === 'altText'),
       () => `TS-4e. the alias's Latin run is isolated wherever the report shows it (headers, titles, alt texts, the title measures' texts): ${JSON.stringify(uniq(used.filter((t) => !t.s.includes(FSI)).map((t) => `${t.what} "${t.s}"`)).slice(0, 6))}`);
+    const mixA = notIsolated(shownTexts(A));
+    chk(() => !mixA.length, () => `TS-10a. every mixed Arabic/Latin text of the Arabic report is isolated: ${JSON.stringify(uniq(mixA.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
   }
 
   // ---------- TS-2: the twin and the EN-AR copy, terms everywhere ----------
@@ -237,6 +242,8 @@ try {
     chk(() => !stray.length, () => `TS-2e. no text of the twin keeps the English name of a termed field: ${JSON.stringify(uniq(stray.map((t) => `${t.what} "${t.s.slice(0, 70)}"`)).slice(0, 8))}`);
     const kpi = shownTexts(TW).filter((t) => t.s.includes('KPI'));
     chk(() => kpi.length >= 5 && kpi.every((t) => t.s.includes(FSI + 'KPI 2024' + PDI)), () => `TS-4f. the twin's alias isolated wherever it shows: ${JSON.stringify(uniq(kpi.filter((t) => !t.s.includes(FSI)).map((t) => t.s)).slice(0, 5))}`);
+    const mixT = notIsolated(shownTexts(TW));
+    chk(() => !mixT.length, () => `TS-10c. every mixed Arabic/Latin text of the twin is isolated: ${JSON.stringify(uniq(mixT.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
     // the EN-AR copy
     const pc = await twinPlan({ labels: L, terms: TERMS, into: 'same' }), cid = pc.j && pc.j.plan && pc.j.plan.planId;
     if (cid) await s.call('approve_plan', { planId: cid });
@@ -247,6 +254,8 @@ try {
       () => `TS-2f. the EN-AR copy: its Arabic pages carry the terms, its English pages are untouched: ${wc.err ? short(wc) : JSON.stringify({ ar: arP.filter((x) => DN[x.key] && x.displayName !== isolated(DN[x.key])).slice(0, 3), en: enP.filter((x) => DN[x.key] && /[؀-ۿ]/.test(String(x.displayName))).slice(0, 3) })}`);
     const cstray = shownTexts(C, (f) => arPages.has(pageIdOf(f) || '')).filter((t) => en.some((n) => t.s.includes(n)) && !/^No data: /.test(t.s));
     chk(() => !cstray.length, () => `TS-2g. no Arabic page of the copy keeps an English name of a termed field: ${JSON.stringify(uniq(cstray.map((t) => `${t.what} "${t.s.slice(0, 70)}"`)).slice(0, 8))}`);
+    const mixC = notIsolated(shownTexts(C, (f) => arPages.has(pageIdOf(f) || '')));
+    chk(() => !mixC.length, () => `TS-10d. every mixed Arabic/Latin text on the copy's Arabic pages is isolated: ${JSON.stringify(uniq(mixC.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
   }
 
   // ---------- TS-9: Microsoft's validator and check_report ----------
@@ -301,6 +310,17 @@ try {
     chk(() => t.includes('+ 0') && dropped.every((k) => rowOf(qs, k) && !rowOf(qs, k).earlier && rowOf(qs, k).status !== 'approved') && kept.every((k) => rowOf(qs, k) && rowOf(qs, k).earlier === true),
       () => `TS-5f. a changed description or DAX drops that term only (asked again): ${JSON.stringify(qs.map((r) => [r.field, r.status, r.earlier]))}`);
     chk(() => q.j.terminology.askNext && dropped.includes(q.j.terminology.askNext.field), () => `TS-5g. the dropped term is asked again first: ${JSON.stringify(q.j && q.j.terminology && q.j.terminology.askNext)}`);
+  }
+  // ---------- TS-10b (last: the term kept in English stays in the session's memory) ----------
+  {
+    // the proof's tab (20 Oct): a field kept in English on a tooltip page, «تلميح · Month Short»
+    const DNm = Object.assign({}, DN, { 'Calendar[Month Short]': 'Month Short' });   // (the person keeps it in English)
+    const pm = await plan({ displayNames: DNm, name: 'تقرير مختلط' }), mid = pm.j && pm.j.plan && pm.j.plan.planId;
+    if (mid) await s.call('approve_plan', { planId: mid });
+    const rm = mid ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير مختلط', planId: mid, design: pm.j.design }) : pm;
+    const M = readReport(path.join(ROOT, 'large/تقرير مختلط.Report')), tips = shownTexts(M).filter((t) => t.what === 'page name' && (M[t.where] || {}).type === 'Tooltip'), mixM = notIsolated(shownTexts(M));
+    chk(() => !rm.err && tips.some((t) => /Month Short/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · Month Short» and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
+    if (!rm.err) { const c = await s.call('check_report', { path: 'large/تقرير مختلط.pbip' }); chk(() => !c.err && c.j.validator.errors === 0 && c.j.impact.kinds.canBreak.count === 0, () => `TS-10b: validator 0, check_report 0 "can break": ${short(c)}`); }
   }
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }
 await s.close(); await w.close();
