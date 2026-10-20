@@ -1035,9 +1035,9 @@ function reportRun(a, mode) {
   const flip = applyFlip(r.files, { flip: a.flipCards, lang: a.lang, rtl: look && look.rtl, ui: look && look.ui, font: look && look.font, radius: Number.isFinite(radius) ? radius : 8, tmsl: m.tmsl,
     base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0flip' });
   const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
-  // (0.3.0 J18, B-171 item 5) an Arabic report's visible texts: each Latin run inside Arabic text isolated (an approved
-  // name with an acronym, a model name kept in English inside an Arabic title), in the files the plan checks and writes
-  if (a.lang === 'ar') Terms.isolateFiles(r.files);
+  // (0.3.0 J18, B-171 item 5) an Arabic report's approved names: each Latin run of one (an acronym, a code) isolated
+  // wherever the report shows it, in the files the plan checks and writes (a model name kept in English is not touched)
+  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name));
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists

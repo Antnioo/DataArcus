@@ -24,16 +24,27 @@ export const SCOPE = 'ar';
 const ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/, ISOLATED = /[⁦-⁩]/;
 const RUN = /[A-Za-z0-9](?:[A-Za-z0-9_%]|[ .,'&+#/\-](?=[A-Za-z0-9]))*/g;
 const FSI = '⁨', PDI = '⁩', RLM = '‏';
+const runs = (t) => t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run));
+const ends = (t) => t.replace(/^(\s*)\u2068/, `$1${RLM}${FSI}`).replace(/\u2069(\s*)$/, `${PDI}${RLM}$1`);
 export function isolateLatin(s) {
   const t = String(s == null ? '' : s);
   if (!ARABIC.test(t) || !/[A-Za-z]/.test(t) || ISOLATED.test(t)) return t;
-  return t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run))
-    .replace(/^(\s*)⁨/, `$1${RLM}${FSI}`).replace(/⁩(\s*)$/, `${PDI}${RLM}$1`);
+  return ends(runs(t));
+}
+// (the full run's test.mjs, e/h and P3-2: isolating every mixed text changed Arabic titles that keep a model name in
+// English, outside what a person approved: the owner decides that one) a text with an approved name in it: that name's
+// Latin runs isolated where the text holds it, and a right-to-left mark at an end the name's run reaches
+export function isolateNames(s, names) {
+  let t = String(s == null ? '' : s);
+  if (ISOLATED.test(t)) return t;
+  let hit = false;
+  for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
+  return hit ? ends(t) : t;
 }
 // the text without the marks the writer adds (to compare a written text with the name a person approved)
 export const plain = (s) => String(s == null ? '' : s).replace(/[⁦-⁩‎‏]/g, '');
 
-// A report's visible texts isolated, in its files ({ path, data }) as the writer built them: the formatting literals of
+// A report's visible texts with an approved name in them isolated (isolateNames), in its files ({ path, data }) as the writer built them: the formatting literals of
 // pages, visuals and phone layouts (titles, alt texts, text boxes, button texts and tooltips), text box runs, the
 // display names of projections, page and bookmark names, and the texts of the report's Text measures (their DAX string
 // literals). Never a filter's values, a measure's or visual's name, or anything else. Returns how many texts changed.
@@ -50,8 +61,11 @@ function walkVisual(o, change) {
   }
 }
 const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
-export function isolateFiles(files) {
-  let n = 0; const change = (s) => { const out = isolateLatin(s); if (out !== s) n++; return out; };
+export function isolateFiles(files, names) {
+  // names: the approved Arabic names with a Latin run (the others need nothing), longest first
+  const list = [...new Set((names || []).map(String).filter((x) => ARABIC.test(x) && /[A-Za-z]/.test(x) && !ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
+  if (!list.length) return 0;
+  let n = 0; const change = (s) => { const out = isolateNames(s, list); if (out !== s) n++; return out; };
   for (const f of files || []) {
     if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
     const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
