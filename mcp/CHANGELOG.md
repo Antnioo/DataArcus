@@ -199,6 +199,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   (answered compact, texts cut last), names the metric switcher's choices under cannot, lists the EN-AR copy's
   «English» button as kept with why, and lists and labels a button's own title; an Arabic report's flip cards write their
   units as Arabic words after a Western-digit number (3.43 ألف، 1.20 مليون، 2.05 مليار; English keeps K, M, B).
+- A1: the integration audit of the 0.3.0 wave (D1-D7, U1, X1, G1, R1, L1-L5, S1, J17-J19, W1, Q1, A2 together): every
+  suite, every tool on every fixture in English and Arabic over stdio, every wave option on one report (then its twin,
+  its EN-AR copy and its redesign), and the reproducible build; results in this file.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

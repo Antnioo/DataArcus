@@ -117,14 +117,16 @@ const safe = (fn) => async (args) => { const mark = writtenSince(); try { const 
 // (R4) a script that was not written: the write's own words, which name exactly what it left on disk, if anything
 const notWrittenWhy = (dir, e) => 'The script could not be written to ' + dir + ' (' + String((e && e.code) || 'error') + ')' + (e && e.left ? ': ' + e.message : '.');
 const sameFile = (f, data) => { try { const st = fs.lstatSync(f); return st.isFile() && st.size === Buffer.byteLength(data) && fs.readFileSync(f, 'utf8') === data; } catch (e) { return false; } };
-function writeScript(dir, base, script) {
+function writeScript(dir, base, script, plan) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
-    if (nothingAt(f)) { try { writeNew(f, script); noteWritten(f); return f; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
+    if (nothingAt(f)) { if (plan) return f; try { writeNew(f, script); noteWritten(f); return f; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
     else if (sameFile(f, script)) return f;
   }
   throw new Error('no free file name');
 }
+// the file writeScript would write now, named and not written (a plan names the file its click writes: 0.3.0 A1)
+const scriptNameNow = (dir, base, script) => writeScript(dir, base, script, true);
 // The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
 // same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
 // project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
@@ -1829,8 +1831,7 @@ server.registerTool('add_gulf_calendar', {
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
   if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase })));
-  const named = (dir, base) => path.join(dir, base + '.tmdl');
-  const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
+  const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: scriptNameNow, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
     plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`], { pins: { add_gulf_calendar: inputsPin(a) } })) }));
 }));

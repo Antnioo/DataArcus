@@ -556,6 +556,8 @@ function buildTwin(P, labels) {
 // tooltip pages, drillthrough, bookmarks) goes to the Arabic one. Each page gets a language button to its counterpart; each
 // slicer pair one sync group (visual.syncGroup, the visualConfiguration schema's VisualSyncGroup); the counterpart
 // language's pages are hidden from the tabs (HiddenInViewMode). The original is only read.
+// a report's .platform as create_report writes it (pbip-export.js): its type, its name, a new logical id
+const newPlatform = (name) => json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json', metadata: { type: 'Report', displayName: name }, config: { version: '2.0', logicalId: crypto.randomUUID() } });
 export const COPY_TAG = ' (EN-AR)';
 const LANG = { en: { text: 'العربية', alt: 'Show this page in Arabic', on: 'English' }, ar: { text: 'English', alt: 'اعرض هذه الصفحة بالإنجليزية', on: 'Arabic' } };
 const VC_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
@@ -757,7 +759,9 @@ function languageCopy(P, built, labels) {
     changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   if (built.ext) changed.set(EXT, json(built.ext));
   if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); changed.set('.platform', json(pl)); }
-  const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
+  // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
+  else changed.set('.platform', newPlatform(loc.base + COPY_TAG));
+  const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(R.hasPlatform ? [] : [{ rel: '.platform', data: changed.get('.platform') }], built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
   const anyNav = R.pages.some((pg) => pg.visuals.some((v) => Mirror.kindOf(v.json) === 'navigator')), anyBmNav = R.pages.some((pg) => pg.visuals.some((v) => typeOf(v.json) === 'bookmarkNavigator'));
   const notes = [].concat(anyNav ? ['A page navigator lists the pages shown in the tabs only: on an Arabic page it lists the English pages (use page buttons there)'] : [], anyBmNav ? ['A bookmark navigator lists every bookmark: the English and the Arabic ones'] : [],
     R.bookmarks.length ? ['A bookmark group keeps its name in its Arabic copy (bookmarks.json)'] : []);
@@ -1019,6 +1023,7 @@ function scriptName(dir, base, text) {
 export function twinOutputs(P) {
   const { loc, R } = P, dir = P.outBase + '.Report', out = P.copy ? P.copy.files.map((f) => dir + '/' + f.rel) : R.files.map((rel) => dir + '/' + rel);
   if (!P.copy && P.built.ext && !R.files.includes(EXT)) out.push(dir + '/' + EXT);
+  if (!P.copy && !R.hasPlatform) out.push(dir + '/.platform');
   if (P.month.offered) { const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
   return out.concat([P.outBase + '.pbip']);
 }
@@ -1053,6 +1058,8 @@ export function writeTwin(a, plan) {
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
   if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); }
+  // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
+  else out.set('.platform', newPlatform(loc.base + ' AR'));
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(twinDir) } }], settings: { enableAutoRecovery: true } };
   if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; }
   // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
@@ -1062,6 +1069,7 @@ export function writeTwin(a, plan) {
     : R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
   // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
   if (!P.copy && out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
+  if (!P.copy && !R.hasPlatform) tree.push({ path: path.basename(twinDir) + '/.platform', data: out.get('.platform') });
   let month = { written: false, why: P.month.why };
   if (P.month.offered) {
     const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script);
@@ -1075,7 +1083,7 @@ export function writeTwin(a, plan) {
   writeTree(loc.project, tree);
   // (0.3.0 J18) the terms of the written plan are confirmed for this model (this session only)
   if (Array.isArray(d.terminology)) Terms.remember(P.model, d.terminology);
-  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
+  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0) + (R.hasPlatform ? 0 : 1), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
     ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
