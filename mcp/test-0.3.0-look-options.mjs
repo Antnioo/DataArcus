@@ -148,10 +148,24 @@ try {
     // dropdown's measured title share, slicerH), tile ceil(1.6 pt) + 2 x 4 padding (written), 4 between
     const pills0 = pills(allVisuals(EN.dir)), szOf = (v) => parseFloat(String(S(P(v, 'value', 'default').fontSize)));
     const tit = (v) => ((v.visual.visualContainerObjects || {}).title || [{ properties: {} }])[0].properties;
-    const need = (t) => Math.ceil(8 + 2 * t) + Math.ceil(1.6 * t) + 8 + 4;
+    // (F2, changed on purpose: F1's sum was measured too low on Desktop 2.159, RECHECK-F1.md: 88 at 15pt cuts the text,
+    // 140 draws it whole) the height measured to work, 140 at 15pt, scaled with the text size
+    const need = (t) => Math.ceil(140 * t / 15);
     chk(() => pills0.length === 2 && pills0.every((v) => parseFloat(String(S(tit(v).fontSize))) === szOf(v) && v.position.height >= need(szOf(v))
       && ['topMargin', 'bottomMargin'].every((m) => S(P(v, 'padding', 'default')[m]) === '4D')),
       () => `P6. each pill slicer: header at the tiles' text size, padding 4 written, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
+    // P6b (F2): in a stacked filter rail the layout gives each pill slicer the height measured for it at the slicer text
+    // size (the strip above keeps its height and lowers the text instead); nothing overlaps; the reason said
+    {
+      const RL = await write({ name: 'Look Pills Rail', lang: 'en', layout: 'exec', filters: 'start', secondPage: false, planFields: FIELDS, slicerStyle: 'pills' });
+      const rp = RL.dir && fs.existsSync(RL.dir) ? pills(allVisuals(RL.dir)) : [], all = RL.dir && fs.existsSync(RL.dir) ? allVisuals(RL.dir) : [];
+      const sl = all.filter((v) => /^(slicer|advancedSlicerVisual)$/.test(v.visual.visualType)).sort((a, b) => a.position.y - b.position.y);
+      const overlap = sl.some((v, i) => i && sl[i - 1].position.y + sl[i - 1].position.height > v.position.y);
+      chk(() => rp.length === 2 && rp.every((v) => v.position.height >= need(szOf(v)) && parseFloat(String(S(tit(v).fontSize))) === szOf(v)) && !overlap,
+        () => `P6b. the rail's pill slicers as high as measured (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
+      const c = RL.r && !RL.r.err ? await check(RL.pbip) : null;
+      chk(() => clean(c) && noBreak(c), () => `P6b. validator 0 errors, 0 "can break" on the rail report: ${valErr(c)}`);
+    }
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
     chk(() => band && ents(band, 'value').length && ents(band, 'value').every((e) => e.selector) && S(P(band, 'value', 'default').show) === 'true' && P(band, 'value', 'default').fontSize && P(band, 'value', 'default').fontColor
       && ents(band, 'outline').every((e) => e.selector) && S(P(band, 'outline', 'default').show) === 'true',
@@ -237,10 +251,17 @@ try {
     const vs = PD && fs.existsSync(path.join(PD, 'visuals')) ? fs.readdirSync(path.join(PD, 'visuals')).map((v) => rd(path.join(PD, 'visuals', v, 'visual.json'))) : [];
     const pl = vs.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), lb = vs.filter((v) => v.visual.visualType === 'textbox');
     const v0 = pl.find((v) => v.name === 'pillv0'), v2 = pl.find((v) => v.name === 'pillv2'), shipped = EN && EN.dir ? allVisuals(EN.dir).find((v) => v.visual.visualType === 'advancedSlicerVisual') : null;
-    chk(() => r && r.check && r.check.validator === 0 && r.check.canBreak === 0 && pl.length === 4 && lb.length === 4 && /V0 \(shipped\)/.test(JSON.stringify(lb))
+    // (F2, the laptop's recheck: the project must open in Desktop) definition.pbism, a V3 model with a culture, no slicer in
+    // a group the page lacks; the shipped shape at 15pt at 140, 130 and 120
+    const SM = path.join(out, 'pills/Shop.SemanticModel'), bim = fs.existsSync(path.join(SM, 'model.bim')) ? rd(path.join(SM, 'model.bim')) : {};
+    const hOf = (n) => (pl.find((v) => v.name === n) || { position: {} }).position.height;
+    chk(() => fs.existsSync(path.join(SM, 'definition.pbism')) && rd(path.join(SM, 'definition.pbism')).version === '1.0' && bim.model.defaultPowerBIDataSourceVersion === 'powerBI_V3' && bim.model.culture
+      && pl.every((v) => !v.parentGroupName) && hOf('pillv0') === 140 && hOf('pillv0130') === 130 && hOf('pillv0120') === 120,
+      () => `VAR-2. the variants project opens in Desktop (pbism, V3 and culture, no stray group) and holds the shipped shape at 140, 130, 120: ${JSON.stringify(pl.map((v) => [v.name, v.position.height, v.parentGroupName || null]))}`);
+    chk(() => r && r.check && r.check.validator === 0 && r.check.canBreak === 0 && pl.length === 6 && lb.length === 6 && /V0 \(shipped\)/.test(JSON.stringify(lb))
       && Object.values(v2.visual.objects).every((es) => es.length === 1 && !es[0].selector) && shipped && JSON.stringify(Object.keys(v0.visual.objects).sort()) === JSON.stringify(Object.keys(shipped.visual.objects).sort()) && v0.visual.objects.padding && v0.visual.visualContainerObjects.title[0].properties.fontSize
       && !pl.find((v) => v.name === 'pillv1').visual.objects.padding && !pl.find((v) => v.name === 'pillv1').visual.visualContainerObjects.title[0].properties.fontSize,
-      () => `VAR. one page, four labelled pill variants (V0 the shipped shape, V1 its text only, V2 no selectors, V3 with room), validator 0 and 0 "can break": ${JSON.stringify(r).slice(0, 400)} ${pl.length} pills, ${lb.length} labels`);
+      () => `VAR. one page, six labelled pill slicers (V0 the shipped shape at 140, 130, 120; V1 its text only, V2 no selectors, V3 with room), validator 0 and 0 "can break": ${JSON.stringify(r).slice(0, 400)} ${pl.length} pills, ${lb.length} labels`);
     fs.rmSync(out, { recursive: true, force: true });
   }
 
