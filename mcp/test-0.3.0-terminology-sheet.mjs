@@ -80,6 +80,8 @@ const LARGE = path.join(HERE, 'test-models/large-synthetic/Large Synthetic.Seman
 fs.cpSync(LARGE, path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
 fs.cpSync(LARGE, path.join(ROOT, 'other/Large Synthetic.SemanticModel'), { recursive: true });
 const MP = 'large/Large Synthetic.SemanticModel', OTHER = 'other/Large Synthetic.SemanticModel', TMDL = path.join(ROOT, MP, 'definition/tables/Web Orders.tmdl');
+// (CI's Windows job: Git checks the fixtures out with CRLF; the copy edited in TS-5 is written so here too, on every system)
+fs.writeFileSync(TMDL, fs.readFileSync(TMDL, 'utf8').replace(/\r?\n/g, '\r\n'));
 const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
 const model = (dir, tables, rels) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: rels || [] } })); };
 // two fields named "Amount" (Sales and Budget), one region dimension
@@ -289,8 +291,10 @@ try {
     const o = await s.call('plan_layout', { path: OTHER, focus: 'Web Orders', lang: 'ar', layout: 'exec', name: 'تقرير', secondPage: true }), osh = (o.j && o.j.terminology && o.j.terminology.sheet) || [];
     chk(() => osh.length && !osh.some((r) => r.earlier), () => `TS-5e. another model with the same tables reuses nothing: ${JSON.stringify(osh.filter((r) => r.earlier).map((r) => r.field))}`);
     let t = fs.readFileSync(TMDL, 'utf8');
-    t = t.replace("\tmeasure 'Web Orders Total Score' =", "\t/// Made-up description, changed for the test.\n\tmeasure 'Web Orders Total Score' =");
-    t = t.replace(/(\tmeasure 'Web Orders Count' = )([^\n]+)/, '$1$2 + 0');
+    // (the file's own line ends kept: a CRLF line's DAX ends before its \r)
+    const eol = /\r\n/.test(t) ? '\r\n' : '\n';
+    t = t.replace("\tmeasure 'Web Orders Total Score' =", `\t/// Made-up description, changed for the test.${eol}\tmeasure 'Web Orders Total Score' =`);
+    t = t.replace(/(\tmeasure 'Web Orders Count' = )([^\r\n]+)/, '$1$2 + 0');
     fs.writeFileSync(TMDL, t);
     const q = await plan({}), qs = (q.j && q.j.terminology && q.j.terminology.sheet) || [];
     const dropped = ['Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Count]'], kept = Object.keys(DN).filter((k) => !dropped.includes(k));
