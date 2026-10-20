@@ -124,6 +124,12 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   changes the model; the naming and lineage tags shared with the metric switcher in mcp/lib/model-script.mjs). Pinned by the plan, on the approval page (cards, back line, bookmarks, the model change, "apply
   the script first"); check_report knows the pattern (bookmark naming a missing visual: an error; a picture measure not
   in the model yet: a note). (L4)
+- S1 sweep: the twin keeps a sort by a month's number (Min of Month Number, a month start) when time stays left to
+  right (B-180); a hidden "Keep:" measure is named in one script (B-181); create_arabic_twin reads its model again
+  right before its first write (B-182); the app's own approval prompt counts the files per group and names a changed
+  colour (B-183); read_report no longer returns static visual titles (B-184); check_report's validator findings no
+  longer quote report names (B-211); repo checks for non-literal requires (B-196) and for every npm test script's
+  result line (B-198); the smooth-lines suite reads its source files line-ending blind (PR #81's Windows job).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
