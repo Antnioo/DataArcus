@@ -52,7 +52,8 @@ function build(a, o) {
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   // (0.3.0 D2) the gallery kinds the plan asks for (a.gallery), on the first page, as create_report puts them; small
   // multiples take the bar chart's category for their panels, as there
-  if (a.gallery) bind = Gallery.withUnits(bind, m.tables);
+  // (0.3.0 J19) with the person's answers on shared axes, as create_report places the combo
+  if (a.gallery) bind = Object.assign(Gallery.withUnits(bind, m.tables), a.axes ? { axes: a.axes } : {});
   if (a.gallery && !(bind.cats || {}).split && (bind.cats || {}).bar) bind = Object.assign({}, bind, { cats: Object.assign({}, bind.cats, { split: bind.cats.bar }) });
   const used = new Set();
   const pages = (o.second ? specs : specs.slice(0, 1)).map((p) => {
