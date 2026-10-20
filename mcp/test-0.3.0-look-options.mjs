@@ -142,6 +142,16 @@ try {
     // P5 (F1, the laptop proof on Desktop 2.159: every pill drawn with no text): the item text, the button slicer's
     // "Values" card, is written as the new card's value is measured to need (round 0): everything under the default
     // selector, show included, no entry without a selector; its outline likewise
+    // P6 (F1, the owner's idea with the proof's screenshot: the pills shorter than the dropdown, their header bigger, and
+    // a button slicer hides a text that does not fit): the pill's header (its container title) written at the text size
+    // the tiles use, and the visual as high as the header and one row of tiles need: header ceil(8 + 2 pt) (the
+    // dropdown's measured title share, slicerH), tile ceil(1.6 pt) + 2 x 4 padding (written), 4 between
+    const pills0 = pills(allVisuals(EN.dir)), szOf = (v) => parseFloat(String(S(P(v, 'value', 'default').fontSize)));
+    const tit = (v) => ((v.visual.visualContainerObjects || {}).title || [{ properties: {} }])[0].properties;
+    const need = (t) => Math.ceil(8 + 2 * t) + Math.ceil(1.6 * t) + 8 + 4;
+    chk(() => pills0.length === 2 && pills0.every((v) => parseFloat(String(S(tit(v).fontSize))) === szOf(v) && v.position.height >= need(szOf(v))
+      && ['topMargin', 'bottomMargin'].every((m) => S(P(v, 'padding', 'default')[m]) === '4D')),
+      () => `P6. each pill slicer: header at the tiles' text size, padding 4 written, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
     chk(() => band && ents(band, 'value').length && ents(band, 'value').every((e) => e.selector) && S(P(band, 'value', 'default').show) === 'true' && P(band, 'value', 'default').fontSize && P(band, 'value', 'default').fontColor
       && ents(band, 'outline').every((e) => e.selector) && S(P(band, 'outline', 'default').show) === 'true',
@@ -226,10 +236,11 @@ try {
     const PD = r && r.pageId ? path.join(out, 'pills/Pills Variants.Report/definition/pages', r.pageId) : '';
     const vs = PD && fs.existsSync(path.join(PD, 'visuals')) ? fs.readdirSync(path.join(PD, 'visuals')).map((v) => rd(path.join(PD, 'visuals', v, 'visual.json'))) : [];
     const pl = vs.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), lb = vs.filter((v) => v.visual.visualType === 'textbox');
-    const v1 = pl.find((v) => v.name === 'pillv1'), v2 = pl.find((v) => v.name === 'pillv2');
-    chk(() => r && r.check && r.check.validator === 0 && r.check.canBreak === 0 && pl.length === 3 && lb.length === 3 && /shipped/.test(JSON.stringify(lb))
-      && Object.values(v2.visual.objects).every((es) => es.length === 1 && !es[0].selector) && JSON.stringify(v1.visual.objects.value) === JSON.stringify(EN && EN.dir ? (allVisuals(EN.dir).find((v) => v.visual.visualType === 'advancedSlicerVisual') || { visual: { objects: {} } }).visual.objects.value : null),
-      () => `VAR. one page, three labelled pill variants (V1 the shipped shape, V2 no selectors, V3 with room), validator 0 and 0 "can break": ${JSON.stringify(r).slice(0, 400)} ${pl.length} pills, ${lb.length} labels`);
+    const v0 = pl.find((v) => v.name === 'pillv0'), v2 = pl.find((v) => v.name === 'pillv2'), shipped = EN && EN.dir ? allVisuals(EN.dir).find((v) => v.visual.visualType === 'advancedSlicerVisual') : null;
+    chk(() => r && r.check && r.check.validator === 0 && r.check.canBreak === 0 && pl.length === 4 && lb.length === 4 && /V0 \(shipped\)/.test(JSON.stringify(lb))
+      && Object.values(v2.visual.objects).every((es) => es.length === 1 && !es[0].selector) && shipped && JSON.stringify(Object.keys(v0.visual.objects).sort()) === JSON.stringify(Object.keys(shipped.visual.objects).sort()) && v0.visual.objects.padding && v0.visual.visualContainerObjects.title[0].properties.fontSize
+      && !pl.find((v) => v.name === 'pillv1').visual.objects.padding && !pl.find((v) => v.name === 'pillv1').visual.visualContainerObjects.title[0].properties.fontSize,
+      () => `VAR. one page, four labelled pill variants (V0 the shipped shape, V1 its text only, V2 no selectors, V3 with room), validator 0 and 0 "can break": ${JSON.stringify(r).slice(0, 400)} ${pl.length} pills, ${lb.length} labels`);
     fs.rmSync(out, { recursive: true, force: true });
   }
 
