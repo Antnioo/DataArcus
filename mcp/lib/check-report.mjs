@@ -32,7 +32,17 @@ export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 't
 
 // ---- untrusted text: the reading layer's rules (lib/read-report.mjs), one copy ----
 // a validator message, without the report's own text: quoted parts and file paths are left out
-const scrub = (m, reportDir) => String(m || '').split(reportDir).join('<report>').replace(/(['"“”‘’])[^'"“”‘’]{0,400}\1/g, '<text>').replace(/(?:[A-Za-z]:)?[\\/][^\s:,;)]+/g, '<file>').slice(0, 240);
+// (0.3.0 S1, B-211: L4 saw a name in `what`) the validator quotes a name in "..."; a name that holds a quote itself
+// ("Sales "North"", "O'Brien") broke the pairs, so a quoted part counts only where it stands alone (after the start, a
+// space or a bracket; before the end, a space or punctuation), and when two or more quotes are still left, everything
+// from the first to the last is masked (the words between them too): never a name
+const QUOTES = /['"“”‘’]/g;
+const scrub = (m, reportDir) => {
+  let s = String(m || '').split(reportDir).join('<report>').replace(/(^|[\s([])(['"“”‘’])[^'"“”‘’]{0,400}\2(?=$|[\s:,;.)\]])/g, '$1<text>');
+  const left = [...s.matchAll(QUOTES)];
+  if (left.length >= 2) s = s.slice(0, left[0].index) + '<text>' + s.slice(left[left.length - 1].index + 1);
+  return s.replace(/(?:[A-Za-z]:)?[\\/][^\s:,;)]+/g, '<file>').slice(0, 240);
+};
 const rel = (reportDir, f) => path.relative(reportDir, f).split(path.sep).join('/');
 
 // ---- reading the report: the reading layer's files (lib/read-report.mjs: links not followed, every file measured
