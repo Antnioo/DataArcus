@@ -10,6 +10,7 @@
 // instruction is dropped, and no value is ever read: the DAX computes them in Desktop.
 import { createRequire } from 'node:module';
 import { readsLikeInstruction, modelOf } from './model.mjs';
+import { freeNamer, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L3)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js');
@@ -23,8 +24,8 @@ const obj = (p) => [{ properties: p }];
 const litOf = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : '');
 const textOf = (p) => litOf(p).replace(/^'|'$/g, '').replace(/''/g, "'");
 const numOf = (p) => parseFloat(litOf(p));
-const key = (s) => String(s == null ? '' : s).trim().toLowerCase();
 export const FOLDER = 'DataArcus flip cards';
+export const SCRIPT_SUFFIX = ' - flip cards';
 const SUFFIX = { front: 'flip front', back: 'flip back', backdrop: 'flip backdrop' };
 // the turn (the lab's v2, measured): .3 s at most, from 25 degrees and opacity .6
 export const TURN = { seconds: 0.3, degrees: 25, opacity: 0.6, perspective: 700 };
@@ -103,22 +104,21 @@ function calendarFor(model, table) {
   return null;
 }
 
-// a free measure name: never one the model has (a script never replaces anything), nor one this script already took
-function freeName(taken, want) { let n = want; for (let k = 2; taken.has(key(n)); k++) n = `${want} ${k}`; taken.add(key(n)); return n; }
 
 /** The flip cards option as the plan pins it: null (off), true (every KPI card) or the sorted card numbers. */
 export function flipOption(v) { if (v === true) return true; if (Array.isArray(v) && v.length) return [...new Set(v.map(Number))].sort((a, b) => a - b); return null; }
 
 /**
  * Turns the chosen KPI cards of create_report's built files into flip cards, in place. files: the build's [{ path, data }];
- * o: { flip (true | [n]), lang, rtl, ui { card, text }, font, radius, tmsl (the model as read), base (the script's file base) }.
- * Returns null when off; else { cards, bookmarks, measures (for flipScript), notFlipped, skipped }.
+ * o: { flip (true | [n]), lang, rtl, ui { card, text }, font, radius, tmsl (the model as read), base (the report's base name),
+ * seed (the plan's: the lineage tags) }. The script "<base> - flip cards.tmdl" joins the files (one write, one digest), as
+ * the metric switcher's. Returns null when off; else { cards, bookmarks, measures, scriptFile, notFlipped, skipped }.
  */
 export function applyFlip(files, o) {
   const flip = flipOption(o.flip);
   if (!flip) return null;
   const words = W[o.lang === 'ar' ? 'ar' : 'en'], model = modelOf(o.tmsl), rtl = !!o.rtl;
-  const taken = new Set((model.tables || []).flatMap((t) => [t.name].concat((t.measures || []).map((x) => x.name), (t.columns || []).map((x) => x.name))).map(key));
+  const free = freeNamer(model.tables);   // (a script never replaces anything: no name the model has)
   const at = new Map(files.map((f, i) => [f.path, i]));
   const read = (p) => JSON.parse(files[at.get(p)].data);
   const put = (p, j) => { const data = JSON.stringify(j, null, 2); if (at.has(p)) files[at.get(p)].data = data; else { at.set(p, files.length); files.push({ path: p, data }); } };
@@ -156,7 +156,7 @@ export function applyFlip(files, o) {
       let set = made.get(mk);
       if (!set) {
         const cal = calendarFor(model, t), x = measuresOf(c, t, m, cal, words);
-        set = { t, front: freeName(taken, `${m.name} (${SUFFIX.front})`), back: freeName(taken, `${m.name} (${SUFFIX.back})`), backdrop: freeName(taken, `${m.name} (${SUFFIX.backdrop})`), x, measure: m.name };
+        set = { t, front: free(`${m.name} (${SUFFIX.front})`), back: free(`${m.name} (${SUFFIX.back})`), backdrop: free(`${m.name} (${SUFFIX.backdrop})`), x, measure: m.name };
         measures.push({ t, name: set.backdrop, expression: x.backdrop }, { t, name: set.front, expression: x.front }, { t, name: set.back, expression: x.back });
         made.set(mk, set);
       }
@@ -196,15 +196,18 @@ export function applyFlip(files, o) {
     put(bl, list);
   }
   const notFlipped = flip === true ? [] : flip.filter((n) => n > most).map((n) => ({ card: n, why: `the report has ${most} KPI card${most === 1 ? '' : 's'}` }));
-  return { cards, bookmarks: bookmarks.length, measures, notFlipped, skipped };
+  // the script next to the project, before the .pbip (written last), as the metric switcher's
+  let scriptFile = null;
+  if (measures.length && o.base) { scriptFile = scriptFileOf(o.base, SCRIPT_SUFFIX); files.splice(Math.max(0, files.findIndex((f) => /\.pbip$/.test(f.path))), 0, { path: scriptFile, data: flipScript(measures, o.seed || '') }); }
+  return { cards, bookmarks: bookmarks.length, measures, scriptFile, notFlipped, skipped };
 }
 
 /** The TMDL script that adds the measures (createOrReplace, each table under "ref table"); nothing it names exists yet. */
-export function flipScript(measures) {
+export function flipScript(measures, seed) {
   const byT = new Map(); measures.forEach((x) => { if (!byT.has(x.t)) byT.set(x.t, []); byT.get(x.t).push(x); });
   const out = ['createOrReplace', ''];
   byT.forEach((list, t) => { out.push('\tref table ' + Fix.name(t), '');
-    list.forEach((x) => { const lines = Fix.measure({ name: x.name, expression: x.expression, displayFolder: FOLDER, dataCategory: 'ImageUrl' }, 2); if (!lines) throw new Error('a flip measure could not be written'); out.push(...lines, ''); }); });
+    list.forEach((x) => { const lines = Fix.measure({ name: x.name, expression: x.expression, displayFolder: FOLDER, dataCategory: 'ImageUrl', lineageTag: tagOf(seed, x.t + '\u0000' + x.name) }, 2); if (!lines) throw new Error('a flip measure could not be written'); out.push(...lines, ''); }); });
   return out.join('\n').replace(/\n+$/, '\n');
 }
 
