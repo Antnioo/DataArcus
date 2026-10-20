@@ -68,6 +68,9 @@ jobs:
       - name: Analytics events follow GA4 rules (no parameter GA4 reads as the traffic source)
         run: node scripts/test-analytics-events.mjs
 
+      - name: The beta page's "What's new in 0.3.0" in English and Arabic, naming nothing outside 0.3.0
+        run: node scripts/test-whats-new.mjs
+
   website-suites:
     runs-on: ubuntu-latest
     timeout-minutes: 40
