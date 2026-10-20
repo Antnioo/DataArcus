@@ -108,6 +108,13 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   selected one in the accent; only for a field of 2-6 values known from the model's metadata, else a dropdown, told) and
   `grid` "solid" (default) | "dotted" | "none" for the charts' value-axis gridlines; the approval preview draws both,
   the Arabic twin keeps them with the pills right to left. (L2)
+- L3: `metricSwitcher` (2-5 of the model's measures, off by default): the report gets its own page "Metric" / «المؤشر»
+  with one single-select slicer and a bar chart (by the main category) and a line chart (by month, when the month has an
+  order) whose values come from a field parameter, so each chart switches between the measures and keeps each measure's
+  own format; the titles follow the metric. The model is never changed: the field parameter and its title measure come
+  as a TMDL script file next to the project (lineage tags, NAMEOF of each measure, labels escaped), to apply in TMDL
+  view; until then only that page shows Power BI's error. Pinned by the plan, listed on the approval page;
+  check_report knows field parameters and flags a title measure that reads the display column alone.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
