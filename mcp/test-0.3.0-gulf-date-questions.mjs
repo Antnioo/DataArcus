@@ -108,21 +108,21 @@ try {
   // ---------- GD-3 and GD-7: a Ramadan page, one question at a time; the year only from the person ----------
   {
     const p0 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN() }), g0 = G(p0);
-    chk(() => !idOf(p0) && g0.seasonal && g0.askNext && g0.askNext.id === 'dateRole' && g0.remaining >= 3 && (g0.pleaseConfirm || []).every((q) => q.en && ARABIC.test(q.ar)),
-      () => `GD-7a. a seasonal plan with open questions: no plan id; one question asked first (the date), the rest listed in EN and AR: ${JSON.stringify(g0).slice(0, 600)}`);
+    chk(() => idOf(p0) && /before showing this plan/.test(g0.sayFirst || '') && g0.seasonal && g0.askNext && g0.askNext.id === 'dateRole' && g0.remaining >= 3 && (g0.pleaseConfirm || []).every((q) => q.en && ARABIC.test(q.ar)),
+      () => `GD-7a. a seasonal plan with open questions: asked first (sayFirst; the plan id kept, Decision needed); one question asked first (the date), the rest listed in EN and AR: ${JSON.stringify(g0).slice(0, 600)}`);
     const p1 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]' } }), g1 = G(p1);
     chk(() => g1.askNext && g1.askNext.id === 'grain' && g1.remaining === g0.remaining - 1 && ['gregorian', 'hijri', 'seasonDay'].every((o) => g1.askNext.options.includes(o)),
       () => `GD-7b. once answered it moves on: the grain next, one fewer left: ${JSON.stringify(g1.askNext)} ${g1.remaining} vs ${g0.remaining}`);
     const p2 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian' } }), g2 = G(p2);
-    chk(() => !idOf(p2) && g2.askNext && g2.askNext.id === 'scope' && /one Ramadan/i.test(g2.askNext.en) && /every Ramadan/i.test(g2.askNext.en) && ARABIC.test(g2.askNext.ar) && probs(p2).some((x) => /scope|one Ramadan|every Ramadan/i.test(x)),
-      () => `GD-3a. a Ramadan flag without a year: asks the scope, no plan id: ${short(p2)}`);
+    chk(() => g2.askNext && g2.askNext.id === 'scope' && /one Ramadan/i.test(g2.askNext.en) && /every Ramadan/i.test(g2.askNext.en) && ARABIC.test(g2.askNext.ar) && /scope/.test(g2.sayFirst || ''),
+      () => `GD-3a. a Ramadan flag without a year: asks the scope first: ${short(p2)}`);
     chk(() => g2.askNext && !YEARISH.test(JSON.stringify(g2.askNext)), () => `GD-3b. the scope question proposes no year: ${JSON.stringify(g2.askNext)}`);
     const p3 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year' } }), g3 = G(p3);
-    chk(() => !idOf(p3) && g3.askNext && g3.askNext.id === 'year' && !YEARISH.test(JSON.stringify(g3)), () => `GD-3c. "this year only" without the year: asks it, no year guessed anywhere: ${JSON.stringify(g3).slice(0, 600)}`);
+    chk(() => g3.askNext && g3.askNext.id === 'year' && !YEARISH.test(JSON.stringify(g3)), () => `GD-3c. "this year only" without the year: asks it, no year guessed anywhere: ${JSON.stringify(g3).slice(0, 600)}`);
     const p4 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'all' } });
     chk(() => !idOf(p4) && probs(p4).some((x) => /every Ramadan|all/i.test(x) && /Hijri Year/.test(x)), () => `GD-3d. "all Ramadans" with a Hijri-year filter is a conflict: no plan id: ${short(p4)}`);
     const p5 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446 } }), g5 = G(p5);
-    chk(() => !idOf(p5) && g5.askNext && g5.askNext.id === 'hijriYearColumn' && g5.askNext.options.includes('Calendar[Hijri Year]'), () => `GD-5a. a Hijri-year column found by its name only is a candidate: asked: ${JSON.stringify(g5.askNext)}`);
+    chk(() => g5.askNext && g5.askNext.id === 'hijriYearColumn' && g5.askNext.options.includes('Calendar[Hijri Year]'), () => `GD-5a. a Hijri-year column found by its name only is a candidate: asked: ${JSON.stringify(g5.askNext)}`);
     chk(() => g5.calendar && g5.calendar.declared === false && g5.calendar.columns && g5.calendar.columns.hijriYear && g5.calendar.columns.hijriYear.by === 'name', () => `GD-5b. names alone stay candidates: ${JSON.stringify(g5.calendar)}`);
     const A6 = { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' };
     const p6 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: A6 });
@@ -180,11 +180,11 @@ try {
     chk(() => idOf(r) && g.answers && g.answers.dateRole === 'Sales[Order Date]' && g.answers.year === 1446 && (g.earlier || []).includes('dateRole') && (g.earlier || []).includes('year') && g.askNext == null,
       () => `GD-8a. the same model in the session: the answers reused (earlier), nothing asked: ${short(r)}`);
     const o = await plan('gd2', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]) });
-    chk(() => !idOf(o) && !(G(o).earlier || []).length && G(o).askNext && G(o).askNext.id === 'dateRole', () => `GD-8b. another model folder reuses nothing: ${short(o)}`);
+    chk(() => !(G(o).earlier || []).length && G(o).askNext && G(o).askNext.id === 'dateRole', () => `GD-8b. another model folder reuses nothing: ${short(o)}`);
     // the relationship changes: the ship date becomes the active one
     const j = JSON.parse(fs.readFileSync(bim('gdm'), 'utf8')); j.model.relationships = rels('Calendar', true); fs.writeFileSync(bim('gdm'), JSON.stringify(j, null, 1));
     const f = await plan('gdm', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]) }), gf = G(f);
-    chk(() => !idOf(f) && !(gf.earlier || []).includes('dateRole') && gf.askNext && gf.askNext.id === 'dateRole' && (gf.earlier || []).includes('year'), () => `GD-8c. a changed relationship drops the date answer only: ${JSON.stringify(gf).slice(0, 500)}`);
+    chk(() => !(gf.earlier || []).includes('dateRole') && gf.askNext && gf.askNext.id === 'dateRole' && (gf.earlier || []).includes('year'), () => `GD-8c. a changed relationship drops the date answer only: ${JSON.stringify(gf).slice(0, 500)}`);
     // the column changes: the Hijri year becomes text
     const j2 = JSON.parse(fs.readFileSync(bim('gdm'), 'utf8')); j2.model.tables.find((t) => t.name === 'Calendar').columns.find((c) => c.name === 'Hijri Year').dataType = 'string'; fs.writeFileSync(bim('gdm'), JSON.stringify(j2, null, 1));
     const c = await plan('gdm', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]' } }), gc = G(c);
