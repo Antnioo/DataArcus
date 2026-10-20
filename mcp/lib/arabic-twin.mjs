@@ -16,6 +16,7 @@ import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './m
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { draftText } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
+import { testEditBeforeWrite } from './write-io.mjs';
 import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
 import { capAnswer } from './answer.mjs';
@@ -978,6 +979,9 @@ export function writeTwin(a, plan) {
     month = { scriptFile: pathOut(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
+  // (0.3.0 S1, B-182, as R6's F07 for create_report) the model read again right before the first write (no folder is made
+  // yet): its print the approved one, or nothing is written (the read above can be seconds older than the write)
+  if ('modelPrint' in d) { testEditBeforeWrite(); const now = modelOf(R, loc).m; if (((now && now.print) || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id)); }
   writeTree(loc.project, tree);
   return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
     ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot,
