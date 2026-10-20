@@ -179,6 +179,11 @@ them from the same model open in Power BI Desktop:
   so `create_report` writes them as a TMDL script next to the project (`flipCards.scriptFile`): tell the user to apply
   the script first, in TMDL view (`howToApply`), and that a card turns with Ctrl+click while editing. Never write the
   measures yourself and never apply the script.
+- **Status icons** (`statusIcons`, off by default; pinned by the plan): the theme's DataArcus icons (three shapes, not
+  colour alone) before a table's or matrix's measure. `true` uses the rates whose target the model names ("<name>
+  Target / Goal / Budget"); the list form `[{ measure, good: ">= 0.97", bad: "< 0.94" }]` takes thresholds the user
+  gives you. Never invent a threshold: ask the user for good and bad. A target needs a status measure, written as a TMDL
+  script next to the project (`statusIcons.scriptFile`): tell the user to apply it first (`howToApply`).
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.

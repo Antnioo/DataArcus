@@ -180,7 +180,12 @@
       }
       case 'donut': { const r = Math.min(b.w, b.h) * 0.36; return `<circle cx="${n(b.x + b.w / 2)}" cy="${n(b.y + b.h / 2)}" r="${n(r)}" fill="none" stroke="${GREY}" stroke-width="${n(r * 0.42)}"/>`; }
       case 'card': return R(0.06, 0.25, 0.46, 0.4);
-      case 'table': return R(0, 0, 1, 0.13, GREY, '.9') + [0.24, 0.42, 0.6, 0.78].map((g) => R(0, g, 1, 0.07, GREY, '.45')).join('');
+      case 'table': {
+        // (L5) a small round marker before each row's value where a status icon goes (its column by its place)
+        const ic = v && Array.isArray(v.iconCols) && v.iconOf ? v.iconCols : [], r = Math.max(1.5, Math.min(b.h * 0.03, 6 * u));
+        const marks = ic.map((i) => [0.24, 0.42, 0.6, 0.78].map((g) => `<circle data-icon="status" cx="${n(X((i + 0.12) / v.iconOf))}" cy="${n(Y(g + 0.035))}" r="${n(r)}" fill="${c.accent}"/>`).join('')).join('');
+        return R(0, 0, 1, 0.13, GREY, '.9') + [0.24, 0.42, 0.6, 0.78].map((g) => R(0, g, 1, 0.07, GREY, '.45')).join('') + marks;
+      }
       case 'slicer': {
         // (drop-downs of a fixed height, as many as the box holds, up to 3: a filter panel's slicers)
         const dh = Math.min(b.h, 26 * u), k2 = Math.max(1, Math.min(3, Math.floor(b.h / (dh * 1.6))));
@@ -362,6 +367,11 @@
       out.headerSize = numOf(hp.fontSize) || +th1(theme, 'tableEx', 'columnHeaders', 'fontSize') || +th1(theme, 'tableEx', 'values', 'fontSize') || 10;
       out.headerFont = strOf(hp.fontFamily) || (tc.label || {}).fontFace || out.font;
       if (boolOf(hp.wordWrap) === true) out.headerWrap = true;
+    }
+    // (0.3.0 L5) the value columns that carry a status icon (conditional formatting with an icon), by their place
+    if (type === 'tableEx' || type === 'pivotTable') {
+      const vp = (((qs.Values || {}).projections) || []).filter((x) => x && x.field), ic = (Array.isArray(ob.values) ? ob.values : []).filter((e) => e && e.selector && e.properties && e.properties.icon).map((e) => e.selector.metadata);
+      if (ic.length) { out.iconCols = vp.map((x, i) => (ic.includes(x.queryRef) ? i : -1)).filter((i) => i >= 0); out.iconOf = vp.length; }
     }
     // D5: a slicer's header (Desktop draws it; its title is off): its text, else the field's display name, its size
     if (type === 'slicer') {
