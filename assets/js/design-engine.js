@@ -622,6 +622,25 @@
     });
     return vs;
   };
+  // (0.3.0 L5, the theme-icons lab of 10 Oct, Desktop 2.158.1304) DataArcus's three status icons, at the theme's top level
+  // ("icons", a root key Microsoft's validator knows), for conditional formatting: unused until a rule or a measure names
+  // them. They differ in shape as well as colour (a tick in a circle, a triangle with "!", a cross in a rounded square), so
+  // they read without colour. Each in the theme's good / neutral / bad taken to 3:1 on the visuals' background (WCAG 1.4.11,
+  // hue kept), its mark white or near black, whichever stands higher on it. Inside a data URI a colour is rgb(): a
+  // bare "#" ends the URI. ui: the design's ui
+  const ICON_NAMES = { good: 'daGood', neutral: 'daWarn', bad: 'daBad' };
+  const statusIcons = (ui) => {
+    const u = colours({ ui }).ui, rgb = (h) => 'rgb(' + hexToRgb(h).join(',') + ')';
+    const svg = (body) => "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'>" + body + '</svg>';
+    const line = (d, m) => `<path d='${d}' fill='none' stroke='${m}' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>`;
+    const one = (k) => { const f = toContrast(u[k], u.card, 3), m = contrast('#ffffff', f) >= contrast('#1f2329', f) ? '#ffffff' : '#1f2329'; return { f: rgb(f), m: rgb(m) }; };
+    const g = one('good'), n = one('neutral'), b = one('bad');
+    return {
+      daGood: { description: 'DataArcus good', url: svg(`<circle cx='8' cy='8' r='7' fill='${g.f}'/>` + line('M4.5 8.2l2.3 2.3 4.7-4.9', g.m)) },
+      daWarn: { description: 'DataArcus warning', url: svg(`<path d='M8 1.2L15.2 14.3H0.8Z' fill='${n.f}' stroke='${n.f}' stroke-width='1' stroke-linejoin='round'/>` + line('M8 5.8v4', n.m) + `<circle cx='8' cy='12.2' r='1' fill='${n.m}'/>`) },
+      daBad: { description: 'DataArcus bad', url: svg(`<rect x='1.5' y='1.5' width='13' height='13' rx='3' fill='${b.f}'/>` + line('M5.5 5.5l5 5M10.5 5.5l-5 5', b.m)) }
+    };
+  };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
   const buildTheme = (d0, lang) => {
@@ -638,6 +657,7 @@
       tableAccent: u.accent,
       good: u.good, neutral: u.neutral, bad: u.bad,
       maximum: u.good, center: u.neutral, minimum: u.bad,
+      icons: statusIcons(u),
       hyperlink: d.data[0], visitedHyperlink: mix(d.data[0], u.text, 0.3),
       textClasses: {
         callout: { fontSize: fs(28, l), fontFace: f, color: u.text },
@@ -975,7 +995,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

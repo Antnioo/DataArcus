@@ -212,7 +212,7 @@ try {
       () => `C8. every a11y finding names Microsoft's guidance as its source: ${JSON.stringify(ck.j.findings.filter((f) => /^A11Y_/.test(f.rule)).map((f) => f.source))}`);
     // only the a11y family, when asked
     const only = await s.call('check_report', { path: 'health/Worse.Report', checks: ['a11y'] });
-    chk(() => !only.err && only.j.rulesRun.every((r) => /^A11Y_/.test(r)) && only.j.rulesRun.length === 6, () => `C8. checks ["a11y"] runs the six a11y rules alone: ${only.err ? only.t.slice(0, 300) : JSON.stringify(only.j.rulesRun)}`);
+    chk(() => !only.err && only.j.rulesRun.every((r) => /^A11Y_/.test(r)) && only.j.rulesRun.length === 7, () => `C8. checks ["a11y"] runs the seven a11y rules alone (L5 added A11Y_ICON_SHAPES): ${only.err ? only.t.slice(0, 300) : JSON.stringify(only.j.rulesRun)}`);
     // right to left is judged by the direction: the English report's left-to-right order is wrong in Arabic
     const rtl = await s.call('check_report', { path: made.health.rep, lang: 'ar', checks: ['a11y'] });
     chk(() => !rtl.err && rtl.j.findings.some((f) => f.rule === 'A11Y_TAB_ORDER' && /right to left/.test(f.what)), () => `C2 rtl. read as right to left, the left-to-right order is met the other way round: ${short(rtl)}`);
