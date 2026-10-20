@@ -19,7 +19,8 @@ import { writeTree } from './files.mjs';
 import { testEditBeforeWrite } from './write-io.mjs';
 import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
-import { capAnswer } from './answer.mjs';
+import { capAnswer, fitLists, out } from './answer.mjs';
+import { AIM } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
 
@@ -858,8 +859,26 @@ function termsOf(R, texts, labels, a, m) {
   return { keys, term, given: sortKeys(given), unknown, notUsing, statuses };
 }
 
+// (0.3.0 Q1) the twin's plan on a large report: 46,660 characters (52,412 into "same") for a two-page report with every
+// option on, and the backstop halved its texts with no way to get the rest. The texts are cut to fit, from textsFrom, with
+// where the rest starts (moreTexts); notTranslated (said in the plan before the go) is cut only when the texts alone can't
+// make room, with its count (the approval window always shows it whole). The room left for the plan the server adds: PLAN_ROOM
+const PLAN_ROOM = 2500;
+function twinFit(a, from) {
+  const size = (x) => JSON.stringify(out(x)).length, before = { texts: a.textsNotListed || 0, notTranslated: a.notTranslatedNotListed || 0 }, all = a.texts;
+  const t = fitLists(a, () => [[a, 'texts']], size, AIM - PLAN_ROOM), t2 = t && t.k === 0 ? (a.texts = all, fitLists(a, () => [[a, 'texts'], [a, 'notTranslated']], size, AIM - PLAN_ROOM)) : null;
+  // (the lists the twin's plan already stopped at TEXTS_MAX keep that count too)
+  const keep = (k, n) => { const v = (a[k + 'NotListed'] || 0) + n; if (v) a[k + 'NotListed'] = v; else delete a[k + 'NotListed']; };
+  if (t) keep('texts', before.texts);
+  if (t2) keep('notTranslated', before.notTranslated);
+  const left = (a.texts || []).length, rest = a.textsNotListed || 0;
+  if (rest) a.moreTexts = { listed: left, from: from + left, notListed: rest, how: `Only ${left} texts (from ${from}) fit in one answer. Call create_arabic_twin again with the same inputs and textsFrom: ${from + left} for the next ones, and draft them too; then give all the approved labels together in one call, which proposes the plan to approve. Nothing is written without the approved plan.` };
+  if (a.notTranslatedNotListed) a.moreNotTranslated = { listed: (a.notTranslated || []).length, notListed: a.notTranslatedNotListed, how: 'The rest of the texts that stay English are shown in DataArcus\'s approval window, with the plan, before the person approves: tell the user that this list is shortened. A label for one makes it Arabic.' };
+  return a;
+}
+
 export function planTwin(a) {
-  const loc = locate(a.path), R = readOriginal(loc);
+  const loc = locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0));
   // (0.3.0 X1) into "same": one report holding both languages, "<name> (EN-AR)"; the default, the separate twin "<name> AR"
   const same = a.into === 'same', outBase = loc.base + (same ? COPY_TAG : ' AR');
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
@@ -949,7 +968,7 @@ export function planTwin(a) {
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer({
+  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -960,7 +979,9 @@ export function planTwin(a) {
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right
     waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `native: ${Gallery.WF_WHAT.native} (the user can choose "mirror": a stacked column chart read from the right, with no Total column and no legend)` : 'mirror: each waterfall is a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend (the user can choose "native": Power BI\'s own waterfall, left to right)',
-    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
+    // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
+    texts: texts.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(texts.length > textsFrom + TEXTS_MAX ? { textsNotListed: texts.length - textsFrom - TEXTS_MAX } : {}),
+    ...(textsFrom ? { textsFrom: Math.min(textsFrom, texts.length) } : {}),
     labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
@@ -971,7 +992,7 @@ export function planTwin(a) {
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
-  }, (x) => JSON.stringify(x).length) };
+  }, textsFrom), (x) => JSON.stringify(x).length) };
 }
 
 // ---- the write ----

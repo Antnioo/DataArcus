@@ -14,7 +14,7 @@ import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, 
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
 import { freeFile, planWrites, withPlan } from './lib/files.mjs';
-import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
+import { AIM, fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
@@ -43,7 +43,7 @@ import { planTwin, twinKey, twinOutputs, writeTwin } from './lib/arabic-twin.mjs
 import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { testEditBeforeWrite } from './lib/write-io.mjs';
-import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
+import { nameOut as textOut, out, capAnswer, failText, fitLists } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -93,7 +93,9 @@ const scrub = (str) => {
 // (audit 6, A6-6: every answer leaves through out(): a model name's hidden characters as code points, lib/answer.mjs)
 // (A6-8: and no answer passes 40,000 characters: capAnswer cuts the longest lists and says so)
 const pretty = (o) => JSON.stringify(o, null, 2), flat = (o) => JSON.stringify(o);
-const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? textOut(o) : pretty(capAnswer(out(o), (x) => pretty(x).length))) }] });
+// (0.3.0 Q1) an answer whose indented form passes AIM (34,000) goes out without the indentation (the same JSON, as
+// compact's): on the large model plan_layout in Arabic with every option on was 37,908 characters indented
+const text = (o) => { if (typeof o === 'string') return { content: [{ type: 'text', text: scrub(textOut(o)) }] }; const x = out(o); return pretty(x).length > AIM ? compact(o) : { content: [{ type: 'text', text: scrub(pretty(capAnswer(x, (y) => pretty(y).length))) }] }; };
 const compact = (o) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length))) }] });
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
@@ -406,7 +408,7 @@ server.registerTool('read_model', {
   inputSchema: { path: modelPath, tables: z.array(z.string()).min(1).max(100).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary') }, annotations: READS
 }, safe(async ({ path: p, tables }) => {
   const m = loadModel(p);
-  if (tables) return text(Object.assign(namedTables(m, tables), hiddenOf(m)));
+  if (tables) return text(Object.assign(namedTables(m, tables, hiddenOf(m)), hiddenOf(m)));
   return isLarge(m) ? compact(Object.assign(largeSummary(m), hiddenOf(m))) : text(Object.assign(fullAnswer(m), hiddenOf(m)));
 }));
 
@@ -436,6 +438,8 @@ server.registerTool('check_model_health', {
     country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
     asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the gulfCalendar section counts as today (YYYY-MM-DD; default: today). For tests'),
     planId: planIdInput,
+    // (0.3.0 Q1) the parts of the answer to show: on a large model the lists are shortened to fit one answer
+    only: z.array(z.string().max(40)).min(1).max(20).optional().describe('Only these parts of the answer, for the rest of a list the answer shortened (listsCut says so): finding ids (findings[].id, skipped.checks[].id), fix names (MONTH_SORT, NO_FORMAT, PCT_FORMAT, THOUSANDS, FORMATS), "pleaseConfirm" or "gulfCalendar". The score, the scripts and what is written stay the same'),
     // (B-148) the user's answers to pleaseConfirm questions, remembered in a file next to the model (with an approved plan)
     answers: z.array(z.object({ answerKey: z.string().max(64), answer: z.enum(['intended', 'mistake']) }).strict()).max(200).optional()
       .describe('Only with the user\'s own answers to pleaseConfirm questions: { answerKey (from the question), answer: intended (the user says it is right) or mistake }. Recorded in "<model>.dataarcus-answers.json" next to the model (hashes, the answer and its date; no name, no DAX) after an approved plan, like the fix scripts; the question is not asked again until its measure or relationship changes. Never answer for the user'),
@@ -443,7 +447,7 @@ server.registerTool('check_model_health', {
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }, annotations: ADDS
-}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers }) => {
+}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers, only }) => {
   const m = loadModel(p);
   const wouldWrite = [];
   const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
@@ -556,7 +560,7 @@ server.registerTool('check_model_health', {
   // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
   const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH }, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
-  return text({
+  return text(healthFit({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
     ...(!m.report ? { reportNotRead: (m.reportsSeen && m.reportsSeen.notRead && m.reportsSeen.notRead.length ? `No report of this model could be read (${m.reportsSeen.notRead.map((x) => `"${x.report}": ${x.why}`).join('; ')}).` : m.reportsSeen && m.reportsSeen.counted.length === 0 ? 'No report of this model was found next to it (a .Report folder whose definition.pbir points at this model).' : 'No report was read: the model is not inside a project folder with its reports.') + ' So unused columns and measures were not checked (stats.unusedColumns and unusedMeasures are null): never tell the user that columns are unused.' } : {}),
@@ -586,8 +590,29 @@ server.registerTool('check_model_health', {
         'Or read the types from the same model open in Power BI Desktop: run this DAX query with Microsoft\'s Power BI Authoring MCP (dax_query_operations, Execute), then call check_model_health again with columnTypes = { "Table[Column]": Type } for every row:\n' + COLUMN_TYPES_QUERY],
       checks: r.skipped.map((s) => ({ id: s.id, title: ((Health.RULES[s.id] || {}).en || [s.id])[0], count: s.items.length, items: s.items.slice(0, maxItems) }))
     } : undefined
-  });
+  }, only));
 }));
+// (0.3.0 Q1) check_model_health's answer on a large model: at maxItems 200 on the 300-table model it was 168,550
+// characters, and the backstop kept 1 of its 6 findings. Every finding, fix and question is kept with its count; their
+// object lists are shortened evenly (each with "<list>NotListed"), and only gives the rest of one part
+const HEALTH_PARTS = ['MONTH_SORT', 'NO_FORMAT', 'PCT_FORMAT', 'THOUSANDS', 'FORMATS', 'pleaseConfirm', 'gulfCalendar'];
+function healthFit(a, only) {
+  if (only) {
+    const want = new Set(only.map((x) => String(x).trim())), unknown = [...want].filter((x) => !HEALTH_PARTS.includes(x) && !(a.findings || []).some((f) => f.id === x) && !((a.skipped || {}).checks || []).some((c) => c.id === x));
+    a.findings = (a.findings || []).filter((f) => want.has(f.id));
+    if (a.skipped) a.skipped.checks = a.skipped.checks.filter((c) => want.has(c.id));
+    if (a.fixes) { Object.keys(a.fixes).forEach((k) => { if (!want.has(k)) delete a.fixes[k]; }); if (!Object.keys(a.fixes).length) delete a.fixes; }
+    if (!want.has('pleaseConfirm')) delete a.pleaseConfirm;
+    if (!want.has('gulfCalendar')) delete a.gulfCalendar;
+    a.only = Object.assign({ shown: [...want].filter((x) => !unknown.includes(x)), note: 'Only these parts of the check are in this answer (only); the score counts every finding.' }, unknown.length ? { notFound: unknown } : {});
+  }
+  const lists = (x) => [].concat((x.findings || []).map((f) => [f, 'items']), ((x.skipped || {}).checks || []).map((c) => [c, 'items']),
+    x.pleaseConfirm ? [[x.pleaseConfirm, 'items'], [x.pleaseConfirm, 'answered']] : [],
+    ...Object.values(x.fixes || {}).map((f) => ['sorts', 'suggested', 'measures', 'columns', 'fields', 'byHand'].map((k) => [f, k])));
+  const fit = fitLists(a, lists, (x) => pretty(out(x)).length, AIM);
+  if (fit && fit.cut) a.listsCut = { listed: fit.k, lists: fit.cut, how: `This answer lists at most ${fit.k} objects per finding, fix and question, to stay under ${AIM.toLocaleString('en-US')} characters; every finding is kept with its full count, and "<list>NotListed" says how many objects each list leaves out. The fix script files are not shortened: they hold every object they cover. For the rest of one part, call check_model_health again with the same inputs and only: ["<a finding id or fix name>"] (no planId needed: it writes nothing). Tell the user the lists were shortened.` };
+  return a;
+}
 
 const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
   .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
@@ -1429,9 +1454,22 @@ function redesignPlan(a) {
   const m = loadModel(a.path), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle });
   const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
   const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
-  return Object.assign({ redesign: R.answer }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
+  return Object.assign({ redesign: redesignFit(JSON.parse(JSON.stringify(R.answer)), a.redesignPages) }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     : { plan: Plans.proposal(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: redesignPin(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown,
       outputs: R.files.map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), copied: R.files.length })) });
+}
+// (0.3.0 Q1) the redesign's answer grows with every page (a two-page report with every option on: 35,098 characters, its
+// pages' lists 20,384 of them). Cut at that cause, in this order, until it fits: the visuals not changed, the patches (the
+// same changes as file edits), then the changes; each with its count. The approval window shows every one of them
+// (the plan's own copy, never cut), and redesignPages lists one page's in full here
+function redesignFit(r, only) {
+  if (only && only.length) { const want = new Set(only.map(String)); r.pagesNotShown = (r.pages || []).filter((p) => !want.has(p.id) && !want.has(p.page)).length; r.pages = (r.pages || []).filter((p) => want.has(p.id) || want.has(p.page)); }
+  const size = (x) => pretty(out({ redesign: x })).length + 2500, pages = r.pages || [];
+  const tiers = [() => pages.map((p) => [p, 'notChanged']), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
+  let cut = 0;
+  for (const t of tiers) { const f = fitLists(r, t, size, AIM); if (!f) break; cut += f.cut; if (f.k > 0) break; }
+  if (cut) r.listsCut = { how: `This plan lists fewer visuals than it changes or keeps, to stay under ${AIM.toLocaleString('en-US')} characters ("<list>NotListed" says how many each list leaves out). DataArcus's approval window shows every change and every visual not changed before the person approves. To list one page in full here, call plan_layout again with the same inputs and redesignPages: ["<page id>"] (redesign.pages[].id); the plan is the same.` };
+  return r;
 }
 // (0.3.0 R2) what an Arabic plan says before the go: the proposed names it pins, the fields kept in English (with why)
 const NOT_TRANSLATED_WHY = 'No Arabic name: none was given (displayNames) and the fixed list of report words has none for it, so it shows under its English model name. Titles keep it alone, never joined with English words (a chart cut to its top N may begin with «أعلى N من M:», a table beside a chart of the same name ends with «: التفاصيل»).';
@@ -1467,6 +1505,7 @@ server.registerTool('plan_layout', {
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
     svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
     redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle,
+    redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or its name) in full, when the plan\'s answer shortened its lists (listsCut); the plan is the same'),
     // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
     ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
   }, annotations: READS
@@ -1798,6 +1837,7 @@ server.registerTool('create_arabic_twin', {
     mirrorPicturePages: z.boolean().default(false).describe('A page drawn on a background picture is kept left to right by default (Power BI has no setting that mirrors the picture, so mirrored visuals would leave its panels); true mirrors such pages anyway. The plan names them: ask the user'),
     into: z.enum(['separate', 'same']).optional().describe('"separate" (the default): the twin is its own report "<name> AR". "same": ONE report holding both languages, a copy "<name> (EN-AR)" next to the original (never the original itself): its English pages as they are and their Arabic pages, a language button on every page to its counterpart, the slicers of each page pair kept in sync. Only when the user asks for one report with both languages'),
     tabsShown: z.enum(['en', 'ar']).optional().describe('With into "same": the pages shown in the tabs; the other language\'s are hidden and reached by the language button. "en" (the default) or "ar"'),
+    textsFrom: z.number().int().min(0).max(100000).optional().describe('The plan only: list the texts from this one on (moreTexts.from in an answer that could not list them all); the plan and what is written stay the same'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
@@ -1810,7 +1850,7 @@ server.registerTool('create_arabic_twin', {
   const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${P.answer.labels.given} Arabic texts as approved), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
     : `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
+  return compact(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
     ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) })) }));
 }));
 

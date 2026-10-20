@@ -96,6 +96,22 @@ export function capAnswer(o, size) {
   return c;
 }
 
+// (0.3.0 Q1) an answer that lists objects cuts its own lists, at their cause, before the backstop above has to: every
+// list named by lists(answer) (each [holder, key], an array at holder[key]) keeps its first k items, the same k for all,
+// the largest k that brings the answer under aim; each cut list gets "<key>NotListed": how many were left out, beside it.
+// Nothing else changes (no finding, statement or refusal is dropped). Returns { k, cut } (cut: the lists cut), or null
+// when nothing had to be cut.
+export function fitLists(answer, lists, size, aim) {
+  if (size(answer) <= aim) return null;
+  const all = lists(answer).filter(([h, k]) => h && Array.isArray(h[k]));
+  const full = all.map(([h, k]) => h[k].slice()), top = Math.max(0, ...full.map((x) => x.length));
+  const apply = (n) => all.forEach(([h, k], i) => { h[k] = full[i].slice(0, n); if (full[i].length > n) h[k + 'NotListed'] = full[i].length - n; else delete h[k + 'NotListed']; });
+  let lo = 0, hi = top;
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); apply(mid); if (size(answer) <= aim) lo = mid; else hi = mid - 1; }
+  apply(lo);
+  return { k: lo, cut: all.filter((x, i) => full[i].length > lo).length };
+}
+
 // A6-17: an error DataArcus did not make itself (a TypeError, a RangeError...) is told as an internal error, with what
 // this call wrote before it stopped (the files module's log); never "nothing was written" when something was. Our own
 // errors (plain Error, written for the user) pass unchanged.

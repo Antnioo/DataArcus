@@ -198,6 +198,10 @@ await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 const big = sizes.reduce((a, s) => (s.chars > a.chars ? s : a), { chars: 0 });
 console.log(`\n${results.length} golden tasks run (tool level). Largest answer: ${big.tool}, ${big.chars} characters.`);
+// (0.3.0 Q1) the largest answer of each tool, so a growth of any one is seen (the answers with every 0.3.0 option on, on
+// the large model, are measured and capped by test-0.3.0-large-model-caps.mjs; the cap: lib/scope.mjs LIMIT and AIM)
+const byTool = {}; sizes.forEach((x) => { if (!byTool[x.tool] || x.chars > byTool[x.tool]) byTool[x.tool] = x.chars; });
+console.log('Largest answer per tool: ' + Object.entries(byTool).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${n}`).join(', ') + '.');
 
 // The expected results (round 12b, AUD-030). Not compared: the health answer's size on the large model, which holds the
 // temporary folder's path (its length differs between Windows and Linux).

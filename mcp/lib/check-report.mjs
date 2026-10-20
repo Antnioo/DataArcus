@@ -15,6 +15,7 @@ import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 // (Microsoft's report CLI, which needs Node 20 or later, is loaded when the validator runs, never at the server's start:
 // one tool's dependency cannot stop the others; round 22b, the review of round 22, item 5)
 import { loadModel, ROOT, visible } from './model.mjs';
+import { AIM } from './scope.mjs';
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
@@ -374,12 +375,15 @@ export async function checkReport(p, opts) {
   };
   // (F-CP, the fuzz test: every answer stays within the tools' 40,000 characters) the findings, then the lint's, are cut
   // until it fits; the counts keep every finding and truncated says so
+  // (0.3.0 Q1: the EN-AR copy of a two-page report answered 36,542 characters, within 10% of the cap: the cut aims at
+  // scope.mjs's AIM, and says how many findings are left out and how to see them)
   const size = () => JSON.stringify(answer).length;
   while (size() > ANSWER_CAP && answer.findings.length > 1) { answer.findings = answer.findings.slice(0, Math.max(1, Math.floor(answer.findings.length * 0.7))); answer.truncated = true; }
+  if (answer.findings.length < all.length) Object.assign(answer, { findingsNotListed: all.length - answer.findings.length, findingsHow: 'counts.byRule counts every finding. For the ones not listed, call check_report again with checks: ["<one check>"], one kind at a time.' });
   while (size() > ANSWER_CAP && answer.lint && answer.lint.findings.length) { answer.lint.findings = answer.lint.findings.slice(0, Math.floor(answer.lint.findings.length * 0.7)); answer.lint.truncated = true; }
   if (size() > ANSWER_CAP && answer.suspiciousNames) { answer.suspiciousNames.names = answer.suspiciousNames.names.slice(0, 5); }
   if (size() > ANSWER_CAP) answer.notChecked = answer.notChecked.slice(0, 10);
   return answer;
 }
-const ANSWER_CAP = 40000;
+const ANSWER_CAP = AIM;
 export { ROOT, REPORT_LIMITS };
