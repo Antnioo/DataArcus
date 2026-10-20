@@ -177,6 +177,12 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   what is new in it (only what integration/0.3.0-wave merged) and what to try first; the plan_layout and
   create_arabic_twin lines follow 0.3.0 (the native waterfall reads left to right; the EN-AR copy).
   `scripts/test-whats-new.mjs` checks the section in both languages and that it names no 0.3.1 draft.
+- Q1: every answer stays under 40,000 characters on the 300-table model with every 0.3.0 option on, cut at its cause:
+  check_model_health keeps every finding (its object lists shortened evenly, `only` gives one part whole; it used to
+  drop 5 of 6 findings at maxItems 200), the Arabic twin's plan pages its texts (`textsFrom`), plan_layout's redesign
+  cuts its per-page lists (`redesignPages`), read_model `tables` names every table not shown, check_report says how many
+  findings are not listed; an answer over 34,000 characters indented is sent without indentation. New suite
+  `large-model-caps`; the golden baseline prints the largest answer per tool.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
