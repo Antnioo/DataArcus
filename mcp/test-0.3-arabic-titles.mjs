@@ -80,6 +80,8 @@ try {
     const AED = M('Sales PY', { cardFormat: '"AED" #,0' }), PCT = M('Cost PY', { cardFormat: '"AED" #,0' });
     const QUARTER = C('Quarter', { kind: 'quarter' }), CITY = C('City'), REGION = C('Region', { kind: 'region', rows: 5 }), CH = C('Channel', { kind: 'channel', rows: 4 });
     const B = { kpis: [AED, PCT], measure: AED, date: QUARTER, cats: { bar: CITY, column: CH, donut: C('Channel'), split: REGION }, y: {}, table: [CITY, AED], slicers: [CITY, null, null], tip: { card: AED, cat: CITY, y: AED } };
+    // (0.3.0 J19, changed on purpose: one currency shares a combo's axis only when the person confirmed the pair compares)
+    const AXR = req('../assets/js/axis-units.js'); B.axes = { confirmed: [AXR.record(AED, PCT, 'comparable', []), AXR.record(M('Total Sales'), M('Total Cost'), 'comparable', [])] };
     const names = ['Sales PY', 'Cost PY', 'Quarter', 'City', 'Region', 'Channel', 'Sales'];
     const t = ['combo', 'waterfall', 'multiples'].map((k) => G.title(k, B, 'حسب'));
     chk(() => t.every((x) => x && words(x).every((w) => words(names.join(' ')).includes(w))), () => `AT-2a. gallery titles in an Arabic report add no English word ("and", "per", "by", "last year"): ${JSON.stringify(t)}`);
@@ -94,7 +96,9 @@ try {
     // (D1, changed on purpose: a mirrored right-to-left waterfall is written as the stacked column chart, columnChart, read from the right;
     // D7: the default became waterfallRtl "native", so this build asks for "mirror")
     chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('columnChart') && !types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
-    const bad = stray(shownTexts(files), names);
+    // (0.3.0 J19, changed on purpose: the combo's value axis is titled with its unit, an ISO code shown the same in both
+    // languages, isolated in Arabic: the brief's rule 6)
+    const bad = stray(shownTexts(files), names.concat('AED'));
     chk(() => r.files && !bad.length, () => `AT-2d. the Arabic gallery page shows no English word but the fields' names: ${JSON.stringify(uniq(bad).slice(0, 12))}`);
   }
 
