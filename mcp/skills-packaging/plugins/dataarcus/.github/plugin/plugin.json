@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "name": "dataarcus",
+  "description": "Arabic right-to-left reports and Arabic twins, Gulf calendars with Hijri and Ramadan, the model health check, and an approval click before any file is written. Works next to Microsoft's Power BI Report skill.",
+  "author": { "name": "DataArcus", "url": "https://dataarcus.com" },
+  "homepage": "https://dataarcus.com/power-bi-mcp/",
+  "repository": "https://github.com/Antnioo/DataArcus",
+  "license": "LicenseRef-DataArcus",
+  "keywords": ["powerbi", "pbir", "pbip", "arabic", "rtl", "gulf", "hijri", "ramadan", "report-design"],
+  "skills": ["./skills/dataarcus", "./skills/report-design"],
+  "agents": [],
+  "mcpServers": {
+    "dataarcus": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/server/mcp/server.mjs"],
+      "env": { "DATAARCUS_ROOT": "${DATAARCUS_ROOT}" },
+      "tools": ["*"]
+    }
+  }
+}
