@@ -207,6 +207,9 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   a Ramadan / Gulf-dates plan gets no plan id until grain and scope are answered; the metric switcher opens on its first
   metric and its Arabic line chart reads right to left; a status icon sits beside its own value and never on a blank
   row; the mirrored waterfall and the flip cards say plainly what they don't draw.
+- F2: the button-slicer pills get the height Desktop 2.159 was measured to need (140 at 15pt, scaled with the text):
+  the layout gives a pill slicer that height where the rail has room, else a smaller text, else the dropdown with why;
+  the laptop's variants report opens in Desktop and measures 120, 130 and 140.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

@@ -101,10 +101,12 @@
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
-    // (0.3.0 F1, the laptop proof on 2.159: a button slicer hides a text its tile is too low for) a pill slicer: its header
-    // (the container title, written at the tiles' size) the dropdown's measured title share ceil(8 + 2 x pt), one row of
-    // tiles one line ceil(1.6 x pt) + 2 x PILL_PAD of padding (written), and 4 between: 49 at 8pt, 56 at 10pt, 74 at 15pt
-    const PILL_PAD = 4, pillH = (t) => Math.ceil(8 + 2 * t) + Math.ceil(1.6 * t) + 2 * PILL_PAD + 4;
+    // (0.3.0 F1, F2) a pill slicer's height (its header, the container title written at the tiles' size, and one row of
+    // tiles): MEASURED on Desktop 2.159 (dataarcus-engine, business/beta/ship030/RECHECK-F1.md, 20 Oct 2026): at 15pt a
+    // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
+    // low for). 140 at 15pt, scaled with the text size, never less: 75 at 8pt, 94 at 10pt, 140 at 15pt. PILL_PAD: the
+    // tiles' padding, written
+    const PILL_PAD = 4, pillH = (t) => Math.ceil(140 * t / 15);
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:

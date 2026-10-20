@@ -519,6 +519,15 @@
         // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
         visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) }); return fr; })(), drillFilterOtherVisuals: true };
     };
+    // (0.3.0 F2) the heights of stacked slicers: each pill slicer pillH (the measured need) when all fit the room, else the
+    // room left after the dropdowns, shared by the pills (never less than the dropdown's height)
+    const isPill = (f) => { const kv = PILLS && valuesKnown(f); return !!(kv && kv.n >= 2 && kv.n <= 6); };
+    const stackHeights = (fields, sh, room) => {
+      const want = fields.map((f) => (isPill(f) ? Math.max(sh, pillH(SLICER_TEXT)) : sh)), np = fields.filter(isPill).length;
+      if (!np || want.reduce((a, b) => a + b, 0) <= room) return want;
+      const share = (room - sh * (fields.length - np)) / np;
+      return fields.map((f) => (isPill(f) ? Math.max(sh, share) : sh));
+    };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
       if (size < SLICER_TEXT) out.textSize = num(size);
@@ -627,12 +636,17 @@
         const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
         const sw = across ? (room - gap * (n - 1)) / n : room;
         const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
+        // (0.3.0 F2) stacked, a pill slicer gets the height measured for it (pillH) where the rail has room, else its share
+        // of what is left; a strip keeps its height (the pills' text, then the dropdown, decide in slicerVisual)
+        const hs = across ? fields.map(() => sh) : stackHeights(fields, sh, s.h - 2 * pad - bh - gap * n);
+        let yAt = s.y + pad;
         fields.forEach((f, i) => {
           // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
-          const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
+          const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : yAt;
+          yAt += hs[i] + gap;
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
-          const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
-            visual: slicerVisual(f, ttl, Math.round(sw), Math.round(sh)) });
+          const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(hs[i]), z: z, parent, kind: 'slicer',
+            visual: slicerVisual(f, ttl, Math.round(sw), Math.round(hs[i])) });
           slicerNames.push(v.name);
           z += 1000;
         });
@@ -1165,10 +1179,14 @@
         visualContainerObjects: Object.assign(frame(null, W.closeFilters || 'Close the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.closeBm) }) }) } });
       // slicers stacked, then Reset at the bottom
       const sh = Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (P.h - head - pad - bh - gap * (fields.length + 1)) / Math.max(1, fields.length))), names = [];
+      // (0.3.0 F2) a pill slicer the height measured for it where the panel has room (stackHeights)
+      const hs = stackHeights(fields, sh, P.h - head - pad - bh - gap * (fields.length + 1));
+      let yAt = P.y + head + 8 * k;
       fields.forEach((f, i) => {
         const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
-        const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
-          visual: slicerVisual(f, ttl, Math.round(sw), Math.round(sh)) });
+        const v = add1({ x: Math.round(P.x + pad), y: Math.round(yAt), w: Math.round(sw), h: Math.round(hs[i]), kind: 'slicer',
+          visual: slicerVisual(f, ttl, Math.round(sw), Math.round(hs[i])) });
+        yAt += hs[i] + gap;
         names.push(v.name);
       });
       const rb = rnd();
