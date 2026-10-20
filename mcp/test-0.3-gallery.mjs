@@ -175,7 +175,8 @@ const ARB = { kpis: [M('إجمالي المبيعات', { cardFormat: '"AED" #,0
   table: [C('المدينة'), M('إجمالي المبيعات')], slicers: [C('المدينة'), null, null], tip: { card: M('إجمالي المبيعات'), cat: C('المدينة'), y: M('إجمالي المبيعات') } };
 let RA = null;
 {
-  const r = RA = get(() => build(ARB, { lang: 'ar', gallery: true, name: 'GA' }));
+  // (D7: the default became waterfallRtl "native"; this build asks for "mirror", D1's chart, as written)
+  const r = RA = get(() => build(ARB, { lang: 'ar', gallery: true, name: 'GA', waterfallRtl: 'mirror' }));
   // (in the order of the slots: a right-to-left page writes its visuals in its own reading order)
   // (D1, changed on purpose: the right-to-left waterfall is a stacked column chart, columnChart, drawn as a waterfall)
   const ts = r.files ? [(v) => v.visual.visualType === 'lineClusteredColumnComboChart', (v) => v.visual.visualType === 'columnChart', (v) => !!(v.visual.query && v.visual.query.queryState.Rows)].map((f) => titleOf(visuals(r).find(f) || { visual: {} })) : [];

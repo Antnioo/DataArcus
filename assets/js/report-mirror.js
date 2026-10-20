@@ -71,7 +71,9 @@
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
-    waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps, no legend; hovering the empty space under a step shows its base. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
+    waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
+    // (D7) waterfallRtl "native": Power BI's own waterfall, kept as it is
+    waterfallNative: 'waterfall charts: the waterfall reads left to right, as Power BI draws it',
     waterfallTime: 'waterfall charts over time, kept left to right as asked (timeRightToLeft false): still waterfalls, their order as it is, the value axis at the right',
     waterfallKept: 'waterfall charts the running total can\'t follow (a breakdown, a sort by the value, a text category with no order): A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)',
     bar: 'bar charts: names at the right, bars growing from the right',
@@ -127,7 +129,7 @@
 
   // ---- one visual ----
   // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
-  // opts: { timeRightToLeft (default true), dateTables: [names] }. Returns { json (a new object), kind, changes }
+  // opts: { timeRightToLeft (default true), dateTables: [names], waterfallRtl ('native' | 'mirror', D7), waterfall }. Returns { json (a new object), kind, changes }
   function mirrorVisual(json0, W, opts) {
     const o = opts || {};
     if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
@@ -148,6 +150,9 @@
       plainEntry(objects(), 'valueAxis').properties.invertAxis = mk('true');
       changes.push('axes');
     }
+    // (D7) opts.waterfallRtl "native" (visual-gallery.js WATERFALL_RTL_DEFAULT): Power BI's own waterfall kept as the
+    // original has it, left to right (only its place is mirrored); "mirror": the stacked column chart below
+    if (kind === 'waterfall' && (Gallery() ? Gallery().waterfallRtlOf(o.waterfallRtl) : 'native') === 'native') kind = 'waterfallNative';
     // (D1) a waterfall: the stacked column chart that reads from the right, or kept left to right
     // (time kept left to right on request, opts.timeRightToLeft false: a waterfall over time stays one, its order as it is)
     if (kind === 'waterfall' && o.timeRightToLeft === false && isTime((first(projections(v.query, 'Category')) || {}).field, o.dateTables)) {
@@ -161,7 +166,7 @@
       let wf;
       try {
         wf = G ? G.rtlWaterfall(v.query, { extMeasure: wo.extMeasure || ((t, want) => want), sortByOf: wo.sortByOf, lang: 'ar',
-          typeOf: (t, c) => (wo.typeOf && wo.typeOf(t, c)) || ((o.dateColumns || []).includes(t + '.' + c) ? 'dateTime' : null), colours: { rise: fill('increaseFill', th.good), fall: fill('decreaseFill', th.bad) },
+          typeOf: (t, c) => (wo.typeOf && wo.typeOf(t, c)) || ((o.dateColumns || []).includes(t + '.' + c) ? 'dateTime' : null), colours: { rise: fill('increaseFill', G.sentimentOf(th, 'good')), fall: fill('decreaseFill', G.sentimentOf(th, 'bad')) },
           formatString: ym && wo.formatOf && isObj(ym.Expression) && isObj(ym.Expression.SourceRef) ? wo.formatOf(ym.Expression.SourceRef.Entity, ym.Property) : null }) : { ok: false, why: 'the visual gallery is not loaded' };
       } catch (e) { wf = { ok: false, why: 'its query has a shape not expected' }; }
       if (wf.ok) {

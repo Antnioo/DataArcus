@@ -15,6 +15,7 @@
 //   T  the twin (create_arabic_twin through the server): the same visual as the direct Arabic report; the measures in
 //      the twin's own reportExtensions.json; the model's sort-by column used; the plan says exactly what is written
 //   V  Microsoft's validator 0 errors and check_report 0 "can break" on every report written here
+// (D7: the default became waterfallRtl "native"; every Arabic build and twin here asks for "mirror", D1's chart)
 //   node test-0.3.0-waterfall-rtl2.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -42,7 +43,7 @@ const build = (lang, B, names) => {
   const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma';
   E.repairState(d);
   return Px.build({ name: 'WF ' + lang, title: 'WF', pageName: 'P', lang, rtl: lang === 'ar', font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: false,
-    model: Object.assign({ byPath: 'M.SemanticModel' }, names ? { names } : {}), bind: B || bindWith(MONTH), texts: E.REPORT_TEXTS[lang], chartAxes: 'mirrored', gallery: true,
+    model: Object.assign({ byPath: 'M.SemanticModel' }, names ? { names } : {}), bind: B || bindWith(MONTH), texts: E.REPORT_TEXTS[lang], chartAxes: 'mirrored', waterfallRtl: 'mirror', gallery: true,
     pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'waterfall', x: 20, y: 20, w: 1240, h: 600 }], panel: null, hand: true, png: new Uint8Array([1]) }] });
 };
 const UI = (() => { const d = E.fresh(); E.repairState(d); return d.ui; })();
@@ -82,7 +83,8 @@ chk(() => { const tt = wa.visual.query.queryState.Tooltips.projections; return t
   () => `A3: Tooltips hold Min of Month Number (the sort) and the running total: ${show(wa)}`);
 chk(() => sort0(wa).direction === 'Descending' && JSON.stringify(sort0(wa).field) === MIN_MONTH, () => `A4: sorted Descending by Min of Month Number: January at the RIGHT: ${show(wa)}`);
 const exts = ext ? ext.entities.flatMap((e) => e.measures.filter((m) => /^Waterfall /.test(m.name)).map((m) => Object.assign({ entity: e.name }, m))) : [];
-chk(() => exts.length === 7 && exts.filter((m) => !/^Waterfall total label/.test(m.name)).every((m) => m.entity === T && m.dataType === 'Double' && m.formatString === '#,0') && exts.some((m) => m.name === 'Waterfall total label: Total Sales' && m.dataType === 'Text'), () => `A5: seven measures in reportExtensions.json, under Sales: six Double with the measure's format, the total's label Text: ${JSON.stringify(exts).slice(0, 600)}`);
+// (D7, changed on purpose: a fall is labelled negative like Power BI's waterfall: the two fall measures' format is "-#,0")
+chk(() => exts.length === 7 && exts.filter((m) => !/^Waterfall total label/.test(m.name)).every((m) => m.entity === T && m.dataType === 'Double' && m.formatString === (/^Waterfall fall/.test(m.name) ? '-#,0' : '#,0')) && exts.some((m) => m.name === 'Waterfall total label: Total Sales' && m.dataType === 'Text'), () => `A5: seven measures in reportExtensions.json, under Sales: six Double with the measure's format (a fall's negative), the total's label Text: ${JSON.stringify(exts).slice(0, 600)}`);
 const runDax = (measureOf(ext, 'Waterfall running total: Total Sales') || {}).expression || '';
 chk(() => /VAR _o = MAX \( 'Sales'\[Month Number\] \)/.test(runDax) && runDax.includes("CALCULATE ( 'Sales'[Total Sales], REMOVEFILTERS ( 'Sales'[Month Name] ), FILTER ( ALL ( 'Sales'[Month Number] ), MAX ( 'Sales'[Month Number], _o ) = _o ) )"),
   () => `A6: the running total is in the TIME order (every month up to this one by Month Number, the month name's filter removed): ${runDax}`);
@@ -126,7 +128,7 @@ chk(() => nameOfProj(ys(wa2)[0]) === 'Waterfall base: Total Sales (2)' && measur
 {
   const ORD = C('Month Name', { kind: 'month', ordered: true }), d = E.fresh(); d.font = 'Tahoma'; E.repairState(d);
   const r = get(() => Px.build({ name: 'WF ord', title: 'WF', pageName: 'P', lang: 'ar', rtl: true, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'ar'), sample: false,
-    model: { byPath: 'M.SemanticModel', columns: { Sales: { 'Month Name': { type: 'string', sortBy: 'Month Number' }, 'Month Number': { type: 'int64' } } } }, bind: bindWith(ORD, { date: ORD }), texts: E.REPORT_TEXTS.ar, chartAxes: 'mirrored', gallery: true,
+    model: { byPath: 'M.SemanticModel', columns: { Sales: { 'Month Name': { type: 'string', sortBy: 'Month Number' }, 'Month Number': { type: 'int64' } } } }, bind: bindWith(ORD, { date: ORD }), texts: E.REPORT_TEXTS.ar, chartAxes: 'mirrored', waterfallRtl: 'mirror', gallery: true,
     pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'waterfall', x: 20, y: 20, w: 1240, h: 600 }], panel: null, hand: true, png: new Uint8Array([1]) }] }));
   const v = r.files && typed(r, 'columnChart'), run = r.files ? (measureOf(extOf(r), 'Waterfall running total: Total Sales') || {}).expression || '' : '';
   chk(() => v && JSON.stringify(sort0(v).field) === JSON.stringify(C0('Month Name')) && sort0(v).direction === 'Descending' && run.includes("REMOVEFILTERS ( 'Sales'[Month Name] ), FILTER ( ALL ( 'Sales'[Month Number] ), MAX ( 'Sales'[Month Number], _o ) = _o )"),
@@ -189,7 +191,7 @@ const twinOfEn = (r) => {
   const files = (r.files || []).map((f) => {
     if (!/visual\.json$/.test(f.path)) return f;
     const pj = r.files.find((x) => x.path === f.path.replace(/visuals\/[^/]+\/visual\.json$/, 'page.json')), W = pj ? JSON.parse(String(pj.data)).width : 1280;   // (each page's own width: the tooltip page is 320)
-    const v = JSON.parse(String(f.data)), m = Mirror.mirrorVisual(v, W, { timeRightToLeft: true, waterfall: { extMeasure: mine, theme: JSON.parse(String((r.files.find((x) => /-theme\.json$/.test(x.path)) || {}).data || '{}')) } });
+    const v = JSON.parse(String(f.data)), m = Mirror.mirrorVisual(v, W, { timeRightToLeft: true, waterfallRtl: 'mirror', waterfall: { extMeasure: mine, theme: JSON.parse(String((r.files.find((x) => /-theme\.json$/.test(x.path)) || {}).data || '{}')) } });
     out.push(m); return Object.assign({}, f, { data: JSON.stringify(m.json, null, 2) });
   });
   return { files, results: out, measures: wfm };
@@ -248,7 +250,7 @@ try {
       visualContainerObjects: { title: [{ properties: { show: { expr: { Literal: { Value: 'true' } } }, text: { expr: { Literal: { Value: "'Sales bridge'" } } } } }] } } });
   [['wfMonth', wf('wfMonth', 40, col('Calendar', 'Month Name'))], ['wfRegion', wf('wfRegion', 1000, col('Sales', 'Region'), { sort: [{ field: mea('Sales', 'Total Sales').field, direction: 'Descending' }], isDefaultSort: true })]]
     .forEach(([n, v]) => { fs.mkdirSync(path.join(VIS, n), { recursive: true }); fs.writeFileSync(path.join(VIS, n, 'visual.json'), JSON.stringify(v, null, 2)); });
-  const plan = await ask('create_arabic_twin', { path: 'wft/Twin Sales.pbip' });
+  const plan = await ask('create_arabic_twin', { path: 'wft/Twin Sales.pbip', waterfallRtl: 'mirror' });
   const mirrors = JSON.stringify((plan.j || {}).mirrors || []), cannot = JSON.stringify((plan.j || {}).cannot || []);
   chk(() => !plan.err && (plan.j.mirrors || []).some((m) => m.kind === 'waterfall' && m.count === 1 && /stacked column chart/.test(m.what) && /no Total column/i.test(m.what)),
     () => `T1: the plan's "mirrors" says the waterfall is written as a stacked column chart read from the right, with no Total column: ${short(plan)} ${mirrors.slice(0, 600)}`);
