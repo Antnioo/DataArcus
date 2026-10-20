@@ -44,6 +44,9 @@ jobs:
       - name: The shipped code loads every module by a literal path (packaging stages only what it can name, B-196)
         run: node scripts/test-literal-requires.mjs && node scripts/check-literal-requires.mjs
 
+      - name: Every MCP test script prints the result line CI's summary counts (B-198)
+        run: node scripts/test-result-lines.mjs && node scripts/check-result-lines.mjs
+
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
