@@ -122,7 +122,8 @@ try {
 
   // ---------- HA: Arabic, hand-placed, right to left ----------
   {
-    const AR = await write({ name: 'Gallery Arabic', lang: 'ar', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES });
+    // (D7: the default became waterfallRtl "native"; this report asks for "mirror", D1's chart, as written)
+    const AR = await write({ name: 'Gallery Arabic', lang: 'ar', pages: HAND(['combo', 'waterfall', 'smallMultiples']), planFields: SAME_UNIT, displayNames: AR_NAMES, waterfallRtl: 'mirror' });
     const vs = AR.dir && fs.existsSync(AR.dir) ? allVisuals(AR.dir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
     chk(() => cb && S(objp(cb, 'valueAxis').switchAxisPosition) === 'true' && S(objp(cb, 'categoryAxis').invertAxis) === 'true' && JSON.stringify(roles(cb).Y2) === '["Total Cost"]',
       () => `HA combo: mirrored (value axis right, categories inverted): ${AR.err || short(AR.r)} ${JSON.stringify(cb && cb.visual.objects)}`);
@@ -185,7 +186,7 @@ try {
 
   // ---------- TW: the Arabic twin of the English gallery report ----------
   {
-    const p0 = EN && EN.r && !EN.r.err ? await w.call('create_arabic_twin', { path: EN.pbip }) : null, id = p0 && p0.j && p0.j.plan && p0.j.plan.planId;
+    const p0 = EN && EN.r && !EN.r.err ? await w.call('create_arabic_twin', { path: EN.pbip, waterfallRtl: 'mirror' }) : null, id = p0 && p0.j && p0.j.plan && p0.j.plan.planId;
     if (id) await approve(id);
     const tw = id ? await w.call('create_arabic_twin', { path: EN.pbip, planId: id }) : null, twinDir = path.join(ROOT, 'g', 'Gallery Hand AR.Report');
     const vs = fs.existsSync(twinDir) ? allVisuals(twinDir) : [], cb = vs.find(KIND_OF.combo), wf = vs.find(rtlWaterfall), sm = vs.find(KIND_OF.smallMultiples);
