@@ -6,7 +6,8 @@
 // (R5, 0.3.0: the question's id and its object are hashed too; a record written before, with them in plain text, is read
 // and held hashed from then on. A stale answer is kept, not applied, until the person forgets their answers.)
 // (0.3.0 J18) The terminology sheet's confirmed terms are records of their own (termRecord below): hashes, and the Arabic
-// name the person approved for a field. No network: nothing here sends or loads anything.
+// name the person approved for a field. (0.3.0 J17) The Gulf date questions' answers too (dateRecord below): hashes and
+// the answer. No network: nothing here sends or loads anything.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -192,6 +193,54 @@
     return out;
   }
 
+  // ---- (0.3.0 J17, B-170) the Gulf date questions' answers: which date the report follows, its grain, its seasonal
+  // scope, the Hijri year and the Hijri-year column, as the person answered them. Reused only for the same model
+  // (modelKey, given by the caller), the same question and the same metadata (evidenceHash: each field the question is
+  // about, its type and sort-by column, and the relationships that start at it with their active flags). A flipped
+  // relationship or a changed column: asked again. A record holds hashes and the answer (a field hashed, a grain or scope
+  // word, a year the person gave), never a name or data:
+  //   { modelKey, questionHash, evidenceHash, answer, at, by: 'user' }
+  const DATE_QUESTIONS = ['dateRole', 'grain', 'scope', 'year', 'hijriYearColumn'];
+  const DATE_ANSWER = /^(gregorian|hijri|seasonDay|all|year|\d{3,4}|field:[0-9a-f]{64})$/;
+  const dateQuestion = (q) => sha256(JSON.stringify(['date-question', String(q)]));
+  /** A field as a date answer holds it: hashed ("Table[Field]", its names exactly as the model has them). */
+  const dateField = (key) => { const k = termKeyOf(key); return 'field:' + sha256(JSON.stringify(['date-field', k ? k.table : String(key), k ? k.field : ''])); };
+  /** The evidence of a date question: a SHA-256 of each field it is about (model.bim's model: tables and relationships):
+   *  its type and sort-by column, and every relationship from it with its target and active flag. */
+  function dateEvidence(model, question, keys) {
+    const tables = (model && model.tables) || [], rels = (model && model.relationships) || [];
+    const parts = (keys || []).map(String).slice().sort().map((key) => {
+      const k = termKeyOf(key), t = k && tables.find((x) => String(x.name) === k.table), c = t && (t.columns || []).find((x) => String(x.name) === k.field);
+      if (!c) return [key, 'missing'];
+      const from = rels.filter((r) => String(r.fromTable) === k.table && String(r.fromColumn) === k.field)
+        .map((r) => [String(r.toTable), String(r.toColumn), r.isActive === false ? 'inactive' : 'active']).sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
+      return [key, String(c.dataType || 'unknown'), String(c.sortByColumn || ''), from];
+    });
+    return sha256(JSON.stringify(['date-evidence-v1', String(question)].concat(parts)));
+  }
+  /** A date answer record: { modelKey (64 hex), question (one of DATE_QUESTIONS), evidence (dateEvidence's), answer
+   *  (a grain or scope word, a year, or dateField's), at (ISO date, default now) }. */
+  function dateRecord(o) {
+    if (!o || !HEX.test(String(o.modelKey)) || !DATE_QUESTIONS.includes(o.question) || !HEX.test(String(o.evidence)) || !DATE_ANSWER.test(String(o.answer))) throw new Error('A date answer needs a model key, a question, its evidence and an answer.');
+    return { modelKey: o.modelKey, questionHash: dateQuestion(o.question), evidenceHash: o.evidence, answer: String(o.answer), at: o.at || new Date().toISOString(), by: 'user' };
+  }
+  function validDate(r) {
+    return !!r && typeof r === 'object' && !Array.isArray(r) && keysAre(r, ['answer', 'at', 'by', 'evidenceHash', 'modelKey', 'questionHash'])
+      && HEX.test(r.modelKey) && HEX.test(r.questionHash) && HEX.test(r.evidenceHash) && typeof r.answer === 'string' && DATE_ANSWER.test(r.answer)
+      && typeof r.at === 'string' && r.at.length <= 40 && r.by === 'user';
+  }
+  /** The answers given before for these questions ({ question, evidence }): a Map question -> answer, only where a
+   *  record matches the model key, the question and the evidence; the latest record wins. */
+  function applyDates(items, records, modelKey) {
+    const out = new Map(), recs = (records || []).filter(validDate);
+    for (const it of items || []) {
+      if (!it || !DATE_QUESTIONS.includes(it.question)) continue;
+      const qh = dateQuestion(it.question);
+      for (const r of recs) if (r.modelKey === modelKey && r.questionHash === qh && r.evidenceHash === it.evidence) out.set(it.question, r.answer);
+    }
+    return out;
+  }
+
   // The browser's own storage, one entry per model fingerprint. Nothing leaves the browser. Every read and write is
   // guarded (a private window, blocked storage): without storage the answers last until the page is closed.
   const PREFIX = 'dataarcus-mh-answers:';
@@ -213,5 +262,6 @@
     try { if (!s) return; const keys = []; for (let i = 0; i < s.length; i++) { const k = s.key(i); if (k && k.startsWith(PREFIX)) keys.push(k); } keys.forEach((k) => s.removeItem(k)); } catch (e) { /* nothing stored */ }
   }
 
-  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget, termEvidence, termRecord, validTerm, applyTerms };
+  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget, termEvidence, termRecord, validTerm, applyTerms,
+    DATE_QUESTIONS, dateField, dateEvidence, dateRecord, validDate, applyDates };
 });

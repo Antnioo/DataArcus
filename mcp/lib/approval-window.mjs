@@ -232,6 +232,8 @@ export function summary(kind, data) {
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
+    // (0.3.0 J17, B-170) the date the report follows, its grain and seasonal scope, and the dates' status, before the click
+    if (Array.isArray(d.gulfDates) && d.gulfDates.length) sections.push({ heading: 'Dates and seasonal scope', rows: d.gulfDates.map(([k, v]) => [String(k), String(v)]) });
     // (0.3.0 R2: an Arabic report's texts are Arabic, or listed here with why before the go) the fields kept in English
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic name)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
     // (D1) a right-to-left report's waterfalls: what each is written as, before the click
