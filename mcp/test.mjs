@@ -1024,7 +1024,10 @@ if (part('gulf-health')) {
   const same = [];
   for (const p of ['dax-project', 'bim-project', 'tmdl-project', 'sample.pbit']) {
     const a = await ask({ path: p }), b = await ask({ path: p, country: 'ksa', asOf: ASOF });
-    if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.findings, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.findings, b.j.skipped])) same.push(p);
+    // (0.3.0 Q1, changed on purpose: an answer near the cap shortens its object lists to fit (listsCut), and the country's
+    // section takes room: the findings are compared by id, count and the objects both list, in the same order)
+    const fl = (j, o) => j.findings.map((f, i) => [f.id, f.count, f.items.slice(0, Math.min(f.items.length, ((o.findings[i] || {}).items || []).length))]);
+    if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.skipped]) || JSON.stringify(fl(a.j, b.j)) !== JSON.stringify(fl(b.j, a.j))) same.push(p);
   }
   check(!same.length, `gulfCalendar: the score or the findings moved with a country on: ${same}`);
 }
@@ -1972,7 +1975,10 @@ if (part('check-report')) {
       W(path.join(pg, 'visuals', id, 'visual.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name: id, position: { x: 10, y: 10, z: 5000 + i, width: 200, height: 12, tabOrder: 5000 + i },
         visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Twenty characters ok', textStyle: { fontSize: '14pt' } }] }] } }] } } }); }
     const a = await ask('check_report', { path: 'cr-project/CR Many.Report' }), b = await ask('check_report', { path: 'cr-project/CR Many.Report', maxFindings: 5 });
-    chk(() => !a.err && a.j.findings.length === 60 && a.j.counts.byRule.TEXTBOX_FITS === 300 && a.j.truncated === true && a.t.length < 40000 && b.j.findings.length === 5 && b.j.counts.byRule.TEXTBOX_FITS === 300,
+    // (0.3.0 Q1, changed on purpose: 60 findings made 34,000-40,000 characters, within 10% of the cap; the answer now aims
+    // at 34,000 and says how many are not listed: findingsNotListed)
+    const total = (j) => j.counts.errors + j.counts.warnings + j.counts.notes;
+    chk(() => !a.err && a.j.findings.length <= 60 && a.j.findings.length >= 30 && a.j.findings.length + a.j.findingsNotListed === total(a.j) && /again with checks/.test(a.j.findingsHow) && a.j.counts.byRule.TEXTBOX_FITS === 300 && a.j.truncated === true && a.t.length < 36000 && b.j.findings.length === 5 && b.j.counts.byRule.TEXTBOX_FITS === 300,
       () => `findings must be capped at maxFindings and counted per rule: ${a.err ? short(a) : JSON.stringify({ n: a.j.findings.length, counts: a.j.counts, truncated: a.j.truncated, size: a.t.length, b: b.j && b.j.findings.length })}`);
   }
 
