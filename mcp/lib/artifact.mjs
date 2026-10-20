@@ -69,8 +69,10 @@ async function validate(files, mem) {
 
 // every field a visual shows, sorts or filters by, every page's filter: in the model, or a measure of the report's own
 // (definition/reportExtensions.json); a date hierarchy's level is checked by its table
-function references(inv, tables, mem) {
+// (0.3.0 L4) pending: measures the plan writes as a script with the report (the flip cards'), counted as the model's
+function references(inv, tables, mem, pending) {
   const model = new Map((tables || []).map((t) => [t.name, { columns: new Set((t.columns || []).map((c) => c.name)), measures: new Set((t.measures || []).map((x) => x.name)) }]));
+  (pending || []).forEach((x) => { const t = model.get(x.t); if (t) t.measures.add(x.name); });
   const ext = new Map();
   try { (JSON.parse(mem.get('definition/reportExtensions.json') || '{}').entities || []).forEach((e) => ext.set(String(e.name), new Set((e.measures || []).map((x) => String(x.name))))); } catch (e) { /* none */ }
   const found = (f) => {
@@ -99,7 +101,7 @@ function references(inv, tables, mem) {
 }
 
 /** The checks of a project's files in memory (create_report's files: "<name>.Report/...", "<name>.pbip"). tables: the
- *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests). Never writes into the user's folder. */
+ *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests); opts.pending: [{ t, name }] measures written with the report as a script (L4). Never writes into the user's folder. */
 export async function checkArtifact(files, tables, lang, opts) {
   const o = opts || {}, skip = skipped(o), rep = inReport(files), mem = new Map(rep.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8')]));
   const notRun = [], blocking = [], byRule = {};
@@ -120,7 +122,7 @@ export async function checkArtifact(files, tables, lang, opts) {
   if (inv) {
     // 2. the references
     if (skip.has('references')) notRun.push({ check: 'references', why: 'skipped' });
-    else { try { const r = references(inv, tables, mem); checks.references = { ran: true, checked: r.checked, unresolved: r.unresolved }; count('REF_UNRESOLVED', r.unresolved); blocking.push(...r.files); checks.references.pages = r.pages; }
+    else { try { const r = references(inv, tables, mem, o.pending); checks.references = { ran: true, checked: r.checked, unresolved: r.unresolved }; count('REF_UNRESOLVED', r.unresolved); blocking.push(...r.files); checks.references.pages = r.pages; }
       catch (e) { notRun.push({ check: 'references', why: 'could not read a visual\'s fields' }); } }
     // 3. our measured rules (the same input check_report gives them)
     if (skip.has('rules')) notRun.push({ check: 'rules', why: 'skipped' });

@@ -411,8 +411,14 @@
         .sort((a, b) => ((+(a.position || {}).z || 0) - (+(b.position || {}).z || 0)) || (+(a.position || {}).y || 0) - (+(b.position || {}).y || 0) || (+(a.position || {}).x || 0) - (+(b.position || {}).x || 0));
       const byName = new Map(list.map((j) => [String(j.name), j]));
       const at = (j) => { let x = +(j.position || {}).x || 0, y = +(j.position || {}).y || 0, g = j.parentGroupName, hid = !!j.isHidden, d = 0; while (g && byName.has(g) && d++ < 10) { const q = byName.get(g); x += +(q.position || {}).x || 0; y += +(q.position || {}).y || 0; hid = hid || !!q.isHidden; g = q.parentGroupName; } return { x, y, hid }; };
-      const visuals = list.filter((j) => !j.visualGroup && j.visual).map((j) => {
-        const p = at(j), type = String(j.visual.visualType || 'unknown'), title = type === 'textbox' ? textOf(j) : titleOf(j, ext);
+      // (0.3.0 L4) a flip card is drawn as the card its front shows (the title kept on the front's hidden title); its
+      // backdrop, an image in the same box, is not drawn; its back starts hidden
+      const linkOf = (j) => { const e = ((((j.visual || {}).visualContainerObjects || {}).visualLink) || []).find((x) => x && !x.selector && x.properties); return e ? lit(e.properties.type) : null; };
+      const boxOf = (j) => [j.parentGroupName || '', ...['x', 'y', 'width', 'height'].map((k) => +(j.position || {})[k] || 0)].join('|');
+      const fronts = list.filter((j) => j.visual && j.visual.visualType === 'image' && !j.isHidden && linkOf(j) === 'Bookmark');
+      const flipTitle = (j) => { const t = ((((j.visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties) || {}; return lit((t.properties || {}).text) || ''; };
+      const visuals = list.filter((j) => !j.visualGroup && j.visual && !(j.visual.visualType === 'image' && !linkOf(j) && fronts.some((f) => boxOf(f) === boxOf(j)))).map((j) => {
+        const front = fronts.includes(j), p = at(j), type = front ? 'cardVisual' : String(j.visual.visualType || 'unknown'), title = front ? flipTitle(j) : type === 'textbox' ? textOf(j) : titleOf(j, ext);
         return p.hid ? null : Object.assign({ type, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0, z: +(j.position || {}).z || 0, title }, settingsOf(j, type, theme, id),
           type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
