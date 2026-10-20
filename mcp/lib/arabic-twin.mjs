@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
+import { inside, real, nothingAt, writeNew, visible, shownName, loadModel, ROOT } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
@@ -21,6 +21,7 @@ import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
 import { capAnswer } from './answer.mjs';
 import { writtenName } from './display-names.mjs';
+import * as Terms from './terminology.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -240,8 +241,9 @@ function textsOf(R) {
     return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: draftText(raw) });
   });
 }
-// the labels by the ids the answer gave, as the mirror engine's ids (the report's own names)
-const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = labels[k]; }); return out; };
+// the labels by the ids the answer gave, as the mirror engine's ids (the report's own names); (0.3.0 J18) each as it is
+// written: a Latin run inside Arabic text isolated (terminology.mjs)
+const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = Terms.isolateLatin(labels[k]); }); return out; };
 
 // ---- the model next to the report: its date tables (for time left to right, T2) and the month offer ----
 function modelOf(R, loc) {
@@ -768,6 +770,8 @@ function languageCopy(P, built, labels) {
 
 // ---- the plan ----
 const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
+// (0.3.0 J18) terms as a plan pins them: keys as Table[Field], each name as written (writtenName)
+const normTerms = (t) => sortKeys(Object.fromEntries(Object.entries(t || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? [`${mk[1]}[${mk[2]}]`, cleanLabel(v, `terms: ${String(k)}`)] : null; }).filter(Boolean)));
 const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
 
@@ -808,6 +812,52 @@ function notTranslatedOf(texts, labels, problems) {
   return [...rows.values()].map((r) => ({ text: r.text, where: Object.entries(r.where).map(([w, n]) => (n > 1 ? `${w} (${n})` : w)).join(', '), why: r.why, ids: r.ids }));
 }
 
+// (0.3.0 J18, B-171) the terminology sheet of the twin: each field text's field ("Table[Field]", from the projections that
+// show it), the terms the person gave (terms: { "Table[Field]": Arabic }, or the English name to keep it) or confirmed
+// earlier in this session for this field of this model, unchanged since (a.memory false: none, the write's own plan).
+// A term labels every header of its field (a label given for one that says it otherwise is not used: notUsing) and every
+// text made of its English name ("A by B", "Top {1} of {2}: A by B", "A (B)", "A: detail", "No data: A"), the same word
+// everywhere; an English name two fields share with two terms derives nothing. labels: changed in place.
+function termsOf(R, texts, labels, a, m) {
+  const keyOfRef = new Map();
+  const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && typeof p.queryRef === 'string' ? Terms.fieldKeyOf(p.field) : null; if (k && !keyOfRef.has(p.queryRef)) keyOfRef.set(p.queryRef, k); }); Object.values(o).forEach(walk); };
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => walk(isObj(v.json) && isObj(v.json.visual) ? v.json.visual.query : null)));
+  texts.forEach((t) => { if (t.kind !== 'field') return; const k = keyOfRef.get(String(t.rawId).slice('field:'.length)); if (k) { t.fieldKey = k; t.field = shownName(k, 200); } });
+  const keys = [...new Set(texts.filter((t) => t.fieldKey).map((t) => t.fieldKey))];
+  const enOf = (k) => new Set([k.replace(/^.*?\[(.*)\]$/, '$1')].concat(texts.filter((t) => t.fieldKey === k).map((t) => t.raw.trim())));
+  const given = {}, unknown = [], term = new Map(), notUsing = [];
+  Object.entries(a.terms || {}).forEach(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), n = mk ? `${mk[1]}[${mk[2]}]` : null; const c = cleanLabel(v, `terms: ${String(k)}`);
+    if (n) given[n] = c; if (!n || !keys.includes(n)) unknown.push(visible(String(k)).slice(0, 160)); });
+  const conf = a.memory === false ? new Map() : Terms.confirmedOf(m, keys.filter((k) => given[k] == null));
+  keys.forEach((k) => {
+    if (given[k] != null) term.set(k, enOf(k).has(given[k].trim()) ? { ar: null, status: 'kept', declined: true } : { ar: given[k], status: 'approved' });
+    else if (conf.has(k)) { const c = conf.get(k); term.set(k, c.decision === 'kept' ? { ar: null, status: 'kept', declined: true, earlier: true } : { ar: c.alias, status: 'approved', earlier: true }); }
+  });
+  const said = () => 'the terminology sheet';
+  texts.filter((t) => t.fieldKey && term.has(t.fieldKey) && term.get(t.fieldKey).ar != null).forEach((t) => {
+    const ar = term.get(t.fieldKey).ar;
+    if (labels[t.id] != null && labels[t.id] !== ar) notUsing.push({ id: t.id, why: 'a field\'s header takes the field\'s term: the label given for it was not used' });
+    labels[t.id] = ar; t.labelFrom = said(t.fieldKey);
+  });
+  // the texts made of the fields' English names
+  const byName = new Map(), clash = new Set();
+  term.forEach((x, k) => { if (x.ar == null) return; enOf(k).forEach((n) => { const l = n.toLowerCase(); if (byName.has(l) && byName.get(l) !== x.ar) clash.add(l); else byName.set(l, x.ar); }); });
+  clash.forEach((l) => byName.delete(l));
+  if (byName.size) texts.forEach((t) => {
+    if (t.fieldKey || t.text == null) return;
+    const used = [], d = draftText(t.raw, { names: byName, used }); if (!d || !used.length) return;
+    if (labels[t.id] == null) { labels[t.id] = d; t.labelFrom = said(); }
+    else if (labels[t.id] !== d) notUsing.push({ id: t.id, why: `its label says the field otherwise than the sheet («${visible(d).slice(0, 120)}»): kept as the person gave it` });
+  });
+  // every other field's status: a label given for its header (approved), its fixed list draft (not written until it is
+  // approved), or none (kept in English)
+  const statuses = () => keys.forEach((k) => { if (term.has(k)) return; const ts = texts.filter((t) => t.fieldKey === k), lab = ts.map((t) => labels[t.id]).find((x) => x != null);
+    if (lab != null) return term.set(k, { ar: lab, status: 'approved' });
+    const dr = ts.map((t) => t.draftArabic).find(Boolean);
+    term.set(k, dr ? { ar: dr, status: 'draft', why: 'a draft from the fixed list of report words: not written until the person approves it (terms)' } : { ar: null, status: 'kept' }); });
+  return { keys, term, given: sortKeys(given), unknown, notUsing, statuses };
+}
+
 export function planTwin(a) {
   const loc = locate(a.path), R = readOriginal(loc);
   // (0.3.0 X1) into "same": one report holding both languages, "<name> (EN-AR)"; the default, the separate twin "<name> AR"
@@ -824,6 +874,7 @@ export function planTwin(a) {
   const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
+  const T = termsOf(R, texts, labels, a, model.m);
   // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
   // the plan (labelFrom) and written with it; a label given for the button wins
   texts.forEach((t) => { if (t.kind === 'button' && t.goesTo && labels[t.id] == null && labels[t.goesTo] != null) { labels[t.id] = labels[t.goesTo]; t.labelFrom = 'the approved Arabic name of the page it goes to'; } });
@@ -831,6 +882,7 @@ export function planTwin(a) {
   const problems = [];
   texts.forEach((t) => { if ((t.kind === 'titleMeasure' || t.kind === 'measureText') && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).replace(/^(titleText|measureText):/, ''), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
   sameTextLabels(texts, labels);
+  T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [] }, together = { on: [], bars: [] };
@@ -890,12 +942,14 @@ export function planTwin(a) {
   if (built.titleMeasures && built.titleMeasures.notTranslated.length) cannot.push({ what: 'chart titles from title measures that build their text another way', why: 'their DAX is not only fixed texts and the numbers the report counts, so DataArcus can\'t translate it without guessing: the title stays as it is (titleMeasures.notTranslated says why for each)', where: built.titleMeasures.notTranslated.map((x) => x.measure).slice(0, 30) });
   // (0.3.0 D3) what stays English in the twin, and why, said before the go (as create_report's plan does: R2, #75)
   const notTranslated = notTranslatedOf(texts, labels, problems);
+  // (0.3.0 J18) the terminology sheet: each field's places on the twin's own pages, as built
+  const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }), Terms.isolateLatin);
   const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
     how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, answer: capAnswer({
+  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -904,11 +958,12 @@ export function planTwin(a) {
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
-    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, raw, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
+    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
     labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
     ...(languages ? { languages } : {}),
+    terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW_TWIN }, T.unknown.length ? { unknownTerms: T.unknown } : {}, T.notUsing.length ? { labelsNotUsingTerm: T.notUsing.slice(0, 60) } : {}),
     sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...notCopiedOf(R.left),
@@ -944,7 +999,9 @@ export function writeTwin(a, plan) {
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
   // (X1) the plan's own options: a call with planId that names other ones is refused, never written another way
   if ((a.into != null && (a.into === 'same') !== (d.into === 'same')) || (a.tabsShown != null && d.into === 'same' && a.tabsShown !== (d.tabsShown || 'en'))) throw new Error('Nothing was written: into or tabsShown differ from the approved plan\'s. Make the plan again with the options the user wants, show it and wait for their go.');
-  const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, into: d.into, tabsShown: d.tabsShown });
+  // (0.3.0 J18) the plan's terms: a call with planId that gives other ones is refused
+  if (a.terms && JSON.stringify(normTerms(a.terms)) !== JSON.stringify(d.terms || {})) throw new Error('Nothing was written: these terms differ from the terms of the approved plan. Show the user the new terminology sheet, get a new plan id for it (call this tool without planId), and wait for the user\'s go.');
+  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, into: d.into, tabsShown: d.tabsShown });
   // (B-154) the model the plan read (for the month column and the dates), as it was at the go
   if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P;
@@ -983,6 +1040,8 @@ export function writeTwin(a, plan) {
   // yet): its print the approved one, or nothing is written (the read above can be seconds older than the write)
   if ('modelPrint' in d) { testEditBeforeWrite(); const now = modelOf(R, loc).m; if (((now && now.print) || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id)); }
   writeTree(loc.project, tree);
+  // (0.3.0 J18) the terms of the written plan are confirmed for this model (this session only)
+  if (Array.isArray(d.terminology)) Terms.remember(P.model, d.terminology);
   return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (out.has(EXT) && !R.files.includes(EXT) ? 1 : 0), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
     ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,

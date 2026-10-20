@@ -40,17 +40,25 @@ export function proposeArabic(name) {
 // "Tooltip · Month", "Top {1} of {2}: X", "No data: X", "A by B") when every part has a draft, else a field name from the
 // glossary (proposeArabic); null when any part has none. Spaces before and after the text are kept (the Reset button's
 // gap before its icon). Never a guess: a word not listed gives no draft
-export function draftText(text) {
+// (0.3.0 J18, B-171) opts.names: the approved terms, Map(English name in lower case -> Arabic), tried first for every
+// part, with the writer's own joins of names: "A (B)" (an alt text), "A: detail" (a table beside its chart, the writer's
+// tail «التفاصيل», pbip-page.js). opts.used (an array) collects the English names it took
+const TAIL = { detail: 'التفاصيل' };
+export function draftText(text, opts) {
   const raw = String(text == null ? '' : text), m = /^(\s*)([\s\S]*?)(\s*)$/.exec(raw), core = m[2];
   if (!core || /[\u0600-\u06FF]/.test(core) || core.length > 200) return null;
+  const names = opts && opts.names instanceof Map ? opts.names : null, used = opts && Array.isArray(opts.used) ? opts.used : [];
   const one = (t) => {
     const s = t.trim(); if (!s) return null;
+    if (names && names.has(s.toLowerCase())) { used.push(s); return names.get(s.toLowerCase()); }
     if (PHRASES.has(s.toLowerCase())) return PHRASES.get(s.toLowerCase());
     let x;
     if (s.includes(' · ')) { const parts = s.split(' · ').map(one); return parts.every(Boolean) ? parts.join(' · ') : null; }
     if ((x = /^Top (\{\d+\}|\d+) of (\{\d+\}|\d+): (.+)$/.exec(s))) { const d = one(x[3]); return d ? `أعلى ${x[1]} من ${x[2]}: ${d}` : null; }
     if ((x = /^No data: (.+)$/.exec(s))) { const d = one(x[1]); return d ? `${PHRASES.get('no data')}: ${d}` : null; }
+    if (names && (x = /^(.+): (detail)$/i.exec(s))) { const a = one(x[1]); if (a) return `${a}: ${TAIL.detail}`; }
     if ((x = /^(.+?) by (.+)$/.exec(s))) { const a = one(x[1]), b = one(x[2]); if (a && b) return `${a} حسب ${b}`; }
+    if (names && (x = /^(.+?) \((.+)\)$/.exec(s))) { const a = one(x[1]), b = one(x[2]); if (a && b) return `${a} (${b})`; }
     return proposeArabic(s);
   };
   const d = one(core);
