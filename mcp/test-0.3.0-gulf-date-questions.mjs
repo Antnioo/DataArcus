@@ -108,12 +108,17 @@ try {
   // ---------- GD-3 and GD-7: a Ramadan page, one question at a time; the year only from the person ----------
   {
     const p0 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN() }), g0 = G(p0);
-    chk(() => idOf(p0) && /before showing this plan/.test(g0.sayFirst || '') && g0.seasonal && g0.askNext && g0.askNext.id === 'dateRole' && g0.remaining >= 3 && (g0.pleaseConfirm || []).every((q) => q.en && ARABIC.test(q.ar)),
-      () => `GD-7a. a seasonal plan with open questions: asked first (sayFirst; the plan id kept, Decision needed); one question asked first (the date), the rest listed in EN and AR: ${JSON.stringify(g0).slice(0, 600)}`);
+    // (F1, the owner's decision of 20 Oct: STRICT on; this check said "the plan id kept" while the decision was open)
+    chk(() => !idOf(p0) && /before showing this plan/.test(g0.sayFirst || '') && g0.seasonal && g0.askNext && g0.askNext.id === 'dateRole' && g0.remaining >= 3 && (g0.pleaseConfirm || []).every((q) => q.en && ARABIC.test(q.ar)),
+      () => `GD-7a. a seasonal plan with open questions: asked first (sayFirst; no plan id: STRICT); one question asked first (the date), the rest listed in EN and AR: ${JSON.stringify(g0).slice(0, 600)}`);
     const p1 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]' } }), g1 = G(p1);
     chk(() => g1.askNext && g1.askNext.id === 'grain' && g1.remaining === g0.remaining - 1 && ['gregorian', 'hijri', 'seasonDay'].every((o) => g1.askNext.options.includes(o)),
       () => `GD-7b. once answered it moves on: the grain next, one fewer left: ${JSON.stringify(g1.askNext)} ${g1.remaining} vs ${g0.remaining}`);
+    // GD-11 (F1, STRICT): no plan id until the grain and the scope are answered; the refusal says why
+    const why = (p) => probs(p).join(' ');
+    chk(() => !idOf(p1) && /grain/.test(why(p1)) && /scope/.test(why(p1)) && /because/.test(why(p1)), () => `GD-11a. the date answered, grain and scope not: no plan id, and the refusal says why: ${short(p1)}`);
     const p2 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian' } }), g2 = G(p2);
+    chk(() => !idOf(p2) && /scope/.test(why(p2)), () => `GD-11b. the grain answered, the scope not: no plan id: ${short(p2)}`);
     chk(() => g2.askNext && g2.askNext.id === 'scope' && /one Ramadan/i.test(g2.askNext.en) && /every Ramadan/i.test(g2.askNext.en) && ARABIC.test(g2.askNext.ar) && /scope/.test(g2.sayFirst || ''),
       () => `GD-3a. a Ramadan flag without a year: asks the scope first: ${short(p2)}`);
     chk(() => g2.askNext && !YEARISH.test(JSON.stringify(g2.askNext)), () => `GD-3b. the scope question proposes no year: ${JSON.stringify(g2.askNext)}`);
@@ -231,6 +236,11 @@ try {
     const hit = g.match(/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i);
     chk(() => g.length > 50 && !/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i.test(g), () => `GD-9e. the seasonal block makes no uplift claim: ${hit && g.slice(Math.max(0, hit.index - 120), hit.index + 40)}`);
     chk(() => /never (claim|say)/i.test(G(EN.p).sayInPlan || ''), () => `GD-9f. the plan is told never to claim a seasonal result from metadata: ${G(EN.p).sayInPlan}`);
+  }
+  // GD-11c (last: its answers stay in the session's memory)
+  {
+    const p2b = await plan('gds', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: { grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' } });
+    chk(() => idOf(p2b), () => `GD-11c. grain and scope (and the year) answered, the date left to the active relationship: plan id: ${short(p2b)}`);
   }
 } finally {
   await s.close(); await w.close();
