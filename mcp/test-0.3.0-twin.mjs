@@ -237,7 +237,8 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
     return P;
   };
   const P2 = setup('twin2');
-  const plan = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false });
+  // (D7: the default became waterfallRtl "native"; this plan asks for "mirror", whose kept waterfall T6 checks)
+  const plan = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, waterfallRtl: 'mirror' });
   const j = plan.j || {}, raw = plan.t || '';
   // T5: no instruction-like name reaches the answer, in ids, texts or where lists; such a text gets an opaque id
   chk(() => !plan.err && !raw.includes(EVIL_V) && !raw.includes(EVIL_M), () => `T5. instruction-like visual and measure names never reach the answer: ${raw.includes(EVIL_V) ? 'visual name' : ''} ${raw.includes(EVIL_M) ? 'measure name' : ''} ${short(plan)}`);
