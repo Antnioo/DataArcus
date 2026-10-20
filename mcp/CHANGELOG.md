@@ -161,6 +161,18 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   Arabic). No secondary axis anywhere: the gallery's combo and the native copy's combos and multi-value charts follow
   the rule; SAR and AED, minutes and hours, a percent and a count never share. No currency converted, nothing read from
   the data. (J19, B-172)
+- J17 (B-170, the owner, 20 Oct: "continue the held jobs"): Gulf business dates and seasonal scope are asked, never
+  guessed. With the model, plan_layout lists the structural date candidates (each date column of the plan's fact
+  tables, its relationship to the calendar and whether it is active: an active relationship is not business intent)
+  and asks, one question at a time in English and Arabic (gulfDates.askNext): which date (order date, ship date or
+  another named one), which grain (Gregorian, Hijri, season day) and, for a seasonal page (a Ramadan, Eid or Hijri
+  filter or axis), one Hijri year or every season (the year only from the person). A role no active relationship or
+  plan measure (USERELATIONSHIP) serves stops the plan with why, as does any answer the plan contradicts (the year
+  filter, the grain's axis); an unanswered seasonal question is asked first (sayFirst) and shown as not answered on the
+  approval page; a missing calendar column offers add_gulf_calendar with the person's country and years. Estimated versus
+  announced dates and the country's limits are carried into the plan and the approval page. Answers are remembered
+  for the session per model and dropped when a relationship or column changes. Nothing edits a relationship and
+  nothing written holds USERELATIONSHIP.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
