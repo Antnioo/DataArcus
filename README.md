@@ -23,7 +23,8 @@ them is uploaded), articles in English and Arabic, and the public test notes beh
 
 - **Automated tests on every change:** 19 website test suites (thousands of checks) run on each push.
 - **Microsoft's own validator:** our test runs check the reports the tools write, on our sample models, with
-  Microsoft's report validator. It does not run on the reports you make.
+  Microsoft's report validator. The website's tools don't run it on the reports you make in your browser; the
+  DataArcus MCP runs it on your machine on each report before it is written, and in `check_report`.
 - **Measured in Power BI Desktop:** sizes, layouts and numbers are measured in Power BI Desktop, never estimated, and
   recorded with the version used.
 - **Sourced facts:** prices, dates and Microsoft claims are linked to their source and re-checked. The Gulf calendar's

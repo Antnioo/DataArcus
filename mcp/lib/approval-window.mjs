@@ -76,7 +76,8 @@ const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td
 // (R6, the outside audit of 19 Oct, F09 c: the page named the report, not every file) every file a plan writes, by kind,
 // counted, each path folded under its group (no script: <details> opens without one)
 const GROUPS = [['Bookmarks', /(^|\/)bookmarks\//], ['Pages', /\/page\.json$/], ['Visuals', /\/visual\.json$/], ['Phone layouts', /\/mobile\.json$/], ['Theme', /RegisteredResources\/[^/]+\.json$/i],
-  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
+  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Flip cards script', / - flip cards(?: \d+)?\.tmdl$/i], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
+// (0.3.0 A2: the flip cards' script was listed as a "Format script", L4)
 // own: a plan kind's groups, tried first (D6: the twin's month script, the theme file)
 export function groupFiles(paths, own) {
   const G = (own || []).concat(GROUPS), out = G.map(([label]) => ({ label, paths: [] }));
@@ -98,7 +99,9 @@ export function promptSummary(kind, data) {
   }
   const cc = kind === 'report' && d.colours && Array.isArray(d.colours.changed) ? d.colours.changed.filter((c) => HEX.test(String(c.from)) && HEX.test(String(c.to))) : [];
   const card = d.colours && HEX.test(String(d.colours.card)) ? ` against ${d.colours.card}` : '';
-  cc.forEach((c) => { const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
+  cc.forEach((c) => { const own = d.colours && HEX.test(String(d.colours.card)) ? `; the written colour's own ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '';
+    // (0.3.0 A2: the contrast said after the written colour was the approved one's)
+    const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (the approved colour's contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1${own}).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
   return lines.join('\n');
 }
 const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
@@ -269,7 +272,7 @@ export function summary(kind, data) {
     const dc = p.design && Array.isArray(p.design.data) ? p.design.data : null;
     if (dc) look.push(['Data colours', { swatches: dc.map((c, i) => ['', written(c, i)]) }]);
     const own = (c) => (HEX.test(String(c.to)) && HEX.test(String(d.colours.card)) ? `; the written colour's own contrast: ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '');
-    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (Power BI's accessibility basics; the hue is kept)`]));
+    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
     // (L3) the metric switcher: the measures and their labels, the charts that switch, and the model change it needs

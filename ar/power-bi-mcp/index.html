@@ -130,7 +130,7 @@
                 <ul class="beta-steps">
                   <li data-i18n-html="beta.new.l1"><strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.</li>
                   <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس مقسّم وتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
-                  <li data-i18n-html="beta.new.l3"><strong>تقرير واحد باللغتين.</strong> تستطيع <code translate="no">create_arabic_twin</code> أن تكتب نسخة باسم "(EN-AR)" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وفي كل صفحة زر للتبديل بين اللغتين، على الشاشة وعلى الهاتف. ويبقى تقريرك الأصلي كما هو.</li>
+                  <li data-i18n-html="beta.new.l3"><strong>تقرير واحد باللغتين.</strong> تستطيع <code translate="no">create_arabic_twin</code> أن تكتب نسخة باسم "(EN-AR)" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.</li>
                   <li data-i18n-html="beta.new.l4"><strong>مخطط الشلال والمخطط المركّب والمخططات المتعددة الصغيرة.</strong> عناصر Power BI المرئية نفسها (waterfall وcombo وsmall multiples)، حين تطلبها وتناسبها الحقول. وفي التقرير العربي يُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI، وتبقى بقية الصفحة معكوسة.</li>
                   <li data-i18n-html="beta.new.l5"><strong>صفحة موافقة تستطيع مراجعتها.</strong> تعرض المعاينة كل عنوان كما سيُكتب في التقرير، وتعلّم العنوان بأنه مقطوع حيث تقول القاعدة التي قيست في Power BI Desktop إن Desktop يقطعه، وترسم كل مقسّم مع رأسه. وتسرد الصفحة كل ملف ستكتبه الخطة، مجمّعًا ومعدودًا.</li>
                   <li data-i18n-html="beta.new.l6"><strong>أشكال أكثر تختارها في الخطة.</strong> خطوط منحنية بنقطة عند كل قيمة، ومقسّمات بأزرار مستديرة (لحقل له من 2 إلى 6 قيم)، وخطوط شبكة منقّطة أو بلا خطوط، وبطاقات تنقلب، وأيقونات حالة تختلف في الشكل لا في اللون وحده، وصفحة تبدّل بين 2 إلى 5 مقاييس. البطاقات المنقلبة ومبدّل المقاييس وأيقونات الحالة المبنية على هدف تأتي مع نص برمجي للنموذج تطبّقه أنت في TMDL view: لا يغيّر DataArcus نموذجك.</li>
@@ -141,7 +141,7 @@
                 <ol class="beta-steps">
                   <li data-i18n-html="beta.new.t1"><strong>تقرير عربي.</strong> اطلب من Claude تقريرًا بالعربية على نموذجك، وراجع قائمة المصطلحات في صفحة الموافقة قبل أن تنقر Approve.</li>
                   <li data-i18n-html="beta.new.t2"><strong>النسخة العربية.</strong> اطلب نسخة عربية من تقرير لديك، وافتحها بجانب الأصل في Power BI Desktop.</li>
-                  <li data-i18n-html="beta.new.t3"><strong>زر EN-AR.</strong> اطلب النسخة العربية داخل التقرير نفسه، بالإنجليزية والعربية معًا، ثم اضغط «العربية» في أي صفحة، و"English" للعودة.</li>
+                  <li data-i18n-html="beta.new.t3"><strong>زر EN-AR.</strong> اطلب نسخة واحدة من تقريرك بالإنجليزية والعربية معًا (EN-AR)، ثم اضغط «العربية» في أي صفحة، و"English" للعودة.</li>
                   <li data-i18n-html="beta.new.t4"><strong>صفحة الموافقة.</strong> قارن معاينتها وقائمة ملفاتها بما يفتحه Power BI Desktop، وأخبرنا أين يختلفان.</li>
                 </ol>
               </section>
@@ -159,7 +159,7 @@
                 <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسّم.</span></li>
                 <li class="mb-2"><code translate="no">check_model_health</code>: <span data-i18n="beta.tools.check_model_health">فحص صحة النموذج: درجة وكل ملاحظة، مع نصوص إصلاح تراجعها أنت (لا تُطبَّق أبدًا).</span></li>
                 <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">الموضع الدقيق لكل عنصر مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار (ويُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI). لا تكتب شيئًا.</span></li>
-                <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">تفتح نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه: لا تكتب أي أداة إلا بعد نقرتك على Approve، ولا تكتب أي أداة ملفًا دون خطة موافَق عليها. (يمكن لبرنامج يعمل على جهازك ويتحكم في المتصفح أو الفأرة أن ينقر عليها: راجع ملاحظات الخصوصية.)</span></li>
+                <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">تطلب موافقتك في نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه (وفي تطبيق له نافذة موافقة خاصة به تسألك تلك النافذة بدلًا منها): لا تكتب أي أداة إلا بعد موافقتك، ولا تكتب أي أداة ملفًا في مجلدك دون خطة موافَق عليها. (يمكن لبرنامج يعمل على جهازك ويتحكم في المتصفح أو الفأرة أن ينقر عليها: راجع ملاحظات الخصوصية.)</span></li>
                 <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">تقرير جديد بجانب نموذجك، كل عنصر مرئي في مكانه ومربوط بحقولك.</span></li>
                 <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا.</span></li>
                 <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">تقرأ تقريرًا موجودًا لديك، سطرًا لكل عنصر مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.</span></li>
@@ -187,8 +187,8 @@
               <ul>
                 <li data-i18n="beta.safe.model">لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.</li>
                 <li data-i18n="beta.safe.ask">يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).</li>
-                <li data-i18n="beta.safe.validator">تفحص أداة check_report أي تقرير دون اتصال بمدقّق التقارير من Microsoft.</li>
-                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير عناوينه القصيرة كما كُتبت (فإن كُتب رقم أو اسم في عنوان يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>.</li>
+                <li data-i18n="beta.safe.validator">تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.</li>
+                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير النصوص المكتوبة فيه: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية (فإن كُتب فيها رقم أو اسم يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">المتطلبات والحدود</h2>
@@ -295,7 +295,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=20261020w1" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=20261020a2" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
