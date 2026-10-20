@@ -156,6 +156,11 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   title and alt text made of those names. Latin identifiers inside Arabic text are wrapped in bidi isolates
   (U+2068 ... U+2069, with U+200F where the run ends the text), so "KPI 2024" keeps its order. The approval page shows
   the sheet side by side, EN | AR, escaped. The plan pins the map (another map at the write: refused, nothing written).
+- Two measures share a chart axis only when their units, scale and ISO currency match and the person confirms they
+  compare (`sharedAxes`); otherwise separate visuals, each with its unit on its axis, the reason in the plan (English and
+  Arabic). No secondary axis anywhere: the gallery's combo and the native copy's combos and multi-value charts follow
+  the rule; SAR and AED, minutes and hours, a percent and a count never share. No currency converted, nothing read from
+  the data. (J19, B-172)
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
