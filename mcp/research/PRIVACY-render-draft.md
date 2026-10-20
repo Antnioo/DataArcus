@@ -20,7 +20,9 @@ no queries." **with:**
 >   formats, sort-by columns, hierarchies, relationships and measures (their DAX), with **made-up rows** in place of
 >   every row (DataArcus reads the model's definition only; the model's own rows, sources, "Enter data" and DATATABLE
 >   values are never read into the copy). It opens that copy with a copy of the report in Power BI Desktop, in its own
->   window, captures each page as an image, closes that window by its process id and deletes the copies. The images go
+>   window, captures each page as an image with Microsoft's preview command (the report authoring CLI DataArcus ships;
+>   its Desktop host only, which talks to that Desktop on your computer: never its service host, which would publish to
+>   your Power BI workspace), closes that window by its process id and deletes the copies. The images go
 >   to your AI app. What they show:
 >   - **No value of your data:** every number, date and label inside the visuals is made up.
 >   - **Names:** page names, titles, text boxes, field and measure names, as the report shows them: the same names the
@@ -66,9 +68,8 @@ private temporary copy):
 
 ## "Known gaps" (add)
 
-> - `render_report`'s images are of the whole Desktop window (ribbon, panes and page tabs included). The copy keeps
->   your model's names, so a table or measure name shown in the Fields pane is in the image, as it is already in the
->   metadata the AI gets.
+> - `render_report`'s images are Desktop's captures of the page, which can show the Filters pane beside it, with the
+>   copy's field names (your model's names, as the AI already gets them as metadata).
 
 ## Decisions the owner makes before this goes in
 1. The temporary folder: the OS temporary folder (this draft and the code), or inside the working folder.

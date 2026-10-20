@@ -8,9 +8,13 @@
 //   SH  renderProject (the DAX form the driver opens): every column declared with its type, relationships and measures
 //       kept, the report pointed at the shadow, the first page to capture active; Microsoft's validator 0 errors and
 //       check_report 0 "can break" on the shadow project (the twin's own report; the Arabic fixture's planned report)
-//   D   lib/desktop-render.mjs on a FAKE Desktop (fixtures/fake-desktop-helper.mjs, the PowerShell helper's protocol):
-//       open, pid, window, captures until two in a row match, a page switch and a capture a page, close by pid, temp
-//       folder deleted (on an error too); refuses on a dialog, on the user's own Desktop in front, off Windows
+//   D   lib/desktop-render.mjs on a FAKE Desktop (fixtures/fake-desktop-helper.mjs, the PowerShell helper's protocol)
+//       and a FAKE of Microsoft's preview command (fixtures/fake-preview-cli.mjs): open, pid, window, each page captured
+//       by `preview <the shadow's .Report> --host desktop --screenshot --page <id>` until two in a row match (never
+//       --host service, --group, --dataset, --close), only from our pid; close by pid, temp folder deleted (on an error
+//       too); refuses on a dialog, on the user's own Desktop in front, off Windows
+//       (reviewer, 20 Oct: the captures are Microsoft's preview command; its Desktop host never starts or closes
+//       Desktop, so the launch and the close stay DataArcus's own)
 //   T   the server: the tool hidden without the switch (11 tools, instructions unchanged); with it: refused off Windows,
 //       the literal choice asked first (Desktop not started), images a page with the boxes and what they can't tell
 //   node test-0.3.1-see-the-result.mjs
@@ -178,12 +182,14 @@ if (S) {
 }
 
 // ---------- D: the driver on a fake Desktop ----------
-const FAKE = path.join(HERE, 'fixtures', 'fake-desktop-helper.mjs');
+const FAKE = path.join(HERE, 'fixtures', 'fake-desktop-helper.mjs'), FAKE_PV = path.join(HERE, 'fixtures', 'fake-preview-cli.mjs');
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return false; } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const T = { pollMs: 10, windowMs: 3000, settleMs: 3000, pageSettleMs: 2000 };
 let runN = 0;
-const fake = (sc) => { const log = path.join(ROOT, `fake-${++runN}.log`); return { log, helper: { cmd: process.execPath, args: [FAKE, JSON.stringify(Object.assign({ log }, sc))] } }; };
+const fake = (sc) => { const log = path.join(ROOT, `fake-${++runN}.log`), j = JSON.stringify(Object.assign({ log }, sc)); return { log, helper: { cmd: process.execPath, args: [FAKE, j] }, preview: { cmd: process.execPath, args: [FAKE_PV, j] } }; };
+const run = (pj, f, timing) => D.render(pj, { helper: f.helper, preview: f.preview, timing: timing || T });
+const pvCalls = (o) => o.filter((x) => x.op === 'preview').map((x) => x.args);
 const ops = (log) => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
 const temps = () => fs.readdirSync(os.tmpdir()).filter((n) => n.startsWith('dataarcus-render-'));
 if (D && projects.twin) {
@@ -192,19 +198,21 @@ if (D && projects.twin) {
   {
     const f = fake({ windowAfter: 3, stableAfter: 3 });
     let r = null, err = null;
-    try { r = await D.render(pj, { helper: f.helper, timing: T }); } catch (e) { err = e; }
-    const o = ops(f.log), names = o.map((x) => x.op);
+    try { r = await run(pj, f); } catch (e) { err = e; }
+    const o = ops(f.log), names = o.map((x) => x.op), calls = pvCalls(o);
     chk(() => r && !err, () => `D-1. the render runs on the fake Desktop: ${err && err.message}`);
     if (r) {
-      const opened = o.find((x) => x.op === 'open');
-      chk(() => names[0] === 'foreground' && opened && /Render twin\.pbip$/.test(opened.file) && [os.tmpdir(), fs.realpathSync(os.tmpdir())].some((t) => opened.file.startsWith(t)), () => `D-1. foreground checked first, then the project opened by its path in a temporary folder: ${JSON.stringify(o.slice(0, 3))}`);
-      chk(() => names.filter((n) => n === 'state').length >= 3 && names.indexOf('capture') > names.indexOf('open'), () => `D-1. the window waited for: ${names.join(',')}`);
+      const opened = o.find((x) => x.op === 'open'), folder = opened && path.join(path.dirname(opened.file), 'Render twin.Report');
+      chk(() => names[0] === 'foreground' && opened && opened.exists && /Render twin\.pbip$/.test(opened.file) && [os.tmpdir(), fs.realpathSync(os.tmpdir())].some((t) => opened.file.startsWith(t)), () => `D-1. foreground checked first, then the project opened by its path in a temporary folder: ${JSON.stringify(o.slice(0, 3))}`);
+      chk(() => names.filter((n) => n === 'state').length >= 3 && names.indexOf('preview') > names.indexOf('open'), () => `D-1. the window waited for before any capture: ${names.join(',')}`);
       chk(() => r.pid === opened.pid && o.filter((x) => x.op === 'close').length === 1 && o.find((x) => x.op === 'close').pid === opened.pid && !alive(opened.pid), () => `D-2. closed by the pid it started, once, and that process is gone: ${JSON.stringify(o.filter((x) => x.op === 'close'))}`);
+      chk(() => calls.length && calls.every((c) => c[0] === 'preview' && c[1] === folder && c[c.indexOf('--host') + 1] === 'desktop' && c.includes('--screenshot') && c.includes('--page') && c[c.indexOf('--scale') + 1] === '1'), () => `D-2. every capture is Microsoft's preview on the shadow report's folder, --host desktop, by page, scale 1: ${JSON.stringify(calls[0])}`);
+      chk(() => calls.every((c) => !c.some((x) => ['service', '--group', '--dataset', '--close', '--close-all', '--reload', '--all-pages'].includes(x))), () => `D-2. never --host service, --group, --dataset, --close, --reload or --all-pages: ${JSON.stringify(calls.find((c) => c.some((x) => /service|group|dataset|close|reload|all-pages/.test(x))))}`);
       chk(() => r.pages.length === pj.pages.length && r.pages.every((p) => p.settled === true && Buffer.isBuffer(p.png) && p.png.slice(1, 4).toString() === 'PNG'), () => `D-3. one settled PNG a page: ${JSON.stringify(r.pages.map((p) => [p.id, p.settled, p.png && p.png.length]))}`);
-      const perPage = pj.pages.map((p) => o.filter((x) => x.op === 'capture' && x.page === p.name).length);
+      const perPage = pj.pages.map((p) => calls.filter((c) => c[c.indexOf('--page') + 1] === p.id).length);
       chk(() => perPage.every((n) => n >= 3 + 1 && n <= 3 + 2), () => `D-3. captured until two in a row match (3 changing frames, then 2 the same): ${perPage}`);
-      const switched = o.filter((x) => x.op === 'page').map((x) => x.name);
-      chk(() => JSON.stringify(switched) === JSON.stringify(pj.pages.slice(1).map((p) => p.name)), () => `D-4. a page switch by name for every page after the first (the first is the active page): ${switched}`);
+      const order = [...new Set(calls.map((c) => c[c.indexOf('--page') + 1]))];
+      chk(() => JSON.stringify(order) === JSON.stringify(pj.pages.map((p) => p.id)), () => `D-4. the pages captured by their ids, in order: ${order}`);
       chk(() => r.pages.every((p, k) => p.png.equals(fs.readFileSync(path.join(path.dirname(f.log), `fake-${runN}-last-${k}.png`)))), () => 'D-3. each page\'s image is its last capture');
     }
     chk(() => JSON.stringify(temps()) === JSON.stringify(before), () => `D-5. the temporary folder is deleted: ${temps().filter((n) => !before.includes(n))}`);
@@ -212,41 +220,62 @@ if (D && projects.twin) {
   // D-6. a capture that fails: Desktop closed, the folder deleted, the error said
   {
     const f = fake({ windowAfter: 1, stableAfter: 1, failCapture: 2 });
-    let err = null; try { await D.render(pj, { helper: f.helper, timing: T }); } catch (e) { err = e; }
+    let err = null; try { await run(pj, f); } catch (e) { err = e; }
     const o = ops(f.log), opened = o.find((x) => x.op === 'open');
     chk(() => err && /capture/i.test(err.message) && opened && o.some((x) => x.op === 'close' && x.pid === opened.pid) && !alive(opened.pid) && JSON.stringify(temps()) === JSON.stringify(before), () => `D-6. a failed capture: closed by pid, folder deleted, said: ${err && err.message} ${JSON.stringify(o.slice(-3))}`);
   }
   // D-7. a dialog: stops, clicks nothing, closes, deletes
   {
     const f = fake({ windowAfter: 1, dialogAt: 2 });
-    let err = null; try { await D.render(pj, { helper: f.helper, timing: T }); } catch (e) { err = e; }
+    let err = null; try { await run(pj, f); } catch (e) { err = e; }
     const o = ops(f.log), opened = o.find((x) => x.op === 'open');
-    chk(() => err && err.refused === true && /dialog/i.test(err.message) && !o.some((x) => x.op === 'capture') && o.some((x) => x.op === 'close' && x.pid === opened.pid) && !alive(opened.pid) && JSON.stringify(temps()) === JSON.stringify(before), () => `D-7. a dialog open: nothing captured or clicked, closed by pid, deleted: ${err && err.message} ${o.map((x) => x.op)}`);
+    chk(() => err && err.refused === true && /dialog/i.test(err.message) && !o.some((x) => x.op === 'preview') && o.some((x) => x.op === 'close' && x.pid === opened.pid) && !alive(opened.pid) && JSON.stringify(temps()) === JSON.stringify(before), () => `D-7. a dialog open: nothing captured or clicked, closed by pid, deleted: ${err && err.message} ${o.map((x) => x.op)}`);
   }
   // D-8. the user's own Desktop in front: refused before anything
   {
     const f = fake({ foreground: 'desktop' });
-    let err = null; try { await D.render(pj, { helper: f.helper, timing: T }); } catch (e) { err = e; }
+    let err = null; try { await run(pj, f); } catch (e) { err = e; }
     const o = ops(f.log);
     chk(() => err && err.refused === true && /in front/i.test(err.message) && o.map((x) => x.op).join() === 'foreground' && JSON.stringify(temps()) === JSON.stringify(before), () => `D-8. the user's Desktop in front: refused, nothing opened or written: ${err && err.message} ${o.map((x) => x.op)}`);
   }
   // D-9. a page that never settles: its last capture, marked, at the cap
   {
     const f = fake({ windowAfter: 1, stableAfter: 1e9 }), t0 = Date.now();
-    let r = null, err = null; try { r = await D.render({ ...pj, pages: pj.pages.slice(0, 1) }, { helper: f.helper, timing: { ...T, settleMs: 300 } }); } catch (e) { err = e; }
+    let r = null, err = null; try { r = await run({ ...pj, pages: pj.pages.slice(0, 1) }, f, { ...T, settleMs: 300 }); } catch (e) { err = e; }
     chk(() => r && r.pages.length === 1 && r.pages[0].settled === false && Buffer.isBuffer(r.pages[0].png) && Date.now() - t0 < 5000, () => `D-9. never the same twice: returned at the cap, settled false: ${err && err.message} ${r && JSON.stringify(r.pages.map((p) => p.settled))}`);
   }
   // D-10. Desktop not found: said, nothing opened
   {
     const f = fake({ noDesktop: true });
-    let err = null; try { await D.render(pj, { helper: f.helper, timing: T }); } catch (e) { err = e; }
+    let err = null; try { await run(pj, f); } catch (e) { err = e; }
     chk(() => err && err.refused === true && /Power BI Desktop/.test(err.message) && !ops(f.log).some((x) => x.op === 'open') && JSON.stringify(temps()) === JSON.stringify(before), () => `D-10. no Desktop: refused, nothing opened: ${err && err.message}`);
   }
   // D-11. off Windows, no helper: refused
   {
     let err = null; try { await D.render(pj, { helper: null, timing: T }); } catch (e) { err = e; }
+    chk(() => { const pv = D.previewCommand(); return pv && pv.cmd === process.execPath && /powerbi-report-authoring-cli[\\/]dist[\\/]cli\.js$/.test(pv.args[0]) && fs.existsSync(pv.args[0]); }, () => `D-11. the preview command is the pinned report authoring CLI: ${JSON.stringify(D.previewCommand())}`);
+    chk(() => JSON.stringify(D.previewArgs('/t/R.Report', '/t/a.png', 'p1')) === JSON.stringify(['preview', '/t/R.Report', '--host', 'desktop', '--screenshot', '/t/a.png', '--page', 'p1', '--scale', '1']), () => `D-11. the one preview call: ${JSON.stringify(D.previewArgs('/t/R.Report', '/t/a.png', 'p1'))}`);
     chk(() => D.helperCommand('linux') === null && D.helperCommand('darwin') === null && /powershell/i.test(D.helperCommand('win32').cmd) && D.helperCommand('win32').args.some((a) => /desktop-render\.ps1$/.test(a)), () => 'D-11. the helper is PowerShell on Windows, none elsewhere');
     chk(() => err && err.refused === true && /Windows/.test(err.message), () => `D-11. no helper: refused (Windows only): ${err && err.message}`);
+  }
+  // D-14. Desktop still opening the report (a retryable answer): asked again, then captured
+  {
+    const f = fake({ windowAfter: 1, stableAfter: 1, notReadyFor: 3 });
+    let r = null, err = null; try { r = await run({ ...pj, pages: pj.pages.slice(0, 1) }, f); } catch (e) { err = e; }
+    chk(() => r && r.pages[0].settled && pvCalls(ops(f.log)).length >= 5, () => `D-14. "not open yet" is asked again within the wait: ${err && err.message} ${pvCalls(ops(f.log)).length}`);
+  }
+  // D-15. a capture from a Desktop DataArcus did not start: stopped, nothing returned, ours closed, folder deleted
+  {
+    const f = fake({ windowAfter: 1, foreignPid: true });
+    let r = null, err = null; try { r = await run(pj, f); } catch (e) { err = e; }
+    const o = ops(f.log), opened = o.find((x) => x.op === 'open');
+    chk(() => !r && err && err.refused === true && /did not start/.test(err.message) && o.some((x) => x.op === 'close' && x.pid === opened.pid) && !alive(opened.pid) && JSON.stringify(temps()) === JSON.stringify(before), () => `D-15. another Desktop's capture: refused, closed ours, deleted: ${err && err.message}`);
+  }
+  // D-16. a page that can't be found: that page says why, the others are captured
+  {
+    const f = fake({ windowAfter: 1, stableAfter: 1, missingPage: pj.pages[1].id });
+    let r = null, err = null; try { r = await run(pj, f); } catch (e) { err = e; }
+    chk(() => r && r.pages[0].settled && !r.pages[1].png && /PAGE_NOT_FOUND/.test(r.pages[1].error), () => `D-16. a page not found: its error, the first page captured: ${err && err.message} ${r && JSON.stringify(r.pages.map((p) => p.error || p.settled))}`);
   }
   // D-12. the learning hook: the written boxes against boxes measured in an image (none yet: null, said)
   {
@@ -256,7 +285,7 @@ if (D && projects.twin) {
   chk(() => fs.readFileSync(path.join(HERE, 'lib', 'desktop-render.ps1'), 'utf8').length > 0, () => 'D-13. the PowerShell helper is there');
   {
     const ps = fs.readFileSync(path.join(HERE, 'lib', 'desktop-render.ps1'), 'utf8');
-    chk(() => ['foreground', 'find', 'open', 'state', 'page', 'capture', 'close'].every((op) => new RegExp(`'${op}'\\s*\\{`).test(ps)) && /PrintWindow/.test(ps) && /PBI_DESKTOP_PATH/.test(ps) && /taskkill[^\n]*\/PID[^\n]*\/T/.test(ps) && !/Stop-Process\s+-Name|taskkill[^\n]*\/IM/i.test(ps), () => 'D-13. the helper answers every operation, captures by handle (PrintWindow), finds Desktop by PBI_DESKTOP_PATH first, closes by pid only (its tree), never by name');
+    chk(() => ['foreground', 'find', 'open', 'state', 'close'].every((op) => new RegExp(`'${op}'\\s*\\{`).test(ps)) && !/'(page|capture)'\s*\{|PrintWindow/.test(ps) && /PBI_DESKTOP_PATH/.test(ps) && /taskkill[^\n]*\/PID[^\n]*\/T/.test(ps) && !/Stop-Process\s+-Name|taskkill[^\n]*\/IM/i.test(ps), () => 'D-13. the helper does only what Microsoft\'s preview can\'t (foreground, find, open, state, close; the captures are the preview\'s), finds Desktop by PBI_DESKTOP_PATH first, closes by pid only (its tree), never by name');
   }
 }
 
@@ -282,7 +311,7 @@ if (D && projects.twin) {
   await on.close();
   // with the fake Desktop (the tests' hook)
   const f = fake({ windowAfter: 1, stableAfter: 1 });
-  const w = await serverClient(ROOT, { DATAARCUS_EXPERIMENTAL_RENDER: '1', DATAARCUS_TEST_RENDER_HELPER: JSON.stringify({ ...f.helper, timing: T }) });
+  const w = await serverClient(ROOT, { DATAARCUS_EXPERIMENTAL_RENDER: '1', DATAARCUS_TEST_RENDER_HELPER: JSON.stringify({ ...f.helper, preview: f.preview, timing: T }) });
   const g = await w.call('render_report', { path: 'lit/Lit.Report' });
   chk(() => !g.err && g.j && g.j.rendered === false && g.j.literals && g.j.literals.count === 6 && g.j.literals.items.length === 6 && /stub/.test(g.j.sayFirst) && !ops(f.log).some((o) => o.op === 'open') && SECRETS.every((s) => !g.t.includes(s.replace(/"/g, ''))), () => `T-4. constants in the DAX and no choice: listed (names and counts), Desktop not started: ${g.t.slice(0, 400)}`);
   let raw = null;
