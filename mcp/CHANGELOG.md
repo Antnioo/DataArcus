@@ -115,6 +115,15 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   as a TMDL script file next to the project (lineage tags, NAMEOF of each measure, labels escaped), to apply in TMDL
   view; until then only that page shows Power BI's error. Pinned by the plan, listed on the approval page;
   check_report knows field parameters and flags a title measure that reads the display column alone.
+- plan_layout and create_report take `flipCards` (off by default; `true` for every KPI card, or a list of 1-6 card
+  numbers): each chosen KPI card becomes the Desktop lab's flip card (10 Oct, "build 1", v2): three Image visuals in the
+  card's box (a backdrop in the card colour, the front with the value, the back with one line about the measure,
+  hidden), each face turning to the other through a display-only bookmark of its own (two a card), a 0.3 s turn from
+  25 degrees that never starts invisible, right to left mirrored in Arabic. The faces' picture measures are written as
+  a TMDL script next to the project ("<report> - flip cards.tmdl", applied by the user in TMDL view; DataArcus never
+  changes the model; the naming and lineage tags shared with the metric switcher in mcp/lib/model-script.mjs). Pinned by the plan, on the approval page (cards, back line, bookmarks, the model change, "apply
+  the script first"); check_report knows the pattern (bookmark naming a missing visual: an error; a picture measure not
+  in the model yet: a note). (L4)
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
