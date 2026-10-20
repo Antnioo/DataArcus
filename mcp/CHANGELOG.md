@@ -202,6 +202,11 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - A1: the integration audit of the 0.3.0 wave (D1-D7, U1, X1, G1, R1, L1-L5, S1, J17-J19, W1, Q1, A2 together): every
   suite, every tool on every fixture in English and Arabic over stdio, every wave option on one report (then its twin,
   its EN-AR copy and its redesign), and the reproducible build; results in this file.
+- F1: the ship fixes from the laptop proof (Desktop 2.159): the button-slicer pills draw their text (the shipped
+  shape, with labelled variants for the laptop); every mixed Arabic/Latin name isolated, page and tooltip tabs included;
+  a Ramadan / Gulf-dates plan gets no plan id until grain and scope are answered; the metric switcher opens on its first
+  metric and its Arabic line chart reads right to left; a status icon sits beside its own value and never on a blank
+  row; the mirrored waterfall and the flip cards say plainly what they don't draw.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

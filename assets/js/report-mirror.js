@@ -71,7 +71,7 @@
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
-    waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
+    waterfall: 'waterfall charts: no Total column in Arabic: the last step on the left ends at the total, with no total label either (Power BI 2.159 does not draw it); every step\'s tooltip gives the running total. Power BI draws a waterfall left to right only and its axis holds only the model\'s members, so each is written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the twin\'s own report measures): the running total in the original\'s order, the first period at the right and each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative), the original waterfall\'s increase and decrease colours, no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip. The series are named in Arabic: القاعدة، ارتفاع، انخفاض، ارتفاع تحت الصفر، انخفاض تحت الصفر، الإجمالي الجاري، الإجمالي',
     // (D7) waterfallRtl "native": Power BI's own waterfall, kept as it is
     waterfallNative: 'waterfall charts: the waterfall reads left to right, as Power BI draws it',
     waterfallTime: 'waterfall charts over time, kept left to right as asked (timeRightToLeft false): still waterfalls, their order as it is, the value axis at the right',
@@ -231,6 +231,9 @@
     }
     // tables, matrices, new cards
     if (kind === 'table') {
+      // (0.3.0 F1) a status icon right of its value ('After', English) goes left of it ('Before'), where an Arabic reader ends
+      const ob = isObj(v.objects) ? v.objects : null, vals = ob && Array.isArray(ob.values) ? ob.values : null;
+      (vals || []).forEach((e) => { const ic = isObj(e) && isObj(e.properties) && isObj(e.properties.icon) ? e.properties.icon : null; if (ic && strOf(ic.layout) === 'After') { ic.layout = str('Before'); changes.push('status icons'); } });
       const ps = projections(v.query, 'Values');
       if (ps && ps.length > 1) { ps.reverse(); changes.push('columns'); }
       (ps || []).filter((x) => isObj(x) && isObj(x.field) && x.field.Column && typeof x.queryRef === 'string').forEach((x) => {
