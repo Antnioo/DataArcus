@@ -1,4 +1,5 @@
-# S2-1 (20 Oct 2026): the Windows helper of lib/desktop-render.mjs (render_report, experimental). Started by the driver
+# S2-1 (20 Oct 2026): the Windows helper of lib/desktop-render.mjs (render_report, experimental): the parts Microsoft's
+# preview command can't do (its Desktop host never starts Desktop and refuses to close it). Started by the driver
 # with -NoProfile -NonInteractive -File; reads one JSON request a line on stdin ({ id, op, ... }) and answers one JSON
 # line ({ id, ok: true, ... } or { id, ok: false, error }). It touches only the Power BI Desktop process the driver
 # started (its pid, or the PBIDesktop process whose command line names the driver's project) and that process's
@@ -6,18 +7,14 @@
 #   foreground          is a Power BI Desktop window in front? (the user's own: the driver refuses then)
 #   find                PBIDesktop.exe: PBI_DESKTOP_PATH, the installer's folder, the Microsoft Store package
 #   open  exe file      starts Desktop on the project file; answers its pid
-#   state pid file      the process (alive, its pid if the Store started it again), its main window (the handle,
-#                       sized 1600 x 1000 once, never activated), a dialog (the main window disabled, or a Win32 dialog)
-#   page  pid hwnd name shows the page whose tab is named so (UI Automation: TabItem, then ListItem; no mouse)
-#   capture hwnd file   the window by its handle (PrintWindow with PW_RENDERFULLCONTENT) into a PNG
+#   state pid file      the process (alive, its pid if the Store started it again), its main window (the handle; never
+#                       moved or activated), a dialog (the main window disabled, or a Win32 dialog)
 #   close pid file      ends that process and its children (taskkill /PID /T), only if its command line names file
+# The pages are captured by Microsoft's preview command (lib/desktop-render.mjs), not here.
 # Not proven on Windows yet: the laptop runs it first ("For the laptop" in mcp/work/S2.md).
 $ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
-Add-Type -AssemblyName System.Drawing
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
 Add-Type -TypeDefinition @"
 using System;
 using System.Collections.Generic;
@@ -29,17 +26,10 @@ public static class DaWin {
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
   [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
-  [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
   [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr h, uint cmd);
   [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr h, StringBuilder s, int n);
-  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
-  [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
-  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
-  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
-  [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
-  [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
   public static List<IntPtr> Of(uint pid) {
     var l = new List<IntPtr>();
     EnumWindows(delegate (IntPtr h, IntPtr x) { uint p; GetWindowThreadProcessId(h, out p); if (p == pid && IsWindowVisible(h)) l.Add(h); return true; }, IntPtr.Zero);
@@ -50,8 +40,6 @@ public static class DaWin {
   public static uint Pid(IntPtr h) { uint p; GetWindowThreadProcessId(h, out p); return p; }
 }
 "@
-[void][DaWin]::SetProcessDPIAware()
-$script:sized = @{}
 
 function Send($obj) { [Console]::Out.WriteLine(($obj | ConvertTo-Json -Compress -Depth 5)); [Console]::Out.Flush() }
 function Reply($id, $obj) { $obj['id'] = $id; $obj['ok'] = $true; Send $obj }
@@ -114,45 +102,8 @@ while ($true) {
           $other = $wins | Where-Object { $_ -ne $main -and [DaWin]::IsWindowEnabled($_) } | Select-Object -First 1
           $dialog = @{ title = $(if ($other) { [DaWin]::Text($other) } else { '' }) }
         }
-        $hwnd = $null
-        if ($main) {
-          $hwnd = $main.ToInt64()
-          if (-not $script:sized.ContainsKey($hwnd)) {
-            if ([DaWin]::IsIconic($main)) { [void][DaWin]::ShowWindow($main, 4) }   # SW_SHOWNOACTIVATE
-            $r = New-Object 'DaWin+RECT'; [void][DaWin]::GetWindowRect($main, [ref]$r)
-            [void][DaWin]::SetWindowPos($main, [IntPtr]::Zero, $r.Left, $r.Top, 1600, 1000, 0x14)   # SWP_NOZORDER | SWP_NOACTIVATE
-            $script:sized[$hwnd] = $true
-          }
-        }
+        $hwnd = $(if ($main) { $main.ToInt64() } else { $null })
         Reply $m.id @{ pid = $own; alive = $true; hwnd = $hwnd; dialog = $dialog }
-      }
-      'page' {
-        $root = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr][long]$m.hwnd)
-        $named = New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, [string]$m.name)
-        $done = $null
-        foreach ($ct in @([System.Windows.Automation.ControlType]::TabItem, [System.Windows.Automation.ControlType]::ListItem)) {
-          $cond = New-Object System.Windows.Automation.AndCondition($named, (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, $ct)))
-          $el = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
-          if (-not $el) { continue }
-          $pat = $null
-          if ($el.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$pat)) { $pat.Select(); $done = $ct.ProgrammaticName; break }
-          if ($el.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$pat)) { $pat.Invoke(); $done = $ct.ProgrammaticName; break }
-        }
-        if (-not $done) { throw "no page tab named so (UI Automation: TabItem, ListItem)" }
-        Reply $m.id @{ by = $done }
-      }
-      'capture' {
-        $h = [IntPtr][long]$m.hwnd
-        $r = New-Object 'DaWin+RECT'; [void][DaWin]::GetWindowRect($h, [ref]$r)
-        $w = $r.Right - $r.Left; $ht = $r.Bottom - $r.Top
-        if ($w -le 0 -or $ht -le 0) { throw 'the window has no size (minimized?)' }
-        $bmp = New-Object System.Drawing.Bitmap $w, $ht
-        $g = [System.Drawing.Graphics]::FromImage($bmp); $dc = $g.GetHdc()
-        $ok = [DaWin]::PrintWindow($h, $dc, 2)   # PW_RENDERFULLCONTENT
-        $g.ReleaseHdc($dc); $g.Dispose()
-        if (-not $ok) { $bmp.Dispose(); throw 'PrintWindow returned 0' }
-        $bmp.Save([string]$m.file, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()
-        Reply $m.id @{ width = $w; height = $ht }
       }
       'close' {
         $procId = [int]$m.pid

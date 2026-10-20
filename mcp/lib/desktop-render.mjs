@@ -1,14 +1,20 @@
 // S2-1 (20 Oct 2026, mcp/research/SEE-THE-RESULT.md "S2: the v1"): the driver that lets Power BI Desktop draw a written
 // report on a copy of the model with made-up rows (lib/shadow-model.mjs renderProject), on the user's own Windows
 // machine. Experimental: used by render_report only (off unless DATAARCUS_EXPERIMENTAL_RENDER=1).
-// The driver is platform-free: it writes the project into a new folder of the OS temporary folder (never the working
-// folder), and talks to a helper process over JSON lines ({ id, op, ... } in, { id, ok, ... } out). On Windows the helper
-// is lib/desktop-render.ps1 (Win32 and UI Automation); the tests use a fake one with the same protocol
-// (fixtures/fake-desktop-helper.mjs). The order, from the lab's quirks (mcp/CLAUDE.md, scripts/tests/DESKTOP-TESTS.md):
-// the user's own Desktop in front -> refuse before anything; open the project by its path and keep the pid; wait for the
-// window; a dialog -> stop, click nothing, close; capture by the window's handle until two captures in a row match (the
-// visuals have drawn; at most settleMs for the first page, pageSettleMs after a page switch); switch pages by name;
-// close by the pid (its process tree only) and delete the folder, in finally, whatever happened.
+// The captures are Microsoft's: `powerbi-report-author preview <folder> --host desktop --screenshot <file> --page <id>`
+// (the report authoring CLI mcp/package.json pins; its Desktop host talks to Desktop over Microsoft's Desktop bridge and
+// answers which Desktop process each capture came from). That host is attach-only: it never starts Desktop, and it
+// refuses `--close` ("it attaches to a window the user owns and must never terminate it"). So DataArcus keeps the
+// smallest driver of its own for those two parts, through a helper process over JSON lines ({ id, op, ... } in,
+// { id, ok, ... } out): on Windows lib/desktop-render.ps1 (refuse when the user's own Desktop is in front, find
+// Desktop, open the project by path and keep the pid, see the window and any dialog, close by the pid); the tests use a
+// fake one (fixtures/fake-desktop-helper.mjs) and a fake preview (fixtures/fake-preview-cli.mjs).
+// The order: the user's Desktop in front -> refuse before anything; the project into a new folder of the OS temporary
+// folder (never the working folder); open it, keep the pid; wait for the window; a dialog -> stop, click nothing; each
+// page captured by Microsoft's preview until two captures in a row match (a capture is the window as it is: Desktop may
+// still be drawing), and only from our pid; close by the pid (its process tree only) and delete the folder, in
+// finally, whatever happened. Never `--host service` (it binds a dataset in the user's workspace: the data would leave
+// the machine), never --group or --dataset, never a folder but the shadow project's.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +28,8 @@ import { compare } from './box-diff.mjs';
 // window shows before the visuals are drawn", 2.159 says "not loaded after 45 s" while it is still loading)
 export const RENDER = Object.freeze({ pollMs: 1500, windowMs: 120000, settleMs: 90000, pageSettleMs: 30000, helperMs: 60000 });
 const PS1 = fileURLToPath(new URL('./desktop-render.ps1', import.meta.url));
+// Microsoft's report authoring CLI (its bin, dist/cli.js beside the package's dist/index.js)
+const CLI = (() => { try { return path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), 'cli.js'); } catch (e) { return null; } })();
 
 /** A render that stopped: refused (nothing of the user's was in the way, or nothing was started) or failed. */
 export class RenderStop extends Error { constructor(message, refused) { super(message); this.refused = !!refused; } }
@@ -30,6 +38,41 @@ export class RenderStop extends Error { constructor(message, refused) { super(me
 export function helperCommand(platform) {
   if ((platform || process.platform) !== 'win32') return null;
   return { cmd: 'powershell.exe', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', PS1] };
+}
+
+/** Microsoft's preview command: node with the pinned CLI (null when it is not installed). */
+export function previewCommand() { return CLI ? { cmd: process.execPath, args: [CLI] } : null; }
+
+/** The one preview call DataArcus makes: a page of the shadow report captured from Power BI Desktop at scale 1. */
+export function previewArgs(reportFolder, file, pageId) {
+  return ['preview', reportFolder, '--host', 'desktop', '--screenshot', file, '--page', String(pageId), '--scale', '1'];
+}
+const NEVER = new Set(['--group', '--dataset', '--close', '--close-all', '--reload', '--reload-with-model', '--headless', '--all-pages', '--list-hosts', '--status']);
+class PreviewFail extends Error { constructor(message, code, retryable) { super(message); this.code = code || ''; this.retryable = !!retryable; } }
+// runs the preview command; its JSON answer ({ data } or { error }) or a PreviewFail. Refuses, before running, any call
+// but the one previewArgs makes on a folder inside `inside` (the render's own temporary folder).
+function runPreview(pv, args, ms, inside) {
+  const host = args[args.indexOf('--host') + 1], folder = String(args[1] || ''), rel = path.relative(inside, folder);
+  if (args[0] !== 'preview' || host !== 'desktop' || args.some((a) => NEVER.has(a)) || !rel || rel.startsWith('..') || path.isAbsolute(rel)) {
+    return Promise.reject(new RenderStop('DataArcus refused its own preview call: only "--host desktop" on the shadow project\'s folder is allowed.'));
+  }
+  return new Promise((resolve, reject) => {
+    const child = spawn(pv.cmd, (pv.args || []).concat(args), { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let out = '', err = '';
+    const t = setTimeout(() => { try { child.kill(); } catch (e) { /* gone */ } }, ms);
+    child.stdout.on('data', (d) => { out += d; });
+    child.stderr.on('data', (d) => { err = (err + d).slice(-2000); });
+    child.on('error', (e) => { clearTimeout(t); reject(new PreviewFail('the preview command could not start: ' + short(e && e.message, 160))); });
+    child.on('close', () => {
+      clearTimeout(t);
+      const line = out.trim().split('\n').filter(Boolean).pop() || '';
+      let j = null; try { j = JSON.parse(line); } catch (e) { j = null; }
+      const e = j && (j.error || (j.data && j.data.ok === false && j.data.error));
+      if (e) { reject(new PreviewFail(`${short(e.code || 'error', 40)}: ${short(e.message, 200)}`, e.code, e.retryable)); return; }
+      if (!j || !j.data) { reject(new PreviewFail('the preview command gave no answer' + (err.trim() ? ': ' + short(err.trim().split('\n').pop(), 160) : ''))); return; }
+      resolve(j.data);
+    });
+  });
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -64,13 +107,16 @@ function startHelper(h, ms) {
 const dialogStop = (d) => new RenderStop(`A dialog is open in Power BI Desktop${d && d.title ? ` ("${short(d.title)}")` : ''}. DataArcus clicks nothing it doesn't know, so it stopped and closed its own Desktop window; nothing was captured. If Desktop asks this every time (sign-in, an update, a privacy level), answer it once in your own Desktop, then ask again.`, true);
 
 /** Renders project ({ files: [{ path, text | data }], name, pages: [{ n, id, name }] }: renderProject's) in Power BI
- *  Desktop. opts: { helper ({ cmd, args }: helperCommand()), timing (RENDER overrides) }. Returns { pid, pages: [{ n,
+ *  Desktop. opts: { helper ({ cmd, args }: helperCommand()), preview ({ cmd, args }: previewCommand()), timing (RENDER
+ *  overrides) }. Returns { pid, pages: [{ n,
  *  id, name, png (Buffer), settled, seconds } | { n, id, name, error }], openSeconds, totalSeconds }. Throws a RenderStop
  *  (refused: true when nothing was started, or a dialog stopped it). Whatever happens, the Desktop it started is closed
  *  by its pid and the temporary folder is deleted before it returns. */
 export async function render(project, opts) {
   const o = opts || {}, T = Object.assign({}, RENDER, o.timing || {}), t0 = Date.now();
   if (!o.helper) throw new RenderStop('Rendering needs Windows with Power BI Desktop installed: this computer is not Windows. The approval page\'s preview (drawn by DataArcus, not by Desktop) is the look available here. Nothing was opened.', true);
+  const pv = o.preview || previewCommand();
+  if (!pv) throw new RenderStop('Microsoft\'s report authoring CLI (its preview command) is not installed with DataArcus: run npm ci in the mcp folder. Nothing was opened.', true);
   const h = startHelper(o.helper, T.helperMs);
   let dir = null, pbip = null, pid = null, result = null, notClosed = null, left = null;
   try {
@@ -105,16 +151,26 @@ export async function render(project, opts) {
       await sleep(T.pollMs);
     }
     const openSeconds = Math.round((Date.now() - t0) / 100) / 10;
-    // a page: captured until two in a row are the same (the visuals have drawn), at most `budget`; the last capture
-    // marked settled: false at the cap
+    // a page: captured by Microsoft's preview until two in a row are the same (the visuals have drawn), at most
+    // `budget`; the last capture marked settled: false at the cap. A retryable answer (Desktop still opening the
+    // report, its bridge not up yet) is asked again within the budget. A capture from any Desktop but ours stops it.
+    const reportFolder = path.join(dir, project.name + '.Report');
     const settle = async (p, k, budget) => {
       const start = Date.now(), end = start + budget;
       let prev = null;
       for (let n = 0; ; n++) {
         await state();
         const f = path.join(dir, `capture-${k}-${n}.png`);
-        try { await h.ask({ op: 'capture', hwnd, file: f, page: p.name }); } catch (e) { throw new RenderStop(`The capture of page ${p.n} failed: ${short(e.message, 160)}`); }
-        const png = fs.readFileSync(f); fs.rmSync(f, { force: true });
+        let d = null;
+        try { d = await runPreview(pv, previewArgs(reportFolder, f, p.id), T.helperMs, dir); } catch (e) {
+          if (e instanceof RenderStop) throw e;
+          if (e.retryable && Date.now() < end) { await sleep(T.pollMs); continue; }
+          throw new RenderStop(`The capture of page ${p.n} failed (Microsoft's preview command): ${short(e.message, 220)}`);
+        }
+        const shot = (d.screenshots || [])[0];
+        if (!shot) throw new RenderStop(`The capture of page ${p.n} failed: Microsoft's preview command saved no image.`);
+        if (shot.pid != null && Number(shot.pid) !== Number(pid)) throw new RenderStop(`Microsoft's preview command captured a Power BI Desktop that DataArcus did not start (process ${shot.pid}): stopped, and nothing of that capture is returned.`, true);
+        const png = fs.readFileSync(shot.path || f); fs.rmSync(f, { force: true });
         const sum = crypto.createHash('sha256').update(png).digest('hex'), seconds = Math.round((Date.now() - start) / 100) / 10;
         if (sum === prev) return { png, settled: true, seconds };
         prev = sum;
@@ -125,10 +181,11 @@ export async function render(project, opts) {
     const pages = [];
     for (const [k, p] of project.pages.entries()) {
       const id = { n: p.n, id: p.id, name: p.name };
-      if (k > 0) {
-        try { await h.ask({ op: 'page', pid, hwnd, name: p.name }); } catch (e) { pages.push(Object.assign(id, { error: `not captured: the page could not be shown (${short(e.message, 160)})` })); continue; }
+      if (k === 0) { pages.push(Object.assign(id, await settle(p, k, T.settleMs))); continue; }
+      try { pages.push(Object.assign(id, await settle(p, k, T.pageSettleMs))); } catch (e) {
+        if (!(e instanceof RenderStop) || e.refused) throw e;
+        pages.push(Object.assign(id, { error: 'not captured: ' + short(e.message, 260) }));
       }
-      pages.push(Object.assign(id, await settle(p, k, k ? T.pageSettleMs : T.settleMs)));
     }
     result = { pid, pages, openSeconds, totalSeconds: 0 };
   } finally {

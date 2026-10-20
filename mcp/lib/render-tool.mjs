@@ -16,7 +16,8 @@ export const RENDER_TOOL = 'render_report';
 export const renderOn = (env) => (env || process.env).DATAARCUS_EXPERIMENTAL_RENDER === '1';
 const LIST_MAX = 60;
 
-// (tests only, as DATAARCUS_TEST_WRITE_FAIL) a fake Desktop helper with the PowerShell helper's protocol, and short waits
+// (tests only, as DATAARCUS_TEST_WRITE_FAIL) a fake Desktop helper with the PowerShell helper's protocol, a fake of
+// Microsoft's preview command, and short waits
 const testHelper = () => { const v = process.env.DATAARCUS_TEST_RENDER_HELPER; if (!v) return null; try { const j = JSON.parse(v); return j && j.cmd ? j : null; } catch (e) { return null; } };
 
 /** Registers render_report. deps: the server's own { safe, text, z, untrusted } (every answer leaves through text()). */
@@ -49,7 +50,7 @@ export function registerRender(server, deps) {
     const pj = renderProject(m.tmsl, files, { name: 'DataArcus render', literals: a.literals || 'keep', magnitude: a.magnitude, pages: a.pages });
     if (!pj.pages.length) throw new Error('This report has no page to capture (tooltip and hidden pages are not captured). Nothing was opened.');
     let r;
-    try { r = await render(pj, { helper, timing: t && t.timing }); } catch (e) {
+    try { r = await render(pj, { helper, preview: t && t.preview, timing: t && t.timing }); } catch (e) {
       if (e instanceof RenderStop) return text({ rendered: false, why: e.message, done: 'Nothing was written in the working folder; DataArcus closed the Desktop window it started, if any, and deleted its temporary copy.' });
       throw e;
     }
