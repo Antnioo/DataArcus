@@ -41,6 +41,9 @@ jobs:
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
+      - name: The shipped code loads every module by a literal path (packaging stages only what it can name, B-196)
+        run: node scripts/test-literal-requires.mjs && node scripts/check-literal-requires.mjs
+
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
