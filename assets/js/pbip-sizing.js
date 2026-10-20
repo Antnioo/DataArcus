@@ -107,8 +107,15 @@
     // low for). 140 at 15pt, scaled with the text size, never less: 75 at 8pt, 94 at 10pt, 140 at 15pt. PILL_PAD: the
     // tiles' padding, written: 0 (F4, the owner: no margins in the pills)
     // (0.3.0 F3) and a floor: on 2.159 a pill slicer 76 high cuts its 8pt text, 88 draws 9pt whole (PILLS-F2.md, 20 Oct
-    // 2026): the header and Power BI's own tile spacing do not shrink with the text. Never below 88
-    const PILL_PAD = 0, pillH = (t) => Math.max(88, Math.ceil(140 * t / 15));
+    // 2026), with the tiles' padding 4. (Both superseded by F6 below: measured again with every margin 0.)
+    // (0.3.0 F6) the heights MEASURED with every margin 0 (FINAL-ship030.md, Desktop 2.159, 20 Oct 2026, the grid at 100%):
+    // the text whole from 56 at 8pt and 9pt, from 72 at 10pt and 15pt (the smallest the grid offered; never a guess
+    // below; above 15pt 72 scaled up with the text). pillRoom: the space below the header (the container's
+    // spaceBelowTitle), for the "clear selections" eraser that sits in the header row, its square measured 21 px high on
+    // the same page, and 4 px at least so no descender (Arabic «ع») touches a pill: max(4, 21 - the header's line ceil(pt
+    // x 4/3)). pillH = the measured minimum + pillRoom: 66 at 8pt, 65 at 9pt, 79 at 10pt, 76 at 15pt
+    const PILL_ERASER = 21, pillRoom = (t) => Math.max(4, PILL_ERASER - Math.ceil(t * 4 / 3));
+    const PILL_PAD = 0, pillH = (t) => (t <= 9 ? 56 : t <= 15 ? 72 : Math.ceil(72 * t / 15)) + pillRoom(t);
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:
@@ -181,7 +188,7 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).

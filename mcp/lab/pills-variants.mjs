@@ -9,9 +9,10 @@
 //   V3  V1 with room for the text: padding 2 on every side and a smaller text (9)
 // V1-V3 at 140. (F2, the laptop's recheck: the project now opens in Desktop: definition.pbism, a V3 model with a culture,
 // three typed rows a table so the tiles have values, and no slicer kept in a group that is not on the page.)
-// (F4) a first page, "Measurement grid": the shipped shape (every margin 0) at 56-88 for 8pt and 9pt, 72-120 for 10pt
-// and 15pt, on Calendar[Quarter] (Q1..Q4) and, at 8pt, Sales[Is Online] (False, True); the F3 shape (padding 4) at 76 and
-// 88 for 8pt as the control: the laptop reads, for each pt, the smallest height whose every tile's text is whole.
+// (F4, F6) a first page, "Measurement grid": the shipped shape at the height pillH gives each pt (8pt 66, 9pt 65, 10pt
+// 79, 15pt 76: the grid's measured minimum + the header's room), on Calendar[Quarter] (Q1..Q4) and Sales[Is Online]
+// (False, True), one with an Arabic header at 9pt; then four reports as create_report writes them: the strip and the
+// rail, English and Arabic ("Pills Strip EN" ... "Pills Rail AR").
 // Microsoft's validator and check_report run on the report. Nothing outside the folder given is touched.
 //   node lab/pills-variants.mjs <empty folder>      (from mcp/; prints the .pbip to open in Power BI Desktop)
 import '../test-env.mjs';
@@ -20,7 +21,10 @@ import path from 'node:path';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { serverClient } from '../test-0.2.9.mjs';
+
+const Zs = createRequire(import.meta.url)('../../assets/js/pbip-sizing.js').make({ font: 'Segoe UI', LABEL: 10 });   // (F6: pillH, pillRoom)
 
 export async function writeVariants(out) {
   const ROOT = fs.realpathSync.native(path.resolve(out));
@@ -92,17 +96,20 @@ export async function writeVariants(out) {
     const FIELD = { Q: { t: 'Calendar', c: 'Quarter', n: 4 }, TF: { t: 'Sales', c: 'Is Online', n: 2 } };
     const f3 = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.spacing; c.padding = [{ properties: { topMargin: L('4L'), bottomMargin: L('4L'), leftMargin: L('4L'), rightMargin: L('4L') }, selector: { id: 'default' } }];
       ['customizePadding', 'cellPadding', 'rowPadding', 'columnPadding', 'topOuterMargin', 'bottomOuterMargin', 'leftOuterMargin', 'rightOuterMargin'].forEach((k) => delete c.layout[0].properties[k]); return c; };
-    const cellOf = (pt, h, fk, shape) => {
+    const cellOf = (pt, h, fk, shape, title) => {
       const F = FIELD[fk], o = JSON.parse(JSON.stringify(shape === 'F3' ? f3(pill.visual.objects) : pill.visual.objects)), vco = JSON.parse(JSON.stringify(pill.visual.visualContainerObjects));
       o.value.find((e) => e.selector && e.selector.id === 'default').properties.fontSize = L(pt + 'D'); o.layout[0].properties.columnCount = L(F.n + 'L');
-      vco.title[0].properties.fontSize = L(pt + 'D'); vco.title[0].properties.text = L("'" + F.c + "'");
-      if (shape === 'F3') { delete vco.padding; delete vco.spacing; }
+      vco.title[0].properties.fontSize = L(pt + 'D'); vco.title[0].properties.text = L("'" + String(title || F.c).replace(/'/g, "''") + "'");
+      if (title) vco.title[0].properties.alignment = L("'right'");
+      if (shape === 'F3') { delete vco.padding; delete vco.spacing; } else vco.spacing[0].properties.spaceBelowTitle = L(Zs.pillRoom(pt) + 'D');   // (F6: the header's room a pt)
       const q = JSON.parse(JSON.stringify(pill.visual.query)), pr = q.queryState.Values.projections[0];
       pr.field = { Column: { Expression: { SourceRef: { Entity: F.t } }, Property: F.c } }; pr.queryRef = F.t + '.' + F.c; pr.nativeQueryRef = F.c; delete pr.displayName; delete q.sortDefinition;
-      return { pt, h, label: `${pt}pt · ${h} high · ${shape === 'F3' ? 'margins as F3 (control)' : 'margins 0'} · ${F.c}`, visual: Object.assign({}, pill.visual, { query: q, objects: o, visualContainerObjects: vco }) };
+      return { pt, h, label: `${pt}pt · ${h} high · ${shape === 'F3' ? 'margins as F3 (control)' : `shipped (header room ${Zs.pillRoom(pt)})`} · ${title ? 'Arabic header' : F.c}`, visual: Object.assign({}, pill.visual, { query: q, objects: o, visualContainerObjects: vco }) };
     };
-    const COLS = [[8, 'Q', [56, 64, 72, 80, 88]], [8, 'TF', [56, 64, 72, 80, 88]], [9, 'Q', [56, 64, 72, 80, 88]], [10, 'Q', [72, 80, 88, 96, 104, 120]], [15, 'Q', [72, 80, 88, 96, 104, 120]]];
-    const cols = COLS.map(([pt, fk, hs]) => hs.map((h) => cellOf(pt, h, fk))).concat([[cellOf(8, 76, 'Q', 'F3'), cellOf(8, 88, 'Q', 'F3')]]);
+    // (F6) the shipped shape at the height pillH gives a pt (the grid's measured minimum + the header's room), and an Arabic
+    // header with descenders («عطلة نهاية الأسبوع») at 9pt, the one the laptop saw touch the pills
+    const COLS = [[8, 'Q'], [8, 'TF'], [9, 'Q'], [9, 'TF', 'عطلة نهاية الأسبوع'], [10, 'Q'], [15, 'Q']];
+    const cols = COLS.map(([pt, fk, ar]) => [cellOf(pt, Zs.pillH(pt), fk, null, ar)]);
     wr(path.join(GD, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: gridId, displayName: 'Measurement grid', displayOption: 'FitToPage', width: 1920, height: 1080 });
     let zg = 0;
     cols.forEach((col, ci) => { let y = 16; col.forEach((cell, ri) => {
@@ -113,7 +120,23 @@ export async function writeVariants(out) {
       y += 46 + cell.h + 12; }); });
     order.pageOrder.unshift(gridId, pageId); order.activePageName = gridId; wr(path.join(P, 'pages.json'), order);
     const c = await s.call('check_report', { path: 'pills/Pills Variants.pbip' });
-    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, gridId, grid: cols.flat().map((c) => c.label), variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
+    // (F6) the strip and the rail as create_report writes them, in English and in Arabic (the Arabic header names have
+    // descenders), each checked
+    const AR_NAMES = { 'Sales[Is Online]': 'عطلة نهاية الأسبوع', 'Sales[Size Band]': 'فئة الحجم', 'Sales[Region]': 'المنطقة' };
+    const reports = [];
+    for (const [nm, lang, filters] of [['Pills Strip EN', 'en', 'top'], ['Pills Strip AR', 'ar', 'top'], ['Pills Rail EN', 'en', 'start'], ['Pills Rail AR', 'ar', 'start']]) {
+      const a = Object.assign({ path: 'pills', lang, layout: 'exec', filters, secondPage: false, name: nm, slicerStyle: 'pills' }, lang === 'ar' ? { displayNames: AR_NAMES } : {});
+      const p2 = await s.call('plan_layout', Object.assign({ planFields: FIELDS }, a)), id2 = p2.j && p2.j.plan && p2.j.plan.planId;
+      if (!id2) { reports.push({ name: nm, error: 'no plan: ' + p2.t.slice(0, 200) }); continue; }
+      const m = links().length; await s.call('approve_plan', { planId: id2 });
+      for (let k = 0; k < 100 && links().length <= m; k++) await new Promise((r) => setTimeout(r, 50));
+      await req(links()[m], 'decision=approve'); await s.call('approve_plan', { planId: id2 });
+      const w = await s.call('create_report', Object.assign({ planId: id2, design: p2.j.design, fields: FIELDS }, a));
+      const ck = w.err ? null : await s.call('check_report', { path: 'pills/' + nm + '.pbip' });
+      reports.push({ name: nm, pbip: path.join(ROOT, 'pills', nm + '.pbip'), slicers: w.j && w.j.slicerStyle ? w.j.slicerStyle.slicers.map((x) => `${x.field}: ${x.written}`) : (w.err ? w.t.slice(0, 200) : []),
+        check: ck && ck.j ? { validator: ck.j.validator.errors, canBreak: ck.j.impact.kinds.canBreak.count } : null });
+    }
+    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, gridId, grid: cols.flat().map((c) => c.label), reports, variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
   } finally { await s.close(); }
 }
 

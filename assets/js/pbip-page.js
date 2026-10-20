@@ -309,12 +309,12 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
-      iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
+      iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
       kpiTitleFit, titleFit, oneLine
     };
   }
@@ -327,7 +327,7 @@
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
-      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, PILL_PAD, subtitlesUsed, svgDone,
+      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
       trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
@@ -525,7 +525,7 @@
           spacing: obj({ verticalSpacing: int(0) }, DEF) },
         // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
         visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) });
-          return Object.assign(fr, { padding: obj({ top: num(0), bottom: num(0), left: num(0), right: num(0) }), spacing: obj({ customizeSpacing: bool(true), spaceBelowTitle: num(0), spaceBelowTitleArea: num(0) }) }); })(), drillFilterOtherVisuals: true };
+          return Object.assign(fr, { padding: obj({ top: num(0), bottom: num(0), left: num(0), right: num(0) }), spacing: obj({ customizeSpacing: bool(true), spaceBelowTitle: num(pillRoom(pt0)), spaceBelowTitleArea: num(0) }) }); })(), drillFilterOtherVisuals: true };
     };
     // (0.3.0 F2) the heights of stacked slicers: each pill slicer pillH (the measured need) when all fit the room, else the
     // room left after the dropdowns, shared by the pills (never less than the dropdown's height)
