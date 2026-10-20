@@ -34,11 +34,12 @@ const AED = M('Total Sales', { cardFormat: '"AED" #,0' });
 const MONTH = C('Month Name', { kind: 'month', sortBy: { t: T, c: 'Month Number' } });
 const B = { kpis: [AED], measure: AED, date: MONTH, cats: { bar: C('City'), column: MONTH, donut: C('Channel') }, y: {},
   table: [C('City'), AED], slicers: [C('City'), null, null], tip: { card: AED, cat: C('City'), y: AED } };
+// (D7: the default became waterfallRtl "native"; these builds and twins ask for "mirror", D1's chart, as written)
 const build = (lang) => {
   const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma';
   E.repairState(d);
   return Px.build({ name: 'WF ' + lang, title: 'WF', pageName: 'P', lang, rtl: lang === 'ar', font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: false,
-    model: { byPath: 'M.SemanticModel' }, bind: B, texts: E.REPORT_TEXTS[lang], chartAxes: 'mirrored', gallery: true,
+    model: { byPath: 'M.SemanticModel' }, bind: B, texts: E.REPORT_TEXTS[lang], chartAxes: 'mirrored', waterfallRtl: 'mirror', gallery: true,
     pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'waterfall', x: 20, y: 20, w: 1240, h: 600 }], panel: null, hand: true, png: new Uint8Array([1]) }] });
 };
 const get = (fn) => { try { return fn(); } catch (e) { return { threw: String(e && e.message || e) }; } };
@@ -71,24 +72,24 @@ chk(() => [[wa, CAPS.columnChart.objects], [we, WC]].every(([v, K]) => Object.en
 
 // ---------- M: the Arabic twin of the English report ----------
 chk(() => Mirror.kindOf(we) === 'waterfall', () => `M1: the twin knows a waterfall (kind ${Mirror.kindOf(we)}), not "other: moved only"`);
-const tw = we && Mirror.mirrorVisual(we, 1280, { timeRightToLeft: true, dateTables: [], dateColumns: [] });
+const tw = we && Mirror.mirrorVisual(we, 1280, { waterfallRtl: 'mirror', timeRightToLeft: true, dateTables: [], dateColumns: [] });
 chk(() => tw.json.visual.visualType === 'columnChart' && sort0(tw.json).direction === 'Descending' && JSON.stringify(sort0(tw.json).field) === MIN_MONTH && lit(props(tw.json, 'valueAxis').switchAxisPosition) === 'true' && !(tw.json.visual.objects || {}).categoryAxis,
   () => `M2: the twin's waterfall by month: the stacked chart (D1), Descending by Min of Month Number, value axis at the right, no categoryAxis: ${show(tw && tw.json)}`);
 // a waterfall by a date column the model calls a date (a continuous axis for a column chart): still no invertAxis
 const byDate = JSON.parse(JSON.stringify(we)); byDate.visual.query.queryState.Category.projections[0].field.Column.Property = 'Order Date'; delete byDate.visual.query.sortDefinition;
-const td = Mirror.mirrorVisual(byDate, 1280, { timeRightToLeft: true, dateTables: [], dateColumns: [T + '.Order Date'] });
+const td = Mirror.mirrorVisual(byDate, 1280, { waterfallRtl: 'mirror', timeRightToLeft: true, dateTables: [], dateColumns: [T + '.Order Date'] });
 chk(() => props(td.json, 'categoryAxis').invertAxis === undefined && lit(props(td.json, 'categoryAxis').axisType) === "'Categorical'" && sort0(td.json).direction === 'Descending',
   () => `M3: a waterfall by a date column: Descending by it, its axis Categorical (one column a date, the sort honoured; D1), never categoryAxis.invertAxis: ${show(td.json)}`);
 // sorted by its measure (largest first): mirrored by Ascending, the largest at the right (as the column charts)
 const byY = JSON.parse(JSON.stringify(we)); byY.visual.query.sortDefinition = { sort: [{ field: JSON.parse(JSON.stringify(we.visual.query.queryState.Y.projections[0].field)), direction: 'Descending' }], isDefaultSort: true };
 // (D1: kept a waterfall with its own order: the running total would follow the ranking, and a waterfall reads left to right)
-chk(() => { const r = Mirror.mirrorVisual(byY, 1280, {}); return r.kind === 'waterfallKept' && sort0(r.json).direction === 'Descending' && r.json.visual.visualType === 'waterfallChart'; }, () => 'M4: a waterfall sorted by its measure is kept a waterfall, left to right (D1)');
+chk(() => { const r = Mirror.mirrorVisual(byY, 1280, { waterfallRtl: 'mirror' }); return r.kind === 'waterfallKept' && sort0(r.json).direction === 'Descending' && r.json.visual.visualType === 'waterfallChart'; }, () => 'M4: a waterfall sorted by its measure is kept a waterfall, left to right (D1)');
 // time kept left to right on request (timeRightToLeft: false): the waterfall follows the column charts' rule exactly
 // (written first as "the sort stays Ascending"; the twin keeps only a sort by the category itself, and a column chart
 // sorted by Min of the month number is flipped too: listed in the PR under "Seen, not in scope", not changed here)
-const kept = Mirror.mirrorVisual(we, 1280, { timeRightToLeft: false, dateTables: [T] });
+const kept = Mirror.mirrorVisual(we, 1280, { waterfallRtl: 'mirror', timeRightToLeft: false, dateTables: [T] });
 const asCol = JSON.parse(JSON.stringify(we)); asCol.visual.visualType = 'clusteredColumnChart';
-const keptCol = Mirror.mirrorVisual(asCol, 1280, { timeRightToLeft: false, dateTables: [T] });
+const keptCol = Mirror.mirrorVisual(asCol, 1280, { waterfallRtl: 'mirror', timeRightToLeft: false, dateTables: [T] });
 void keptCol;   // (D1: time kept left to right on request: the waterfall stays one, its query as it is, the value axis at the right)
 chk(() => kept.kind === 'waterfallTime' && kept.json.visual.visualType === 'waterfallChart' && JSON.stringify(kept.json.visual.query) === JSON.stringify(we.visual.query) && lit(props(kept.json, 'valueAxis').switchAxisPosition) === 'true', () => `M5: timeRightToLeft false: the waterfall kept left to right as asked: ${show(kept.json)}`);
 chk(() => /waterfall/i.test(Mirror.KIND_WHAT.waterfall || '') && /stacked column chart/.test(Mirror.KIND_WHAT.waterfall) && /left to right only/i.test(Mirror.KIND_WHAT.waterfall),
@@ -100,7 +101,7 @@ chk(() => /waterfall/i.test(Mirror.KIND_WHAT.waterfall || '') && /stacked column
   // the twin: the English report with its page mirrored by the twin's engine
   const twin = EN.files && { files: EN.files.map((f) => {
     if (!/visual\.json$/.test(f.path)) return f;
-    const v = JSON.parse(String(f.data)); return Object.assign({}, f, { data: JSON.stringify(Mirror.mirrorVisual(v, 1280, { timeRightToLeft: true }).json, null, 2) });
+    const v = JSON.parse(String(f.data)); return Object.assign({}, f, { data: JSON.stringify(Mirror.mirrorVisual(v, 1280, { waterfallRtl: 'mirror', timeRightToLeft: true }).json, null, 2) });
   }) };
   [['ar', AR], ['twin', twin]].forEach(([what, r]) => {
     if (!r || !r.files) { chk(() => false, () => `V ${what}: no report was written`); return; }

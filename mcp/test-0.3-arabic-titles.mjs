@@ -86,12 +86,13 @@ try {
     const TS = M('Total Sales', { cardFormat: '"AED" #,0' }), TC = M('Total Cost', { cardFormat: '"AED" #,0' });
     chk(() => G.title('combo', Object.assign({}, B, { kpis: [TS, TC], measure: TS }), 'by') === 'Total Sales and Total Cost by Quarter', () => `AT-2b. unchanged in English: ${G.title('combo', Object.assign({}, B, { kpis: [TS, TC], measure: TS }), 'by')}`);
     const d = E.fresh(); d.font = 'Tahoma'; E.repairState(d);
-    const r = get(() => Px.build({ name: 'GA', title: 'تقرير', pageName: 'الصفحة', lang: 'ar', rtl: true, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'ar'), sample: false, gallery: true,
+    const r = get(() => Px.build({ name: 'GA', title: 'تقرير', pageName: 'الصفحة', lang: 'ar', rtl: true, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'ar'), sample: false, gallery: true, waterfallRtl: 'mirror',
       model: { byPath: 'M.SemanticModel' }, bind: B, texts: E.REPORT_TEXTS.ar, chartAxes: 'mirrored', quietGrid: true,
       pages: [{ name: 'الصفحة', page: { w: 1280, h: 720 }, slots: [{ kind: 'combo', x: 20, y: 20, w: 610, h: 330 }, { kind: 'waterfall', x: 650, y: 20, w: 610, h: 330 }, { kind: 'multiples', x: 20, y: 370, w: 1240, h: 330 }], panel: null, hand: true, png: new Uint8Array([1]) }] }));
     const files = {}; (r.files || []).filter((f) => /\.json$/.test(f.path)).forEach((f) => { try { files[f.path] = JSON.parse(String(f.data)); } catch (e) { /* not JSON */ } });
     const types = Object.values(files).map((j) => j.visual && j.visual.visualType).filter(Boolean);
-    // (D1, changed on purpose: a mirrored right-to-left waterfall is written as the stacked column chart, columnChart, read from the right)
+    // (D1, changed on purpose: a mirrored right-to-left waterfall is written as the stacked column chart, columnChart, read from the right;
+    // D7: the default became waterfallRtl "native", so this build asks for "mirror")
     chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('columnChart') && !types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
     const bad = stray(shownTexts(files), names);
     chk(() => r.files && !bad.length, () => `AT-2d. the Arabic gallery page shows no English word but the fields' names: ${JSON.stringify(uniq(bad).slice(0, 12))}`);

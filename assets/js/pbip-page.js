@@ -790,14 +790,18 @@
         // direction: Power BI accumulates a waterfall left to right) a mirrored right-to-left report's waterfall is a
         // stacked column chart drawn as a waterfall from the report's own measures, read from the right
         // (visual-gallery.js rtlWaterfall); one the measures can't order stays a waterfall, left to right, and is told
-        const wf = query && MIRROR && s.kind === 'waterfall' ? G.rtlWaterfall(query, { extMeasure, lang, grid: GRID, azText: !!G.fieldsOf('waterfall', Bt).cat && isTime(G.fieldsOf('waterfall', Bt).cat), formatString: (G.fieldsOf('waterfall', Bt).y || {}).tableFormat || null,
+        // (D7) o.waterfallRtl "native" (the default, G.WATERFALL_RTL_DEFAULT): Power BI's own waterfall, left to right, written
+        // exactly as in English; "mirror": the stacked column chart above
+        const WF_NATIVE = MIRROR && s.kind === 'waterfall' && G.waterfallRtlOf(o.waterfallRtl) === 'native';
+        const wf = query && MIRROR && s.kind === 'waterfall' && !WF_NATIVE ? G.rtlWaterfall(query, { extMeasure, lang, grid: GRID, azText: !!G.fieldsOf('waterfall', Bt).cat && isTime(G.fieldsOf('waterfall', Bt).cat), formatString: (G.fieldsOf('waterfall', Bt).y || {}).tableFormat || null,
           // (the model's sort-by column and type, o.model.columns from the MCP; else the bound field's own type)
           sortByOf: (t, cn) => ((((o.model || {}).columns || {})[t] || {})[cn] || {}).sortBy || null,
-          typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(u.good), fall: G.fillOf(u.bad) } }) : null;
+          typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(G.sentimentOf(o.theme, 'good', u)), fall: G.fillOf(G.sentimentOf(o.theme, 'bad', u)) } }) : null;   // (D7: the written theme's, as the English waterfall's)
         if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
           waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
-        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR, smooth: SMOOTH }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
-          if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR && !WF_NATIVE, smooth: SMOOTH }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+          if (WF_NATIVE) waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.native, native: true });
+          else if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
           else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }

@@ -227,9 +227,27 @@
   const WF_PARTS = ['base', 'rise', 'fall', 'rise below 0', 'fall below 0'];
   const WF_WORDS = { en: ['Base', 'Rise', 'Fall', 'Rise below 0', 'Fall below 0', 'Running total', 'Total'], ar: ['القاعدة', 'ارتفاع', 'انخفاض', 'ارتفاع تحت الصفر', 'انخفاض تحت الصفر', 'الإجمالي الجاري', 'الإجمالي'] };
   const WF_WHAT = {
-    columnChart: 'no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the report\'s own measures), because Power BI draws a waterfall left to right only and its axis holds only the model\'s members: the first period at the right, each step rising or falling from the one at its right, the value axis at the right, labels on the steps, no legend; hovering the empty space under a step shows its base',
-    waterfallChart: 'A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)'
+    columnChart: 'no Total column in Arabic: the last step on the left ends at the total (labelled "الإجمالي" with its value, and every step\'s tooltip gives the running total). Written as a stacked column chart drawn as a waterfall (an invisible base under each step, from the report\'s own measures), because Power BI draws a waterfall left to right only and its axis holds only the model\'s members: the first period at the right, each step rising or falling from the one at its right, the value axis at the right, labels on the steps (a fall shown negative, as Power BI\'s waterfall), the waterfall\'s increase and decrease colours; no legend (a stacked column chart\'s legend would list the invisible base); hovering the empty space under a step shows its base in the tooltip («القاعدة»)',
+    waterfallChart: 'A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)',
+    // (D7) waterfallRtl "native": Power BI's own waterfall, as in English
+    native: 'the waterfall reads left to right, as Power BI draws it'
   };
+  // (D7, the owner, 20 Oct: "the same design of waterfall if somehow we can mirror the same design rtl then ok if not
+  // then just leave it normal") a right-to-left report's waterfall: "mirror", the stacked column chart above (read from
+  // the right, but no Total column, no legend, the base in the tooltip: Power BI's waterfall design cannot be mirrored,
+  // mcp/work/D7.md), or "native", Power BI's waterfallChart left to right exactly as in English. The one default, read
+  // by the writer, the twin and the MCP; flip it here
+  // (D7) the waterfall's increase and decrease colours: the written theme's good and bad (Microsoft Learn, report themes:
+  // "good, neutral, bad: the status colors used by the waterfall chart"), else Power BI's default theme's (a theme with
+  // none, as a hand-placed report's: the English waterfall then draws these; laptop check in mcp/work/D7.md)
+  const PBI_SENTIMENT = Object.freeze({ good: '#1AAB40', bad: '#D64554', neutral: '#D9B300' });
+  const sentimentOf = (theme, key, ui) => { const ok = (h) => typeof h === 'string' && /^#[0-9a-f]{6}$/i.test(h); const t = theme && theme[key], u = ui && ui[key]; return ok(t) ? t : ok(u) ? u : PBI_SENTIMENT[key]; };
+  const WATERFALL_RTL = Object.freeze(['mirror', 'native']);
+  const WATERFALL_RTL_DEFAULT = 'native';
+  const waterfallRtlOf = (v) => (WATERFALL_RTL.includes(v) ? v : WATERFALL_RTL_DEFAULT);
+  // (D7) a fall labelled negative, as Power BI's waterfall labels it: the fall's measures are drawn positive (stacked on
+  // the base), so their format shows the sign: the measure's own negative section, else "-" before its format
+  const fallFormat = (f) => { const s = typeof f === 'string' && f ? f.split(';') : []; return s[1] ? s[1] : '-' + (s[0] || '#,0'); };
   const NUMERIC = /^(int64|integer|whole|double|decimal|number|currency|date|datetime|datetimezone)$/i;
   function rtlWaterfall(query0, ctx) {
     const c = ctx || {}, no = (why) => ({ ok: false, why });
@@ -279,7 +297,7 @@
     const words = WF_WORDS[c.lang === 'en' ? 'en' : 'ar'], measures = [];
     const projOf = (i) => {
       const want = 'Waterfall ' + (i < 5 ? WF_PARTS[i] : i === 5 ? 'running total' : 'total label') + ': ' + shown(yName);
-      const m = c.extMeasure(t, want, head + DAX[i], i === 6 ? 'Text' : 'Double', i === 6 ? null : c.formatString || null);
+      const m = c.extMeasure(t, want, head + DAX[i], i === 6 ? 'Text' : 'Double', i === 6 ? null : i === 2 || i === 4 ? fallFormat(c.formatString) : c.formatString || null);
       measures.push({ t, m, expression: head + DAX[i] });
       return { field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m, displayName: words[i] };
     };
@@ -361,6 +379,6 @@
     return { m: both, c, tail: TAILS[kind][inAr ? 'ar' : 'en'] };
   }
 
-  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort, rtlWaterfall, fillOf, WF_WHAT, WF_WORDS };
+  const api = { KINDS, KIND_NAMES, TOOL_NAMES, LABELS, MAX_PANELS, MAX_STEPS, WRITES, isKind, typeOf, unitOf, unitsDiffer, additive, ordered, membersOf, fieldsOf, fits, pick, resolve, split, assign, askedKinds, withUnits, fromTool, toTool, labelOf, storyOf, bindQuery, titleParts, title, objects, mirrorSort, rtlWaterfall, fillOf, WF_WHAT, WF_WORDS, WATERFALL_RTL, WATERFALL_RTL_DEFAULT, waterfallRtlOf, fallFormat, PBI_SENTIMENT, sentimentOf };
   if (node) module.exports = api; else root.DAGallery = api;
 })(typeof self !== 'undefined' ? self : this);

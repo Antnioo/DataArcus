@@ -197,6 +197,7 @@
    * @property {Object<string, string>} [subtitles]  a slot's role or title -> its subtitle
    * @property {string} [chartColors]  'gradient': bars fade by value
    * @property {string} [chartAxes]  'mirrored': right-to-left charts are mirrored
+   * @property {string} [waterfallRtl]  D7: a mirrored right-to-left report's waterfall: 'native' (visual-gallery.js WATERFALL_RTL_DEFAULT) Power BI's waterfallChart left to right, as in English; 'mirror' the stacked column chart read from the right (D1)
    * @property {boolean} [quietGrid]  quiet gridlines
    * @property {Array<{t: string, c: string, type: string, values: Array<boolean|string|number>, literals: string[]}>} [pageFilters]
    *   "is one of" filters on every report page: typed values (the writer writes Power BI's literals; type is the column's
@@ -229,7 +230,7 @@
    * @property {Array} noPageButtons  pages without page buttons (no room)
    * @property {Array} tableColumns  tables that hold fewer fields than given
    * @property {Array} rowLabels  the Arabic tables' row-label measures
-   * @property {Array} [waterfallRtl]  D1: each waterfall of a mirrored right-to-left report: { page, title, written ('columnChart': drawn from the report's measures, read from the right; 'waterfallChart': kept left to right), what, why?, measures? }
+   * @property {Array} [waterfallRtl]  D1: each waterfall of a mirrored right-to-left report: { page, title, written ('columnChart': drawn from the report's measures, read from the right; 'waterfallChart': kept left to right, or native: true, D7's "native"), what, why?, measures? }
    * @property {Array} rowLabelSkipped
    * @property {Array} extRenamed  report measures renamed because the model has the name
    * @property {Object} chartColors
