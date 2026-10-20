@@ -173,6 +173,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   announced dates and the country's limits are carried into the plan and the approval page. Answers are remembered
   for the session per model and dropped when a relationship or column changes. Nothing edits a relationship and
   nothing written holds USERELATIONSHIP.
+- W1: the beta page /power-bi-mcp/ (English, and its Arabic at /ar/power-bi-mcp/ and ?lang=ar) says testers get 0.3.0,
+  what is new in it (only what integration/0.3.0-wave merged) and what to try first; the plan_layout and
+  create_arabic_twin lines follow 0.3.0 (the native waterfall reads left to right; the EN-AR copy).
+  `scripts/test-whats-new.mjs` checks the section in both languages and that it names no 0.3.1 draft.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
