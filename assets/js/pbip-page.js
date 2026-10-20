@@ -329,7 +329,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -481,6 +481,33 @@
     // properties: Microsoft's validator 0.4.0 does not know the "dropdown" object, and check_report shows exactly this
     // shape as a known note (mcp/lib/check-report.mjs VALIDATOR_GAPS); any other property in it would stay an error.
     const slicerBox = () => obj({ borderRadius: num(8), borderIndividualCorners: bool(false), borderColor: color(edge) });
+    // (0.3.0 L2, the polish lab of 12-13 Oct, Desktop 2.158: "pills") with o.slicerStyle 'pills', a slicer whose field has
+    // 2-6 values known from the model's metadata alone (two values: true/false or an IF/SWITCH of two texts; a quarter; a
+    // calculated column of 3-6 texts, the picker's few) is Power BI's button slicer: rounded buttons on one row, a calm fill,
+    // the selected one in the accent; every other slicer stays the rounded dropdown. Each is told with why (slicerStyles).
+    // Names and values from Microsoft's catalog (powerbi-core-visual-schema): the state-keyed cards as a button's (each
+    // card's show with no selector, its look in "default", the selected look in "selected"); shape and layout have no states.
+    // Right to left: sorted descending by the field on its one row, so the first value is at the right.
+    const PILLS = o.slicerStyle === 'pills', int = (x) => lit(Math.round(x) + 'L');
+    const valuesKnown = (f) => (!f ? null : f.two ? { n: 2, why: 'two values (true/false, or a formula of two texts)' } : f.cal && f.cal.rows ? { n: f.cal.rows, why: f.cal.rows + ' values (a ' + f.cal.kind + ')' } : f.few ? { n: f.few, why: f.few + ' values (a formula of ' + f.few + ' texts)' } : null);
+    const slicerVisual = (f, ttl, w) => {
+      const kv = valuesKnown(f), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6;
+      if (PILLS && f) slicerStyles.push({ page: pg.name || base, field: f.t + '[' + f.c + ']', written: pill ? 'pills' : 'dropdown',
+        why: pill ? kv.why + ', known from the model' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
+      if (!pill) return { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
+        objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true };
+      const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
+      if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
+      const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];
+      const full = label(f), shownT = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
+      if (shownT !== full) titles.slicers.push({ page: pg.name || base, field: full, shown: shownT });
+      return { visualType: 'advancedSlicerVisual', query,
+        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n) }),
+          fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
+          value: states({ show: bool(true) }, { fontFamily: str(font), fontSize: num(SLICER_TEXT), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
+          outline: states({ show: bool(true) }, { lineColor: color(edge) }, { lineColor: color(acc) }) },
+        visualContainerObjects: frame(shownT, full), drillFilterOtherVisuals: true };
+    };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
       if (size < SLICER_TEXT) out.textSize = num(size);
@@ -594,9 +621,7 @@
           const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
-            visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
-              visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+            visual: slicerVisual(f, ttl, Math.round(sw)) });
           slicerNames.push(v.name);
           z += 1000;
         });
@@ -776,6 +801,13 @@
           else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
+        // (0.3.0 L2, the lab's "keep as option") o.grid 'dotted': the value axis's gridlines dotted, in the quiet grey (also
+        // where the theme sets its own); 'none': no gridlines; 'solid' (the default) writes nothing more
+        if (query && (o.grid === 'dotted' || o.grid === 'none') && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line' || isGallery(s.kind))) {
+          visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
+          if (o.grid === 'none') va[0].properties.gridlineShow = bool(false);
+          else Object.assign(va[0].properties, { gridlineShow: bool(true), gridlineStyle: str('dotted'), gridlineColor: color(GRID || mixHex(u.text, u.card, 0.85)) });
+          gridCharts.n++; }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
         // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (0.2.9.1, from draft #69: only a bar:
         // a two-valued category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
@@ -1118,9 +1150,7 @@
       fields.forEach((f, i) => {
         const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
         const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
-          visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-            objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
-            visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+          visual: slicerVisual(f, ttl, Math.round(sw)) });
         names.push(v.name);
       });
       const rb = rnd();
@@ -1235,6 +1265,7 @@
         objects.general = obj({ paragraphs: [Object.assign({}, para, { textRuns: [Object.assign({}, run, { textStyle: Object.assign({}, run.textStyle, { fontSize: size + 'pt' }) })] })] });
       } else if (t === 'pageNavigator') objects.text = ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(PHONE.nav) }, selector: { id } }));
       else if (t === 'slicer') { objects.header = obj({ textSize: num(PHONE.slicer) }); objects.items = obj({ textSize: num(PHONE.slicer) }); }
+      else if (t === 'advancedSlicerVisual') objects.value = obj({ fontSize: num(PHONE.slicer) }, DEF);   // (L2: the pills' text, as a button's)
       else if (t === 'actionButton') objects.text = obj({ fontSize: num(PHONE.button) }, DEF);
       else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) }); }
       else if (t === 'tableEx') { objects.columnHeaders = obj({ fontSize: num(PHONE.table) }); objects.values = obj({ fontSize: num(PHONE.table) }); objects.total = obj({ fontSize: num(PHONE.table) });

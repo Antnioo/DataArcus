@@ -103,6 +103,11 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - L1: line charts (and the line of a combo) are smooth by default, monotone (no swing past the data), with a small filled
   dot in the series' colour on each point so every value stays findable; `smoothLines: false` keeps straight lines without
   dots. plan_layout pins it, the approval page's preview draws the curve and its dots, the look summary says it.
+- plan_layout and create_report take two look options the polish lab proved in Desktop (12-13 Oct), pinned by the plan:
+  `slicerStyle` "dropdown" (default, rounded) or "pills" (Power BI's button slicer, rounded buttons, a calm fill, the
+  selected one in the accent; only for a field of 2-6 values known from the model's metadata, else a dropdown, told) and
+  `grid` "solid" (default) | "dotted" | "none" for the charts' value-axis gridlines; the approval preview draws both,
+  the Arabic twin keeps them with the pills right to left. (L2)
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

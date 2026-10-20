@@ -204,6 +204,8 @@
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
    * @property {boolean} [smoothLines]  false: straight line charts without markers; smooth (monotone) with a dot on each point by default (L1)
+   * @property {string} [slicerStyle]  'pills': a slicer of 2-6 known values is Power BI's button slicer; 'dropdown' (default) (0.3.0 L2)
+   * @property {string} [grid]  'dotted' or 'none': the charts' value-axis gridlines; 'solid' (default) as before (0.3.0 L2)
    * @property {boolean} [phoneLayout]  false: no phone layout (no mobile.json); every page has one by default (0.3.0)
    * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
    *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
@@ -232,6 +234,8 @@
    * @property {Array} extRenamed  report measures renamed because the model has the name
    * @property {Object} chartColors
    * @property {Object} chartAxes
+   * @property {?Object} slicerStyle  with slicerStyle 'pills': { asked, slicers: [{ page, field, written, why }] } (0.3.0 L2)
+   * @property {?Object} grid  with grid 'dotted' or 'none': { asked, charts } (0.3.0 L2)
    * @property {Array} tabRows  pages whose tabs take two or three rows
    * @property {Array} ringsSmall  ring pictures drawn without their number
    * @property {Array} shortDays  column charts that show Day Short
@@ -511,6 +515,9 @@
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
     if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
+    // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
+    if (o.slicerStyle === 'pills') out.slicerStyle = { asked: 'pills', slicers: n.slicerStyles };
+    if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
 
