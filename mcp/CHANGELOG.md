@@ -146,6 +146,16 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   DataArcus); `[{ measure, good: ">= 0.97", bad: "< 0.94" }]` uses the user's own thresholds as rules (no measure, no
   script). Thresholds are never guessed. Pinned by the plan, on the approval page; check_report knows the icons (a note
   until the script is applied; the shapes carry the meaning, said in the a11y notes). (L5)
+- J18 (B-171, the owner, 20 Oct: "continue the held jobs"): the Arabic terminology sheet. An Arabic plan (plan_layout
+  lang "ar") and the Arabic twin (create_arabic_twin, both `into` forms) list every field the report shows with its
+  places (page, visual, role: title, table header, slicer header, tooltip, alt text), its English name and its Arabic:
+  approved (by the person now, or earlier in this session for the same field of the same model, with the same
+  description and DAX), draft (the fixed list's, approved only with the plan) or kept in English (declined, or none
+  yet, with why); one missing term is asked at a time (askNext). The approved alias is written on every title, table
+  header, slicer header, tooltip and alt text: the twin takes `terms` { "Table[Field]": "..." } and derives each
+  title and alt text made of those names. Latin identifiers inside Arabic text are wrapped in bidi isolates
+  (U+2068 ... U+2069, with U+200F where the run ends the text), so "KPI 2024" keeps its order. The approval page shows
+  the sheet side by side, EN | AR, escaped. The plan pins the map (another map at the write: refused, nothing written).
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
