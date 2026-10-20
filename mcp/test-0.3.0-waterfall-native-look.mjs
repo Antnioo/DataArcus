@@ -164,6 +164,11 @@ try {
   chk(() => clean(ve), () => `V EN: validator 0 errors, check_report 0 "can break": ${short(ve)}`);
 
   // T: the twin, both values
+  // (reviewer, J18 merge) the twin's own waterfall keeps the English query, its fields shown with Arabic display names
+  // (J18's terminology labels every field the twin shows; before it, the native waterfall kept English names, against
+  // the owner's must-fix "no English in Arabic reports")
+  const noNames = (q) => JSON.parse(JSON.stringify(q || {}, (k, v) => (k === 'displayName' ? undefined : v)));
+  const arabicNamed = (q) => { const n = []; JSON.stringify(q || {}, (k, v) => { if (k === 'displayName') n.push(v); return v; }); return n.length > 0 && n.every((s) => /[\u0600-\u06FF]/.test(s)); };
   for (const [val, outName] of [[null, 'Bridge EN AR'], ['mirror', 'Bridge EN AR']]) {
     const tag = val || 'default';
     const tp = await call('create_arabic_twin', Object.assign({ path: 'g/Bridge EN.pbip' }, val ? { waterfallRtl: val } : {})), tid = tp.j && tp.j.plan && tp.j.plan.planId;
@@ -175,8 +180,8 @@ try {
     const other = tid ? await call('create_arabic_twin', { path: 'g/Bridge EN.pbip', planId: tid, waterfallRtl: val === 'mirror' ? 'native' : 'mirror' }) : null;
     chk(() => other && other.err && /Nothing was written/.test(other.t) && !fs.existsSync(path.join(ROOT, 'g', outName + '.Report')), () => `T3 ${tag}: the twin with another waterfallRtl than its plan's is refused, nothing written: ${short(other)}`);
     const tw = tid ? await call('create_arabic_twin', { path: 'g/Bridge EN.pbip', planId: tid }) : null, wt = wfOf(path.join(ROOT, 'g', outName + '.Report'));
-    chk(() => tw && !tw.err && wt && (val === 'mirror' ? wt.visual.visualType === 'columnChart' : wt.visual.visualType === 'waterfallChart' && JSON.stringify(wt.visual.query) === JSON.stringify(wen.visual.query) && JSON.stringify(wt.visual.objects || {}) === JSON.stringify(wen.visual.objects || {})),
-      () => `T4 ${tag}: the twin writes ${val === 'mirror' ? 'the stacked chart' : 'the original waterfall as it is (left to right)'}: ${short(tw)} ${show(wt)}`);
+    chk(() => tw && !tw.err && wt && (val === 'mirror' ? wt.visual.visualType === 'columnChart' : wt.visual.visualType === 'waterfallChart' && JSON.stringify(noNames(wt.visual.query)) === JSON.stringify(noNames(wen.visual.query)) && arabicNamed(wt.visual.query) && JSON.stringify(wt.visual.objects || {}) === JSON.stringify(wen.visual.objects || {})),
+      () => `T4 ${tag}: the twin writes ${val === 'mirror' ? 'the stacked chart' : 'the original waterfall as it is (left to right), its fields shown with Arabic names'}: ${short(tw)} ${show(wt)}`);
     const vt = tw && !tw.err ? await checked('g/' + outName + '.pbip') : null;
     chk(() => clean(vt), () => `V twin ${tag}: validator 0 errors, check_report 0 "can break": ${short(vt)}`);
     if (val === 'mirror' && wt) {
