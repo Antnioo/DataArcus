@@ -93,7 +93,10 @@ const segments = (d) => { const n = String(d).match(/-?[\d.]+/g).map(Number), ou
 
 // ---------- X: the texts ----------
 {
-  const sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8'), sk = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+  // (S1: PR #81's mcp-windows-parts (0) failed X1: Git on Windows checks the files out with CRLF, and the pattern below
+  // ends at "\n"; the source is read line-ending blind)
+  const lf = (f) => fs.readFileSync(f, 'utf8').replace(/\r\n/g, '\n');
+  const sv = lf(path.join(HERE, 'server.mjs')), sk = lf(path.join(HERE, 'skills/report-design/SKILL.md'));
   const desc = (/smoothLines: z\.boolean\(\)\.optional\(\)\.describe\(([^\n]+)\),\n/.exec(sv) || [])[1] || '';
   chk(() => /Default true/.test(desc) && /dot|marker/i.test(desc) && /jagged/.test(desc) && /false/.test(desc), () => `X1: create_report's smoothLines says the default, the dots, and when to turn it off (a jagged series): ${desc}`);
   chk(() => /smoothLines/.test(sk) && /jagged/.test(sk), () => 'X2: SKILL.md says when to turn smoothLines off');
