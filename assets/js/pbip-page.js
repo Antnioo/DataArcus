@@ -511,13 +511,20 @@
       const full = label(f), shownT = oneLine(full, pt0, w - 2 * Math.round(8 * k));
       if (shownT !== full) titles.slicers.push({ page: pg.name || base, field: full, shown: shownT });
       return { visualType: 'advancedSlicerVisual', query,
-        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n) }),
+        // (0.3.0 F4, the owner: "remove the margins in the pills, that will give you more room") every margin the button
+        // slicer has, by Microsoft's capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0:
+        // the layout's cell, row and column padding and outer margins (no states), the tiles' padding and the space
+        // between value and label (state-keyed: default), the container's padding and the space below its title
+        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(0),
+            topOuterMargin: int(0), bottomOuterMargin: int(0), leftOuterMargin: int(0), rightOuterMargin: int(0) }),
           fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
           value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
           outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }),
-          padding: obj({ topMargin: num(PILL_PAD), bottomMargin: num(PILL_PAD), leftMargin: num(PILL_PAD), rightMargin: num(PILL_PAD) }, DEF) },
+          padding: obj({ paddingSelection: str('Custom'), topMargin: int(PILL_PAD), bottomMargin: int(PILL_PAD), leftMargin: int(PILL_PAD), rightMargin: int(PILL_PAD) }, DEF),
+          spacing: obj({ verticalSpacing: int(0) }, DEF) },
         // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
-        visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) }); return fr; })(), drillFilterOtherVisuals: true };
+        visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) });
+          return Object.assign(fr, { padding: obj({ top: num(0), bottom: num(0), left: num(0), right: num(0) }), spacing: obj({ customizeSpacing: bool(true), spaceBelowTitle: num(0), spaceBelowTitleArea: num(0) }) }); })(), drillFilterOtherVisuals: true };
     };
     // (0.3.0 F2) the heights of stacked slicers: each pill slicer pillH (the measured need) when all fit the room, else the
     // room left after the dropdowns, shared by the pills (never less than the dropdown's height)
