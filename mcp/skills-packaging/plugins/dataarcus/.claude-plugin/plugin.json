@@ -1,0 +1,26 @@
+{
+  "name": "dataarcus",
+  "displayName": "DataArcus for Power BI",
+  "description": "Arabic right-to-left reports and Arabic twins, Gulf calendars with Hijri and Ramadan, the model health check, and an approval click before any file is written. Works next to Microsoft's Power BI Report skill.",
+  "author": { "name": "DataArcus", "url": "https://dataarcus.com" },
+  "homepage": "https://dataarcus.com/power-bi-mcp/",
+  "repository": "https://github.com/Antnioo/DataArcus",
+  "license": "LicenseRef-DataArcus",
+  "keywords": ["powerbi", "pbir", "pbip", "arabic", "rtl", "gulf", "hijri", "ramadan", "report-design"],
+  "skills": ["./skills/dataarcus", "./skills/report-design"],
+  "userConfig": {
+    "working_folder": {
+      "type": "directory",
+      "title": "Working folder",
+      "description": "The folder that holds your Power BI projects (.pbip). DataArcus reads and writes only inside it; put in it only models whose names, types and formats you may share with your AI app.",
+      "required": true
+    }
+  },
+  "mcpServers": {
+    "dataarcus": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/mcp/server.mjs"],
+      "env": { "DATAARCUS_ROOT": "${user_config.working_folder}" }
+    }
+  }
+}
