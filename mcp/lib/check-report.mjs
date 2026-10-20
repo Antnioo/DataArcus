@@ -270,6 +270,17 @@ export async function checkReport(p, opts) {
         what: 'the image shows a picture measure the model does not have yet, so it is empty in Power BI Desktop (a flip card\'s face before its script is applied)',
         fix: 'Apply the report\'s flip cards script ("<model> - flip cards.tmdl", next to the project) in TMDL view: Preview, then Apply. Then check again.', source: 'DataArcus: the flip cards (0.3.0 L4), their measures written as a TMDL script' });
     });
+    // (0.3.0 L5) a table's or matrix's status icon whose value is a measure of the model that the model does not have yet
+    // (the status icons' script not applied): a note, never "can break"; the measure's name is not quoted
+    if (tables) R.visuals.filter((x) => x.type === 'tableEx' || x.type === 'pivotTable').forEach((x) => {
+      const missing = arr((((x.json || {}).visual || {}).objects || {}).values).map((e) => e && e.properties && e.properties.icon && e.properties.icon.value && e.properties.icon.value.expr && e.properties.icon.value.expr.Measure)
+        .filter((ms) => ms && ms.Expression && ms.Expression.SourceRef && !ms.Expression.SourceRef.Schema)
+        .filter((ms) => { const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity); return !(t && (t.measures || []).some((y) => y.name === ms.Property)); });
+      if (!missing.length) return;
+      add({ origin: 'rule', rule: 'ICON_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: x.type },
+        what: `${missing.length} status icon${missing.length === 1 ? ' takes its' : 's take their'} icon from a measure the model does not have yet, so no icon shows in Power BI Desktop (the status icons before their script is applied)`,
+        fix: 'Apply the report\'s status icons script ("<report> - status icons.tmdl", next to the project) in TMDL view: Preview, then Apply. Then check again.', source: 'DataArcus: the status icons (0.3.0 L5), their measures written as a TMDL script' });
+    });
   }
   // 4. untrusted text: page names that read like an instruction (the name is not repeated)
   R.pages.forEach((pg) => { if (INSTRUCTION.test(pg.rawName)) add({ origin: 'instruction', rule: 'INSTRUCTION_TEXT', severity: 'note', file: `definition/pages/${pg.id}/page.json`, page: { id: pg.id, name: null }, visual: null,
