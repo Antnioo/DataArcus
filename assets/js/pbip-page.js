@@ -525,8 +525,11 @@
     const stackHeights = (fields, sh, room) => {
       const want = fields.map((f) => (isPill(f) ? Math.max(sh, pillH(SLICER_TEXT)) : sh)), np = fields.filter(isPill).length;
       if (!np || want.reduce((a, b) => a + b, 0) <= room) return want;
-      const share = (room - sh * (fields.length - np)) / np;
-      return fields.map((f) => (isPill(f) ? Math.max(sh, share) : sh));
+      // (0.3.0 F3, the rail on 2.159: 76 at 8pt cut the pills' text) short of room, a dropdown gives up its extra height
+      // first, down to its own measured need (slicerH), so the pills keep theirs; then the pills share what is left
+      const nd = fields.length - np, dmin = Math.min(sh, slicerH(SLICER_TEXT));
+      const pe = Math.max(dmin, Math.min(pillH(SLICER_TEXT), (room - nd * dmin) / np)), de = nd ? Math.max(dmin, Math.min(sh, (room - np * pe) / nd)) : 0;
+      return fields.map((f) => (isPill(f) ? pe : de));
     };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;

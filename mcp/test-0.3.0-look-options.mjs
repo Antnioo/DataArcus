@@ -150,7 +150,9 @@ try {
     const tit = (v) => ((v.visual.visualContainerObjects || {}).title || [{ properties: {} }])[0].properties;
     // (F2, changed on purpose: F1's sum was measured too low on Desktop 2.159, RECHECK-F1.md: 88 at 15pt cuts the text,
     // 140 draws it whole) the height measured to work, 140 at 15pt, scaled with the text size
-    const need = (t) => Math.ceil(140 * t / 15);
+    // (F3, changed on purpose: PILLS-F2.md on Desktop 2.159: 76 high at 8pt cuts the text, 88 at 9pt draws it whole: the
+    // height has a floor, it does not shrink with the text) never below 88
+    const need = (t) => Math.max(88, Math.ceil(140 * t / 15));
     chk(() => pills0.length === 2 && pills0.every((v) => parseFloat(String(S(tit(v).fontSize))) === szOf(v) && v.position.height >= need(szOf(v))
       && ['topMargin', 'bottomMargin'].every((m) => S(P(v, 'padding', 'default')[m]) === '4D')),
       () => `P6. each pill slicer: header at the tiles' text size, padding 4 written, high enough (${pills0.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt, title ${S(tit(v).fontSize)}`).join('; ')})`);
@@ -161,8 +163,12 @@ try {
       const rp = RL.dir && fs.existsSync(RL.dir) ? pills(allVisuals(RL.dir)) : [], all = RL.dir && fs.existsSync(RL.dir) ? allVisuals(RL.dir) : [];
       const sl = all.filter((v) => /^(slicer|advancedSlicerVisual)$/.test(v.visual.visualType)).sort((a, b) => a.position.y - b.position.y);
       const overlap = sl.some((v, i) => i && sl[i - 1].position.y + sl[i - 1].position.height > v.position.y);
-      chk(() => rp.length === 2 && rp.every((v) => v.position.height >= need(szOf(v)) && parseFloat(String(S(tit(v).fontSize))) === szOf(v)) && !overlap,
-        () => `P6b. the rail's pill slicers as high as measured (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
+      // (F3, changed on purpose: PILLS-F2.md, the laptop wrote this rail's pills 76 high at 8pt and Desktop cut their text)
+      // a pill slicer the rail cannot give the measured height (88 at least) is a dropdown, and the answer says why; here
+      // the rail holds three slicers at 15pt in 228, so both are dropdowns
+      const why = /the slicer is \d+ high, the pills need \d+ at their smallest text/.test(JSON.stringify((RL.r && RL.r.slicerStyles) || RL.r || ''));
+      chk(() => rp.every((v) => v.position.height >= need(szOf(v)) && parseFloat(String(S(tit(v).fontSize))) === szOf(v)) && (rp.length === 2 || (rp.length === 0 && why)) && !overlap,
+        () => `P6b. the rail's pill slicers as high as measured, or dropdowns with why (pills ${rp.length}, why ${why}) (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
       const c = RL.r && !RL.r.err ? await check(RL.pbip) : null;
       chk(() => clean(c) && noBreak(c), () => `P6b. validator 0 errors, 0 "can break" on the rail report: ${valErr(c)}`);
     }
