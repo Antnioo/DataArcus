@@ -5,6 +5,9 @@ import { marked, modelOf, nameOut, shownName, summary, withNamesNote } from './m
 import { takenNames } from './report-names.mjs';
 
 export const LIMIT = 40000;
+// (0.3.0 Q1) where an answer that lists objects cuts its own lists: 15% under LIMIT, so the last backstop (answer.mjs
+// capAnswer, which halves whatever list is longest) never has to cut it, and a growth of the parts not cut stays under
+export const AIM = 34000;
 const size = (o) => JSON.stringify(o, null, 2).length;
 const lc = (s) => String(s == null ? '' : s).toLowerCase();
 const raw = (m) => modelOf(m.tmsl);
@@ -83,7 +86,7 @@ function largeBody(m, all, rel, full, withMeasures, notListed) {
 
 // read_model with tables: exactly the named tables, in full; names that don't exist are listed back; an answer that
 // would pass LIMIT stops at a table and names the tables left out
-export function namedTables(m, names) {
+export function namedTables(m, names, extra) {
   // (the user's names are matched against the model's own, the answer gives them as nameOut writes them)
   const all = summary(m), by = new Map(all.map((t, i) => [lc(m.tables[i].name), t]));
   const found = [], notFound = [];
@@ -92,9 +95,14 @@ export function namedTables(m, names) {
   if (notFound.length) out.notFound = notFound;
   for (const t of found) {
     out.tables.push(t);
-    if (size(out) > LIMIT - 400 && out.tables.length > 1) { out.tables.pop(); notShown.push(t.table); }
+    // (0.3.0 Q1: the names note the server adds (extra) counted too: without it a 100-table call passed LIMIT and the
+    // backstop halved the tables, 40 to 20, with no notShown for them)
+    if (size(Object.assign({}, out, extra || {})) > AIM - 400 && out.tables.length > 1) { out.tables.pop(); notShown.push(t.table); }
   }
-  if (notShown.length) { out.notShown = notShown.map((n) => marked(n, n)); out.note = `The answer is kept under 40,000 characters: ${out.tables.length} of ${found.length} tables are shown. Call read_model again with the tables in notShown.`; }
+  const tell = () => { out.notShown = notShown.map((n) => marked(n, n)); out.note = `The answer is kept under ${LIMIT.toLocaleString('en-US')} characters: ${out.tables.length} of ${found.length} tables are shown. Call read_model again with the tables in notShown.`; };
+  if (notShown.length) tell();
+  // (Q1) the list of the tables not shown is counted too
+  while (notShown.length && size(Object.assign({}, out, extra || {})) > AIM && out.tables.length > 1) { notShown.unshift(out.tables.pop().table); tell(); }
   return withNamesNote(out);
 }
 
