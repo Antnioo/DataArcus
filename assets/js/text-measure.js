@@ -22,6 +22,7 @@
     for (const ch of String(text == null ? '' : text)) {
       const c = ch.codePointAt(0);
       if (c === 0x200E || c === 0x200F) continue;   // direction marks have no width
+      if (c >= 0x2066 && c <= 0x2069) continue;     // (0.3.0 J18) nor the direction isolates the writer puts round a Latin run in Arabic text
       if ((c >= 0x0600 && c <= 0x06FF) || (c >= 0xFB50 && c <= 0xFEFF)) em += bold ? 0.62 : 0.55;
       else if (c >= 0x30 && c <= 0x39) em += 0.54 * (bold ? 1.09 : 1) * wide;
       else if (LETTER[ch] != null) em += LETTER[ch] * (bold ? 1.09 : 1) * wide;
