@@ -157,6 +157,5 @@ try {
   } finally { await s.close(); }
 } catch (e) { problems.push('the suite threw: ' + (e && e.stack || e)); }
 
-console.log(`test-0.3.0-powerbi-2026-10: ${checks - problems.length}/${checks} checks pass`);
-if (problems.length) { problems.forEach((p) => console.log(' FAIL ' + p)); process.exit(1); }
-console.log('PASS');
+if (problems.length) { console.log(`FAIL  powerbi-2026-10  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  powerbi-2026-10  ${checks} checks`);
