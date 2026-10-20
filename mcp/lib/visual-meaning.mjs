@@ -25,6 +25,8 @@ import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 
 // one test of custom versus native for every block (assets/js/visual-types.js, Microsoft's catalog)
 const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
+// (0.3.0 J19, B-172) which measures may share one value axis: the one rule, shared with the gallery's combo
+const AX = createRequire(import.meta.url)('../../assets/js/axis-units.js');
 // Microsoft's validator's own table of required roles and maxima per visual type (its metadata provider): the referee
 // of every native visual this module chooses (the laptop proof of 11 Oct: a donut written with no value, a map with no
 // location: PBIR_ROLE_REQUIRED_MISSING; two categories in a donut: PBIR_ROLE_MAX_EXCEEDED)
@@ -535,21 +537,50 @@ export const shortType = (t) => { const s = String(t || '').replace(/[0-9A-Fa-f]
 // inv: the reading block's inventory (read-report.mjs); opts: { typeOf } (typeOfModel of the report's model)
 // One entry per custom visual: { page, pageName, visual (its id, for the writer), place, size, from, kind, native, label,
 // roles { NativeRole: [queryRef] }, why, tell, lost, guess, confidence, htmlNeeded, candidates [{ native, fits }] }
+// (0.3.0 J19, B-172) the native charts whose value roles put their measures on one axis
+const AXIS_ROLES = { lineClusteredColumnComboChart: ['Y', 'Y2'], clusteredColumnChart: ['Y'], clusteredBarChart: ['Y'], lineChart: ['Y'], areaChart: ['Y'] };
+// the measures a native chart would put on one value axis, and whether they may share it (axis-units.js decide: the same
+// unit, scale and currency, and the person's confirmation, opts.axes { tables, confirmed }); when they may not, the panels:
+// one native chart per group in the custom visual's box (a line chart over time, else the chart's own kind, a combo's
+// columns), each with its group's values, the category and the tooltips. Never a combo with a second axis.
+function axesFor(r, o, type) {
+  const roles = AXIS_ROLES[r.native];
+  if (!roles) return null;
+  const vals = roles.flatMap((k) => r.roles[k] || []);
+  if (vals.length < 2) return null;
+  const fmt = o.formatOf || (() => undefined);
+  const ms = vals.map((f) => Object.assign(f.kind === 'measure' ? { t: f.table, m: f.name } : { t: f.table, c: f.name, agg: f.agg === 'Count' || f.agg === 'DistinctCount' ? 2 : undefined }, { formatString: fmt(f) }));
+  const d = AX.decide(ms, o.axes || {});
+  if (d.share) return r.native === 'lineClusteredColumnComboChart' ? { share: true, why: d.why } : null;
+  const cat = r.roles.Category || [], time = !!r.drill && r.drill.some((f) => f.level) || cat.some((f) => /^date/i.test(String((o.typeOf && o.typeOf(f)) || '')));
+  // (a combo's panels: lines over time, else the custom visual's own bars where its id says bars, else columns)
+  const bars = hintsOf(type).includes('bar'), one = r.native === 'lineClusteredColumnComboChart' ? (time ? 'lineChart' : bars ? 'clusteredBarChart' : 'clusteredColumnChart') : r.native;
+  const refs = (l) => l.map((f) => f.queryRef).filter(Boolean);
+  const panels = d.groups.map((g) => ({ native: one, roles: Object.assign({ Category: refs(cat), Y: refs(g.map((i) => vals[i])) }, (r.roles.Tooltips || []).length ? { Tooltips: refs(r.roles.Tooltips) } : {}),
+    unit: d.labels[g[0]] && d.labels[g[0]].en }));
+  return { share: false, why: d.why, ask: d.ask, panels, bars: one === 'clusteredBarChart' };
+}
 export function replacementsOf(inv, opts) {
   const o = opts || {}, out = [];
   ((inv && inv.pages) || []).forEach((p) => (p.visuals || []).forEach((x) => {
     if (!x.meaning) return; // the reading block gives a meaning to custom visuals only
     const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }, o.factsOf && x.json ? { facts: o.factsOf(x.json) } : {}));
-    out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: r.kind, native: r.native, label: r.native ? LABEL[r.kind] || r.native : null,
+    const ax = r.native ? axesFor(r, o, x.type) : null, panels = ax && ax.panels ? ax.panels : null, kindOf = (t) => Object.keys(NATIVE).find((k) => NATIVE[k] === t) || r.kind;
+    out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: panels ? kindOf(panels[0].native) : r.kind, native: panels ? panels[0].native : r.native,
+      label: r.native ? LABEL[panels ? kindOf(panels[0].native) : r.kind] || r.native : null,
+      ...(ax ? { axes: Object.assign({ share: ax.share, why: ax.why }, panels ? { panels: panels.length } : {}) } : {}), ...(panels ? { panels } : {}), ...(ax && ax.ask && ax.ask.length ? { ask: ax.ask } : {}),
       roles: r.native ? Object.fromEntries(Object.entries(r.roles).map(([k, l]) => [k, l.map((f) => f.queryRef).filter(Boolean)])) : {},
       format: r.format || {}, tooltips: !!r.tooltips, ...(r.expand ? { expand: r.expand } : {}), ...(r.aggregate ? { aggregate: r.aggregate } : {}),
-      why: r.why, tell: r.tell, lost: r.lost, guess: r.guess, confidence: r.confidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })) });
+      why: r.why, tell: panels ? r.tell.replace(/^This custom visual becomes a native [^.(]+/, `This custom visual becomes ${panels.length} separate native ${LABEL[kindOf(panels[0].native)] || panels[0].native}s in its box, one axis each (${ax.why.en})`) : r.tell,
+      lost: ax && ax.bars ? r.lost.filter((l) => !/horizontal bars/.test(l)) : r.lost, guess: r.guess, confidence: r.confidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })) });
   }));
   return out;
 }
 // the plan's line: "custom visual X on page N at x,y -> native Y (visualType): why"; no field or report name in it
 export function replacementLine(e) {
   const why = String(e.why || '').replace(/^a custom visual: /, '');
+  // (0.3.0 J19) values that may not share one axis: separate native visuals in the box, the reason said
+  if (e.panels) return `custom visual ${e.from} on page ${e.page} at ${e.place} -> ${e.panels.length} separate ${e.label}s (${e.native}) in its box, one axis each${e.guess ? ' [a guess]' : ''}: ${why}; ${e.axes.why.en}`;
   return `custom visual ${e.from} on page ${e.page} at ${e.place} -> ` + (e.native ? `${e.label} (${e.native})${e.guess ? ' [a guess]' : ''}: ${why}` : `no native visual: an HTML/SVG measure in an image-capable visual (step D), or a table of its links: ${why}`);
 }
 export { VT };
