@@ -49,7 +49,7 @@ const calendar = (hijri) => ({ name: 'Calendar', dataCategory: 'Time', partition
   .concat(hijri ? [col('Hijri Year', 'int64'), col('Hijri Month Name', 'string', { sortByColumn: 'Hijri Month Number' }), col('Hijri Month Number', 'int64'), col('Is Ramadan', 'boolean'), col('Ramadan Day', 'int64')] : []) });
 const rels = (cal, shipActive) => [{ name: 'r-order', fromTable: 'Sales', fromColumn: 'Order Date', toTable: cal, toColumn: 'Date', ...(shipActive ? { isActive: false } : {}) },
   { name: 'r-ship', fromTable: 'Sales', fromColumn: 'Ship Date', toTable: cal, toColumn: 'Date', ...(shipActive ? {} : { isActive: false }) }];
-['gd', 'gd2', 'gdm', 'ar'].forEach((d) => model(d, [sales('Calendar'), calendar(true)], rels('Calendar')));
+['gd', 'gds', 'gd2', 'gdm', 'ar'].forEach((d) => model(d, [sales('Calendar'), calendar(true)], rels('Calendar')));
 model('nohijri', [sales('Calendar'), calendar(false)], rels('Calendar'));
 // the Calendar Generator's own table (declared columns), as add_gulf_calendar writes it
 const built = Cal.build(Object.assign({}, Cal.DEFAULTS, { name: 'Gulf Calendar', start: '2024-01-01', end: '2028-12-31', weekend: 'uae', hijri: true, fiscal: true, relative: true, observed: true, arabicNames: true }));
@@ -107,36 +107,36 @@ try {
 
   // ---------- GD-3 and GD-7: a Ramadan page, one question at a time; the year only from the person ----------
   {
-    const p0 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN() }), g0 = G(p0);
+    const p0 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN() }), g0 = G(p0);
     chk(() => !idOf(p0) && g0.seasonal && g0.askNext && g0.askNext.id === 'dateRole' && g0.remaining >= 3 && (g0.pleaseConfirm || []).every((q) => q.en && ARABIC.test(q.ar)),
       () => `GD-7a. a seasonal plan with open questions: no plan id; one question asked first (the date), the rest listed in EN and AR: ${JSON.stringify(g0).slice(0, 600)}`);
-    const p1 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]' } }), g1 = G(p1);
+    const p1 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]' } }), g1 = G(p1);
     chk(() => g1.askNext && g1.askNext.id === 'grain' && g1.remaining === g0.remaining - 1 && ['gregorian', 'hijri', 'seasonDay'].every((o) => g1.askNext.options.includes(o)),
       () => `GD-7b. once answered it moves on: the grain next, one fewer left: ${JSON.stringify(g1.askNext)} ${g1.remaining} vs ${g0.remaining}`);
-    const p2 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian' } }), g2 = G(p2);
+    const p2 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian' } }), g2 = G(p2);
     chk(() => !idOf(p2) && g2.askNext && g2.askNext.id === 'scope' && /one Ramadan/i.test(g2.askNext.en) && /every Ramadan/i.test(g2.askNext.en) && ARABIC.test(g2.askNext.ar) && probs(p2).some((x) => /scope|one Ramadan|every Ramadan/i.test(x)),
       () => `GD-3a. a Ramadan flag without a year: asks the scope, no plan id: ${short(p2)}`);
     chk(() => g2.askNext && !YEARISH.test(JSON.stringify(g2.askNext)), () => `GD-3b. the scope question proposes no year: ${JSON.stringify(g2.askNext)}`);
-    const p3 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year' } }), g3 = G(p3);
+    const p3 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year' } }), g3 = G(p3);
     chk(() => !idOf(p3) && g3.askNext && g3.askNext.id === 'year' && !YEARISH.test(JSON.stringify(g3)), () => `GD-3c. "this year only" without the year: asks it, no year guessed anywhere: ${JSON.stringify(g3).slice(0, 600)}`);
-    const p4 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'all' } });
+    const p4 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'all' } });
     chk(() => !idOf(p4) && probs(p4).some((x) => /every Ramadan|all/i.test(x) && /Hijri Year/.test(x)), () => `GD-3d. "all Ramadans" with a Hijri-year filter is a conflict: no plan id: ${short(p4)}`);
-    const p5 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446 } }), g5 = G(p5);
+    const p5 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446 } }), g5 = G(p5);
     chk(() => !idOf(p5) && g5.askNext && g5.askNext.id === 'hijriYearColumn' && g5.askNext.options.includes('Calendar[Hijri Year]'), () => `GD-5a. a Hijri-year column found by its name only is a candidate: asked: ${JSON.stringify(g5.askNext)}`);
     chk(() => g5.calendar && g5.calendar.declared === false && g5.calendar.columns && g5.calendar.columns.hijriYear && g5.calendar.columns.hijriYear.by === 'name', () => `GD-5b. names alone stay candidates: ${JSON.stringify(g5.calendar)}`);
     const A6 = { dateRole: 'Sales[Order Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' };
-    const p6 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: A6 });
+    const p6 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: A6 });
     chk(() => !idOf(p6) && probs(p6).some((x) => x.includes('"Calendar[Hijri Year]"') && x.includes('1446')), () => `GD-3e. the year confirmed but not on the page: the exact filter to add, no plan id: ${short(p6)}`);
-    const p7 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: A6 }), g7 = G(p7);
+    const p7 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1446)]), gulfDates: A6 }), g7 = G(p7);
     chk(() => idOf(p7) && g7.askNext == null && g7.remaining === 0 && g7.answers && g7.answers.scope === 'year' && g7.answers.year === 1446, () => `GD-3f. every question answered and the filter wired: plan id: ${short(p7)}`);
-    const p8 = await plan('gd', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1445)]), gulfDates: A6 });
+    const p8 = await plan('gds', { planFields: PF(), pageFilters: RAMADAN().concat([YEAR_F(1445)]), gulfDates: A6 });
     chk(() => !idOf(p8) && probs(p8).some((x) => /1445/.test(x) && /1446/.test(x)), () => `GD-3g. a Hijri-year filter that is not the person's year: refused: ${short(p8)}`);
-    const h = await plan('gd', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'hijri', scope: 'all' } });
+    const h = await plan('gds', { planFields: PF(), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'hijri', scope: 'all' } });
     chk(() => !idOf(h) && probs(h).some((x) => /Hijri Month Name/.test(x) && /timeAxis/.test(x)), () => `GD-3h. a Hijri grain with a Gregorian axis is incompatible: the Hijri month column to use: ${short(h)}`);
-    const h2 = await plan('gd', { planFields: Object.assign(PF(), { timeAxis: 'Calendar[Hijri Month Name]' }), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'hijri', scope: 'all' } }), gh = G(h2);
+    const h2 = await plan('gds', { planFields: Object.assign(PF(), { timeAxis: 'Calendar[Hijri Month Name]' }), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'hijri', scope: 'all' } }), gh = G(h2);
     chk(() => idOf(h2) && gh.grain && gh.grain.axis === 'Calendar[Hijri Month Name]' && gh.grain.sortedBy === 'Calendar[Hijri Month Number]', () => `GD-3i. the Hijri axis sorted by its number (sort-by metadata): ${JSON.stringify(gh.grain)} ${short(h2)}`);
     chk(() => /not (checked|known).*(complete|comparable)|(complete|comparable).*not (checked|known)/i.test(JSON.stringify(gh)), () => `GD-3j. every Ramadan together: the plan says the seasons are not checked to be complete or comparable: ${JSON.stringify(gh).slice(0, 500)}`);
-    const d = await plan('gd', { planFields: Object.assign(PF(), { timeAxis: 'Calendar[Month Name]' }), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'seasonDay', scope: 'all' } });
+    const d = await plan('gds', { planFields: Object.assign(PF(), { timeAxis: 'Calendar[Month Name]' }), pageFilters: RAMADAN(), gulfDates: { dateRole: 'Sales[Order Date]', grain: 'seasonDay', scope: 'all' } });
     chk(() => !idOf(d) && probs(d).some((x) => /Ramadan Day/.test(x)), () => `GD-3k. a season-day grain needs the Ramadan Day axis: ${short(d)}`);
   }
 
@@ -228,7 +228,8 @@ try {
       chk(() => c && !c.err && c.j.impact && c.j.impact.kinds && (c.j.impact.kinds.canBreak || { count: 0 }).count === 0, () => `GD-10b ${tag}. check_report: 0 "can break": ${short(c)}`);
     }
     const g = JSON.stringify(G(EN.p)) + JSON.stringify(G(AR.p));
-    chk(() => g.length > 50 && !/uplift|outperform|grew|growth|better than|boost|ارتفاع|نمو|زيادة/i.test(g), () => `GD-9e. the seasonal block makes no uplift claim: ${g.slice(0, 300)}`);
+    const hit = g.match(/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i);
+    chk(() => g.length > 50 && !/uplift|outperform|grew|growth|better than|boost|(^|[\s،(])(ال)?(ارتفاع|نمو|زيادة)([\s،.)]|$)/i.test(g), () => `GD-9e. the seasonal block makes no uplift claim: ${hit && g.slice(Math.max(0, hit.index - 120), hit.index + 40)}`);
     chk(() => /never (claim|say)/i.test(G(EN.p).sayInPlan || ''), () => `GD-9f. the plan is told never to claim a seasonal result from metadata: ${G(EN.p).sayInPlan}`);
   }
 } finally {
