@@ -515,7 +515,8 @@
         // slicer has, by Microsoft's capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0:
         // the layout's cell, row and column padding and outer margins (no states), the tiles' padding and the space
         // between value and label (state-keyed: default), the container's padding and the space below its title
-        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(0),
+        // (F5, the owner: "nothing touches or breaks") except the gap between two pills, columnPadding 6: across, no height
+        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(6),
             topOuterMargin: int(0), bottomOuterMargin: int(0), leftOuterMargin: int(0), rightOuterMargin: int(0) }),
           fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
           value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
