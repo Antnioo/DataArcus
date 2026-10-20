@@ -132,9 +132,15 @@ try {
   chk(() => charts.some((v) => v.visual.visualType === 'clusteredBarChart') && ok.j.metricSwitcher.charts.some((c) => c.kind === 'bar'), () => `W7: a bar chart by the main category switches: ${JSON.stringify(ok.j.metricSwitcher && ok.j.metricSwitcher.charts)}`);
   const pj = rd(path.join(dir, 'definition/pages/pages.json')), tips = pagesOf(dir).filter((p) => p.json.type === 'Tooltip').map((p) => p.id);
   chk(() => mp && pj.pageOrder.indexOf(mp.id) >= 0 && tips.every((t) => pj.pageOrder.indexOf(t) > pj.pageOrder.indexOf(mp.id)) && pj.activePageName !== mp.id, () => `W8: the Metric page comes after the report's pages, before the tooltip pages, and is not the page that opens: ${JSON.stringify(pj)}`);
-  // (the saved first choice: the schema gives a formatting property no shape to check, and Desktop has not shown one for
-  // a field parameter: not written, said; "For the laptop")
-  chk(() => slicer && !(slicer.visual.objects.general || []).some((e) => e.properties && e.properties.filter) && /Not written/.test(ok.j.metricSwitcher.savedSelection), () => `S1: no saved selection is written, and the answer says so: ${JSON.stringify(slicer && slicer.visual.objects).slice(0, 300)}`);
+  // (F1, the owner's decision of 20 Oct: the switch opens with the FIRST metric chosen, in the shape Desktop 2.159 saved
+  // in the laptop proof, out/L3-saved-general.json; this check said "no saved selection" while the shape was unseen)
+  const gf = slicer && ((slicer.visual.objects.general || []).find((e) => e.properties && e.properties.filter) || {}).properties;
+  const fl = gf && gf.filter && gf.filter.filter, cond = fl && fl.Where && fl.Where[0], ann = cond && cond.Annotations && cond.Annotations.filterExpressionMetadata;
+  chk(() => fl && fl.Version === 2 && fl.From[0].Entity === 'Metric' && fl.From[0].Name === 'm' && cond.Condition.In.Expressions[0].Column.Property === 'Metric Fields'
+    && cond.Condition.In.Values[0][0].Literal.Value === "'''Web Orders''[Web Orders Count]'" && ann.expressions[0].Column.Property === 'Metric'
+    && ann.decomposedIdentities.values[0][0]['0'][0].Literal.Value === "'''Web Orders''[Web Orders Count]'" && ann.decomposedIdentities.columns[0].value.Column.Property === 'Metric Fields'
+    && ann.valueMap[0]['0'] === 'Web Orders Count' && /first metric/i.test(ok.j.metricSwitcher.savedSelection),
+    () => `S1: the slicer opens with the first metric chosen (general.filter, the shape Desktop saved), said in the answer: ${JSON.stringify(slicer && slicer.visual.objects.general).slice(0, 600)} ${ok.j && ok.j.metricSwitcher && ok.j.metricSwitcher.savedSelection}`);
   const script = fs.existsSync(sf) ? fs.readFileSync(sf, 'utf8') : '', R = script ? readScript(script) : null, tb = R && (R.model.tables || [])[0];
   const col3 = (n) => tb && (tb.columns || []).find((c) => c.name === n);
   chk(() => /^createOrReplace\n/.test(script) && R.model.tables.length === 1 && tb.name === 'Metric' && ['Metric', 'Metric Fields', 'Metric Order'].every((n) => col3(n)), () => `T1: the script adds one table Metric with its three columns: ${script.slice(0, 300)}`);
@@ -161,6 +167,13 @@ try {
   const pgA = mA && mA.json, slA = mA && mA.visuals.find((v) => v.visual.visualType === 'slicer'), barA = mA && mA.visuals.find((v) => v.visual.visualType === 'clusteredBarChart');
   chk(() => pgA.displayName === 'المؤشر' && slA.position.x + slA.position.width > pgA.width * 0.75 && barA && lit(barA.visual.objects.valueAxis[0].properties.invertAxis) === 'true',
     () => `A2: the page «المؤشر» is mirrored: the slicer at the right, the bars growing from the right: ${JSON.stringify(pgA && pgA.displayName)} ${JSON.stringify(slA && slA.position)}`);
+  // A4 (F1, the proof: the Metric page's Arabic line kept Jan at the left): its sort is the report's own (no
+  // isDefaultSort, which a field-parameter visual may recompute), Descending by the month, the value axis at the right
+  const lineA = mA && mA.visuals.find((v) => v.visual.visualType === 'lineChart'), sdA = lineA && lineA.visual.query.sortDefinition;
+  const slA2 = slA && ((slA.visual.objects.general || []).find((e) => e.properties && e.properties.filter) || {}).properties;
+  chk(() => sdA && sdA.sort[0].direction === 'Descending' && !sdA.isDefaultSort && lit(lineA.visual.objects.valueAxis[0].properties.switchAxisPosition) === 'true' && lit(lineA.visual.objects.categoryAxis[0].properties.invertAxis) === 'true',
+    () => `A4: the Arabic Metric line is mirrored with a sort of its own: ${JSON.stringify(sdA)} ${JSON.stringify(lineA && lineA.visual.objects).slice(0, 300)}`);
+  chk(() => slA2 && slA2.filter.filter.Where[0].Annotations.filterExpressionMetadata.valueMap[0]['0'] === AR_NAMES['Web Orders[Web Orders Count]'], () => `A5: the Arabic switch opens on its first metric, under its Arabic label: ${JSON.stringify(slA2).slice(0, 400)}`);
   if (!okA.err) await validate('AR', dirA, 'large/L3 AR.pbip', 'ar');
   const tp = await ask('create_arabic_twin', { path: 'large/L3 Switch.pbip' }), tid = tp.j && tp.j.plan && tp.j.plan.planId;
   if (tid) await approve(tid);
@@ -198,7 +211,8 @@ try {
   // ---------- F: the page filters (0.3.0 A1: the Metric page of a Ramadan report showed every date) ----------
   {
     const PF = [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1446] }];
-    const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF });
+    // (F1, STRICT: a Ramadan page needs the person's grain and scope)
+    const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF, gulfDates: { dateRole: 'Web Orders[Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' } });
     const F = await planAndWrite(fa);
     const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design })) : F.pl;
     const fdir = path.join(ROOT, 'large', 'L3 Filtered.Report'), pgs = pagesOf(fdir).filter((p) => p.json.type !== 'Tooltip'), mpF = metricPage(fdir);
