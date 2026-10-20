@@ -207,6 +207,19 @@ export function close(id) { const w = windows.get(id); if (w) { bySecret.delete(
 const TERM_STATUS = (r) => (r.status === 'approved' ? `approved${r.earlier ? ' (earlier in this session, unchanged since)' : ''}`
   : r.status === 'draft' ? 'draft from the fixed list of report words: approved with this plan' : `kept in English${r.why ? `: ${String(r.why).replace(/^kept in English(?: for now)?: /, '')}` : ''}`);
 const termSheet = (rows) => ({ heading: `Terminology sheet: English | Arabic (${rows.length})`, rows: rows.map((r) => [`${String(r.en)} (${String(r.field)})`, `${r.ar != null ? String(r.ar) : String(r.en)}: ${TERM_STATUS(r)}${r.places ? `; shown in ${r.places} place${r.places === 1 ? '' : 's'}` : ''}`]) });
+// (0.3.0 X1; 0.3.1 X2) a report holding both languages, on the twin's EN-AR page and on create_report's page: the report,
+// every page pair, the language buttons, the slicers kept in sync; at: where in the sections they go (0 first)
+function languagesSections(LG, sections, at) {
+  const pairs = Array.isArray(LG.pairs) ? LG.pairs : [], btns = Array.isArray(LG.buttons) ? LG.buttons : [], sg = Array.isArray(LG.syncGroups) ? LG.syncGroups : [], T = LG.tabs || {};
+  const pg = (x) => `"${String((x && x.name) || '')}"${x && x.hidden ? ' (hidden in the tabs)' : ''}`;
+  sections.splice(at, 0, { heading: 'One report, English and Arabic', rows: [['New report', String((LG.copy || {}).report || '')], ['Project file', String((LG.copy || {}).pbip || '')], ['The original', at ? 'none: a new report' : 'only read: not changed'],
+    ['Tabs shown', String(T.shown || '')], ['Hidden in the tabs', String(T.hidden || '')], ['Tooltip pages', String(T.tooltipPages || '')], ['What a reader sees', String(T.service || '')], ['Bookmarks', String(LG.bookmarks || 'none')]]
+    .concat((Array.isArray(LG.measures) ? LG.measures : []).map((m) => ['Report measure', `${String(m.arabic)} for the Arabic pages; ${String(m.measure)} stays for the English pages`])) },
+  { heading: `Page pairs (${pairs.length})`, rows: pairs.map((x, i) => [`${i + 1}. English ${pg(x.english)}`, `Arabic ${pg(x.arabic)}${x.tooltip ? ' (tooltip pages)' : x.drillthrough ? ' (drillthrough pages)' : ''}`]) },
+  { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
+  { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
+}
+
 const KIND_NAME = { bar: 'Bar chart', column: 'Column chart', line: 'Line chart', donut: 'Donut chart', table: 'Table' };
 const KIND_A = { bar: 'a bar chart', column: 'a column chart', line: 'a line chart', donut: 'a donut chart', table: 'a table' };
 /** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
@@ -218,7 +231,7 @@ export function summary(kind, data) {
   const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
+    const T = { title: (d.bilingual ? 'English and Arabic in one report' : 'Report') + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
@@ -291,6 +304,8 @@ export function summary(kind, data) {
       .concat([['Preview', 'the preview draws a waterfall and small multiples as a column-chart placeholder, a combo as a line-chart placeholder']]) });
     const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
     if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
+    // (0.3.1 X2) a report in English and Arabic: both halves, as the twin's EN-AR page shows them
+    if (d.bilingual && typeof d.bilingual === 'object') languagesSections(d.bilingual, sections, 1);
     // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
     if (Array.isArray(d.customVisualsShown)) sections.push({ heading: `Custom visuals replaced (${d.customVisualsShown.length})`, rows: d.customVisualsShown.map((x) => [String(x.line), (x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows']]) });
     else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
@@ -333,16 +348,7 @@ export function summary(kind, data) {
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
     // (0.3.0 X1) one report holding both languages: the copy, every page pair, the language buttons, the slicers in sync
     const LG = d.languages && typeof d.languages === 'object' ? d.languages : null;
-    if (LG) {
-      const pairs = Array.isArray(LG.pairs) ? LG.pairs : [], btns = Array.isArray(LG.buttons) ? LG.buttons : [], sg = Array.isArray(LG.syncGroups) ? LG.syncGroups : [], T = LG.tabs || {};
-      const pg = (x) => `"${String((x && x.name) || '')}"${x && x.hidden ? ' (hidden in the tabs)' : ''}`;
-      sections.unshift({ heading: 'One report, English and Arabic', rows: [['New report', String((LG.copy || {}).report || '')], ['Project file', String((LG.copy || {}).pbip || '')], ['The original', 'only read: not changed'],
-        ['Tabs shown', String(T.shown || '')], ['Hidden in the tabs', String(T.hidden || '')], ['Tooltip pages', String(T.tooltipPages || '')], ['What a reader sees', String(T.service || '')], ['Bookmarks', String(LG.bookmarks || 'none')]]
-        .concat((Array.isArray(LG.measures) ? LG.measures : []).map((m) => ['Report measure', `${String(m.arabic)} for the Arabic pages; ${String(m.measure)} stays for the English pages`])) });
-      sections.splice(1, 0, { heading: `Page pairs (${pairs.length})`, rows: pairs.map((x, i) => [`${i + 1}. English ${pg(x.english)}`, `Arabic ${pg(x.arabic)}${x.tooltip ? ' (tooltip pages)' : x.drillthrough ? ' (drillthrough pages)' : ''}`]) },
-        { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
-        { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
-    }
+    if (LG) languagesSections(LG, sections, 0);
     return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic month script', /\.tmdl$/i]]) : null };
   }
   // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with

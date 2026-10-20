@@ -13,7 +13,7 @@ import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, shownName, loadModel, ROOT } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, reportPrint, readBytes, isFile, isDir, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource, memorySource, canSync } from './read-report.mjs';
 import { draftText } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
 import { testEditBeforeWrite } from './write-io.mjs';
@@ -56,22 +56,33 @@ function locate(p) {
   return { dir, base, pbip, project: path.dirname(dir) };
 }
 
+// (0.3.1 X2) the original in memory: the English report create_report's plan builds (its files as the writer gives
+// them, '<base>.Report/...'), read by the same reader through the reading block's memorySource; nothing on disk
+function memoryLoc(mem) {
+  const pre = String(mem.base) + '.Report/', map = new Map();
+  (mem.files || []).forEach((f) => { if (String(f.path).startsWith(pre)) map.set(String(f.path).slice(pre.length), f.data); });
+  return { dir: path.join(mem.projectDir, String(mem.base) + '.Report'), base: String(mem.base), pbip: null, project: mem.projectDir, mem: map };
+}
+// a file of the original by its path in the report folder: its bytes, or its JSON (on disk: the reading block's reader)
+const bytesAt = (loc, rel) => { if (!loc.mem) return readBytes(path.join(loc.dir, ...rel.split('/'))); const d = loc.mem.get(rel); if (d == null) throw new Error('missing'); return typeof d === 'string' ? Buffer.from(d, 'utf8') : Buffer.from(d); };
+const jsonAt = (loc, rel) => (loc.mem ? JSON.parse(bytesAt(loc, rel).toString('utf8')) : readJson(path.join(loc.dir, ...rel.split('/'))));
+
 // ---- the report read, strictly, through the reading block (R1, the cross-review: the twin had its own locate, walker,
 // reader and limits): every file listed by strictFiles (a link, a folder too deep, too many files or a file over 8 MB
 // stops it, nothing written); pages in order, their visuals (in file order) and bookmarks from inventory() ----
 function readOriginal(loc) {
-  const left = [], files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.', left });
-  const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
+  const left = [], files = loc.mem ? [...loc.mem.keys()].sort() : strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.', left });
+  const inv = inventory(loc.mem ? memorySource([...loc.mem].map(([p, data]) => ({ path: p, data }))) : diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const unreadable = inv.unreadableFiles.slice();
   // (the fuzz test's F-T4 and its crash in modelOf: any file can hold any JSON; what is not the shape expected is left
   // out here and copied as it is)
-  let pbir = {}; try { const j = readJson(path.join(loc.dir, 'definition.pbir')); pbir = isObj(j) ? j : {}; } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
+  let pbir = {}; try { const j = jsonAt(loc, 'definition.pbir'); pbir = isObj(j) ? j : {}; } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
     visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json, mobile: mobileOf(loc, files, x.file) })) }));
   const bookmarks = inv.bookmarks.filter((b) => isObj(b.raw) && (typeof b.raw.name === 'string' || typeof b.raw.name === 'number')).map((b) => ({ rel: b.file, json: b.raw }));
   // (rc.24) the report's own measures (definition/reportExtensions.json), for the title measures; and the theme's text
   // sizes, for what the Arabic texts need
-  let ext = null; if (files.includes(EXT)) { try { const j = readJson(path.join(loc.dir, ...EXT.split('/'))); ext = isObj(j) && Array.isArray(j.entities) ? j : null; } catch (e) { ext = null; } }
+  let ext = null; if (files.includes(EXT)) { try { const j = jsonAt(loc, EXT); ext = isObj(j) && Array.isArray(j.entities) ? j : null; } catch (e) { ext = null; } }
   return { files, left, pages, bookmarks, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
@@ -80,7 +91,7 @@ const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 // null (none, or not a JSON object: then it is copied as it is)
 function mobileOf(loc, files, rel) {
   const m = rel.replace(/visual\.json$/, 'mobile.json'); if (m === rel || !files.includes(m)) return null;
-  try { const j = readJson(path.join(loc.dir, ...m.split('/'))); return isObj(j) ? { rel: m, json: j } : null; } catch (e) { return null; }
+  try { const j = jsonAt(loc, m); return isObj(j) ? { rel: m, json: j } : null; } catch (e) { return null; }
 }
 const EXT = 'definition/reportExtensions.json';
 // definition.pbir's model folder, when it names one: { path } or null
@@ -614,11 +625,14 @@ function langButton(page, visuals, mobiles, lang, target, name) {
   const w = Math.max(need ? need.one : 0, Math.ceil(Rules.MEASURED.BTN_TW(t, [...W.text].length))), h = Math.max(tpl ? posOf(tpl).height : 0, need ? need.needH : Rules.MEASURED.BTN_H(t));
   // where: the tabs' group (else the page), at the tabs' height (else near the top), from its end
   const g = tpl && tpl.parentGroupName != null ? visuals.find((v) => isObj(v) && v.name === tpl.parentGroupName && posOf(v)) : null;
-  const room = g ? posOf(g).width : pw, y = tpl ? posOf(tpl).y : Math.round(8 * ph / 720), off = g ? absBox(visuals, g) : { x: 0, y: 0 };
+  const room = g ? posOf(g).width : pw, y0 = tpl ? posOf(tpl).y : Math.round(8 * ph / 720), off = g ? absBox(visuals, g) : { x: 0, y: 0 };
   const obst = visuals.filter((v) => isObj(v) && !isObj(v.visualGroup) && posOf(v)).map((v) => absBox(visuals, v)).filter(Boolean);
   const free = (x) => { const A = { x: off.x + x, y: off.y + y, width: w, height: h }; return A.x >= -0.5 && A.x + w <= pw + 0.5 && A.y >= -0.5 && A.y + h <= ph + 0.5 && !obst.some((b) => overlaps(b, A) && !holdsBox(b, A)); };
   const xs = []; for (let x = Math.floor(room - w); x >= 0; x--) xs.push(x); if (lang === 'ar') xs.reverse();
-  const x = xs.find(free);
+  // (X2: a page with no page tabs and no header, the metric switcher's, starts its visuals near the top) at the tabs'
+  // height; else near the top, then the first free row of the page's top quarter, from its end
+  let y = y0, x = xs.find(free);
+  if (x == null && !tpl) for (let yy = 0; yy + h <= ph / 4 && x == null; yy++) { y = yy; x = xs.find(free); }
   if (x == null) return { json: null, why: `no free place ${w} x ${h} at the ${lang === 'ar' ? 'left' : 'right'} end of ${g ? 'the header (the page tabs\' group)' : 'the top of the page'}: the page is written without it; add the button by hand` };
   const zs = visuals.filter((v) => posOf(v)).map((v) => posOf(v)), top = (k) => Math.max(0, ...zs.map((p) => (Number.isFinite(p[k]) ? p[k] : 0)));
   btn.position = { x, y, z: top('z') + 1000, height: h, width: w, tabOrder: top('tabOrder') + 1000 };
@@ -690,10 +704,13 @@ function languageCopy(P, built, labels) {
     if (isObj(arPage)) renameFilters(arPage, arId, '');
     // each slicer pair in one sync group: a group the English slicer has already, else its own
     pg.visuals.forEach((v, i) => {
-      if (typeOf(enV[i]) !== 'slicer' || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
+      // (X2) every slicer kind Microsoft's catalog says Power BI keeps in sync (the slicer, the button slicer's pills, the
+      // list and text slicers), one field (Power BI syncs a slicer of one field only)
+      if (!canSync(typeOf(enV[i])) || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
       const has = isObj(enV[i].visual.syncGroup) && typeof enV[i].visual.syncGroup.groupName === 'string' && enV[i].visual.syncGroup.groupName;
       const ps = isObj(enV[i].visual.query) && isObj(enV[i].visual.query.queryState) ? Object.values(enV[i].visual.query.queryState).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])) : [];
       const q = ps.map((p) => (isObj(p) && typeof p.queryRef === 'string' ? p.queryRef : '')).find(Boolean) || 'Slicer';
+      if (ps.length > 1) return;
       if (!has) enV[i].visual.syncGroup = { groupName: `${q.slice(0, 80)} (EN-AR ${++n})`, fieldChanges: true, filterChanges: true };
       arV[i].visual.syncGroup = clone(enV[i].visual.syncGroup);
       syncGroups.push({ page: safeName(typeof P0.displayName === 'string' ? P0.displayName : id), slicer: safeName(String(v.json.name)), arabicSlicer: nm.get(String(v.json.name)), group: safeName(enV[i].visual.syncGroup.groupName), ...(has ? { kept: 'the English slicer\'s own sync group: its Arabic copy joins it' } : {}) });
@@ -744,13 +761,13 @@ function languageCopy(P, built, labels) {
     if (isObj(j.options) && Array.isArray(j.options.targetVisualNames)) { const m = names.get(act) || new Map(); j.options.targetVisualNames = j.options.targetVisualNames.map((x) => (m.has(String(x)) ? m.get(String(x)) : x)); }
     added.push({ rel: b.rel.replace(/[^/]+$/, j.name + '.bookmark.json'), data: json(j) });
   });
-  if (R.bookmarks.length && R.files.includes(BM)) { try { const j = readJson(path.join(loc.dir, ...BM.split('/'))); if (isObj(j) && Array.isArray(j.items)) {
+  if (R.bookmarks.length && R.files.includes(BM)) { try { const j = jsonAt(loc, BM); if (isObj(j) && Array.isArray(j.items)) {
     const item = (it) => (!isObj(it) ? it : Array.isArray(it.children) ? Object.assign(clone(it), { name: newId('bookmarkGroup\u0000' + it.name), children: it.children.map((c) => bmOf.get(String(c)) || c) }) : Object.assign(clone(it), { name: bmOf.get(String(it.name)) || it.name }));
     j.items = j.items.concat(j.items.map(item)); changed.set(BM, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   // pages.json: the English pages, then the Arabic ones in the same order; the first page opened in the language shown
   const PJ = 'definition/pages/pages.json';
   let activePage = null;
-  if (R.files.includes(PJ)) { try { const j = readJson(path.join(loc.dir, ...PJ.split('/'))); if (isObj(j)) {
+  if (R.files.includes(PJ)) { try { const j = jsonAt(loc, PJ); if (isObj(j)) {
     const order = Array.isArray(j.pageOrder) ? j.pageOrder.map(String) : R.pages.map((pg) => String(pg.id));
     j.pageOrder = order.concat(order.filter((x) => arOf.has(x)).map((x) => arOf.get(x)));
     const first = j.activePageName != null && arOf.has(String(j.activePageName)) ? String(j.activePageName) : order.find((x) => arOf.has(x) && !(pairs.find((p) => p.english.id === safeName(x)) || {}).tooltip);
@@ -758,7 +775,7 @@ function languageCopy(P, built, labels) {
     activePage = j.activePageName != null ? safeName(String(j.activePageName)) : null;
     changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   if (built.ext) changed.set(EXT, json(built.ext));
-  if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); changed.set('.platform', json(pl)); }
+  if (R.hasPlatform) { const pl = loc.mem ? jsonAt(loc, '.platform') : mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: P.name || loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); changed.set('.platform', json(pl)); }
   // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
   else changed.set('.platform', newPlatform(loc.base + COPY_TAG));
   const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(R.hasPlatform ? [] : [{ rel: '.platform', data: changed.get('.platform') }], built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
@@ -883,21 +900,28 @@ function twinFit(a, from) {
 }
 
 export function planTwin(a) {
-  const loc = locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0));
+  // (0.3.1 X2) inMemory: { files, base, projectDir }: the English report create_report's plan builds, made one report
+  // with its Arabic pages under its own name (into "same"); nothing of it is on disk yet
+  const loc = a.inMemory ? memoryLoc(a.inMemory) : locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0));
   // (0.3.0 X1) into "same": one report holding both languages, "<name> (EN-AR)"; the default, the separate twin "<name> AR"
-  const same = a.into === 'same', outBase = loc.base + (same ? COPY_TAG : ' AR');
+  const same = a.into === 'same' || !!a.inMemory, outBase = a.inMemory ? loc.base : loc.base + (same ? COPY_TAG : ' AR');
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
-  const free = nothingAt(twinDir) && nothingAt(twinPbip);
+  const free = a.inMemory ? true : nothingAt(twinDir) && nothingAt(twinPbip);
   const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = dateColumnsOf(model.m);
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
   // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
   const blankBytes = Buffer.from(Mirror.BLANK_PNG, 'base64');
-  const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { return readBytes(path.join(loc.dir, ...rel.split('/'))).equals(blankBytes); } catch (e) { return false; } };
+  const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { return bytesAt(loc, rel).equals(blankBytes); } catch (e) { return false; } };
   const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank })).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
   const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
+  // (0.3.1 X2) the Arabic of a text by the text itself, as the plan shows it (a report built again draws new ids): every
+  // text of those words takes it, unless a label was given for its id
+  const byText = isObj(a.textLabels) ? a.textLabels : {}, textsUsed = new Set();
+  texts.forEach((t) => { if (t.text != null && labels[t.id] == null && Object.prototype.hasOwnProperty.call(byText, t.text)) { labels[t.id] = cleanLabel(byText[t.text], t.id); textsUsed.add(t.text); } });
+  const textsUnknown = Object.keys(byText).filter((k) => !textsUsed.has(k) && !texts.some((t) => t.text === k)).map((k) => visible(k).slice(0, 160));
   const T = termsOf(R, texts, labels, a, model.m);
   // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
   // the plan (labelFrom) and written with it; a label given for the button wins
@@ -959,7 +983,7 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
-  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown }, built, rawLabels(texts, labels)) : null;
+  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, name: a.inMemory ? loc.base : null }, built, rawLabels(texts, labels)) : null;
   const languages = copy ? { copy: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.' },
     how: 'One report holding both languages: the original\'s English pages as they are, and after them each page\'s Arabic page, mirrored as the twin is (the same Arabic texts, phone layout, waterfalls and empty state). Every page has a small language button to its counterpart; the slicers of each page pair are kept in sync; the Arabic pages\' links (page tabs, tooltip pages, bookmarks) go to Arabic pages.',
     pairs: copy.pairs, buttons: copy.buttons, syncGroups: copy.syncGroups, tabs: copy.tabs, activePage: copy.activePage,
@@ -980,7 +1004,7 @@ export function planTwin(a) {
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, labels, texts, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
