@@ -125,7 +125,11 @@ export function addSwitch(r, o) {
   };
   let cx = x0, z = 1000;
   charts.forEach((kind) => { chart(kind, kind === 'bar' ? cat : date, cx, z); cx += cw + gap; z += 1000; });
-  files.push({ path: `${D}/pages/${pageId}/page.json`, data: json({ $schema: SCHEMA.page, name: pageId, displayName: PAGE_NAME[lang], displayOption: 'FitToPage', width: W, height: H }) });
+  // the report's page filters (pageFilters: the same on each of its pages) hold on this page too, each under a name of
+  // its own (0.3.0 A1: the Metric page of a Ramadan report showed every date)
+  const ownPage = r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(f.data)).find((p) => p.type !== 'Tooltip' && p.filterConfig && (p.filterConfig.filters || []).length);
+  const filterConfig = ownPage ? { filters: ownPage.filterConfig.filters.map((x, i) => Object.assign({}, x, { name: 'Filter' + crypto.createHash('sha256').update(pageId + '\0filter' + i).digest('hex').slice(0, 24) })) } : null;
+  files.push({ path: `${D}/pages/${pageId}/page.json`, data: json(Object.assign({ $schema: SCHEMA.page, name: pageId, displayName: PAGE_NAME[lang], displayOption: 'FitToPage', width: W, height: H }, filterConfig ? { filterConfig } : {})) });
   vs.forEach((v) => files.push({ path: `${D}/pages/${pageId}/visuals/${v.name}/visual.json`, data: json(v) }));
   // the page goes after the report's own pages, before the tooltip pages (pages.json keeps every other page as it is)
   const pagesFile = r.files.find((f) => f.path === `${D}/pages/pages.json`), pj = JSON.parse(pagesFile.data), own = r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(f.data)).filter((p) => p.type !== 'Tooltip').map((p) => p.name);

@@ -194,6 +194,22 @@ try {
     const crg = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crg.err && !(crg.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crg.j.fieldParameters && /in the model/.test(crg.j.fieldParameters.note), () => `V3: with the script's own table no finding, and the note says the table is in the model: ${JSON.stringify(crg.j && crg.j.fieldParameters).slice(0, 400)}`);
   } else chk(() => false, () => 'V2/V3: no script to apply');
+
+  // ---------- F: the page filters (0.3.0 A1: the Metric page of a Ramadan report showed every date) ----------
+  {
+    const PF = [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1446] }];
+    const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF });
+    const F = await planAndWrite(fa);
+    const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design })) : F.pl;
+    const fdir = path.join(ROOT, 'large', 'L3 Filtered.Report'), pgs = pagesOf(fdir).filter((p) => p.json.type !== 'Tooltip'), mpF = metricPage(fdir);
+    const fields = (p) => ((p.json.filterConfig || {}).filters || []).map((x) => (x.field.Column || {}).Property + '=' + JSON.stringify(x.filter.Where[0].Condition.In.Values)).sort().join();
+    const own = pgs.filter((p) => !mpF || p.id !== mpF.id);
+    chk(() => !okF.err && mpF && own.length && own.every((p) => fields(p) === fields(own[0])) && fields(own[0]).includes('Is Ramadan') && fields(mpF) === fields(own[0]),
+      () => `F1: the Metric page holds the report's page filters (Is Ramadan, Hijri Year 1446) like every other page: ${short(okF)} ${JSON.stringify(pgs.map((p) => [p.json.displayName, fields(p)]))}`);
+    const names = mpF ? ((mpF.json.filterConfig || {}).filters || []).map((x) => x.name) : [];
+    chk(() => names.length === 2 && new Set(names).size === 2 && !own.some((p) => ((p.json.filterConfig || {}).filters || []).some((x) => names.includes(x.name))), () => `F2: the Metric page's filters have names of their own: ${JSON.stringify(names)}`);
+    if (!okF.err) await validate('page filters', fdir, 'large/L3 Filtered.pbip', 'en');
+  }
 } finally { await s.close(); fs.rmSync(ROOT, { recursive: true, force: true }); }
 
 if (problems.length) { console.log(`FAIL  metric-switcher  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
