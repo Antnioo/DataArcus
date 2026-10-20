@@ -99,7 +99,8 @@ const valErr = (r) => (r && r.j ? JSON.stringify({ v: r.j.validator, k: r.j.impa
 const scriptAt = (f) => { if (!f || !fs.existsSync(f)) return null; const tree = Tmdl.parse(fs.readFileSync(f, 'utf8')), out = [];
   const visit = (n, table) => (n.children || []).forEach((c) => { if (c.type === 'ref' && c.of === 'table') visit(c, c.name); else if (c.type === 'measure') out.push({ table, name: c.name, expression: c.expr || '', props: Object.fromEntries(c.props || []) }); else visit(c, table); });
   visit(tree, null); return { text: fs.readFileSync(f, 'utf8'), measures: out }; };
-const SCRIPT = path.join(ROOT, 'g', 'Shop - flip cards.tmdl');
+// the script next to the project: "<report> - flip cards.tmdl" (one file per report, as the metric switcher's)
+const scriptOf = (name) => path.join(ROOT, 'g', name + ' - flip cards.tmdl');
 // the DAX string literals of an expression, joined (what the browser gets, but for the DAX's own values)
 // the picture's static text: the string literals after RETURN, outside the DAX calls that make the value (SUBSTITUTE,
 // FORMAT, IF: their own literals are DAX, never picture text)
@@ -117,7 +118,7 @@ const write = async (args, crOver) => {
   if (!id) return { pl, err: 'no plan id: ' + short(pl) };
   const html = await approve(id);
   const cr = Object.assign({ path: MP, planId: id }, args, args.pages ? {} : { design: pl.j.design });
-  delete cr.flipCards;
+  delete cr.flipCards; delete cr.metricSwitcher;
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
   const r = await w.call('create_report', Object.assign(cr, crOver || {}));
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
@@ -140,7 +141,7 @@ try {
     const Z = await write({ name: 'Flip False', lang: 'en', ...DES, planFields: FIELDS, flipCards: false });
     const pg = D.dir && fs.existsSync(D.dir) ? shownPages(D.dir) : [], pz = Z.dir && fs.existsSync(Z.dir) ? shownPages(Z.dir) : [];
     chk(() => pg.length === 1 && !images(pg[0]).length && pg[0].visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && v.parentGroupName === (kpiGroup(pg[0]) || {}).name).length === 3, () => `OFF1. default: the three KPI cards as before, no flip image: ${D.err || short(D.r)}`);
-    chk(() => !bookmarksOf(D.dir).items.some((b) => /flip|قلب/i.test(b.displayName || '')) && !fs.existsSync(SCRIPT) && !(D.r.j || {}).flipCards, () => 'OFF2. default: no flip bookmark, no script, no flipCards in the answer');
+    chk(() => !bookmarksOf(D.dir).items.some((b) => /flip|قلب/i.test(b.displayName || '')) && !fs.existsSync(scriptOf('Flip Off')) && !fs.existsSync(scriptOf('Flip False')) && !(D.r.j || {}).flipCards, () => 'OFF2. default: no flip bookmark, no script, no flipCards in the answer');
     const types = (ps) => JSON.stringify(ps.flatMap((p) => p.visuals.map((v) => (v.visual ? v.visual.visualType : 'group'))).sort());
     chk(() => pz.length === 1 && types(pz) === types(pg) && walk(Z.dir).length === walk(D.dir).length, () => `OFF3. flipCards false writes what the default writes: ${Z.err || short(Z.r)}`);
     chk(() => JSON.stringify(D.pl.j).includes('"flipCards":false'), () => `OFF4. the plan's look names the default (off): ${JSON.stringify((D.pl.j || {}).reportLook || null).slice(0, 300)}`);
@@ -170,10 +171,10 @@ try {
       () => `F5. both bookmarks of every card listed in bookmarks.json, once (the Reset bookmark kept): ${JSON.stringify(BM.list).slice(0, 400)}`);
     chk(() => BM.items.some((b) => b.options && b.options.suppressDisplay) && BM.list.items.length === BM.items.length, () => 'F5b. the Reset bookmark is still there and listed');
     // the script
-    const sc = scriptAt(SCRIPT), byM = new Map(((sc || {}).measures || []).map((x) => [x.table + '\u0000' + x.name, x]));
+    const sc = scriptAt(scriptOf('Flip EN')), byM = new Map(((sc || {}).measures || []).map((x) => [x.table + '\u0000' + x.name, x]));
     const refs = sets.flatMap((s) => [s.front, s.back, s.backdrop]).map(measureOf);
-    chk(() => sc && refs.length === 9 && refs.every((r) => r && !r.schema && byM.has(r.t + '\u0000' + r.m)) && sc.measures.length === 9, () => `F6. the script "Shop - flip cards.tmdl" next to the project holds the 9 measures the visuals name (model measures, no extension): ${sc ? sc.measures.map((x) => x.name).join(' | ') : 'no script'} ${JSON.stringify(refs).slice(0, 300)}`);
-    chk(() => sc && /^createOrReplace/.test(sc.text) && sc.measures.every((x) => x.table === 'Sales' && x.props.dataCategory === 'ImageUrl' && x.props.displayFolder), () => `F7. createOrReplace under ref table Sales; each measure ImageUrl, in a display folder: ${sc ? JSON.stringify(sc.measures.map((x) => x.props)).slice(0, 300) : ''}`);
+    chk(() => sc && refs.length === 9 && refs.every((r) => r && !r.schema && byM.has(r.t + '\u0000' + r.m)) && sc.measures.length === 9, () => `F6. the script "Flip EN - flip cards.tmdl" next to the project holds the 9 measures the visuals name (model measures, no extension): ${sc ? sc.measures.map((x) => x.name).join(' | ') : 'no script'} ${JSON.stringify(refs).slice(0, 300)}`);
+    chk(() => sc && /^createOrReplace/.test(sc.text) && sc.measures.every((x) => x.table === 'Sales' && x.props.dataCategory === 'ImageUrl' && x.props.displayFolder && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(x.props.lineageTag || '')) && new Set(sc.measures.map((x) => x.props.lineageTag)).size === sc.measures.length, () => `F7. createOrReplace under ref table Sales; each measure ImageUrl, in a display folder, with its own lineage tag (model-script.mjs): ${sc ? JSON.stringify(sc.measures.map((x) => x.props)).slice(0, 300) : ''}`);
     chk(() => sc && !sc.measures.some((x) => MODEL.model.tables.some((t) => (t.measures || []).some((y) => y.name === x.name))), () => 'F7b. no script measure has a name the model already has (nothing replaced)');
     const exprOf = (v) => { const r = measureOf(v); return r ? (byM.get(r.t + '\u0000' + r.m) || {}).expression || '' : ''; };
     const ts = setOf(sets, 'Total Sales'), front = ts && exprOf(ts.front), back = ts && exprOf(ts.back), bd = ts && exprOf(ts.backdrop);
@@ -223,7 +224,7 @@ try {
 
   // ---------- H: hostile names and descriptions ----------
   {
-    const sc = scriptAt(SCRIPT), all = sc ? sc.measures : [];
+    const sc = scriptAt(scriptOf('Flip EN')), all = sc ? sc.measures : [];
     const hostileM = all.filter((x) => x.name.startsWith(HOSTILE));
     chk(() => hostileM.length === 3 && /'Share % <b>"A&B"#1<\/b> \(flip front\)'/.test(sc.text), () => `H1. the hostile measure's new names are quoted in the script and read back whole: ${all.map((x) => x.name).join(' | ')}`);
     const f = hostileM.find((x) => /front/.test(x.name)), lf = f ? literals(f.expression) : '';
@@ -246,22 +247,20 @@ try {
 
   // ---------- L: a list ----------
   {
-    if (fs.existsSync(SCRIPT)) fs.renameSync(SCRIPT, SCRIPT + '.en');
     const L = await write({ name: 'Flip List', lang: 'en', ...DES, planFields: FIELDS, flipCards: [2, 5] });
-    const pg = L.dir && fs.existsSync(L.dir) ? shownPages(L.dir) : [], p0 = pg[0] || { visuals: [] }, sets = flipSets(p0), sc = scriptAt(SCRIPT);
+    const pg = L.dir && fs.existsSync(L.dir) ? shownPages(L.dir) : [], p0 = pg[0] || { visuals: [] }, sets = flipSets(p0), sc = scriptAt(scriptOf('Flip List'));
     chk(() => sets.length === 1 && p0.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && v.parentGroupName === (kpiGroup(p0) || {}).name).length === 2 && sc && sc.measures.length === 3 && sc.measures.every((x) => /^Orders/.test(x.name)),
       () => `L1. flipCards [2, 5]: only the second card flips (Orders); the others stay cards: ${L.err || short(L.r)} ${sc ? sc.measures.map((x) => x.name) : ''}`);
     const fa = (L.r && L.r.j && L.r.j.flipCards) || {};
     chk(() => JSON.stringify(fa.notFlipped || '').includes('5'), () => `L2. card 5 (the report has 3) is told: ${JSON.stringify(fa).slice(0, 300)}`);
     const c = L.r && !L.r.err ? await check(L.pbip) : null;
     chk(() => clean(c) && noBreak(c), () => `L3. validator 0 errors, 0 "can break": ${valErr(c)}`);
-    if (fs.existsSync(SCRIPT)) fs.renameSync(SCRIPT, SCRIPT + '.list');
   }
 
   // ---------- A: Arabic ----------
   {
     const A = await write({ name: 'Flip AR', lang: 'ar', ...DES, planFields: FIELDS, displayNames: AR_NAMES, flipCards: true });
-    const pg = A.dir && fs.existsSync(A.dir) ? shownPages(A.dir) : [], p0 = pg[0] || { visuals: [] }, sets = flipSets(p0), sc = scriptAt(SCRIPT);
+    const pg = A.dir && fs.existsSync(A.dir) ? shownPages(A.dir) : [], p0 = pg[0] || { visuals: [] }, sets = flipSets(p0), sc = scriptAt(scriptOf('Flip AR'));
     const byM = new Map(((sc || {}).measures || []).map((x) => [x.name, x])), ex = (v) => { const r = measureOf(v); return r && byM.get(r.m) ? decodeURIComponent(literals(byM.get(r.m).expression)) : ''; };
     chk(() => sets.length === 3 && sets.every((s) => /dir='rtl'/.test(ex(s.front)) && /dir='rtl'/.test(ex(s.back))), () => `A1. the Arabic faces are right to left: ${A.err || short(A.r)} ${sets[0] ? ex(sets[0].front).slice(0, 300) : ''}`);
     const ta = setOf(sets, 'Total Sales');
@@ -300,6 +299,18 @@ try {
     const c2 = fs.existsSync(copyDir) ? await check('g/Flip EN (EN-AR).pbip') : null;
     chk(() => clean(c2) && noBreak(c2) && !rules(c2).includes('PBIR_BOOKMARK_VISUAL_REF_MISSING'), () => `TW5. validator 0 errors, 0 "can break" on the EN-AR copy: ${valErr(c2)}`);
     chk(() => JSON.stringify(hashes(ENDIR)) === JSON.stringify(before) && Object.keys(before).length > 0, () => 'TW6. the original report untouched by the twin and the copy (hash of every file)');
+  }
+
+  // ---------- BOTH: with L3's metric switcher (one helper for model additions, one script file per option) ----------
+  {
+    const B2 = await write({ name: 'Flip Both', lang: 'en', ...DES, planFields: FIELDS, flipCards: [1], metricSwitcher: ['Sales[Total Sales]', 'Sales[Orders]'] });
+    const fsc = scriptAt(scriptOf('Flip Both')), msc = path.join(ROOT, 'g', 'Flip Both - metric switcher.tmdl');
+    const pg = B2.dir && fs.existsSync(B2.dir) ? shownPages(B2.dir) : [];
+    chk(() => fsc && fsc.measures.length === 3 && fs.existsSync(msc) && pg.length === 2 && flipSets(pg[0]).length === 1 && B2.r.j.flipCards && B2.r.j.metricSwitcher,
+      () => `BOTH1. both options: the flip script and the switcher's script, each its own file; the KPI page flips, the Metric page added: ${B2.err || short(B2.r)}`);
+    chk(() => /Flip cards \(1\)/.test(unesc(B2.html || '').replace(/<[^>]+>/g, ' ')) && /Metric switcher/.test(unesc(B2.html || '')), () => 'BOTH2. the approval page shows both');
+    const c = B2.r && !B2.r.err ? await check(B2.pbip) : null;
+    chk(() => clean(c) && noBreak(c), () => `BOTH3. validator 0 errors, 0 "can break" with both: ${valErr(c)}`);
   }
 
   // ---------- CR: a bookmark naming a missing visual ----------

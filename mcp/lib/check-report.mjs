@@ -17,6 +17,7 @@ import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 import { loadModel, ROOT, visible } from './model.mjs';
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
+import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -274,6 +275,26 @@ export async function checkReport(p, opts) {
   // name or text reads like an instruction, with its kind and reason; the name itself stays withheld
   // (R1: the reading block flags them once, as it reads them: pages, visual names, titles, text boxes, bookmarks)
   const suspicious = inv.suspicious.map((x) => ({ kind: x.kind, name: WITHHELD, file: x.file, why: x.why }));
+  // (L3) field parameters: the visuals that switch by one (Microsoft's validator accepts fieldParameters: no "can break"),
+  // whether the model the report names has its table yet, and a title measure that reads its display column alone (the
+  // lab of 10 Oct: Desktop's "Column [Metric] is part of composite key" error; the validator does not read the model)
+  let fieldParameters = null;
+  { const used = fieldParametersOf(R.visuals.map((x) => ({ file: x.file, json: x.json })));
+    if (used.length) {
+      let tm = null;
+      try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
+        if (by) { const t = loadModel(path.resolve(loc.reportDir, String(by))).tmsl; tm = (t && t.model) || t; } } catch (e) { tm = null; }
+      const tables = [...new Set(used.map((u) => u.table))], have = tm ? new Set((tm.tables || []).map((t) => t.name)) : null, missing = have ? tables.filter((t) => !have.has(t)) : [];
+      const tp = tm ? titleProblems(tm) : { problems: [] };
+      tp.problems.forEach((x) => add({ origin: 'rule', rule: 'FIELD_PARAMETER_TITLE', severity: 'warning', file: null, page: null, visual: null,
+        what: `a measure reads the field parameter's display column alone (${visible(x.parameter).slice(0, 60)}[${visible(x.display).slice(0, 60)}]): Power BI Desktop refuses it ("part of composite key") and the visual using it shows an error`,
+        fix: 'Read the parameter\'s order column instead: IF ( HASONEVALUE ( <table>[<table> Order] ), SWITCH ( SELECTEDVALUE ( <table>[<table> Order] ), 0, "label", ... ), "Choose one metric" ). DataArcus\'s metric switcher script writes it so.',
+        source: 'DataArcus: measured in Power BI Desktop 2.158, the field parameter lab of 10 Oct 2026' }));
+      fieldParameters = { parameters: tables.map((t) => ({ table: safeName(t), visuals: used.filter((u) => u.table === t).length, inModel: have ? have.has(t) : null })),
+        note: !tm ? 'The visuals that switch by a field parameter need its table in the model; the model could not be read here, so it is not known whether it is there yet.'
+          : missing.length ? `Until the script is applied: the field parameter${missing.length === 1 ? '' : 's'} ${missing.map((t) => JSON.stringify(safeName(t))).join(', ')} ${missing.length === 1 ? 'is' : 'are'} not in the model yet, so only the visuals that switch by ${missing.length === 1 ? 'it' : 'them'} show Power BI's error (apply the metric switcher's TMDL script next to the project in TMDL view). Not a broken report: every other visual works.`
+          : 'The field parameter tables the visuals switch by are in the model.' };
+    } }
   // what the tool could not judge
   if (dir === 'rtl') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
@@ -323,6 +344,7 @@ export async function checkReport(p, opts) {
     impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
+    ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
     counts: { errors: all.filter((f) => f.severity === 'error').length, warnings: all.filter((f) => f.severity === 'warning').length, notes: all.filter((f) => f.severity === 'note').length, byRule, byImpact },
     truncated: all.length > findings.length,
