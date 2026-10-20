@@ -194,6 +194,52 @@ try {
     const crg = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crg.err && !(crg.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crg.j.fieldParameters && /in the model/.test(crg.j.fieldParameters.note), () => `V3: with the script's own table no finding, and the note says the table is in the model: ${JSON.stringify(crg.j && crg.j.fieldParameters).slice(0, 400)}`);
   } else chk(() => false, () => 'V2/V3: no script to apply');
+
+  // ---------- F: the page filters (0.3.0 A1: the Metric page of a Ramadan report showed every date) ----------
+  {
+    const PF = [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1446] }];
+    const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF });
+    const F = await planAndWrite(fa);
+    const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design })) : F.pl;
+    const fdir = path.join(ROOT, 'large', 'L3 Filtered.Report'), pgs = pagesOf(fdir).filter((p) => p.json.type !== 'Tooltip'), mpF = metricPage(fdir);
+    const fields = (p) => ((p.json.filterConfig || {}).filters || []).map((x) => (x.field.Column || {}).Property + '=' + JSON.stringify(x.filter.Where[0].Condition.In.Values)).sort().join();
+    const own = pgs.filter((p) => !mpF || p.id !== mpF.id);
+    chk(() => !okF.err && mpF && own.length && own.every((p) => fields(p) === fields(own[0])) && fields(own[0]).includes('Is Ramadan') && fields(mpF) === fields(own[0]),
+      () => `F1: the Metric page holds the report's page filters (Is Ramadan, Hijri Year 1446) like every other page: ${short(okF)} ${JSON.stringify(pgs.map((p) => [p.json.displayName, fields(p)]))}`);
+    const names = mpF ? ((mpF.json.filterConfig || {}).filters || []).map((x) => x.name) : [];
+    chk(() => names.length === 2 && new Set(names).size === 2 && !own.some((p) => ((p.json.filterConfig || {}).filters || []).some((x) => names.includes(x.name))), () => `F2: the Metric page's filters have names of their own: ${JSON.stringify(names)}`);
+    if (!okF.err) await validate('page filters', fdir, 'large/L3 Filtered.pbip', 'en');
+  }
+  // ---------- F3: the Metric page's background is the report's own (0.3.0 A1: it had none); English and Arabic ----------
+  for (const lang of ['en', 'ar']) {
+    const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_NAMES } : {});
+    const B = await planAndWrite(ba), okB = B.id ? await ask('create_report', Object.assign({}, ba, { planId: B.id, design: B.pl.j.design })) : B.pl;
+    const bdir = path.join(ROOT, 'large', `L3 Background ${lang}.Report`), mpB = metricPage(bdir), first = pagesOf(bdir).find((p) => p.json.type !== 'Tooltip' && (!mpB || p.id !== mpB.id) && p.json.objects);
+    const bg = (p) => p && p.json.objects && p.json.objects.background && p.json.objects.background[0].properties, os = (p) => p && p.json.objects && JSON.stringify(p.json.objects.outspace);
+    chk(() => !okB.err && mpB && first && bg(mpB) && os(mpB) === os(first) && (bg(mpB).image ? bg(mpB).image.image.name : bg(mpB).color) && lit(bg(mpB).transparency) === lit(bg(first).transparency),
+      () => `F3 ${lang}: the Metric page has the report's background and outspace: ${short(okB)} metric ${JSON.stringify(mpB && mpB.json.objects)} first ${JSON.stringify(first && first.json.objects).slice(0, 400)}`);
+    if (lang === 'ar') {
+      const al = (v, o) => lit(((((v.visual.visualContainerObjects || {})[o]) || [])[0] || { properties: {} }).properties.alignment);
+      const cs = mpB ? mpB.visuals.filter((v) => /^(clusteredBarChart|lineChart)$/.test(v.visual.visualType)) : [];
+      chk(() => cs.length && cs.every((v) => al(v, 'title') === "'right'" && al(v, 'subTitle') === "'right'") && !(okB.j && okB.j.check && okB.j.check.problems || []).some((x) => x.rule === 'RTL_MIRROR'),
+        () => `F5: the Arabic Metric page's chart titles and subtitles are aligned right (RTL_MIRROR): ${JSON.stringify(cs.map((v) => [al(v, 'title'), al(v, 'subTitle')]))} ${JSON.stringify(okB.j && okB.j.check && okB.j.check.problems).slice(0, 300)}`);
+    }
+    if (!okB.err) await validate('background ' + lang, bdir, `large/L3 Background ${lang}.pbip`, lang);
+  }
+  // ---------- F4: the twin of a report without .platform writes one (0.3.0 A1: PBIR_PLATFORM_MISSING, a "can break") ----------
+  {
+    const P0 = path.join(ROOT, 'np'); fs.cpSync(path.join(HERE, 'fixtures/twin-project'), P0, { recursive: true }); fs.rmSync(path.join(P0, 'Twin Sales.Report/.platform'), { force: true });
+    for (const into of ['separate', 'same']) {
+      const tp = await ask('create_arabic_twin', { path: 'np/Twin Sales.pbip', into }), id = tp.j && tp.j.plan && tp.j.plan.planId;
+      if (id) await approve(id);
+      const tw = id ? await ask('create_arabic_twin', { path: 'np/Twin Sales.pbip', into, planId: id }) : tp;
+      const rdir = tw.j && tw.j.report ? path.join(P0, String(tw.j.report).split(/[\\/]/).pop()) : '', pf = rdir && path.join(rdir, '.platform');
+      let pj = null; try { pj = rd(pf); } catch (e) { pj = null; }
+      chk(() => !tw.err && pj && pj.metadata.type === 'Report' && pj.metadata.displayName === path.basename(rdir).replace(/\.Report$/, '') && /^[0-9a-f-]{36}$/.test(pj.config.logicalId) && pj.config.version === '2.0' && /platformProperties\/2\.0\.0/.test(pj.$schema),
+        () => `F4 ${into}: the twin of a report without .platform writes its own: ${short(tw)} ${JSON.stringify(pj)}`);
+      if (pj) { const cr = await ask('check_report', { path: 'np/' + path.basename(rdir).replace(/\.Report$/, '.pbip') }); chk(() => !cr.err && cr.j.validator.errors === 0 && cr.j.impact.kinds.canBreak.count === 0, () => `F4 ${into}: validator 0 errors, check_report 0 "can break": ${short(cr)}`); }
+    }
+  }
 } finally { await s.close(); fs.rmSync(ROOT, { recursive: true, force: true }); }
 
 if (problems.length) { console.log(`FAIL  metric-switcher  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
