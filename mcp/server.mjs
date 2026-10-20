@@ -93,8 +93,11 @@ const scrub = (str) => {
 // (audit 6, A6-6: every answer leaves through out(): a model name's hidden characters as code points, lib/answer.mjs)
 // (A6-8: and no answer passes 40,000 characters: capAnswer cuts the longest lists and says so)
 const pretty = (o) => JSON.stringify(o, null, 2), flat = (o) => JSON.stringify(o);
-const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? textOut(o) : pretty(capAnswer(out(o), (x) => pretty(x).length))) }] });
-const compact = (o) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length))) }] });
+// (0.3.0 A3) a twin's plan (answered compact: a fully optioned report's plan passed the cap pretty-printed) keeps its
+// texts whole while any other list can be cut: a text the plan does not show can't be given an Arabic label
+const TWIN_CAP = { last: ['texts'] };
+const text = (o, opts) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? textOut(o) : pretty(capAnswer(out(o), (x) => pretty(x).length, opts))) }] });
+const compact = (o, opts) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length, opts))) }] });
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
 const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
@@ -1645,10 +1648,13 @@ server.registerTool('plan_layout', {
     if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
     const an = arabicNames.arabicNames, why = NOT_TRANSLATED_WHY;
     const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))), conf2 = Terms.confirmedOf(m0, more);
-    conf2.forEach((c, k) => { reused[k] = c; planNames = Object.assign(planNames || {}, { [k]: reusedNames()[k] }); });
+    // (0.3.0 A3) a first name added here starts from the names the person approved (displayNames), never without them:
+    // a plan whose only fixed-list name came from the lint's fields pinned that one alone and dropped every approved name
+    const namesSoFar = () => planNames || Object.assign({}, a.displayNames || {});
+    conf2.forEach((c, k) => { reused[k] = c; planNames = Object.assign(namesSoFar(), { [k]: reusedNames()[k] }); });
     more.filter((k) => !conf2.has(k)).forEach((k) => {
       const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1'));
-      if (p) { planNames = Object.assign(planNames || {}, { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
+      if (p) { planNames = Object.assign(namesSoFar(), { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
       else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
     });
   }
@@ -1720,7 +1726,13 @@ server.registerTool('plan_layout', {
     const norm = (k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); };
     const givenN = new Map(Object.entries(a.displayNames || {}).map(([k, v]) => [norm(k), String(v)]));
     const places = exact ? Terms.placesOf(Terms.reportOf(exact.files)) : null, inThePlan = (arabicNames.arabicNames && arabicNames.arabicNames.inThePlan) || {};
-    const keysShown = places ? [...places.keys()] : [...new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field), ...givenN.keys()])];
+    const keysShown0 = places ? [...places.keys()] : [...new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field), ...givenN.keys()])];
+    // (0.3.0 A3) a measure shown only on a flip card (its title, alt texts, bookmarks and faces: no field header) is a
+    // row too: a declined one was listed nowhere and an approved one was not remembered for the next plan
+    // (and a metric switcher's measure: its name is a choice of the switcher's slicer and its charts' title, from this sheet)
+    const flipKeys = flipPlan ? [...new Set((flipPlan.cards || []).map((c) => norm(c.measure)))] : [];
+    const switchKeys = switchPlan ? [...new Set((switchPlan.measures || []).map((x) => norm(x.field)))] : [];
+    const keysShown = [...new Set(keysShown0.concat(flipKeys, switchKeys))];
     const terms = new Map(keysShown.map((k) => {
       const en = k.replace(/^.*?\[(.*)\]$/, '$1');
       if (givenN.has(k)) { const v = givenN.get(k); return [k, v.trim() === en ? { ar: null, status: 'kept', declined: true } : { ar: v, status: 'approved' }]; }
@@ -1729,9 +1741,14 @@ server.registerTool('plan_layout', {
       return [k, { ar: null, status: 'kept' }];
     }));
     termRows = Terms.sheetOf(keysShown, terms, places, Terms.isolateLatin);
+    termRows.forEach((r, i) => { const k = keysShown[i]; if (r.where.length) return;
+      r.where = [...new Set((flipKeys.includes(k) ? flipPlan.cards.filter((c) => norm(c.measure) === k).map((c) => `${c.page}: flip card (title, alt text, bookmarks, faces)`) : [])
+        .concat(switchKeys.includes(k) ? [`${switchPlan.page}: a choice of the metric switcher (its slicer and its charts' title)`] : []))]; });
     terminology = { terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW }) };
   }
-  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then the cards are empty pictures). Editing in Desktop, a card turns with Ctrl+click.` }) } : {};
+  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then the cards are empty pictures). Editing in Desktop, a card turns with Ctrl+click.${a.lang === 'ar' ? ' Say keptInEnglish too.' : ''}` },
+    // (0.3.0 A3) an Arabic front shortens a large value with the English card's Latin unit letters: said before the go
+    a.lang === 'ar' ? { keptInEnglish: [{ text: 'K, M, B', where: 'the front of a flip card whose value is 1,000 or more (3.43K, 1.20M, 2.05B)', why: 'the front shortens a large value with the unit letters of the English card; no Arabic unit word is written yet' }] } : {}) } : {};
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
     : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, switchPlan ? { metricSwitcher: switchPlan } : {}, flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined }) } : {}, iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined }) } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, termRows ? { terminology: termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })) } : {}, gulfDateRows ? { gulfDates: gulfDateRows } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
@@ -1810,8 +1827,8 @@ server.registerTool('create_arabic_twin', {
   const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${P.answer.labels.given} Arabic texts as approved), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
     : `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
-    ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) })) }));
+  return compact(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
+    ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) })) }), TWIN_CAP);
 }));
 
 // (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
