@@ -408,7 +408,9 @@
     const v = json.visual, button = kindOf(json) === 'button';
     [['o', v.objects], ['c', v.visualContainerObjects]].forEach(([w, bag]) => { if (!isObj(bag)) return; Object.keys(bag).forEach((card) => {
       (Array.isArray(bag[card]) ? bag[card] : []).forEach((e, i) => { if (!isObj(e) || !isObj(e.properties)) return; TEXT_PROPS.forEach((prop) => {
-        if (prop === 'text' && ((w === 'c' && card === 'title') || (w === 'o' && card === 'text' && button))) return;
+        // (0.3.0 A3) a button's own title (the visual's title card: off by default, still the name a screen reader may
+        // read, and shown when switched on) is listed with the other texts, so it takes the button's approved Arabic
+        if (prop === 'text' && ((w === 'c' && card === 'title' && !button) || (w === 'o' && card === 'text' && button))) return;
         const s = strOf(e.properties[prop]); if (s != null && /\p{L}/u.test(s)) fn({ key: `${w}.${card}.${i}.${prop}`, prop, entry: e, text: s });
       }); });
     }); });
