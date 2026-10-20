@@ -151,5 +151,5 @@ try {
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* a temp folder */ }
 }
 
-if (problems.length) { console.error(`${problems.length} of ${checks} D6 checks FAILED:\n- ` + problems.join('\n- ')); process.exit(1); }
-console.log(`All ${checks} D6 checks passed (approval pages complete for the twin and the theme).`);
+if (problems.length) { console.log(`FAIL  approval-complete  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  approval-complete  ${checks} checks`);

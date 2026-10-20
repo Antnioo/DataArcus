@@ -154,6 +154,6 @@ try {
 } catch (e) { problems.push('the test threw: ' + String(e && e.stack || e).slice(0, 600)); }
 
 function texts0(svg) { return [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => unq(m[1])); }
-console.log(`D5 preview match: ${checks - problems.length} of ${checks} checks pass`);
-problems.forEach((p) => console.log('  FAIL ' + p));
+if (problems.length) { console.log(`FAIL  preview-match  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
+console.log(`PASS  preview-match  ${checks} checks`);
 process.exit(problems.length ? 1 : 0);
