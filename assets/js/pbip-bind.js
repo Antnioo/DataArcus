@@ -416,7 +416,7 @@
     // (design round 9, the re-score's D11 and D19: the writer reads the picker's two-valued and many-valued marks from
     // the field itself, so a chart by "Yes/No" or by a product name is drawn for it; builder 5's marks, carried only)
     return Object.assign({ t: table.name, c: c.name, type }, by ? { sortBy: { t: table.name, c: by.name } } : {}, sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: table.name, c: dt.name } } : {},
-      marks, r ? { tableFormat: r.format } : {}, sh ? { short: sh } : {}, twoValued(c, type) ? { two: true } : {}, manyValued(table, c) ? { wide: true } : {});
+      marks, r ? { tableFormat: r.format } : {}, sh ? { short: sh } : {}, twoValued(c, type) ? { two: true } : {}, fewValued(c, type) ? { few: fewValued(c, type) } : {}, manyValued(table, c) ? { wide: true } : {});
   }
   // (round 18, S3, the owner's yes on 6 Oct: a chart's day names slant on a column chart; builder 7's audit A3-2, 11 Oct:
   // it was the server's, by the Gulf calendar's names "Day Name" and "Day Short"): a day-name column carries its
@@ -466,6 +466,10 @@
   const twoValued = (c, type) => { if (type === 'boolean') return true; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : ''); if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return false;
     // (round 8, D11: a SWITCH or nested IFs whose results are two texts hold two values too)
     const words = new Set((e.match(/"(?:[^"]|"")*"/g) || []).map((x) => x.toLowerCase())); return words.size === 2; };
+  // (0.3.0 L2: the pills slicer) a calculated column whose DAX is IF or SWITCH with 3-6 distinct texts holds that many
+  // values at most (by its formula, never its data): few, for the writer's button slicer; 0 otherwise
+  const fewValued = (c, type) => { if (type === 'boolean') return 0; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : ''); if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return 0;
+    const n = new Set((e.match(/"(?:[^"]|"")*"/g) || []).map((x) => x.toLowerCase())).size; return n >= 3 && n <= 6 ? n : 0; };
   // S5: a column with many values: a lookup table's own name column (Product Name in Products), or a detail place
   // (a city, an address, a postcode: by the model's data category, or its whole words)
   const DETAIL_PLACE = /^(city|address|place|postalcode|postcode|zip|latitude|longitude|weburl)$/i;
@@ -501,7 +505,7 @@
         const col = Object.assign({ t: t.name, c: c.name, type, dateTable: isDateTable(t), cat: c.dataCategory }, fo.sortBy ? { sortBy: fo.sortBy } : {}, fo.ordered ? { ordered: true } : {}, fo.dateOf ? { dateOf: fo.dateOf } : {}, { time: fo.time }, fo.cal ? { cal: fo.cal } : {});
         // (A3-3: its table format in META too: build puts it on a table's field only)
         Object.assign(meta(col), { lang: type === 'string' || type === 'unknown' ? langOf(c.name) : null, i, twin: null, tableFormat: fo.tableFormat || null, short: fo.short || null,
-          stamp: isStamp(c, type), two: twoValued(c, type), wide: manyValued(t, c), id: idLike(c),
+          stamp: isStamp(c, type), two: twoValued(c, type), few: fewValued(c, type), wide: manyValued(t, c), id: idLike(c),
           numeric: /^(sum|average|min|max|count|distinctcount)$/i.test(String(c.summarizeBy || '')) || /^[#0,.\s]+%?$/.test(String(c.formatString || '').trim()) && /0/.test(String(c.formatString || '')) });
         columns.push(col); });
     });
@@ -787,7 +791,7 @@
     // (counts: agg, its name) keeps them, so a model without measures is bound here too)
     const tfOf = (x) => x.tableFormat || metaOf(x).tableFormat, shortOf = (x) => x.short || metaOf(x).short;
     const f = (x, role) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}, x.unitAuto ? { unitAuto: true } : {},   /* (round 11, RESCORE-4: unitAuto was dropped here, so the written card kept its 2 decimals) */ role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {})
-      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') || x.num ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {}, x.time != null ? { time: x.time } : {}, x.cal ? { cal: x.cal } : {}, x.two || metaOf(x).two ? { two: true } : {}, x.wide || metaOf(x).wide ? { wide: true } : {},
+      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') || x.num ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {}, x.time != null ? { time: x.time } : {}, x.cal ? { cal: x.cal } : {}, x.two || metaOf(x).two ? { two: true } : {}, x.few || metaOf(x).few ? { few: x.few || metaOf(x).few } : {}, x.wide || metaOf(x).wide ? { wide: true } : {},
         x.agg != null ? Object.assign({ agg: x.agg }, x.name ? { name: x.name } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}) : {}, role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {}, role === 'cat' && shortOf(x) ? { short: shortOf(x) } : {})) : null);
     const card = (x) => { const o = f(x); return o && ch.full && x.fullFormat ? Object.assign(o, { cardFormat: x.fullFormat }) : o; };
     // the same field: a measure by its name (as before), a column by its table, name and aggregation
