@@ -18,6 +18,8 @@ import { loadModel, ROOT, visible } from './model.mjs';
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
+// (0.3.1 L6) the names the DAX function library gives its measures (lib/dax-functions.mjs SUFFIX; a free name may add " 2")
+const DAX_MEASURE = / \((sparkline|bullet bar|KPI card|story title)\)( \d+)?$/;
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -266,6 +268,7 @@ export async function checkReport(p, opts) {
       if (!ms) return;
       const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity);
       if (t && (t.measures || []).some((y) => y.name === ms.Property)) return;
+      if (DAX_MEASURE.test(String(ms.Property))) return;   // (L6: a DAX functions measure: DAX_MEASURE_PENDING below)
       add({ origin: 'rule', rule: 'IMAGE_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: 'image' },
         what: 'the image shows a picture measure the model does not have yet, so it is empty in Power BI Desktop (a flip card\'s face before its script is applied)',
         fix: 'Apply the report\'s flip cards script ("<model> - flip cards.tmdl", next to the project) in TMDL view: Preview, then Apply. Then check again.', source: 'DataArcus: the flip cards (0.3.0 L4), their measures written as a TMDL script' });
@@ -280,6 +283,24 @@ export async function checkReport(p, opts) {
       add({ origin: 'rule', rule: 'ICON_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: x.type },
         what: `${missing.length} status icon${missing.length === 1 ? ' takes its' : 's take their'} icon from a measure the model does not have yet, so no icon shows in Power BI Desktop (the status icons before their script is applied)`,
         fix: 'Apply the report\'s status icons script ("<report> - status icons.tmdl", next to the project) in TMDL view: Preview, then Apply. Then check again.', source: 'DataArcus: the status icons (0.3.0 L5), their measures written as a TMDL script' });
+    });
+  }
+  // (0.3.1 L6) a visual that shows a measure of the DAX functions script (a table column, a KPI card's picture, a story
+  // title) the model does not have yet: a note, never "can break" (the script is applied by the user in TMDL view, and
+  // raises the compatibility level). Counted per visual; the measure's name is not quoted
+  if (checks.includes('navigation')) {
+    let tables = null;
+    try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = loadModel(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
+    if (tables) R.visuals.forEach((x) => {
+      const found = [];
+      const walk = (o) => { if (!o || typeof o !== 'object') return; if (o.Measure && o.Measure.Expression && o.Measure.Expression.SourceRef && !o.Measure.Expression.SourceRef.Schema && typeof o.Measure.Property === 'string') found.push(o.Measure); Object.values(o).forEach(walk); };
+      walk((x.json || {}).visual);
+      const missing = found.filter((ms) => DAX_MEASURE.test(ms.Property)).filter((ms) => { const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity); return !(t && (t.measures || []).some((y) => y.name === ms.Property)); });
+      const n = new Set(missing.map((ms) => ms.Expression.SourceRef.Entity + '\u0000' + ms.Property)).size;
+      if (!n) return;
+      add({ origin: 'rule', rule: 'DAX_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: x.type },
+        what: `the visual shows ${n === 1 ? 'a measure' : n + ' measures'} of the DataArcus DAX functions script that the model does not have yet, so ${n === 1 ? 'it is' : 'they are'} empty in Power BI Desktop (a picture, a column or a title before the script is applied)`,
+        fix: 'Apply the report\'s DAX functions script ("<report> - DAX functions.tmdl", next to the project) in TMDL view: Preview, then Apply. It raises the model\'s compatibility level to 1702, which cannot be undone; save a copy first. Then check again.', source: 'DataArcus: the DAX function library (0.3.1 L6), its functions and measures written as a TMDL script' });
     });
   }
   // 4. untrusted text: page names that read like an instruction (the name is not repeated)

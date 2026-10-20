@@ -53,7 +53,7 @@ const cssColor = (c, d) => (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(String(c || '')
 const cssFont = (f) => String(f || 'Segoe UI').replace(/[^A-Za-z0-9 -]/g, '').trim() || 'Segoe UI';
 
 // the KPI rule's shapes for the front (pbip-bind's card rule, as DAX): a percent, a whole count, else automatic units
-function frontValue(m, mref) {
+export function frontValue(m, mref) {
   const f = String(m.formatString || ''), pct = /%/.test(f) || /%|\b(rate|ratio|share|margin)\b/i.test(String(m.name));
   if (pct) return `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )`;
   if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )`;
@@ -93,7 +93,7 @@ function measuresOf(c, t, m, cal, words) {
 
 // the calendar a measure's year on year may use: the key date column of a table marked as a date table (dataCategory
 // Time), related directly to the measure's table; else null with why
-function calendarFor(model, table) {
+export function calendarFor(model, table) {
   const cals = (model.tables || []).filter((t) => /^time$/i.test(String(t.dataCategory || '')));
   for (const t of cals) {
     const c = (t.columns || []).find((x) => x.isKey && /^date(time)?$/i.test(String(x.dataType || '')));

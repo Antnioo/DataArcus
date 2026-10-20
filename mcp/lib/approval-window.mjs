@@ -89,6 +89,8 @@ export function groupFiles(paths, own) {
 export const PROMPT_SUMMARY_CAP = 600;
 export function promptSummary(kind, data) {
   const d = data || {}, groups = summary(kind, d).files || [], lines = [];
+  // (L6) the compatibility step first in the app's prompt too
+  if (kind === 'report' && d.daxFunctions && d.daxFunctions.compatibility && d.daxFunctions.compatibility.raises) lines.push('First: applying the DAX functions script raises the model\'s compatibility level to 1702; it cannot be undone.');
   if (groups.length) {
     const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${g.label} (${g.paths.length})`);
     let line = `${n} file${n === 1 ? '' : 's'}: `, k = 0;
@@ -113,7 +115,7 @@ function askPage(w) {
   // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
   const ck = s.previews && s.previews.check, ckHtml = ck ? `<h2>Checked before writing</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `Page ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}<p class="note">The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.</p></div>` : '';
   return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files)}<p class="note">${esc(writesNote(w.plan.writes))}</p></div>
+${s.first ? `<h2>${esc(s.first.heading)}</h2><div class="card"><p class="warn"><strong>${esc(s.first.text)}</strong></p></div>` : ''}${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files)}<p class="note">${esc(writesNote(w.plan.writes))}</p></div>
 ${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
 <form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
@@ -207,10 +209,14 @@ export function summary(kind, data) {
   const d = data || {}, pins = d.pins || {}, sections = [];
   // (R6, F09 f: a long value was cut at 600 characters) every value in full
   const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : JSON.stringify(v));
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions\.tmdl$/i]]) : null;   // (L3: the switch's own script)
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
+    // (0.3.1 L6) the DAX function library's compatibility step, FIRST on the page: applying its script raises the model's
+    // compatibility level to 1702, which cannot be undone (or the model is already there)
+    const DF = d.daxFunctions && d.daxFunctions.compatibility ? d.daxFunctions : null;
+    if (DF) T.first = { heading: DF.compatibility.raises ? 'First: this raises your model\'s compatibility level (cannot be undone)' : 'First: your model\'s compatibility level', text: String(DF.compatibility.sayFirst || '') };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
@@ -248,8 +254,13 @@ export function summary(kind, data) {
         SI.themeAdded ? [['Theme', String(SI.themeAdded)]] : [],
         (SI.notShown || []).map((x) => [`No icon: ${cut(String(x.measure || ''), 120)}`, String(x.why || '')]),
         SI.none ? [['No icon', String(SI.none)]] : []) });
+    // (0.3.1 L6) the DAX function library: every function and every measure the script adds, where each shows, before the click
+    if (DF) sections.push({ heading: `DAX function library (${(DF.functions || []).length} functions, ${(DF.measures || []).length} measures)`, rows: (DF.functions || []).map((f) => [`Function ${String(f.name || '')}`, `(${String(f.params || '')})${f.inScript === false ? ': already in the model, left out of the script' : ''}`])
+      .concat((DF.measures || []).map((x) => [`Measure ${cut(String(x.measure || ''), 140)}`, `${({ sparkline: 'sparkline column', bulletBar: 'bullet bar column', kpiCards: 'KPI card picture', storyTitles: 'story title' })[x.use] || String(x.use || '')} of ${cut(String(x.of || ''), 140)}`]),
+        [['Colours', String(DF.colours || '')], ['Model change', String(DF.modelChange || '')]],
+        (DF.notUsed || []).map((x) => [`Not used: ${String(x.use || '')}${x.page ? ` (${cut(String(x.page), 60)})` : ''}`, String(x.why || '')])) });
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
-    const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
+    const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', daxFunctions: 'DAX function library', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
     const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true)).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
