@@ -3505,13 +3505,18 @@ if (part('round12')) {
   // #22 and #21: one Ramadan (page filters on the Ramadan flag and the Hijri year): no slicer on a column a page filter
   //   fixes, and the line chart by Ramadan Day (1 to 30), not by month (two points); both told
   {
-    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'] },
-      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    // (F1, STRICT: the person's grain is the season's days, so the plan takes its axis, Calendar[Ramadan Day], as given)
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'], timeAxis: 'Calendar[Ramadan Day]' },
+      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }],
+      // (F1, STRICT: the person's grain and scope: one Ramadan, 1447, by its days)
+      gulfDates: { grain: 'seasonDay', scope: 'year', year: 1447 } });
     const vs = pageVisuals(x, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].queryRef);
     const line = vs.find((v) => type(v) === 'lineChart'), notes = JSON.stringify((x.j || {}).reportNotes || []);
     chk(() => !x.err && sl.length >= 1 && !sl.includes('Calendar.Is Ramadan') && !sl.includes('Calendar.Hijri Year') && /slicer/i.test(notes),
-      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)}`);
-    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day' && /Ramadan Day/.test(notes),
+      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)} ${x.err ? x.t.slice(0, 600) : ''}`);
+    // (F1, STRICT: the person now gives the season-day axis, so the writer has no change of its own to tell: the note's
+    // part of this check is left out on purpose)
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day',
       () => `#21: one Ramadan's line chart by Ramadan Day: ${line && line.visual.query.queryState.Category.projections[0].queryRef}`);
   }
   // #16: month labels stay level: the line chart's axis takes the model's short month names ("Jan") where it has them
