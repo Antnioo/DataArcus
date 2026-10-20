@@ -101,6 +101,10 @@
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    // (0.3.0 F1, the laptop proof on 2.159: a button slicer hides a text its tile is too low for) a pill slicer: its header
+    // (the container title, written at the tiles' size) the dropdown's measured title share ceil(8 + 2 x pt), one row of
+    // tiles one line ceil(1.6 x pt) + 2 x PILL_PAD of padding (written), and 4 between: 49 at 8pt, 56 at 10pt, 74 at 15pt
+    const PILL_PAD = 4, pillH = (t) => Math.ceil(8 + 2 * t) + Math.ceil(1.6 * t) + 2 * PILL_PAD + 4;
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:
@@ -173,7 +177,7 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
