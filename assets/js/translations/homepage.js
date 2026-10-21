@@ -52,7 +52,7 @@ window.homepageTranslations = {
         "Enterprise Governance & Security",
         "Custom Visual Development"
       ],
-      proofBadges: ["Microsoft Certified Power BI Data Analyst", "Reports checked with Microsoft's report validator", "Arabic & English"],
+      proofBadges: ["Microsoft Certified Power BI Data Analyst", "Report files checked with Microsoft's format validator", "Arabic & English"],
       proof: {"live": "Live showcase", "title": "Fintech Portfolio Risk Engine", "subtitle": "72 projects, public challenge data", "caption": "Budget, schedule and delivery risk in one model: Earned Value Management forecasts each project's final cost and end date.", "link": "See the live dashboard"}
     },
 
@@ -345,7 +345,7 @@ portfolio: {
         "حوكمة وأمان على مستوى الشركات",
         "تطوير واجهات مرئية مخصصة"
       ],
-      proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "تقارير تُفحص بمدقّق التقارير من Microsoft", "العربية والإنجليزية"],
+      proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "ملفات التقارير تُفحص بمدقّق التنسيق من Microsoft", "العربية والإنجليزية"],
       proof: {"live": "نموذج تفاعلي مباشر", "title": "محرّك مخاطر محفظة مشاريع Fintech", "subtitle": "72 مشروعًا، ببيانات تحدٍّ عامة", "caption": "مخاطر الميزانية والجدول الزمني والتسليم في نموذج واحد: إدارة القيمة المكتسبة تتوقّع التكلفة النهائية وتاريخ الانتهاء لكل مشروع.", "link": "شاهد لوحة التحكم"}
     },
 
