@@ -86,5 +86,14 @@ export const writesNote = (writes) => {
   return `New files only: nothing is overwritten or deleted. ${FAILED}`;
 };
 
+// (0.3.0 T1, T-5) the same sentences on an Arabic plan's approval page
+const FAILED_AR = 'إن فشلت الكتابة في منتصفها، يحذف DataArcus ما أنشأه هذا الطلب، ويذكر أي شيء لم يستطع حذفه.';
+export const writesNoteAr = (writes) => {
+  const w = (writes || []).map(String);
+  if (w.some((x) => x.includes(REPLACES))) return `تستبدل هذه الخطة ملف الإجابات الذي كتبه DataArcus بجانب المشروع (إن كان لا يزال الملف الذي فحصه DataArcus)، وكل ملف آخر جديد: لا يُكتب فوق أي ملف آخر ولا يُحذف شيء. ${FAILED_AR}`;
+  if (w.some((x) => /^the answers file /.test(x))) return `تكتب هذه الخطة ملف إجابات جديدًا بجانب المشروع. ملفات جديدة فقط: لا يُكتب فوق أي ملف ولا يُحذف شيء. ${FAILED_AR}`;
+  return `ملفات جديدة فقط: لا يُكتب فوق أي ملف ولا يُحذف شيء. ${FAILED_AR}`;
+};
+
 /** The short key the assistant passes back for a question: the first 16 characters of its signature. */
 export const answerKey = (sig) => String(sig).slice(0, 16);

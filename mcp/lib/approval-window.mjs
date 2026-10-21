@@ -11,9 +11,10 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { writesNote } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
+import { writesNote, writesNoteAr } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
 import { E } from './design.mjs';             // (D6: the written colour's own contrast, by the engine's rule)
 import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
+import { scriptIs, APPLY_STEPS, SCRIPT_IS_AR, APPLY_STEPS_AR } from './plain-words.mjs';   // (0.3.0 T1, T-4)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -65,8 +66,8 @@ button.go{background:var(--accent);border-color:var(--accent);color:var(--accent
 .done{font-size:18px;font-weight:600}.sw-i{display:inline-flex;align-items:center;gap:4px;margin:0 10px 4px 0;white-space:nowrap}.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
 .preview figure{margin:0 0 14px}.preview svg{display:block;width:100%;height:auto;border-radius:6px}.preview figcaption{color:var(--soft);font-size:13px;margin-top:6px}`;
 
-function page(title, body) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
+function page(title, body, ar) {
+  return `<!doctype html><html lang="${ar ? 'ar" dir="rtl' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
 }
 // (rc.22, B-135: the colours were shown as raw JSON) a value { swatches: [[name, hex]] } is drawn as colour swatches, each
 // hex checked to be a colour (no other text reaches the style)
@@ -105,27 +106,96 @@ export function promptSummary(kind, data) {
     const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (the approved colour's contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1${own}).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
   return lines.join('\n');
 }
-const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
+// (0.3.0 T1, the simulated beta testers' T-5) the page's own words, in Arabic for an Arabic plan (a report in Arabic,
+// a twin, the EN-AR copy); file paths, field names and plan ids stay as they are, isolated left to right (J18)
+const WORDS = {
+  en: { ask: 'Approve: ', lead: 'DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.', approve: 'Approve', notNow: 'Not now',
+    preview: 'What the report will look like', previewNote: 'A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads the files on your computer to check them, and never returns data values to Claude.',
+    page: 'Page', toCheck: 'to check', checked: 'Checked before writing', worth: 'Worth a look', checkNote: 'The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.',
+    files: 'Files that will be written', yours: 'The files you asked for:', all: (n) => `All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'About the script',
+    roles: { report: 'the report: open it in Power BI Desktop', script: 'the script: see "About the script" below', theme: 'the theme file: in Power BI Desktop, View > Themes > Browse for themes' },
+    plan: (id) => `Plan ${id}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.` },
+  ar: { ask: 'موافقة: ', lead: 'يطلب DataArcus موافقتك قبل أن يكتب أي شيء. لم يُكتب أي شيء بعد. راجع الخطة، ثم وافق عليها أو لا.', approve: 'موافقة', notNow: 'ليس الآن',
+    preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل عنصر مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
+    page: 'الصفحة', toCheck: 'للفحص', checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
+    files: 'الملفات التي ستُكتب', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
+    roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
+    plan: (id) => `الخطة <bdi dir="ltr">${esc(id)}</bdi>. لا يوافق عليها إلا نقرة هنا: ما يُكتب في المحادثة لا يوافق عليها. لا توافق إلا على خطة طلبتها.` }
+};
+// the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
+const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'العناصر المرئية', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم العناصر المرئية المخصصة',
+  'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Status icons script': 'سكربت أيقونات الحالة', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
+  "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
+function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
+const kindLabel = (label, ar) => (ar && KIND_AR[label] ? `${KIND_AR[label]} · ${label}` : label);
+const iso = (t) => `<bdi dir="ltr">${esc(t)}</bdi>`;
+// (0.3.0 T1, T-1: "102 files:" then every visual.json path; finance and HR approved "on the summary line") the files by
+// kind, in words ("1 report: 4 pages, 40 visuals, 2 bookmarks, 26 phone layouts; 1 theme; 1 script"), counted from the
+// same list the page folds below (the plan's own outputs: what the write writes)
+export function kindsLine(paths, kind, ar) {
+  const P = (paths || []).map(String), n = (re) => P.filter((f) => re.test(f)).length, en = (k, one, many) => `${k} ${k === 1 ? one : many}`, parts = [];
+  const reports = n(/\.pbip$/i);
+  if (reports) {
+    const inner = [[n(/\/page\.json$/), 'page', 'pages', 'الصفحات'], [n(/\/visual\.json$/), 'visual', 'visuals', 'العناصر المرئية'], [n(/\.bookmark\.json$/), 'bookmark', 'bookmarks', 'الإشارات المرجعية'], [n(/\/mobile\.json$/), 'phone layout', 'phone layouts', 'تخطيطات الهاتف']].filter((x) => x[0]);
+    parts.push(ar ? `التقارير: ${reports}${inner.length ? ` (${inner.map((x) => `${x[3]}: ${x[0]}`).join('، ')})` : ''}` : `${en(reports, 'report', 'reports')}${inner.length ? ': ' + inner.map((x) => en(x[0], x[1], x[2])).join(', ') : ''}`);
+  }
+  const themes = kind === 'theme' ? n(/\.json$/i) : n(/RegisteredResources\/[^/]+\.json$/i), scripts = n(/\.tmdl$/i);
+  if (themes) parts.push(ar ? `السمة: ${themes}` : en(themes, 'theme', 'themes'));
+  if (scripts) parts.push(ar ? `السكربتات: ${scripts}` : en(scripts, 'script', 'scripts'));
+  return parts.join(ar ? '؛ ' : '; ');
+}
+// the files the person asked for, named on top: the project file (the report), each script, the theme file
+const mainFiles = (paths, kind) => (paths || []).map(String).filter((f) => /\.pbip$/i.test(f) || /\.tmdl$/i.test(f) || (kind === 'theme' && /\.json$/i.test(f)))
+  .map((f) => [f, /\.pbip$/i.test(f) ? 'report' : /\.tmdl$/i.test(f) ? 'script' : 'theme']);
+const filesHtml = (groups, kind, ar) => {
+  if (!groups || !groups.length) return '';
+  const W = WORDS[ar ? 'ar' : 'en'], all = [].concat(...groups.map((g) => g.paths)), n = all.length, line = kindsLine(all, kind, ar), main = mainFiles(all, kind);
+  return `${line ? `<p><strong>${esc(line)}</strong></p>` : ''}${main.length ? `<p>${esc(W.yours)}</p><ul>${main.map(([f, r]) => `<li>${iso(f.split('/').pop())}: ${esc(W.roles[r])}</li>`).join('')}</ul>` : ''}`
+    + `<details><summary>${esc(W.all(n))}</summary><ul>${groups.map((g) => `<li><details><summary>${esc(kindLabel(g.label, ar))} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li>${iso(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul></details>`;
+};
+// (T-4) what a script is and the 3 steps, where the person decides
+const scriptHtml = (s, writes, ar) => {
+  const any = (s.files || []).some((g) => g.paths.some((f) => /\.tmdl$/i.test(f))) || (writes || []).some((x) => /\.tmdl\b/i.test(String(x)));
+  if (!any) return '';
+  const W = WORDS[ar ? 'ar' : 'en'];
+  return `<h2>${esc(W.about)}</h2><div class="card"><p>${esc(ar ? SCRIPT_IS_AR : scriptIs(s.scriptWhat))}</p><ol>${(ar ? APPLY_STEPS_AR : APPLY_STEPS).map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
+};
+
+
+// (T-5) a section's heading in Arabic, where the page knows it (the rest of the heading, a count, stays)
+const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
+  ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
+  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
+  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان']];
+// (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
+const headingOf = (h, ar) => { if (!ar) return h; const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); return x ? `${x[1]} · ${h}` : h; };
 
 function askPage(w) {
-  const s = w.show;
-  const sections = s.sections.filter((x) => x.rows.length).map((x) => `<h2>${esc(x.heading)}</h2>${rows(x.rows)}`).join('');
+  const s = w.show, ar = s.lang === 'ar', W = WORDS[ar ? 'ar' : 'en'];
+  // (T-7: the raw inputs folded) a section with fold is shown closed
+  const sections = s.sections.filter((x) => x.rows.length).map((x) => (x.fold ? `<details><summary>${esc(headingOf(x.heading, ar))}</summary>${rows(x.rows)}</details>` : `<h2>${esc(headingOf(x.heading, ar))}</h2>${rows(x.rows)}`)).join('');
   // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
-  const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>What the report will look like</h2><div class="card preview">${s.previews.pages.map((p, i) => {
+  const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>${esc(W.preview)}</h2><div class="card preview">${s.previews.pages.map((p, i) => {
     const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
-    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">Page ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} to check: ${esc([...new Set(fl.map((f) => Preview.WORDS.en[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads files on your machine to check and fingerprint them, and never returns data values to Claude.</p></div>` : '';
+    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">${esc(W.page)} ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} ${esc(W.toCheck)}: ${esc([...new Set(fl.map((f) => (Preview.WORDS[ar && Preview.WORDS.ar ? 'ar' : 'en'] || Preview.WORDS.en)[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">${esc(W.previewNote)}</p></div>` : '';
   // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
-  const ck = s.previews && s.previews.check, ckHtml = ck ? `<h2>Checked before writing</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `Page ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}<p class="note">The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.</p></div>` : '';
-  return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files)}<p class="note">${esc(writesNote(w.plan.writes))}</p></div>
-${sections}
-<div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
-<form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
-<p class="note">Plan ${esc(w.plan.id)}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.</p>`);
+  // (T1, T-3: "3 more worth a look" with no list) each item worth a look, one plain line
+  const ck = s.previews && s.previews.check, wl = ck && Array.isArray(ck.worthALookItems) ? ck.worthALookItems : [];
+  const ckHtml = ck ? `<h2>${esc(W.checked)}</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `${W.page} ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}${wl.length ? `<p>${esc(W.worth)}:</p><ul>${wl.map((x) => `<li dir="auto">${esc(x)}</li>`).join('')}</ul>` : ''}<p class="note">${esc(W.checkNote)}</p></div>` : '';
+  return page(W.ask + s.title, `<h1 dir="auto">${esc(s.title)}</h1><p class="lead">${esc(W.lead)}</p>
+${pv}${ckHtml}<h2 id="files">${esc(W.files)}</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files, s.kind, ar)}<p class="note">${esc(ar ? writesNoteAr(w.plan.writes) : writesNote(w.plan.writes))}</p></div>
+${scriptHtml(s, w.plan.writes, ar)}${sections}
+<div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">${esc(W.approve)}</button></form>
+<form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">${esc(W.notNow)}</button></form></div>
+<p class="note">${ar ? W.plan(w.plan.id) : esc(W.plan(w.plan.id))}</p>`, ar);
 }
-const donePage = (w) => page(w.decided === 'approve' ? 'Approved' : 'Not approved', w.decided === 'approve'
+const donePage = (w) => (w.show && w.show.lang === 'ar' ? page(w.decided === 'approve' ? 'تمت الموافقة' : 'لم تتم الموافقة', w.decided === 'approve'
+  ? `<p class="done">تمت الموافقة.</p><p>ارجع إلى Claude: يمكنه الآن كتابة ملفات الخطة ${iso(w.plan.id)}. يمكنك إغلاق هذه الصفحة.</p>`
+  : `<p class="done">لم تتم الموافقة.</p><p>لن يُكتب أي شيء للخطة ${iso(w.plan.id)}. أخبر Claude بما تريد تغييره. يمكنك إغلاق هذه الصفحة.</p>`, true)
+  : page(w.decided === 'approve' ? 'Approved' : 'Not approved', w.decided === 'approve'
   ? `<p class="done">Approved.</p><p>Go back to Claude: it can now write the files of plan ${esc(w.plan.id)}. You can close this tab.</p>`
-  : `<p class="done">Not approved.</p><p>Nothing will be written for plan ${esc(w.plan.id)}. Tell Claude what to change. You can close this tab.</p>`);
+  : `<p class="done">Not approved.</p><p>Nothing will be written for plan ${esc(w.plan.id)}. Tell Claude what to change. You can close this tab.</p>`));
 const gonePage = () => page('Not available', '<p class="done">This approval link is no longer valid.</p><p>It was used, or its plan expired or was made in another session of DataArcus. Ask Claude to make the plan again.</p>');
 
 function headers(res, code, type) {
@@ -209,16 +279,33 @@ const TERM_STATUS = (r) => (r.status === 'approved' ? `approved${r.earlier ? ' (
 const termSheet = (rows) => ({ heading: `Terminology sheet: English | Arabic (${rows.length})`, rows: rows.map((r) => [`${String(r.en)} (${String(r.field)})`, `${r.ar != null ? String(r.ar) : String(r.en)}: ${TERM_STATUS(r)}${r.places ? `; shown in ${r.places} place${r.places === 1 ? '' : 's'}` : ''}`]) });
 const KIND_NAME = { bar: 'Bar chart', column: 'Column chart', line: 'Line chart', donut: 'Donut chart', table: 'Table' };
 const KIND_A = { bar: 'a bar chart', column: 'a column chart', line: 'a line chart', donut: 'a donut chart', table: 'a table' };
+// (0.3.0 T1, T-7) the tools' inputs in the person's words: [label, (value, val) => text]
+const DAY = (v) => String(v).charAt(0).toUpperCase() + String(v).slice(1);
+const COUNTRY = { uae: 'United Arab Emirates', ksa: 'Saudi Arabia', qat: 'Qatar', kwt: 'Kuwait', bhr: 'Bahrain', omn: 'Oman' };
+const INPUT_WORDS = {
+  path: ['Model', (v) => String(v)], maxItems: ['Findings listed per check', (v) => `at most ${v}`], weekStart: ['Week starts on', DAY], country: ['Country', (v) => COUNTRY[v] || String(v)],
+  asOf: ['Counted as today', (v) => String(v)], only: ['Only these checks', (v, val) => val(v)], forgetAnswers: ['Forget the recorded answers', (v) => (v ? 'yes' : 'no')],
+  columnTypes: ['Column types you gave', (v) => `${Object.keys(v || {}).length} column${Object.keys(v || {}).length === 1 ? '' : 's'}`],
+  firstYear: ['First year', (v) => String(v)], lastYear: ['Last year', (v) => String(v)], name: ['Name', (v) => String(v)], folder: ['Folder', (v) => String(v)],
+  announced: ['Ramadan and Eid dates', (v) => (v ? 'the UAE\'s announced dates (later ones are Umm al-Qura estimates)' : 'the Umm al-Qura calendar only')],
+  weekend: ['Weekend', (v) => ({ country: 'the country\'s official weekend', 'sat-sun': 'Saturday and Sunday', 'fri-sat': 'Friday and Saturday', fri: 'Friday', sun: 'Sunday' })[v] || String(v)],
+  lang: ['Language of the names', (v) => (v === 'ar' ? 'Arabic' : 'English')], arabicNames: ['Arabic name columns too', (v) => (v ? 'yes' : 'no')], fiscalStart: ['Fiscal year starts in month', (v) => String(v)],
+  relateTo: ['Related to the new table\'s Date', (v) => [].concat(v).join(', ')], arabicColumnsOnly: ['What is written', (v) => (v ? 'only the Arabic calendar columns, for your own date table' : 'a new calendar table')],
+  brand: ['Brand colour', (v) => String(v)], mode: ['Mode', (v) => String(v)]
+};
 /** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
  *  click approves). kind: the plan's kind; data: the plan's data (its pins, the twin's labels). */
 export function summary(kind, data) {
   const d = data || {}, pins = d.pins || {}, sections = [];
   // (R6, F09 f: a long value was cut at 600 characters) every value in full
   const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : JSON.stringify(v));
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
+  // (0.3.0 T1, T-6: "There is no background image." under a list holding the background PNG) a page background the writer
+  // writes blank (a see-through pixel, so the page shows the theme's colour) is listed as what it is
+  const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
+    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files, kind, lang: p.lang === 'ar' ? 'ar' : 'en', scriptWhat: 'the changes listed with the plan' };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
@@ -262,7 +349,7 @@ export function summary(kind, data) {
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
     const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
-    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true)).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
+    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || ((p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true) && (!Array.isArray(d.waterfallRtl) || d.waterfallRtl.length)))).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
     // (R6, F13: the accessibility step changed a colour after the go, and said so only after the write) the colour the
     // report is written with, from the plan's own build, and why, before the click
@@ -306,12 +393,17 @@ export function summary(kind, data) {
   if (kind === 'redesign') {
     const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
     const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
+    // (0.3.0 T1, T-7: "moves from 40, 40, 700 x 640 to 40, 40, 704 x 640") a change of place or size, in words
+    const moved = (a, b) => { if (!a || !b) return null; const dx = b.x - a.x, dy = b.y - a.y, dw = b.w - a.w, dh = b.h - a.h, r = Math.round, out = [];
+      if (dx) out.push(`${r(Math.abs(dx))} to the ${dx > 0 ? 'right' : 'left'}`); if (dy) out.push(`${r(Math.abs(dy))} ${dy > 0 ? 'down' : 'up'}`);
+      const size = [dw ? `${r(Math.abs(dw))} ${dw > 0 ? 'wider' : 'narrower'}` : null, dh ? `${r(Math.abs(dh))} ${dh > 0 ? 'taller' : 'shorter'}` : null].filter(Boolean);
+      return [out.length ? `moves ${out.join(' and ')}` : 'stays in place', size.length ? size.join(' and ') : null].filter(Boolean).join(', ') + ` (now ${r(b.w)} x ${r(b.h)}, its top left corner at ${r(b.x)}, ${r(b.y)})`; };
     // (R6, F08: a visual by its kind, fields and place, never its title text)
     const of = (c) => `${cut(c.type, 40)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
     // (0.3.0 D4) a unit on one line: the visuals laid on it, each by its kind and fields, and where it goes with it
     const overlaid = (c) => (Array.isArray(c.overlays) && c.overlays.length ? `with what lies on it, ${c.from || c.overlays.some((o) => o.from) ? 'moved' : 'kept'} with it: ${c.overlays.map((o) => `${cut(o.visual, 60)} (${of(Object.assign({}, o, { place: null }))})${o.from ? ` to ${at(o.to)}` : ''}`).join('; ')}` : null);
     const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
-      [c.from ? `moves from ${at(c.from)} to ${at(c.to)}` : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, overlaid(c)].filter(Boolean).join('; ')]));
+      [c.from ? moved(c.from, c.to) : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, overlaid(c)].filter(Boolean).join('; ')]));
     if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
     const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${of(x)})`, [cut(x.why, 200), overlaid(x)].filter(Boolean).join('; ')])));
     const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
@@ -322,11 +414,19 @@ export function summary(kind, data) {
       n('visualFilters', 'visual filter', 'visual filters'), n('slicerSelections', 'slicer selection', 'slicer selections'), n('tooltipLinks', 'tooltip link', 'tooltip links'), n('tooltipPages', 'tooltip page', 'tooltip pages'), n('drillthroughPages', 'drillthrough page', 'drillthrough pages'),
       n('interactions', 'visual interaction', 'visual interactions'), n('groups', 'group', 'groups'), n('customVisuals', 'custom visual', 'custom visuals'), n('phoneLayouts', 'phone layout', 'phone layouts'), n('resources', 'resource file', 'resource files'),
       [['How', 'copied as they are: their contents (filter values, slicer selections, bookmark states) are not read']]) });
-    return { title: 'Redesign of a report', sections, files, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script and no theme file of its own.` : null };
+    // (0.3.0 T1, T-6: "The redesign writes no format script and no theme file of its own." above a list with a theme JSON
+    // and a PNG) the theme and the images listed are the original's, copied (the theme with the changes listed, if any)
+    const rFiles = Array.isArray(d.outputs) ? groupFiles(d.outputs, [["Theme (the original's, copied)", /RegisteredResources\/[^/]+\.json$/i], ["Images (the original's, copied)", /\.(png|jpe?g|gif|svg)$/i]]) : null;
+    const themed = S.theme && S.theme.tokens && Object.keys(S.theme.tokens).length;
+    return { title: 'Redesign of a report', sections, files: rFiles, kind, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script; the theme file and the images listed are the original's, copied${themed ? ', the theme with the changes listed under Changes' : ' as they are'}.` : null };
   }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});
-    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic calendar columns', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)], ['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] });
+    // (0.3.0 T1, T-7: "Waterfall, right to left: native: ..." on a report with no waterfall) an option the report does not
+    // use is left out (the plan's data says how many waterfalls and picture pages it has; an older plan shows them all)
+    const uses = (k) => d[k] == null || d[k] > 0;
+    sections.push({ heading: 'Options', rows: [['Charts over time', d.timeRightToLeft === false ? 'left to right, as in English' : 'right to left, like the rest of the page'], ['Arabic calendar columns', d.arabicMonth ? 'yes: a script adds them to your date table (see "About the script")' : 'no']]
+      .concat(uses('picturePages') ? [['Pages drawn on a background picture', d.mirrorPicturePages ? 'mirrored anyway (their picture is not)' : 'kept left to right (the picture can\'t be mirrored)']] : [], uses('waterfalls') ? [['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] : []) });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
@@ -343,7 +443,7 @@ export function summary(kind, data) {
         { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
         { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
     }
-    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null };
+    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null, kind, lang: 'ar', scriptWhat: 'the Arabic calendar columns' };
   }
   // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
   // their hex, and the report they come from
@@ -356,8 +456,13 @@ export function summary(kind, data) {
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
   const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;
-  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers)).map(([k, v]) => [k, val(v)]) });
+  // (0.3.0 T1, T-7: "maxItems: 15 weekStart: sunday") each input in plain words; every input as given, folded below
+  const given = Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers));
+  sections.push({ heading: 'Inputs', rows: given.filter(([k]) => INPUT_WORDS[k]).map(([k, v]) => [INPUT_WORDS[k][0], INPUT_WORDS[k][1](v, val)]) });
+  if (given.length) sections.push({ heading: 'All inputs, as given (raw)', fold: true, rows: given.map(([k, v]) => [k, val(v)]) });
   // (R6, F09 f: a long answers list was cut at 600 characters, as hashes) every question with the answer recorded for it
   if (shownAnswers && shownAnswers.length) sections.push({ heading: `Answers to record (${shownAnswers.length})`, rows: shownAnswers.map((x) => [String(x.object || ''), `${x.answer === 'mistake' ? 'a mistake' : 'intended'} (the question: ${String(x.question || '')})`]) });
-  return { title: titles[kind] || 'Plan', sections, files: kind === 'theme' && Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Theme file', /\.json$/i]]) : files };
+  const calAr = kind === 'calendar' && own.lang === 'ar';
+  return { title: titles[kind] || 'Plan', sections, files: kind === 'theme' && Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Theme file', /\.json$/i]]) : files, kind, lang: calAr ? 'ar' : 'en',
+    scriptWhat: kind === 'calendar' ? (own.arabicColumnsOnly ? 'the Arabic calendar columns to your date table' : 'the calendar table') : kind === 'scripts' ? 'the fixes listed' : null };
 }

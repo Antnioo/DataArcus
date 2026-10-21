@@ -157,3 +157,14 @@ export function gulfFixInputs(gc) {
   return { tool: 'add_gulf_calendar', inputs, ...(ask.length ? { askTheUser: ask } : {}),
     what: 'add_gulf_calendar writes this table as a TMDL script in a new file next to the project, for the user to apply in TMDL view; nothing is written into the model.' };
 }
+
+// (0.3.0 T1, the simulated beta testers: "a long JSON with 50 column names", the agent rewrote them) the table's columns
+// grouped by kind, counted, for the plan: "50 columns: 19 date columns, 6 Hijri, 6 Ramadan and Eid, ..."
+const KINDS = [['Arabic labels (the names and flags in Arabic, each sorted like its English column)', /\(Arabic\)$/], ['Ramadan and Eid', /Ramadan|Eid|^Is Estimated Date$/], ['Hijri', /^Hijri/],
+  ['weekend and working day', /Weekend|Working Day/], ['fiscal', /^Fiscal/], ['relative to today', /Offset$|^Is Past$/]];
+export function columnsByKind(cols) {
+  const list = (cols || []).map(String), n = KINDS.map(() => 0); let dates = 0;
+  list.forEach((c) => { const i = KINDS.findIndex(([, re]) => re.test(c)); if (i < 0) dates++; else n[i]++; });
+  return `${list.length} columns: ${[`${dates} date column${dates === 1 ? '' : 's'} (date, year, quarter, month, week, day)`].concat(KINDS.map(([k], i) => (n[i] ? `${n[i]} ${k}` : null)).filter(Boolean)).join(', ')}`;
+}
+

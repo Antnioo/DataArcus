@@ -104,7 +104,8 @@ try {
   // ---------- O5: the approval page ----------
   { const pw = await w.call('plan_layout', { path: MODEL('ov'), redesignFrom: FROM('ov') }), n = links().length; await w.call('approve_plan', { planId: pw.j.plan.planId }); const page = await get(await linkAt(n));
     const rows = (page.match(/<tr[\s\S]*?<\/tr>/g) || []).filter((r) => /lineMonth|colRegion|ndCol|ndLine|ttlLine/.test(r));
-    chk(() => rows.some((r) => /lineMonth/.test(r) && /ndLine/.test(r) && /ttlLine/.test(r) && /moves from/.test(r)) && rows.some((r) => /colRegion/.test(r) && /ndCol/.test(r)), () => `O5. the approval page shows each unit on one line: ${rows.map((r) => r.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300)).join(' | ')}`);
+    // (0.3.0 T1, T-7, changed on purpose: a move is said in words now, "moves 2 up, 2 wider", not "moves from x, y, w x h to ...")
+    chk(() => rows.some((r) => /lineMonth/.test(r) && /ndLine/.test(r) && /ttlLine/.test(r) && /moves |stays in place/.test(r)) && rows.some((r) => /colRegion/.test(r) && /ndCol/.test(r)), () => `O5. the approval page shows each unit on one line: ${rows.map((r) => r.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300)).join(' | ')}`);
     chk(() => !rows.some((r) => /ndCol|ndLine|ttlLine/.test(r) && !/colRegion|lineMonth/.test(r)), () => `O5. no line of its own for an overlay: ${rows.map((r) => r.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 200)).join(' | ')}`); }
 
   // ---------- O4: the written copy ----------
