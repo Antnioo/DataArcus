@@ -25,6 +25,7 @@ import { createRequire } from 'node:module';
 import { serverClient } from '../test-0.2.9.mjs';
 
 const Zs = createRequire(import.meta.url)('../../assets/js/pbip-sizing.js').make({ font: 'Segoe UI', LABEL: 10 });   // (F6: pillH, pillRoom)
+const AC = createRequire(import.meta.url)('../../assets/js/arabic-calendar.js');   // (P7: C1's Arabic labels)
 
 export async function writeVariants(out) {
   const ROOT = fs.realpathSync.native(path.resolve(out));
@@ -32,7 +33,7 @@ export async function writeVariants(out) {
   // Q1..Q4)
   const ROWS = {
     Sales: 'let Source = #table(type table [Amount = number, Region = text, Channel = text, #"Is Online" = logical, Date = datetime], {{50, "North", "Web", true, #datetime(2026, 1, 5, 0, 0, 0)}, {500, "South", "Store", false, #datetime(2026, 4, 5, 0, 0, 0)}, {5000, "East", "Web", true, #datetime(2026, 7, 5, 0, 0, 0)}, {700, "West", "Store", false, #datetime(2026, 10, 5, 0, 0, 0)}}) in Source',
-    Calendar: 'let Source = #table(type table [Date = datetime, #"Month Name" = text, #"Month Number" = Int64.Type, Quarter = text], {{#datetime(2026, 1, 5, 0, 0, 0), "January", 1, "Q1"}, {#datetime(2026, 4, 5, 0, 0, 0), "April", 4, "Q2"}, {#datetime(2026, 7, 5, 0, 0, 0), "July", 7, "Q3"}, {#datetime(2026, 10, 5, 0, 0, 0), "October", 10, "Q4"}}) in Source' };
+    Calendar: 'let Source = #table(type table [Date = datetime, #"Month Name" = text, #"Month Number" = Int64.Type, Quarter = text, #"Year Quarter" = text, #"Is Weekend" = logical], {{#datetime(2026, 1, 5, 0, 0, 0), "January", 1, "Q1", "2026 Q1", false}, {#datetime(2026, 4, 5, 0, 0, 0), "April", 4, "Q2", "2026 Q2", true}, {#datetime(2026, 7, 5, 0, 0, 0), "July", 7, "Q3", "2026 Q3", false}, {#datetime(2026, 10, 5, 0, 0, 0), "October", 10, "Q4", "2026 Q4", true}}) in Source' };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: ROWS[n] } }];
   const col = (name, dataType, x) => Object.assign({ name, dataType, sourceColumn: name }, x || {});
   fs.mkdirSync(path.join(ROOT, 'pills/Shop.SemanticModel'), { recursive: true });
@@ -41,7 +42,10 @@ export async function writeVariants(out) {
     { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Is Online', 'boolean'), col('Date', 'dateTime'),
       { name: 'Size Band', type: 'calculated', dataType: 'string', expression: 'SWITCH ( TRUE (), Sales[Amount] > 1000, "Large", Sales[Amount] > 100, "Medium", "Small" )' }],
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] },
-    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Month Name', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64'), col('Quarter', 'string')] }],
+    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime', { isKey: true }), col('Month Name', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64'), col('Quarter', 'string'), col('Year Quarter', 'string'), col('Is Weekend', 'boolean')]
+      // (P7) C1's Arabic twins, from the shared builder (assets/js/arabic-calendar.js), as calculated columns of the date
+      .concat(AC.columnsFor({ columns: [{ name: 'Quarter', type: 'string' }, { name: 'Year Quarter', type: 'string' }, { name: 'Is Weekend', type: 'boolean' }],
+        src: { quarter: "QUARTER ( 'Calendar'[Date] )", year: "YEAR ( 'Calendar'[Date] )", flag: () => "'Calendar'[Is Weekend]" } }).columns.map((c) => ({ name: c.name, type: 'calculated', dataType: 'string', expression: c.dax }))) }],
     relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } }, null, 1));
   const FIELDS = { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Month Name]', category: 'Sales[Region]', category2: 'Sales[Channel]', slicers: ['Sales[Size Band]', 'Sales[Is Online]'] };
   const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
@@ -118,7 +122,38 @@ export async function writeVariants(out) {
         visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: cell.label, textStyle: { fontSize: '10pt' } }] }] } }] } } });
       wr(path.join(GD, 'visuals', 'p' + id, 'visual.json'), Object.assign({}, pill0, { name: 'p' + id, position: { x, y: y + 46, z: zg, width: 300, height: cell.h, tabOrder: zg++ }, visual: cell.visual }));
       y += 46 + cell.h + 12; }); });
-    order.pageOrder.unshift(gridId, pageId); order.activePageName = gridId; wr(path.join(P, 'pages.json'), order);
+    // (P7) the "Direction" page: the pills as shipped in English (left to right, the value centred, the header left) and in
+    // Arabic (from the right by the sort, the value centred, the header right; C1's Arabic labels, mixed values isolated),
+    // then Arabic «الربع» with the value Left, Center (shipped), Right, and with text wrap on, each labelled
+    const dirId = crypto.createHash('sha256').update('pills-direction').digest('hex').slice(0, 20), DD = path.join(P, dirId), PT = 10, DH = Zs.pillH(PT);
+    const cellDir = (t, c, n, title, ar, align, wrap) => {
+      const o = JSON.parse(JSON.stringify(pill.visual.objects)), vco = JSON.parse(JSON.stringify(pill.visual.visualContainerObjects)), vd = o.value.find((e) => e.selector && e.selector.id === 'default').properties;
+      vd.fontSize = L(PT + 'D'); vd.horizontalAlignment = L("'" + align + "'"); vd.textWrap = L(wrap ? 'true' : 'false'); o.layout[0].properties.columnCount = L(n + 'L');
+      Object.assign(vco.title[0].properties, { fontSize: L(PT + 'D'), text: L("'" + String(title).replace(/'/g, "''") + "'"), alignment: L(ar ? "'right'" : "'left'") });
+      vco.spacing[0].properties.spaceBelowTitle = L(Zs.pillRoom(PT) + 'D');
+      const q = JSON.parse(JSON.stringify(pill.visual.query)), pr = q.queryState.Values.projections[0];
+      pr.field = { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }; pr.queryRef = t + '.' + c; pr.nativeQueryRef = c; delete pr.displayName;
+      if (ar) q.sortDefinition = { sort: [{ field: pr.field, direction: 'Descending' }] }; else delete q.sortDefinition;
+      return Object.assign({}, pill.visual, { query: q, objects: o, visualContainerObjects: vco });
+    };
+    const DIR = [
+      ['EN shipped: Is Weekend (centred, left to right)', cellDir('Calendar', 'Is Weekend', 2, 'Is Weekend', false, 'center')],
+      ['EN shipped: Quarter', cellDir('Calendar', 'Quarter', 4, 'Quarter', false, 'center')],
+      ['EN shipped: Size Band', cellDir('Sales', 'Size Band', 3, 'Size Band', false, 'center')],
+      ['AR shipped: Is Weekend (Arabic), from the right', cellDir('Calendar', 'Is Weekend (Arabic)', 2, 'عطلة نهاية الأسبوع', true, 'center')],
+      ['AR shipped: Quarter (Arabic) «الربع 1»', cellDir('Calendar', 'Quarter (Arabic)', 4, 'الربع', true, 'center')],
+      ['AR shipped: Year Quarter (Arabic) «2026 الربع 1»', cellDir('Calendar', 'Year Quarter (Arabic)', 4, 'السنة والربع', true, 'center')],
+      ['AR variant: value Left', cellDir('Calendar', 'Quarter (Arabic)', 4, 'الربع', true, 'left')],
+      ['AR variant: value Right', cellDir('Calendar', 'Quarter (Arabic)', 4, 'الربع', true, 'right')],
+      ['AR variant: Center, text wrap ON', cellDir('Calendar', 'Quarter (Arabic)', 4, 'الربع', true, 'center', true)]];
+    wr(path.join(DD, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: dirId, displayName: 'Direction', displayOption: 'FitToPage', width: 1920, height: 1080 });
+    DIR.forEach(([say, visual], i) => {
+      const col = Math.floor(i / 3), row = i % 3, x = 20 + col * 630, y = 20 + row * (DH + 100), id = 'd' + i;
+      wr(path.join(DD, 'visuals', 'l' + id, 'visual.json'), { $schema: pill.$schema, name: 'l' + id, position: { x, y, z: i * 2, width: 600, height: 44, tabOrder: i * 2 },
+        visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: say + ` · ${PT}pt · ${DH} high`, textStyle: { fontSize: '10pt' } }] }] } }] } } });
+      wr(path.join(DD, 'visuals', 'p' + id, 'visual.json'), Object.assign({}, pill0, { name: 'p' + id, position: { x, y: y + 48, z: i * 2 + 1, width: 600, height: DH, tabOrder: i * 2 + 1 }, visual }));
+    });
+    order.pageOrder.unshift(gridId, dirId, pageId); order.activePageName = gridId; wr(path.join(P, 'pages.json'), order);
     const c = await s.call('check_report', { path: 'pills/Pills Variants.pbip' });
     // (F6) the strip and the rail as create_report writes them, in English and in Arabic (the Arabic header names have
     // descenders), each checked
@@ -136,7 +171,7 @@ export async function writeVariants(out) {
       reports.push({ name: nm, pbip: path.join(ROOT, 'pills', nm + '.pbip'), slicers: w.j && w.j.slicerStyle ? w.j.slicerStyle.slicers.map((x) => `${x.field}: ${x.written}`) : (w.err ? w.t.slice(0, 200) : []),
         check: ck && ck.j ? { validator: ck.j.validator.errors, canBreak: ck.j.impact.kinds.canBreak.count } : null });
     }
-    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, gridId, grid: cols.flat().map((c) => c.label), reports, variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
+    return { pbip: path.join(ROOT, 'pills/Pills Variants.pbip'), pageId, gridId, dirId, direction: DIR.map(([say]) => say), grid: cols.flat().map((c) => c.label), reports, variants: Object.keys(V), check: c.j ? { validator: c.j.validator.errors, canBreak: c.j.impact.kinds.canBreak.count } : c.t.slice(0, 300) };
   } finally { await s.close(); }
 }
 

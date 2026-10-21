@@ -238,6 +238,10 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   only the fields the report binds, exactly the objects its plan lists (it rewrote the whole model's: 3 listed, 11
   changed); check_model_health's own script still covers the whole model. The Arabic calendar's flag labels say exactly
   true and false (E1's F-4): Is Working Day «يوم عمل» / «يوم عطلة», Is Weekend «عطلة نهاية الأسبوع» / «خارج عطلة نهاية الأسبوع».
+- P7 (the owner, 21 Oct: "if English then the value in the pill LTR, if Arabic then RTL"): each pill's value centred
+  (text wrap off), the header at the reading start, Arabic tiles from the right; every Arabic calendar label that mixes
+  Arabic with digits («الربع 1», «2025 الربع 1», «السنة المالية 2025», «الربع المالي 1») written with its digit runs
+  isolated and a right-to-left mark at the end the run reaches, so it reads in the right order inside a pill.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

@@ -526,7 +526,10 @@
         objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(6),
             topOuterMargin: int(0), bottomOuterMargin: int(0), leftOuterMargin: int(0), rightOuterMargin: int(0) }),
           fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
-          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text) }, { fontColor: color(onAcc) }),
+          // (0.3.0 P7, the owner: "if English then the value in the pill LTR, if Arabic then RTL") each value centred in its
+          // pill, in both languages (value.horizontalAlignment, Microsoft's capabilities), text wrap off (a wrapped value
+          // needs a second line the measured height has no room for); the tiles' order is the sort's (no direction setting)
+          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text), horizontalAlignment: str('center'), textWrap: bool(false) }, { fontColor: color(onAcc) }),
           outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }),
           padding: obj({ paddingSelection: str('Custom'), topMargin: int(PILL_PAD), bottomMargin: int(PILL_PAD), leftMargin: int(PILL_PAD), rightMargin: int(PILL_PAD) }, DEF),
           spacing: obj({ verticalSpacing: int(0) }, DEF) },

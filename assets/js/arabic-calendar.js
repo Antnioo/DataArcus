@@ -38,8 +38,11 @@
   const kindOf = (name) => { const k = key(name); if (Object.prototype.hasOwnProperty.call(FLAGS, k)) return 'flag'; const x = KINDS.find(([re]) => re.test(k)); return x ? x[1] : null; };
   const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const sw = (expr, list) => `SWITCH ( ${expr}, ${list.map((v, i) => `${i + 1}, ${q(v)}`).join(', ')} )`;
-  // the year inside an Arabic text, wrapped in a left-to-right isolate (U+2066 ... U+2069) so it keeps its place
-  const isoNum = (expr) => `UNICHAR ( 8294 ) & ${expr} & UNICHAR ( 8297 )`;
+  // (0.3.0 P7, J18's rule, terminology.mjs isolateLatin) a digit run inside an Arabic text in a first-strong isolate
+  // (U+2068 ... U+2069), and a right-to-left mark (U+200F) beside a run at either end of the text, so it reads in its place
+  // inside a pill: «2025 الربع 1» as RLM FSI 2025 PDI « الربع » FSI 1 PDI RLM
+  const isoNum = (expr) => `UNICHAR ( 8296 ) & ${expr} & UNICHAR ( 8297 )`, RLM = 'UNICHAR ( 8207 )';
+  const atStart = (dax) => `${RLM} & ${dax}`, atEnd = (dax) => `${dax} & ${RLM}`;
 
   /**
    * The Arabic twins a date table gets.
@@ -63,10 +66,10 @@
       if (kind === 'month') { dax = src.month && sw(src.month, MONTHS); order = { by: sorts.month, dax: src.month }; }
       else if (kind === 'day') { dax = src.weekday && sw(src.weekday, DAYS); order = { by: sorts.day, dax: src.weekday }; }
       else if (kind === 'hijri') { dax = src.hijriMonth && sw(src.hijriMonth, HIJRI); order = { by: sorts.hijri, dax: src.hijriMonth }; if (!dax) why = 'no Hijri month number to name'; }
-      else if (kind === 'quarter') dax = src.quarter && `${q(QUARTER + ' ')} & ${src.quarter}`;
-      else if (kind === 'yearQuarter') dax = src.year && src.quarter && `${isoNum(src.year)} & ${q(' ' + QUARTER + ' ')} & ${src.quarter}`;
-      else if (kind === 'fiscalYear') { dax = src.fiscalYearNo ? `${q(FISCAL_YEAR + ' ')} & ${isoNum(src.fiscalYearNo)}` : src.fiscalYearText ? `${q(FISCAL_YEAR + ' ')} & ${isoNum(src.fiscalYearText)}` : null; if (!dax) why = 'no fiscal year to name'; }
-      else if (kind === 'fiscalQuarter') { dax = src.fiscalMonth ? `${q(FISCAL_QUARTER + ' ')} & ROUNDUP ( ( ${src.fiscalMonth} ) / 3, 0 )` : src.fiscalQuarterText ? `${q(FISCAL_QUARTER + ' ')} & ${src.fiscalQuarterText}` : null; if (!dax) why = 'no fiscal month number to count its quarter from'; }
+      else if (kind === 'quarter') dax = src.quarter && atEnd(`${q(QUARTER + ' ')} & ${isoNum(src.quarter)}`);
+      else if (kind === 'yearQuarter') dax = src.year && src.quarter && atEnd(atStart(`${isoNum(src.year)} & ${q(' ' + QUARTER + ' ')} & ${isoNum(src.quarter)}`));
+      else if (kind === 'fiscalYear') { dax = src.fiscalYearNo ? atEnd(`${q(FISCAL_YEAR + ' ')} & ${isoNum(src.fiscalYearNo)}`) : src.fiscalYearText ? atEnd(`${q(FISCAL_YEAR + ' ')} & ${isoNum(src.fiscalYearText)}`) : null; if (!dax) why = 'no fiscal year to name'; }
+      else if (kind === 'fiscalQuarter') { dax = src.fiscalMonth ? atEnd(`${q(FISCAL_QUARTER + ' ')} & ${isoNum(`ROUNDUP ( ( ${src.fiscalMonth} ) / 3, 0 )`)}`) : src.fiscalQuarterText ? atEnd(`${q(FISCAL_QUARTER + ' ')} & ${isoNum(src.fiscalQuarterText)}`) : null; if (!dax) why = 'no fiscal month number to count its quarter from'; }
       else if (kind === 'flag') {
         const f = src.flag ? src.flag(c.name) : null, [yes, no] = FLAGS[key(c.name)];
         if (f && (t === 'boolean' || src.flagTyped === false)) dax = `IF ( ${f}, ${q(yes)}, ${q(no)} )`;
