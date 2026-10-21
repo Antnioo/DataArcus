@@ -4,9 +4,23 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]: 0.3.0
-The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the release candidate is branch
-`release/0.3.0`, merged after the laptop's Power BI Desktop proof. Each line is one merged pull request:
+## [0.3.0]: 2026-10-21 (the version for testers)
+Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
+2.159.883.0, build 332beac). In short:
+- **See it before you approve it:** the approval window draws the planned pages, and every report is checked (the
+  measured rules, the layout, accessibility) before it is written.
+- **Arabic:** an Arabic copy of a report (`create_arabic_twin`), or one report with an EN-AR language button
+  (`into: "same"`); every mixed Arabic and English text reads in the right order; Arabic calendar columns (months,
+  days, quarters, fiscal, Hijri) offered as a script, the report switching to them once it is applied; a waterfall
+  and a line chart read from the right.
+- **New looks:** pill slicers sized to their text, centred in both languages; smooth lines; a metric switcher; flip
+  cards; status icons from the theme; a native waterfall; a redesign of an existing report that leaves the original
+  as it is; a phone layout on every page.
+- **Safety:** nothing is written without your approval; a write that fails half-way leaves nothing half-written; only
+  the report's own files are read; DataArcus still sends nothing anywhere and never returns your data's values.
+- **Gulf calendar:** `add_gulf_calendar` (weekends by date, Ramadan and Eid, Hijri months, fiscal years).
+
+Every change, one line each (the pull request or the job that made it):
 - #37 Preview before Approve: the approval window draws the planned pages before the go.
 - #38 Check before write: the measured rules and the layout check on the report before it is written or downloaded.
 - #63 Preview fidelity: titles, cut tables, slanting labels, button names and the KPI value side as Desktop draws them.
