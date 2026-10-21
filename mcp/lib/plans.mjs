@@ -7,6 +7,7 @@
 // prompt when the app supports MCP elicitation. The assistant's reply approves nothing: the tools can't check who
 // typed it.
 import crypto from 'node:crypto';
+import { scriptWords } from './plain-words.mjs';   // (0.3.0 T1, T-4: what a script is and how to apply it, with every plan that writes one)
 
 // how long a plan id is good for: 2 hours from its proposal, never extended (an approval does not restart it: Z-02).
 // DATAARCUS_PLAN_TTL_MS can only shorten it (the tests use a few seconds); it can never make a plan live longer
@@ -50,7 +51,7 @@ const alive = (p) => p && now() - p.created <= TTL;
 export function proposal(id, extra) {
   const p = plans.get(id);
   return Object.assign({ planId: id, status: 'proposed', written: false, writesAfterGo: p.writes, sayFirst: 'Nothing was written. ' + SHOW, expiresInMinutes: Math.round(TTL / 60000) },
-    p.modelPrint ? { modelPinned: 'The model as it was read for this plan (a hash of its definition files): if the model changes before the write, nothing is written and the plan must be made again.' } : {}, extra || {});
+    p.modelPrint ? { modelPinned: 'The model as it was read for this plan (a hash of its definition files): if the model changes before the write, nothing is written and the plan must be made again.' } : {}, scriptWords(p.writes), extra || {});
 }
 
 /** A plan that can still be approved (known, alive), or a throw with what to do: checked before the person is asked. */

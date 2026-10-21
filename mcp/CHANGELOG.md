@@ -256,6 +256,11 @@ Every change, one line each (the pull request or the job that made it):
   (text wrap off), the header at the reading start, Arabic tiles from the right; every Arabic calendar label that mixes
   Arabic with digits («الربع 1», «2025 الربع 1», «السنة المالية 2025», «الربع المالي 1») written with its digit runs
   isolated and a right-to-left mark at the end the run reaches, so it reads in the right order inside a pill.
+- T1 (the simulated beta testers of 21 Oct, 18 episodes): the approval page leads with the files by kind in words and
+  the file asked for, the full list folded; it is in Arabic, right to left, for an Arabic plan; a script is explained
+  in one sentence with the 3 steps to apply it, the folder is named, the inputs are in plain words and the items "worth
+  a look" are listed; a report path that misses names the report found ("Did you mean ...?"); `add_gulf_calendar`
+  `arabicColumnsOnly` writes only the Arabic calendar columns script for the model's own date table.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import path from 'node:path';
-import { decode, inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
+import { decode, inside, readCapped, readsLikeInstruction, real, ROOT, shownName, shownPath, visible, WITHHELD } from './model.mjs';
 import { meaningInReport, VT } from './visual-meaning.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
@@ -121,6 +121,41 @@ export function reportPrint(p) {
   } catch (e) { return 'unreadable'; }
 }
 
+// (0.3.0 T1, the simulated beta testers' T-2: ""Twin Sales.pbip" is not a report" when it sat in Sales/; the agent then
+// asked the person for a path they did not know) the reports of the working folder near a path that misses: names only
+// (folders and .pbip files, never a file's contents), inside DATAARCUS_ROOT, links not followed, 4 levels deep and
+// 4,000 entries at most. Returns { hits (named like the path), all } as paths relative to the working folder, screened.
+export const NEAR = { depth: 4, entries: 4000, shown: 8 };
+export function reportsNear(p) {
+  if (!ROOT) return { hits: [], all: [] };
+  const strip = (n) => String(n).replace(/\.(pbip|Report)$/i, '').trim().toLowerCase(), want = strip(path.basename(String(p).replace(/[\\/]+$/, '')));
+  const found = []; let seen = 0;
+  const visit = (dir, depth) => {
+    let list; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of list) {
+      if (++seen > NEAR.entries) return;
+      if (e.isSymbolicLink() || e.name === 'node_modules' || e.name === '.git') continue;
+      const full = path.join(dir, e.name);
+      if (!e.isDirectory()) { if (/\.pbip$/i.test(e.name)) found.push(full); continue; }
+      // a .Report folder counts when no .pbip of its name stands beside it (that one is named instead)
+      if (/\.Report$/i.test(e.name)) { if (!list.some((x) => !x.isDirectory() && /\.pbip$/i.test(x.name) && strip(x.name) === strip(e.name))) found.push(full); continue; }
+      if (!/\.(SemanticModel|Dataset)$/i.test(e.name) && depth < NEAR.depth) visit(full, depth + 1);
+    }
+  };
+  visit(ROOT, 0);
+  const rel = (f) => shownPath(path.relative(ROOT, f).split(path.sep).join('/'));
+  return { hits: found.filter((f) => strip(path.basename(f)) === want).map(rel), all: found.map(rel) };
+}
+// the message for a path that is not a report: where the report of that name is, so the agent retries alone
+function missSaid(p, why) {
+  const n = reportsNear(p), q = (x) => `"${x}"`, list = (xs) => xs.slice(0, NEAR.shown).map(q).join('; ') + (xs.length > NEAR.shown ? `; and ${xs.length - NEAR.shown} more` : '');
+  const name = shownPath(path.basename(String(p).replace(/[\\/]+$/, '')).replace(/\.(pbip|Report)$/i, ''));
+  if (n.hits.length === 1) return `"${p}" is not a report at that path. Did you mean ${q(n.hits[0])}? Call the tool again with that path (paths are relative to the working folder).`;
+  if (n.hits.length) return `"${p}" is not a report at that path. Reports named "${name}" in the working folder: ${list(n.hits)}. Call the tool again with one of these paths.`;
+  if (n.all.length) return `No report named "${name}" at "${p}" or elsewhere in the working folder. Reports there: ${list(n.all)}. Call the tool again with one of these paths.`;
+  return why + ' No report was found in the working folder either.';
+}
+
 export function locate(p, tool) {
   const who = tool || 'this tool';
   const full = inside(p);
@@ -131,8 +166,8 @@ export function locate(p, tool) {
     dir = target;
   } else if (isDir(full)) {
     if (isDir(path.join(full, 'definition')) || isFile(path.join(full, 'report.json')) || /\.Report$/i.test(full)) dir = full;
-    else { const reps = fs.readdirSync(full).filter((n) => /\.Report$/i.test(n) && isDir(path.join(full, n))); if (reps.length === 1) dir = path.join(full, reps[0]); else throw new Error(reps.length ? `"${p}" holds ${reps.length} reports: name one of them (the .pbip file or the .Report folder).` : `"${p}" holds no report: give a .pbip file, a .Report folder, or a folder holding definition/.`); }
-  } else throw new Error(`"${p}" is not a report: give a .pbip file, a .Report folder, or a folder holding definition/.`);
+    else { const reps = fs.readdirSync(full).filter((n) => /\.Report$/i.test(n) && isDir(path.join(full, n))); if (reps.length === 1) dir = path.join(full, reps[0]); else throw new Error(reps.length ? `"${p}" holds ${reps.length} reports: name one of them (the .pbip file or the .Report folder).` : missSaid(p, `"${p}" holds no report: give a .pbip file, a .Report folder, or a folder holding definition/.`)); }
+  } else throw new Error(missSaid(p, `"${p}" is not a report: give a .pbip file, a .Report folder, or a folder holding definition/.`));
   real(dir, p);
   if (!isDir(dir)) throw new Error(`The report folder of "${p}" is not there.`);
   const def = path.join(dir, 'definition');
