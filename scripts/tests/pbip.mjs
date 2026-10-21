@@ -658,7 +658,7 @@ export default async function ({ browser, url }) {
         const pg2 = await v.ctx.newPage();
         await pg2.setContent(`<!doctype html><html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"></head><body>${want.join('')}</body></html>`);
         const out = await pg2.evaluate(() => {
-          const bad = [], in1 = (b, B) => b.x >= B.x - 1 && b.x + b.width <= B.x + B.width + 1;
+          const bad = [], in1 = (b, B) => b.x >= B.x - 4 && b.x + b.width <= B.x + B.width + 4;   // (4 px: a text box's text sits flush with its edge, and a glyph's side bearing measures 2 px past it on some machines' fonts (CI, 21 Oct: "Your logo" 1886 vs 1884); the flip this guards against is off by 100+ px)
           document.querySelectorAll('svg').forEach((svg, si) => {
             const vb = svg.viewBox.baseVal, P = { x: vb.x, width: vb.width };
             svg.querySelectorAll('g.v').forEach((g) => { const r = g.querySelector('rect.box'); if (!r) return; const B = r.getBBox();
