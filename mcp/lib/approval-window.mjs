@@ -326,7 +326,7 @@ export function summary(kind, data) {
   }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});
-    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic month column', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)], ['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] });
+    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic calendar columns', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)], ['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
@@ -343,7 +343,7 @@ export function summary(kind, data) {
         { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
         { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
     }
-    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic month script', /\.tmdl$/i]]) : null };
+    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null };
   }
   // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
   // their hex, and the report they come from

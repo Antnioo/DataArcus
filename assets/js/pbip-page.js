@@ -309,12 +309,12 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
-      iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
+      iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
       kpiTitleFit, titleFit, oneLine
     };
   }
@@ -327,7 +327,7 @@
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
-      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, PILL_PAD, subtitlesUsed, svgDone,
+      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
       trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
@@ -495,9 +495,16 @@
       // (0.3.0 F1) the pills' text size: the slicer text, a size smaller at a time (to 8) until the header and one row of
       // tiles fit the visual's height (pillH); a slot too low even at 8 keeps the dropdown, said with why
       let pt0 = SLICER_TEXT; while (h && pt0 > 8 && pillH(pt0) > h) pt0 = Math.max(8, Math.ceil(pt0) - 1);
-      const low = !!(h && pillH(pt0) > h), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6 && !low;
+      // (0.3.0 C1 add-on, the laptop's PILLS-F6: "Medium" drawn "Mediu…" in a rail's 86 px pill) and the width: the widest
+      // value known from the model (true/false, a formula's texts; a calendar's quarter by the longest way it is written)
+      // at the text size, plus its room, in one pill (pillFits), a size smaller at a time to 8; else the dropdown, said
+      const texts = kv ? (f.texts || (f.cal && f.cal.kind === 'quarter' ? ['Quarter 4', 'الربع 4'] : null)) : null;
+      // (a smaller text needs a little more height, pillRoom: the first size where both the height and the width hold)
+      if (kv && texts && w && !pillFits(texts, kv.n, w, pt0)) { let p = pt0; while (p > 8 && !(pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h))) p = Math.max(8, Math.ceil(p) - 1); if (pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h)) pt0 = p; }
+      const narrow = !!(kv && w && (!texts || !pillFits(texts, kv.n, w, pt0))), widest = texts ? texts.slice().sort((x, y) => y.length - x.length)[0] : null;
+      const low = !narrow && !!(h && pillH(pt0) > h), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6 && !low && !narrow;
       if (PILLS && f) slicerStyles.push({ page: pg.name || base, field: f.t + '[' + f.c + ']', written: pill ? 'pills' : 'dropdown',
-        why: pill ? kv.why + ', known from the model' + (pt0 < SLICER_TEXT ? '; text ' + pt0 + 'pt so the header and the pills fit the slicer\'s height' : '') : kv && kv.n >= 2 && kv.n <= 6 ? 'the slicer is ' + Math.round(h) + ' high, the pills need ' + pillH(8) + ' at their smallest text (8pt): a dropdown' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
+        why: pill ? kv.why + ', known from the model' + (pt0 < SLICER_TEXT ? '; text ' + pt0 + 'pt so the header and the pills fit the slicer\'s height and every value fits its pill' : '') : kv && kv.n >= 2 && kv.n <= 6 && narrow && !low ? (texts ? 'the pills would cut «' + widest + '» (' + Math.floor(pillW(kv.n, w)) + ' a pill; no smaller text fits both its width and the slicer\'s height): a dropdown' : 'its values\' texts are not known from the model, so their width can\'t be checked: a dropdown') : kv && kv.n >= 2 && kv.n <= 6 ? 'the slicer is ' + Math.round(h) + ' high, the pills need ' + pillH(8) + ' at their smallest text (8pt): a dropdown' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
       if (!pill) return { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
         objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true };
       const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };

@@ -216,6 +216,15 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
 - F6: the pill slicers keep room between their header and the pills (no Arabic descender on a pill, no "clear
   selections" eraser over the first pill), and their height is the one measured on Desktop 2.159 with margins 0 (56 at
   8-9pt, 72 at 10-15pt) plus that room, so the filter rail draws pills again.
+- C1 (the owner, 21 Oct): Arabic calendar columns. One shared builder (`assets/js/arabic-calendar.js`) gives a date
+  table the Arabic twins of what it has: Month Name/Month Short/Day Name/Day Short (Arabic), Quarter (Arabic) «الربع 1»,
+  Year Quarter (Arabic) «2025 الربع 1» (the year isolated), Fiscal Year/Quarter (Arabic), Hijri Month Name (Arabic), and
+  text labels for its flags (Is Weekend, Is Working Day, Is Ramadan, Is Eid al-Fitr/al-Adha (Arabic)), each sorted by the
+  English column's own sort column (or a hidden number written with it). The Calendar Generator (site and
+  add_gulf_calendar) writes them; every Arabic route (plan_layout/create_report lang "ar", create_arabic_twin, the EN-AR
+  copy) offers them as a TMDL script for the user's own date table, approved with the plan, never applied by DataArcus.
+  Until the script is applied the Arabic report binds the English calendar columns and says which fields show English
+  data and how to switch (apply the script, then plan again); after it, the Arabic twins are bound, flags included.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

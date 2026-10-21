@@ -421,7 +421,7 @@ export default async function ({ browser, url }) {
     const model = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/test-model/calendar.dax'), 'utf8').replace(/\r\n/g, '\n');
     const mo = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, MODEL_CG)) : null;
     // 36 -> 39 (owner 2026-10-06): the test model's options have the three Arabic name columns on
-    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 40, /* 39 -> 40: round 18, S3 (the owner's yes): Day Short */ `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
+    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 51, /* 39 -> 40: round 18, S3 (the owner's yes): Day Short; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins (quarters, short names, fiscal, flags) */ `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
   }
 
   return { checks, problems };

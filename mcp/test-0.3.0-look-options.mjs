@@ -176,6 +176,18 @@ try {
         () => `P6b. the rail's pill slicers as high as measured, or dropdowns with why (pills ${rp.length}, why ${why}) (${rp.map((v) => `${v.position.height} >= ${need(szOf(v))} at ${szOf(v)}pt`).join('; ')}), no overlap: ${RL.err || short(RL.r).slice(0, 200)}`);
       const c = RL.r && !RL.r.err ? await check(RL.pbip) : null;
       chk(() => clean(c) && noBreak(c), () => `P6b. validator 0 errors, 0 "can break" on the rail report: ${valErr(c)}`);
+      // P6c (0.3.0 C1 add-on, the laptop's PILLS-F6 on e1f9e31: in this rail, 274 px for three values at 15pt, 86 px a pill,
+      // "Medium" was drawn "Mediu…", EN and AR; written red first): each pill as wide as its widest known value at its text
+      // size plus its room (pbip-sizing.js pillFits), by a smaller text; else a dropdown, said with why ("would cut")
+      const KNOWN = { 'Size Band': ['Large', 'Medium', 'Small'], 'Is Online': ['False', 'True'] };
+      const Zw = req0('../assets/js/pbip-sizing.js').make({ font: 'Segoe UI', LABEL: 10 });
+      const fieldOfV = (v) => { const m = JSON.stringify(v.visual.query || {}).match(/"Property":"([^"]+)"/); return m ? m[1] : ''; };
+      const cut = rp.filter((v) => { const n = parseInt(String(S(P(v, 'layout').columnCount)), 10), pt = parseFloat(String(S(P(v, 'value', 'default').fontSize)));
+        return !(typeof Zw.pillFits === 'function' && Zw.pillFits(KNOWN[fieldOfV(v)] || [], n, v.position.width, pt)); });
+      const said = JSON.stringify((RL.r && RL.r.j && RL.r.j.slicerStyles) || (RL.r && RL.r.j) || '');
+      const dropped = all.filter((v) => v.visual.visualType === 'slicer' && /Size Band/.test(JSON.stringify(v.visual.query || {})));
+      chk(() => !cut.length && (rp.some((v) => fieldOfV(v) === 'Size Band') || (dropped.length && /would cut/.test(said))),
+        () => `P6c. no pill cuts its text in the rail (a smaller text, else a dropdown with why): ${cut.map((v) => `${fieldOfV(v)} ${v.position.width} wide x ${S(P(v, 'layout').columnCount)} at ${S(P(v, 'value', 'default').fontSize)}pt`).join('; ')} ${dropped.length ? 'dropdown, said: ' + /would cut/.test(said) : ''}`);
     }
     // P7 (F4, the owner: "remove the margins in the pills"): every margin the pill slicer has, from Microsoft's
     // capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0: the tiles' padding and spacing

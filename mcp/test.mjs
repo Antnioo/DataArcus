@@ -1808,7 +1808,7 @@ if (part('gulf-calendar')) {
   check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
   // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
-  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 40 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column */
+  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 51 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins */
   check(!g.err && g.j.columns.includes('Day Short') && /^\t\tcolumn 'Day Short'\n\t\t\tisNameInferred\n\t\t\tsourceColumn: \[Day Short\]\n\t\t\tsortByColumn: 'Day of Week'$/m.test(sc), `add_gulf_calendar: "Day Short" in the columns and the script, sorted by Day of Week: ${short(g)}`);
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
@@ -1816,7 +1816,7 @@ if (part('gulf-calendar')) {
   // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
   // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
   // 3 -> 6 sortByColumn (owner 2026-10-06): each Arabic name column is sorted by the same number as its English one
-  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 7, /* 6 -> 7: round 18, S3 (the owner's yes): Day Short sorted by Day of Week */ `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 9, /* 6 -> 7: round 18, S3 (the owner's yes): Day Short sorted by Day of Week; 7 -> 9: 0.3.0 C1, Month Short (Arabic) and Day Short (Arabic) */ `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -3609,7 +3609,7 @@ if (part('round12')) {
     const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
     const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
     // each name twice (owner 2026-10-06): the English column and its Arabic one, sorted by the same number
-    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'"]) /* round 18, S3 (the owner's yes): one more Day of Week, for Day Short */
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'"]) /* round 18, S3 (the owner's yes): one more Day of Week, for Day Short; 0.3.0 C1 (the owner, 21 Oct): Month Short (Arabic) and Day Short (Arabic), at the end */
         && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
         && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
       () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);
