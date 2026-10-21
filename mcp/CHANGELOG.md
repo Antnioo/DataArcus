@@ -232,6 +232,12 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   never translated silently, the model never renamed); mcp/README.md documents the EN-AR copy, the Arabic calendar
   script, checking the .mcpb's SHA-256, the developer install's prerequisites and the lowest Desktop version tested.
   `test-0.3.0-claims.mjs` checks each.
+- F7 (the API red team, E1 round 2): the Arabic calendar script (C1) leaves out, and names with why, a date table or
+  column whose name holds a control character (a line break could end the script's quoted name and stand as script
+  lines; AUD-032's rule, as every other script writer); a report's formats script (plan_layout, create_report) changes
+  only the fields the report binds, exactly the objects its plan lists (it rewrote the whole model's: 3 listed, 11
+  changed); check_model_health's own script still covers the whole model. The Arabic calendar's flag labels say exactly
+  true and false (E1's F-4): Is Working Day «يوم عمل» / «يوم عطلة», Is Weekend «عطلة نهاية الأسبوع» / «خارج عطلة نهاية الأسبوع».
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.
