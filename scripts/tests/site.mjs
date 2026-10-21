@@ -329,20 +329,21 @@ export default async function ({ browser, url }) {
         return { lang: document.documentElement.lang, dir: document.documentElement.dir, h1: document.querySelector('h1').textContent, title: document.title,
           text: document.body.innerText, action: f && f.getAttribute('action'), key: el('access_key') && el('access_key').value, subject: el('subject') && el('subject').value,
           fields: ['name', 'email', 'model', 'linkedin'].map((n) => [n, !!el(n), !!(el(n) && el(n).required), el(n) && el(n).labels.length]),
-          join: !!document.querySelector('a[href="#join"]') && !!document.getElementById('join'), tools: document.querySelectorAll('#join, code').length };
+          join: !!document.querySelector('.cta-actions a[href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0"]') && !!document.getElementById('join'), tools: document.querySelectorAll('#join, code').length };
       });
       checks++;
       if (lang === 'ar' && (r.lang !== 'ar' || r.dir !== 'rtl')) problems.push(`${tag}: lang=${r.lang} dir=${r.dir}, want ar and rtl`);
       if (lang === 'en' && (r.lang !== 'en' || r.dir === 'rtl')) problems.push(`${tag}: lang=${r.lang} dir=${r.dir}, want en, left to right`);
       if (lang === 'ar' && !/[\u0600-\u06FF]/.test(r.title + r.h1)) problems.push(`${tag}: title or heading not in Arabic`);
-      if (lang === 'en' && r.title !== 'DataArcus for Power BI: private beta') problems.push(`${tag}: title is "${r.title}"`);
+      // (changed on purpose, 22 Oct: the owner made 0.3.0 public: "public beta", a Download button to the release, the form for feedback)
+      if (lang === 'en' && r.title !== 'DataArcus for Power BI: public beta') problems.push(`${tag}: title is "${r.title}"`);
       if (r.action !== 'https://api.web3forms.com/submit' || !key || r.key !== key) problems.push(`${tag}: the form does not post to the home form's Web3Forms endpoint and key`);
-      if (r.subject !== 'DataArcus for Power BI beta request') problems.push(`${tag}: hidden subject is "${r.subject}"`);
+      if (r.subject !== 'DataArcus for Power BI feedback') problems.push(`${tag}: hidden subject is "${r.subject}"`);
       for (const [n, has, req, labels] of r.fields) {
         if (!has || !labels) problems.push(`${tag}: form field ${n} missing or without a label`);
         else if (req !== (n !== 'linkedin')) problems.push(`${tag}: form field ${n} ${req ? 'required' : 'optional'}, want ${n === 'linkedin' ? 'optional' : 'required'}`);
       }
-      if (!r.join) problems.push(`${tag}: no "Ask to join" link to #join`);
+      if (!r.join) problems.push(`${tag}: no Download button to the 0.3.0 release page, or no #join section`);
       if (r.tools < 9) problems.push(`${tag}: the 8 tools are not listed`);
       for (const claim of [/until you say/i, /until you approve/i, /nothing is written until/i, /plan first/i, /\bfirst\b[^.]{0,30}\b(tool|agent|mcp)\b/i, /\bonly (tool|agent|mcp)\b/i, /\b(AED|USD|\$)\s?\d/])
         if (claim.test(r.text)) problems.push(`${tag}: a claim it must not make: ${claim}`);
