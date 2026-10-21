@@ -82,7 +82,7 @@ window.betaPageTranslations = {
       "req": {
         "title": "Requirements and limits",
         "windows": "Windows only.",
-        "desktop": "A recent Power BI Desktop: the reports use recent features that older versions lack.",
+        "desktop": "Power BI Desktop 2.159.883.0 (October 2026) or later: the reports use recent features that older versions lack.",
         "claude": "Claude Desktop.",
         "beta": "A private beta: the package is not signed yet, and we send its SHA-256 so you can check the file you received.",
         "large": "Models above about 50 tables are experimental."
@@ -181,7 +181,7 @@ window.betaPageTranslations = {
       "req": {
         "title": "المتطلبات والحدود",
         "windows": "Windows فقط.",
-        "desktop": "إصدار حديث من Power BI Desktop: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.",
+        "desktop": "Power BI Desktop بالإصدار 2.159.883.0 (أكتوبر 2026) أو أحدث: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.",
         "claude": "Claude Desktop.",
         "beta": "نسخة تجريبية خاصة: الحزمة غير موقّعة بعد، ونرسل بصمتها SHA-256 لتتحقق من الملف الذي استلمته.",
         "large": "النماذج التي تتجاوز نحو 50 جدولًا تجريبية."
