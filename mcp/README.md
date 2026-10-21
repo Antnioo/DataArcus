@@ -7,7 +7,7 @@ For testers on Windows, no command line needed.
 1. **Power BI Desktop 2.159.883.0 (October 2026) or later**, the lowest version the 0.3.0 laptop proofs ran on
    (Help > About shows yours; the Microsoft Store version updates itself), and save your reports as Power BI projects
    (File > Save as > `.pbip`).
-2. **Get the extension:** download the `.mcpb` file from https://github.com/Antnioo/DataArcus/releases (the beta
+2. **Get the extension:** download the `.mcpb` file from https://github.com/Antnioo/dataarcus-releases/releases (the beta
    release is shared with testers), or use the file you were sent. **Check it** against the SHA-256 we send: in a
    Command Prompt, `certutil -hashfile "<file>.mcpb" SHA256`, or in PowerShell, `Get-FileHash "<file>.mcpb"` (SHA-256
    is its default); the two must match before you install.
