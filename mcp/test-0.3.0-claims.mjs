@@ -75,7 +75,8 @@ for (const [k, t] of Object.entries(home)) {
   check(!/Every number validated against the source/.test(t) && !/كل رقم مُطابق مع المصدر/.test(t), `W2-1b. ${k}: the home page's badge says every number is validated against the source`);
 }
 check(/Microsoft and others now offer AI tools/.test(home.en) && /تقدّم Microsoft وغيرها/.test(home.ar), 'W2-1a. the home page (EN and AR) says what is true: Microsoft and others offer AI report tools');
-check(/checked with Microsoft's report validator/.test(home.en) && /بمدقّق التقارير من Microsoft/.test(home.ar), 'W2-1b. the home page badge (EN and AR) says the reports are checked with Microsoft\'s report validator');
+// (changed on purpose, 21 Oct: the outside review's GO IF: the badge says format, so it can't read as checking the numbers)
+check(/Report files checked with Microsoft's format validator/.test(home.en) && /ملفات التقارير تُفحص بمدقّق التنسيق من Microsoft/.test(home.ar), 'W2-1b. the home page badge (EN and AR) says the report files are checked with Microsoft\'s format validator');
 const rootReadme = flat('../README.md');
 check(!/\(findings\/\)/.test(rootReadme), 'W2-2. README.md links findings/, a folder that does not exist');
 check(!/\b\d+ website test suites\b/.test(rootReadme), 'W2-2. README.md gives a website suite count that goes stale');
