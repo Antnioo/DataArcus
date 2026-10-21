@@ -75,8 +75,9 @@ try {
     chk(() => /^createOrReplace/.test(sc) && /ref table Calendar/.test(sc) && !bad.length, () => `AC-1c. each column a string, its lineage tag, sorted by the English column's own sort column: ${JSON.stringify(bad)} ${sc.slice(0, 400)}`);
     chk(() => /'Calendar'\[Date\]/.test(block(sc, 'Month Name (Arabic)')) && /"يناير"/.test(sc) && /"الأحد"/.test(sc) && /WEEKDAY \( 'Calendar'\[Date\], 1 \)/.test(block(sc, 'Day Name (Arabic)')),
       () => `AC-1d. the names come from the date (SWITCH on MONTH and WEEKDAY of Calendar[Date]): ${block(sc, 'Month Name (Arabic)').slice(0, 200)}`);
-    chk(() => /"الربع "/.test(block(sc, 'Quarter (Arabic)')) && /UNICHAR \( 8294 \)/.test(block(sc, 'Year Quarter (Arabic)')) && /UNICHAR \( 8297 \)/.test(block(sc, 'Year Quarter (Arabic)')),
-      () => `AC-1e. «الربع 1»; the year of «2025 الربع 1» isolated (U+2066 ... U+2069): ${block(sc, 'Year Quarter (Arabic)').slice(0, 260)}`);
+    // (P7, changed on purpose: J18's rule for the digit runs, a first-strong isolate U+2068 and a right-to-left mark at an end)
+    chk(() => /"الربع "/.test(block(sc, 'Quarter (Arabic)')) && /UNICHAR \( 8296 \) & YEAR/.test(block(sc, 'Year Quarter (Arabic)')) && /UNICHAR \( 8297 \)/.test(block(sc, 'Year Quarter (Arabic)')) && /UNICHAR \( 8207 \)/.test(block(sc, 'Year Quarter (Arabic)')),
+      () => `AC-1e. «الربع 1»; the year of «2025 الربع 1» isolated (U+2068 ... U+2069, U+200F at the ends): ${block(sc, 'Year Quarter (Arabic)').slice(0, 260)}`);
     chk(() => /IF \( 'Calendar'\[Is Weekend\], "عطلة نهاية الأسبوع", "يوم عمل" \)/.test(block(sc, 'Is Weekend (Arabic)')) && /IF \( 'Calendar'\[Is Ramadan\], "رمضان", "خارج رمضان" \)/.test(block(sc, 'Is Ramadan (Arabic)')),
       () => `AC-1f. the flags' labels: ${block(sc, 'Is Weekend (Arabic)').slice(0, 200)} | ${block(sc, 'Is Ramadan (Arabic)').slice(0, 200)}`);
     chk(() => /'Calendar'\[Fiscal Month Number\]/.test(block(sc, 'Fiscal Quarter (Arabic)')) && /"السنة المالية "/.test(block(sc, 'Fiscal Year (Arabic)')) && !/[A-Za-z]{2,}"\s*[,)]/.test(block(sc, 'Fiscal Year (Arabic)').replace(/"FY"|"fy"/g, '')),

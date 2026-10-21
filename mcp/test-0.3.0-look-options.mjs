@@ -19,6 +19,11 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 const req0 = createRequire(import.meta.url);
+// (P7, the owner, 21 Oct: "if English then the value in the pill LTR, if Arabic then RTL") each pill's value centred,
+// text wrap off; the header at the reading start
+const dirShape = (v, side) => { const vd = ((((v.visual.objects || {}).value || []).find((e) => e.selector && e.selector.id === 'default')) || { properties: {} }).properties, t = (((v.visual.visualContainerObjects || {}).title || [{ properties: {} }])[0]).properties;
+  const L = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : undefined);
+  return L(vd.horizontalAlignment) === "'center'" && L(vd.textWrap) === 'false' && L(t.alignment) === `'${side}'`; };
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -219,6 +224,8 @@ try {
       chk(() => [8, 9, 10, 15].map((t) => Zs.pillH(t)).join() === '66,65,79,76' && [8, 9, 10, 15].every((t) => Zs.pillH(t) === need(t)), () => `P8. pillH at 8, 9, 10, 15pt: ${[8, 9, 10, 15].map((t) => Zs.pillH(t)).join()} (want 66,65,79,76)`);
       chk(() => pv.length === 2 && pv.every((v) => !bad(v).length), () => `P7. every margin of the pill slicer written 0, the gap between pills 6: ${JSON.stringify(pv.map(bad))}`);
     }
+    // P9 (P7): the English pills: every value centred, text wrap off, the header left
+    chk(() => pills(allVisuals(EN.dir)).length === 2 && pills(allVisuals(EN.dir)).every((v) => dirShape(v, 'left')), () => `P9. the English pills: value centred, no wrap, header left: ${JSON.stringify(pills(allVisuals(EN.dir)).map((v) => [((v.visual.objects.value || []).find((e) => e.selector) || {}).properties, v.visual.visualContainerObjects.title]).slice(0, 1)).slice(0, 500)}`);
     const ents = (v, o) => ((v && v.visual.objects && v.visual.objects[o]) || []);
     chk(() => band && ents(band, 'value').length && ents(band, 'value').every((e) => e.selector) && S(P(band, 'value', 'default').show) === 'true' && P(band, 'value', 'default').fontSize && P(band, 'value', 'default').fontColor
       && ents(band, 'outline').every((e) => e.selector) && S(P(band, 'outline', 'default').show) === 'true',
@@ -258,11 +265,26 @@ try {
     chk(() => clean(c) && noBreak(c), () => `N2. validator 0 errors, 0 "can break": ${valErr(c)}`);
   }
 
+  // ---------- AI (P7): C1's Arabic calendar labels, each digit run isolated (J18's rule) ----------
+  {
+    const AC = req0('../assets/js/arabic-calendar.js');
+    const cols = [{ name: 'Quarter', type: 'string' }, { name: 'Year Quarter', type: 'string' }, { name: 'Fiscal Year', type: 'string' }, { name: 'Fiscal Quarter', type: 'string' }];
+    const r = AC.columnsFor({ columns: cols, src: { quarter: 'QUARTER ( [Date] )', year: 'YEAR ( [Date] )', fiscalYearNo: '[FY]', fiscalMonth: '[FM]' } });
+    const daxOf = (n) => (r.columns.find((c) => c.name === n + ' (Arabic)') || {}).dax || '';
+    const FSI = 'UNICHAR ( 8296 )', PDI = 'UNICHAR ( 8297 )', RLM = 'UNICHAR ( 8207 )';
+    const q = daxOf('Quarter'), yq = daxOf('Year Quarter'), fy = daxOf('Fiscal Year'), fq = daxOf('Fiscal Quarter');
+    chk(() => q.endsWith(`${FSI} & QUARTER ( [Date] ) & ${PDI} & ${RLM}`) && yq.startsWith(`${RLM} & ${FSI} & YEAR ( [Date] ) & ${PDI}`) && yq.endsWith(`${FSI} & QUARTER ( [Date] ) & ${PDI} & ${RLM}`)
+      && fy.endsWith(`${FSI} & [FY] & ${PDI} & ${RLM}`) && new RegExp(`${FSI.replace(/[()]/g, '\\$&')} & ROUNDUP`).test(fq) && fq.endsWith(`${PDI} & ${RLM}`) && ![q, yq, fy, fq].some((d) => /8294/.test(d)),
+      () => `AI1. «الربع 1», «2025 الربع 1», «السنة المالية 2025», «الربع المالي 1»: every digit run isolated (FSI/PDI), an RLM at the end it reaches: ${JSON.stringify({ q, yq, fy, fq })}`);
+  }
+
   // ---------- A: Arabic, right to left ----------
   {
     const A = await write({ name: 'Look Arabic', lang: 'ar', ...DES, planFields: FIELDS, displayNames: AR_NAMES, slicerStyle: 'pills', grid: 'dotted' });
     const vs = A.dir && fs.existsSync(A.dir) ? allVisuals(A.dir) : [], ps = pills(vs);
     const desc = (v) => { const s = ((v.visual.query.sortDefinition || {}).sort || [])[0]; return !!s && s.direction === 'Descending' && (s.field.Column || {}).Property === fieldOf(v); };
+    // A4 (P7): the Arabic pills: every value centred, text wrap off, the header right; from the right by the sort
+    chk(() => ps.length === 2 && ps.every((v) => dirShape(v, 'right') && desc(v)), () => `A4. the Arabic pills: value centred, no wrap, header right, read from the right: ${JSON.stringify(ps.map((v) => [((v.visual.objects.value || []).find((e) => e.selector) || {}).properties, v.visual.visualContainerObjects.title[0].properties.alignment])).slice(0, 500)}`);
     chk(() => ps.length === 2 && ps.every(desc) && ps.every((v) => S(P(v, 'layout').rowCount) === '1L'), () => `A1. the Arabic pills read from the right (one row, sorted descending): ${A.err || short(A.r)} ${JSON.stringify(ps.map((v) => v.visual.query.sortDefinition))}`);
     chk(() => charts(vs).length >= 3 && charts(vs).every((v) => S(P(v, 'valueAxis').gridlineStyle) === 'dotted'), () => 'A2. the Arabic charts dotted');
     const c = A.r && !A.r.err ? await check(A.pbip) : null;
