@@ -3753,7 +3753,11 @@ if (part('round12b')) {
     const tables = vis.filter((v) => v.visual && v.visual.visualType === 'tableEx'), projs = tables.flatMap((v) => v.visual.query.queryState.Values.projections);
     const fmtOf = (ref) => [...new Set(projs.filter((x) => x.queryRef === ref).map((x) => x.format || null))];
     const cardOf = (mname) => vis.filter((v) => v.visual && /card/i.test(v.visual.visualType) && JSON.stringify(v.visual.query || {}).includes(`"Property":"${mname}"`)).map((v) => JSON.stringify(v.visual.objects || {}));
-    chk(() => !cr.err && Object.keys(cr.j)[0] === 'formats' && cr.j.formats.fixScriptFile === hf.fixScriptFile
+    // (0.3.0 F7, changed on purpose: the red team's F-3, the report's script changes only the report's fields, so it is its
+    // own file next to the health check's whole-model one, never that file; the report's fields here: Return Rate, Orders,
+    // Order Date, Qty)
+    const crScript = !cr.err && cr.j.formats && cr.j.formats.fixScriptFile && fs.existsSync(path.isAbsolute(cr.j.formats.fixScriptFile) ? cr.j.formats.fixScriptFile : path.join(ROOT, cr.j.formats.fixScriptFile)) ? fs.readFileSync(path.isAbsolute(cr.j.formats.fixScriptFile) ? cr.j.formats.fixScriptFile : path.join(ROOT, cr.j.formats.fixScriptFile), 'utf8') : '';
+    chk(() => !cr.err && Object.keys(cr.j)[0] === 'formats' && crScript && cr.j.formats.fields.every((x) => ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Order Date]', 'Sales[Qty]', 'Sales[Revenue]'].includes(x.object))
         && JSON.stringify(fmtOf('Sales.Return Rate')) === '["0.0%"]' && JSON.stringify(fmtOf('Sales.Orders')) === '["#,0"]' && JSON.stringify(fmtOf('Sales.Order Date')) === '["dd mmm yyyy"]'
         && cardOf('Return Rate').length && cardOf('Return Rate').every((o) => /0\.0%/.test(o)) && cardOf('Orders').length && cardOf('Orders').every((o) => /#,0'/.test(o) && !/0\.00/.test(o))
         && fs.readFileSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel/model.bim'), 'utf8') === bim,
