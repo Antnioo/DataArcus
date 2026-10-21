@@ -10,6 +10,16 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { writesNote } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
+import { E } from './design.mjs';             // (D6: the written colour's own contrast, by the engine's rule)
+import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
+
+// (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
+const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
+// (D7) a right-to-left waterfall's switch, in the person's words
+const Gallery = createRequire(import.meta.url)('../../assets/js/visual-gallery.js');
+const wfRtlSaid = (v) => (Gallery.waterfallRtlOf(v) === 'native' ? `native: ${Gallery.WF_WHAT.native} (Power BI's own waterfall, as in English)` : 'mirror: a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend, the base shown in the tooltip');
 
 const windows = new Map();          // planId -> { secret, plan, show, decided: null | 'approve' | 'decline', waiters, opened, seen }
 const bySecret = new Map();         // secret -> planId
@@ -52,7 +62,8 @@ table{width:100%;border-collapse:collapse}td{padding:6px 8px;border-top:1px soli
 ul{margin:0;padding-inline-start:20px}li{overflow-wrap:anywhere}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}form{margin:0}
 button{font:inherit;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 button.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.note{color:var(--soft);font-size:13px;margin-top:18px}.warn{color:var(--warn)}
-.done{font-size:18px;font-weight:600}.sw-i{display:inline-flex;align-items:center;gap:4px;margin:0 10px 4px 0;white-space:nowrap}.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}`;
+.done{font-size:18px;font-weight:600}.sw-i{display:inline-flex;align-items:center;gap:4px;margin:0 10px 4px 0;white-space:nowrap}.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
+.preview figure{margin:0 0 14px}.preview svg{display:block;width:100%;height:auto;border-radius:6px}.preview figcaption{color:var(--soft);font-size:13px;margin-top:6px}`;
 
 function page(title, body) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
@@ -63,11 +74,50 @@ const HEX = /^#[0-9a-f]{6}$/i;
 const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, c]) => `<span class="sw-i"><span class="sw" style="background:${c}"></span>${esc(n ? n + ' ' : '')}${esc(c)}</span>`).join(' ');
 const rows = (list) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${esc(x)}</li>`).join('')}</ul>` : esc(v)}</td></tr>`).join('')}</table></div>`;
 
+// (R6, the outside audit of 19 Oct, F09 c: the page named the report, not every file) every file a plan writes, by kind,
+// counted, each path folded under its group (no script: <details> opens without one)
+const GROUPS = [['Bookmarks', /(^|\/)bookmarks\//], ['Pages', /\/page\.json$/], ['Visuals', /\/visual\.json$/], ['Phone layouts', /\/mobile\.json$/], ['Theme', /RegisteredResources\/[^/]+\.json$/i],
+  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Flip cards script', / - flip cards(?: \d+)?\.tmdl$/i], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
+// (0.3.0 A2: the flip cards' script was listed as a "Format script", L4)
+// own: a plan kind's groups, tried first (D6: the twin's month script, the theme file)
+export function groupFiles(paths, own) {
+  const G = (own || []).concat(GROUPS), out = G.map(([label]) => ({ label, paths: [] }));
+  (paths || []).forEach((f) => { const i = G.findIndex(([, re]) => re.test(String(f))); out[i].paths.push(String(f)); });
+  return out.filter((g) => g.paths.length);
+}
+// (0.3.0 S1, B-183: the app's own prompt showed the writes and the overwrite sentence only) the same as the approval page
+// says, in short, for the app's prompt (MCP elicitation): the files counted per group, and each colour the plan writes
+// other than the one approved. At most PROMPT_SUMMARY_CAP characters: groups past it are counted, never cut mid-word
+export const PROMPT_SUMMARY_CAP = 600;
+export function promptSummary(kind, data) {
+  const d = data || {}, groups = summary(kind, d).files || [], lines = [];
+  if (groups.length) {
+    const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${g.label} (${g.paths.length})`);
+    let line = `${n} file${n === 1 ? '' : 's'}: `, k = 0;
+    while (k < parts.length && line.length + parts[k].length + 40 <= PROMPT_SUMMARY_CAP / 2) { line += (k ? ', ' : '') + parts[k]; k++; }
+    if (k < parts.length) line += `${k ? ', ' : ''}and ${parts.length - k} more group${parts.length - k === 1 ? '' : 's'}`;
+    lines.push(line + '.');
+  }
+  const cc = kind === 'report' && d.colours && Array.isArray(d.colours.changed) ? d.colours.changed.filter((c) => HEX.test(String(c.from)) && HEX.test(String(c.to))) : [];
+  const card = d.colours && HEX.test(String(d.colours.card)) ? ` against ${d.colours.card}` : '';
+  cc.forEach((c) => { const own = d.colours && HEX.test(String(d.colours.card)) ? `; the written colour's own ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '';
+    // (0.3.0 A2: the contrast said after the written colour was the approved one's)
+    const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (the approved colour's contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1${own}).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
+  return lines.join('\n');
+}
+const filesHtml = (groups) => (groups && groups.length ? `<p>${groups.reduce((n, g) => n + g.paths.length, 0)} files:</p><ul>${groups.map((g) => `<li><details><summary>${esc(g.label)} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li dir="auto">${esc(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul>` : '');
+
 function askPage(w) {
   const s = w.show;
   const sections = s.sections.filter((x) => x.rows.length).map((x) => `<h2>${esc(x.heading)}</h2>${rows(x.rows)}`).join('');
+  // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
+  const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>What the report will look like</h2><div class="card preview">${s.previews.pages.map((p, i) => {
+    const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
+    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">Page ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} to check: ${esc([...new Set(fl.map((f) => Preview.WORDS.en[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads files on your machine to check and fingerprint them, and never returns data values to Claude.</p></div>` : '';
+  // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
+  const ck = s.previews && s.previews.check, ckHtml = ck ? `<h2>Checked before writing</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `Page ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}<p class="note">The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.</p></div>` : '';
   return page('Approve: ' + s.title, `<h1>${esc(s.title)}</h1><p class="lead">DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.</p>
-<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul><p class="note">Nothing is overwritten or deleted.</p></div>
+${pv}${ckHtml}<h2>Files that will be written</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files)}<p class="note">${esc(writesNote(w.plan.writes))}</p></div>
 ${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">Approve</button></form>
 <form method="post"><input type="hidden" name="decision" value="decline"><button type="submit">Not now</button></form></div>
@@ -153,22 +203,29 @@ export function state(id) { const w = windows.get(id); return w ? { opened: w.op
 /** Forgets a plan's window (its link answers "no longer valid" from then on). */
 export function close(id) { const w = windows.get(id); if (w) { bySecret.delete(w.secret); windows.delete(id); w.waiters.splice(0).forEach((f) => f(null)); } }
 
+// (0.3.0 J18, B-171) the terminology sheet, side by side: each field's English name (its key) and its Arabic, with its status
+const TERM_STATUS = (r) => (r.status === 'approved' ? `approved${r.earlier ? ' (earlier in this session, unchanged since)' : ''}`
+  : r.status === 'draft' ? 'draft from the fixed list of report words: approved with this plan' : `kept in English${r.why ? `: ${String(r.why).replace(/^kept in English(?: for now)?: /, '')}` : ''}`);
+const termSheet = (rows) => ({ heading: `Terminology sheet: English | Arabic (${rows.length})`, rows: rows.map((r) => [`${String(r.en)} (${String(r.field)})`, `${r.ar != null ? String(r.ar) : String(r.en)}: ${TERM_STATUS(r)}${r.places ? `; shown in ${r.places} place${r.places === 1 ? '' : 's'}` : ''}`]) });
 const KIND_NAME = { bar: 'Bar chart', column: 'Column chart', line: 'Line chart', donut: 'Donut chart', table: 'Table' };
 const KIND_A = { bar: 'a bar chart', column: 'a column chart', line: 'a line chart', donut: 'a donut chart', table: 'a table' };
 /** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
  *  click approves). kind: the plan's kind; data: the plan's data (its pins, the twin's labels). */
 export function summary(kind, data) {
   const d = data || {}, pins = d.pins || {}, sections = [];
-  const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : cut(JSON.stringify(v), 600));
+  // (R6, F09 f: a long value was cut at 600 characters) every value in full
+  const val = (v) => (v == null ? '' : typeof v === 'string' ? v : typeof v === 'boolean' ? (v ? 'yes' : 'no') : JSON.stringify(v));
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null };
+    const T = { title: 'Report' + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files };
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);
-    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
+    // (R6, F09 d) the lint's own measured why when the plan holds it (#64), else the general reason
+    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)])
       .concat(kinds.length ? [['Written as another kind', kinds.map((k) => `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`)]] : []) });
     // category is the bar chart's field, category2 the column chart's
@@ -178,28 +235,129 @@ export function summary(kind, data) {
     sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
+    if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
+    // (0.3.0 J17, B-170) the date the report follows, its grain and seasonal scope, and the dates' status, before the click
+    if (Array.isArray(d.gulfDates) && d.gulfDates.length) sections.push({ heading: 'Dates and seasonal scope', rows: d.gulfDates.map(([k, v]) => [String(k), String(v)]) });
+    // (0.3.0 R2: an Arabic report's texts are Arabic, or listed here with why before the go) the fields kept in English
+    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic name)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
+    // (D1) a right-to-left report's waterfalls: what each is written as, before the click
+    if (Array.isArray(d.waterfallRtl) && d.waterfallRtl.length) sections.push({ heading: `Waterfalls, right to left (${d.waterfallRtl.length})`, rows: d.waterfallRtl.map((x) => [`${cut(String(x.page || ''), 60)}${x.title ? `: ${cut(String(x.title), 80)}` : ''}`, `${String(x.written || '')}: ${String(x.what || '')}${x.why ? ` (${String(x.why)})` : ''}`]) });
+    // (0.3.0 L4) the flip cards: which cards, what their back says, the bookmarks, the model change, before the click
+    const FC = d.flipCards && Array.isArray(d.flipCards.cards) ? d.flipCards : null;
+    if (FC && FC.cards.length) sections.push({ heading: `Flip cards (${FC.cards.length})`, rows: FC.cards.map((c) => [`${cut(String(c.page || ''), 60)}: card ${c.card}`, `${cut(String(c.title || ''), 80)}: the front shows its title and value; the back shows the measure's name and one line: ${String((c.back || {}).description || '')}; ${String((c.back || {}).value || '')}; year on year: ${String((c.back || {}).yearOnYear || '')}`])
+      .concat([['Bookmarks', `${FC.bookmarks} display-only bookmarks (two a card: one shows the back, one the front); they touch no slicer or filter`],
+        ['Model change', `${FC.newMeasures} new measures (the pictures) in the script "${String(FC.scriptAfterGo || '')}" next to the project. The model is not changed by DataArcus: apply the script first, in TMDL view (Preview, then Apply); until then ${FLIP_BEFORE}`],
+        ['How it turns', 'a click turns the card (Ctrl+click while editing in Desktop), in 0.3 s; the backdrop in the card colour stays behind both faces']],
+      (FC.notFlipped || []).map((x) => [`Card ${x.card}`, `not flipped: ${String(x.why || '')}`])) });
+    // (0.3.0 L5) the status icons: which columns, how each is decided (the user's thresholds as given, or the target the
+    // model names), the shapes, the model change, before the click
+    const SI = d.statusIcons && Array.isArray(d.statusIcons.columns) ? d.statusIcons : null;
+    if (SI) sections.push({ heading: `Status icons (${SI.columns.length})`, rows: SI.columns.map((c) => [`${cut(String(c.page || ''), 60)}: ${c.visual === 'matrix' ? 'matrix' : 'table'}, ${cut(String(c.measure || ''), 120)}`,
+      c.way === 'rules' ? `rules from the user's thresholds, as given: good ${String((c.thresholds || {}).good || '')}, bad ${String((c.thresholds || {}).bad || '')}; between them the warning icon (no script)` : `a status measure ${String(c.statusMeasure || '')}: at or above its target ${String(c.target || '')} (named in the model) good, below it bad; no warning band (no threshold is guessed)`])
+      .concat([['Icons', String(SI.icons || '')], ['Placement', String(SI.placement || '')]],
+        SI.modelChange ? [['Model change', String(SI.modelChange)]] : [['Model change', 'none: the model is not changed (rules need no measure)']],
+        SI.themeAdded ? [['Theme', String(SI.themeAdded)]] : [],
+        (SI.notShown || []).map((x) => [`No icon: ${cut(String(x.measure || ''), 120)}`, String(x.why || '')]),
+        SI.none ? [['No icon', String(SI.none)]] : []) });
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
-    const LK = { theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
+    const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
-    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null).map((k) => [LK[k], k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
+    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true)).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
+    // (R6, F13: the accessibility step changed a colour after the go, and said so only after the write) the colour the
+    // report is written with, from the plan's own build, and why, before the click
+    const cc = d.colours && Array.isArray(d.colours.changed) ? d.colours.changed : [];
+    // (D6, the laptop proof of rc.2: the swatch showed the approved colour beside the line saying another is written) the
+    // swatches are the written colours; the line names the approved one
+    const written = (c, i) => { const x = i === 0 && cc.find((k) => String(k.from).toLowerCase() === String(c).toLowerCase()); return x ? String(x.to) : String(c); };
     const dc = p.design && Array.isArray(p.design.data) ? p.design.data : null;
-    if (dc) look.push(['Data colours', { swatches: dc.map((c) => ['', String(c)]) }]);
+    if (dc) look.push(['Data colours', { swatches: dc.map((c, i) => ['', written(c, i)]) }]);
+    const own = (c) => (HEX.test(String(c.to)) && HEX.test(String(d.colours.card)) ? `; the written colour's own contrast: ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '');
+    cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
+    // (L3) the metric switcher: the measures and their labels, the charts that switch, and the model change it needs
+    const ms = d.metricSwitcher && typeof d.metricSwitcher === 'object' ? d.metricSwitcher : null;
+    const CK = { bar: 'Bar chart', line: 'Line chart' };
+    if (ms) sections.push({ heading: 'Metric switcher', rows: [['Page', String(ms.page || '')]]
+      .concat((Array.isArray(ms.measures) ? ms.measures : []).map((x, i) => [`Metric ${i + 1}: ${cut(String(x.field), 120)}`, `shown as "${cut(String(x.label), 100)}"`]))
+      .concat([['Charts that switch', (Array.isArray(ms.charts) ? ms.charts : []).map((c) => `${CK[c.kind] || 'Chart'} by ${String(c.by)}`)]], (ms.notSwitched || []).length ? [['Not on the page', ms.notSwitched.map(String)]] : [],
+        [['Title with nothing chosen', String(ms.fallbackTitle || '')], ['Model change', String(ms.modelChange || '')], ['Script file', String(ms.script || '')], ['Before the script is applied', String(ms.beforeApplied || '')], ['Saved selection', String(ms.savedSelection || '')]]) });
+    // (0.3.0 D2) each gallery visual the user asked for: what is written and why (the writer's rule on the fields), and
+    // how the preview draws it
+    const GN = { combo: 'Combo (line and clustered column)', waterfall: 'Waterfall', smallMultiples: 'Small multiples' };
+    const gl = Array.isArray(d.gallery) ? d.gallery : [];
+    if (gl.length) sections.push({ heading: 'Visual gallery', rows: gl.map((g) => [`${GN[g.kind] || 'A gallery visual'}${g.title ? `: ${cut(g.title, 80)}` : ''}`, `written as ${g.written === g.kind ? (GN[g.kind] || g.kind).toLowerCase() : String(g.written)}: ${String(g.why || '')}`])
+      .concat([['Preview', 'the preview draws a waterfall and small multiples as a column-chart placeholder, a combo as a line-chart placeholder']]) });
     const other = ['pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards'].filter((k) => p[k] !== undefined && p[k] !== null);
     if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
-    if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
+    // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
+    if (Array.isArray(d.customVisualsShown)) sections.push({ heading: `Custom visuals replaced (${d.customVisualsShown.length})`, rows: d.customVisualsShown.map((x) => [String(x.line), (x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows']]) });
+    else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
+    // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click
+    const NC = { validator: 'Microsoft\'s validator', references: 'Fields against the model', rules: 'Measured rules', lint: 'Layout check' };
+    const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
+    if (nc.length) sections.unshift({ heading: 'Not checked before writing', rows: nc.map((n) => [NC[n.check] || 'A check', `not run: ${String(n.why || '')}. The rest of the report was checked (all ${d.exact.pages || 'its'} pages).`]) });
     return Object.assign(T, { sections });
+  }
+  // (0.3, J13 redesign step 2; the laptop's PROOF-rc24 block 2 (b): step 1's page showed the plan's fields, not what was
+  // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
+  // is copied as it is
+  if (kind === 'redesign') {
+    const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
+    const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
+    // (R6, F08: a visual by its kind, fields and place, never its title text)
+    const of = (c) => `${cut(c.type, 40)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
+    // (0.3.0 D4) a unit on one line: the visuals laid on it, each by its kind and fields, and where it goes with it
+    const overlaid = (c) => (Array.isArray(c.overlays) && c.overlays.length ? `with what lies on it, ${c.from || c.overlays.some((o) => o.from) ? 'moved' : 'kept'} with it: ${c.overlays.map((o) => `${cut(o.visual, 60)} (${of(Object.assign({}, o, { place: null }))})${o.from ? ` to ${at(o.to)}` : ''}`).join('; ')}` : null);
+    const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
+      [c.from ? `moves from ${at(c.from)} to ${at(c.to)}` : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, overlaid(c)].filter(Boolean).join('; ')]));
+    if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
+    const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${of(x)})`, [cut(x.why, 200), overlaid(x)].filter(Boolean).join('; ')])));
+    const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
+    sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
+    sections.push({ heading: `Changes (${changes.length})`, rows: changes });
+    sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });
+    sections.push({ heading: 'Kept as it is', rows: [].concat(n('pages', 'page', 'pages'), n('bookmarks', 'bookmark', 'bookmarks'), n('buttons', 'button', 'buttons'), n('reportFilters', 'report filter', 'report filters'), n('pageFilters', 'page filter', 'page filters'),
+      n('visualFilters', 'visual filter', 'visual filters'), n('slicerSelections', 'slicer selection', 'slicer selections'), n('tooltipLinks', 'tooltip link', 'tooltip links'), n('tooltipPages', 'tooltip page', 'tooltip pages'), n('drillthroughPages', 'drillthrough page', 'drillthrough pages'),
+      n('interactions', 'visual interaction', 'visual interactions'), n('groups', 'group', 'groups'), n('customVisuals', 'custom visual', 'custom visuals'), n('phoneLayouts', 'phone layout', 'phone layouts'), n('resources', 'resource file', 'resource files'),
+      [['How', 'copied as they are: their contents (filter values, slicer selections, bookmark states) are not read']]) });
+    return { title: 'Redesign of a report', sections, files, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script and no theme file of its own.` : null };
   }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});
-    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic month column', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)]] });
+    sections.push({ heading: 'Options', rows: [['Time axis right to left', val(d.timeRightToLeft)], ['Arabic calendar columns', val(d.arabicMonth)], ['Mirror picture pages', val(d.mirrorPicturePages)], ['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
-    return { title: 'Arabic twin of a report', sections };
+    if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
+    // (0.3.0 D3) every text the twin shows in English, with why, before the click
+    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
+    // (0.3.0 X1) one report holding both languages: the copy, every page pair, the language buttons, the slicers in sync
+    const LG = d.languages && typeof d.languages === 'object' ? d.languages : null;
+    if (LG) {
+      const pairs = Array.isArray(LG.pairs) ? LG.pairs : [], btns = Array.isArray(LG.buttons) ? LG.buttons : [], sg = Array.isArray(LG.syncGroups) ? LG.syncGroups : [], T = LG.tabs || {};
+      const pg = (x) => `"${String((x && x.name) || '')}"${x && x.hidden ? ' (hidden in the tabs)' : ''}`;
+      sections.unshift({ heading: 'One report, English and Arabic', rows: [['New report', String((LG.copy || {}).report || '')], ['Project file', String((LG.copy || {}).pbip || '')], ['The original', 'only read: not changed'],
+        ['Tabs shown', String(T.shown || '')], ['Hidden in the tabs', String(T.hidden || '')], ['Tooltip pages', String(T.tooltipPages || '')], ['What a reader sees', String(T.service || '')], ['Bookmarks', String(LG.bookmarks || 'none')]]
+        .concat((Array.isArray(LG.measures) ? LG.measures : []).map((m) => ['Report measure', `${String(m.arabic)} for the Arabic pages; ${String(m.measure)} stays for the English pages`])) });
+      sections.splice(1, 0, { heading: `Page pairs (${pairs.length})`, rows: pairs.map((x, i) => [`${i + 1}. English ${pg(x.english)}`, `Arabic ${pg(x.arabic)}${x.tooltip ? ' (tooltip pages)' : x.drillthrough ? ' (drillthrough pages)' : ''}`]) },
+        { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
+        { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
+    }
+    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null };
+  }
+  // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
+  // their hex, and the report they come from
+  if (kind === 'theme' && d.colours && typeof d.colours === 'object') {
+    const C = d.colours, src = d.source && typeof d.source === 'object' ? d.source : null, one = (c) => ({ swatches: [['', String(c)]] });
+    const from = !src ? null : src.from === 'visuals' ? `from the colours on the visuals of report "${String(src.report)}"`
+      : `from the theme of report "${String(src.report)}" (${String(src.theme)})${src.from === 'theme and visuals' ? ' and the colours on its visuals' : ''}`;
+    sections.push({ heading: 'Colours', rows: [from ? ['Where they come from', from] : null, ['Data colours', { swatches: (Array.isArray(C.data) ? C.data : []).map((c, i) => [String(i + 1), String(c)]) }],
+      ['Page', one(C.page)], ['Visuals', one(C.visuals)], ['Text', one(C.text)], ['Accent', one(C.accent)], C.mode ? ['Mode', C.mode === 'dark' ? 'dark' : 'light'] : null].filter(Boolean) });
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
-  const own = Object.values(pins)[0] || {};
-  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, val(v)]) });
-  return { title: titles[kind] || 'Plan', sections };
+  const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;
+  sections.push({ heading: 'Inputs', rows: Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers)).map(([k, v]) => [k, val(v)]) });
+  // (R6, F09 f: a long answers list was cut at 600 characters, as hashes) every question with the answer recorded for it
+  if (shownAnswers && shownAnswers.length) sections.push({ heading: `Answers to record (${shownAnswers.length})`, rows: shownAnswers.map((x) => [String(x.object || ''), `${x.answer === 'mistake' ? 'a mistake' : 'intended'} (the question: ${String(x.question || '')})`]) });
+  return { title: titles[kind] || 'Plan', sections, files: kind === 'theme' && Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Theme file', /\.json$/i]]) : files };
 }

@@ -1,8 +1,364 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.2.9.1" just below (branch `fix/0.2.9.1`, one PR to main); before it "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "R7" just below (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## R7: every privacy and safety claim re-read against the code (19 Oct, cloud builder; branch `fix/0.3.0-privacy-reread` from `fix/0.3.0-approval-disclosure` e4ae1cd = R6, PR #79; the reviewer opens the PR into release/0.3.0 after #79 merges; the owner merges)
+The reviewer's brief (the owner, 19 Oct: beta testers get 0.3.0; every outside-audit finding fixed first; this full
+privacy re-read last, after R2-R6; the last full read was 11 Oct). Rules: the MCP returns metadata only, never data
+values; public claims must be true; fix claims by WORDING; a claim that only code can make true is listed under "Needs
+code" (file + proposed fix), the code is not changed. Out of scope: new features, Gulf dates, terminology, axis units.
+When #79 merges into release/0.3.0: merge origin/release/0.3.0 into this branch.
+Plan (in order):
+1. This plan, pushed first.
+2. `mcp/work/R7-claims.md`: every sentence of mcp/PRIVACY.md (sections 1-5, Coming, Known gaps) a row (claim, where,
+   true?, evidence file:function, action); then the claims of mcp/README.md, README.md, mcp/PRODUCT_SPEC.md,
+   mcp/skills/report-design/SKILL.md, mcp/lib/agent-text.mjs, mcp/lib/approval-window.mjs, power-bi-mcp/ (EN, AR), the
+   beta page and its translations, the Theme Generator logo line, any site privacy page.
+3. Checked in the code: what each tool returns (no data values; which titles/names, how screened), what is read
+   (whole files hashed), what is written (new files only, except the answers file; a failed write removes what that call
+   created and names what it could not), the browser (logo bytes never stored or sent; derived colours in localStorage;
+   answers until "Forget my answers"), network (the MCP none; the site's analytics/consent as they are).
+4. Known items: PRIVACY section 4 heading "never overwritten" and "DataArcus reads no data to find them"; read_report's
+   short static titles (screened for instructions and length only) said exactly in PRIVACY and the tool description,
+   "Needs code: read_report returns no static title text, or only screened"; the confirmation memory's plain-text
+   fields (audit F10) said wherever "only hashes" is claimed (checked against the code: what R5 actually stores).
+5. Wording fixed; agent-text caps and tests; site: test-site-config, build:min if a translation .js changes, ?v= bump,
+   sitemap-lastmod --write (after git fetch --unshallow).
+6. A text test for the rules a grep can check ("never reads" data, "never overwritten" without the answers-file
+   exception), in test-release-text.mjs.
+7. Suites: release-text, agent/description tests, website suites touched, site-config, check:min; full mcp npm test once.
+8. CHANGELOG [Unreleased] R5 line (given), R6 line if missing, R7 line; this section's done part; push. No PR.
+Expected (before any run): every PRIVACY.md sentence in the table with evidence; zero untrue claims left in the listed
+files; the new release-text checks red on e4ae1cd (the known "never overwritten"/"reads no data" lines), green after;
+every other suite unchanged in count except release-text; full npm test green.
+
+- Done (commits 67c6585 wording + claims table + checks, 76a61cf the beta page's English lines; then this note and the
+  CHANGELOG): `mcp/work/R7-claims.md`: 118 PRIVACY.md claims, 93 true, 25 reworded (untrue 4: the redesign "short
+  titles", "full paths stay in the local log", section 4's heading, "no file renamed over another"; overstated 7; stale or
+  incomplete 14), 1 needs code; 28 rows for the other files. Wording only; code changed only in texts (read_report's
+  description and NOTE, model.mjs's data-file message, agent-text's last line at the same 2,200 cap).
+- Found in the code: R5 already hashes the question id and object name (the brief's F10 "plain text" was the pre-R5
+  shape); plain text are the answer, the date and time and "user"; the hashes are unsalted SHA-256; the file name holds
+  the model's name. The only log line is the start line. plan_layout's J14 copy is the one write outside the folder.
+- Needs code (not changed): N1 read_report returns a short static title or text box as typed (read-report.mjs:safeText):
+  return none by default, or only when asked; N2 check_model_health's `destructiveHint: false` while it replaces or
+  empties its own answers file.
+- Tests: release-text 4 -> 36 (15 of the new checks red on e4ae1cd); test-rc23 F3 expected sentence changed on purpose
+  ("it reads none of your tables' data"), 51/51; v029agent 23, r6-disclosure 37, r5-answers 33, redesign 49,
+  approval-hardening 22, b148 28; site config, check:min, csp, ar-pages, sitemap-lastmod (+ its test), analytics events
+  PASS.
+- Next: the reviewer reviews; when #79 merges into release/0.3.0, merge origin/release/0.3.0 here; the reviewer opens
+  the PR into release/0.3.0; the owner checks the Arabic sentences of the beta page and merges.
+## R6: the approval page shows everything the click approves; the theme pins its model (19 Oct, cloud builder; branch `fix/0.3.0-approval-disclosure` from `release/0.3.0` c058e87; one PR into release/0.3.0, not merged)
+The reviewer's brief (B28; the owner's decision of 19 Oct: every finding of the outside audit of 19 Oct is fixed before
+0.3.0 reaches beta testers; R4 write safety = PR #78, R5 done, R7 = PRIVACY.md's full re-read, not this branch).
+Out of scope: PRIVACY.md beyond the sentences with the stronger claim (R7), Gulf dates, terminology, axis units.
+What was found first (release/0.3.0 c058e87):
+- F07: generate_theme proposes with model null and gates with null; the gate lets null/null through. The model's print
+  (model.mjs) hashes the definition files only, NOT the report theme the colours are taken from (existingTheme).
+- F13: the J14 exact artifact is built at plan time, so the a11y step (report-a11y.js readable, 3:1, MIN_CONTRAST) has
+  already run when the plan is shown; the page shows the design's colour, not the written one (said only after the write).
+- F09: release/0.3.0's redesign is #68's lossless copy (step 1's loss list, added fields and format script were #62's,
+  never merged): it writes no format script and loses nothing (verifyCopy refuses a missing file). The loss list that
+  exists is the native copy's (customVisualsFrom: each replacement's `lost`), shown as JSON cut at 600 characters.
+Plan (in order):
+1. Failing tests first: `mcp/test-0.3.0-approval-disclosure.mjs` (in npm test), T07, T08, T09, T13.
+2. F07: generate_theme with path pins modelRef { key, print } where print = the model's print + a hash of the report
+   theme it read (the colours' source); the gate refuses a plan made with a model when the write passes none, and the
+   reverse; no model = still allowed. Before the first write (generate_theme; create_report: new report, redesign,
+   native copy) the model is read again and its print compared with the pinned one: changed = "Nothing was written",
+   before any mkdir. A test hook (DATAARCUS_TEST_EDIT_BEFORE_WRITE, tests only, like DATAARCUS_TEST_WRITE_FAIL) edits a
+   model file between the last read and that re-read.
+3. F13: the plan keeps the writer's own a11y result (the exact build's r.a11y.colours): the page shows "approved colour
+   -> written colour" with "contrast X:1 against the visuals' background #..., needs 3:1" (the code's rule: WCAG 1.4.11
+   for a data colour; the brief's 4.5:1 is text's) before the click; the written theme is that build's bytes.
+4. F09: (a) the native copy's every replacement and every loss item on the page, escaped, never cut; the redesign says
+   "Nothing is left out" with its file count (the copy check refuses a lost file); (b) the writes line names every kind
+   of file (the redesign: no format script, said); (c) the page lists every file written, grouped (pages, visuals, phone
+   layouts, theme, resources, bookmarks, format script, .pbip...) and counted, from the plan's own list (the exact
+   artifact's paths; the redesign's copy list); (d) a kind change shows the lint's stored measured why; (e) the
+   overwrite sentence true per plan kind (new files only; the answers file replaced; a failed write removes what this
+   call created); (f) no value cut at 600 characters: lists shown in full (each answer with its question).
+5. F08: the redesign's answer names a visual by kind, fields and place, never its static title text (the title is still
+   copied into the file; the local approval page keeps showing it, it is not a tool answer). Wording everywhere: "reads
+   files on your machine to check and fingerprint them; never returns data values to Claude" (agent-text, the approval
+   page, README, the site's MCP page EN/AR, PRIVACY.md's stronger sentences only).
+6. F11: Theme Generator logo line (EN, AR, lab): the image is never uploaded or saved; the colours taken from it are
+   saved in this browser like any theme. node scripts/test-site-config.mjs; no .min.js change expected (HTML only).
+7. Suites: the new one, approval-hardening, partial-writes, 0.3-redesign, 0.3-a11y, 0.3-arabic-titles, release-text,
+   website theme-logo, site-config, check:min; then the full mcp npm test once. CHANGELOG "R6" bullet; PR into
+   release/0.3.0 (not merged).
+Expected (written before the run): the new suite about 30 checks, all red on c058e87 except the no-model theme (still
+written) and the page's escaping of hostile names (already escaped): those stay green. After: all green; every listed
+suite green with no expectation changed except where this brief changes behaviour (listed in the PR); full npm test
+green. grep: no "never reads data values"/"not your data" claim left; no "Nothing is overwritten" where untrue.
+- Done (commits bbbacb0, then db31959 = release/0.3.0 with #78 R4 merged in: CHANGELOG, WORK.md and the test list keep
+  both; create_report's write keeps R4's format script and R6's re-read): F07 lib/plans.mjs gate (model plan needs the
+  model at the write, and the reverse), server.mjs themeRef/sameModelBeforeWrite (generate_theme, create_report's new
+  report, redesign, native copy), lib/write-io.mjs testEditBeforeWrite (tests only). F13 the exact build's a11y result in
+  the plan's data (colours), shown as "approved colour -> written colour: contrast X:1 against the visuals' background,
+  needs 3:1". F09 plan data outputs (exact artifact paths + format script; the redesign's copy list) grouped on the
+  page (approval-window.mjs groupFiles), the measured why, customVisualsShown, answersShown, no 600-character cut,
+  answers.mjs writesNote per plan. F08 redesign.mjs: kind, fields, place; no title text in the answer or on the page
+  (the new title the user gives is shown). Wording: agent-text (2200 of 2200), README, PRODUCT_SPEC, SKILL, server
+  notes, PRIVACY.md section 3's first sentence and section 4's "Nothing is overwritten" only, the site's MCP page and
+  the Theme Generator's logo line (EN, AR, lab; translations .min.js rebuilt, ?v= 20261019r6, Arabic copies rendered).
+- Tests: test-0.3.0-approval-disclosure.mjs 37 checks, 23 red on c058e87 (14 green before, as guards: T07-4/5/7/8 a
+  good write and the no-model theme, T08's filter/slicer/bookmark/DATATABLE sentinels already absent, T08-7 the copied
+  title, T09-10 the escaping, the set-up checks), 37/37 after. Changed on purpose: test-0.3-redesign C8 (the old title text no longer
+  returned), test-0.3.0-answers-safety F04-7 (the new-files sentence says what a failed write removes).
+- Full mcp npm test on db31959 + this note: every script PASS (test.mjs 1581, G-13 inside, r6-disclosure 37). Website: theme-logo 753,
+  site 463, anchors 128, tools 341, lang-switcher 1368, theme-generator 894, theme-generator-lab 894; site-config, check-min,
+  csp, ar-pages PASS (test-sitemap-lastmod cannot run here: the shallow clone lacks an old commit, not this change).
+- PR #79 into release/0.3.0 opened on the owner's go (not merged). Next: review, CI, the owner merges; R7 re-reads PRIVACY.md.
+## R4: the rollback never deletes or replaces what is not ours (19 Oct, cloud builder; branch `fix/0.3.0-write-safety` from `release/0.3.0` 1ae53f3; one PR into release/0.3.0, not merged)
+The reviewer's brief (19 Oct; the owner approved fixing every Codex finding before release). The outside audit (Codex, pinned to
+integration ce8335b, re-found on release/0.3.0): F01 the rollback unlinks/rmdirs tracked paths by NAME (files.mjs writeTree,
+write-io.mjs writeFileNew) with no check it is still what this call created; F02 freeFile snapshots missing folders, then a
+recursive mkdir, and counts all as created (another program's folder can be removed; a half-way mkdir failure leaves folders);
+F03 placeFile's no-hard-link fallback and writeTree's folder placement are check-then-rename (can replace); F06 check_model_health's
+scripts/answers and create_report's format script are written outside withPlan. Another builder has fix/0.3.0-answers-safety
+(lib/answers.mjs): this branch stays out of it (writeAnswers is only called through the plan policy).
+- Plan: (1) each created file's identity from its own handle (open 'wx', fstat dev+ino bigint, size after the write); each
+  created folder's from lstat right after its own mkdir. Cleanup lstats each path: removed only when it (and every folder this
+  call made on the way to it) still has its recorded identity and its real parent is inside the working folder; else left and
+  named in `left.foreign` ("not created by this call, or replaced since"). (2) freeFile makes folders one level at a time,
+  non-recursive io.mkdirSync; EEXIST = not ours; a failure half-way removes what it made and throws writeFailed. (3) No
+  check-then-rename anywhere: writeFileNew links its temporary file into place, and with no hard links writes straight to the
+  name with 'wx'; writeTree writes straight into place (each folder by an exclusive mkdir, each file 'wx', .pbip files last:
+  Desktop opens a project by its .pbip), no temporary folder, nothing renamed. (4) files.mjs `planWrites(planId, tool)`: the
+  withPlan policy for a tool whose writes are answer fields (each step through it; the plan stays unused only when every
+  write that failed left nothing and nothing was written); check_model_health's scripts and answers file go through it and the
+  answer says `planUse` when a write failed; create_report's format script is written inside its withPlan, after the tree;
+  a script's failure is said with the write's own message (the exact leftovers).
+- Test first: `mcp/test-0.3.0-write-safety.mjs` (in npm test), 32 checks, **21 red on release/0.3.0 1ae53f3** (S1 3, S2 2, S3 1,
+  S4 2, S5 2, S6 1, S7 2, S8 1, H1 2, H2 2, H3 2, C1 1). Expected after: 32/32; test-partial-writes 37, test-z unchanged; the
+  full `npm test` all PASS with the same counts as release/0.3.0.
+- **Done (commits 8c96ffe, da0e83e; see the PR):** write-safety 32/32. Full `npm test` on Linux, all PASS: release-text 4,
+  test.mjs 1581, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226 (32 reports; its 8 "labelled by
+  title" notes as before), rc22 26, rc23 51, rc24 28, preview 71, check 31, fidelity 38, 0291 17, b173 20, b146 32, phone 355,
+  b148 28, story-titles 94, approval-hardening 22, b153 37, a11y 121, gallery 44, waterfall-rtl 15, redesign 49,
+  label-limits 30, j14 30, r4 32. The first full run failed test.mjs's source check (it looks for `flag: 'wx'` in write-io):
+  createFile now names its flag `{ flag: 'wx' }` (no test changed). My S8 at first swapped a folder by rmdir + mkdir, which
+  reuses the inode on Linux: it now renames the old one aside (fixed before green, still red on 1ae53f3).
+- Decisions I made: the tree is written in place (no temporary folder renamed into place: a directory rename can replace an
+  empty folder on Linux, and Node has no no-replace rename), .pbip last; a file or folder whose identity changed is named
+  under "Left as found, not created by this call"; a failed write whose error says nothing of what it left (writeAnswers's
+  own) uses the plan; check_model_health says `planUse` only when a write failed.
+- Seen, not in scope: lib/answers.mjs writeAnswers still writes with fs directly (tmp, then link or rename over its own
+  answers file; the other builder's branch); lib/artifact.mjs (J14's private copy in the temp folder) makes folders with a
+  recursive mkdir; between removeOurs's lstat and its unlink a swap is still possible (Node has no unlinkat on a handle):
+  the window is one call, named in PRIVACY's "what these checks are not".
+- Next: the reviewer reviews the PR into release/0.3.0, CI green (mcp-windows runs S3 with a junction), the owner merges.
+
+## R5: the answers file and memory, safe and truthful (19 Oct, cloud builder; branch `fix/0.3.0-answers-safety` from `release/0.3.0`; one PR into release/0.3.0, not merged)
+The reviewer's brief (the owner approved fixing every finding of the outside audit of 19 Oct before release; findings
+pinned to integration ce8335b, found again on release/0.3.0). Another builder has `fix/0.3.0-write-safety`
+(write-io.mjs / files.mjs / withPlan): this branch only calls write-io's public functions (io, writeFileNew,
+writeFailed, shownWritePath), never changes them.
+- F04 (High): `lib/answers.mjs` readAnswers takes the file's identity (dev+ino by lstat, size, SHA-256 of the bytes read);
+  writeAnswers(dir, base, records, checked) writes the temp, takes the identity again right before the rename and
+  refuses ("Nothing was written: the answers file ... changed after DataArcus checked it", code ANSWERS_CHANGED, nothing
+  touched) when it differs; a file that appeared after a check that found none goes through writeFileNew (EEXIST, never
+  replaced). The plan line says "a new file" or "which replaces the answers file DataArcus wrote there" (and how many
+  answers that no longer apply are dropped); `writesNote(writes)` (answers.mjs) is the approval page's and the app
+  prompt's note: "This plan replaces the answers file DataArcus wrote ..." for such a plan, "Nothing is overwritten or
+  deleted." otherwise. Residual: between the last identity check and the rename (microseconds) a swap is still possible
+  (POSIX rename has no compare-and-swap); said in the PR.
+- F05 (Med): the temp is written with `io.writeFileSync(..., 'wx')` inside the try, recorded before the call, removed on
+  any failure; errors are write-io's writeFailed (e.left). check_model_health: `answersLeftOnDisk` names what is left;
+  `answersPlan` says the plan was NOT used when nothing of this call is on disk (the same planId writes again), and IS
+  used otherwise (leftovers, or fix scripts written in the same call).
+- F14 (Med): confirm-memory.js signature() has a table branch ('b148-table-v1'): table, looksLike, key column and the
+  other table's key with their types; a date table's dateTime column names. Earlier table answers come back once (they
+  were signed without their evidence).
+- F10 (Low), decided: HASH. Records are { questionHash, objectHash, answer, evidenceSignature, at, by }; `at`/`by` kept as
+  non-sensitive metadata. Why: the answers file sits next to the project and travels with it (a shared folder, Git), so
+  names in it would describe the model without the model; hashes say nothing to anyone without the model. Older records
+  (plain questionId/object) are read through `upgrade()` and kept hashed from then on (browser at once, the file at its
+  next approved write). PRIVACY.md says exactly what is kept.
+- F12 (Low), decided: KEEP. The page no longer prunes: stale answers stay in localStorage, not applied, shown as "N
+  earlier answers no longer apply ... until you click Forget my answers" (#mhStale); an answer whose DAX comes back
+  applies again; saving a new answer keeps them (kept(a) = keep + stale). The MCP file drops them only at an approved
+  write, which its plan now says.
+- Tests: `mcp/test-0.3.0-answers-safety.mjs` (in npm test) 33 checks, 27 red on release/0.3.0; now 33/33.
+  test-confirm-memory.mjs U6/S4 changed on purpose (the record's new shape), 28/28. Website model-health B-148: 6 red on
+  the old page code; now 232 PASS. ?v= 20261019r5 on confirm-memory and model-health (EN and AR pages).
+- Next: the reviewer reviews the PR; the owner checks the Arabic sentence; merges into release/0.3.0.
+
+## R3: a right-to-left waterfall reads from the right (19 Oct, cloud builder; branch `fix/0.3.0-waterfall-rtl` from `release/0.3.0`; one PR into release/0.3.0, not merged)
+The reviewer's brief (19 Oct, the owner's must-fix: in an Arabic report the waterfall did not switch direction). Another
+builder has `fix/0.3.0-arabic-titles` (titles in pbip-page.js / story titles): this branch stays out of those lines.
+- (1) What a waterfall has (Microsoft's capabilities, `@microsoft/powerbi-core-visual-schema` as mcp/package.json pins it,
+  data/capabilities.json `waterfallChart.objects`; the bundled PBIR schemas in mcp/schemas name no visual's objects, only
+  `sortDefinition`: visualConfiguration 2.1.0 schema-embedded.json:52, direction "Descending" :120): categoryAxis has NO
+  invertAxis (show, preferredCategoryWidth, maxMarginFactor, innerPadding, fonts, titles, axisStyle); valueAxis has
+  switchAxisPosition and invertAxis (the latter turns values upside down: not a mirror); legend.position (with a
+  Breakdown only); no "reverse" anywhere. So the honest mirror = the order (sort Descending) + the value axis at the right.
+- (2) What was written before: the WRITER already did it (visual-gallery.js objects/mirrorSort, called in pbip-page.js
+  when chartAxes is "mirrored", create_report's default for Arabic): an Arabic waterfall by month is sorted Descending by
+  Min of Month Number (in Tooltips) with valueAxis.switchAxisPosition. The ARABIC TWIN did nothing: report-mirror.js
+  kindOf gave waterfallChart 'other' (moved only). Fixed there: kind 'waterfall' = the column charts' value axis and sort
+  rules, never categoryAxis.invertAxis (not even for a date column), plan text says only the order is reversed.
+- Test first: `mcp/test-0.3.0-waterfall-rtl.mjs` (in npm test), 15 checks, 6 red on release/0.3.0 (all twin: M1-M6);
+  the writer's W1-W5 and the validator V (Arabic report, twin page) were green already. test-0.3.0-twin.mjs T6 changed
+  on purpose (the waterfall moved from "cannot" to "mirrors"; the scatter stays under cannot).
+- Decisions I made: the twin's waterfall follows the column charts' rule exactly, including timeRightToLeft: false
+  (M5 first said "the month sort stays"; the shared rule keeps only a sort by the category itself, so a writer-made
+  chart sorted by Min of the month number is flipped anyway: column charts too; not changed, listed for the owner);
+  the legend is not moved on a waterfall (not measured); no new Arabic sentence.
+- For the laptop (Desktop 2.159): an Arabic report (gallery: true) with a waterfall by month, and the Arabic twin of
+  its English report: the first month at the right, the running total building right to left, the Total column at the
+  left end, the value axis at the right; the English report unchanged (January at the left, axis at the left).
+- Next: the reviewer reviews the PR, the laptop checks in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3.0 R2" just below (branch `fix/0.3.0-arabic-titles`, normal PR #75 to `release/0.3.0`); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 R2: English titles in an Arabic report from an English-named model (19 Oct, cloud builder; branch `fix/0.3.0-arabic-titles` from `release/0.3.0` f5455c9; normal PR #75 to `release/0.3.0`, not merged)
+The owner's must-fix after testing 0.3: create_report / plan_layout with lang 'ar' on a model with English names showed
+English titles ("Web Orders Total Score by Plan Group"). Rule: every text an Arabic report shows is Arabic, or the plan
+lists it as not translated, with why, before the person approves.
+- Causes found (probe: the golden model, focus Web Orders, exec + ops, tooltip page, no displayNames):
+  (a) story-titles.js join / pbip-query.js byTitle chose the joiner by the measure's script, not the report's language:
+  two English names gave "M by C" (and the Top-N title measures' DAX strings «أعلى N من M: ... by ...»); alternate gave
+  "ranked by", "per", "breakdown by"; timeWords said an English name's PY/YTD in English words ("Sales last year") on
+  KPI labels (kpiLabel), titles and alt text (report-a11y nameOf). (b) visual-gallery.js title: " and ", ", per " and
+  "by" with English names. (c) the plan never pinned the fixed list's Arabic names (only suggested them; create_report
+  wrote names only when the assistant passed them back) and never listed what stays English; the table's ": detail"
+  tail followed the title's script. (d) none found: buttons, page names, "No data", the table total, header subtitle
+  are Arabic already (REPORT_TEXTS.ar); the report name is the user's.
+- Fix: the report's word («حسب» / "by") decides: an Arabic report never joins English names with English words (the
+  measure's name alone; repeated titles get "(column)"), no English alternates, English names kept as they are (no
+  "last year"); gallery the same; the table's tail «: التفاصيل» in an Arabic report. plan_layout (Arabic): the fixed
+  list's names are pinned with the plan (arabicNames.inThePlan, as an English plan's readable names), every other shown
+  field is listed in arabicNames.notTranslated { field, shownAs, why } with sayInPlan; the fields come from the
+  planned page itself (plan-lint fields: the ops layout's 5th/6th cards, a third category); the approval window has a
+  section "Shown in English (n, no Arabic name)". The model is never renamed.
+- Test first: mcp/test-0.3-arabic-titles.mjs (in npm test), 27 checks, 17 red on integration/0.3-preview ce8335b and on
+  release/0.3.0 f5455c9; all green after. AT-4 (English titles unchanged) recorded in test-models/arabic-titles-en.json.
+- Expectations changed (dated notes, listed in the PR for the owner): test.mjs Round0 AR planName, display names (Last
+  Ramadan's pinned name, used 6), the table title in Arabic, the 960x720 Arabic table share (keeps the model's names via
+  displayNames), round 20 repeated titles (Arabic now unique); test-round22 (keeps English names via displayNames),
+  test-round23 (row label header «المنطقة»); test-0.2.9-sweep B-88 (the plan's pinned names written too).
+- Next: the reviewer reviews the PR, the laptop checks in Desktop (list in the PR), the owner merges into release/0.3.0.
+
+## 0.3.0 release branch (19 Oct, cloud builder; branch `release/0.3.0` from main `d76703c`; DRAFT PR #74 to main, the owner merges after the laptop proof)
+The owner's decision (19 Oct): beta testers get 0.3.0, the 0.3 drafts as they are. One `git merge --no-ff` per branch,
+in the briefed order, conflicts resolved as draft #65's integration check did (both behaviours kept, no test dropped
+or loosened); generated files rebuilt with the repo's scripts (build:min, ar-pages --write, csp --write,
+sitemap-lastmod --write), `?v=` stamp `20261019r030` where both sides bumped.
+- Merged: #37, #38, #63 | #48, #53 | #51, #52, #54, #56 | #57 (2047862), #58, #59 | #60, #61 | #68 (not #62), #64,
+  #69 (4dec207) | main (#70, #71, #72, #73). CHANGELOG `## [Unreleased]: 0.3.0` (one line per PR); PRIVACY.md
+  "Checked against 0.3.0" (test-release-text needs both together).
+- New conflicts (not in #65): #68's redesign path and plan follow #58 (modelRef) and #59 (withPlan) like the native
+  copy; #69's build/write split keeps #38's check (made in the build, said at the write), #59's withPlan inside
+  finish, #58's modelRef in both gates, #37's preview next to #69's exact in the plan, #51's guard before the exact
+  build; check-report.mjs exports #38's rulesInput for #69's artifact.mjs.
+- Results: CI on f5455c9 green: mcp 11264, website 10997, mcp-windows, scan. Locally (Linux) every npm test script
+  PASS (test.mjs 32 + 584 + 631 + 332, G-13 249 reports, 0 with errors); a11y 121/121 (W1 passes: #57's alt text is
+  the full title); site scripts all pass.
+- Next: the laptop proves 0.3.0 in Power BI Desktop (list in PR #74); fix jobs open PRs into `release/0.3.0`
+  (Arabic titles from an English-named model; waterfall right to left; Codex safety findings); the owner merges.
+
+## B-146: the aggregation guard (18 Oct, cloud builder; branch `feat/0.3-aggregation-guard` from main `4a837f9`; DRAFT PR, merges after 0.2.9 reaches testers)
+The owner's go (18 Oct, "finish as much R&D as we can with new ideas that can join our product"); the reviewer's brief.
+(rc.23 is merged, PR #49; main merged into this branch after it.)
+- **Measured first (the writer today, `assets/js/pbip-query.js` TYPES):** the report writer writes only clustered bar and
+  column, line, donut, table, matrix, cards, gauge, funnel, treemap and map: no stacked, 100% or area chart, no legend
+  (Series), no visual-level total that sums. Power BI's own totals and cards recalculate a measure. So the brief's
+  "stacked slot becomes clustered" has nothing to change today: the guard is a check on the planned page (any stacked
+  or area type with a non-additive value is a plan problem), pinned by a test, so a future stacked kind can't skip it.
+  What can be wrong today: a snapshot (Balance, Headcount, Inventory) summed over time, as a measure that SUMs or as a
+  column the writer sums on a model without measures, on a time axis or a card.
+- **Build:** `assets/js/aggregation.js` (browser + Node, metadata only): `classify(measure, ctx)` -> `non_additive` |
+  `semi_additive_time` | `unknown` with confidence and evidence (DAX shape, format, name), never "additive";
+  `guard(page)` on the planned page. plan_layout (via lib/plan-lint.mjs, the page built as create_report writes it)
+  answers `aggregation`: non-additive values in a table or matrix (sayInPlan: Power BI's own total recalculates it,
+  nothing sums it), one `pleaseConfirm` question per snapshot value on a time axis or a card (EN and AR), and a plan
+  problem for a non-additive value in a stacked type. Nothing the writer writes changes.
+- **Tests first** (`mcp/test-b146.mjs`, red on main: the module does not exist): the brief's synthetic model (Margin %,
+  Avg Order Value, Distinct Customers, Balance, Sales); Balance on a date axis asks one question; Sales and an unknown
+  measure: nothing; a stacked page with Margin %: a plan problem.
+- **Precision (expected, written before the run):** classify every measure of the repo fixtures and 18 public Microsoft
+  models (Analysis-Services 4, fabric-samples 1, fabric-toolbox 12, the COVID .pbit; shallow clones, metadata only):
+  every non_additive and semi_additive call listed and marked; 0 wrong non_additive is the bar. Full `npm test`
+  unchanged; golden numbers unchanged unless this rule fires (none of the golden models has a snapshot name, expected).
+- **Done (cloud builder):** `assets/js/aggregation.js` (classify, guard, whyAr, STACKED), `lib/plan-lint.mjs` (the guard on
+  the built page; `aggregationAnswer`), `server.mjs` plan_layout (`aggregation`; designLint computed before the plan id
+  so a stacked problem can refuse it), PRIVACY.md's plan_layout row. `mcp/test-b146.mjs` 24 checks (red on main: no
+  module), in npm test.
+- **Precision (measured):** `mcp/research/AGGREGATION-HOLDOUT.md` + `aggregation-holdout.tsv` (every call marked) +
+  `aggregation-holdout.mjs`. Microsoft 17 models read (Gateway Monitor.pbit holds no model), 1161 measures: 381
+  non_additive, 10 asked, 14 handled, 756 unknown; repo fixtures 9 models, 1023 measures: 537, 10, 132, 344. 0 wrong.
+  Eight rule fixes on the way (unit conversions, // in texts, % format on arithmetic, text measures, "utilization",
+  inventory catalogues, flows, average+cumulative), none special-cased.
+- **The reviewer's #51 review (18 Oct): the 26 models were a tuning set, not a holdout.** Fresh holdout (15 public repos,
+  34 models, 916 measures), rule FROZEN at `6c9177f`: non_additive 315/399 right (0.789), semi 25/28. Causes: a unit
+  `1E9` not read as a constant (35), shares of a total (8), distinct counts of a table's own id (41), "Qtd"/YTD-YTD/
+  period window (3). Fixed in the rule, 7 red-first checks in test-b146 (32 checks now): after fixing on the holdout
+  310/312 (0.994), 28/28. The tuning set's first "0 wrong" was not true: 99 calls I had marked right were wrong
+  (94 synthetic "Share %", 4 "Items Unique", New Customers); corrected in AGGREGATION-HOLDOUT.md and the tsv (1 wrong,
+  12 undecidable ids left). The fresh holdout's per-measure list stays out of the repo (other people's repos).
+- **Next (the reviewer's item 2):** B-147 format review as "Please confirm", new branch `feat/0.3-format-review` from
+  `hc/b143-unrelated-tables` (draft #48), draft PR.
+- **Open (for the owner):** (1) packaging (dataarcus-engine build) must carry `assets/js/aggregation.js` with the
+  engines; (2) the website doesn't use it yet (no page, no .min.js); (3) a model without measures: the writer sums a
+  "Balance" column (counts(), NOT_SUM has rates and prices, not snapshots): the plan now asks, the writer still sums
+  (a writer change Desktop would show: the owner's call); (4) CHANGELOG untouched (its open section is 0.2.9).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J14" just below (branch `feat/0.3-exact-artifact`, one draft PR), then "0.2.9.1" just below (branch `fix/0.2.9.1`, one PR to main); before it "AUD-040" just below (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J14: check the exact artifact before writing (19 Oct, cloud builder; branch `feat/0.3-exact-artifact` from main `d76703c`; ONE DRAFT PR, merges only after 0.2.9 testers report)
+Backlog B-168 (outside design card C01), the reviewer's brief under the owner's go for 0.3 R&D.
+- Problem: plan_layout's lint (lib/plan-lint.mjs) builds its own variant of the report in memory and lints page 1 only,
+  without number formats, Arabic display names, SVG measures, page filters; create_report rebuilds at write time (new
+  random page and visual ids), so what was checked is never byte-for-byte what is written.
+- Draft #38 (feat/0.3.0-check, stacked on #37) already: the measured rules + the layout lint on the project in memory
+  (assets/js/layout-check.js), shown before Approve and returned by create_report as `check`; it reports only, never
+  holds a write back, runs no validator, binds nothing to the approval, and create_report still rebuilds.
+- Plan (built beside #38, main has neither #37 nor #38): (1) create_report's build becomes one function (`reportRun`,
+  server.mjs) used by plan_layout (mode build) and create_report; (2) `lib/artifact.mjs`: the digest, the model print
+  (B-154's `m.print` when #58 is in, else a hash of the model as read), the binding, and `checkArtifact`: Microsoft's
+  validator offline on the exact bytes (a private folder in the OS temp, never the user's folder, removed at once), the
+  references to the model (REF_UNRESOLVED), the measured rules, the lint, for every page; a check that could not run =>
+  `incomplete`; validator errors, unresolved references, rule errors => `blocked` (no plan id); (3) the plan keeps the
+  built files in memory (plans.mjs `attach`), the approval records the binding (digest + pin + model print); (4)
+  create_report with an approved artifact rechecks the model print and the binding, then writes exactly those bytes; a
+  change => "Nothing was written ... make the plan again"; no artifact => it refuses at the write; (5) the answers carry
+  counts, rule ids, relative paths and the digest only.
+- Expected (written before any run): test-j14-exact 25 checks, 20 red on main d76703c (E-1, E-5, E-8, E-11, E-18 green:
+  they hold today); all 25 green after. Every other suite: same counts as main (the golden baseline unchanged; G-13 0
+  reports with errors).
+- **Done** (`62274eb` red tests, `38a18e4` the build, `c527464` the writer fix): test-j14 27/27 (20 red before, as
+  expected; E-23/E-24 added red after the full run found the donut bug). Full run on Linux (5 shards as CI): test.mjs
+  32 + 584 + 620 + 332 = 1568, G-13 249 reports, 0 with errors; shard 0 all PASS (release-text 4, v029c 36, d 21, e 21,
+  f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51, rc24 28, j14 27). Website 19/19 suites,
+  check:min, site config pass.
+- Found by the exact check (first full run, sweep D11): a column chart turned donut by the two-valued rule kept the
+  bar's `valueAxis` (show false): Microsoft's validator error PBIR_FORMATTING_OBJECT_UNKNOWN, impact canBreak; fixed
+  in assets/js/pbip-page.js (only a bar gets it). Main writes it today (0.2.9 too).
+- Decisions I made: the validator runs on a private copy in the OS temp folder (it reads only folders), never in the
+  user's folder, deleted at once; blocking = validator errors after the known gaps, unresolved references, rule errors
+  (warnings, notes and lint findings are counted only); a plan whose build fails gets its plan id as before and
+  create_report gives the same refusal (and "make the plan again" if it would write); a given design is built as
+  given (keeps the small-page note), else the pinned design; designLint (page 1, kinds) stays as it is; the native
+  copy (customVisualsFrom) is outside J14; the model print is #58's `m.print` when that lands, else a hash of the
+  model as read; artifacts live in memory, newest 64.
+- Seen, not in scope: the format script (formats.scriptAfterGo) is still made at the write, outside the digest; the
+  report's name is fixed at plan time, so a report written under that name between plan and write makes the write
+  refuse ("already there") instead of taking a free name; the approval window does not show exactCheck yet (#38 adds
+  its "Checked before writing" section there); layouts suite's known defect (8 reports, lint labels) as on main.
+- The owner's decision (19 Oct, via the reviewer, "agree"): when Microsoft's validator or the reference check did not
+  run, no plan id; when only a size cap skipped part of the check (a file over the 8 MB it reads, e.g. a background up
+  to 10 MB), the plan keeps its id and the approval page lists what was not checked, above Approve. Done: `c9ee2a6`
+  (F-1, F-2, F-3 red first; E-16 replaced by F-1 as decided), `7b4006d` the build: test-j14 30/30; full run 5 shards:
+  test.mjs 1568, G-13 249 reports 0 with errors, shard 0 all PASS (j14 30). Rules or lint not run: incomplete, the plan
+  keeps its id, listed on the approval page too (the decision names only the validator and the references).
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 testers report.
 
 ## 0.2.9.1: two fixes after 0.2.9 shipped (19 Oct, cloud builder; branch `fix/0.2.9.1` from main `d76703c`; one PR, not merged)
 The reviewer's brief (19 Oct): one normal PR, only these two fixes (no 0.3 code; drafts #37-#69 stay out). Test first:
@@ -59,6 +415,80 @@ The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Ex
   the twin: a TABLE_HEADER_CUT warning for Total Score, a note for Total Value; crop each Arabic header at full size and
   read its drawn width at 10pt and 15pt (the cause), the header font in the format pane, and whether a header wraps.
 - Next: the reviewer reviews the PR, the laptop re-checks in Desktop, the owner merges.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J13 redesign step 2" just below (branch `feat/0.3-redesign-step2`, ONE DRAFT PR to main, supersedes #62; merges only after 0.2.9 testers report), then "J9 step 1" (its history), then "AUD-040" (branch `site/aud040-pbit-filter-values`, one PR to main), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J13 redesign step 2: every page, as a copy with allowlisted patches (19 Oct, cloud builder; branch `feat/0.3-redesign-step2` = #62's `feat/0.3-redesign` rebased on main `d76703c`; ONE DRAFT PR, supersedes #62)
+The owner's decisions (19 Oct): step 2 = all pages + page filters, built as a LOSSLESS COPY + ALLOWLISTED PATCHES ("copy-and-patch",
+approved), never a rebuild from the inventory. Why: the laptop's Desktop look at #62 (engine `business/beta/rc24/PROOF-rc24.md`, block 2):
+(a) the branch predated rc.24 ("Column chart by" for a bar): the rebase fixes it; (b) the approval page showed the plan's fields, not what
+was dropped; (c) a 2-page report got no plan id; (d) the rebuilt table drew a needless vertical scrollbar (771 x 311 at 1920, 6 rows +
+total). A rebuild of the lab's 2-page "Dense Ops" lost 2 bookmarks, 2 page buttons + 1 bookmark button per page, the header text box and
+underline shape, page 2, the page name, 2 tooltip pages and 8 visual filters. Spec: the outside design, Codex card C09.
+- **Where:** `lib/redesign.mjs` rewritten (step 1's rebuild code removed; `nameFor` and the model check kept); `server.mjs`:
+  `redesignPlan` (plan_layout with redesignFrom returns before any design), create_report's early dispatch, `redesignPin`, inputs
+  `titles` and `restyle`; `lib/plans.mjs`: plan kind `redesign` (allows create_report); `lib/approval-window.mjs`: the redesign page
+  (Changes, Not changed with why, Kept as it is). Shared files touched: server.mjs, plans.mjs, approval-window.mjs, README.md, PRIVACY.md.
+- **How:** (1) strictFiles + every JSON file under definition/, definition.pbir and .platform must name a known schema family at a
+  known major version (report 3, page 2, visualContainer 2, ...): else no plan id. (2) every file read as bytes into memory.
+  (3) ALLOW: a visual.json's /position/x|y|width|height and its static title's Literal; .platform's displayName and logicalId; the
+  custom theme's dataColors/foreground/background/tableAccent/good/neutral/bad. (4) patches by page id + visual name. The grid: each
+  page's top-level native visuals in rows (60% shared height), 16 margin and gap and 8 a step on the 720-tall grid (x h/720), heights
+  equal in a row; a row keeps its place when a table would shrink (scrollbar, (d)), it would leave the page, or it would newly overlap
+  anything. Never moved: groups and their visuals, custom visuals, buttons, navigators, text boxes, shapes, images, hidden visuals,
+  tooltip pages. (6) verifyCopy: same file set, every changed file only at its plan's pointers with the plan's values, no new dangling
+  reference (page order, active page, bookmark pages/visuals/targets, bookmark list, button pages and bookmarks, tooltip links, groups,
+  theme), opaque payloads equal (bookmarks whole; filters, bindings, objects, interactions, links, tooltip, drillthrough binding). (7)
+  pin `{ redesignFrom, titles, restyle, files.source: reportPrint }`; the write: gate, recompute the patches (must equal the plan's),
+  read the bytes, recheck the print, build, verify, writeTree (exclusive; .pbip last). Every page, any count, gets a plan id.
+- **Tests:** `test-0.3-redesign.mjs` replaced (C1-C10, 49 checks; step 1's 30 rebuild checks retired by the owner's decision, its name,
+  other-model and gate checks carried over). Red first on step 1's code: 11 of 11 C1 checks failed, C2-C10 could not run (no plan id).
+- **For the laptop (Desktop, EN + AR):** open "Twin Sales redesigned" or the lab's "Dense Ops redesigned": every page there with its
+  name; page buttons and the bookmark button go where they went; both bookmarks (Reset filters per page) apply; cross-highlight and the
+  edited interactions as in the original; drillthrough from a chart; the tooltip pages on hover; the Top-N "Keep:" visual filters, the
+  month filter and the blank exclusions in the filter pane; the moved visuals on equal margins, no new scrollbar on tables; the original
+  opens unchanged. Then an Arabic report (and its twin) the same way.
+- **Next:** the reviewer reviews the draft PR; the laptop's Desktop check above; merges only after 0.2.9 testers report.
+
+## J9 step 1: a redesign that keeps the original (19 Oct, cloud builder; branch `feat/0.3-redesign` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D): `plan_layout` gains a redesign mode. Given an existing report, plan a cleaner page with the
+design engine (same fields, same pages, better layout: grid, header, KPI row, the theme's fonts and colours) and write it as
+a NEW report "<name> redesigned" next to the original, which is never touched (only after approval). Step 1 = the plan and
+the field mapping (every visual of the original accounted for: kept, merged, or not carried over with why) + tests; the
+write reuses create_report.
+- **Where:** `mcp/lib/redesign.mjs` (new: reads the original through read-report.mjs's strictFiles/inventory, maps it, picks
+  the layout); `server.mjs` only wires it: the `redesignFrom` input (create_report's inputs, so plan_layout takes it too),
+  pinned (`REPORT_PINNED`) with the original's contents (`filesPin.source`: reportPrint), plan_layout's defaults and its
+  `redesign` block, create_report's refusals (pages; a name already taken). Shared files touched: server.mjs, README.md,
+  PRIVACY.md, package.json (the test script). Not touched: pbip-page.js, design.mjs, model-health-engine.js, read-report.mjs.
+- **Rules (decisions made by the builder, for the owner):** a slot per field kind, as the writer binds them (measured:
+  analysis's column chart takes `category2`; ops's donut and exceptions bar take `category`). Cards (card, new card,
+  multi-row card, KPI, gauge) -> KPI cards, at most 6; the charts' measure = the one the original's charts show most; a
+  chart's other measure becomes a KPI card while the row has room; line/area/combo -> the trend; bar/funnel/pie/donut/
+  treemap -> `category`; column/ribbon/map -> `category2`; table/matrix -> one table of at most 8 fields (a second table's
+  fields join it); slicers -> at most 3. A second visual of a field already shown -> merged. Not carried over, with why:
+  text boxes, shapes, images, buttons, navigators, custom visuals, hidden visuals, other charts, report-level measures,
+  hierarchy levels; at the report level the tooltip/drillthrough/hidden pages, bookmarks, page/report/visual filters (their
+  values are never read into a plan). Layout: the one that keeps the most and adds the fewest (exec, analysis, focus; a
+  bar chart with no trend or column chart goes to analysis's main chart); a slot the original has no field for gets the
+  picker's field, listed in `added`. Display names the original shows (not instruction-like, <= 80) are the plan's
+  proposal. Name: "<name> redesigned" within the writer's 30 characters (the original's name cut at a whole word, so the
+  suffix stays); `secondPage` false; colours from the original's theme (`themeFrom`).
+- **Step 1 writes one report page only.** A report with more pages is mapped page by page (each its own layout) and gets
+  no plan id: planProblems says writing every page is step 2.
+- **Combines with:** #58 (B-152: strictFiles reads only the report's own files: redesign.mjs calls strictFiles, so it gets
+  that; B-154: plans pin a model print: the redesign goes through create_report's own gate, `modelRef`, unchanged);
+  #59 (B-153 writes through withPlan: the redesign's write is create_report's ordinary write); #37/#38 (preview and check
+  before write in plan-lint.mjs: plan_layout's designLint runs on the redesign's planned page as on any plan).
+- **Tests:** `test-0.3-redesign.mjs` (R1-R8, 30 checks; 24 red with main's server.mjs). Expected before the run: the
+  one-page fixture (twin Overview + Details' table, bar and custom visual + a second Total Sales card + a page filter): 13
+  visuals = 7 kept, 1 merged, 5 not carried over; fields kpis [Total Sales, Orders], measure Total Sales, timeAxis
+  Calendar[Month Name], category Sales[Product], category2 Sales[Region], table [Product, Amount, Total Sales], slicers
+  [Region]; exec + filters start; nothing added; the original byte for byte the same after the write; two pages: no plan id.
+- **Next (step 2, needs the owner's go):** write every page (create_report from several designs, or one design per page);
+  carry page filters file to file (never through the chat), bookmarks and drillthrough pages; a Desktop check of the
+  written redesign (English and Arabic, smallest and largest page).
 
 ## 0.2.9 release notes (19 Oct, reviewer; branch `release/0.2.9-notes` from main `0dc8144`; one PR, not merged)
 - The owner said "yes ship 0.2.9 to testers" (19 Oct) after the laptop's Desktop release proof of rc.24 passed
@@ -68,6 +498,53 @@ The reviewer's brief (19 Oct, J16): the laptop measured the golden twin "Teal Ex
 - Next: the laptop builds 0.2.9 from this PR's merge commit (engine `release/0.2.9`, record `packaging/releases/0.2.9.json`),
   installs it over rc.24 and calls the 11 tools once; the owner then publishes the download and sends the invitations.
 
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "0.3 J4 story titles" just below (branch `feat/0.3-story-titles`, draft PR #57, merged only after 0.2.9 reaches testers), then "rc.24" (branch `fix/0.2.9-rc24`, one PR to main), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3 J4: story titles + B-130 / B-131 (18 Oct, cloud builder; branch `feat/0.3-story-titles` from main `f09bf30`; draft PR, not merged)
+The owner's go (18 Oct, R&D for 0.3): titles that say what the visual answers, from metadata only, unique on a page without
+"(2)", shortened by rule to the box, never cut in a word; EN + AR. Merges only after 0.2.9 reaches testers. The twin
+(lib/arabic-twin.mjs, rc.24 PR #55) untouched.
+- **Engine:** `assets/js/story-titles.js` (new, browser + Node, `window.DAStoryTitles`): `timeWords` (PY/LY/SPLY, YTD,
+  QTD, MTD, YoY, MoM said in words; "PY Sales" -> "Sales last year"; Arabic names get Arabic words; names written in words
+  such as "Last Ramadan" kept), `nameOf` (a display name as given, never rewritten), `variants` (the full title, then one
+  per rule: the measure's table prefix, a column's Name/Short/Label (AR «اسم»), "Total"/«إجمالي», a trailing clause of the
+  column then of the measure from its first qualifier word (after, during, by... / بعد، خلال، من، في، حسب، المستخدمة، وال...)),
+  `fit`/`fitWidth` (first that fits, text-measure.js), `alternate` (another true sentence for a same chart), `NEVER`.
+- **Patterns:** EN "M by C", "C ranked by M" (a chart sorted by its measure: a top-N bar/column), "M per C", "M breakdown
+  by C", "M across C"; without a column (a column in the other script): "Ranked by M", "M breakdown", "M overview".
+  AR «M حسب C», «ترتيب C حسب M», «M لكل C», «توزيع M حسب C», «M عبر C»; «الترتيب حسب M», «توزيع M», «نظرة على M».
+  Time words AR: «في العام الماضي», «منذ بداية العام/الربع/الشهر», «مقارنة بالعام الماضي/بالشهر الماضي», «مقابل» (vs).
+- **Writer (shared files touched):** `pbip-query.js` bindStory (bindTitle reads its first form), kpiLabel;
+  `pbip-page.js` (also touched by other 0.3 drafts): the chart/table title takes the first form that fits two lines with
+  "Top 999 of 999: " and ": detail"; the "(2)" numbering became `alternate` (number kept only if the forms run out);
+  KPI titles get the time words. `lib/plan-lint.mjs`: the planned cards capped to the measures the binding fills (the
+  planned page had "KPI 2/3/4" cards with no field on health-project), its titles kept off the answer (`titles`).
+  `theme-generator.js` loads story-titles.min.js before pbip-query (stamps 20261018st on the 3 generator pages).
+- **Tests:** `mcp/test-0.3-story-titles.mjs` (91 checks, in npm test): 6 of 82 red on the writer before (c52c30c), 0
+  after (777a8fd); then ST-1m (capital after "Total") and ST-2e (no "…" on any page, tooltips too: found the tooltip
+  bar's title still cut, fixed in 5e303b2). The engine checks (ST-1) were written with the engine.
+- **Tests changed on purpose (listed in the PR):** test-round22 `e` (expected "(2)", now "Total Sales per Region") and
+  `3rd-4` (expected a "…" entry for a long title, now shortened by rule; still checks every told title is shown);
+  golden task 6 longTitleUses 142 -> 128 (why written in golden-expected.json): **needs the owner's go** (GOLDEN-TASKS rule).
+- **Full runs (Linux) on 5e303b2 + golden:** test.mjs 4 shards 32 + 584 + 620 + 332 PASS, G13 249 reports 0 errors;
+  release-text 4, v029c/d/e/f/g 36/21/21/20/21, golden 12 (after the update), fuzz 8199, layouts 226 (32 reports),
+  rc22 26, rc23 51, story-titles 91; round22 58 (in test.mjs). Website 19 of 19 PASS; check:min, site config, ar-pages,
+  sitemap-lastmod, csp PASS.
+- **19 Oct, the owner's decision (relayed by the reviewer):** a visual's alt text is the FULL story title, never the
+  fitted one (draft #60's a11y W1 failed beside #57). Fixed in f3bf539 (test ST-6 red first, 8a1e63b: 3 of 94): charts,
+  tables, renamed same charts (the alternate with full names), Top N of M titles and the tooltip pages; the drawn title
+  stays fitted. Locally merged with feat/0.3-accessibility (throwaway, not pushed): test-0.3-a11y 121/121, story-titles
+  94/94. Golden task 6 longTitleUses 128 -> 131 (3 alt texts name the long measure whole again; why written).
+- **Seen, not in scope:** plan_layout's slot list still shows 4 KPI slots (roles "KPI 2/3/4") on a model with one measure
+  while create_report writes one card (design/server, other drafts); titles keep column names such as "Month Short",
+  "Month Year", "Day Name" on wide charts (only shortened under budget); the lab's no-model download keeps its "KPI 1-4"
+  placeholder cards; a KPI title is not rule-shortened (it wraps; none cut on the golden models); Desktop not run for
+  this branch (Arabic shortened titles to be judged from full-size crops).
+- **Decisions I made:** the owner's "Top N of M:" lead (design rounds 8/10) stays; the story is its core, so no "Top 10
+  Customers by Sales" form. Rules apply only when a title doesn't fit (no "Total" dropped on a wide chart). KPI titles
+  keep the wrap rule (none cut on the golden models). Tooltip pages' titles unchanged.
 ## rc.24: the gaps of the laptop's Desktop release proof of rc.23 (18 Oct, cloud builder; branch `fix/0.2.9-rc24` from main `f09bf30`; one PR, not merged)
 The reviewer's brief (18 Oct): rc.23 + these gaps, found by the laptop's Desktop proof of rc.23 (Power BI Desktop 2.159).
 They finish features approved for 0.2.9 (B-140, the twin B-137/B-138); nothing else changes (0.2.9's scope frozen).
@@ -120,6 +597,212 @@ and so do slicer selections and series formatting. Owner's go 19 Oct ("agree all
 slicers and formatting" next to Enter data and DATATABLE; the audit page says the rows stay, those values travel with the
 file, clear them (reset the filters and slicers) before saving the template. ?v=20261019a040, min rebuilt, /ar/ regenerated,
 sitemap dates. test-site-config pins it. mcp/ untouched (read_report returns a filter's field and kind only).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 6: phone layout" just below (draft), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 step 6: phone layout (18 Oct, cloud builder; branch `feat/0.3-phone-layout` from main `dcc0f1a`; DRAFT PR, not merged)
+The reviewer's brief (routine B6) said the writer writes desktop pages only. **Not so:** pbip-page.js has written a phone
+layout (mobile.json, visualContainerMobileState 2.1.0, PW 323) for every report page since round 11, tuned in Desktop
+(rounds 11, 12, 23; mcp/CLAUDE.md lines 92, 118). So no rewrite; what is new:
+- `mcp/test-phone.mjs` (in npm test): the layouts matrix (32 reports, EN ltr / AR rtl) checked for P1 every data visual
+  and the title has a phone position, P2 on the 323 canvas, P3 no overlap, P4 charts and tables in reading order, P5 the
+  Arabic report the English one mirrored, P6 no phone layout on tooltip pages, P7 validator 0 errors, P8 the option.
+  It passed on the writer as it was (828 boxes, 450 data visuals, 176 charts, 225 mirrored): 348 checks green before
+  any change; P8 (7 checks) red first.
+- `layout.phoneLayout` (design SCHEMA, repairState; default on, false writes no mobile.json); Pbip.build option
+  `phoneLayout`; plan_layout and create_report answer `phone: { written, canvas: 323, about }`.
+- Measured, NOT changed (they would change what Desktop shows; the owner decides): tables after the charts on 26 of 46
+  pages that have both (the brief wants all); slicers in one row on 0 of 40 (stacked full-width rows; the brief and
+  Microsoft's best practices say horizontal); phone axis and table text 8pt (PHONE in pbip-page.js:1150), Microsoft says
+  "Don't use fonts smaller than nine points".
+- For the laptop (Desktop's mobile layout view, English and Arabic, smallest and largest page): (1) a report written with
+  phoneLayout false opens with an empty phone canvas and no error; (2) the default report's phone layout as before; (3)
+  if the owner says yes to the measured items: slicers in one row, tables last, 9pt axes/tables, each measured first.
+## B-148: confirmation memory (0.3 R&D, 18 Oct, cloud builder; branch `feat/0.3-confirm-memory` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The reviewer's brief (owner's go 18 Oct, J3): a "Please confirm" answer is remembered while the metadata the question was
+based on is unchanged, and the question comes back when it changes. Metadata only: no DAX text or data is stored.
+- **The record:** `{ questionId, object, answer, evidenceSignature, at, by: 'user' }`; answer `intended` | `mistake`;
+  evidenceSignature = SHA-256 of the question's id, object, a hash of its DAX piece, the measure's DAX text hash, format
+  string, table and measure names (a relationship's: its four columns, the candidate column and their types).
+- **One module, shared:** `assets/js/confirm-memory.js` (browser and Node; sync SHA-256 in plain JS, no network):
+  signature, fingerprint, apply (reused / asked again / stale dropped), record, and the browser's localStorage helpers.
+  model-health-engine.js is NOT touched (other 0.3 drafts change it).
+- **Website:** each question gets "Yes, intended" / "No, a mistake" (Dismiss stays, for the session); answers kept in
+  localStorage only, per model fingerprint (the model's table names, hashed); "Your earlier answers" list and "Forget my
+  answers" (removes every answer this browser holds).
+- **MCP:** check_model_health: items get `answerKey`; input `answers: [{ answerKey, answer }]` and `forgetAnswers`; the
+  file `<model>.dataarcus-answers.json` next to the model (where the fix scripts go) is written ONLY with an approved
+  plan that lists it (plan kind scripts, pinned records); read back on every check: answered questions under
+  `pleaseConfirm.answered`, not asked again; stale ones named as `answersForgotten`.
+- **Tests red first:** `mcp/test-confirm-memory.mjs` (in npm test): 16 run before the code, 15 red (the module did not
+  exist, so its 12 unit checks were not reached); now 28 of 28. `scripts/tests/model-health.mjs` "B-148": crashed red
+  before the page code (no answer button); now model-health 205 checks PASS (+10: 5 checks x EN 1440 / AR 390).
+- **Built:** `assets/js/confirm-memory.js` (+ .min); `mcp/lib/answers.mjs` (read; write = new file by link, or rename
+  over a DataArcus answers file only; anything else at the name is never replaced); check_model_health: `answers`,
+  `forgetAnswers`, items' `answerKey` (16 hex of the signature), `answered`, `answersForgotten`, `answersNotRecorded`,
+  `answersFileProblem`; the plan pins the records without their date. Website: "Yes, intended" / "No, a mistake",
+  "Your earlier answers on this model", "Forget my answers" (every answer in this browser); stale answers dropped
+  when a model is loaded. PRIVACY.md section 4 names the file (the one file DataArcus replaces, its own only).
+- Shared files touched: server.mjs (check_model_health only), model-health.js, the Health Check page and its /ar/ copy
+  (styles, the new script, ?v=20261018b148), mcp/package.json (the test script), PRIVACY.md.
+- **Arabic for the owner:** نعم، مقصود / لا، خطأ / إجاباتك السابقة على هذا النموذج / انسَ إجاباتي / مقصود / خطأ: لم يُصلح بعد /
+  لم يتغير منذ ذلك الحين / تبقى إجاباتك في هذا المتصفح فقط ولا تُرسل إلى أي مكان. يعود السؤال عندما يتغير المقياس أو العلاقة التي يخصها.
+- **Seen, not in scope:** the MCP has no other "confirm" questions with ids (the plan tools' asks, e.g. arabicNames
+  sayFirst, are instructions, not questions): only pleaseConfirm is remembered; the CSV/HTML/Markdown exports still list
+  every question (answers not in them); in the Arabic page the DAX evidence box looked right at 390 px but was not
+  checked character by character for mirrored brackets.
+- **Next:** the reviewer reviews the draft PR; the owner checks the Arabic texts; merges only after 0.2.9 reaches testers.
+## J5 (0.3 R&D): privacy and approval hardening B-152 + B-154 (18 Oct, cloud builder; branch `feat/0.3-approval-hardening` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, through the reviewer). From an outside audit of 0.2.9 (every write is gated; these were the gaps).
+- **B-152:** reportPrint, the Arabic twin and the native copy read EVERY file of a .Report folder. Plan: `strictFiles`
+  (lib/read-report.mjs) lists only the report's own file types: definition.pbir, .platform, semanticModelDiagramLayout.json,
+  mobileState.json, definition/**/*.json, StaticResources/** images and JSON (and .pbiviz), CustomVisuals/** (a private
+  visual's package files); any other file (a stray .csv/.xlsx, .pbi/localSettings.json) is never opened, hashed or copied
+  (only its name is seen), and the twin's and the native copy's plans name it (`notCopied`). Links still refuse the read.
+- **B-154:** an approval pinned inputs, not the model. Plan: loadModel returns `print` (sha256 of the definition files it
+  already reads: model.bim, the .tmdl files; a .pbit or model.bim file's own bytes; nothing else, never .pbi/cache.abf);
+  Plans.propose/gate take `{ key, print }`; a write after the model changed is refused "Nothing was written: the model
+  changed after you approved: make the plan again ...". Every plan that reads a model: scripts, report (and the native
+  copy), calendar, twin (its model through definition.pbir; checked in writeTwin, one small change, rc.24 touches the file).
+- Test first: `mcp/test-approval-hardening.mjs` (22 checks, in npm test): **18 red on main**. Expected after: 22 pass;
+  every other count of npm test unchanged.
+- **Done (`d902fc6`):** as planned. Full `npm test` (Linux): all PASS, counts unchanged (release-text 4, test.mjs 1569,
+  v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks, fuzz 8199, layouts 226, rc22 26, rc23 51) + approval-hardening 22.
+  No website file touched. Shared files touched: lib/read-report.mjs, lib/model.mjs, lib/plans.mjs, server.mjs (8 call
+  sites: modelKey -> modelRef), lib/arabic-twin.mjs (5 lines), lib/native-copy.mjs, PRIVACY.md, README.md.
+- Decisions made: the allowlist by place in the folder (Microsoft's report-folder doc), .pbi/localSettings.json left out
+  (user-local, Git ignores it); the print is computed from the bytes loadModel already reads (no second read); a write
+  that passes no print to a plan that pinned one is refused (fails closed); the twin checks the model in writeTwin from
+  the plan's data (as its source report). Seen, not in scope: read_report/check_report still walk every file name (they
+  read only known JSON paths); the model's report files are not in the model's print (a report edited after the go
+  is not a model change).
+- Next: the reviewer reviews the draft PR; it merges only after 0.2.9 reaches testers.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-153" just below (0.3 draft, branch `feat/0.3-partial-writes`), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-153: partial writes (18 Oct, cloud builder; 0.3 R&D, branch `feat/0.3-partial-writes` from main `f09bf30`; one DRAFT PR, merges only after 0.2.9 reaches testers)
+The reviewer's brief (owner's go of 18 Oct for 0.3 R&D): a write that fails half-way (disk full) could leave a partial
+file and an unused plan. Found: `writeNew` (theme file, TMDL scripts) wrote straight at the final name, so a full disk left
+a half file there; `writeTree` recorded a file only after writeFileSync returned, so a file cut off part-way stayed in its
+temporary folder (and the folder too); generate_theme's new folders (freeFile) stayed; create_report consumed its plan
+~150 lines after the tree was placed; a clean-up that could not remove something called it "not created by this call".
+- `lib/write-io.mjs` (new): `io` (the writing fs calls, replaceable by tests: `setIo`, `failingIo`; in a server
+  `DATAARCUS_TEST_WRITE_FAIL="<CODE>:<partial|open>:<n>[+stuck]"`: the n-th file write writes half then throws / throws
+  before any byte, once; +stuck: that file can't be removed either), `writeFileNew` (temporary name in the same folder,
+  'wx', then a hard link into place, which fails rather than replace; a rename, checked just before, on a drive without
+  hard links), `writeFailed` (one wording: "Nothing was written" only when the clean-up was complete; otherwise
+  PARTIAL_WRITE "The write stopped part-way ... Still on disk from this call: <exact paths>"), `e.left = { ours, foreign }`.
+  model.mjs `writeNew` = writeFileNew (one line, import beside it, away from PR #58's lines).
+- `lib/files.mjs`: writeTree records each file BEFORE writing it, uses io, names exactly what is left (ours vs foreign);
+  `freeFile(..., made)` tells the folders it made; `withPlan(planId, tool, write)`: the plan policy.
+- **Plan policy (decided):** used the moment the write is complete (before the answer is built). A failed write whose
+  clean-up was complete leaves the plan unused: the disk is as approved, so the same planId writes after the cause is
+  fixed. A failed write that left something marks the plan used: the folder holds part of this write, which nobody
+  approved; the person deletes what is named and approves again. The answer says which.
+- server.mjs: create_report (tree and native copy), generate_theme, add_gulf_calendar, create_arabic_twin go through
+  withPlan; gulf-calendar.mjs passes a write's own error on. check_model_health's scripts unchanged (their error is an
+  answer field already). PRIVACY.md section 4: two sentences.
+- Test first: `test-partial-writes.mjs` (in npm test): 12 of its first 16 checks red on main (the unit checks need
+  the module); 31 then. U1-U5 (withPlan in-process, 5 checks) were added with withPlan's last rule (an error after
+  the files were placed uses the plan), not red first. Expected after: 37 PASS (W2's "folders that were there are never
+  removed" added after CI's first Windows run: freeFile found its new folders by comparing a path with mkdirSync's
+  answer, which Windows spells differently (RUNNER~1), so the clean-up removed the empty folder above them; now found
+  by walking up to the first folder that exists. Not red on Linux, where the spellings agree); test-audit6 47, twin 116, z 13, approval 20 unchanged; npm test all PASS.
+- No Arabic sentence added. Seen, not in scope: see the PR.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "J7" just below (branch `feat/0.3-accessibility`, draft PR), then "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J7: accessibility of written reports (18 Oct, cloud builder; branch `feat/0.3-accessibility` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D). Microsoft's "Design Power BI reports for accessibility" (learn.microsoft.com/power-bi/create-reports/desktop-accessibility-creating-reports).
+- New module `assets/js/report-a11y.js` (+ .min): the writer's half and check_report's rule family "a11y", one set of rules.
+  Writer (pbip-export.js calls it twice): `readable(theme, card)` steps the theme's FIRST data colour (the one every
+  one-measure chart draws) to 3:1 on the card with design-engine `toContrast` (kept exactly when at 3:1; the other colours
+  stay the design's: test.mjs holds the written theme to the design's, and the second chart's colour is chosen at 3:1
+  already). `apply(files)` after the pages: a data visual's alt text stays the writer's full title (made from its fields,
+  "Total Sales by Region"; test.mjs's title-fit checks read it as the full title); a data visual WITHOUT alt text gets
+  `describe()`'s sentence of its type, role and fields (EN/AR, never a value, at most 250: "Total Sales by Region, one bar
+  per Region."); a text box's own text as its alt text; an empty text box / shape / picture without alt text out of the
+  tab order (measured 6-7 Oct: no tabOrder = no Tab stop); each page's and group's Tab stops in reading order (rows, then
+  left to right or right to left by the right edge), keeping their numbers. create_report tells a stepped colour (from,
+  ratio, to). Tooltip pages untouched.
+  check_report (report-rules.js runs the six rules; `checks: ["a11y"]`): A11Y_ALT_TEXT, A11Y_DECORATIVE (note),
+  A11Y_TAB_ORDER (pairs met against the reading order, by the report's direction; a data visual not a stop unless 80% of
+  it lies on a stop: the "No data" overlay), A11Y_TITLE, A11Y_CONTRAST (the colours a chart draws: its fixed fills, else
+  the theme's first 1 / Y count / 8 with a legend or slices, against the visual's background, else the page's; a page
+  picture not judged), A11Y_COLOUR_ONLY (legend field, 2+ measures or slices with the legend off). Impact kind stays
+  dataarcusRule (its sentence now names the accessibility basics; C13 keeps three kinds).
+- Test first: `mcp/test-0.3-a11y.mjs` (in npm test). First version 110 checks, 52 red on main (W1, W2 decorative stops,
+  W4, W5 rules absent, C1-C8). The first full run then failed 13 test.mjs checks: they read a visual's alt text as its
+  full title (#24, #1, e, h, 10, KPI fit) and hold the theme to the design's (gradient, P1-2): my first version replaced
+  every alt text and stepped every palette colour. Fixed at the cause (above); the new test's W1 / W4 now say that
+  contract (121 checks, describe() and apply() checked on their own). Proposal for the owner: alt text as a sentence of
+  its own (Microsoft: the reader says the title first) once test.mjs reads the full title from the writer's notes.
+- Story titles (#57): #57 writes the story title, and the writer's alt text is that full title, so the two agree with no
+  extra step; where describe() writes a sentence, a measure's name goes through `ST.timeWords` when story-titles.js is
+  loaded, as its title says it.
+- Shared files touched: pbip-export.js (2 calls), pbip-notes.js (`a11y` in the result), report-rules.js (rules, guide
+  source, per-finding severity), server.mjs (check_report's checks description, one create_report note),
+  check-report.mjs (CHECKS, page json, notChecked line, the dataarcusRule sentence), theme-generator.js (BUILDER + ?v=).
+- Runs (Linux, b1f5073): npm test all PASS (release-text 4, mcp 1569, v029c 36, d 21, e 21, f 20, g 21, golden 12 tasks
+  unchanged, fuzz 8199, layouts 226, rc22 26, rc23 51, a11y 121); website site 463, theme-generator 894, -lab 894, pbip
+  85, design-engine 598; check-min, test-site-config, csp, ar-pages PASS. Validator 0 errors on the written reports (W5).
+- Not yet seen in Desktop: the alt texts in the Selection pane / a screen reader, and the tab order after the decorative
+  stops left it (the next laptop round).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J8" just below (branch `feat/0.3-gallery-foundation`, draft PR, 0.3). Before (18 Oct): "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J8: the visual gallery's foundation (19 Oct, cloud builder; branch `feat/0.3-gallery-foundation` from main `f09bf30`; DRAFT PR, merges only after 0.2.9 reaches testers)
+The owner's go (18 Oct, 0.3 R&D): three of Power BI's own visuals behind the design flag `gallery: true` (off by default).
+New module `assets/js/visual-gallery.js` (browser and Node, `window.DAGallery`): the rules, the queries, the titles and the
+formatting. Slot kinds `combo` (lineClusteredColumnComboChart), `waterfall` (waterfallChart), `multiples`
+(clusteredColumnChart with the `Rows` small-multiples role). Test first: `mcp/test-0.3-gallery.mjs` (44 checks, in npm
+test; 17 of its first 19 red on main).
+- When each fits (field roles only, never data): combo = a time or ordered axis + two different measures; the line on the
+  secondary axis (`valueAxis.secShow`) only when both units are known and differ (percent / currency / count, from the
+  picker's pct and the formats); a percent is always the line. Waterfall = an additive measure (no percent, average,
+  rate, ratio, share, margin, distinct count; English and Arabic words) by a category with a known count of 2-12
+  members (the picker's rows or the kind: 4 quarters, 7 days, 12 months). Multiples = a column chart + a second text
+  category (not the axis, not time, at most 9 members; without a known count, not an id, code or name).
+- The flag off, or the fields don't fit: the slot is written as its plain kind (combo > line, waterfall and multiples >
+  column) and told in the build result's `gallery: [{ page, from, to, title, why }]` (key present only with the flag
+  or a gallery slot).
+- Only roles and properties in Microsoft's capabilities (`@microsoft/powerbi-core-visual-schema`, data/capabilities.json)
+  inside the bundled PBIR schemas; the test checks every written property and runs Microsoft's validator: 0 errors, EN and AR.
+- Shared files touched: `pbip-export.js` (accepts the kinds, resolves them, the result key), `pbip-page.js` (5 hooks:
+  type, query, title, left-out check, formatting), `theme-generator.js` (?v= of the two), the theme generator pages' ?v=.
+  Not touched: server.mjs, design.mjs (the `gallery` argument of create_report / plan_layout is the next step).
+- Open, for the laptop lab (Desktop): see the PR's "Needs a Desktop check".
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J11" just below (0.3 R&D draft, branch `feat/0.3-label-limits`); before it (18 Oct): "B-155" (branch `site/pbit-wording`), then "rc.23" (branch `fix/0.2.9-rc23`, PR to main); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J11: label limits keep column charts (19 Oct, cloud builder; branch `feat/0.3-label-limits` from main `f09bf30`; ONE DRAFT PR, merges only after 0.2.9 reaches testers)
+B-140 option B (the owner's go for 0.3 R&D, 18 Oct): the writer decides column vs bar from the limits the laptop measured
+in Desktop 2.159 (108 charts: en/ar, 400/600/900 px on a 1920 page, 5/8/12 categories; longest name level, and longest
+never cut when it may wrap to 2 lines), not from its own 12-letter guess. Metadata only: names' lengths only where the
+model says what the axis is (months, weekdays, quarters, a "Month Short" column), else the 12-letter stand-in.
+- `assets/js/label-limits.js` (new, browser + Node, `DALabelLimits`): `MEASURED` (the table; "<4" is 0), `limitAt(lang,
+  width, count)` (the measured row with the most room a category at or below the chart's; outside: < 400 px or > 12
+  categories), `decide({ lang, width, pageWidth, labelPt, count, names | axis | nameLength, noun })` -> { kind, why, limit }.
+  Known names: the wrap limit; unknown names (stand-in): the LEVEL limit (D15: real names can be longer than 12). Between
+  rows a name fits also where the laptop's rule (40 + 8.5 a letter) says level AND the next measured row up holds it
+  level. Count unknown: 12 (the worst row), said in why. Script unknown: the lower of en/ar. Labels larger than 15pt
+  (scaled to 1920): outside. Outside: kind null, the writer's rule as before.
+- `pbip-page.js` asBar (shared file, small hook): the table first, the old rule only where it gives null; every kind
+  change carries `why` (kindChanges[].why; donut and many-valued bar too). `lib/plan-lint.mjs` passes why;
+  `server.mjs` plan_layout: slot `kindWhy`, kindChanges.slots[].why. `theme-generator.js` loads label-limits.min.js
+  before pbip-page (?v= bumped; its pages' ?v= too).
+- Test first: `mcp/test-0.3-label-limits.mjs` (in npm test), 23 of its first 26 red on main.
+- Golden models: the Comparison column chart (text category, 927 px, Top 8, 116 a category) stays a bar chart (unknown
+  names held to the level limit, 8 letters), now with the measured reason in the plan.
+- Decision for the owner: may unknown names use the wrap limit (16 at 113 a category)? Then the golden Comparison chart
+  stays a column chart, but test-0.2.9w's D15 check (8 columns in 600 of 1280, bank's 17-letter names) turns column too.
+- Open: Desktop proof on the laptop of the new column charts (12 short months at 900; Arabic weekdays at 840 of 1920;
+  Arabic months at 1200 of 1920, the rule-interpolated case).
 
 ## B-155: what a .pbit holds, said exactly (18 Oct, cloud builder; branch `site/pbit-wording` from main `4a837f9`; one PR, not merged)
 The outside audit: four public pages said a .pbit has "no data rows". The definition can hold small tables typed in with
@@ -150,6 +833,169 @@ scope is otherwise frozen. Test first: `mcp/test-rc23.mjs` (51 checks, in npm te
   articles/article-power-bi-model-ai-ready.html, services/copilot-readiness-audit.html, their /ar/ copies and
   translations): the same inexactness about "Enter data" tables, about the browser tool, left for the owner.
   PRIVACY.md's header still records "checked ... on 2026-10-11, with Microsoft's validator 0.4.0" (history).
+
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 1: Preview before Approve" just below (branch `feat/0.3.0-preview`, draft PR #37, merged only after 0.2.9 reaches testers; main merged in on 18 Oct), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "0.3.0 step 2: Check before download / write" just below (branch `feat/0.3.0-check`, stacked on step 1's `feat/0.3.0-preview` / PR #37; draft PR #38, merged only after 0.2.9 reaches testers; main merged in through step 1 on 18 Oct), then "0.3.0 step 1: Preview before Approve" (the owner said yes to the previews, 18 Oct), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.0 step 2: Check before download / write (18 Oct, cloud builder; branch `feat/0.3.0-check` from `feat/0.3.0-preview` `6eac888`; draft PR stacked on #37, not merged)
+The owner's go (18 Oct, after his yes to step 1's previews), from PLAN-0.3.0 step 2: the measured rules and the layout
+check run on the generated project before the lab offers the download and before the MCP writes; the answer is "0
+problems Power BI Desktop would show" or the list. Out of scope: story titles (step 4; B-130/B-131), the gallery, any
+change to what the writer writes (the writer's own findings are listed, not fixed). Health Check files untouched.
+- **One engine:** `assets/js/layout-check.js` (new; Node and `window.DALayoutCheck`): the design lint moved here
+  unchanged in what it finds (`lint`, `LINT_RULES`, `MEASURED`; the names a finding shows are the caller's: the MCP
+  passes read-report's screened ones); `inventoryOf(files)` (the in-memory reader of a project's PBIR files, the fields
+  read-report's inventory gives the lint and the rules; paths with or without a download's folder); `rulesInput` (the
+  one copy: check_report uses it too); `checkProject(files, { model, lang })` -> `{ pages, visuals, desktop, worth,
+  summary, problems, worthALook, counts }`. A problem Desktop would show = a measured rule's warning or error, or a
+  layout finding that is neither a guess nor a note; the rest is "worth a look". `mcp/lib/design-lint.mjs` is now a
+  22-line adapter.
+- **MCP:** `plan-lint.mjs` `checkFiles` / `checkSummary` (and `plannedReport` for the tests); `create_report` checks the
+  project in memory before `writeTree` and answers `check` (summary, problems with their fixes, the rest counted);
+  `planPreview` checks the planned pages and the approval window shows "Checked before writing" next to the preview,
+  above Approve. The check reports only: it never writes, approves or holds a write back.
+- **Lab:** the check runs on "Preview the download" and on "Download project" (on the files offered), and shows the
+  summary (en/ar) and up to 12 problems; the download is never held back. Loads visual-types, report-rules and
+  layout-check (new .min.js files) after the writer. Stamps 20261018c: theme-generator.min.js on both generator pages,
+  the three new files.
+- **Found and fixed before the PR:** the first reader stripped only "<Name>.Report/", so a download's paths
+  ("<folder>/<Name>.Report/...") were read as no pages and a false ".platform missing"; the tests now prove pages were
+  read (pages, visuals) and that a folder in front gives the same answer.
+- **What the check finds on the golden models** (writer's planned report, 2 pages + tooltip): arabic-long-names ar exec,
+  health-project en analysis, large-synthetic en ops (logistics): 0 problems Desktop would show; worth a look
+  TOOLTIP_SCROLL 1, COVER_CARDS 2 each. Ramadan en focus: 0; TOOLTIP_SCROLL 2, AXIS_TEXT_TIME_UNSORTED 2 (guess),
+  COVER_CARDS 2. The lab's sample download: 0 problems, 5 worth a look. MCP and lab identical on every golden model.
+- **Tests (red first for the MCP):** `mcp/test-0.3.0-check.mjs` C-01..C-03 (0 -> 31, in npm test; red on step 1's code
+  at C-01); approval window 28 -> 31 (W-12, W-13 red on step 1's code); website `pbip` 92 -> 98 (the lab's check; written
+  with the code, not run red first). Existing lint and check_report suites unchanged: v029a4 39, v029w 75, v029checks 37.
+- **Full runs (Linux) on `efe9bee`:** `cd mcp && npm test` all PASS (mcp 1575, v029c/d/e/f/g 36/21/21/20/21, golden 12
+  unchanged, fuzz 600, layouts 32 reports 226 checks, preview 71, check 31); website 18 of 18 PASS (pbip 98); check:min
+  66 match, csp, site config PASS. One existing test was pointed at the moved code: test-0.2.9d's R7 reads the lint's
+  thresholds and sources in layout-check.js (the same assertion; design-lint.mjs no longer holds them).
+- **Open (for the owner):** (1) the line between "problems Desktop would show" and "worth a look" (above): agree or
+  change. (2) Problem texts are English on the Arabic lab page (the rules' and lint's own words; only the summary is
+  Arabic). (3) "Worth a look" is counted, not listed, in the lab and the approval window.
+- **Seen, not in scope:** every golden report gets TOOLTIP_SCROLL (the tooltip page's bar chart may need a scrollbar,
+  a note) and COVER_CARDS (the "No data" message cards: meant); on the Ramadan model the time axis is a text column
+  with no sort-by column in the model (a guess from its name). The small Arabic preview in the lab draws some titles
+  past their box (the preview's width estimate at 260 px). From step 1: the writer's duplicate titles "(2) (2)" and
+  "KPI 2/3/4" titles (B-130/B-131, step 4).
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (19 Oct): "J12: preview fidelity fixes" just below (branch `feat/0.3-preview-fidelity`, a draft PR stacked on #37). Before it (18 Oct): "0.3.0 step 1: Preview before Approve" just below (branch `feat/0.3.0-preview`, draft PR #37, merged only after 0.2.9 reaches testers; main merged in on 18 Oct), then "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## J12: preview fidelity fixes (19 Oct, cloud builder; branch `feat/0.3-preview-fidelity` from `feat/0.3.0-preview` `269983b` = draft PR #37; a draft PR stacked on #37, merged only after 0.2.9 reaches testers)
+The laptop compared #37's preview (page-preview.js fromFiles + render) with Desktop's PDF export of the same written
+reports (English exec, its Arabic twin, a dense ops page with 6 KPIs): every box placed right (within 4 units); wrong:
+titles (one line at 11 px; Desktop: the visual's own size, 18pt = 24 on 1920 for charts and tables, 9-10pt for KPI
+cards, wrapping: 7 of 14 took 2 lines, ~36 units from the plot), cut content no flag reports (a 507-wide 4-column
+table shows 3 columns; a 509-wide line chart's 12 months slant), and words that carry meaning (page-button names, the
+report title, the KPI value's side on Arabic pages).
+- **Plan (the reviewer's brief):** (1) fromFiles reads each visual's title size (its own, else the theme's), font, wrap;
+  render draws titles at that size in page units, wrapped at the inner width (w less 16k a side, as the writer) by
+  text-measure.js's textWidth (bold, as the writer measures), and the placeholder plot starts under the lines.
+  (2) check() flags `cut` for a table whose headers at its header size (+24k each, as rc.24's fitHeaders) need more
+  than w - 36k, and for a column/line chart whose category labels slant: px per category < (40 + 8.5 x letters) x
+  size/15 (the laptop's rule), with known lengths only (months 12, quarters 4, weekdays 7; short or full by name; full
+  is never assumed shorter than 9); an unknown category is a quiet note ("label size unknown"), never a flag.
+  (3) page buttons drawn with their names, the current page (navigationSection = the page) underlined (the writer's bar,
+  or the preview's own line); text boxes at their own size and weight; a KPI value drawn where its file aligns it
+  (the writer writes 'right' on Arabic pages; rc.24, PR #55, makes the twin write 'right' too: the preview reads the
+  file, so it follows #55 when it lands; a file still saying 'left' is drawn left, as Desktop shows it).
+- **Expected (before any run):** `test-0.3-preview-fidelity.mjs` 37 checks, 27 red on #37's code, all green after;
+  preview 71 and approval 28 unchanged; the website pbip suite's lab preview checks green; full npm test all PASS.
+- **Shared files touched:** assets/js/page-preview.js (+ .min.js) only (theme-generator.js unchanged: the lab loads
+  text-measure.js with the writer before a preview).
+- **Done (branch pushed, draft PR stacked on #37):** red commit (plan + tests), then the engine: `fromFiles` reads
+  per visual its title size/font/bold/wrap/alignment/padding (own, else the theme's visualStyles, else textClasses),
+  a text box's run size/weight/alignment, a button's text/size/bold and PageNavigation target (`current` when it is
+  the page), a card's value alignment ('center' when the file sets none) and size, a table's columns (header names,
+  widths) and header size, a column/line chart's category and label size; pages get their `id`. `check` adds the two
+  cut flags with a `why`; `notes(page)` (new) lists charts whose labels' length is unknown, drawn as a grey tag, not
+  counted as a flag. `render`: titles in page units at their size, wrapped by textWidth, line 1.5 em; the plot below;
+  text boxes and buttons drawn with their text (page buttons without an outline; the current page underlined by the
+  writer's bar, or the preview's own line when there is none); the card's value rect (`kv`) at its written side.
+- **Tests (Linux):** fidelity 0 -> 38 (27 of the first 37 red on #37's code; 1 added after: the planned dense table
+  fits, see the decision below); preview 71, approval 28 unchanged; website pbip 92 and theme-generator 894 PASS; site
+  config, check:min PASS. Full `cd mcp && npm test` all PASS (mcp 1577, v029c/d/e/f/g 36/21/21/20/21, golden 12
+  unchanged, fuzz 8199, layouts 226, rc22 26, preview 71, fidelity 38).
+- **Decisions made:** (1) the dense table: today's writer writes 3 of the 4 asked columns in a 507 slot at 10pt
+  (106 + 94 + 217 = 417 of 471): not cut, so not flagged; the laptop's 4-column table needs 610 of 471 and is flagged
+  (the test uses the dense page with the laptop's 4 columns). Ask the laptop which file its export came from.
+  (2) A full month or weekday name is taken as 9 letters in any language (never shorter): the Arabic exec's month
+  line chart (1242 wide, 104 a month, 117 needed) is flagged. (3) An unknown category is a note, not a flag (else
+  every chart by a region would say "to check"). (4) F-02 measures the plot on the 508 bar chart (a line's highest
+  point moves with the plot's height). (5) No ?v= bump for page-preview.min.js: the file is not on main yet.
+- **New Arabic words (for the owner):** «طول التسميات غير معروف» (the note "label length unknown").
+- **Seen, not in scope:** the dense page shows one breakdown three times ("by Hub Region", "(2)", "(3)"; draft #57,
+  story titles); the Arabic exec's table headers need 1103 of 891 (long Arabic names: the writer keeps them); merging
+  #38 with this branch conflicts only in WORK.md and package.json's test line.
+
+## 0.3.0 step 1: Preview before Approve (18 Oct, cloud builder; branch `feat/0.3.0-preview` from main `6d88fe4`; draft PR, not merged)
+The owner's go (18 Oct) on the 0.3.0 plan approved 17 Oct ("yes B and the promise stays"): step 1 first, merged only after
+0.2.9 reaches testers. Out of scope: step 2 (check before download), the visual gallery, story titles, anything the
+writer writes.
+- **The promise stays:** the picture is drawn from the PLAN only (visual types, positions, sizes, titles, field names,
+  theme colours); grey placeholder shapes (bars, a line, a ring, rows) with no text and no number, the page labelled
+  "preview" / «معاينة». No values, no sample data.
+- **One engine:** `assets/js/page-preview.js` (new; Node and `window.DAPagePreview`): `render(page, opts)` -> SVG string
+  (deterministic, every name escaped, right to left: titles from the right and bars from the right, positions as the
+  page places them), `check(page)` -> flags `cut` (off the page), `overlap` (>10% of the smaller, a card's cover left
+  out: the design lint's rule), `small` (chosen, not measured: chart/table 140 x 100, card 70 x 40, slicer 70 x 28 on
+  the 720 grid), `fromFiles(files)` (the pages the writer's PBIR files show: tooltip and hidden pages and hidden
+  visuals out; a card with no field and no title, or an empty text box, is a panel), `fromSlots` (the design engine's
+  slots). Flags: a dashed amber outline and a small tag with the word (overlap, cut off, too small).
+- **MCP:** `lib/plan-lint.mjs` `planPreview` (the writer's report of the plan in memory, the same build as planLint,
+  now shared as `build()`; planLint unchanged: first page, title "Plan"), with the design lint's findings of each page
+  as flags (OVERLAP, OFF_PAGE, BAR_LABELS_MAY_BE_CUT, TABLE_GROW_TO_FIT, TABLE_WIDTHS_TOO_WIDE); a model with no
+  measure falls back to the slots. `plan_layout` keeps it in the plan's data (`preview`, never in an answer; none for
+  a custom-visuals copy or a plan with problems). `approval-window.mjs`: "What the report will look like", one picture
+  per page above Approve, with a caption that counts what to check. Security unchanged: same CSP (inline SVG needs no
+  change), secret link, Host/Origin checks, no-store; only the click approves.
+- **Lab page:** "Preview the download" in the project card draws the download's own pages (the writer's files, the
+  same renderer); `withProject()` now builds the input for the download and the preview alike. Button text in the
+  translations (en/ar). Stamps 20261018b: theme-generator.min.js and translations/theme-generator.min.js on both
+  generator pages.
+- **Tests (written red first):** `mcp/test-0.3.0-preview.mjs` P-01..P-08 (71 checks; golden: arabic-long-names ar exec,
+  health-project en analysis, large-synthetic en ops focus logistics, no-measures en focus), in `npm test`;
+  `test-approval.mjs` W-09..W-11 (20 -> 28 checks; the reopen test's link index moved from 2 to 4 because two windows
+  now open before it); website `pbip` suite: the lab preview's boxes equal the download's, en and ar (red 4 before the
+  build, green after).
+- **Samples for the owner:** `mcp/work/preview-samples/` (made by `make.mjs` there: the real approval window, shot in
+  Chromium).
+- **Tests (Linux), before -> after:** preview 0 -> 71 (P-01 red first); approval window 20 -> 28 (4 red first); website
+  `pbip` 92 checks, the lab-preview checks red (4) before the build, all green after; full `cd mcp && npm test` all PASS
+  (mcp 1572, v029c/d/e/f/g 36/21/21/20/21, golden 12 unchanged, fuzz 600, layouts 32 reports 226 checks, preview 71);
+  website 18 of 18 PASS; check:min 63 match with new stamps, csp, site config PASS.
+- **Open (for the owner):** (1) the 3 samples: say yes or what to change. (2) the "too small" sizes are chosen, not
+  measured: measure them in Desktop or accept them. (3) Docs not yet updated for the preview (README, PRIVACY,
+  CHANGELOG 0.3.0, the skill): after the owner's yes. (4) Two copies of the overlap rule (design-lint.mjs and
+  page-preview.js `check`): the lint could use the renderer's `check` later (not in this step).
+- **Seen, not in scope:** the writer's duplicate titles "Total by Note (2) (2)" and "... by Lane Region (2)" when two
+  charts use the same field (health-project, large-synthetic, arabic page 2); KPI titles "KPI 2", "KPI 3", "KPI 4" on
+  health-project (the writer's default titles where the model has fewer measures); long Arabic KPI titles cut to a few
+  words in the preview (in Desktop they wrap to two lines: the preview cuts at one line); the approval page is English
+  only (an Arabic plan's captions mix "Page 1:" with the Arabic name).
+- **Next:** CI green on the draft PR; the owner looks at the 3 samples; merge only after 0.2.9 reaches testers. Step 2
+  (check before download) not started.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (18 Oct): "B-147" just below (branch `feat/0.3-format-review`, draft PR, stacked on #48); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## B-147: format review as "Please confirm" (18 Oct, cloud builder; branch `feat/0.3-format-review` from `hc/b143-unrelated-tables` (draft #48); DRAFT PR)
+The owner's R&D go; the reviewer's brief. `assets/js/model-health-engine.js` pleaseConfirm only: never a finding, never a
+RULE, never the score (the published 85 unchanged).
+- `ratioAsPercent`: a ratio or multiple by name (current/quick/debt... ratio, asset/inventory turnover, debt to X,
+  multiple) with a % format and no percentage word in the name. `percentTwice`: a % format (a % outside quotes, not
+  escaped) on DAX with `* 100`. `thousandsPlain`: DIVIDE(x, 1000 or 1000000) or `/ 1000` on an amount (name or column)
+  that is not a unit conversion (ms, bytes, km...), the format with no K/M and no thousands comma, the name not scaled.
+  Each question in EN and AR with `format`; evidence the exact DAX piece ("* 100", "/ 1000000") or ''.
+- Test first (`scripts/tests/model-health.mjs` "B-147", red on the branch: no questions): 7 asked, 13 quiet look-alikes.
+- Precision: 60 models (9 repo fixtures, 17 Microsoft, 34 fresh holdout from the B-146 review): 1 question
+  (`[% Category Compete Share]`, INT(DIVIDE * 100) formatted 0%): right. 0 wrong; recall not measured (few cases).
+- Engine .min.js rebuilt, `?v=20261018w` on the Health Check page and its /ar/ copy (ar-pages --write).
 
 ## B-145: faster CI, no check lost (18 Oct, cloud builder; branch `ci/parallel-tests` from main `5c0ad21`; one PR, not merged)
 The owner's go (18 Oct, "yes queue it after rc.22"). Scope: CI only; no test removed, skipped or loosened, no timeout
@@ -216,6 +1062,24 @@ run found: the early approval check must not delete an expired plan, G9; server.
   tooltip with no Top N (210 high). Not changed (it would change what Desktop shows).
 - **Seen, not in scope:** a report saved in the older format (report.json at the report's root) is counted but not read
   by check_model_health (said now in notRead; reading it would be new work); the problem texts of the rules are English.
+
+## 0.3.0 step 6: theme from a logo (18 Oct, cloud builder; branch `feat/0.3-theme-from-logo` from main `dcc0f1a`; DRAFT PR, not merged)
+The owner's go (18 Oct: "finish as much R&D as we can"). Website only (the MCP's generate_theme is untouched: mcp/ is frozen).
+- Engine (`assets/js/design-engine.js`, shared with the MCP but unused there yet): `rgbToLab`, `deltaE` (CIEDE2000, Sharma's
+  pairs), `simulateCvd` (Machado 2009, severity 1, linear RGB), `logoColours(px)` (alpha < 128, near-white/near-black
+  with chroma < 12 skipped; weighted k-means in Lab, k 6, seeded deterministically; merge < 12; soft edges (blends with
+  white, black or a heavier cluster) dropped; >= 4%; top 3, each the logo's own most frequent colour; mono when no hue),
+  `logoTheme(colours, { ui, harmony })` (logo colours + generate(lead, harmony) + CALM, 15 apart; each to 3:1 on the
+  card with toContrast, listed in `adjusted`; order: lead first, all 5040 orders of the rest scored by the closest
+  neighbours over normal/deutan/protan; the logo's colours keep places 2-3 when within 10% of the best or >= 20 apart).
+- Page (`theme-generator.js`, both generator pages): drop zone under "Generate"; the file is drawn on a <=128 px canvas
+  from an object URL (revoked), never uploaded or stored, no analytics event (the no-network test). Applies like Generate
+  (data, accent, brand box). Panel: logo swatches with shares, the palette, the honest line for an adjusted logo colour,
+  a contrast table (visuals, page, 3:1, 4.5:1), the colour-blind line (min CIEDE2000 per vision). EN + AR, hex codes in
+  <bdi dir=ltr>.
+- Tests: `scripts/tests/theme-logo.mjs` (753 checks; in run-all, shard 3). Screenshots: branch `shots/theme-logo`
+  (capture-theme-logo.mjs).
+- Open: the MCP could expose the same (a `logo` input to generate_theme) after 0.2.9; Desktop proof of a logo theme.
 
 ## Health Check 3: precision fixes and "Please confirm" (18 Oct, cloud builder; branch `hc3/precision-and-confirm` from main `6d88fe4`; one PR, not merged)
 The owner's go (18 Oct). One engine (`assets/js/model-health-engine.js`), used by the website and the MCP.

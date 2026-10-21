@@ -159,9 +159,14 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
   // ---------- A4-7, C2: one finding shape; the kind read from the finding's origin, not from its text ----------
   {
     const ORIGINS = ['validator', 'schema', 'rule', 'instruction'];
-    const xs = [base].filter((x) => x.j);
-    chk(() => xs.every((x) => x.j.findings.every((f) => ORIGINS.includes(f.origin) && ['error', 'warning', 'note'].includes(f.severity) && f.impact)) && base.j.findings.length,
-      () => `A4-7: every finding carries its origin (${ORIGINS.join(', ')}): ${JSON.stringify(base.j.findings.map((f) => [f.rule, f.origin]))}`);
+    // (U1, changed on purpose: Base's only findings were the dropdown slicers' known notes, gone since the catalog 0.1.3
+    // lists the object; a copy with a made-up object on a chart gives the validator's finding to read)
+    const RO = copy('A47 origin'), of = chartOf(RO), oj = J(of);
+    oj.visual.objects = Object.assign({}, oj.visual.objects, { madeUpObject: [{ properties: { show: { expr: { Literal: { Value: 'true' } } } } }] }); W(of, oj);
+    const xo = await run('A47 origin');
+    const xs = [base, xo].filter((x) => x.j);
+    chk(() => xs.length === 2 && xs.every((x) => x.j.findings.every((f) => ORIGINS.includes(f.origin) && ['error', 'warning', 'note'].includes(f.severity) && f.impact)) && xo.j.findings.some((f) => f.origin === 'validator'),
+      () => `A4-7: every finding carries its origin (${ORIGINS.join(', ')}): ${JSON.stringify(xs.map((x) => x.j.findings.map((f) => [f.rule, f.origin])))}`);
     const RL = copy('A47 lint'), cf = chartOf(RL), cj = J(cf);
     cj.visual.visualContainerObjects = Object.assign({}, cj.visual.visualContainerObjects, { title: [{ properties: { show: { expr: { Literal: { Value: 'false' } } } } }] }); W(cf, cj);
     const xl = await run('A47 lint');

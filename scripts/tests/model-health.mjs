@@ -509,6 +509,110 @@ export default async function ({ browser, url }) {
     check(Array.isArray(covid.confirm) && covid.confirm.length === 0, `HC3 B, questions on Microsoft's COVID-19 sample: ${JSON.stringify(covid.confirm)}`);
   }
 
+  // ---- B-143 (the owner's rc.21 test): a date table or a fact table that no relationship touches is a "Please
+  //      confirm" question, never a finding; tables meant to stand alone are never asked about ----
+  {
+    // the bridge project (Calendar, Customer and Sales, no relationship): Calendar (read only by SAMEPERIODLASTYEAR, which
+    // filters nothing through it) and Sales (its CustomerKey is Customer's key); Customer, a dimension, is not asked about
+    const T = load('tmdl-model.js'), dir = path.join(ROOT, 'scripts/tests/fixtures/bridge-project/Sales.SemanticModel');
+    const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+    const bridge = E.analyze(T.fromFiles(walk(dir).filter((f) => /\.tmdl$/.test(f)).map((f) => ({ path: path.relative(dir, f).split(path.sep).join('/'), text: fs.readFileSync(f, 'utf8') }))), null);
+    const q = (r) => (r.confirm || []).filter((c) => c.id === 'unrelatedTable');
+    check(JSON.stringify(q(bridge).map((c) => c.obj + ' ' + c.table.looksLike).sort()) === '["Calendar date","Sales fact"]' && q(bridge).find((c) => c.obj === 'Sales').table.otherTable === 'Customer',
+      `B-143, the bridge project: ${JSON.stringify(q(bridge))}`);
+    for (const c of q(bridge)) check(/\?$/.test(c.message.en) && /[؀-ۿ]/.test(c.message.ar) && /؟$/.test(c.message.ar) && c.evidence === '', `B-143, ${c.obj}: a question in English and Arabic, no DAX: ${JSON.stringify(c)}`);
+    // never a finding and never in the score: the same model with the relationships scores the same, without the questions
+    const col = (n, ty, x) => Object.assign({ name: n, dataType: ty || 'int64', sourceColumn: n }, x || {});
+    const base = (rels, extra) => ({ model: { tables: [
+      { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Calendar') },
+      { name: 'Customer', columns: [col('CustomerKey'), col('City', 'string')], partitions: mpart('Customer') },
+      { name: 'Sales', columns: [col('CustomerKey'), col('OrderDate', 'dateTime'), col('Amount', 'decimal')], partitions: mpart('Sales'),
+        measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])', formatString: '#,0' }] }].concat(extra || []), relationships: rels } });
+    const linked = [{ name: 'c', fromTable: 'Sales', fromColumn: 'CustomerKey', toTable: 'Customer', toColumn: 'CustomerKey' }, { name: 'd', fromTable: 'Sales', fromColumn: 'OrderDate', toTable: 'Calendar', toColumn: 'Date' }];
+    const loose = E.analyze(base([]), null), tied = E.analyze(base(linked), null);
+    check(JSON.stringify(q(loose).map((c) => c.obj).sort()) === '["Calendar","Sales"]' && q(tied).length === 0, `B-143, unrelated vs related: ${JSON.stringify([q(loose).map((c) => c.obj), q(tied).map((c) => c.obj)])}`);
+    check(!loose.findings.some((f) => f.id === 'unrelatedTable') && ['overall', 'perf', 'maint', 'bp'].every((k) => loose.score[k] === E.scoreFrom(loose.findings)[k]) && !E.RULES.unrelatedTable,
+      'B-143: the question is counted as a finding, in the score, or as a rule');
+    // tables meant to stand alone, beside a related model: a measure table, a field parameter, a what-if parameter, a
+    // calculation group, a hidden table, a one-column list, a disconnected date slicer read by MAX, a second log that
+    // shares an operation id with a fact, and a fact whose key is linked in DAX (TREATAS): no question
+    const standAlone = [
+      { name: '_Measures', columns: [col('Column1', 'string', { isHidden: true })], measures: [{ name: 'Avg', expression: 'AVERAGE(Sales[Amount])', formatString: '#,0' }], partitions: mpart('_Measures') },
+      { name: 'Metric', columns: [col('Metric', 'string', { relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Metric Fields' }] } }), col('Metric Fields', 'string', { isHidden: true }), col('Metric Order')],
+        partitions: [{ name: 'p', source: { type: 'calculated', expression: '{ ("Total", NAMEOF([Total]), 0) }' } }] },
+      { name: 'Discount', columns: [col('Discount', 'decimal'), col('Step')], measures: [{ name: 'Discount Value', expression: 'SELECTEDVALUE(Discount[Discount], 0)', formatString: '0%' }],
+        partitions: [{ name: 'p', source: { type: 'calculated', expression: 'GENERATESERIES(0, 0.5, 0.05)' } }] },
+      { name: 'Time Calc', calculationGroup: { calculationItems: [{ name: 'YTD', expression: 'TOTALYTD(SELECTEDMEASURE(), Calendar[Date])' }] }, columns: [col('Name', 'string'), col('Ordinal')], partitions: [{ name: 'p', source: { type: 'calculationGroup' } }] },
+      { name: 'Staging', isHidden: true, columns: [col('CustomerKey'), col('Amount', 'decimal'), col('Note', 'string')], partitions: mpart('Staging') },
+      { name: 'Region List', columns: [col('Region', 'string')], partitions: mpart('Region List') },
+      { name: 'Date Compare', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Date Compare'),
+        measures: [{ name: 'Sales To Date', expression: 'CALCULATE([Total], FILTER(ALL(Sales[OrderDate]), Sales[OrderDate] <= MAX(\'Date Compare\'[Date])))', formatString: '#,0' }] },
+      { name: 'Errors', columns: [col('OperationId'), col('Message', 'string'), col('Code', 'string')], partitions: mpart('Errors') },
+      { name: 'Commits', columns: [col('OperationId'), col('Duration', 'double'), col('Rows')], partitions: mpart('Commits') },
+      { name: 'Budget', columns: [col('CustomerKey'), col('Target', 'decimal'), col('Year')], partitions: mpart('Budget'),
+        measures: [{ name: 'Budget', expression: 'CALCULATE(SUM(Budget[Target]), TREATAS(VALUES(Customer[CustomerKey]), Budget[CustomerKey]))', formatString: '#,0' }] }];
+    const quiet = E.analyze(base(linked, standAlone), null);
+    check(q(quiet).length === 0, `B-143, tables meant to stand alone were asked about: ${JSON.stringify(q(quiet).map((c) => c.obj))}`);
+    // red before green: the same fact without its TREATAS, and the same calendar unread by DAX, are asked about
+    const shown = E.analyze(base(linked, [{ name: 'Budget', columns: [col('CustomerKey'), col('Target', 'decimal'), col('Year')], partitions: mpart('Budget') },
+      { name: 'Date Compare', columns: [col('Date', 'dateTime'), col('Year')], partitions: mpart('Date Compare') }]), null);
+    check(JSON.stringify(q(shown).map((c) => c.obj).sort()) === '["Budget","Date Compare"]', `B-143, a fact and a calendar nothing links: ${JSON.stringify(q(shown).map((c) => c.obj))}`);
+    // one table only: nothing to relate it to
+    check(q(E.analyze({ model: { tables: [{ name: 'Sales', columns: [col('CustomerKey'), col('Amount', 'decimal'), col('OrderDate', 'dateTime')], partitions: mpart('Sales') }] } }, null)).length === 0, 'B-143: a one-table model was asked about');
+  }
+
+  // ---- B-147 (0.3): a format that may not show what the measure means is a "Please confirm" question, never a finding,
+  //      never in the score: a ratio or multiple shown as a percentage, a value multiplied by 100 and then formatted as a
+  //      percentage again, a value divided by 1,000 or 1,000,000 shown as a plain number ----
+  {
+    const col = (n, ty) => ({ name: n, dataType: ty || 'decimal', sourceColumn: n });
+    const ms = (name, expression, formatString) => ({ name, expression, formatString });
+    const asked = { // name: [expression, format, the question's id]
+      'Current Ratio': ['DIVIDE(SUM(BS[Current Assets]), SUM(BS[Current Liabilities]))', '0.0%', 'ratioAsPercent'],
+      'Asset Turnover': ['DIVIDE(SUM(Sales[Amount]), SUM(BS[Total Assets]))', '0%', 'ratioAsPercent'],
+      'Debt to Equity': ['DIVIDE(SUM(BS[Debt]), SUM(BS[Equity]))', '0.00%', 'ratioAsPercent'],
+      'Margin Pct': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0%', 'percentTwice'],
+      'Compete Share': ['INT(DIVIDE(SUM(Sales[Units]), SUM(Sales[Market Units])) * 100)', '0%;-0%;0%', 'percentTwice'],
+      'Revenue': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0.0', 'thousandsPlain'],
+      'Total Cost': ['SUM(Sales[Cost]) / 1000000', '#,0', 'thousandsPlain']
+    };
+    const quietOnes = { // the same shapes that mean what they show: no question
+      'Gross Margin Ratio': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount]))', '0.0%'],
+      'Employee Turnover': ['DIVIDE(SUM(HR[Leavers]), SUM(HR[Headcount]))', '0.0%'],
+      'Quick Ratio': ['DIVIDE(SUM(BS[Current Assets]), SUM(BS[Current Liabilities]))', '0.00"x"'],
+      'Margin Points': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0'],
+      'Margin Literal': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0"%"'],
+      'Margin Escaped': ['DIVIDE(SUM(Sales[Profit]), SUM(Sales[Amount])) * 100', '0.0\\%'],
+      'Revenue K': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0'],
+      'Revenue (thousands)': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0'],
+      'Revenue Shown': ['DIVIDE(SUM(Sales[Amount]), 1000)', '#,0.0"K"'],
+      'Duration (s)': ['DIVIDE(SUM(Log[DurationMs]), 1000)', '0.0'],
+      'Query Seconds': ['SUM(Log[DurationMs]) / 1000', '#,0.0'],
+      'Data Size': ['DIVIDE(SUM(Log[Bytes]), 1024)', '#,0'],
+      'Sales Amount': ['SUM(Sales[Amount])', '#,0']
+    };
+    const all = Object.assign({}, asked, quietOnes);
+    const model = (names) => ({ model: { tables: [
+      { name: 'Sales', columns: [col('Amount'), col('Profit'), col('Cost'), col('Units'), col('Market Units')], partitions: mpart('Sales'), measures: names.map((n) => ms(n, all[n][0], all[n][1])) },
+      { name: 'BS', columns: [col('Current Assets'), col('Current Liabilities'), col('Total Assets'), col('Debt'), col('Equity')], partitions: mpart('BS') },
+      { name: 'HR', columns: [col('Leavers'), col('Headcount')], partitions: mpart('HR') },
+      { name: 'Log', columns: [col('DurationMs'), col('Bytes')], partitions: mpart('Log') }] } });
+    const r = E.analyze(model(Object.keys(all)), null);
+    const fmtIds = ['ratioAsPercent', 'percentTwice', 'thousandsPlain'], conf = (r.confirm || []).filter((c) => fmtIds.includes(c.id));
+    const got = conf.map((c) => c.id + ' ' + c.obj).sort(), want = Object.entries(asked).map(([n, v]) => v[2] + ' [' + n + ']').sort();
+    check(JSON.stringify(got) === JSON.stringify(want), `B-147, the format questions: ${JSON.stringify(got)}, expected ${JSON.stringify(want)}`);
+    for (const c of conf) {
+      check(/\?$/.test(c.message.en) && /[؀-ۿ]/.test(c.message.ar) && /؟$/.test(c.message.ar) && c.format === all[c.obj.slice(1, -1)][1], `B-147, ${c.id} on ${c.obj}: a question in English and Arabic, with the format: ${JSON.stringify(c)}`);
+      check(c.evidence === '' || all[c.obj.slice(1, -1)][0].includes(c.evidence), `B-147, ${c.id} on ${c.obj}: the evidence "${c.evidence}" is not an exact piece of its DAX`);
+    }
+    const p2 = conf.find((c) => c.obj === '[Margin Pct]') || {}, t2 = conf.find((c) => c.obj === '[Total Cost]') || {};
+    check(p2.evidence === '* 100' && t2.evidence === '/ 1000000', `B-147, evidence pieces: ${JSON.stringify([p2.evidence, t2.evidence])}`);
+    // never a finding, never a rule, never in the score: the same model without the asked measures scores the same
+    const quiet = E.analyze(model(Object.keys(quietOnes)), null);
+    check(!fmtIds.some((id) => E.RULES[id] || r.findings.some((f) => f.id === id)) && ['overall', 'perf', 'maint', 'bp'].every((k) => r.score[k] === E.scoreFrom(r.findings)[k])
+      && (quiet.confirm || []).filter((c) => fmtIds.includes(c.id)).length === 0, `B-147: a format question is a rule, a finding or in the score, or a quiet one was asked: ${JSON.stringify((quiet.confirm || []).filter((c) => fmtIds.includes(c.id)))}`);
+  }
+
   {
     // the page shows each finding's source (English and Arabic), and the CSV and the HTML and Markdown documentation carry it
     for (const lang of ['en', 'ar']) {
@@ -653,6 +757,61 @@ export default async function ({ browser, url }) {
         check(/<h2>Please confirm \(questions, not findings\)<\/h2>/.test(html) && (html.match(/<td>question<\/td>/g) || []).length === 3, 'HC3 HTML documentation: the questions section');
         check(md.includes('## Please confirm (questions, not findings)') && (md.match(/^\| question \|/gm) || []).length === 3, 'HC3 Markdown documentation: the questions section');
       }
+      if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  {
+    // B-148 (0.3): an answer to a "Please confirm" question is kept in this browser only (localStorage, per model), reused
+    // while the measure is unchanged, asked again when its DAX changes, and forgotten with "Forget my answers"; no request
+    // is made while answering or forgetting, and nothing of the DAX is stored
+    const c = (n, ty) => ({ name: n, dataType: ty || 'int64', sourceColumn: n });
+    const aModel = (expr) => ({ name: 'a', compatibilityLevel: 1567, model: { culture: 'en-US', tables: [
+      { name: 'Sales', columns: [c('Qty'), c('Amount', 'decimal')], partitions: mpart('Sales'),
+        measures: [{ name: 'Units Doubled', expression: expr, formatString: '#,0' }, { name: 'Amount Doubled', expression: 'SUM(Sales[Amount]) + SUM(Sales[Amount])', formatString: '#,0' }] }] } });
+    const f1 = pbit({ DataModelSchema: JSON.stringify(aModel('SUM(Sales[Qty]) + SUM(Sales[Qty])')), Version: '1.28' });
+    const f2 = pbit({ DataModelSchema: JSON.stringify(aModel('SUM(Sales[Qty]) + SUM(Sales[Qty]) + 0')), Version: '1.28' });
+    for (const [lang, w] of [['en', 1440], ['ar', 390]]) {
+      const v = await visitor(browser, { viewport: [w, 900] });
+      const tag = `B-148 page (${lang}, ${w} px)`;
+      const open = async (file) => { await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' }); await v.pg.setInputFiles('#mhFile', { name: 'answers.pbit', mimeType: 'application/octet-stream', buffer: file }); await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 }); };
+      const qs = () => v.pg.$$eval('.mh-q', (x) => x.map((q) => q.querySelector('code').textContent));
+      await open(f1);
+      const requests = []; const onReq = (rq) => requests.push(rq.url()); v.pg.on('request', onReq);
+      const labels = await v.pg.$$eval('.mh-q[data-q*="Units Doubled"] [data-qanswer]', (b) => b.map((x) => x.dataset.qanswer + ':' + x.textContent.trim()));
+      await v.pg.click('.mh-q[data-q*="Units Doubled"] [data-qanswer="intended"]');
+      const after = await qs(), answered = await v.pg.$$eval('#mhAnswered li', (x) => x.map((l) => l.textContent));
+      check(labels.length === 2 && (lang === 'en' ? labels.includes('intended:Yes, intended') && labels.includes('mistake:No, a mistake') : labels.includes('intended:نعم، مقصود') && labels.includes('mistake:لا، خطأ'))
+        && !after.includes('[Units Doubled]') && after.includes('[Amount Doubled]') && answered.length === 1 && answered[0].includes('[Units Doubled]'), `${tag}: answered: ${JSON.stringify({ labels, after, answered })}`);
+      const stored = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).map((k) => [k, localStorage.getItem(k)]));
+      check(stored.length === 1 && /^dataarcus-mh-answers:[0-9a-f]{64}$/.test(stored[0][0]) && !/SUM|Qty|Sales|Units Doubled|duplicateAggregate/.test(stored[0][1]) && JSON.parse(stored[0][1]).length === 1 && JSON.parse(stored[0][1])[0].by === 'user',
+        `${tag}: stored per model, hashes and the answer only: ${JSON.stringify(stored)}`);
+      v.pg.off('request', onReq);
+      // the same model again (a new page): not asked again; the DAX changed: asked again, the old answer kept and marked
+      // as no longer applying (R5, F12: nothing is deleted without the click on "Forget my answers")
+      await open(f1);
+      const again = await qs();
+      await open(f2);
+      const changed = await qs(), kept = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).map((k) => JSON.parse(localStorage.getItem(k)).length));
+      const staleNote = await v.pg.$eval('#mhStale', (x) => x.textContent).catch(() => '');
+      check(!again.includes('[Units Doubled]') && again.includes('[Amount Doubled]') && changed.includes('[Units Doubled]') && JSON.stringify(kept) === '[1]'
+        && (lang === 'en' ? /1 earlier answer no longer applies.*Forget my answers/.test(staleNote) : /لم تعد تنطبق.*انسَ إجاباتي/.test(staleNote)), `${tag}: reused, then asked again after the DAX changed, the old answer kept and marked: ${JSON.stringify({ again, changed, kept, staleNote })}`);
+      // the DAX back as it was: the kept answer applies again
+      await open(f1);
+      const restored = await qs();
+      check(!restored.includes('[Units Doubled]'), `${tag}: the DAX back as it was: the kept answer applies again: ${JSON.stringify(restored)}`);
+      // forget: every answer this browser holds is gone, the question is back
+      await open(f2);
+      v.pg.on('request', onReq);
+      await v.pg.click('.mh-q[data-q*="Units Doubled"] [data-qanswer="mistake"]');
+      const mistake = await v.pg.$$eval('#mhAnswered li', (x) => x.map((l) => l.textContent));
+      const noOverflow = await v.pg.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+      await v.pg.click('#mhForget');
+      const back = await qs(), left = await v.pg.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dataarcus-mh-answers:')).length);
+      v.pg.off('request', onReq);
+      check(mistake.length === 1 && (lang === 'en' ? /mistake/.test(mistake[0]) : /خطأ/.test(mistake[0])) && back.includes('[Units Doubled]') && left === 0 && noOverflow, `${tag}: a mistake answer, then forget: ${JSON.stringify({ mistake, back, left, noOverflow })}`);
+      check(requests.length === 0, `${tag}: requests while answering or forgetting: ${JSON.stringify(requests.slice(0, 5))}`);
       if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }

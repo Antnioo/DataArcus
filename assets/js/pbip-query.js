@@ -31,6 +31,13 @@
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
   const obj = (props, selector) => (selector ? [{ properties: props, selector }] : [{ properties: props }]);
+  // a line's style (L1, the owner's smooth lines of 19 Oct, from the lab of 13 Oct): 3 wide (P2); smooth by default,
+  // monotone ('monotoneX': never swings past the data), with a filled circle on each point so every value stays findable
+  // (the series' own colour: no markerColor), its size from the line's width. One entry, no selector: the form Desktop
+  // 2.158 drew in the lab of 7 Oct ("a smooth line, a dot per month"). smooth false: the straight line, no markers.
+  // Every name and value is in Microsoft's capabilities for lineChart and both combos' lineStyles.
+  const LINE_WIDTH = 3;
+  const lineStyle = (smooth) => Object.assign({ strokeWidth: num(LINE_WIDTH) }, smooth ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX'), showMarker: bool(true), markerShape: str('circle'), markerSize: num(LINE_WIDTH + 2) } : {});
   const resource = (item) => ({ expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: item } } });
   const json = (o) => JSON.stringify(o, null, 2);
   const rnd = () => {
@@ -77,6 +84,8 @@
   const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: shown(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? shown(f.name ? f.name : fname(f)) : null);
+  // (S1, B-181) a name whose letters are all Latin (a helper named in English stays in one script)
+  const latinOnly = (x) => !/[^\P{L}\p{Script=Latin}]/u.test(String(x));
   // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
   // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
   const hasControl = (x) => /\p{Cc}/u.test(String(x));
@@ -200,6 +209,7 @@
   // taken for a day or month name. A category's kind: the picker's, where it gives it ({ kind, rows, family }), else
   // read from the name as before: a day name (7 rows), a month name (12; "Month Year" is no month name: it holds a
   // month per year), a quarter without a year in its name (4; "Year Quarter" holds many).
+  const Story = () => (typeof module !== 'undefined' && module.exports ? require('./story-titles.js') : root.DAStoryTitles);
   const Bind = () => { try { return (typeof module !== 'undefined' && module.exports ? require('./pbip-bind.js') : root.DABind) || null; } catch (e) { return null; } };
   const nameLike = (n) => { const b = Bind(); return !!(b && b.nameLike && b.nameLike(n)); };
   const YEARISH = /year|سنة|السنة|عام/i;
@@ -321,21 +331,30 @@
     if (!a || !b) return a || null;
     const ar = AR_LETTERS.test(a);
     if (ar !== AR_LETTERS.test(b)) return a;
+    if (AR_LETTERS.test(by) && !ar) return a;   // (0.3.0 R2: an Arabic report never joins two English names with "by")
     return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
   };
-  function bindTitle(kind, B, by) {
+  // 0.3, J4 (B-130, B-131): the title says what the visual answers, from its fields' metadata (story-titles.js): its
+  // measure's time intelligence in words ("Sales PY" -> "Sales last year"), and every shorter form its rules allow, so
+  // the page can pick the first that fits its box (bindStory: the list, the full title first)
+  function bindStory(kind, B, by) {
     const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure;
-    if (kind === 'line' && B.date && B.measure) return byTitle(label(B.measure), by, label(B.date));
-    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return byTitle(label(y), by, label(cat));
-    if ((kind === 'gauge' || kind === 'card') && y) return label(y);
+    const of = (m, c) => Story().variants(m, c, by, shown);
+    if (kind === 'line' && B.date && B.measure) return of(B.measure, B.date);
+    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return of(y, cat);
+    if ((kind === 'gauge' || kind === 'card') && y) return of(y, null);
     // a table or matrix by its content (the owner's design choice 3, 5 Oct 2026): its first measure by its first text
     // column, "Total Sales by Region"; the other columns are named by their headers
     if (kind === 'table' || kind === 'matrix') {
       const fs = (B.table || []).filter(Boolean), m = fs.find(isValue), c = fs.find(isTextField);
-      return m && c ? byTitle(label(m), by, label(c)) : m ? label(m) : null;
+      return m ? of(m, c || null) : null;
     }
     return null;
   }
+  function bindTitle(kind, B, by) { const v = bindStory(kind, B, by); return v ? v[0].text : null; }
+  // a KPI card's title: its measure's name, its time intelligence in words (a display name stays as given); by: the
+  // report's word (an Arabic report keeps an English name as it is, R2)
+  const kpiLabel = (f, by) => (f ? Story().nameOf(f, shown, AR_LETTERS.test(by || '')) : null);
   const PF_KINDS = { boolean: 'boolean', string: 'text', int64: 'whole', double: 'decimal' };
   // one page filter value as Power BI writes it, by the column's type (or, with none, the value's own), or null
   const pfLiteral = (v, type) => {
@@ -373,10 +392,11 @@
       freeExt, timeExt
     } = c;
     // (the cross-review's G4: the writer's own daxNames and valueDax, one DAX for a visual's value everywhere)
-    const extMeasure = (t, want, expression, dataType) => {
+    // (D1: with the value's format, formatString, for the right-to-left waterfall's measures)
+    const extMeasure = (t, want, expression, dataType, formatString) => {
       const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
       let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
-      timeExt.push({ t, m, expression, dataType }); return m;
+      timeExt.push(Object.assign({ t, m, expression, dataType }, formatString ? { formatString } : {})); return m;
     };
     const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
     // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
@@ -438,7 +458,11 @@
       let c; try { c = daxNames.column(f.t, f.c); } catch (e) { return null; }
       const y = 'CALCULATE ( ' + y0 + ' )', cap = n + extra + 1;
       const head = 'VAR _t = CALCULATETABLE ( FILTER ( VALUES ( ' + c + ' ), NOT ISBLANK ( ' + c + ' ) && NOT ISBLANK ( ' + y + ' ) ), REMOVEFILTERS ( ' + c + ' ) ) VAR _n = COUNTROWS ( _t ) VAR _k = IF ( MIN ( _n, ' + cap + ' ) = ' + cap + ', ' + n + ', _n )';
-      const keep = () => { const keepName = extMeasure(f.t, 'Keep: ' + shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property) + ' by ' + label(f), head + ' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
+      // (0.3.0 S1, B-181: "Keep: Web Orders Total Score by مجموعة الخطة" in the Fields pane) the hidden helper's name in one
+      // script, plain English: the measure by the shown name, else by the model's names, else "Keep: top categories"
+      const yName = shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property);
+      const keepWant = ['Keep: ' + yName + ' by ' + label(f), 'Keep: ' + yName + ' by ' + shown(f.c)].find(latinOnly) || 'Keep: top categories';
+      const keep = () => { const keepName = extMeasure(f.t, keepWant, head +' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
       const filter = { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, keepName),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: keepName } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
@@ -451,13 +475,13 @@
   }
 
   const api = {
-    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource,
+    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
-    labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, pageFilterOf, measures
+    labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, bindStory, kpiLabel, PF_KINDS, pfLiteral, pageFilterOf, measures
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipQuery = api;
 })(typeof self !== 'undefined' ? self : this);

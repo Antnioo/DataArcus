@@ -10,7 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
-import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
 import { writeTree } from './files.mjs';
 
@@ -36,32 +36,35 @@ function formatOfModel(tables) {
   return (f) => (!f ? undefined : f.kind === 'measure' ? map.get(`m:${f.name}`) : map.get(`c:${f.table}[${f.name}]`));
 }
 // what the gate pins and the write compares: each entry's visual, native type and roles (by queryRef)
-const keyOf = (entries) => JSON.stringify(entries.map((e) => ({ visual: e.visual, native: e.native, roles: e.roles })));
+// (0.3.0 J19) and its panels, when its values may not share one axis
+const keyOf = (entries) => JSON.stringify(entries.map((e) => ({ visual: e.visual, native: e.native, roles: e.roles, panels: e.panels || null })));
 
-// model: loadModel's answer for the report's model (its tables: data types and formats)
-export function planNative(reportPath, model) {
+// model: loadModel's answer for the report's model (its tables: data types and formats); axes (0.3.0 J19): the model's
+// measures and the person's answers on shared axes ({ tables, confirmed }, axis-units.js)
+export function planNative(reportPath, model, axes) {
   const loc = locate(reportPath);
-  strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.' });
+  const left = []; strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.', left });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
-  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts });
+  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
   const free = nothingAt(loc.outDir) && nothingAt(loc.outPbip);
   const answer = {
     report: pathOut(loc.dir), nativeReport: pathOut(loc.outDir), original: 'only read: never changed',
-    replacements: replace.map((e) => ({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, guess: e.guess, lost: e.lost, tell: e.tell })),
+    replacements: replace.map((e) => Object.assign({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, guess: e.guess, lost: e.lost, tell: e.tell }, e.axes ? { axes: e.axes } : {})),
     notReplaced: keep.map((e) => ({ line: replacementLine(e), why: e.htmlNeeded ? 'no native visual draws it: an HTML/SVG measure (a later step) or a table of its links; it stays the custom visual in the copy' : 'no native visual takes its fields: it stays the custom visual in the copy' })),
+    ...notCopiedOf(left),
     sayInPlan: 'Show the user every replacement line and what it loses (lost), before their go: nothing is replaced silently. The original report is not changed; the native copy is a new report next to it. A replacement marked a guess was matched by its fields\' kinds only.'
   };
   if (!entries.length) answer.none = 'This report has no custom visual: nothing to replace.';
   if (!free) answer.taken = `"${path.basename(loc.outDir)}" or its .pbip is already there: DataArcus never writes over a file; rename or move it before create_report.`;
-  return { loc, entries: replace, answer, writes: replace.length ? [`the report "${safeName(loc.base + SUFFIX)}.Report" and its "${safeName(loc.base + SUFFIX)}.pbip" next to "${safeName(loc.base)}": a copy with ${replace.length} custom visual(s) replaced by native ones (create_report with customVisualsFrom)`] : [] };
+  return { loc, entries: replace, answer, ask: replace.flatMap((e) => e.ask || []), writes: replace.length ? [`the report "${safeName(loc.base + SUFFIX)}.Report" and its "${safeName(loc.base + SUFFIX)}.pbip" next to "${safeName(loc.base)}": a copy with ${replace.length} custom visual(s) replaced by native ones (create_report with customVisualsFrom)`] : [] };
 }
 
 // plan: the approved plan (its data.customVisuals: the entries the user approved)
-export function writeNative(reportPath, model, plan) {
+export function writeNative(reportPath, model, plan, axes) {
   const approved = ((plan && plan.data) || {}).customVisuals;
   if (!Array.isArray(approved)) throw new Error('Nothing was written: the approved plan holds no custom-visual replacements. Call plan_layout with customVisualsFrom, show the user the replacements and wait for their go.');
-  const P = planNative(reportPath, model), { loc } = P;
+  const P = planNative(reportPath, model, axes), { loc } = P;
   if (keyOf(P.entries) !== keyOf(approved)) throw new Error('Nothing was written: the report\'s custom visuals are not what the approved plan replaces (the report changed since the plan). Make the plan again with plan_layout, show it and wait for the user\'s go.');
   if (!approved.length) throw new Error('Nothing was written: the approved plan replaces no custom visual.');
   if (!nothingAt(loc.outDir) || !nothingAt(loc.outPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(loc.outDir) ? loc.outPbip : loc.outDir)}" is already there. DataArcus never writes over a file: rename or move it, then ask again.`);
@@ -73,8 +76,11 @@ export function writeNative(reportPath, model, plan) {
   approved.forEach((e) => {
     const v = byId.get(e.visual);
     if (!v || !v.file || !v.json) throw new Error('Nothing was written: a visual of the approved plan could not be read again.');
-    const r = Replace.replaceVisual(v.json, e);
+    // (0.3.0 J19) values that may not share one axis: one native chart per group, in new folders beside it
+    const page = inv.pages.find((pg) => pg.visuals.some((x) => x.id === v.id)), taken = page ? page.visuals.map((x) => x.id) : [];
+    const r = e.panels ? Replace.replacePanels(v.json, e, taken) : Replace.replaceVisual(v.json, e);
     out.set(v.file, json(r.json));
+    (r.more || []).forEach((x) => { const f = v.file.replace(/[^/]+\/visual\.json$/, x.name + '/visual.json'); if (files.includes(f) || out.has(f)) throw new Error('Nothing was written: a panel\'s folder is already in the report.'); out.set(f, json(x.json)); });
     lost.push({ line: replacementLine(e), lost: e.lost.concat(r.lost) });
   });
   // the report stops declaring the custom visuals no visual uses any more (no sign-in prompt for them)
@@ -87,6 +93,8 @@ export function writeNative(reportPath, model, plan) {
   // a private custom visual's own package folder stays in the copy only while a visual still uses it
   const tree = files.filter((rel) => { const m = /^CustomVisuals\/([^/]+)\//.exec(rel); return !(m && dropped.includes(m[1])); })
     .map((rel) => ({ path: path.basename(loc.outDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
+  // (0.3.0 J19) the panels' new visual folders
+  out.forEach((data, rel) => { if (!files.includes(rel)) tree.push({ path: path.basename(loc.outDir) + '/' + rel, data }); });
   tree.push({ path: path.basename(loc.outPbip), data: json(pbip) });
   writeTree(loc.project, tree);
   return { written: true, report: pathOut(loc.outDir), pbip: pathOut(loc.outPbip), replaced: lost.length, lost, customVisualsNoLongerDeclared: dropped.map(safeName), original: 'only read: not changed',

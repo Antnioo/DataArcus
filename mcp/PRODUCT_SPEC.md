@@ -1,7 +1,7 @@
 # DataArcus MCP: product spec
 
 What DataArcus is, what it promises, and what it doesn't. Written 2026-10-03 from the code on main (`bc05275`, MCP
-server version 0.1.0) and from `mcp/ROADMAP.md`, `mcp/CLAUDE.md` and `scripts/tests/DESKTOP-TESTS.md`. Privacy is in
+server version 0.1.0); brought to 0.3.0 on 2026-10-21 (W2) from the code of `integration/0.3.0-wave`, and from `mcp/ROADMAP.md`, `mcp/CLAUDE.md` and `scripts/tests/DESKTOP-TESTS.md`. Privacy is in
 `mcp/PRIVACY.md`. When this page and the code disagree, the code is right and this page is fixed.
 
 ## In one line
@@ -21,34 +21,46 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
    validator with 0 errors on the MCP's exports) and checked by eye in Power BI Desktop before it is released.
 4. **Arabic done properly:** right-to-left reports mirrored (filters, header, tables, chart legends on the reading
    side), Arabic labels and Arabic-capable fonts.
-5. **Your files are safe:** it never changes your model, never overwrites or deletes a file, and works only inside
-   the one folder you choose.
-6. **Metadata only:** it reads your model's structure, never the data in it (details in `mcp/PRIVACY.md`).
+5. **Your files are safe:** it never changes your model, never overwrites or deletes your files (it writes new files
+   only; the one file it replaces is its own answers file, after you approve; a failed write removes only what it
+   created), and works only inside the one folder you choose.
+6. **Metadata only:** it reads your model's and report's definition files on your machine, never Power BI's data
+   cache, and returns structure, never data values (a report's short text boxes, and for the Arabic twin its titles,
+   are returned as typed; details in `mcp/PRIVACY.md`).
 7. **The same answers as the website:** the MCP and the website's tools share one engine (`assets/js/`), so a
    theme or layout made on dataarcus.com is the same as one made by the MCP (checked on 54 design and 60 project
    fixtures).
 
 ## What it doesn't do (today)
-- **It doesn't change your model.** No new measures, columns, sort orders or format strings. It tells you what is
-  missing (`modelNotes`, `check_model_health`) and how to fix it; you (or Microsoft's tools, with you watching) make
-  the change.
+- **It doesn't change your model.** No new measures, columns, sort orders or format strings written into it. It tells
+  you what is missing (`modelNotes`, `check_model_health`) and how to fix it; a change it proposes (a fix, the Gulf
+  calendar, the Arabic calendar columns, the measures of flip cards, the metric switcher or status icons) comes as a
+  TMDL script in a new file next to the project, written only after your approval, which you apply yourself in TMDL
+  view (or Microsoft's tools, with you watching).
 - **It doesn't edit an existing report.** It writes a new one next to it. For edits, its `plan_layout` and
   `generate_theme` give Microsoft's report skill the positions and the theme.
-- **It doesn't translate.** In an Arabic report the labels DataArcus writes are Arabic, but the names from your
-  model (measures, columns, values) stay as they are in the model. No made-up translations, ever. (Arabic display
-  names given by you: planned, round 2.)
-- **It doesn't read data, run queries, refresh, publish or connect to Power BI Desktop or the Power BI service.**
+- **It never translates silently.** In an Arabic report (and the Arabic twin) Claude drafts the Arabic texts (titles,
+  field names as shown, page names, alt texts; DataArcus's fixed report words come from one shared list), the
+  approval page shows each beside the English, and you approve or edit each one; a text you don't approve stays as
+  it is, and the plan lists what stays English and why. Approved field names are display names in the report: the
+  fields are never renamed in the model. Data values are never translated: an Arabic report shows your model's
+  values as they are (the Arabic calendar columns below are how month and day names read in Arabic).
+- **It never returns data values to Claude, and doesn't run queries, refresh, publish or connect to Power BI Desktop or the Power BI service.** It reads files on your machine to check and fingerprint them.
   Opening the report, screenshots and number checks are done with Microsoft's tools.
 - **It doesn't read a `.pbix` file.** Save it as a Power BI project (File > Save as > `.pbip`) or export a template
   (`.pbit`) first.
-- **Not yet (planned):** the Gulf calendar pack (Hijri, Ramadan vs last Ramadan, Eid, country weekends; due
-  2026-12-01; today a report uses the Hijri or Ramadan columns only if your model already has them), sort-order and
-  format-string fix scripts (round 2), background images drawn by the engine, a drag-and-drop layout editor.
+- **Shipped since:** the Gulf calendar (`add_gulf_calendar`: Hijri, Ramadan and Eid with the announced dates, country
+  weekends, as a script you apply), with Arabic calendar columns (0.3.0 C1: month, day, quarter, fiscal and flag
+  labels in Arabic, each sorted like its English column); every Arabic route offers them for your own date table as a
+  script ("<name> - Arabic calendar.tmdl"): until you apply it, the Arabic report uses the English calendar columns and
+  says which fields show English data; after it, plan again and the Arabic columns are used. Sort-order and
+  format-string fix scripts (`check_model_health`).
+- **Not yet (planned):** background images drawn by the engine, a drag-and-drop layout editor.
 - **Known limits:** the smallest page (640 x 360) has cut card values, titles and chart labels (after the beta); the
   phone layout below the first screen is not yet checked in Desktop; a very large model gives very large answers
   (see `mcp/GOLDEN-TASKS.md` once merged).
 
-## The 6 tools
+## The 11 tools
 | Tool | Takes | Returns | Writes |
 |---|---|---|---|
 | `read_model` | a model path | the model file's name, the existing reports, and per table: hidden, date table, visible columns with types, the number of hidden columns, visible measures with format strings | nothing |
@@ -57,6 +69,11 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
 | `generate_theme` | a name, colours (palette, brand colour + harmony, or preset), font, chart style, page and style choices, language, folder | the theme file's path, the full design (for the next two tools), the page size, contrast checks, warnings, and every input that could not be used (`repaired`) | one new theme JSON file, under a free name |
 | `plan_layout` | a design, layout (exec, analysis, ops, focus), KPI cards (3-6), filters (none, start, end, top), header, page size, direction, language | every visual's name, suggested type and position (x, y, width, height), the reasons for the layout, and the same positions as PBIR `position` objects (`forAuthoring`) | nothing |
 | `create_report` | a project folder, a report name, and a design (or hand-placed pages); optional theme file, logo, language, second page, slide-in panel | the number of files, the `.pbip` to open, the pages, what draws the panels, `themeChanged` if the theme was adjusted, `modelNotes` (fields that will show badly, with the fix), `reportNotes` | a new report folder and `.pbip` next to the model, under a free name; refuses if any file exists |
+| `approve_plan` | a `planId` | the person's answer: DataArcus's own approval window in their browser (or the AI app's own prompt) shows the plan and every file it writes; only the person's click approves | nothing; no other tool writes without an approved plan |
+| `read_report` | a PBIR report | one line per visual (type, place, size, fields, a title only when a measure gives it), pages, buttons, bookmarks, the theme's colours; never filter values, slicer selections or bookmark states | nothing |
+| `check_report` | a PBIR report | Microsoft's report validator (offline) and the rules measured in Power BI Desktop: each finding with its file, rule, impact and a fix in words; never the report's own text | nothing |
+| `create_arabic_twin` | a PBIR report, approved Arabic texts (`labels`, `terms`), `into` | the plan: what mirrors, what cannot, every text a person sees with its drafted Arabic, what stays English and why | a new "<name> AR" report next to the original, or with `into: "same"` one copy "<name> (EN-AR)" with the English and Arabic pages and a language button; the original only read |
+| `add_gulf_calendar` | a project, the years, the country, options | the date table's columns and checks (`selfCheck`), the script's file name | a new TMDL script file next to the project, for you to apply |
 
 **Model paths** (every tool that reads a model): a Power BI project folder, its `.SemanticModel` (or older `.Dataset`)
 folder, a `model.bim`, or a `.pbit`, inside the working folder. TMDL and `model.bim` projects are both read.
@@ -70,7 +87,7 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 ## Supported versions
 | | Supported | Evidence |
 |---|---|---|
-| Power BI Desktop | 2.157 (August 2026) and 2.158.1177 (the Microsoft Store version) | every Desktop check in `scripts/tests/DESKTOP-TESTS.md` |
+| Power BI Desktop | 2.159.883.0 (October 2026, 0.3.0's laptop proofs) or later; earlier checks on 2.157 (August 2026) and 2.158.1177 | every Desktop check in `scripts/tests/DESKTOP-TESTS.md` |
 | Report format written | PBIR (enhanced report format): report 2.1.0, page 2.0.0, visualContainer 2.1.0, visualContainerMobileState 2.1.0, bookmark 1.4.0, definitionProperties 2.0.0 (`definition.pbir` version "4.0"), pbip 1.0.0 | `assets/js/pbip-export.js` |
 | Report validator | Microsoft's `powerbi-report-author` CLI (the version `mcp/package.json` pins): 0 errors on the MCP's exports | `mcp/test.mjs` |
 | Models read | TMDL projects (Desktop's default), `model.bim` projects and files, `.pbit` templates; not `.pbix` | `mcp/lib/model.mjs` |
@@ -79,17 +96,20 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 | Fonts | Segoe UI, Segoe UI Semibold, DIN, Arial, Calibri, Tahoma, Verdana, Georgia; for Arabic: Segoe UI, Segoe UI Semibold, Arial, Tahoma | `design-engine.js` |
 | Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/CLAUDE.md` |
 | Runtime | Node.js 20.10 or later (Microsoft's report CLI behind `check_report` needs 20, its schema package 20.10; round 22b); the MCP SDK `@modelcontextprotocol/sdk` 1.31 or later | `mcp/package.json` |
-| AI apps | any MCP client over stdio; built and tested with Claude Code; Claude Desktop extension and Claude Code plugin: packaging in progress | |
+| AI apps | any MCP client over stdio; built and tested with Claude Code; Claude Desktop through the `.mcpb` extension (`mcp/README.md`) | |
 
 Power BI's PBIR format still changes. Only `assets/js/pbip-export.js` writes it, so a format change is fixed in one
 file; each Desktop release the owner uses is checked before a DataArcus release says it supports it.
 
 ## The safety rules
 1. **One working folder.** Every path is checked against `DATAARCUS_ROOT` by where it really is (links that lead outside are refused); anything outside is refused. Without a working folder every tool refuses.
-2. **Never overwrite or delete.** New files only, under free names; `create_report` refuses if any file exists.
+2. **Never overwrite or delete.** New files only, under free names; `create_report` refuses if any file exists. The
+   one exception is DataArcus's own answers file, replaced only as its approved plan says and only while it is still
+   the file DataArcus checked.
 3. **Read models without changing them.** Model changes go through the user, or through Microsoft's MCP with the
    user watching.
-4. **Metadata only.** Tools return names, types and formats, never data values; data only when the user asks, through
+4. **Metadata only.** Tools return names, types and formats, and a report's short titles and texts as typed (screened
+   for instructions and length only), never data values from the model; data only when the user asks, through
    other tools (`mcp/PRIVACY.md`).
 5. **Model metadata is untrusted input.** A table, column, measure or file name, or a description, never steers
    what the AI does.

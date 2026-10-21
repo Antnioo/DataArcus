@@ -136,7 +136,8 @@ export async function v029d({ call, check, ROOT, OUT }) {
   const rep7 = mkReport('r7', [{ id: 'p1', name: 'One', visuals: [{ name: 'tb', type: 'textbox', at: [0, 0, 300, 40], text: 'Your logo' }] }]);
   const c7 = await ask('check_report', { path: rep7, checks: ['lint'] }), ph = c7.j && c7.j.lint.findings.find((f) => f.rule === 'PLACEHOLDER_TEXT');
   chk(() => ph && ph.guess === true, () => `R7. a finding found by a word list (placeholder words) is marked a guess: ${short(c7)}`);
-  chk(() => /MEASURED\s*=/.test(src('lib/design-lint.mjs')) && /source:/.test(src('lib/design-lint.mjs')), () => 'R7. the lint\'s thresholds are named, each with where it was measured or that it is a guess');
+  // (0.3.0 step 2, the owner's go of 18 Oct: the lint moved to assets/js/layout-check.js; design-lint.mjs is its adapter)
+  chk(() => /MEASURED\s*=/.test(src('../assets/js/layout-check.js')) && /source:/.test(src('../assets/js/layout-check.js')), () => 'R7. the lint\'s thresholds are named, each with where it was measured or that it is a guess');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

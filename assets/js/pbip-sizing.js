@@ -101,6 +101,27 @@
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    // (0.3.0 F1, F2) a pill slicer's height (its header, the container title written at the tiles' size, and one row of
+    // tiles): MEASURED on Desktop 2.159 (dataarcus-engine, business/beta/ship030/RECHECK-F1.md, 20 Oct 2026): at 15pt a
+    // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
+    // low for). 140 at 15pt, scaled with the text size, never less: 75 at 8pt, 94 at 10pt, 140 at 15pt. PILL_PAD: the
+    // tiles' padding, written: 0 (F4, the owner: no margins in the pills)
+    // (0.3.0 F3) and a floor: on 2.159 a pill slicer 76 high cuts its 8pt text, 88 draws 9pt whole (PILLS-F2.md, 20 Oct
+    // 2026), with the tiles' padding 4. (Both superseded by F6 below: measured again with every margin 0.)
+    // (0.3.0 F6) the heights MEASURED with every margin 0 (FINAL-ship030.md, Desktop 2.159, 20 Oct 2026, the grid at 100%):
+    // the text whole from 56 at 8pt and 9pt, from 72 at 10pt and 15pt (the smallest the grid offered; never a guess
+    // below; above 15pt 72 scaled up with the text). pillRoom: the space below the header (the container's
+    // spaceBelowTitle), for the "clear selections" eraser that sits in the header row, its square measured 21 px high on
+    // the same page, and 4 px at least so no descender (Arabic «ع») touches a pill: max(4, 21 - the header's line ceil(pt
+    // x 4/3)). pillH = the measured minimum + pillRoom: 66 at 8pt, 65 at 9pt, 79 at 10pt, 76 at 15pt
+    const PILL_ERASER = 21, pillRoom = (t) => Math.max(4, PILL_ERASER - Math.ceil(t * 4 / 3));
+    const PILL_PAD = 0, pillH = (t) => (t <= 9 ? 56 : t <= 15 ? 72 : Math.ceil(72 * t / 15)) + pillRoom(t);
+    // (0.3.0 C1 add-on, the laptop's PILLS-F6 on e1f9e31: in a 274 px rail slicer three values at 15pt make 86 px pills, and
+    // "Medium" was drawn "Mediu…", EN and AR; the 179 px pills of the strip drew it whole) the width: each pill is the
+    // slicer's width less the 6 px gaps, shared; its widest known value must fit at its text size with the room the
+    // rounded ends and the button's own inner margin take (2 lines of the text, pt x 4/3 each: 40 at 15pt, cut at 86 - 40)
+    const PILL_GAP = 6, pillTextRoom = (t) => 2 * Math.ceil(t * 4 / 3), pillW = (n, w) => (w - PILL_GAP * (n - 1)) / n;
+    const pillFits = (texts, n, w, t) => !!(texts && texts.length) && n >= 1 && Math.max(...texts.map((x) => textWidth(String(x), t, false, font))) + pillTextRoom(t) <= pillW(n, w);
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:
@@ -173,7 +194,7 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
@@ -210,8 +231,12 @@
   const tableTotal = (t, pad, font) => rowPitch(t, pad) + along(TABLE_ROWS.total[face(font)].map(([x, y]) => [x, y - pitch1(x)]), t);
   // the height that shows a table's n rows and its total whole
   const tableHeight = (n, t, title, pad, ht, font) => tableHead(ht || t, title, pad, font) + n * rowPitch(t, pad) + tableTotal(t, pad, font);
+  // a page tab on the phone layout (the 323-wide canvas): its name on one line at the phone's 10pt, bold (the current
+  // page is bold there), + 10; the one copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (0.3.0 D3)
+  const PHONE_TAB = { size: 10, gap: 8, w: 323 };
+  const phoneTabWidth = (name, font) => Math.min(PHONE_TAB.w, Math.ceil(textWidth(String(name), PHONE_TAB.size, true, font) + 10));
   const api = {
-    TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    PHONE_TAB, phoneTabWidth, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);

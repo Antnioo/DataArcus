@@ -9,7 +9,11 @@
   // the writer's modules (0.2.9, audit 3's A3-12): in Node required here, in the browser loaded before this file
   const Query = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Sizing = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const Engine = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
+  // (0.3, J7: Power BI's accessibility basics on every report written: report-a11y.js, loaded before this file on the website)
+  const A11y = (typeof module !== 'undefined' && module.exports ? require('./report-a11y.js') : root.DAA11y);
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
+  // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
+  const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
@@ -181,7 +185,8 @@
    * @property {boolean} [sample]  the sample model and data (without model)
    * @property {{byPath: string, byConnection: string, names: Object<string, string[]>, taken: string[]}} [model]  the user's
    *   model: byPath (its .SemanticModel folder) or byConnection; names: each table's column and measure names (the
-   *   report's own measures never take one); taken: report and .pbip names already in the folder
+   *   report's own measures never take one); taken: report and .pbip names already in the folder; columns (D1): each
+   *   table's columns { name: { type, sortBy } }, for a right-to-left waterfall's order
    * @property {Bind} [bind]  the fields (the sample's own with sample)
    * @property {Object<string, string>} [texts]  the report's words (design-engine REPORT_TEXTS): reset, resetTip, pages,
    *   close, filterPanel, openFilters, closeFilters, filtersOpen, filtersClosed, header, kpis, filters, slicer, logo,
@@ -192,13 +197,19 @@
    * @property {Object<string, string>} [subtitles]  a slot's role or title -> its subtitle
    * @property {string} [chartColors]  'gradient': bars fade by value
    * @property {string} [chartAxes]  'mirrored': right-to-left charts are mirrored
+   * @property {string} [waterfallRtl]  D7: a mirrored right-to-left report's waterfall: 'native' (visual-gallery.js WATERFALL_RTL_DEFAULT) Power BI's waterfallChart left to right, as in English; 'mirror' the stacked column chart read from the right (D1)
    * @property {boolean} [quietGrid]  quiet gridlines
    * @property {Array<{t: string, c: string, type: string, values: Array<boolean|string|number>, literals: string[]}>} [pageFilters]
    *   "is one of" filters on every report page: typed values (the writer writes Power BI's literals; type is the column's
    *   data type: boolean, string, int64 or double), or literals already written as Power BI writes them (checked)
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
-   * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
+   * @property {boolean} [smoothLines]  false: straight line charts without markers; smooth (monotone) with a dot on each point by default (L1)
+   * @property {string} [slicerStyle]  'pills': a slicer of 2-6 known values is Power BI's button slicer; 'dropdown' (default) (0.3.0 L2)
+   * @property {string} [grid]  'dotted' or 'none': the charts' value-axis gridlines; 'solid' (default) as before (0.3.0 L2)
+   * @property {boolean} [phoneLayout]  false: no phone layout (no mobile.json); every page has one by default (0.3.0)
+   * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
+   *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
@@ -219,10 +230,13 @@
    * @property {Array} noPageButtons  pages without page buttons (no room)
    * @property {Array} tableColumns  tables that hold fewer fields than given
    * @property {Array} rowLabels  the Arabic tables' row-label measures
+   * @property {Array} [waterfallRtl]  D1: each waterfall of a mirrored right-to-left report: { page, title, written ('columnChart': drawn from the report's measures, read from the right; 'waterfallChart': kept left to right, or native: true, D7's "native"), what, why?, measures? }
    * @property {Array} rowLabelSkipped
    * @property {Array} extRenamed  report measures renamed because the model has the name
    * @property {Object} chartColors
    * @property {Object} chartAxes
+   * @property {?Object} slicerStyle  with slicerStyle 'pills': { asked, slicers: [{ page, field, written, why }] } (0.3.0 L2)
+   * @property {?Object} grid  with grid 'dotted' or 'none': { asked, charts } (0.3.0 L2)
    * @property {Array} tabRows  pages whose tabs take two or three rows
    * @property {Array} ringsSmall  ring pictures drawn without their number
    * @property {Array} shortDays  column charts that show Day Short
@@ -237,7 +251,7 @@
    *   page by page (A6-12): its fields as Table[Field] or Sum(Table[Field]), the helpers left out
    * @property {Array<{page: string, field: string, top: number}>} chartTops  category charts cut to their top N (rc1)
    */
-  const KIND_NAMES = Object.keys(TYPES);
+  const KIND_NAMES = Object.keys(TYPES).concat(Gallery ? Gallery.KIND_NAMES : []);
   const PBI_LITERAL = /^(true|false|null|'(?:[^']|'')*'|-?\d+L|-?\d+(\.\d+)?D)$/;
   // build's input checked against the contract above; every problem named at once (a TypeError)
   function checkBuild(o) {
@@ -253,6 +267,7 @@
     opt('logo', (x) => isObj(x) && x.bytes instanceof Uint8Array && /^(png|jpe?g)$/i.test(String(x.ext)), 'null or { bytes, ext: png or jpg }');
     opt('model', (x) => isObj(x) && (typeof x.byPath === 'string' || typeof x.byConnection === 'string'), '{ byPath } or { byConnection }');
     opt('bind', isObj, 'an object of fields');
+    opt('phoneLayout', (x) => typeof x === 'boolean', 'true or false');
     const box = (x) => isObj(x) && num(x.x) && num(x.y) && num(x.w) && num(x.h);
     const pages = o.pages && o.pages.length ? o.pages : [{ page: o.page, slots: o.slots, png: o.png }], where = o.pages && o.pages.length ? (i) => 'pages[' + i + ']' : () => 'the page';
     if (o.pages != null && !Array.isArray(o.pages)) bad.push('pages must be a list');
@@ -318,6 +333,11 @@
   /** @param {BuildInput} o @returns {BuildResult} */
   function build(o) {
     checkBuild(o);
+    // (0.3, J7) the report theme's data colours at 3:1 on the card before anything reads them (design-engine toContrast;
+    // a colour already at 3:1 is kept exactly): every chart, fade and second colour below is chosen from these
+    const themeCard = ((((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [])[0] || {}).color || {}).solid || {}).color;
+    const readable = A11y.readable(o.theme, ((o.ui || {}).card) || themeCard);
+    if (readable.changed.length) o = Object.assign({}, o, { theme: readable.theme });
     const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
     const W = o.texts || {};
     // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
@@ -350,6 +370,11 @@
     // pages: the main page first; each has its own layout and background image
     const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
       .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
+    // (0.3, J8) a gallery slot is written as its own visual only with o.gallery and where its fields fit (visual-gallery.js);
+    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why }); (0.3.0 D2) a combo in two units is
+    // two panels, two line charts in its box (to: 'two panels')
+    const galleryNotes = [];
+    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = [].concat(...pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery, rtl); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slots || [r.slot]; })); });
     const files = [];
     // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
     const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
@@ -476,7 +501,7 @@
     // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
     if (noData.length || rowLabels.length || timeExt.length) {
       const ents = extFile ? extFile.entities : [];
-      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }); });
+      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push(Object.assign({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }, c.formatString ? { formatString: String(c.formatString) } : {})); });
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
@@ -487,7 +512,14 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
+    const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
+    const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
+    // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
+    if (o.slicerStyle === 'pills') out.slicerStyle = { asked: 'pills', slicers: n.slicerStyles };
+    if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
+    return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
 
 

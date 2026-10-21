@@ -21,10 +21,12 @@ export function withPlans(call) {
         // (B-01) and font, rtl
         'font', 'rtl']
         .filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
-      let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}));
+      // (F1, STRICT: a seasonal page's answers, gulfDates, are plan_layout's input only: given to the plan, not the write)
+      const { gulfDates, ...writeArgs } = args;
+      let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}, gulfDates ? { gulfDates } : {}));
       if (!(pl.j && pl.j.plan && pl.j.plan.planId)) pl = await call('plan_layout', { path: args.path });
       const id = pl.j && pl.j.plan && pl.j.plan.planId ? await approve(pl.j.plan.planId) : null;
-      return call(name, Object.assign({}, args, id ? { planId: id } : {}));
+      return call(name, Object.assign({}, writeArgs, id ? { planId: id } : {}));
     }
     // the others: their own proposal first (it writes nothing), then the same call with the approved plan
     const first = await call(name, args);
