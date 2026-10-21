@@ -77,7 +77,8 @@ try {
       () => `AC-1d. the names come from the date (SWITCH on MONTH and WEEKDAY of Calendar[Date]): ${block(sc, 'Month Name (Arabic)').slice(0, 200)}`);
     chk(() => /"الربع "/.test(block(sc, 'Quarter (Arabic)')) && /UNICHAR \( 8294 \)/.test(block(sc, 'Year Quarter (Arabic)')) && /UNICHAR \( 8297 \)/.test(block(sc, 'Year Quarter (Arabic)')),
       () => `AC-1e. «الربع 1»; the year of «2025 الربع 1» isolated (U+2066 ... U+2069): ${block(sc, 'Year Quarter (Arabic)').slice(0, 260)}`);
-    chk(() => /IF \( 'Calendar'\[Is Weekend\], "عطلة نهاية الأسبوع", "يوم عمل" \)/.test(block(sc, 'Is Weekend (Arabic)')) && /IF \( 'Calendar'\[Is Ramadan\], "رمضان", "خارج رمضان" \)/.test(block(sc, 'Is Ramadan (Arabic)')),
+    // (F7, changed on purpose: the E1 Arabic review's F-4: a weekday holiday is not a weekend, nor a working day)
+    chk(() => /IF \( 'Calendar'\[Is Weekend\], "عطلة نهاية الأسبوع", "خارج عطلة نهاية الأسبوع" \)/.test(block(sc, 'Is Weekend (Arabic)')) && /IF \( 'Calendar'\[Is Ramadan\], "رمضان", "خارج رمضان" \)/.test(block(sc, 'Is Ramadan (Arabic)')),
       () => `AC-1f. the flags' labels: ${block(sc, 'Is Weekend (Arabic)').slice(0, 200)} | ${block(sc, 'Is Ramadan (Arabic)').slice(0, 200)}`);
     chk(() => /'Calendar'\[Fiscal Month Number\]/.test(block(sc, 'Fiscal Quarter (Arabic)')) && /"السنة المالية "/.test(block(sc, 'Fiscal Year (Arabic)')) && !/[A-Za-z]{2,}"\s*[,)]/.test(block(sc, 'Fiscal Year (Arabic)').replace(/"FY"|"fy"/g, '')),
       () => `AC-1g. the fiscal year and quarter in Arabic (the quarter from the fiscal month number): ${block(sc, 'Fiscal Year (Arabic)').slice(0, 260)}`);
@@ -86,6 +87,13 @@ try {
     chk(() => (CA.englishData || []).some((x) => /Is Weekend|Month/.test(x)) && /English data/.test(CA.englishDataWhy || '') && /apply the script/i.test(CA.howToSwitch || '') && /plan/i.test(CA.howToSwitch || ''),
       () => `AC-3a. the plan says which calendar fields show English data until the script is applied, and how to switch: ${JSON.stringify({ e: CA.englishData, h: CA.howToSwitch }).slice(0, 500)}`);
   }
+  // (0.3.0 F7, the E1 Arabic review's F-4) each flag's two labels say exactly the flag's true and false: Is Working Day's
+  // false is a day off (a weekend or a holiday), never "weekend"; Is Weekend's false is "not the weekend", never "a
+  // working day" (a holiday on a weekday is neither)
+  { const F = (AC && AC.FLAGS) || {};
+    chk(() => JSON.stringify(F['is working day']) === JSON.stringify(['يوم عمل', 'يوم عطلة']) && JSON.stringify(F['is weekend']) === JSON.stringify(['عطلة نهاية الأسبوع', 'خارج عطلة نهاية الأسبوع'])
+        && JSON.stringify(F['is ramadan']) === JSON.stringify(['رمضان', 'خارج رمضان']) && F['is eid al-fitr'][0] === 'عيد الفطر' && F['is eid al-adha'][0] === 'عيد الأضحى',
+      () => `AC-1k. each flag's labels mean exactly its true and false: ${JSON.stringify(F)}`); }
   // the generator writes the same twins (one builder)
   {
     const b = Cal ? Cal.build(Object.assign({}, Cal.DEFAULTS)) : null, want = ['Quarter (Arabic)', 'Year Quarter (Arabic)', 'Month Short (Arabic)', 'Day Short (Arabic)', 'Is Weekend (Arabic)', 'Is Working Day (Arabic)', 'Fiscal Year (Arabic)', 'Fiscal Quarter (Arabic)', 'Is Ramadan (Arabic)', 'Is Eid al-Fitr (Arabic)', 'Is Eid al-Adha (Arabic)'];
