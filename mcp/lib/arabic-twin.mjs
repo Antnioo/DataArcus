@@ -42,7 +42,7 @@ const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 const pathOut = (f) => relRoot(f).split('/').map((seg) => (seg === '..' || seg === '.' ? seg : safeName(seg))).join('/');
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
-const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS, ArabicCal = require('../../assets/js/arabic-calendar.js');
+const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS, hasControl = require('../../assets/js/pbip-export.js').hasControl, ArabicCal = require('../../assets/js/arabic-calendar.js');
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 
 // ---- the original: the reading block's locate (a .pbip, a .Report folder, a folder holding exactly one), named ----
@@ -296,13 +296,20 @@ export function monthOffer(model, loc, outBase) {
   let pick = shapes; if (pick.length > 1 && pick.some((x) => x.marked)) pick = pick.filter((x) => x.marked); if (pick.length > 1 && pick.some((x) => x.calendar)) pick = pick.filter((x) => x.calendar);
   const cands = pick.map((x) => Object.assign({}, (m.tables || []).find((t) => t.name === x.name), { shapeDates: x.dates }));
   if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the columns are a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; built with CALENDAR or CALENDARAUTO, or marked as the date table)' };
-  const t = cands[0], cols = t.columns || [];
+  // (0.3.0 F7, the red team's F-2; AUD-032: a name with a control character, a tab or a line break, is never written raw
+  // into a script) the date table, its date column or a column with one is left out and named, with why; a bidi or
+  // zero-width name stays (inside its quotes, as every script writes it)
+  const CC = 'its name holds a control character (a tab or a line break): no script names it; rename it in Power BI Desktop, then ask again';
+  if (hasControl(cands[0].name)) return { offered: false, why: `the date table "${visible(cands[0].name)}": ${CC}`, leftOut: [{ table: visible(cands[0].name), why: CC }] };
+  const t = cands[0], ccCols = (t.columns || []).filter((c) => hasControl(c.name)), cols = (t.columns || []).filter((c) => !hasControl(c.name));
+  const ccLeft = ccCols.map((c) => ({ column: visible(c.name), why: CC }));
   const has = (re) => cols.find((c) => re.test(String(c.name)));
   const arabicMonthThere = !!(has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/));
   const raw = ((m.tmsl && m.tmsl.model && m.tmsl.model.tables) || []).find((x) => x.name === t.name) || {};
-  const date = (raw.columns || []).find((c) => c.name && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
+  const date = (raw.columns || []).find((c) => c.name && !hasControl(c.name) && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
   // the month number to sort by: an integer column named like one (an untyped DAX column of that name counts: its DAX makes it a number)
   const typedRaw = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return untyped(x ? x.dataType : c.dataType); };
+  if (!date) return { offered: false, why: `the date table "${visible(t.name)}" has no date column a script can name`, ...(ccLeft.length ? { leftOut: ccLeft } : {}) };
   // (rc.5: an untyped column of a calculated calendar is a number only when its DAX there is MONTH ( ... ): a plain
   // "Month" there was FORMAT ( [Date], "MMM" ), a text, and sorting by it puts the months in alphabetical order)
   const calcExpr = (raw.partitions || []).filter((p) => p && p.source && p.source.type === 'calculated').map((p) => (Array.isArray(p.source.expression) ? p.source.expression.join('\n') : String(p.source.expression || ''))).join('\n');
@@ -314,7 +321,7 @@ export function monthOffer(model, loc, outBase) {
   const num = cols.find(isMonthNo);
   const calculated = (raw.partitions || []).some((p) => p.source && p.source.type === 'calculated');
   const ref = (c) => daxCol(t.name, c), dref = ref(date.name), col = (re) => cols.find((c) => re.test(String(c.name).trim()));
-  const sortOf = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return x && x.sortByColumn ? String(x.sortByColumn) : null; };
+  const sortOf = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return x && x.sortByColumn && !hasControl(x.sortByColumn) ? String(x.sortByColumn) : null; };
   const fyc = col(/^fiscal year$/i), fmc = col(/^fiscal month number$/i), fqc = col(/^fiscal quarter$/i), hmc = col(/^hijri month number$/i);
   const strip = (c, words) => words.reduce((e, w) => `SUBSTITUTE ( ${e}, "${w}", "" )`, ref(c.name));
   const list = cols.map((c) => ({ name: String(c.name), type: typedRaw(c) || '', sortBy: sortOf(c) }));
@@ -328,6 +335,7 @@ export function monthOffer(model, loc, outBase) {
     sorts: { month: num ? num.name : null, day: null, hijri: hmc ? hmc.name : null } });
   // the month column's sort as before: its English column's own, else the month number found, else a hidden one
   built.columns.filter((c) => c.kind === 'month').forEach((c) => { const en = list.find((x) => x.name === c.of); if (!(en && en.sortBy) && num) { c.sortBy = num.name; delete c.sortNew; } else if (!(en && en.sortBy) && !num) { c.sortBy = MONTH_SORT; c.sortNew = { name: MONTH_SORT, dax: `MONTH ( ${dref} )` }; } });
+  built.skipped = ccLeft.map((x) => ({ of: x.column, why: x.why })).concat(built.skipped);
   if (!built.columns.length) return { offered: false, why: `the date table "${visible(t.name)}" has its Arabic calendar columns already${built.skipped.length ? ` (left out: ${built.skipped.map((x) => `${visible(x.of)}: ${x.why}`).join('; ')})` : ''}` };
   const seed = 'arabic-calendar\0' + t.name, tag = (n) => tagOf(seed, n), lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''], made = new Set();
   built.columns.forEach((c) => { if (c.sortNew && !made.has(c.sortNew.name)) { made.add(c.sortNew.name); lines.push(`\t\tcolumn ${tmdlName(c.sortNew.name)} = ${c.sortNew.dax}`, '\t\t\tdataType: int64', '\t\t\tisHidden', `\t\t\tlineageTag: ${tag(c.sortNew.name)}`, '\t\t\tsummarizeBy: none', ''); } });

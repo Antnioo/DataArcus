@@ -150,10 +150,14 @@ const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables,
 // write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it; afterGo says who writes it;
 // pw: the plan policy of the call's writes (check_model_health's planWrites; create_report writes it inside its withPlan)
 function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '', pw = null) {
-  const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
-  const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
+  const raw = scriptTables(m).raw, s0 = Fix.formatReview(raw);
+  const all = s0.items.concat(s0.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
   if (!mine.length) return null;
-  const cap = maxItems || 50, list = mine.slice(0, cap).map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
+  // (0.3.0 F7, the red team's F-3: the plan listed the report's 3 fields and the script rewrote 11 objects) with keys, the
+  // script changes only the objects the plan lists (the owner's rule: nothing written without being shown first);
+  // check_model_health (no keys) keeps the whole model's script, which its plan lists in full
+  const cap = maxItems || 50, shownMine = mine.slice(0, cap), s = keys ? Fix.formatReview(raw, { only: new Set(shownMine.map((i) => i.object)) }) : s0;
+  const list = shownMine.map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(p));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(p)).replace(/\.[^.]+$/, '');
   let file = {};
@@ -1287,9 +1291,10 @@ function reportRun(a, mode) {
     { phone: phoneAnswer(r.files.some((f) => /\/mobile\.json$/.test(f.path))) },
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, looks, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
-    galleryList ? { gallery: { slots: galleryList } } : {}, SW ? { metricSwitcher: switchSaid(SW) } : {}, CO && CO.offered ? { calendarArabic: calendarSaid(CO, shown, { scriptFile: CO.scriptAfterGo, howToApply: CO.howToApply }) } : {});
+    galleryList ? { gallery: { slots: galleryList } } : {}, SW ? { metricSwitcher: switchSaid(SW) } : {}, CO && CO.offered ? { calendarArabic: calendarSaid(CO, shown, { scriptFile: CO.scriptAfterGo, howToApply: CO.howToApply }) } : CO && CO.leftOut ? { calendarArabic: { offered: false, why: CO.why, leftOut: CO.leftOut } } : {});
   };
-  return { files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
+  // (0.3.0 F7) the fields the report binds, the keys of its formats script (the plan lists exactly these)
+  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
     icons: icons ? Object.assign(iconsSaid(icons), { pending: icons.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: icons.scriptFile }) : null };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
@@ -1327,7 +1332,7 @@ async function exactArtifact(ab, pin, lang) {
   const pending = [].concat(built.flip ? built.flip.pending : [], built.icons ? built.icons.pending : []);
   const check = await checkArtifact(built.files, tables, lang === 'ar' ? 'ar' : 'en', pending.length ? { pending } : undefined);
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl, metricSwitcher: built.metricSwitcher, flip: built.flip, icons: built.icons };
+  return { formatKeys: built.formatKeys, files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl, metricSwitcher: built.metricSwitcher, flip: built.flip, icons: built.icons };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
@@ -1766,10 +1771,15 @@ server.registerTool('plan_layout', {
   // (L3) the switch as the exact build writes it: its measures, labels, charts, script and the model change
   const switchPlan = exact && exact.metricSwitcher ? switchSaid(exact.metricSwitcher) : null;
   const flipPlan = exact && exact.flip ? exact.flip : null;
+  // (0.3.0 F7, the red team's F-3) the formats the plan lists are those of the fields the report binds (the exact
+  // artifact's), the keys create_report's script is built from: the plan shows every object the script changes
+  if (exact && Array.isArray(exact.formatKeys) && m0 && a.path) { const f2 = formatsAnswer(m0, a.path, new Set(exact.formatKeys), undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
+    if (f2) formats = { formats: Object.assign({ sayFirst: formats.formats ? formats.formats.sayFirst.replace(/\d+ of the plan's fields/, `${f2.fields.length} of the plan's fields`).replace(/has no right format|have no right format/, f2.fields.length === 1 ? 'has no right format' : 'have no right format') : `Tell the user first, before the layout: ${f2.fields.length} of the plan's fields ${f2.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, f2) };
+    else formats = {}; }
   // (0.3.0 C1) the Arabic calendar script the write adds (the exact artifact holds it, by its name there)
   const calFile = exact && (exact.files || []).map((f) => f.path).find((f) => /Arabic calendar\.tmdl$/.test(f));
-  const calPlan = calFile && m0 ? calendarOffer({ m: m0 }, null, calFile.replace(/ - Arabic calendar\.tmdl$/, '')) : null;
-  const calendarArabic = calPlan && calPlan.offered ? { calendarArabic: calendarSaid(calPlan, designLint.designLint && Array.isArray(designLint.designLint.fields) ? designLint.designLint.fields : null, { scriptAfterGo: calFile,
+  const calPlan = calFile && m0 ? calendarOffer({ m: m0 }, null, calFile.replace(/ - Arabic calendar\.tmdl$/, '')) : a.lang === 'ar' && m0 && exact ? calendarOffer({ m: m0 }, null, '-') : null;
+  const calendarArabic = calPlan && !calPlan.offered && calPlan.leftOut ? { calendarArabic: { offered: false, why: calPlan.why, leftOut: calPlan.leftOut } } : calPlan && calPlan.offered && calFile ? { calendarArabic: calendarSaid(calPlan, designLint.designLint && Array.isArray(designLint.designLint.fields) ? designLint.designLint.fields : null, { scriptAfterGo: calFile,
     sayInPlan: `Say in the plan: the model's calendar shows English values (${(calPlan.englishData || []).join(', ') || 'its names and flags'}) on Arabic pages until the user applies the TMDL script "${calFile}" (written next to the project after the go, never applied by DataArcus), which adds ${calPlan.columns.length} Arabic columns to ${JSON.stringify(calPlan.table)}; then plan the report again and it binds them.` }) } : {};
   const iconsPlan = exact && exact.icons ? exact.icons : null;
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes)).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, never applied by DataArcus: the user applies it in TMDL view)` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''} (create_report)`];
