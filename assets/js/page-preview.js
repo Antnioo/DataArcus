@@ -304,7 +304,11 @@
     }).join('');
     const tag = `<text class="pv" x="${n(rtl ? 6 * u : W - 6 * u)}" y="${n(H - 6 * u)}" ${font} font-size="${n(fs)}" fill="${GREY}" text-anchor="${rtl ? 'start' : 'end'}" font-style="italic">${esc(T.preview)}</text>`;
     const label = `${T.page} ${clean(page.name)}: ${vs.filter((v) => kindOf(v) !== 'panel').length} ${T.visuals}${flags.length ? `, ${flags.length} ${T.flags}` : ''}`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(W)} ${n(H)}" width="${width}" height="${height}" role="img" aria-label="${esc(label)}">`
+    // (0.3.0 T2, the laptop's final run: on the MCP's Arabic approval page, dir="rtl", every title ran out of its box) the
+    // picture is laid out left to right whatever page it sits in: its anchors are computed for that (an inherited rtl
+    // flips an SVG text's start and end). Arabic still shapes right to left inside each text, and the writer's titles
+    // carry their own direction marks and isolates (J18)
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(W)} ${n(H)}" width="${width}" height="${height}" direction="ltr" role="img" aria-label="${esc(label)}">`
       + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>${body}${marks}${said}${tag}</svg>`;
   }
 

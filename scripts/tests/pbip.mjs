@@ -650,6 +650,26 @@ export default async function ({ browser, url }) {
       check(want2.pages >= 3 && want2.visuals >= 20, `lab check ${lang}: the check read the download's pages (${want2.pages} pages, ${want2.visuals} visuals)`);
       check(said && said.sum === want2.summary && said.items === Math.min(12, want2.problems.length), `lab check ${lang}: the page says "${said && said.sum}", the download's check "${want2.summary}"`);
       check(lang === 'ar' ? /سيُظهرها Power BI Desktop/.test(said && said.sum || '') : /Power BI Desktop would show/.test(said && said.sum || ''), `lab check ${lang}: the answer is in the page's language: ${said && said.sum}`);
+      // 0.3.0 T2 (the laptop's final run of 0.3.0, item 2: «Ara…», «Tota…», the Reset text out of its button, the tag cut):
+      // on a right-to-left page the preview inherited direction rtl, which flips an SVG text's anchor. The pictures drawn
+      // inside a page of the language's own direction (the MCP's approval page is dir="rtl" in Arabic): every text's
+      // measured box inside its visual's box, the tag inside the picture
+      {
+        const pg2 = await v.ctx.newPage();
+        await pg2.setContent(`<!doctype html><html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"></head><body>${want.join('')}</body></html>`);
+        const out = await pg2.evaluate(() => {
+          const bad = [], in1 = (b, B) => b.x >= B.x - 4 && b.x + b.width <= B.x + B.width + 4;   // (4 px: a text box's text sits flush with its edge, and a glyph's side bearing measures 2 px past it on some machines' fonts (CI, 21 Oct: "Your logo" 1886 vs 1884); the flip this guards against is off by 100+ px)
+          document.querySelectorAll('svg').forEach((svg, si) => {
+            const vb = svg.viewBox.baseVal, P = { x: vb.x, width: vb.width };
+            svg.querySelectorAll('g.v').forEach((g) => { const r = g.querySelector('rect.box'); if (!r) return; const B = r.getBBox();
+              g.querySelectorAll('text').forEach((t) => { const b = t.getBBox(); if (t.textContent.trim() && !in1(b, B)) bad.push(`${si}:${g.dataset.kind}:"${t.textContent.slice(0, 16)}" ${Math.round(b.x)}+${Math.round(b.width)} outside ${Math.round(B.x)}+${Math.round(B.width)}`); }); });
+            svg.querySelectorAll('text.pv').forEach((t) => { const b = t.getBBox(); if (!in1(b, P)) bad.push(`${si}:tag ${Math.round(b.x)}+${Math.round(b.width)} outside the picture`); });
+          });
+          return { bad, texts: document.querySelectorAll('svg g.v text').length };
+        });
+        check(out.texts >= 6 && !out.bad.length, `lab preview ${lang}, drawn in a ${lang === 'ar' ? 'right-to-left' : 'left-to-right'} page: every text inside its visual's box (${out.texts} texts): ${out.bad.slice(0, 6).join('; ')}`);
+        await pg2.close();
+      }
       if (v.errs.length) problems.push(`lab preview ${lang}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }
