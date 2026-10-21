@@ -23,6 +23,7 @@ import { capAnswer, fitLists, out } from './answer.mjs';
 import { AIM } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
+import { tagOf } from './model-script.mjs';
 import { fieldParametersOf } from './metric-switcher.mjs';
 
 const require = createRequire(import.meta.url);
@@ -41,7 +42,7 @@ const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 const pathOut = (f) => relRoot(f).split('/').map((seg) => (seg === '..' || seg === '.' ? seg : safeName(seg))).join('/');
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
-const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS;
+const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS, ArabicCal = require('../../assets/js/arabic-calendar.js');
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 
 // ---- the original: the reading block's locate (a .pbip, a .Report folder, a folder holding exactly one), named ----
@@ -283,17 +284,21 @@ const dateColumnsOf = (m) => (m ? [...new Set([].concat(...(m.tables || []).map(
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
 const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).replace(/]/g, ']]') + ']';
-function monthOffer(model, loc, outBase) {
+// (0.3.0 C1, the owner, 21 Oct) the full set of Arabic calendar columns (the shared builder, arabic-calendar.js): the
+// Arabic twins of what the date table has (months, days, quarters, fiscal year and quarter, Hijri months, the flags'
+// labels), each sorted by its English column's own sort column, else by the month number found here, else by a hidden
+// number written with it. The month column stays first and as before (arabicMonth's own fields); the rest beside it
+export function monthOffer(model, loc, outBase) {
   if (!model.m) return { offered: false, why: model.why };
   const m = model.m, isDate = isDateCol;
   // (T-5: by shape; when several, the one marked as the date table, then the one built with CALENDAR)
   const shapes = dateTableShapes(m);
   let pick = shapes; if (pick.length > 1 && pick.some((x) => x.marked)) pick = pick.filter((x) => x.marked); if (pick.length > 1 && pick.some((x) => x.calendar)) pick = pick.filter((x) => x.calendar);
   const cands = pick.map((x) => Object.assign({}, (m.tables || []).find((t) => t.name === x.name), { shapeDates: x.dates }));
-  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; built with CALENDAR or CALENDARAUTO, or imported; its name and its mark do not matter)' };
+  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the columns are a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; built with CALENDAR or CALENDARAUTO, or marked as the date table)' };
   const t = cands[0], cols = t.columns || [];
   const has = (re) => cols.find((c) => re.test(String(c.name)));
-  if (has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/)) return { offered: false, why: `the date table "${visible(t.name)}" has an Arabic month column already` };
+  const arabicMonthThere = !!(has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/));
   const raw = ((m.tmsl && m.tmsl.model && m.tmsl.model.tables) || []).find((x) => x.name === t.name) || {};
   const date = (raw.columns || []).find((c) => c.name && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
   // the month number to sort by: an integer column named like one (an untyped DAX column of that name counts: its DAX makes it a number)
@@ -308,14 +313,34 @@ function monthOffer(model, loc, outBase) {
     return /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?)$/i.test(name); };
   const num = cols.find(isMonthNo);
   const calculated = (raw.partitions || []).some((p) => p.source && p.source.type === 'calculated');
-  const lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''];
-  if (!num) lines.push(`\t\tcolumn ${tmdlName(MONTH_SORT)} = MONTH ( ${daxCol(t.name, date.name)} )`, '\t\t\tdataType: int64', '\t\t\tisHidden', '\t\t\tsummarizeBy: none', '');
-  lines.push(`\t\tcolumn ${tmdlName(MONTH_COLUMN)} = SWITCH ( MONTH ( ${daxCol(t.name, date.name)} ), ${MONTHS_AR.map((n, i) => `${i + 1}, "${n}"`).join(', ')} )`,
-    '\t\t\tdataType: string', '\t\t\tsummarizeBy: none', `\t\t\tsortByColumn: ${tmdlName(num ? num.name : MONTH_SORT)}`, '');
-  return { offered: true, table: visible(t.name), dateColumn: visible(date.name), column: MONTH_COLUMN, sortBy: num ? visible(num.name) : MONTH_SORT + ' (written with it, hidden)',
+  const ref = (c) => daxCol(t.name, c), dref = ref(date.name), col = (re) => cols.find((c) => re.test(String(c.name).trim()));
+  const sortOf = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return x && x.sortByColumn ? String(x.sortByColumn) : null; };
+  const fyc = col(/^fiscal year$/i), fmc = col(/^fiscal month number$/i), fqc = col(/^fiscal quarter$/i), hmc = col(/^hijri month number$/i);
+  const strip = (c, words) => words.reduce((e, w) => `SUBSTITUTE ( ${e}, "${w}", "" )`, ref(c.name));
+  const list = cols.map((c) => ({ name: String(c.name), type: typedRaw(c) || '', sortBy: sortOf(c) }));
+  // (as before C1: the month column even when the table names its months otherwise, "Month" or none)
+  if (!arabicMonthThere && !list.some((c) => /^month name$/i.test(c.name))) list.unshift({ name: 'Month Name', type: 'string', sortBy: null });
+  const built = ArabicCal.columnsFor({ columns: list.filter((c) => !(arabicMonthThere && /^month (name|short)$/i.test(c.name))),
+    src: { month: `MONTH ( ${dref} )`, weekday: `WEEKDAY ( ${dref}, 1 )`, quarter: `QUARTER ( ${dref} )`, year: `YEAR ( ${dref} )`, hijriMonth: hmc ? ref(hmc.name) : null,
+      fiscalMonth: fmc ? ref(fmc.name) : null, fiscalYearNo: fyc && /^int64$/i.test(typedRaw(fyc) || '') ? ref(fyc.name) : null,
+      fiscalYearText: fyc && !/^int64$/i.test(typedRaw(fyc) || '') ? `TRIM ( ${strip(fyc, ['FY', 'fy'])} )` : null,
+      fiscalQuarterText: fqc ? `TRIM ( ${strip(fqc, ['FQ', 'fq', 'Q', 'q'])} )` : null, flag: (n) => { const c = cols.find((x) => x.name === n); return c ? ref(c.name) : null; } },
+    sorts: { month: num ? num.name : null, day: null, hijri: hmc ? hmc.name : null } });
+  // the month column's sort as before: its English column's own, else the month number found, else a hidden one
+  built.columns.filter((c) => c.kind === 'month').forEach((c) => { const en = list.find((x) => x.name === c.of); if (!(en && en.sortBy) && num) { c.sortBy = num.name; delete c.sortNew; } else if (!(en && en.sortBy) && !num) { c.sortBy = MONTH_SORT; c.sortNew = { name: MONTH_SORT, dax: `MONTH ( ${dref} )` }; } });
+  if (!built.columns.length) return { offered: false, why: `the date table "${visible(t.name)}" has its Arabic calendar columns already${built.skipped.length ? ` (left out: ${built.skipped.map((x) => `${visible(x.of)}: ${x.why}`).join('; ')})` : ''}` };
+  const seed = 'arabic-calendar\0' + t.name, tag = (n) => tagOf(seed, n), lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''], made = new Set();
+  built.columns.forEach((c) => { if (c.sortNew && !made.has(c.sortNew.name)) { made.add(c.sortNew.name); lines.push(`\t\tcolumn ${tmdlName(c.sortNew.name)} = ${c.sortNew.dax}`, '\t\t\tdataType: int64', '\t\t\tisHidden', `\t\t\tlineageTag: ${tag(c.sortNew.name)}`, '\t\t\tsummarizeBy: none', ''); } });
+  built.columns.forEach((c) => lines.push(`\t\tcolumn ${tmdlName(c.name)} = ${c.dax}`, '\t\t\tdataType: string', `\t\t\tlineageTag: ${tag(c.name)}`, '\t\t\tsummarizeBy: none', ...(c.sortBy ? [`\t\t\tsortByColumn: ${tmdlName(c.sortBy)}`] : []), ''));
+  const mc = built.columns.find((c) => c.name === MONTH_COLUMN);
+  return { offered: true, table: visible(t.name), dateColumn: visible(date.name), column: mc ? MONTH_COLUMN : built.columns[0].name, sortBy: mc ? (mc.sortNew ? mc.sortBy + ' (written with it, hidden)' : visible(mc.sortBy)) : null,
+    columns: built.columns.map((c) => ({ name: c.name, of: visible(c.of), sortBy: c.sortBy ? visible(c.sortBy) : null })),
+    englishData: built.columns.filter((c) => cols.some((x) => x.name === c.of)).map((c) => ({ field: `${visible(t.name)}[${visible(c.of)}]`, why: `its values are English data (the model's own): an Arabic page shows them as they are until the script adds "${c.name}"` })),
+    ...(built.skipped.length ? { leftOut: built.skipped.map((x) => ({ column: visible(x.of), why: x.why })) } : {}),
     ...(calculated ? { note: 'the date table is a DAX (calculated) table: the lab added the column to its formula; adding it as a calculated column is not yet proven in Desktop through TMDL view: check Preview before Apply' } : {}),
-    scriptAfterGo: `${outBase} - Arabic month.tmdl`, script: lines.join('\n') + '\n',
-    howToApply: 'Save a copy of the Power BI file first. Open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (one column is added to the date table, sorted by its month number), then Apply. DataArcus never applies it: the model is changed only when the user applies it. Then a chart or table can show the Arabic month names (يناير، فبراير...) by using that column.' };
+    scriptAfterGo: `${outBase} - Arabic calendar.tmdl`, script: lines.join('\n') + '\n',
+    howToApply: `Save a copy of the Power BI file first. Open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (${built.columns.length} Arabic column${built.columns.length === 1 ? ' is' : 's are'} added to the date table, each sorted like its English column), then Apply. DataArcus never applies it: the model is changed only when the user applies it. Then ask for the Arabic report again (plan, approve, write): it binds the Arabic columns (يناير، الأحد، الربع 1، عطلة نهاية الأسبوع...) in place of the English ones.`,
+    howToSwitch: 'Until the script is applied the Arabic report binds the English calendar columns (it always works) and shows their English values. To switch: apply the script in TMDL view, then plan the report again (plan_layout, approve, create_report): the Arabic columns are bound automatically.' };
 }
 
 
@@ -1024,7 +1049,7 @@ export function twinOutputs(P) {
   const { loc, R } = P, dir = P.outBase + '.Report', out = P.copy ? P.copy.files.map((f) => dir + '/' + f.rel) : R.files.map((rel) => dir + '/' + rel);
   if (!P.copy && P.built.ext && !R.files.includes(EXT)) out.push(dir + '/' + EXT);
   if (!P.copy && !R.hasPlatform) out.push(dir + '/.platform');
-  if (P.month.offered) { const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
+  if (P.month.offered) { const f = scriptName(loc.project, `${P.outBase} - Arabic calendar`, P.month.script); if (f.free) out.push(path.basename(f.file)); }
   return out.concat([P.outBase + '.pbip']);
 }
 export function writeTwin(a, plan) {
@@ -1072,7 +1097,7 @@ export function writeTwin(a, plan) {
   if (!P.copy && !R.hasPlatform) tree.push({ path: path.basename(twinDir) + '/.platform', data: out.get('.platform') });
   let month = { written: false, why: P.month.why };
   if (P.month.offered) {
-    const f = scriptName(loc.project, `${P.outBase} - Arabic month`, P.month.script);
+    const f = scriptName(loc.project, `${P.outBase} - Arabic calendar`, P.month.script);
     if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
     month = { scriptFile: pathOut(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }

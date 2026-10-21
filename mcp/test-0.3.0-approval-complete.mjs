@@ -83,8 +83,9 @@ try {
     chk(() => new RegExp(`${written.length} files:`).test(H), () => `A1-2. the twin's page counts the files (${written.length}): ${section(H, 'Files that will be written', 500)}`);
     chk(() => said(H, 'Visuals', count(written, /\/visual\.json$/)) && said(H, 'Pages', count(written, /\/page\.json$/)) && said(H, 'Project file', 1),
       () => `A1-3. grouped and counted (visuals ${count(written, /\/visual\.json$/)}, pages ${count(written, /\/page\.json$/)}, project file 1): ${section(H, 'Files that will be written', 800)}`);
-    const month = written.find((r) => /Arabic month.*\.tmdl$/.test(r));
-    chk(() => month && said(H, 'Arabic month script', 1), () => `A1-4. the month script is its own group, named as what it is: ${month} ${section(H, 'Files that will be written', 800)}`);
+    // (0.3.0 C1, changed on purpose: the twin's script is the full Arabic calendar set now, " - Arabic calendar.tmdl")
+    const month = written.find((r) => /Arabic calendar.*\.tmdl$/.test(r));
+    chk(() => month && said(H, 'Arabic calendar script', 1), () => `A1-4. the month script is its own group, named as what it is: ${month} ${section(H, 'Files that will be written', 800)}`);
     chk(() => html.length > 0 && !html.includes(HOSTILE) && !/<script>alert|<b>bold<\/b>/.test(html), () => 'A7-1. a hostile page name is escaped on the twin\'s page');
     // the twin this test writes: Microsoft's validator 0 errors and check_report 0 "can break"
     const c = await w.call('check_report', { path: 'tw/Twin Sales AR.pbip' }), j = c.j || {};

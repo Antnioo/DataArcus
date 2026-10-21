@@ -510,6 +510,9 @@
         columns.push(col); });
     });
     columns.forEach((c) => { if (metaOf(c).lang === 'en' && AR_SUFFIX.test(c.c)) { const base = c.c.replace(AR_SUFFIX, '').trim().toLowerCase(); if (columns.some((o) => o !== c && o.t === c.t && metaOf(o).lang === 'en' && o.c.trim().toLowerCase() === base)) meta(c).lang = 'ar'; } });
+    // (0.3.0 C1) a true/false column with its "<name> (Arabic)" label beside it (the Arabic calendar's flags) is the
+    // English side of that pair, as a text column with its Arabic twin is
+    columns.forEach((c) => { if (c.type === 'boolean' && !metaOf(c).lang) { const nm = String(c.c).trim().toLowerCase() + ' (arabic)'; if (columns.some((o) => o.t === c.t && String(o.c).trim().toLowerCase() === nm)) meta(c).lang = 'en'; } });
     pairTwins(columns);
     return { measures, columns, hiddenMeasures };
   }
@@ -717,6 +720,10 @@
     // with neither is named (calendarNames), so the caller can say how to get one
     const calendarNames = [], swaps = [];
     const inAr = (x) => {
+      // (0.3.0 C1, the owner, 21 Oct) any column of a date table with its "<name> (Arabic)" twin there (the Arabic
+      // calendar columns: quarters, fiscal, the flags' labels, the names): the twin, once the script added it
+      if (L === 'ar' && x && x.c != null) { const nm = String(x.c).trim().toLowerCase() + ' (arabic)', tw = columns.find((c) => c.t === x.t && c.dateTable && String(c.c).trim().toLowerCase() === nm);
+        if (tw) { if (!swaps.some((w) => same(w.from, x))) swaps.push({ from: { t: x.t, c: x.c }, to: { t: tw.t, c: tw.c } }); return tw; } }
       if (L !== 'ar' || !x || x.c == null || !x.cal || !/^(month|day)$/.test(x.cal.kind)) return x;
       const c0 = columns.find((c) => c.t === x.t && c.c === x.c); if (!c0 || metaOf(c0).lang !== 'en') return x;
       const hijri = (c) => (c.cal || {}).family === 'hijri';
