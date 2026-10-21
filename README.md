@@ -40,7 +40,8 @@ What was measured in Power BI Desktop, on which version, how, and the quirks fou
 ## The AI report designer
 
 An AI report designer for Power BI (it works with Claude on your own machine and writes new files only: the one file it ever replaces is its own answers file, after you approve) is in
-private beta. Interested? Write to [hello@dataarcus.com](mailto:hello@dataarcus.com).
+public beta: download 0.3.0 from [the release page](https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0)
+(check its SHA-256 there), install steps in [mcp/README.md](mcp/README.md). Questions: [hello@dataarcus.com](mailto:hello@dataarcus.com).
 
 ## Licence
 

@@ -1,36 +1,36 @@
-// Translations for power-bi-mcp/index.html (DataArcus for Power BI, the private beta page)
+// Translations for power-bi-mcp/index.html (DataArcus for Power BI, the public beta page)
 window.betaPageTranslations = {
   "en": {
     "meta": {
-      "title": "DataArcus for Power BI: private beta",
-      "description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "title": "DataArcus for Power BI: public beta",
+      "description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Public beta for Windows.",
       "author": "DataArcus",
       "og:type": "website",
-      "og:title": "DataArcus for Power BI: private beta",
-      "og:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "og:title": "DataArcus for Power BI: public beta",
+      "og:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Public beta for Windows.",
       "og:url": "https://dataarcus.com/power-bi-mcp/",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "DataArcus for Power BI: private beta",
-      "twitter:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "twitter:title": "DataArcus for Power BI: public beta",
+      "twitter:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Public beta for Windows.",
       "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "canonical": "https://dataarcus.com/power-bi-mcp/"
     },
     "beta": {
       "hero": {
-        "badge": "Private beta",
+        "badge": "Public beta",
         "title": "DataArcus for Power BI",
         "subtitle": "An AI agent in Claude Desktop reads your Power BI project (PBIP, with its TMDL model) and writes a complete new report (PBIR) next to it, in English or in Arabic, right to left.",
-        "button": "Ask to join",
+        "button": "Download 0.3.0",
         "how": "See how it works",
         "facts": "Free during the beta. Windows, with Power BI Desktop and Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "new": {
         "title": "What's new in 0.3.0",
-        "version": "Beta testers get version 0.3.0. What it adds:",
+        "version": "Version 0.3.0 adds:",
         "l1": "<strong>Arabic reports with no English titles.</strong> An Arabic report from an English-named model, and the Arabic twin of a report, show their titles, table headers, tooltips, alt texts and phone layout in Arabic. Before you approve, the plan lists any field kept in English, with why.",
         "l2": "<strong>An Arabic terminology sheet.</strong> One Arabic name per field, approved by you, written on every title, table header, slicer header, tooltip and alt text. The approval page shows it side by side, English and Arabic.",
         "l3": "<strong>One report in English and Arabic.</strong> <code translate='no'>create_arabic_twin</code> can write a copy named \"(EN-AR)\" holding the English pages and their Arabic pages, with a language button on each page where its header has room (and on its phone layout when that has room too); the plan names any page left without one. Your original report is not changed.",
@@ -84,52 +84,52 @@ window.betaPageTranslations = {
         "windows": "Windows only.",
         "desktop": "Power BI Desktop 2.159.883.0 (October 2026) or later: the reports use recent features that older versions lack.",
         "claude": "Claude Desktop.",
-        "beta": "A private beta: the package is not signed yet, and we send its SHA-256 so you can check the file you received.",
+        "beta": "A public beta: the package is not code-signed yet, so check its SHA-256 (below and in the release notes) before you install it.",
         "large": "Models above about 50 tables are experimental."
       },
       "join": {
-        "title": "Ask to join",
-        "next": "We reply with the setup steps. No payment.",
+        "title": "Download and install",
+        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it (<code>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>): <code class='text-break'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here. No payment.",
         "name": "Name *",
         "email": "Email *",
         "model": "What is your model about? *",
         "linkedin": "LinkedIn (optional)",
-        "button": "Send my request",
+        "button": "Send",
         "privacy": "What you send reaches our email through Web3Forms, only so we can reply: <a href='../privacy.html' class='text-accent'>Privacy</a>."
       }
     }
   },
   "ar": {
     "meta": {
-      "title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
-      "description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "title": "DataArcus لـ Power BI: نسخة تجريبية عامة",
+      "description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية عامة لنظام Windows.",
       "author": "داتا أركوس",
       "og:type": "website",
-      "og:title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
-      "og:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "og:title": "DataArcus لـ Power BI: نسخة تجريبية عامة",
+      "og:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية عامة لنظام Windows.",
       "og:url": "https://dataarcus.com/power-bi-mcp/",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
-      "twitter:title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
-      "twitter:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "twitter:title": "DataArcus لـ Power BI: نسخة تجريبية عامة",
+      "twitter:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية عامة لنظام Windows.",
       "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "canonical": "https://dataarcus.com/power-bi-mcp/"
     },
     "beta": {
       "hero": {
-        "badge": "نسخة تجريبية خاصة",
+        "badge": "نسخة تجريبية عامة",
         "title": "DataArcus لـ Power BI",
         "subtitle": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI الخاص بك (PBIP مع نموذج TMDL) ويكتب بجانبه تقريرًا جديدًا كاملًا (PBIR)، بالإنجليزية أو بالعربية من اليمين إلى اليسار.",
-        "button": "اطلب الانضمام",
+        "button": "نزّل الإصدار 0.3.0",
         "how": "شاهد كيف يعمل",
         "facts": "مجاني خلال النسخة التجريبية. يعمل على Windows مع Power BI Desktop و Claude Desktop.",
         "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
       },
       "new": {
         "title": "الجديد في الإصدار 0.3.0",
-        "version": "يحصل المختبِرون على الإصدار 0.3.0. وهذا ما يضيفه:",
+        "version": "ما يضيفه الإصدار 0.3.0:",
         "l1": "<strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.",
         "l2": "<strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس مقسّم وتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.",
         "l3": "<strong>تقرير واحد باللغتين.</strong> تستطيع <code translate='no'>create_arabic_twin</code> أن تكتب نسخة باسم \"(EN-AR)\" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.",
@@ -183,17 +183,17 @@ window.betaPageTranslations = {
         "windows": "Windows فقط.",
         "desktop": "Power BI Desktop بالإصدار 2.159.883.0 (أكتوبر 2026) أو أحدث: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.",
         "claude": "Claude Desktop.",
-        "beta": "نسخة تجريبية خاصة: الحزمة غير موقّعة بعد، ونرسل بصمتها SHA-256 لتتحقق من الملف الذي استلمته.",
+        "beta": "نسخة تجريبية عامة: الحزمة غير موقّعة بعد، فتحقّق من بصمتها SHA-256 (أدناه وفي ملاحظات الإصدار) قبل تثبيتها.",
         "large": "النماذج التي تتجاوز نحو 50 جدولًا تجريبية."
       },
       "join": {
-        "title": "اطلب الانضمام",
-        "next": "نرد عليك بخطوات الإعداد. دون أي دفع.",
+        "title": "التنزيل والتثبيت",
+        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته (<code>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>): <code class='text-break'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا. دون أي دفع.",
         "name": "الاسم *",
         "email": "البريد الإلكتروني *",
         "model": "عن ماذا يتحدث نموذجك؟ *",
         "linkedin": "LinkedIn (اختياري)",
-        "button": "أرسل طلبي",
+        "button": "أرسل",
         "privacy": "ما ترسله يصل إلى بريدنا عبر Web3Forms، فقط لنرد عليك: <a href='../privacy.html' class='text-accent'>الخصوصية</a>."
       }
     }
