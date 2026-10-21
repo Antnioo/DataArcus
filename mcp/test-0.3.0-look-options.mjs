@@ -353,6 +353,17 @@ try {
       && hAt(8) === '66,66' && hAt(9) === '65,65' && hAt(10) === '79' && hAt(15) === '76' && gp.every((v) => S(((v.visual.visualContainerObjects.spacing || [{ properties: {} }])[0].properties).spaceBelowTitle) === Math.max(4, 21 - Math.ceil(parseFloat(ptOf(v)) * 4 / 3)) + 'D')
       && rs.length === 4 && rs.every((x) => x.check && x.check.validator === 0 && x.check.canBreak === 0 && x.slicers.filter((y) => /: pills$/.test(y)).length === 2),
       () => `VAR-3. the grid (first page): ${gp.length} slicers, ${gl.length} labels, 8pt ${hAt(8)}, 9pt ${hAt(9)}, 10pt ${hAt(10)}, 15pt ${hAt(15)}; the four reports: ${JSON.stringify(rs.map((x) => [x.name, x.slicers, x.check]))}`);
+    // VAR-4 (P7): the "Direction" page: EN and AR pills as shipped (centred, header at the reading start, Arabic from the
+    // right; C1's Arabic labels), then Left, Right and text wrap on, each labelled
+    const DP = r && r.dirId ? path.join(out, 'pills/Pills Variants.Report/definition/pages', r.dirId) : '';
+    const dv = DP && fs.existsSync(path.join(DP, 'visuals')) ? fs.readdirSync(path.join(DP, 'visuals')).sort().map((v) => rd(path.join(DP, 'visuals', v, 'visual.json'))) : [];
+    const dp = dv.filter((v) => v.visual.visualType === 'advancedSlicerVisual'), dl = dv.filter((v) => v.visual.visualType === 'textbox');
+    const al = (v) => S(P(v, 'value', 'default').horizontalAlignment), wrap = (v) => S(P(v, 'value', 'default').textWrap), fld = (v) => v.visual.query.queryState.Values.projections[0].queryRef;
+    const ar = dp.filter((v) => /\(Arabic\)/.test(fld(v)));
+    chk(() => dp.length === 9 && dl.length === 9 && dp.slice(0, 6).every((v) => al(v) === 'center' && wrap(v) === 'false') && dp.slice(0, 3).every((v) => dirShape(v, 'left') && !v.visual.query.sortDefinition)
+      && ar.length === 6 && ar.every((v) => v.visual.query.sortDefinition.sort[0].direction === 'Descending') && dp.slice(3, 6).every((v) => dirShape(v, 'right'))
+      && al(dp[6]) === 'left' && al(dp[7]) === 'right' && wrap(dp[8]) === 'true' && dp.every((v) => !v.parentGroupName),
+      () => `VAR-4. the Direction page (9 pills, labelled; shipped centred; Arabic from the right; Left, Right, wrap): ${JSON.stringify(dp.map((v) => [fld(v), al(v), wrap(v)]))}`);
     fs.rmSync(out, { recursive: true, force: true });
   }
 
