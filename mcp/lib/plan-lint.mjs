@@ -151,8 +151,11 @@ export function checkFiles(files, m, lang) { return LC.checkProject(files, { lan
 export function checkSummary(c, cap) {
   const n = cap == null ? 12 : cap, one = (f) => ({ rule: f.rule, page: f.page ? f.page.n : null, visual: f.visual || null, what: f.what, fix: f.fix });
   const worthByRule = {}; c.worthALook.forEach((f) => { worthByRule[f.rule] = (worthByRule[f.rule] || 0) + 1; });
+  // (0.3.0 T1, T-3: "0 problems Power BI Desktop would show, 3 more worth a look" with no list) each item in one plain
+  // line: where, what, and what to do, or "No action needed" for a note that asks for nothing
+  const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.visual ? `${f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
   return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
-    c.worth ? { worthALook: worthByRule } : {});
+    c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.slice(0, 12).map(plain) } : {}, c.worthALook.length > 12 ? { worthALookMore: c.worthALook.length - 12 } : {});
 }
 
 // (B-146) plan_layout's `aggregation`, in the plan's language: what is not additive and where, and one question per
