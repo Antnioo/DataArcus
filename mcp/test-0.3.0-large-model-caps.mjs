@@ -53,7 +53,8 @@ const approve = async (label, planAns) => {
   const n = links().length; await call(label + ': approve_plan (waiting)', 'approve_plan', { planId: pid });
   const url = await linkAt(n); const html = url ? await req(url, 'GET') : '';
   pages.push({ label, bytes: Buffer.byteLength(html, 'utf8'), planChars: chars(planAns.t) });
-  chk(() => html.length > 1000 && /Approve/.test(html), () => `C-3 ${label}: the approval page did not load (${html.length} characters)`);
+  // (0.3.0 T1, T-5, changed on purpose: an Arabic plan's page is Arabic now, its Approve button «موافقة»)
+  chk(() => html.length > 1000 && /Approve|موافقة/.test(html), () => `C-3 ${label}: the approval page did not load (${html.length} characters)`);
   chk(() => Buffer.byteLength(html, 'utf8') < PAGE_MAX, () => `C-3 ${label}: the approval page is ${Buffer.byteLength(html, 'utf8').toLocaleString('en-US')} bytes, over 2 MB`);
   if (url) await req(url, 'POST', 'decision=approve');
   const done = await call(label + ': approve_plan (approved)', 'approve_plan', { planId: pid });
