@@ -14,10 +14,11 @@ import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, 
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
 import { freeFile, planWrites, withPlan } from './lib/files.mjs';
-import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
+import { AIM, fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
+import { resolveSwitch, addSwitch, switchSaid, scriptModel, SWITCH_MIN, SWITCH_MAX, SCRIPT_SUFFIX } from './lib/metric-switcher.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { existingTheme, readReport, reportPrint } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
@@ -26,24 +27,32 @@ import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint, planPreview, checkFiles, checkSummary, aggregationAnswer } from './lib/plan-lint.mjs';
 import { checkArtifact, digestOf, modelPrintOf, bindingOf } from './lib/artifact.mjs';
+import { applyFlip, flipHow, BEFORE_APPLIED as FLIP_BEFORE } from './lib/flip-cards.mjs';
+import { applyIcons, iconsHow, iconsSaid, resolveIcons, LIST_MAX as ICONS_MAX } from './lib/status-icons.mjs';
 import * as Plans from './lib/plans.mjs';
+import * as Terms from './lib/terminology.mjs';
+import * as DateQ from './lib/gulf-date-questions.mjs';
 import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
 const require = createRequire(import.meta.url);
 const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
-const Mirror = require('../assets/js/report-mirror.js');
+const Mirror = require('../assets/js/report-mirror.js'), Gallery = require('../assets/js/visual-gallery.js'), Axes = require('../assets/js/axis-units.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
-import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
+import { planTwin, twinKey, twinOutputs, writeTwin, monthOffer as calendarOffer } from './lib/arabic-twin.mjs';
 import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { testEditBeforeWrite } from './lib/write-io.mjs';
-import { nameOut as textOut, out, capAnswer, failText } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
+import { nameOut as textOut, out, capAnswer, failText, fitLists } from './lib/answer.mjs';   // (the answer's own walk: format characters shown; model.mjs's nameOut also caps a model name's length)
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 // The visuals a report slot can be (audit 6, A6-16): one list for create_report's schema, the tools' limits and rule 6
-const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'];
+// (0.3.0 D2: the visual gallery's three, written only when the user asks: a slot of that kind, or create_report's gallery)
+const GALLERY_KINDS = Object.values(Gallery.TOOL_NAMES);
+// (D7, the owner of 20 Oct) a right-to-left report's waterfall: Power BI's own ("native", the default) or the mirrored look-alike
+const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional().describe(`(Default "${Gallery.WATERFALL_RTL_DEFAULT}".) Only for a right-to-left (Arabic) report\'s waterfall. "native": Power BI\'s own waterfall, exactly as in English: ${Gallery.WF_WHAT.native}; the rest of the report stays mirrored. "mirror": a stacked column chart drawn as a waterfall that reads from the right (the first period at the right), but not Power BI\'s waterfall design: no Total column and no total label (Power BI 2.159 does not draw it), no legend, the empty space under a step shows its base in the tooltip. Power BI cannot draw its own waterfall right to left. The user\'s choice; say it in the plan`);
+const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'].concat(GALLERY_KINDS);
 // The tools' limits, given to the plan step so a plan is checked before it is shown (0.2.9, O-12: a plan with 4 slicers
 // was approved, then create_report refused it). create_report's own inputs use the same numbers.
 const LIMITS = { kpiCards: 6, slicers: 3, tableFields: 8, pageFilters: 8, svgColumns: 4, svgCards: 6, displayNameLength: 80, textLength: 400,
@@ -67,7 +76,7 @@ const modelRef = (m, p) => ({ key: modelKey(m, p), print: m.print });
 const themeRef = (m, p, from) => ({ key: modelKey(m, p), print: crypto.createHash('sha256').update(String(m.print) + '\0' + JSON.stringify(from == null ? null : from)).digest('hex') });
 // (R6, F07) right before a writer's first write (before any folder is made): the model read again, and its print the
 // approved one, or nothing is written (the gate's read can be seconds older than the write)
-const sameModelBeforeWrite = (planId, now, approved) => { testEditBeforeWrite(); if (now() !== approved) throw new Error(Plans.modelChanged(planId)); };
+const sameModelBeforeWrite = (planId, now, approved, report) => { testEditBeforeWrite(); if (now() !== approved) throw new Error(Plans.modelChanged(planId, report)); };
 const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 // Round 17 (the outside review's G-02, privacy): no answer or error sends an absolute local path to the AI. Paths in the
 // working folder become relative to it, the working folder itself is named by its last folder name, and the user's home
@@ -84,8 +93,13 @@ const scrub = (str) => {
 // (audit 6, A6-6: every answer leaves through out(): a model name's hidden characters as code points, lib/answer.mjs)
 // (A6-8: and no answer passes 40,000 characters: capAnswer cuts the longest lists and says so)
 const pretty = (o) => JSON.stringify(o, null, 2), flat = (o) => JSON.stringify(o);
-const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? textOut(o) : pretty(capAnswer(out(o), (x) => pretty(x).length))) }] });
-const compact = (o) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length))) }] });
+// (0.3.0 Q1) an answer whose indented form passes AIM (34,000) goes out without the indentation (the same JSON, as
+// compact's): on the large model plan_layout in Arabic with every option on was 37,908 characters indented
+// (0.3.0 A3) opts.last: a twin's plan keeps its texts whole while any other list can be cut: a text the plan does not
+// show can't be given an Arabic label
+const TWIN_CAP = { last: ['texts'] };
+const text = (o, opts) => { if (typeof o === 'string') return { content: [{ type: 'text', text: scrub(textOut(o)) }] }; const x = out(o); return pretty(x).length > AIM ? compact(o, opts) : { content: [{ type: 'text', text: scrub(pretty(capAnswer(x, (y) => pretty(y).length, opts))) }] }; };
+const compact = (o, opts) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length, opts))) }] });
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
 const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
@@ -103,14 +117,16 @@ const safe = (fn) => async (args) => { const mark = writtenSince(); try { const 
 // (R4) a script that was not written: the write's own words, which name exactly what it left on disk, if anything
 const notWrittenWhy = (dir, e) => 'The script could not be written to ' + dir + ' (' + String((e && e.code) || 'error') + ')' + (e && e.left ? ': ' + e.message : '.');
 const sameFile = (f, data) => { try { const st = fs.lstatSync(f); return st.isFile() && st.size === Buffer.byteLength(data) && fs.readFileSync(f, 'utf8') === data; } catch (e) { return false; } };
-function writeScript(dir, base, script) {
+function writeScript(dir, base, script, plan) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
-    if (nothingAt(f)) { try { writeNew(f, script); noteWritten(f); return f; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
+    if (nothingAt(f)) { if (plan) return f; try { writeNew(f, script); noteWritten(f); return f; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
     else if (sameFile(f, script)) return f;
   }
   throw new Error('no free file name');
 }
+// the file writeScript would write now, named and not written (a plan names the file its click writes: 0.3.0 A1)
+const scriptNameNow = (dir, base, script) => writeScript(dir, base, script, true);
 // The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
 // same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
 // project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
@@ -134,10 +150,14 @@ const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables,
 // write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it; afterGo says who writes it;
 // pw: the plan policy of the call's writes (check_model_health's planWrites; create_report writes it inside its withPlan)
 function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '', pw = null) {
-  const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
-  const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
+  const raw = scriptTables(m).raw, s0 = Fix.formatReview(raw);
+  const all = s0.items.concat(s0.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
   if (!mine.length) return null;
-  const cap = maxItems || 50, list = mine.slice(0, cap).map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
+  // (0.3.0 F7, the red team's F-3: the plan listed the report's 3 fields and the script rewrote 11 objects) with keys, the
+  // script changes only the objects the plan lists (the owner's rule: nothing written without being shown first);
+  // check_model_health (no keys) keeps the whole model's script, which its plan lists in full
+  const cap = maxItems || 50, shownMine = mine.slice(0, cap), s = keys ? Fix.formatReview(raw, { only: new Set(shownMine.map((i) => i.object)) }) : s0;
+  const list = shownMine.map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(p));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(p)).replace(/\.[^.]+$/, '');
   let file = {};
@@ -397,7 +417,7 @@ server.registerTool('read_model', {
   inputSchema: { path: modelPath, tables: z.array(z.string()).min(1).max(100).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary') }, annotations: READS
 }, safe(async ({ path: p, tables }) => {
   const m = loadModel(p);
-  if (tables) return text(Object.assign(namedTables(m, tables), hiddenOf(m)));
+  if (tables) return text(Object.assign(namedTables(m, tables, hiddenOf(m)), hiddenOf(m)));
   return isLarge(m) ? compact(Object.assign(largeSummary(m), hiddenOf(m))) : text(Object.assign(fullAnswer(m), hiddenOf(m)));
 }));
 
@@ -427,6 +447,8 @@ server.registerTool('check_model_health', {
     country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
     asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the gulfCalendar section counts as today (YYYY-MM-DD; default: today). For tests'),
     planId: planIdInput,
+    // (0.3.0 Q1) the parts of the answer to show: on a large model the lists are shortened to fit one answer
+    only: z.array(z.string().max(40)).min(1).max(20).optional().describe('Only these parts of the answer, for the rest of a list the answer shortened (listsCut says so): finding ids (findings[].id, skipped.checks[].id), fix names (MONTH_SORT, NO_FORMAT, PCT_FORMAT, THOUSANDS, FORMATS), "pleaseConfirm" or "gulfCalendar". The score, the scripts and what is written stay the same'),
     // (B-148) the user's answers to pleaseConfirm questions, remembered in a file next to the model (with an approved plan)
     answers: z.array(z.object({ answerKey: z.string().max(64), answer: z.enum(['intended', 'mistake']) }).strict()).max(200).optional()
       .describe('Only with the user\'s own answers to pleaseConfirm questions: { answerKey (from the question), answer: intended (the user says it is right) or mistake }. Recorded in "<model>.dataarcus-answers.json" next to the model (hashes, the answer and its date; no name, no DAX) after an approved plan, like the fix scripts; the question is not asked again until its measure or relationship changes. Never answer for the user'),
@@ -434,7 +456,7 @@ server.registerTool('check_model_health', {
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }, annotations: ADDS
-}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers }) => {
+}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers, only }) => {
   const m = loadModel(p);
   const wouldWrite = [];
   const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
@@ -547,7 +569,7 @@ server.registerTool('check_model_health', {
   // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
   const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" next to the project, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
   const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`).concat(answersWrite), { pins: { check_model_health: pinH }, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
-  return text({
+  return text(healthFit({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
     // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out
     ...(!m.report ? { reportNotRead: (m.reportsSeen && m.reportsSeen.notRead && m.reportsSeen.notRead.length ? `No report of this model could be read (${m.reportsSeen.notRead.map((x) => `"${x.report}": ${x.why}`).join('; ')}).` : m.reportsSeen && m.reportsSeen.counted.length === 0 ? 'No report of this model was found next to it (a .Report folder whose definition.pbir points at this model).' : 'No report was read: the model is not inside a project folder with its reports.') + ' So unused columns and measures were not checked (stats.unusedColumns and unusedMeasures are null): never tell the user that columns are unused.' } : {}),
@@ -577,8 +599,29 @@ server.registerTool('check_model_health', {
         'Or read the types from the same model open in Power BI Desktop: run this DAX query with Microsoft\'s Power BI Authoring MCP (dax_query_operations, Execute), then call check_model_health again with columnTypes = { "Table[Column]": Type } for every row:\n' + COLUMN_TYPES_QUERY],
       checks: r.skipped.map((s) => ({ id: s.id, title: ((Health.RULES[s.id] || {}).en || [s.id])[0], count: s.items.length, items: s.items.slice(0, maxItems) }))
     } : undefined
-  });
+  }, only));
 }));
+// (0.3.0 Q1) check_model_health's answer on a large model: at maxItems 200 on the 300-table model it was 168,550
+// characters, and the backstop kept 1 of its 6 findings. Every finding, fix and question is kept with its count; their
+// object lists are shortened evenly (each with "<list>NotListed"), and only gives the rest of one part
+const HEALTH_PARTS = ['MONTH_SORT', 'NO_FORMAT', 'PCT_FORMAT', 'THOUSANDS', 'FORMATS', 'pleaseConfirm', 'gulfCalendar'];
+function healthFit(a, only) {
+  if (only) {
+    const want = new Set(only.map((x) => String(x).trim())), unknown = [...want].filter((x) => !HEALTH_PARTS.includes(x) && !(a.findings || []).some((f) => f.id === x) && !((a.skipped || {}).checks || []).some((c) => c.id === x));
+    a.findings = (a.findings || []).filter((f) => want.has(f.id));
+    if (a.skipped) a.skipped.checks = a.skipped.checks.filter((c) => want.has(c.id));
+    if (a.fixes) { Object.keys(a.fixes).forEach((k) => { if (!want.has(k)) delete a.fixes[k]; }); if (!Object.keys(a.fixes).length) delete a.fixes; }
+    if (!want.has('pleaseConfirm')) delete a.pleaseConfirm;
+    if (!want.has('gulfCalendar')) delete a.gulfCalendar;
+    a.only = Object.assign({ shown: [...want].filter((x) => !unknown.includes(x)), note: 'Only these parts of the check are in this answer (only); the score counts every finding.' }, unknown.length ? { notFound: unknown } : {});
+  }
+  const lists = (x) => [].concat((x.findings || []).map((f) => [f, 'items']), ((x.skipped || {}).checks || []).map((c) => [c, 'items']),
+    x.pleaseConfirm ? [[x.pleaseConfirm, 'items'], [x.pleaseConfirm, 'answered']] : [],
+    ...Object.values(x.fixes || {}).map((f) => ['sorts', 'suggested', 'measures', 'columns', 'fields', 'byHand'].map((k) => [f, k])));
+  const fit = fitLists(a, lists, (x) => pretty(out(x)).length, AIM);
+  if (fit && fit.cut) a.listsCut = { listed: fit.k, lists: fit.cut, how: `This answer lists at most ${fit.k} objects per finding, fix and question, to stay under ${AIM.toLocaleString('en-US')} characters; every finding is kept with its full count, and "<list>NotListed" says how many objects each list leaves out. The fix script files are not shortened: they hold every object they cover. For the rest of one part, call check_model_health again with the same inputs and only: ["<a finding id or fix name>"] (no planId needed: it writes nothing). Tell the user the lists were shortened.` };
+  return a;
+}
 
 const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
   .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
@@ -631,14 +674,28 @@ const CREATE_REPORT_INPUTS = {
       label: z.string().min(1).max(40).describe('The name of the report-level measure; not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
+    gallery: z.union([z.boolean(), z.array(z.enum(GALLERY_KINDS)).min(1).max(3)]).optional().describe('Power BI\'s waterfall, combo (line and clustered column) and small multiples, only when the user asks for one: true, every kind whose fields fit, or a list of kinds. On a design, combo takes the trend\'s line chart, waterfall the first column chart (else the trend), smallMultiples the next column chart (else the first bar chart); hand-placed pages name the kind in a slot instead. Each is written only where its fields fit (combo: two measures in ONE unit over a time or ordered axis, otherwise two panels, a line chart each, never a second axis; waterfall: one measure that adds up over a category of 2-12 known members, such as months; smallMultiples: one measure by a category, a panel per member of a second category with few members), else as the slot\'s own kind; the plan\'s gallery says each with why. Left out: none'),
+    // (0.3.0 J19, B-172) the person's own answers on which measures may share one chart axis
+    sharedAxes: z.array(z.object({ measures: z.array(z.string().max(300)).length(2).describe('Two measures as Table[Measure], exactly as read_model lists them'), answer: z.enum(['comparable', 'separate']) }).strict()).max(20).optional()
+      .describe('Only the user\'s own answer to a sharedAxes question of the plan: two measures in the same unit, scale and currency share one chart axis (a combo, a chart of several values) only when the user says they compare ("comparable"); "separate" keeps them in separate visuals. Never answer for the user. Measures in different units (SAR and AED, minutes and hours, a percentage and an amount) are always separate visuals, whatever the answer; there is never a secondary axis, and no currency is converted. Left out: every pair in the same unit is separate visuals and the plan asks'),
     chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
     chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
+    waterfallRtl: WATERFALL_RTL_INPUT(),
     text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box ("What it means" in the focus layout), from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out and the chart beside it takes its room: a placeholder is never written'),
     kpiValues: z.enum(['auto', 'full']).optional().describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Never show a name the user has not approved: only names the user gave or approved are written (in an Arabic report, plan_layout\'s arabicNames suggests names for the user to approve or edit); without approval the model\'s names stay. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Left out, the approved plan\'s displayNames are written'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     subtitles: z.record(z.string(), z.string().max(120)).optional().describe('A subtitle under a chart\'s title, from the plan the user approved only, never made up: { "<the slot\'s role as plan_layout names it, or a hand-placed slot\'s title>": "<text>" }. Without it no subtitle is written'),
-    smoothLines: z.boolean().optional().describe('(Default false.) ' + 'Line charts drawn as smooth (monotone) curves; straight by default. Smooth suits a calm series and swings between the points of a jagged one.'),
+    // (0.3.0 L2: the polish lab's look options, 12-13 Oct, Desktop 2.158)
+    slicerStyle: z.enum(['dropdown', 'pills']).optional().describe('(Default "dropdown".) The slicers\' look. "dropdown": a dropdown with a rounded box. "pills": Power BI\'s button slicer, rounded buttons on one row with a calm fill and the selected one in the accent, only for a field whose 2-6 values the model\'s metadata makes known (true/false, a quarter, a calculated column of 2-6 texts); every other slicer stays a dropdown. Pills fit a short choice the user flips often (online or not, a size band); a dropdown fits a long or unknown list. The answer\'s slicerStyle says each slicer\'s style with why'),
+    grid: z.enum(['solid', 'dotted', 'none']).optional().describe('(Default "solid".) The value-axis gridlines of the line, bar, column and gallery charts. "solid": quiet solid lines, as before. "dotted": dotted light grey lines, calmer behind dense bars. "none": no gridlines, for charts with data labels'),
+    // (0.3.0 L4: the flip-card labs of 10 Oct, Desktop 2.158)
+    flipCards: z.union([z.boolean(), z.array(z.number().int().min(1).max(6)).min(1).max(6)]).optional().describe('(Default false: off.) KPI cards that turn over to a one-line description when clicked: true for every KPI card, or a list of 1-6 card numbers in reading order (the same cards on every page). Each becomes three Image visuals in the card\'s box (a backdrop, the front with the value, the back with the measure\'s name, its description from the model, its value and, with a marked date table, the change on last year) and two bookmarks; the pictures are measures the model does not have yet: create_report writes them as a TMDL script next to the project ("<model> - flip cards.tmdl"), which the user applies in TMDL view first (the model is never changed by DataArcus). Fits a report read by people who need a KPI explained; a plain card stays simpler'),
+    // (0.3.0 L5: the theme-icons lab of 10 Oct, Desktop 2.158)
+    statusIcons: z.union([z.boolean(), z.array(z.object({ measure: z.string().max(300), good: z.string().max(40).optional(), bad: z.string().max(40).optional() }).strict()).min(1).max(ICONS_MAX)]).optional().describe('(Default false: off.) Status icons before a table\'s or matrix\'s measure, by conditional formatting with the theme\'s DataArcus icons (good a tick in a circle, warning a triangle, bad a cross in a square: three shapes, never colour alone). true: every rate or ratio in the report\'s tables that has a target measure the model names ("<name> Target", "Goal" or "Budget"): at or above the target good, below it bad. Or a list of 1-8 { measure: "Table[Measure]", good, bad }: good and bad are the USER\'s own thresholds (">= 0.97", "< 0.94"; between them the warning icon), never guessed; an entry without thresholds needs a target the model names. With a target, the status measure is a TMDL script next to the project ("<report> - status icons.tmdl"), which the user applies in TMDL view first (the model is never changed by DataArcus); thresholds need no script'),
+    smoothLines: z.boolean().optional().describe('(Default true.) ' + 'Line charts, and the line of a combo, drawn as smooth curves that never swing past the data (monotone), with a small dot in the series\' colour on each point so every value stays findable. false: straight lines without dots, for a jagged series where every swing matters (daily stock, a sensor).'),
+    // (L3, the lab of 10 Oct: a field parameter switches charts between measures, each in its own format)
+    metricSwitcher: z.array(z.string().max(300)).min(SWITCH_MIN).max(SWITCH_MAX).optional().describe('(Default off.) Only when the user asks for it: 2 to 5 of the model\'s measures, as Table[Measure] exactly as read_model lists them, that one slicer switches between. The report gets a page of its own ("Metric", Arabic «المؤشر») with a single-select slicer and a bar chart by the main category (and a line chart by month when the month has an order) whose values come from a field parameter: each chart shows the chosen measure in its own format, its title follows the metric. The model is never changed: the field parameter (a new table and its title measure) comes as a TMDL script file next to the project, which the user applies in TMDL view; until then only that page shows Power BI\'s error. The labels are the plan\'s display names for the measures (Arabic ones in an Arabic report). A name that is not a measure of the model refuses the plan'),
     noDataMessage: z.boolean().optional().describe('(Default true.) ' + 'Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
@@ -657,10 +714,21 @@ const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl'];
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'metricSwitcher', 'flipCards', 'waterfallRtl', 'statusIcons', 'sharedAxes'];
+// (0.3.0 J19, B-172) sharedAxes: the person's answers as the confirmation memory's records (axis-units.js), on the
+// model's own measures; problems: each name that is not a measure of the model (the call is refused)
+const refParts = (x) => { const r = /^(.+?)\[(.+)\]$/.exec(String(x || '').trim()); return r ? { t: r[1].replace(/^'|'$/g, ''), m: r[2] } : null; };
+function axesProblems(m, list) {
+  const raw = modelOf(m.tmsl).tables || [], has = (r) => !!r && raw.some((t) => t.name === r.t && (t.measures || []).some((x) => x.name === r.m));
+  return (list || []).flatMap((e) => e.measures.filter((x) => !has(refParts(x))).map((x) => `sharedAxes names "${String(x).slice(0, 120)}", which is not a measure of the model (Table[Measure] as read_model lists it).`));
+}
+function axesOf(m, list) {
+  const raw = modelOf(m.tmsl).tables || [];
+  return { tables: raw, confirmed: (list || []).map((e) => { const [x, y] = e.measures.map(refParts); return x && y ? Axes.record(x, y, e.answer, raw) : null; }).filter(Boolean) };
+}
 // (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
 // option left out of create_report takes the plan's value, not a schema default that differs from it)
-const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: false, font: 'Segoe UI' };
+const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid', flipCards: false, waterfallRtl: Gallery.WATERFALL_RTL_DEFAULT, statusIcons: false };
 const withLookDefaults = (a) => Object.assign({}, a, Object.fromEntries(Object.entries(LOOK_DEFAULTS).filter(([k]) => a[k] === undefined)));
 // (B-01: focus and tables decide which fields are picked when the plan names none, so they are pinned too)
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
@@ -706,7 +774,7 @@ server.registerTool('create_report', {
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
     const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
-    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p); }));
+    return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes)); }));
   }
   // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
   // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
@@ -834,7 +902,9 @@ function reportRun(a, mode) {
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
   const slicersDropped = [], byFlagDay = [];
-  const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
+  const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));
+  // (D1: a right-to-left waterfall's running total follows its category's order: the model's sort-by columns and types)
+  const modelColumns = Object.fromEntries(m.tables.map((t) => [t.name, Object.fromEntries((t.columns || []).map((c) => [c.name, Object.assign({ type: c.dataType || null }, c.sortBy ? { sortBy: String(c.sortBy) } : {})]))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
   // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
   // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
   // beside it (the same row, else the same column) takes its room; hand-placed positions are the caller's.
@@ -887,8 +957,26 @@ function reportRun(a, mode) {
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
-  let r, bind, extra = {}, written, boundPages = null;
-  let tinyPage = false, smallPageNote = null, designRepaired = null;
+  // (0.3.0 D2) the visual gallery: on when the user asked (gallery, or a slot of a gallery kind); small multiples take the
+  // bar chart's category for their panels when the plan names no other (the writer's rules decide whether it fits)
+  const galleryOn = (pages) => !!a.gallery || pages.some((p) => (p.slots || []).some((s) => Gallery.isKind(s.kind)));
+  // (and the measures' units from the model's formats, for the combo's one-unit rule)
+  // (0.3.0 J19) and the model's measures with the person's answers on shared axes (sharedAxes), as the confirmation
+  // memory's records, for the one rule of axis-units.js
+  const withSplit = (b, pages) => { if (!b || !galleryOn(pages)) return b; const u = Object.assign(Gallery.withUnits(b, m.tables), { axes: axesOf(m, a.sharedAxes) });
+    return !(u.cats || {}).split && (u.cats || {}).bar ? Object.assign({}, u, { cats: Object.assign({}, u.cats, { split: u.cats.bar }) }) : u; };
+  // what the plan and the answer say of each gallery slot: its kind, what is written (the kind, two panels, or the slot's
+  // own kind) and why, by the writer's own rule on the bound fields
+  const galleryOf = (pages, b) => { const out = [];
+    pages.forEach((p) => (p.slots || []).filter((s) => Gallery.isKind(s.kind)).forEach((s) => { const f = Gallery.fits(s.kind, b);
+      out.push(Object.assign({ page: p.name, kind: Gallery.toTool(s.kind) }, s.role ? { role: s.role } : {}, s.title ? { title: s.title } : {}, s.plain ? { insteadOf: s.plain } : {},
+        { written: f.fits ? Gallery.toTool(s.kind) : f.split ? 'two panels (two line charts)' : s.plain || Gallery.KINDS[s.kind].fallback, why: f.why }, f.whyAr ? { whyAr: f.whyAr } : {}, f.ask && f.ask.length ? { ask: f.ask } : {})); }));
+    // (a design: each kind asked for that no page took, with why: its fields don't suit, or no page had its chart left)
+    if (a.design && a.gallery) Gallery.askedKinds(a.gallery).filter((k) => !out.some((g) => g.kind === Gallery.toTool(k))).forEach((k) => { const f = Gallery.fits(k, b);
+      out.push({ page: null, kind: Gallery.toTool(k), written: 'not placed', why: f.fits ? 'every page\'s chart it can take was given to another gallery visual (one a page)' : f.why + (f.split ? ' (on a designed page a combo is placed only where its units match)' : '') }); });
+    return out; };
+  let r, bind, extra = {}, written, boundPages = null, look = null;   // (look: the colours, font and direction the cards are written with, L4)
+  let tinyPage = false, smallPageNote = null, designRepaired = null, switchAt = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
   if (a.design) {
@@ -919,17 +1007,23 @@ function reportRun(a, mode) {
     // the binding is made first, on the pages' KPI count, which noTime doesn't change)
     const bound = bindFor(kpisOf(projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }))), noTime = !bound.date;
     let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    // (0.3.0 D2; the reviewer's decision of 19 Oct) the gallery kinds the user asked for, on every designed page: at most
+    // one a page, only where the bound fields suit it, a kind not used on an earlier page first (the tooltip pages, which
+    // the writer makes, keep their plain kinds)
+    const B0 = withSplit(listFormats(named(bound)), pages);
+    if (a.gallery) { const used = new Set(); pages = pages.map((p) => { const sl = Gallery.assign(p.slots, a.gallery, { B: B0, avoid: used }); sl.forEach((x) => { if (Gallery.isKind(x.kind)) used.add(x.kind); }); return Object.assign({}, p, { slots: sl }); }); }
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
     if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
       other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
+    look = { ui: design.ui, font: design.font, rtl: designRtl(design.layout, a.lang) };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = listFormats(named(bound))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
-    boundPages = pages;
+    boundPages = pages; switchAt = { rtl: designRtl(design.layout, a.lang), page: pages[0].page };
     // (D16) the line charts the layout leaves out on a model without a time axis are named, with the reason, as before
     if (noTime) projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields })
       .forEach((p) => p.slots.filter((x) => x.kind === 'line').forEach((x) => (r.leftOut = r.leftOut || []).push({ page: p.name, kind: 'line', title: x.title || null, noTime: true })));
@@ -939,7 +1033,7 @@ function reportRun(a, mode) {
     // hand-placed pages: KPI slots beyond the measures are left out, and named
     const leftOut = [];
     a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nCards) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
-    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
+    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots.map((s) => (s.kind === 'smallMultiples' ? Object.assign({}, s, { kind: 'multiples' }) : s))), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
     let theme = a.theme ? themeOf(a.theme) : { name: a.name };   // (let: the design block's A2 scales it to the page below)
@@ -969,16 +1063,49 @@ function reportRun(a, mode) {
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
     }
     written = theme;
+    look = { ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}), font: a.font, rtl: rtlHand };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = listFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: texts(a.lang),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
     });
+    switchAt = { rtl: rtlHand, page: { w: a.pages[0].width, h: a.pages[0].height } };
   }
   if (!boundPages) boundPages = a.pages;
+  // (L3) the metric switcher: its page and its TMDL script join the built files (one write, one digest); the labels are
+  // the display names the plan shows for the measures (the user's, or the plan's Arabic or readable ones)
+  let SW = null;
+  if (a.metricSwitcher) {
+    const rs = resolveSwitch(m.tables, a.metricSwitcher);
+    input(!rs.problems.length, `Nothing was written. ${rs.problems.join(' ')}`);
+    const labels = Object.fromEntries(rs.measures.map((x) => { const g = given.get(Bind.fieldKey(x.t, x.m)); if (g) g.used = true; return [`${x.t}[${x.m}]`, g ? g.name : x.m]; }));
+    SW = addSwitch(r, { raw: modelOf(m.tmsl).tables || [], measures: rs.measures, labels, bind, lang: a.lang, rtl: switchAt.rtl, smooth: a.smoothLines, page: switchAt.page,
+      seed: modelPrintOf(m) + '\0' + r.base + '\0' + JSON.stringify(rs.measures) });
+    reportNotes.push(`The metric switcher is on its own page, ${JSON.stringify(SW.page)}: its field parameter is a TMDL script, "${SW.scriptFile}", next to the project (metricSwitcher.howToApply). ${switchSaid(SW).beforeApplied}`);
+  }
+  // (0.3.0 C1, the owner, 21 Oct) an Arabic report: the Arabic calendar columns its date table lacks, as a TMDL script next
+  // to the project that joins the built files (never applied by DataArcus). Until it is applied the report binds the
+  // English calendar columns (it always works); planned again after it, it binds the Arabic ones
+  const CO = a.lang === 'ar' && a.arabicCalendar !== false ? calendarOffer({ m }, null, r.base) : null;
+  if (CO && CO.offered) r.files.splice(r.files.findIndex((f) => /\.pbip$/.test(f.path)), 0, { path: CO.scriptAfterGo, data: CO.script });
+  // (0.3.0 L4) the chosen KPI cards as flip cards, on the built files (create_report's one build: the plan's artifact holds
+  // them); their measures as a TMDL script next to the project joins the files, as the metric switcher's (model-script.mjs)
+  const radius = +((((((written || {}).visualStyles || {})['*'] || {})['*'] || {}).border || [{}])[0] || {}).radius;
+  const flip = applyFlip(r.files, { flip: a.flipCards, lang: a.lang, rtl: look && look.rtl, ui: look && look.ui, font: look && look.font, radius: Number.isFinite(radius) ? radius : 8, tmsl: m.tmsl,
+    base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0flip' });
+  // (0.3.0 L5) the status icons on the built tables and matrices (the plan's artifact holds them); a status measure goes
+  // into its own TMDL script next to the project (model-script.mjs), rules need none
+  if (Array.isArray(a.statusIcons)) { const ri = resolveIcons(modelOf(m.tmsl).tables || [], a.statusIcons); input(!ri.problems.length, `Nothing was written. ${ri.problems.join(' ')}`); }
+  if (a.sharedAxes) { const ap = axesProblems(m, a.sharedAxes); input(!ap.length, `Nothing was written. ${ap.join(' ')}`); }
+  const icons = applyIcons(r.files, { opt: a.statusIcons, raw: modelOf(m.tmsl).tables || [], base: r.base, seed: modelPrintOf(m) + '\0' + r.base + '\0icons', ui: look && look.ui, rtl: !!(look && look.rtl) });
+  const galleryList = galleryOn(boundPages) ? galleryOf(boundPages, bind) : null;
+  // (0.3.0 J18, B-171 item 5; F1: every mixed text) an Arabic report's texts: each Latin run inside Arabic text (an
+  // acronym, a code, a model name kept in English) isolated wherever the report shows it, in the files the plan checks
+  // and writes
+  if (a.lang === 'ar') Terms.isolateFiles(r.files, [...given.values()].map((g) => g.name), { all: true });
   // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
@@ -1068,8 +1195,16 @@ function reportRun(a, mode) {
   // a right-to-left report's charts (round 13): mirrored, or left as they are when asked
   const CA = r.chartAxes || {};
   const chartAxes = CA.rtl ? { chartAxes: CA.asked === 'mirrored'
-    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right; a waterfall (gallery) has its value axis at the right and its steps run from the right by the same sort (Power BI has no setting to invert its category axis). For charts left to right pass chartAxes: "standard".' }
+    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right; a waterfall (gallery) is Power BI\'s own, left to right as in English, with waterfallRtl "native" (the default: Power BI cannot draw its waterfall design right to left), and with waterfallRtl "mirror" a waterfall (gallery) is written as a stacked column chart drawn as a waterfall, read from the right (Power BI draws a waterfall left to right only; waterfallRtl in reportNotes says what each became). For charts left to right pass chartAxes: "standard".' }
     : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
+  // (0.3.0 L2) the slicers' style asked, and what each slicer was written as with why; the gridlines asked
+  const looks = Object.assign(r.slicerStyle ? { slicerStyle: r.slicerStyle } : {}, r.grid ? { grid: r.grid } : {});
+  // (L4) the flip cards: which cards, their bookmarks, the script and how to apply it first
+  if (flip) looks.flipCards = Object.assign(flipAnswer(flip), flip.scriptFile ? { scriptFile: flip.scriptFile, howToApply: flipHow(flip.scriptFile) } : {});
+  // (L5) the status icons: each column, its way and rule, the script and how to apply it first
+  if (icons) looks.statusIcons = Object.assign(iconsSaid(icons), icons.scriptFile ? { scriptFile: icons.scriptFile, howToApply: iconsHow(icons.scriptFile) } : {});
+  // (D1) a right-to-left report's waterfalls: what each was written as (the plan says it too, waterfallRtl)
+  (r.waterfallRtl || []).forEach((x) => reportNotes.push(`The waterfall${x.title ? ` "${visible(x.title)}"` : ''} on "${visible(x.page)}": ${x.written === 'columnChart' ? x.what : x.what + (x.why ? ` (${x.why})` : '')}.`));
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
   // 0.2.9 part 2 (the owner's own test of 0.2.8): what the report does to its axes, tables and tooltips, said once
@@ -1154,10 +1289,13 @@ function reportRun(a, mode) {
   return Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, projectCheck ? { check: Object.assign({ tellUser: 'Checked before it was written (the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.' }, projectCheck) } : {}, extra, { panels },
     // (0.3.0) the phone layout: written for every page unless the design says phoneLayout false
     { phone: phoneAnswer(r.files.some((f) => /\/mobile\.json$/.test(f.path))) },
-    { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {});
+    { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, looks, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
+    galleryList ? { gallery: { slots: galleryList } } : {}, SW ? { metricSwitcher: switchSaid(SW) } : {}, CO && CO.offered ? { calendarArabic: calendarSaid(CO, shown, { scriptFile: CO.scriptAfterGo, howToApply: CO.howToApply }) } : CO && CO.leftOut ? { calendarArabic: { offered: false, why: CO.why, leftOut: CO.leftOut } } : {});
   };
-  return { files: r.files, finish, m, a11y: r.a11y || null };
+  // (0.3.0 F7) the fields the report binds, the keys of its formats script (the plan lists exactly these)
+  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
+    icons: icons ? Object.assign(iconsSaid(icons), { pending: icons.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: icons.scriptFile }) : null };
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's
@@ -1173,7 +1311,10 @@ function writeApproved(a, art) {
   const again = ' Make the plan again with plan_layout, show it to the user and wait for their go.';
   if (modelPrintOf(m) !== art.modelPrint) throw new Error(`Nothing was written: the model changed since plan ${a.planId} was approved, so the report that was checked is not the one this model gives.${again}`);
   if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw new Error(`Nothing was written: the report kept for plan ${a.planId} is not the one that was approved.${again}`);
-  return Object.assign(art.finish(a.planId), { exact: { status: art.check.status, digest: art.digest, files: art.files.length, pages: art.check.pages,
+  const done = art.finish(a.planId);
+  // (0.3.0 J18) the terms of a written Arabic plan are confirmed for this model (this session only)
+  { const pd = Plans.planOf(a.planId); if (pd && pd.data && Array.isArray(pd.data.terminology)) Terms.remember(m, pd.data.terminology); }
+  return Object.assign(done, { exact: { status: art.check.status, digest: art.digest, files: art.files.length, pages: art.check.pages,
     note: 'These are the files plan_layout built and checked before the go, written byte for byte (the digest is the plan\'s).' } });
 }
 // (J14, the owner's decision of 19 Oct) the checks that must run for a plan id, by their names in the plan
@@ -1184,14 +1325,24 @@ const attached = (id, art) => { if (art) Plans.attach(id, art); return id; };
 async function exactArtifact(ab, pin, lang) {
   let built;
   try { built = reportRun(ab, 'build'); } catch (e) { return null; }
-  const check = await checkArtifact(built.files, built.m.tables, lang === 'ar' ? 'ar' : 'en');
+  // (L3) the metric switcher's page reads the table its script adds: its fields are checked against the model with it
+  const tables = built.metricSwitcher ? built.m.tables.concat(Bind.fromTmsl(scriptModel(built.metricSwitcher.table))) : built.m.tables;
+  // (L4) the flip cards' measures are written with the report, as a script the user applies first: counted as there
+  // (L5) the status icons' measures likewise
+  const pending = [].concat(built.flip ? built.flip.pending : [], built.icons ? built.icons.pending : []);
+  const check = await checkArtifact(built.files, tables, lang === 'ar' ? 'ar' : 'en', pending.length ? { pending } : undefined);
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
-  return { files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y };
+  return { formatKeys: built.formatKeys, files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, gallery: built.gallery, waterfallRtl: built.waterfallRtl, metricSwitcher: built.metricSwitcher, flip: built.flip, icons: built.icons };
 }
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
 // (0.2.9.1, B-174) a category chart's kept categories as the plan and the report notes say them: "Top 5, all of them
 // when it has 7 or fewer" (the writer's Keep: measure), "Top 5" (a fixed Top N filter)
+// (0.3.0 L4) the flip cards as the plan and the answer say them: names screened, no description text, no value
+const flipAnswer = (f) => Object.assign({ cards: f.cards.map((c) => ({ page: shownName(c.page, 80), card: c.card, title: shownName(c.title, 80), measure: shownName(c.measure, 120), measures: c.measures.map((x) => shownName(x, 120)), back: c.back })),
+  bookmarks: f.bookmarks, newMeasures: f.measures.length,
+  how: 'Each card is three Image visuals in its box: a backdrop in the card colour, the front (its title and value) and the back (the measure\'s name and one line: its description from the model, its value, the change on last year where the model has a marked date table), hidden until the card is clicked; each face goes to the other through a display-only bookmark of its own (two a card), which touches no slicer or filter. The turn takes 0.3 s. The pictures are measures the model does not have yet: they are written as a TMDL script next to the project, applied by the user first.' },
+  f.notFlipped.length ? { notFlipped: f.notFlipped } : {}, f.skipped.length ? { skipped: f.skipped.map((x) => ({ page: shownName(x.page, 80), card: x.card, why: x.why })) } : {});
 const topSaid = (x) => `Top ${x.top}` + (x.allUpTo > x.top ? `, all of them when it has ${x.allUpTo} or fewer` : '');
 const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a count, or a measure whose format has no decimals (or a count without a format), shows its whole number with thousand separators (179, 101,914), except an amount (a currency in its format, or a sum of money: sales, revenue, cost, budget...), which keeps automatic units with 2 decimals (EUR 54.66M; 14.81K under a million: Power BI cannot switch the units by the value without a change in the model); every other measure keeps automatic units with 2 decimals (3.43M). A measure that shows text is never put on a card.';
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
@@ -1268,12 +1419,14 @@ server.registerTool('generate_theme', {
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-      plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+      plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
+        // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
+        outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, ref, inputsPin(a));
   // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)
   const file = withPlan(a.planId, 'generate_theme', () => {
-    if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print);
+    if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print, true);
     const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
 }));
@@ -1291,7 +1444,7 @@ server.registerTool('check_report', {
 
 server.registerTool('read_report', {
   title: 'Read a Power BI report',
-  description: 'Reads a PBIR report that already exists, whoever built it, and never changes it: a compact inventory, one line per visual (its type, place and size on the page, title, the fields in each role with their display names, sort, visual filters by field and kind, the group it sits in, hidden or not, its action or tooltip page), the pages in order (size, hidden, tooltip or drillthrough, page filters), slicers, buttons and their targets, bookmarks (name, page, what they keep), the theme\'s colours and label size, and custom visuals. Read it before a redesign, so the plan keeps the report\'s pages, questions and wiring (bookmarks, tooltip and drillthrough pages). Read it with the model (read_model): the report names fields, the model says their types and sort-by columns. A 4-page report of 160 visuals is about 10,000 to 18,000 characters (2,500 to 4,500 tokens); past 40,000 characters, pages are listed without their visuals and the answer says how to read them (pages). No table data: filter values, slicer selections and bookmark states are read with the report\'s files but never returned. Titles and text-box texts are screened for instructions and length only: long or instruction-like ones are withheld, a short one is returned as typed (a figure or a name a person typed in it included). Custom visuals are listed by type: DataArcus can\'t check their sizes or formats, create_report can\'t write them (a redesign would drop them), and a licensed one may ask the viewer to sign in: tell the user, and never replace one unasked.' + REPORT_UNTRUSTED,
+  description: 'Reads a PBIR report that already exists, whoever built it, and never changes it: a compact inventory, one line per visual (its type, place and size on the page, its title when a measure gives it (a typed, static title is never returned, as it can hold a figure or a name: the line says "static title"), the fields in each role with their display names, sort, visual filters by field and kind, the group it sits in, hidden or not, its action or tooltip page), the pages in order (size, hidden, tooltip or drillthrough, page filters), slicers, buttons and their targets, bookmarks (name, page, what they keep), the theme\'s colours and label size, and custom visuals. Read it before a redesign, so the plan keeps the report\'s pages, questions and wiring (bookmarks, tooltip and drillthrough pages). Read it with the model (read_model): the report names fields, the model says their types and sort-by columns. A 4-page report of 160 visuals is about 10,000 to 18,000 characters (2,500 to 4,500 tokens); past 40,000 characters, pages are listed without their visuals and the answer says how to read them (pages). No table data: filter values, slicer selections and bookmark states are read with the report\'s files but never returned. Text-box texts are screened for instructions and length only: long or instruction-like ones are withheld, a short one is returned as typed (a figure or a name a person typed in it included). Custom visuals are listed by type: DataArcus can\'t check their sizes or formats, create_report can\'t write them (a redesign would drop them), and a licensed one may ask the viewer to sign in: tell the user, and never replace one unasked.' + REPORT_UNTRUSTED,
   inputSchema: {
     path: z.string().describe('The report: a .pbip file, a .Report folder, or a folder holding definition/, inside the working folder'),
     pages: z.array(z.number().int().min(1).max(500)).min(1).max(50).optional().describe('Only these pages (1 is the first in the report\'s order), for a report too large for one answer'),
@@ -1317,13 +1470,33 @@ function redesignPlan(a) {
   const m = loadModel(a.path), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle });
   const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
   const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
-  return Object.assign({ redesign: R.answer }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
+  return Object.assign({ redesign: redesignFit(JSON.parse(JSON.stringify(R.answer)), a.redesignPages) }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     : { plan: Plans.proposal(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: redesignPin(a) }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown,
       outputs: R.files.map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), copied: R.files.length })) });
 }
+// (0.3.0 Q1) the redesign's answer grows with every page (a two-page report with every option on: 35,098 characters, its
+// pages' lists 20,384 of them). Cut at that cause, in this order, until it fits: the visuals not changed, the patches (the
+// same changes as file edits), then the changes; each with its count. The approval window shows every one of them
+// (the plan's own copy, never cut), and redesignPages lists one page's in full here
+function redesignFit(r, only) {
+  if (only && only.length) { const want = new Set(only.map(String)); r.pagesNotShown = (r.pages || []).filter((p) => !want.has(p.id) && !want.has(p.page)).length; r.pages = (r.pages || []).filter((p) => want.has(p.id) || want.has(p.page)); }
+  const size = (x) => pretty(out({ redesign: x })).length + 2500, pages = r.pages || [];
+  const tiers = [() => pages.map((p) => [p, 'notChanged']), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
+  let cut = 0;
+  for (const t of tiers) { const f = fitLists(r, t, size, AIM); if (!f) break; cut += f.cut; if (f.k > 0) break; }
+  if (cut) r.listsCut = { how: `This plan lists fewer visuals than it changes or keeps, to stay under ${AIM.toLocaleString('en-US')} characters ("<list>NotListed" says how many each list leaves out). DataArcus's approval window shows every change and every visual not changed before the person approves. To list one page in full here, call plan_layout again with the same inputs and redesignPages: ["<page id>"] (redesign.pages[].id); the plan is the same.` };
+  return r;
+}
 // (0.3.0 R2) what an Arabic plan says before the go: the proposed names it pins, the fields kept in English (with why)
 const NOT_TRANSLATED_WHY = 'No Arabic name: none was given (displayNames) and the fixed list of report words has none for it, so it shows under its English model name. Titles keep it alone, never joined with English words (a chart cut to its top N may begin with «أعلى N من M:», a table beside a chart of the same name ends with «: التفاصيل»).';
-const sayArabicPlan = (nP, nT) => `Say in the plan, before the go: ${nP ? `${nP} field${nP === 1 ? '' : 's'} will show under the proposed Arabic names in inThePlan (from the fixed list of report words; list each beside its model name, marked as proposed: the plan pins them, and approving the plan approves them)` : 'no field has a proposed Arabic name from the fixed list'}${nT ? `; ${nT} field${nT === 1 ? '' : 's'} (notTranslated) will show in English, under the model's names, with the reason (why). To show them in Arabic, propose a name for each (howToPropose), show the proposals, and call plan_layout again with the approved ones as displayNames` : ''}. Every other text of the report (titles' words, buttons, page names, the "no data" text, alt text) is Arabic. The model is never renamed.`;
+// (D6, the laptop's T1b: approved names passed as displayNames, «السنة» among them, made it say "no field has a proposed
+// Arabic name") nG: the Arabic names given in displayNames, counted beside the fixed list's proposals
+// (0.3.0 C1) what an Arabic plan and report say of the Arabic calendar columns: the script, its columns, the calendar
+// fields that show English data until it is applied (those the report shows, when known), and how to switch
+const calendarSaid = (co, shown, extra) => { const on = shown ? (co.englishData || []).filter((x) => shown.includes(x)) : co.englishData || [];
+  return Object.assign({ offered: true, table: co.table, columns: co.columns, englishData: on, englishDataWhy: co.englishDataWhy, howToSwitch: co.howToSwitch }, co.leftOut ? { leftOut: co.leftOut } : {}, co.note ? { note: co.note } : {}, extra || {}); };
+const sayArabicPlan = (nP, nT, nG) => `Say in the plan, before the go: ${[nP ? `${nP} field${nP === 1 ? '' : 's'} will show under the proposed Arabic names in inThePlan (from the fixed list of report words; list each beside its model name, marked as proposed: the plan pins them, and approving the plan approves them)` : '',
+  nG ? `${nG} field${nG === 1 ? '' : 's'} will show under the Arabic names approved in displayNames (list each beside its model name: the plan pins them)` : ''].filter(Boolean).join('; ') || 'no field has an Arabic name, from the fixed list or in displayNames'}${nT ? `; ${nT} field${nT === 1 ? '' : 's'} (notTranslated) will show in English, under the model's names, with the reason (why). To show them in Arabic, propose a name for each (howToPropose), show the proposals, and call plan_layout again with the approved ones as displayNames` : ''}. Every other text of the report (titles' words, buttons, page names, the "no data" text, alt text) is Arabic. The model is never renamed.`;
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
@@ -1345,9 +1518,14 @@ server.registerTool('plan_layout', {
     focus: focusInput, tables: tablesInput,
     themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
+    // (0.3.0 J17) the person's answers to the Gulf date questions (gulfDates.askNext), never Claude's own guess
+    gulfDates: z.object({ dateRole: z.string().max(300), grain: z.enum(['gregorian', 'hijri', 'seasonDay']), scope: z.enum(['all', 'year']), year: z.number().int().min(1300).max(1600),
+      hijriYearColumn: z.string().max(300), country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']), firstYear: z.number().int().min(1901).max(9999), lastYear: z.number().int().min(1901).max(9999) })
+      .partial().strict().optional().describe('With path: the person\'s own answers to gulfDates.askNext: the date the report follows (dateRole, one of gulfDates.candidates), the grain, the seasonal scope (all, or one Hijri year the person names: never "the current" one), the calendar\'s Hijri-year column they confirmed, and for a missing calendar their country and years'),
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
     svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
     redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle,
+    redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or its name) in full, when the plan\'s answer shortened its lists (listsCut); the plan is the same'),
     // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
     ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
   }, annotations: READS
@@ -1357,6 +1535,8 @@ server.registerTool('plan_layout', {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
   let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null, notTranslated = null;
+  // (0.3.0 J18) the terms reused from this session: { key: { alias, decision } }; as display names (a kept one: the model's own)
+  const reused = {}, reusedNames = () => Object.fromEntries(Object.entries(reused).map(([k, c]) => [k, c.decision === 'kept' ? k.replace(/^.*?\[(.*)\]$/, '$1') : c.alias]));
   // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
   Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
   if (a.path) {
@@ -1385,7 +1565,11 @@ server.registerTool('plan_layout', {
     if (a.lang === 'ar' && keys) {
       const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
       const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
-      const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
+      // (0.3.0 J18) a term the person confirmed earlier in this session, for this field of this model, its description and
+      // DAX unchanged: reused as if given (pinned, shown in the sheet as earlier); else the fixed list or the person
+      const conf = Terms.confirmedOf(m, [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)));
+      conf.forEach((c, k) => { reused[k] = c; });
+      const todo = [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k) && !conf.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
       const prop = {}, none = [];
       todo.forEach((k) => { const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1')); if (p) prop[k] = p; else none.push(k); });
       // B-88 (the owner's decision, 13 Oct, option B): every field without an Arabic name gets a proposal: the fixed list's
@@ -1397,8 +1581,9 @@ server.registerTool('plan_layout', {
       // the fixed list's names are the plan's default, as an English plan's readable names (design round 8): named in the
       // plan, pinned with it, approved with it; every other field is listed as kept in English, with why
       notTranslated = [];
+      if (conf.size) planNames = Object.assign({}, reusedNames(), a.displayNames || {});
       if (todo.length) {
-        if (Object.keys(prop).length) planNames = Object.assign({}, prop, a.displayNames || {});
+        if (Object.keys(prop).length) planNames = Object.assign({}, prop, reusedNames(), a.displayNames || {});
         notTranslated = none.map((k) => ({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why: NOT_TRANSLATED_WHY }));
         Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: Object.assign({}, prop) } : {}, { notTranslated });
       }
@@ -1416,6 +1601,9 @@ server.registerTool('plan_layout', {
   const planNoTime = (() => { if (!m0) return false; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return false;
     return !(a.planFields || {}).timeAxis && !(Bind.suggest(sc.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; })();
   const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
+  // (0.3.0 D2) the gallery kinds the user asked for, on the designed page's slots as create_report puts them (each slot
+  // keeps its own kind in insteadOf; the writer's decision on the fields is said below, gallery)
+
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
@@ -1433,6 +1621,16 @@ server.registerTool('plan_layout', {
   let model = null, planned = null;
   if (a.path) { const m = m0; model = modelRef(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
   else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
+  // (0.3.0 J17, B-170) the Gulf date questions: which date the plan follows (an active relationship is not the business
+  // intent), the grain and the seasonal scope, asked one at a time; a role nothing serves, or a seasonal page with an open
+  // question, gets no plan id. The trend's axis: the plan's, or the date the picker takes
+  let gulfDates = {}, gulfDateRows = null;
+  if (m0) {
+    const scG = scopeOf(m0, { focus: a.focus, tables: a.tables });
+    const axisG = pf.timeAxis || (scG.needsFocus ? null : (() => { const d = (Bind.suggest(scG.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; return d && d.c != null ? `${d.t}[${d.c}]` : null; })());
+    const GQ = DateQ.gulfDateQuestions(m0, a, { axis: axisG });
+    if (GQ) { GQ.problems.forEach((x) => planProblems.push(x)); gulfDates = { gulfDates: GQ.answer }; gulfDateRows = GQ.rows; }
+  }
   // 0.2.9 part 2 (O-13): how the plan's month axis will be ordered, said before the plan is shown
   let timeAxis = {};
   if (m0 && !planProblems.length) {
@@ -1449,23 +1647,39 @@ server.registerTool('plan_layout', {
   }
   // (0.2.9, custom visuals, step C) the replacements of an existing report's custom visuals, each with what it loses; the
   // plan pins the approved mapping, and create_report writes only that, in a new "<name> native" report
-  let customVisuals = {}, cvEntries = null;
+  let customVisuals = {}, cvEntries = null, cvAsk = [];
   if (a.customVisualsFrom != null) {
     if (!m0) planProblems.push('customVisualsFrom needs path (the report\'s model), so each replacement is checked against the model\'s types and formats.');
-    else { const cv = planNative(a.customVisualsFrom, m0); cvEntries = cv.entries; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
+    else { const cv = planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes)); cvEntries = cv.entries; cvAsk = cv.ask || []; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
   }
+  // (L3) the metric switcher's measures: each a measure of the model, 2 to 5, before the plan is shown
+  if (a.metricSwitcher) {
+    if (!m0) planProblems.push('metricSwitcher needs path (the model), so its measures can be checked against it.');
+    else if (a.customVisualsFrom != null) planProblems.push('metricSwitcher is for a new report; a native copy of custom visuals writes the replacements alone.');
+    else resolveSwitch(m0.tables, a.metricSwitcher).problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)'));
+  }
+  // (L5) the status icons' measures, thresholds and targets, before the plan is shown (a threshold is never guessed)
+  if (a.statusIcons && a.statusIcons !== false) {
+    if (!m0) planProblems.push('statusIcons needs path (the model), so its measures and targets can be checked against it.');
+    else if (a.customVisualsFrom != null) planProblems.push('statusIcons is for a new report; a native copy of custom visuals writes the replacements alone.');
+    else if (Array.isArray(a.statusIcons)) resolveIcons(modelOf(m0.tmsl).tables || [], a.statusIcons).problems.forEach((x) => planProblems.push(x));
+  }
+  // (0.3.0 J19) the person's answers on shared axes name the model's own measures
+  if (a.sharedAxes) { if (!m0) planProblems.push('sharedAxes needs path (the model), so its measures can be checked against it.'); else axesProblems(m0, a.sharedAxes).forEach((x) => planProblems.push(x)); }
   // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the planned pages as the approval window draws them
   // (lib/plan-lint.mjs planPreview, the shared renderer's page model), kept with the plan and never in an answer: types,
   // positions, sizes, titles, field names and theme colours, never a value. A native copy of custom visuals has none
-  const preview = (() => {
+  // (0.3.0 D5: drawn from the exact artifact's files when there is one, the bytes create_report writes: its titles are
+  // the written titles; built here only for a plan without one)
+  const previewOf = (files) => {
     if (!m0 || planProblems.length || cvEntries) return null;
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return null;
       const lang = a.lang === 'ar' ? 'ar' : 'en';
-      return Object.assign({ lang }, planPreview({ m: m0, tables: sc.tables, design: r.design, lang, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
-        second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }));
+      return Object.assign({ lang }, planPreview(Object.assign({ m: m0, tables: sc.tables, design: r.design, lang, gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null,
+        second: a.secondPage !== false, panel: a.slidePanel === true, title: a.title || a.name, displayNames: planNames || a.displayNames }, files ? { files } : {})));
     } catch (e) { return null; }
-  })();
+  };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
@@ -1476,7 +1690,7 @@ server.registerTool('plan_layout', {
     try {
       const sc = scopeOf(m0, { focus: a.focus, tables: a.tables });
       if (sc.needsFocus) return { skipped: 'a large model needs a focus or tables to plan the page\'s fields' };
-      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
+      return planLint({ m: m0, tables: sc.tables, design: r.design, lang: a.lang === 'ar' ? 'ar' : 'en', gallery: a.gallery, axes: m0 ? axesOf(m0, a.sharedAxes) : undefined, F: Object.keys(pf).length ? fieldsAndProblems(m0.tables, pf).out : null });
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   // B-146, the aggregation guard (0.3): the planned page's values read by assets/js/aggregation.js (metadata only). A
@@ -1489,13 +1703,18 @@ server.registerTool('plan_layout', {
     const known = new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field)].concat(Object.keys(a.displayNames || {})));
     if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
     const an = arabicNames.arabicNames, why = NOT_TRANSLATED_WHY;
-    designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))).forEach((k) => {
+    const more = designLint.designLint.fields.filter((k) => !known.has(k) && inModel(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, ''))), conf2 = Terms.confirmedOf(m0, more);
+    // (0.3.0 A3) a first name added here starts from the names the person approved (displayNames), never without them:
+    // a plan whose only fixed-list name came from the lint's fields pinned that one alone and dropped every approved name
+    const namesSoFar = () => planNames || Object.assign({}, a.displayNames || {});
+    conf2.forEach((c, k) => { reused[k] = c; planNames = Object.assign(namesSoFar(), { [k]: reusedNames()[k] }); });
+    more.filter((k) => !conf2.has(k)).forEach((k) => {
       const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1'));
-      if (p) { planNames = Object.assign(planNames || {}, { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
+      if (p) { planNames = Object.assign(namesSoFar(), { [k]: p }); an.inThePlan = Object.assign(an.inThePlan || {}, { [k]: p }); }
       else notTranslated.push({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why });
     });
   }
-  if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length);
+  if (notTranslated && arabicNames.arabicNames) arabicNames.arabicNames.sayInPlan = sayArabicPlan(Object.keys(arabicNames.arabicNames.inThePlan || {}).length, notTranslated.length, Object.values(a.displayNames || {}).filter((v) => /[\u0600-\u06FF]/.test(String(v))).length);
   const aggr = (designLint.designLint && designLint.designLint.aggregation) || null;
   (aggr ? aggr.problems : []).forEach((x) => planProblems.push(`${x.field}: ${a.lang === 'ar' ? x.ar : x.en}`));
   const aggregation = aggr && (aggr.nonAdditive.length || aggr.questions.length) ? { aggregation: aggregationAnswer(aggr, a.lang === 'ar' ? 'ar' : 'en') } : {};
@@ -1514,6 +1733,7 @@ server.registerTool('plan_layout', {
     if (unchecked.length) planProblems.push(`the report this plan writes could not be fully checked: ${unchecked.map((n) => MUST_RUN[n.check]).join(' and ')} did not run (exactCheck.notRun says why), so no plan id is given. Tell the user; try again, or check the report with check_report after another plan.`);
     if (exact && exact.check.status === 'blocked') planProblems.push(`the report this plan writes fails its check before writing (${Object.entries(exact.check.byRule).filter(([k]) => (exact.check.blocking || []).some((b) => b.rule === k)).map(([k, n]) => `${k} ${n}`).join(', ') || 'blocked'}; exactCheck lists the files): change the plan, or tell the user it can't be written as planned.`);
   }
+  const preview = previewOf(exact ? exact.files : null);
   const exactCheck = !planPin ? {} : { exactCheck: exact ? Object.assign({}, exact.check, { digest: exact.digest,
     sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.`
       : exact.check.status === 'incomplete' ? `Tell the user: not every check could run on the report this plan writes (notRun), so it is not known to be clean. ${(exact.check.notRun || []).every((n) => !MUST_RUN[n.check] || n.capped) ? 'The approval page lists what was not checked; create_report writes exactly the files that were checked.' : 'No plan id is given (planProblems).'}`
@@ -1523,18 +1743,85 @@ server.registerTool('plan_layout', {
   // kind the writer gives them (its own rules, on the page the lint built as create_report writes it), so what is
   // approved is what is written. (rc.24: the lint runs before the plan is proposed, so the plan's data carries the
   // changes too: the approval page said "Column chart by" for the chart written as a bar chart)
+  // (0.3.0 D2) each gallery slot as create_report's own build writes it (the exact artifact): the kind, two panels, or the
+  // slot's own kind, with the writer's why; a designed slot shows what is written
+  const galleryPlan = exact && exact.gallery && exact.gallery.length ? exact.gallery : null;
+  // (the plan's slots are its first page's: the entries of that page, by the slot's role and its own kind)
+  const firstPage = exact && exact.gallery && exact.gallery.find((g) => g.page) ? (exact.gallery.find((g) => g.page) || {}).page : null;
+  if (galleryPlan && !a.pages) galleryPlan.filter((g) => g.page && g.page === firstPage && g.insteadOf).forEach((g) => { const sl = r.slots.find((x) => x.role === g.title && x.kind === g.insteadOf); if (!sl) return;
+    const k = g.written === g.kind ? g.kind : /^two panels/.test(g.written) ? 'line' : g.written;
+    Object.assign(sl, { kind: k, visual: Gallery.isKind(Gallery.fromTool(k)) ? Gallery.labelOf(k, a.lang) : kindLabel(k, a.lang), insteadOf: g.insteadOf, galleryWhy: g.why });
+    const fa = r.forAuthoring.find((f) => f.role === sl.role); if (fa) fa.kind = k; });
   const kinds = (designLint.designLint && designLint.designLint.kinds) || [];
   const ofKind = (kd) => r.slots.filter((x) => (x.plannedAs || x.kind) === kd);   // (the layout's own kinds, before any change)
   kinds.forEach((k) => { const sl = ofKind(k.from)[k.nth]; if (!sl || sl.plannedAs) return; sl.kind = k.to; sl.visual = kindLabel(k.to, a.lang); if (k.topN != null) sl.topN = k.topN; else delete sl.topN; sl.plannedAs = k.from; if (k.why) sl.kindWhy = k.why; });
   const writtenKinds = r.slots.filter((x) => x.plannedAs).map((x) => Object.assign({ role: x.role, from: x.plannedAs, to: x.kind }, x.kindWhy ? { why: x.kindWhy } : {}));
-  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
+  // (0.3.0 J19, B-172) which measures stay off one axis, why (English and Arabic), and the questions for the person
+  const axSplits = (galleryPlan || []).filter((g) => g.whyAr && /two panels/.test(g.written || '')).map((g) => ({ page: g.page, visual: 'combo', why: { en: g.why, ar: g.whyAr } }))
+    .concat((cvEntries || []).filter((e) => e.panels).map((e) => ({ page: e.page, visual: 'custom visual ' + e.from, panels: e.panels.length, why: e.axes.why })));
+  const axAsk = (galleryPlan || []).flatMap((g) => g.ask || []).concat(cvAsk);
+  const sharedAxesAns = axSplits.length || axAsk.length || a.sharedAxes ? { sharedAxes: Object.assign({ splits: axSplits }, axAsk.length ? { ask: axAsk } : {}, a.sharedAxes ? { answered: a.sharedAxes } : {},
+    { sayInPlan: 'Say in the plan, for each chart whose measures stay apart, that they are separate visuals and why (the reason is given in English and Arabic): measures share one axis only in the same unit, scale and currency, and only when the user says they compare; there is never a second axis, and no currency is converted. Ask the user each question in ask, in their words; pass only their own answer back as sharedAxes, then make the plan again.' }) } : {};
+  const gallery = galleryPlan ? { gallery: { slots: galleryPlan, sayInPlan: 'Say in the plan, page by page, each gallery visual the user asked for: its kind, what is written (the kind itself, two panels for a combo of two units on a slot the user placed, or the slot\'s own kind when the fields don\'t fit) and why; on a design at most one goes on a page, only where its fields suit, and a kind no page took is listed as not placed, with why. The approval page\'s preview draws a waterfall and small multiples as a column-chart placeholder and a combo as a line-chart placeholder: say so. They are used only because the user asked: never propose them unasked.' } } : {};
+  // (D1) a right-to-left plan's waterfalls, said before the go as the exact report writes them
+  const waterfallRtl = exact && exact.waterfallRtl && exact.waterfallRtl.length ? { waterfallRtl: { charts: exact.waterfallRtl.map((x) => Object.assign({ page: visible(x.page), title: x.title ? visible(x.title) : null, written: x.written === 'columnChart' ? 'stacked column chart drawn as a waterfall' : x.native ? 'Power BI\'s waterfall, left to right' : 'waterfall, left to right', what: x.what }, x.why ? { why: x.why } : {})),
+    mode: Gallery.waterfallRtlOf(a.waterfallRtl),
+    sayInPlan: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `Say in the plan, in the person's terms: "${Gallery.WF_WHAT.native}" (Power BI's own waterfall, its Total column, legend and colours as in English; the rest of the report is mirrored). The other choice is waterfallRtl "mirror": a look-alike read from the right, with no Total column, no total label and no legend.`
+      : 'Say in the plan, for each waterfall, in the person\'s terms: "no Total column in Arabic: the last step on the left ends at the total", with no total label either (Power BI 2.159 does not draw it; every step\'s tooltip gives the running total), no legend, the base shown in the tooltip, because Power BI draws a waterfall left to right only; or that it is kept a waterfall, left to right, and why. The other choice is waterfallRtl "native": Power BI\'s own waterfall, left to right.' } } : {};
+  // (L3) the switch as the exact build writes it: its measures, labels, charts, script and the model change
+  const switchPlan = exact && exact.metricSwitcher ? switchSaid(exact.metricSwitcher) : null;
+  const flipPlan = exact && exact.flip ? exact.flip : null;
+  // (0.3.0 F7, the red team's F-3) the formats the plan lists are those of the fields the report binds (the exact
+  // artifact's), the keys create_report's script is built from: the plan shows every object the script changes
+  if (exact && Array.isArray(exact.formatKeys) && m0 && a.path) { const f2 = formatsAnswer(m0, a.path, new Set(exact.formatKeys), undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
+    if (f2) formats = { formats: Object.assign({ sayFirst: formats.formats ? formats.formats.sayFirst.replace(/\d+ of the plan's fields/, `${f2.fields.length} of the plan's fields`).replace(/has no right format|have no right format/, f2.fields.length === 1 ? 'has no right format' : 'have no right format') : `Tell the user first, before the layout: ${f2.fields.length} of the plan's fields ${f2.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, f2) };
+    else formats = {}; }
+  // (0.3.0 C1) the Arabic calendar script the write adds (the exact artifact holds it, by its name there)
+  const calFile = exact && (exact.files || []).map((f) => f.path).find((f) => /Arabic calendar\.tmdl$/.test(f));
+  const calPlan = calFile && m0 ? calendarOffer({ m: m0 }, null, calFile.replace(/ - Arabic calendar\.tmdl$/, '')) : a.lang === 'ar' && m0 && exact ? calendarOffer({ m: m0 }, null, '-') : null;
+  const calendarArabic = calPlan && !calPlan.offered && calPlan.leftOut ? { calendarArabic: { offered: false, why: calPlan.why, leftOut: calPlan.leftOut } } : calPlan && calPlan.offered && calFile ? { calendarArabic: calendarSaid(calPlan, designLint.designLint && Array.isArray(designLint.designLint.fields) ? designLint.designLint.fields : null, { scriptAfterGo: calFile,
+    sayInPlan: `Say in the plan: the model's calendar shows English values (${(calPlan.englishData || []).join(', ') || 'its names and flags'}) on Arabic pages until the user applies the TMDL script "${calFile}" (written next to the project after the go, never applied by DataArcus), which adds ${calPlan.columns.length} Arabic columns to ${JSON.stringify(calPlan.table)}; then plan the report again and it binds them.` }) } : {};
+  const iconsPlan = exact && exact.icons ? exact.icons : null;
+  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0, axesOf(m0, a.sharedAxes)).writes : [`the report "<name>.Report" and its "<name>.pbip" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''}${switchPlan ? `, and the metric switcher's TMDL script "<name>${SCRIPT_SUFFIX}.tmdl" (a new table for the model, never applied by DataArcus: the user applies it in TMDL view)` : ''}${flipPlan ? `, and the flip cards' TMDL script "${flipPlan.scriptAfterGo}" (${flipPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''}${iconsPlan && iconsPlan.scriptAfterGo ? `, and the status icons' TMDL script "${iconsPlan.scriptAfterGo}" (${iconsPlan.newMeasures} new measures, never applied by DataArcus: the user applies it in TMDL view)` : ''} (create_report)`];
+  if (calFile && a.customVisualsFrom == null && writes.length) writes[0] += `, and the Arabic calendar columns' TMDL script "${calFile}" (${calPlan ? calPlan.columns.length : ''} columns for the date table, never applied by DataArcus: the user applies it in TMDL view)`;
+  const statusIcons = iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined, sayInPlan: `Say in the plan: which table or matrix columns get a status icon (columns), how each is decided (rule: the user's thresholds as given, or the target the model names), that the icons differ in shape${iconsPlan.scriptAfterGo ? `, and the model change: ${iconsPlan.newMeasures} new status measures in the script "${iconsPlan.scriptAfterGo}" next to the project: the user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then no icon shows)` : ''}${(iconsPlan.notShown || []).length ? '; and each measure left without an icon, with why (notShown)' : ''}.` }) } : {};
+  // (0.3.0 J18, B-171) the terminology sheet of an Arabic plan: every field the report shows (read from the exact
+  // artifact's files when there is one), where it shows, its English name and its Arabic and their status, and the one
+  // term to ask next. The plan's data keeps the rows for the approval page, and the terms are remembered once written
+  let terminology = {}, termRows = null;
+  if (a.lang === 'ar' && m0 && notTranslated) {
+    const norm = (k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(k); };
+    const givenN = new Map(Object.entries(a.displayNames || {}).map(([k, v]) => [norm(k), String(v)]));
+    const places = exact ? Terms.placesOf(Terms.reportOf(exact.files)) : null, inThePlan = (arabicNames.arabicNames && arabicNames.arabicNames.inThePlan) || {};
+    const keysShown0 = places ? [...places.keys()] : [...new Set([...Object.keys(planNames || {}), ...notTranslated.map((x) => x.field), ...givenN.keys()])];
+    // (0.3.0 A3) a measure shown only on a flip card (its title, alt texts, bookmarks and faces: no field header) is a
+    // row too: a declined one was listed nowhere and an approved one was not remembered for the next plan
+    // (and a metric switcher's measure: its name is a choice of the switcher's slicer and its charts' title, from this sheet)
+    const flipKeys = flipPlan ? [...new Set((flipPlan.cards || []).map((c) => norm(c.measure)))] : [];
+    const switchKeys = switchPlan ? [...new Set((switchPlan.measures || []).map((x) => norm(x.field)))] : [];
+    const keysShown = [...new Set(keysShown0.concat(flipKeys, switchKeys))];
+    const terms = new Map(keysShown.map((k) => {
+      const en = k.replace(/^.*?\[(.*)\]$/, '$1');
+      if (givenN.has(k)) { const v = givenN.get(k); return [k, v.trim() === en ? { ar: null, status: 'kept', declined: true } : { ar: v, status: 'approved' }]; }
+      if (reused[k]) return [k, reused[k].decision === 'kept' ? { ar: null, status: 'kept', declined: true, earlier: true } : { ar: reused[k].alias, status: 'approved', earlier: true }];
+      if (inThePlan[k] != null) return [k, { ar: inThePlan[k], status: 'draft' }];
+      return [k, { ar: null, status: 'kept' }];
+    }));
+    termRows = Terms.sheetOf(keysShown, terms, places, Terms.isolateLatin);
+    termRows.forEach((r, i) => { const k = keysShown[i]; if (r.where.length) return;
+      r.where = [...new Set((flipKeys.includes(k) ? flipPlan.cards.filter((c) => norm(c.measure) === k).map((c) => `${c.page}: flip card (title, alt text, bookmarks, faces)`) : [])
+        .concat(switchKeys.includes(k) ? [`${switchPlan.page}: a choice of the metric switcher (its slicer and its charts' title)`] : []))]; });
+    terminology = { terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW }) };
+  }
+  const flipCards = flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined, sayInPlan: `Say in the plan: which KPI cards flip (cards), what their back says (back), the ${flipPlan.bookmarks} bookmarks, and the model change: ${flipPlan.newMeasures} new measures in the script "${flipPlan.scriptAfterGo}" next to the project. The user must apply the script first, in TMDL view (the model is not changed by DataArcus; until then ${FLIP_BEFORE}). Editing in Desktop, a card turns with Ctrl+click.` }) } : {};
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
+    : model ? { plan: Plans.proposal(attached(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: planPin || reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries, customVisualsShown: customVisuals.customVisuals.replacements.map((x) => ({ line: x.line, lost: x.lost || [] })) } : {}, writtenKinds.length ? { kinds: writtenKinds } : {}, galleryPlan ? { gallery: galleryPlan } : {}, switchPlan ? { metricSwitcher: switchPlan } : {}, flipPlan ? { flipCards: Object.assign({}, flipPlan, { pending: undefined }) } : {}, iconsPlan ? { statusIcons: Object.assign({}, iconsPlan, { pending: undefined }) } : {}, exact ? { outputs: exact.files.map((f) => f.path).concat(formats.formats && formats.formats.scriptAfterGo ? [formats.formats.scriptAfterGo] : []) } : {}, exact && exact.a11y && (exact.a11y.colours || []).length ? { colours: { changed: exact.a11y.colours, card: exact.a11y.card } } : {}, notTranslated && notTranslated.length ? { notTranslated } : {}, termRows ? { terminology: termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })) } : {}, gulfDateRows ? { gulfDates: gulfDateRows } : {}, preview ? { preview } : {}, exact ? { exact: Object.assign({ status: exact.check.status, digest: exact.digest, pages: exact.check.pages }, (exact.check.notRun || []).length ? { notChecked: exact.check.notRun.map((n) => ({ check: n.check, why: n.why })) } : {}) } : {})), exact), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   const kindChanges = kinds.length ? { kindChanges: { slots: writtenKinds.map((x) => Object.assign({ role: x.role, layout: x.from, written: x.to }, x.why ? { why: x.why } : {})), sayInPlan: 'The slots above show the kind each visual is written as: a column chart whose category names would slant or be cut is written as a bar chart with its names level, and a category with two values as a donut; each slot\'s why says the reason (the label limits measured in Power BI Desktop). Say it in the plan.' } } : {};
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a tint towards the panel and the largest exactly in the chart\'s colour, never darker (the bar\'s length tells the size; the colour ranks); a chart\'s colour follows its category field, the same on every page: the first field the theme\'s colour, the next a second colour chosen from the palette (another hue, never a red or status colour, 3:1 on the visuals). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, aggregation, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
+  const metricSwitcher = switchPlan ? { metricSwitcher: Object.assign({ sayInPlan: 'Say in the plan: the Metric page, its slicer and the charts that switch, each measure with its label, and the model change: a new table as a TMDL script file next to the project that the user applies in TMDL view (DataArcus never changes the model); until it is applied only that page shows Power BI\'s error. Show howToApply after the write.' }, switchPlan) } : {};
+  return text(Object.assign(formats, arabicNames, terminology, gulfDates, displayNamesAns, customVisuals, plan, timeAxis, designLint, exactCheck, kindChanges, gallery, sharedAxesAns, waterfallRtl, flipCards, statusIcons, aggregation, metricSwitcher, calendarArabic, { phone: phoneAnswer(r.design.layout.phoneLayout !== false) }, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, or all of them when it has at most N + 2; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => {
     // (0.2.9.1, B-174) what the writer keeps on the plan's page (the lint built it): its N and up to how many categories it
     // shows all; a slot the writer does not cut (a time or known category) is not said to be cut. No lint: the slot's N
     const lt = designLint.designLint && designLint.designLint.tops, written = new Map();
@@ -1570,25 +1857,29 @@ server.registerTool('add_gulf_calendar', {
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
   if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase })));
-  const named = (dir, base) => path.join(dir, base + '.tmdl');
-  const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
+  const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: scriptNameNow, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
     plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`], { pins: { add_gulf_calendar: inputsPin(a) } })) }));
 }));
 
 // rc.22, B-139 (the twin's approval page listed internal ids): each approved text named by what it is and its own text,
 // as the plan shows it (texts that read like an instruction stay withheld)
-const TWIN_KIND = { page: 'Page name', button: 'Button', title: 'Title', textbox: 'Text box', field: 'Field name', bookmark: 'Bookmark', titleMeasure: 'Chart title (from a title measure)' };
-const twinNames = (P) => Object.fromEntries(P.texts.filter((t) => P.labels[t.id] != null).map((t) => [t.id, `${t.kind === 'button' && t.goesTo ? 'Page button' : TWIN_KIND[t.kind] || 'Text'}${t.text != null ? ` "${t.text}"` : ' (withheld: reads like an instruction)'}${t.labelFrom ? ' (its page\'s Arabic name)' : ''}`]));
+const TWIN_KIND = { page: 'Page name', button: 'Button', title: 'Title', textbox: 'Text box', field: 'Field name', bookmark: 'Bookmark', titleMeasure: 'Chart title (from a title measure)', measureText: 'Text of a report measure', altText: 'Alt text', blankText: 'Text when there is no data', buttonTooltip: 'Button tooltip', text: 'Text' };
+const twinNames = (P) => Object.fromEntries(P.texts.filter((t) => P.labels[t.id] != null).map((t) => [t.id, `${t.phone ? 'Phone layout: ' : ''}${t.kind === 'button' && t.goesTo ? 'Page button' : TWIN_KIND[t.kind] || 'Text'}${t.text != null ? ` "${t.text}"` : ' (withheld: reads like an instruction)'}${t.labelFrom ? ` (${t.labelFrom})` : ''}`]));
 server.registerTool('create_arabic_twin', {
   title: 'Create the Arabic twin of a report',
-  description: 'Makes the right-to-left Arabic twin of an existing PBIR report: a new "<name> AR" report and .pbip next to the original, on the same model, every page mirrored in place (each visual\'s place mirrored, groups included; bar charts growing from the right; column, line and area charts with the value axis at the right and their order reversed by the sort; legends, titles, text boxes and table columns to the right), page ids, visual names and bookmarks kept so navigation keeps working. The original is only read, never changed; nothing is ever written over. Without planId it writes nothing and answers the plan: the pages, what mirrors, what cannot (custom visuals, the page navigator\'s order, Power BI\'s own words, data values), every text of the report with an id for its Arabic, and the Arabic month column offered as a TMDL script the user applies. The Arabic texts are DRAFTS for the user to approve: pass the approved ones as labels to get a plan id for exactly those; never translate silently. After the user\'s go: approve_plan, then this tool with planId.' + REPORT_UNTRUSTED + UNTRUSTED,
+  description: 'Makes the right-to-left Arabic twin of an existing PBIR report: a new "<name> AR" report and .pbip next to the original (or, with into "same", one copy "<name> (EN-AR)" holding the English pages and their Arabic pages, with a language button on each page to its counterpart and the slicers of each pair in sync), on the same model, every page mirrored in place (each visual\'s place mirrored, groups included; bar charts growing from the right; column, line and area charts with the value axis at the right and their order reversed by the sort; legends, titles, text boxes and table columns to the right), page ids, visual names and bookmarks kept so navigation keeps working. The original is only read, never changed; nothing is ever written over. Without planId it writes nothing and answers the plan: the pages, what mirrors, what cannot (custom visuals, the page navigator\'s order, Power BI\'s own words, data values), every text of the report with an id for its Arabic (the phone layout, alt texts and the empty state too; the phone layout is mirrored like the pages), what stays English and why (notTranslated), and the Arabic month column offered as a TMDL script the user applies. The Arabic texts are DRAFTS for the user to approve: pass the approved ones as labels to get a plan id for exactly those; never translate silently. After the user\'s go: approve_plan, then this tool with planId.' + REPORT_UNTRUSTED + UNTRUSTED,
   inputSchema: {
     path: z.string().describe('The original report: its .pbip file or its .Report folder, inside the working folder'),
     labels: z.record(z.string().max(200), z.string().max(200)).optional().describe('The Arabic texts the user approved, by the text ids of the plan ({ "page:<id>": "...", "title:<page>/<visual>": "...", "field:<queryRef>": "..." }). A text without a label stays as it is'),
+    terms: z.record(z.string().max(300), z.string().max(200)).optional().describe('The terminology sheet\'s terms the user approved, one Arabic name per field: { "Table[Field]": "الاسم" }, or the field\'s English name to keep it in English. A term is written on every header of its field and every title, tooltip and alt text made of its name, the same word everywhere (terminology in the answer: ask its askNext, one at a time)'),
     timeRightToLeft: z.boolean().default(true).describe('Charts over time (months, dates) run right to left like the rest of the page (default); false keeps time left to right. The user\'s choice'),
+    waterfallRtl: WATERFALL_RTL_INPUT(),
     arabicMonth: z.boolean().default(true).describe('Offer (and after the go write) the TMDL script that adds an Arabic month name column to the date table; the user applies it in TMDL view'),
     mirrorPicturePages: z.boolean().default(false).describe('A page drawn on a background picture is kept left to right by default (Power BI has no setting that mirrors the picture, so mirrored visuals would leave its panels); true mirrors such pages anyway. The plan names them: ask the user'),
+    into: z.enum(['separate', 'same']).optional().describe('"separate" (the default): the twin is its own report "<name> AR". "same": ONE report holding both languages, a copy "<name> (EN-AR)" next to the original (never the original itself): its English pages as they are and their Arabic pages, a language button on every page to its counterpart, the slicers of each page pair kept in sync. Only when the user asks for one report with both languages'),
+    tabsShown: z.enum(['en', 'ar']).optional().describe('With into "same": the pages shown in the tabs; the other language\'s are hidden and reached by the language button. "en" (the default) or "ar"'),
+    textsFrom: z.number().int().min(0).max(100000).optional().describe('The plan only: list the texts from this one on (moreTexts.from in an answer that could not list them all); the plan and what is written stay the same'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
@@ -1597,9 +1888,12 @@ server.registerTool('create_arabic_twin', {
   if (a.planId != null && a.planId !== '') { const P = Plans.gate('create_arabic_twin', a.planId, key); return text(withPlan(a.planId, 'create_arabic_twin', () => writeTwin(a, P))); }
   const P = planTwin(a);
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
-  const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
-    .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, modelPrint: P.modelPrint, names: twinNames(P), timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
+  const LG = P.answer.languages;
+  const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${P.answer.labels.given} Arabic texts as approved), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
+    : `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
+    .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic calendar columns: ${(P.month.columns || []).length || 1}); never applied: the user applies it in TMDL view`] : []);
+  return compact(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
+    ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) })) }), TWIN_CAP);
 }));
 
 // (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
@@ -1621,10 +1915,12 @@ server.registerTool('approve_plan', {
   // person answers the app's own prompt, which lists what will be written
   const caps = server.server.getClientCapabilities() || {};
   if (caps.elicitation && (caps.elicitation.form || !caps.elicitation.url)) {
-    let r;
+    // (0.3.0 S1, B-183) what the approval page shows, in short: the files per group, a colour written other than approved
+    let r; const data = (Plans.planOf(P.id) || {}).data, inShort = Approval.promptSummary(P.kind, data), nm = Approval.summary(P.kind, data).name;
+    const writes = P.writes.map((x) => (nm ? String(x).split('<name>').join(nm) : x));   // (the report's name, as the page shows it)
     try {
       r = await server.server.elicitInput({ mode: 'form',
-        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${P.writes.join('\n- ')}\n${writesNote(P.writes)}`,
+        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${writes.join('\n- ')}\n${inShort ? inShort + '\n' : ''}${writesNote(P.writes)}`,
         requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
       { timeout: 10 * 60 * 1000 });
     } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
@@ -1644,7 +1940,7 @@ server.registerTool('approve_plan', {
   if (d === 'approve') return text(Plans.approval(plan.id));
   if (d === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
   return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: o.again ? 'opened again' : st ? 'open' : 'opened',
-    sayFirst: 'Not approved yet: DataArcus opened its approval window in the user\'s browser, with the plan and every file it writes. Tell the user to check it and click Approve there (or "Not now"). When they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
+    sayFirst: 'Not approved yet: still waiting for the click in DataArcus\'s approval window in the user\'s browser (it shows the plan and every file it writes). Tell the user to check it and click Approve there (or "Not now"); a click later still counts: when they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
 }));
 
 prepareRoot();

@@ -54,12 +54,15 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
   chk(() => /customGauge/.test(cannot) && /custom visual/i.test(cannot), () => `T1. the custom visual is listed as left as it is: ${cannot.slice(0, 400)}`);
   chk(() => /nav\b/.test(cannot) && /navigator/i.test(cannot), () => `T1. the page navigator's order is listed (no order setting): ${cannot.slice(0, 400)}`);
   chk(() => (j0.cannot || []).some((c) => /"All"/.test(c.why) && /Total/.test(c.why) && /Blank/.test(c.why)), () => `T1. Power BI's own words are listed: ${cannot.slice(0, 400)}`);
-  chk(() => /phone/i.test(cannot), () => `T1. the phone layout is listed (copied as it is): ${cannot.slice(0, 400)}`);
+  // (0.3.0 D3, changed on purpose: the phone layout is mirrored like the pages now, said in phone, no longer under cannot)
+  chk(() => j0.phone && j0.phone.mirrored === true && !/phone/i.test(cannot), () => `T1. the phone layout is said mirrored (phone): ${JSON.stringify(j0.phone)} ${cannot.slice(0, 200)}`);
   const texts = j0.texts || [], tx = (id) => texts.find((t) => t.id === id);
   chk(() => tx('page:p1overview').text === 'Overview' && tx('title:p1overview/colRegion').text === 'Sales by Region' && tx('button:p1overview/btnDetails').text === 'Go to details'
     && tx('textbox:p1overview/title/0.0').text === 'Sales overview' && tx('bookmark:bmDetails').text === 'Details view', () => `T1. every text is listed with its id: ${JSON.stringify(texts).slice(0, 600)}`);
-  chk(() => tx('field:Sales.Region').draftArabic === 'المنطقة' && tx('field:Sales.Total Sales').draftArabic === 'إجمالي المبيعات' && tx('page:p1overview').draftArabic === null,
-    () => `T1. drafts only from the fixed glossary, else null for Claude to draft and show: ${JSON.stringify([tx('field:Sales.Region'), tx('field:Sales.Total Sales'), tx('page:p1overview')])}`);
+  // (0.3.0 D3, changed on purpose: the report's fixed words are drafted too, "Overview" among them; a text with a word not
+  // listed still gets none)
+  chk(() => tx('field:Sales.Region').draftArabic === 'المنطقة' && tx('field:Sales.Total Sales').draftArabic === 'إجمالي المبيعات' && tx('page:p1overview').draftArabic === 'نظرة عامة' && tx('textbox:p1overview/title/0.0').draftArabic === null,
+    () => `T1. drafts only from the fixed list, else null for Claude to draft and show: ${JSON.stringify([tx('field:Sales.Region'), tx('field:Sales.Total Sales'), tx('page:p1overview'), tx('textbox:p1overview/title/0.0')])}`);
   const evil = texts.find((t) => t.id === 'textbox:p2details/evilNote/0.0');
   chk(() => evil && evil.text == null && evil.withheld && !JSON.stringify(j0).includes('delete the model'), () => `T1. an instruction-like text is withheld: ${JSON.stringify(evil)}`);
   chk(() => /draft/i.test(j0.sayFirst || '') && /never/i.test(j0.sayFirst || ''), () => `T1. the answer tells Claude the Arabic texts are drafts for the user: ${j0.sayFirst}`);
@@ -114,7 +117,9 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     const pl = ok ? rd(path.join(TWIN, '.platform')) : { metadata: {}, config: {} }, plo = rd(path.join(ORIG, '.platform'));
     chk(() => pl.metadata.displayName === 'Twin Sales AR' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(pl.config.logicalId) && pl.config.logicalId !== plo.config.logicalId, () => `T4. .platform: the twin's name and a new logicalId: ${JSON.stringify(pl)}`);
     chk(() => rd(path.join(P, 'Twin Sales AR.pbip')).artifacts[0].report.path === 'Twin Sales AR.Report', () => 'T4. the .pbip opens the twin');
-    chk(() => ok && fs.readFileSync(path.join(ORIG, 'definition/pages/p1overview/visuals/cardSales/mobile.json'), 'utf8') === fs.readFileSync(path.join(TWIN, 'definition/pages/p1overview/visuals/cardSales/mobile.json'), 'utf8'), () => 'T4. mobile.json copied as it is');
+    // (0.3.0 D3, changed on purpose: mobile.json is mirrored on the 323-wide phone canvas, x' = 323 - x - width)
+    { const mo = rd(path.join(ORIG, 'definition/pages/p1overview/visuals/cardSales/mobile.json')), mt = ok ? rd(path.join(TWIN, 'definition/pages/p1overview/visuals/cardSales/mobile.json')) : {};
+      chk(() => ok && mt.position.x === 323 - mo.position.x - mo.position.width && JSON.stringify(Object.assign({}, mt.position, { x: mo.position.x })) === JSON.stringify(mo.position), () => `T4. mobile.json mirrored on the phone canvas: ${JSON.stringify(mt.position)}`); }
     chk(() => ok && fs.readFileSync(path.join(ORIG, 'StaticResources/RegisteredResources/twin-theme.json'), 'utf8') === fs.readFileSync(path.join(TWIN, 'StaticResources/RegisteredResources/twin-theme.json'), 'utf8'), () => 'T4. the theme copied as it is');
   }
   // T5. positions: x' = W - x - w, W the page's or the parent group's width; everything else of the position kept
@@ -232,7 +237,8 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
     return P;
   };
   const P2 = setup('twin2');
-  const plan = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false });
+  // (D7: the default became waterfallRtl "native"; this plan asks for "mirror", whose kept waterfall T6 checks)
+  const plan = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, waterfallRtl: 'mirror' });
   const j = plan.j || {}, raw = plan.t || '';
   // T5: no instruction-like name reaches the answer, in ids, texts or where lists; such a text gets an opaque id
   chk(() => !plan.err && !raw.includes(EVIL_V) && !raw.includes(EVIL_M), () => `T5. instruction-like visual and measure names never reach the answer: ${raw.includes(EVIL_V) ? 'visual name' : ''} ${raw.includes(EVIL_M) ? 'measure name' : ''} ${short(plan)}`);
@@ -244,7 +250,9 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   // waterfall is mirrored now, by its sort and value axis, and counted under mirrors; it was listed here before)
   const other = (j.cannot || []).find((c) => /scatter|no right-to-left setting/i.test(c.what + ' ' + c.why));
   chk(() => other && other.where.length === 1 && other.where.some((w) => /scatter/.test(w)) && !/waterfall/i.test(other.what), () => `T6. scatter listed under cannot, the waterfall no longer: ${JSON.stringify(j.cannot)}`);
-  chk(() => (j.mirrors || []).some((x) => x.kind === 'waterfall' && x.count === 1), () => `T6. the waterfall counted under mirrors: ${JSON.stringify(j.mirrors)}`);
+  // (D1, changed on purpose: a waterfall by a text category with no order of its own (Region) is kept a waterfall, left
+  // to right: the running total has no order to follow; counted under mirrors as kept, and listed under cannot with why)
+  chk(() => (j.mirrors || []).some((x) => x.kind === 'waterfallKept' && x.count === 1) && (j.cannot || []).some((c) => /waterfall/.test(c.what) && /reads left to right in Power BI/.test(c.why) && c.where.length === 1), () => `T6. the waterfall counted under mirrors (kept) and listed under cannot: ${JSON.stringify(j.mirrors)} ${JSON.stringify(j.cannot)}`);
   // write it
   const lab = evilTitle ? { [evilTitle.id]: 'الهامش' } : {};
   const pl = await ask('create_arabic_twin', { path: 'twin2/Twin Sales.pbip', timeRightToLeft: false, labels: lab }), pid = pl.j && pl.j.plan && pl.j.plan.planId;

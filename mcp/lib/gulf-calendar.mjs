@@ -22,11 +22,13 @@ const CALENDAR_IDS = ['GC_NO_HIJRI', 'GC_NO_FLAGS', 'GC_WEEKEND', 'GC_DATES_DIFF
 const NOTHING = ' Nothing was written.';
 
 const refuse = (msg) => { throw new Error(msg + NOTHING); };
-const key = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase();
+export const nameKey = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase();
+const key = nameKey;
 const T = (s) => Date.parse(s + 'T00:00:00Z');
 
-// every name a new table must not take: tables (hidden and automatic ones too), measures and columns
-function takenNames(raw) {
+// every name a new table must not take: tables (hidden and automatic ones too), measures and columns (L3: the metric
+// switcher's table takes its free name by the same list)
+export function takenNames(raw) {
   const out = new Map();
   raw.forEach((t) => {
     out.set(key(t.name), { kind: 'table', name: String(t.name) });
@@ -40,8 +42,9 @@ const freeNames = (taken) => { const out = []; for (let n = 1; out.length < 2 &&
 // The script: one createOrReplace with the new table (its columns as Power BI Desktop saves a DAX table's columns,
 // its DAX as the partition, the three names sorted by their numbers) and one relationship per relateTo column.
 // Mark-as-date-table stays by hand until a person has seen the ribbon with it in a script (mcp/WORK.md, D-GC2).
-function scriptOf(Fix, table, columns, body, rels) {
-  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''], sortBy = new Map(SORTS.filter(([n, by]) => columns.includes(n) && columns.includes(by)));
+// (0.3.0 C1: and the shared builder's Arabic twins, each sorted as the generator says: built.sorts)
+function scriptOf(Fix, table, columns, body, rels, more) {
+  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''], sortBy = new Map(SORTS.concat(more || []).filter(([n, by]) => columns.includes(n) && columns.includes(by)));
   columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ...(sortBy.has(c) ? [`\t\t\tsortByColumn: ${Fix.name(sortBy.get(c))}`] : []), ''));
   out.push(`\t\tpartition ${Fix.name(table)} = calculated`, '\t\t\tmode: import', '\t\t\tsource =', ...body.split('\n').map((l) => '\t\t\t\t\t' + l), '');
   rels.forEach((r) => out.push(`\trelationship ${Fix.name(r.name)}`, `\t\tfromColumn: ${Fix.name(r.table)}.${Fix.name(r.column)}`, `\t\ttoColumn: ${Fix.name(table)}.Date`, ''));
@@ -120,7 +123,7 @@ export function addGulfCalendar(m, a, env) {
 
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
   if (!scriptDir) refuse('The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again.');
-  const script = scriptOf(Fix, table, built.columns, body, rels);
+  const script = scriptOf(Fix, table, built.columns, body, rels, built.sorts);
   let file; try { file = writeScript(scriptDir, scriptBase + ' - add Gulf calendar', script); } catch (e) { if (e && e.left) throw e; refuse('The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + ').'); }
 
   const later = st.observed ? GD.events.flatMap((e) => [['ramadan', e.ramadan, 0], ['fitr', e.fitr, 0], ['adha', e.adha, 9]].filter(([, d]) => d)

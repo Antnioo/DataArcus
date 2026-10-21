@@ -8,7 +8,7 @@
   const E = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
   const Q = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Z = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
-    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, byTitle, catKind, kpiLabel,
+    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, byTitle, catKind, kpiLabel, lineStyle,
     color, contrast, daxNames, fieldCol, gradientFill, hasControl, isTextField, isTime, isValue, json, label, lit,
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
@@ -309,12 +309,12 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
-      iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
+      iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
       kpiTitleFit, titleFit, oneLine
     };
   }
@@ -327,9 +327,9 @@
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
-      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
+      resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -481,6 +481,74 @@
     // properties: Microsoft's validator 0.4.0 does not know the "dropdown" object, and check_report shows exactly this
     // shape as a known note (mcp/lib/check-report.mjs VALIDATOR_GAPS); any other property in it would stay an error.
     const slicerBox = () => obj({ borderRadius: num(8), borderIndividualCorners: bool(false), borderColor: color(edge) });
+    // (0.3.0 L2, the polish lab of 12-13 Oct, Desktop 2.158: "pills") with o.slicerStyle 'pills', a slicer whose field has
+    // 2-6 values known from the model's metadata alone (two values: true/false or an IF/SWITCH of two texts; a quarter; a
+    // calculated column of 3-6 texts, the picker's few) is Power BI's button slicer: rounded buttons on one row, a calm fill,
+    // the selected one in the accent; every other slicer stays the rounded dropdown. Each is told with why (slicerStyles).
+    // Names and values from Microsoft's catalog (powerbi-core-visual-schema): the state-keyed cards as a button's (each
+    // card's show with no selector, its look in "default", the selected look in "selected"); shape and layout have no states.
+    // Right to left: sorted descending by the field on its one row, so the first value is at the right.
+    const PILLS = o.slicerStyle === 'pills', int = (x) => lit(Math.round(x) + 'L');
+    const valuesKnown = (f) => (!f ? null : f.two ? { n: 2, why: 'two values (true/false, or a formula of two texts)' } : f.cal && f.cal.rows ? { n: f.cal.rows, why: f.cal.rows + ' values (a ' + f.cal.kind + ')' } : f.few ? { n: f.few, why: f.few + ' values (a formula of ' + f.few + ' texts)' } : null);
+    const slicerVisual = (f, ttl, w, h) => {
+      const kv = valuesKnown(f);
+      // (0.3.0 F1) the pills' text size: the slicer text, a size smaller at a time (to 8) until the header and one row of
+      // tiles fit the visual's height (pillH); a slot too low even at 8 keeps the dropdown, said with why
+      let pt0 = SLICER_TEXT; while (h && pt0 > 8 && pillH(pt0) > h) pt0 = Math.max(8, Math.ceil(pt0) - 1);
+      // (0.3.0 C1 add-on, the laptop's PILLS-F6: "Medium" drawn "Mediu…" in a rail's 86 px pill) and the width: the widest
+      // value known from the model (true/false, a formula's texts; a calendar's quarter by the longest way it is written)
+      // at the text size, plus its room, in one pill (pillFits), a size smaller at a time to 8; else the dropdown, said
+      const texts = kv ? (f.texts || (f.cal && f.cal.kind === 'quarter' ? ['Quarter 4', 'الربع 4'] : null)) : null;
+      // (a smaller text needs a little more height, pillRoom: the first size where both the height and the width hold)
+      if (kv && texts && w && !pillFits(texts, kv.n, w, pt0)) { let p = pt0; while (p > 8 && !(pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h))) p = Math.max(8, Math.ceil(p) - 1); if (pillFits(texts, kv.n, w, p) && !(h && pillH(p) > h)) pt0 = p; }
+      const narrow = !!(kv && w && (!texts || !pillFits(texts, kv.n, w, pt0))), widest = texts ? texts.slice().sort((x, y) => y.length - x.length)[0] : null;
+      const low = !narrow && !!(h && pillH(pt0) > h), pill = PILLS && kv && kv.n >= 2 && kv.n <= 6 && !low && !narrow;
+      if (PILLS && f) slicerStyles.push({ page: pg.name || base, field: f.t + '[' + f.c + ']', written: pill ? 'pills' : 'dropdown',
+        why: pill ? kv.why + ', known from the model' + (pt0 < SLICER_TEXT ? '; text ' + pt0 + 'pt so the header and the pills fit the slicer\'s height and every value fits its pill' : '') : kv && kv.n >= 2 && kv.n <= 6 && narrow && !low ? (texts ? 'the pills would cut «' + widest + '» (' + Math.floor(pillW(kv.n, w)) + ' a pill; no smaller text fits both its width and the slicer\'s height): a dropdown' : 'its values\' texts are not known from the model, so their width can\'t be checked: a dropdown') : kv && kv.n >= 2 && kv.n <= 6 ? 'the slicer is ' + Math.round(h) + ' high, the pills need ' + pillH(8) + ' at their smallest text (8pt): a dropdown' : kv ? kv.why + ': more than pills hold (2-6)' : 'its number of values is not known from the model\'s metadata' });
+      if (!pill) return { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
+        objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, w), dropdown: slicerBox() }, visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true };
+      const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
+      if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
+      // (0.3.0 F1, the laptop proof on Desktop 2.159: every pill drawn with no text) the button slicer's item text is its
+      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/CLAUDE.md): everything
+      // under the default selector, show included, never an entry without one; the outline likewise. The fill's show
+      // stays without a selector (the card's fillCustom.show: measured). Other shapes for the laptop: mcp/lab/pills-variants.mjs
+      const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];
+      const keyed = (look, picked) => [{ properties: look, selector: DEF }, { properties: picked, selector: SEL }];
+      const full = label(f), shownT = oneLine(full, pt0, w - 2 * Math.round(8 * k));
+      if (shownT !== full) titles.slicers.push({ page: pg.name || base, field: full, shown: shownT });
+      return { visualType: 'advancedSlicerVisual', query,
+        // (0.3.0 F4, the owner: "remove the margins in the pills, that will give you more room") every margin the button
+        // slicer has, by Microsoft's capabilities (advancedSlicerVisual; vco-capabilities for the container), written 0:
+        // the layout's cell, row and column padding and outer margins (no states), the tiles' padding and the space
+        // between value and label (state-keyed: default), the container's padding and the space below its title
+        // (F5, the owner: "nothing touches or breaks") except the gap between two pills, columnPadding 6: across, no height
+        objects: { shapeCustomRectangle: obj({ tileShape: str('pill') }), layout: obj({ rowCount: int(1), columnCount: int(kv.n), customizePadding: bool(true), cellPadding: int(0), rowPadding: int(0), columnPadding: int(6),
+            topOuterMargin: int(0), bottomOuterMargin: int(0), leftOuterMargin: int(0), rightOuterMargin: int(0) }),
+          fillCustom: states({ show: bool(true) }, { fillColor: color(calm) }, { fillColor: color(acc) }),
+          // (0.3.0 P7, the owner: "if English then the value in the pill LTR, if Arabic then RTL") each value centred in its
+          // pill, in both languages (value.horizontalAlignment, Microsoft's capabilities), text wrap off (a wrapped value
+          // needs a second line the measured height has no room for); the tiles' order is the sort's (no direction setting)
+          value: keyed({ show: bool(true), fontFamily: str(font), fontSize: num(pt0), fontColor: color(u.text), horizontalAlignment: str('center'), textWrap: bool(false) }, { fontColor: color(onAcc) }),
+          outline: keyed({ show: bool(true), lineColor: color(edge) }, { lineColor: color(acc) }),
+          padding: obj({ paddingSelection: str('Custom'), topMargin: int(PILL_PAD), bottomMargin: int(PILL_PAD), leftMargin: int(PILL_PAD), rightMargin: int(PILL_PAD) }, DEF),
+          spacing: obj({ verticalSpacing: int(0) }, DEF) },
+        // (F1) the header written at the tiles' size, as the dropdown's is (Power BI's own title size took the tiles' room)
+        visualContainerObjects: (() => { const fr = frame(shownT, full); Object.assign(fr.title[0].properties, { fontSize: num(pt0), fontFamily: str(font) });
+          return Object.assign(fr, { padding: obj({ top: num(0), bottom: num(0), left: num(0), right: num(0) }), spacing: obj({ customizeSpacing: bool(true), spaceBelowTitle: num(pillRoom(pt0)), spaceBelowTitleArea: num(0) }) }); })(), drillFilterOtherVisuals: true };
+    };
+    // (0.3.0 F2) the heights of stacked slicers: each pill slicer pillH (the measured need) when all fit the room, else the
+    // room left after the dropdowns, shared by the pills (never less than the dropdown's height)
+    const isPill = (f) => { const kv = PILLS && valuesKnown(f); return !!(kv && kv.n >= 2 && kv.n <= 6); };
+    const stackHeights = (fields, sh, room) => {
+      const want = fields.map((f) => (isPill(f) ? Math.max(sh, pillH(SLICER_TEXT)) : sh)), np = fields.filter(isPill).length;
+      if (!np || want.reduce((a, b) => a + b, 0) <= room) return want;
+      // (0.3.0 F3, the rail on 2.159: 76 at 8pt cut the pills' text) short of room, a dropdown gives up its extra height
+      // first, down to its own measured need (slicerH), so the pills keep theirs; then the pills share what is left
+      const nd = fields.length - np, dmin = Math.min(sh, slicerH(SLICER_TEXT));
+      const pe = Math.max(dmin, Math.min(pillH(SLICER_TEXT), (room - nd * dmin) / np)), de = nd ? Math.max(dmin, Math.min(sh, (room - np * pe) / nd)) : 0;
+      return fields.map((f) => (isPill(f) ? pe : de));
+    };
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
       if (size < SLICER_TEXT) out.textSize = num(size);
@@ -589,14 +657,17 @@
         const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
         const sw = across ? (room - gap * (n - 1)) / n : room;
         const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
+        // (0.3.0 F2) stacked, a pill slicer gets the height measured for it (pillH) where the rail has room, else its share
+        // of what is left; a strip keeps its height (the pills' text, then the dropdown, decide in slicerVisual)
+        const hs = across ? fields.map(() => sh) : stackHeights(fields, sh, s.h - 2 * pad - bh - gap * n);
+        let yAt = s.y + pad;
         fields.forEach((f, i) => {
           // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
-          const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
+          const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : yAt;
+          yAt += hs[i] + gap;
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
-          const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
-            visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
-              visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+          const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(hs[i]), z: z, parent, kind: 'slicer',
+            visual: slicerVisual(f, ttl, Math.round(sw), Math.round(hs[i])) });
           slicerNames.push(v.name);
           z += 1000;
         });
@@ -695,6 +766,8 @@
           const widest = Math.max(...namesOf(c0, 'day').map((d) => textWidth(d, LABEL, false, font)));   // (A3-7: the day names of its own family)
           if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
         }
+        // (0.3.0 D2) a combo in two units is two panels: each line chart carries its own measure and axis (visual-gallery.js split)
+        if (B && s.bind) Bt = Object.assign({}, Bt, s.bind.measure ? { measure: s.bind.measure } : {}, s.bind.date ? { date: s.bind.date } : {});
         const query = B ? (isGallery(s.kind) ? G.bindQuery(s.kind, Bt) : bindQuery(s.kind, Bt, kpiIndex, rtl)) : null;
         if (B && CHARTS.includes(s.kind)) { const k = s.kind;
           hov = { m: k === 'line' ? Bt.measure : k === 'funnel' && Bt.y && 'funnel' in Bt.y ? Bt.y.funnel : (Bt.y || {})[k] || Bt.measure, cat: k === 'line' ? Bt.date : (Bt.cats || {})[k] }; }
@@ -753,16 +826,41 @@
             visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
           } }
         // P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): a line chart's line 3 wide (1 px was the weakest mark
-        // on every page), its markers as before; smooth only with the design's smoothLines option (lineChartType 'smooth' with
-        // interpolationSmooth 'monotoneX'; "interpolation" is no property; smooth swings between the points of a jagged series)
-        if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: Object.assign({ strokeWidth: num(3) }, o.smoothLines ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX') } : {}) }]; }
+        // on every page); L1: smooth with a dot on each point unless the design's smoothLines is false (pbip-query.js lineStyle)
+        const SMOOTH = o.smoothLines !== false;
+        if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: lineStyle(SMOOTH) }]; }
         // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
         // (0.3, J8) a gallery visual's own formatting: the combo's secondary axis only when its units differ, its line 3
         // wide; the quiet gridlines and a right-to-left report's mirrored axes as the other charts (visual-gallery.js)
-        if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
-          if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
+        // (D1, the owner's must-fix 2: R3's Descending waterfall was seen in Desktop 2.159 to reverse time, not the
+        // direction: Power BI accumulates a waterfall left to right) a mirrored right-to-left report's waterfall is a
+        // stacked column chart drawn as a waterfall from the report's own measures, read from the right
+        // (visual-gallery.js rtlWaterfall); one the measures can't order stays a waterfall, left to right, and is told
+        // (D7) o.waterfallRtl "native" (the default, G.WATERFALL_RTL_DEFAULT): Power BI's own waterfall, left to right, written
+        // exactly as in English; "mirror": the stacked column chart above
+        const WF_NATIVE = MIRROR && s.kind === 'waterfall' && G.waterfallRtlOf(o.waterfallRtl) === 'native';
+        const wf = query && MIRROR && s.kind === 'waterfall' && !WF_NATIVE ? G.rtlWaterfall(query, { extMeasure, lang, grid: GRID, azText: !!G.fieldsOf('waterfall', Bt).cat && isTime(G.fieldsOf('waterfall', Bt).cat), formatString: (G.fieldsOf('waterfall', Bt).y || {}).tableFormat || null,
+          // (the model's sort-by column and type, o.model.columns from the MCP; else the bound field's own type)
+          sortByOf: (t, cn) => ((((o.model || {}).columns || {})[t] || {})[cn] || {}).sortBy || null,
+          typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(G.sentimentOf(o.theme, 'good', u)), fall: G.fillOf(G.sentimentOf(o.theme, 'bad', u)) } }) : null;   // (D7: the written theme's, as the English waterfall's)
+        if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
+          waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR && !WF_NATIVE, smooth: SMOOTH, lang }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+          if (WF_NATIVE) waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.native, native: true });
+          else if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
+          else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
+        // (0.3.0 J19) a panel split from a combo shows its unit as its value axis's title (AED, %; isolated in Arabic)
+        if (query && s.unitLabel && s.kind === 'line') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
+          Object.assign(va[0].properties, { showAxisTitle: bool(true), titleText: str(lang === 'ar' ? s.unitLabel.ar : s.unitLabel.en) }); }
         if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
+        // (0.3.0 L2, the lab's "keep as option") o.grid 'dotted': the value axis's gridlines dotted, in the quiet grey (also
+        // where the theme sets its own); 'none': no gridlines; 'solid' (the default) writes nothing more
+        if (query && (o.grid === 'dotted' || o.grid === 'none') && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line' || isGallery(s.kind))) {
+          visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
+          if (o.grid === 'none') va[0].properties.gridlineShow = bool(false);
+          else Object.assign(va[0].properties, { gridlineShow: bool(true), gridlineStyle: str('dotted'), gridlineColor: color(GRID || mixHex(u.text, u.card, 0.85)) });
+          gridCharts.n++; }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
         // each bar's value beside it (the tooltip pages' bar chart, measured in round 0). (0.2.9.1, from draft #69: only a bar:
         // a two-valued category makes it a donut after, which has no value axis; Microsoft's validator refused the object)
@@ -777,7 +875,11 @@
           if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
         if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
           const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail } : null });
+          // (0.3.0 D2: a gallery visual had no story entry, so two charts that read the same were numbered "(2)") its measure
+          // and axis as its title says them, and its kind's word for a page where no other sentence is left
+          const gs = !told && B && query && isGallery(s.kind) ? G.storyOf(s.kind, Bt, W.by || 'by') : null;
+          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf, story: told ? { m: told.m, c: told.c, ranked: !!topOf, full: story[0], alt: story[0].text + tail }
+            : gs ? { m: gs.m, c: gs.c, ranked: false, full: { m: gs.m, c: gs.c }, alt: ttl, tail: gs.tail } : null });
           if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
         }
         // the title already names the KPI, so the card's own label under the number is not repeated
@@ -1098,12 +1200,14 @@
         visualContainerObjects: Object.assign(frame(null, W.closeFilters || 'Close the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.closeBm) }) }) } });
       // slicers stacked, then Reset at the bottom
       const sh = Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (P.h - head - pad - bh - gap * (fields.length + 1)) / Math.max(1, fields.length))), names = [];
+      // (0.3.0 F2) a pill slicer the height measured for it where the panel has room (stackHeights)
+      const hs = stackHeights(fields, sh, P.h - head - pad - bh - gap * (fields.length + 1));
+      let yAt = P.y + head + 8 * k;
       fields.forEach((f, i) => {
         const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
-        const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
-          visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-            objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
-            visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+        const v = add1({ x: Math.round(P.x + pad), y: Math.round(yAt), w: Math.round(sw), h: Math.round(hs[i]), kind: 'slicer',
+          visual: slicerVisual(f, ttl, Math.round(sw), Math.round(hs[i])) });
+        yAt += hs[i] + gap;
         names.push(v.name);
       });
       const rb = rnd();
@@ -1147,7 +1251,7 @@
         const i = navBtns.indexOf(m);
         if (i === 0) {
           if (col) { y += 100 + GAP; col = 0; }
-          const need = navBtns.map((b) => Math.min(PW, Math.ceil(textWidth(String(b.v.visual.objects.text[1].properties.text.expr.Literal.Value).slice(1, -1), 10, true, font) + 10)));
+          const need = navBtns.map((b) => Z.phoneTabWidth(String(b.v.visual.objects.text[1].properties.text.expr.Literal.Value).slice(1, -1), font));
           let row = [], used = 0; const rows = [row];
           need.forEach((w, j) => { const add = (row.length ? GAP : 0) + w; if (row.length && used + add > PW) { row = [j]; rows.push(row); used = w; } else { row.push(j); used += add; } });
           // (round 12, #2; seen in Desktop 2.158, round 11: names centred in stretched buttons looked scattered): each
@@ -1218,6 +1322,7 @@
         objects.general = obj({ paragraphs: [Object.assign({}, para, { textRuns: [Object.assign({}, run, { textStyle: Object.assign({}, run.textStyle, { fontSize: size + 'pt' }) })] })] });
       } else if (t === 'pageNavigator') objects.text = ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(PHONE.nav) }, selector: { id } }));
       else if (t === 'slicer') { objects.header = obj({ textSize: num(PHONE.slicer) }); objects.items = obj({ textSize: num(PHONE.slicer) }); }
+      else if (t === 'advancedSlicerVisual') objects.value = obj({ fontSize: num(PHONE.slicer) }, DEF);   // (L2: the pills' text, as a button's)
       else if (t === 'actionButton') objects.text = obj({ fontSize: num(PHONE.button) }, DEF);
       else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) }); }
       else if (t === 'tableEx') { objects.columnHeaders = obj({ fontSize: num(PHONE.table) }); objects.values = obj({ fontSize: num(PHONE.table) }); objects.total = obj({ fontSize: num(PHONE.table) });
@@ -1268,7 +1373,8 @@
         // and alt text: the second and later are numbered, "Total Sales by City (2)")
         // (0.3, J4, B-130: "Total by Note (2)", "(2) (2)") the second and later say what they show in another true
         // sentence of their own measure and column, "Note ranked by Total", "Total per Note" (story-titles.js alternate)
-        const alt = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.m, st.c, n, st.ranked, W.by || 'by') : null; };
+        // (0.3.0 D2) a gallery visual whose sentences run out says its kind instead ("Sales: step by step"), never a number
+        const alt = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.m, st.c, n, st.ranked, W.by || 'by') || (st.tail ? k + ': ' + st.tail : null) : null; };
         // (19 Oct: the alt text says the same sentence with the full names)
         const altOf = (n) => { const st = (fitted.get(v.visual) || {}).story; return st ? ST.alternate(st.full.m, st.full.c, n, st.ranked, W.by || 'by') : null; };
         const fullCore = () => { const st = (fitted.get(v.visual) || {}).story; return st ? st.alt : k; };

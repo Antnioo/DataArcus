@@ -54,6 +54,194 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   the answers file's plain-text fields and unsalted hashes are said; `read_report`'s short titles are said to be
   returned as typed (screened for instructions and length only); the files read and hashed, the temporary check copy
   and the one log line are said. `test-release-text.mjs` checks these.
+- D3 (the owner's must-fix 1, "no English titles in Arabic reports"; the laptop's proof of 0.3.0-rc.2): the Arabic twin
+  lists and writes every text a person can see (the phone layout, alt texts, the empty state's "No data" and its
+  measure, button tooltips, every other text property of a visual), drafts every fixed report word from the shared
+  list, says before the go what stays English and why (notTranslated), and mirrors the phone layout like the pages,
+  each phone page tab as wide as its Arabic name by the writer's rule.
+- plan_layout and create_report write Power BI's waterfall, combo (line and clustered column) and small multiples when
+  the user asks (a slot kind, or `gallery`), where the fields fit; a combo of two measures in different units is two
+  panels, never a second axis; gallery titles are told apart by words, never "(2)"; never chosen silently. (D2)
+- D4: a redesign keeps a visual laid over another (a "No data" card, a title box, a panel behind a table) with the
+  visual under it: they move and resize as one, the plan and the approval page name them once, and no overlay takes a
+  slot of its own (the laptop's rc.1/rc.2 proof on "Dense Ops": the overlays stood beside their charts, which were
+  squeezed to 240 wide).
+- D1 (the owner's must-fix 2): a waterfall in a right-to-left report (create_report in Arabic, create_arabic_twin) is
+  written as a stacked column chart drawn as a waterfall from report-level measures: the running total in the time
+  order, January at the right, the steps rising from the right, the value axis at the right; no Total column (Power BI's
+  axis holds only the model's members), the running total in every step's tooltip; English unchanged.
+- D5: the approval window's preview draws what Power BI Desktop draws: every title as the report create_report writes
+  it (a Top N title by the text its measure shows, no "(2)"), a title or table header marked cut only when the
+  writer's and check_report's own measure says so, and each slicer with its header.
+- D6: the Arabic twin's and the theme's approval pages list every file they write, grouped and counted, as
+  create_report's does; the theme page shows its colours (swatches and hex) and the report they come from; create_report's
+  "Data colours" swatch shows the written colour, with both contrasts; the refusal after a theme's report changed says
+  "the model or its report changed"; an Arabic plan's sentence counts the approved Arabic names; approve_plan's "waiting"
+  says a later click still counts.
+- U1: Microsoft's October 2026 update (Desktop 2.159.883.0): Microsoft's visual catalog 0.1.3 (19 Oct) now lists the
+  dropdown slicer's rounded box, so the validator checks it instead of DataArcus marking it "known"; check_report's
+  bundled schemas follow Microsoft's September (SU09) release (visualContainer 2.13.0, the version Desktop saves); the
+  list slicer's new dropdown mode is researched and not written yet (preview, not measured in Desktop).
+- X1 (the owner, 19 Oct: "add the toggle, I think this one will be a niche"): `create_arabic_twin` with `into: "same"`
+  writes a copy "<name> (EN-AR)" holding the English pages as they are and their Arabic pages mirrored as the twin
+  does (D1's right-to-left waterfall, D3's phone layout, empty state and alt texts), every page with a small language
+  button («العربية» / "English") to its counterpart, desktop and phone; the Arabic pages hidden from the tabs (or the
+  English, `tabsShown: "ar"`); each slicer pair synced (`syncGroup`); the original untouched. check_report: a page
+  button whose page is not in the report is an error (PAGE_LINK_MISSING). The separate twin is unchanged (the default).
+- G1: a weekly GitHub routine (`.github/workflows/microsoft-watch.yml`, Mondays 05:17 UTC and by hand) checks
+  Microsoft's report schemas, report theme schema, validator and visual catalog on npm, and the Power BI blog's
+  Feature Summary posts against what DataArcus is built on, and opens one `microsoft-update` issue (or comments on the
+  open one) listing what changed and what in DataArcus it may touch; it never changes code (`scripts/microsoft-watch.mjs`,
+  `mcp/research/MICROSOFT-WATCH.md`).
+- R1 (research, no tool or default changed): `mcp/research/SEE-THE-RESULT.md` compares four ways to let the AI see what
+  Power BI Desktop draws (a shadow-data render on the user's machine, a calibrated in-browser renderer, real-data
+  screenshots on opt-in, the Power BI service) and designs the look-and-propose loop; two prototypes with tests:
+  `mcp/lib/shadow-model.mjs` (a throwaway copy of a model with made-up typed rows) and `mcp/lib/box-diff.mjs` (a
+  box-level score between two drawings of a page); `mcp/research/shadow-try.mjs` writes a fixture's shadow project for
+  the laptop. Recommendation: (a) as the v1 (S2), (b) as the fast first look grown by measured rules, (c) later as a
+  per-run opt-in, not (d).
+- L1: line charts (and the line of a combo) are smooth by default, monotone (no swing past the data), with a small filled
+  dot in the series' colour on each point so every value stays findable; `smoothLines: false` keeps straight lines without
+  dots. plan_layout pins it, the approval page's preview draws the curve and its dots, the look summary says it.
+- plan_layout and create_report take two look options the polish lab proved in Desktop (12-13 Oct), pinned by the plan:
+  `slicerStyle` "dropdown" (default, rounded) or "pills" (Power BI's button slicer, rounded buttons, a calm fill, the
+  selected one in the accent; only for a field of 2-6 values known from the model's metadata, else a dropdown, told) and
+  `grid` "solid" (default) | "dotted" | "none" for the charts' value-axis gridlines; the approval preview draws both,
+  the Arabic twin keeps them with the pills right to left. (L2)
+- L3: `metricSwitcher` (2-5 of the model's measures, off by default): the report gets its own page "Metric" / «المؤشر»
+  with one single-select slicer and a bar chart (by the main category) and a line chart (by month, when the month has an
+  order) whose values come from a field parameter, so each chart switches between the measures and keeps each measure's
+  own format; the titles follow the metric. The model is never changed: the field parameter and its title measure come
+  as a TMDL script file next to the project (lineage tags, NAMEOF of each measure, labels escaped), to apply in TMDL
+  view; until then only that page shows Power BI's error. Pinned by the plan, listed on the approval page;
+  check_report knows field parameters and flags a title measure that reads the display column alone.
+- plan_layout and create_report take `flipCards` (off by default; `true` for every KPI card, or a list of 1-6 card
+  numbers): each chosen KPI card becomes the Desktop lab's flip card (10 Oct, "build 1", v2): three Image visuals in the
+  card's box (a backdrop in the card colour, the front with the value, the back with one line about the measure,
+  hidden), each face turning to the other through a display-only bookmark of its own (two a card), a 0.3 s turn from
+  25 degrees that never starts invisible, right to left mirrored in Arabic. The faces' picture measures are written as
+  a TMDL script next to the project ("<report> - flip cards.tmdl", applied by the user in TMDL view; DataArcus never
+  changes the model; the naming and lineage tags shared with the metric switcher in mcp/lib/model-script.mjs). Pinned by the plan, on the approval page (cards, back line, bookmarks, the model change, "apply
+  the script first"); check_report knows the pattern (bookmark naming a missing visual: an error; a picture measure not
+  in the model yet: a note). (L4)
+- S1 sweep: the twin keeps a sort by a month's number (Min of Month Number, a month start) when time stays left to
+  right (B-180); a hidden "Keep:" measure is named in one script (B-181); create_arabic_twin reads its model again
+  right before its first write (B-182); the app's own approval prompt counts the files per group and names a changed
+  colour (B-183); read_report no longer returns static visual titles (B-184); check_report's validator findings no
+  longer quote report names (B-211); repo checks for non-literal requires (B-196) and for every npm test script's
+  result line (B-198); the smooth-lines suite reads its source files line-ending blind (PR #81's Windows job).
+- D7 (the owner, 20 Oct: "the same design of waterfall ... mirrored rtl ... if not then just leave it normal"):
+  `waterfallRtl: "mirror" | "native"` on plan_layout, create_report and create_arabic_twin, pinned by the plan and shown
+  on the approval page. "native" (the default: Power BI cannot draw its own waterfall's design right to left) writes
+  Power BI's waterfallChart in the Arabic report too, left to right, exactly as the English one, and the plan says "the
+  waterfall reads left to right, as Power BI draws it"; "mirror" keeps D1's stacked column chart, now with the English
+  waterfall's own increase and decrease colours and its falls labelled negative. The rest of the Arabic report stays mirrored.
+- Every DataArcus theme (generate_theme, create_report, the website's Theme Generator) carries three status icons in
+  its `icons` block, "daGood" (a tick in a circle), "daWarn" (a triangle with "!") and "daBad" (a cross in a rounded
+  square): they differ in shape as well as colour, coloured from the theme's good / neutral / bad (taken to 3:1 on the
+  visuals' background, hue kept), unused unless a rule names them. plan_layout and create_report take `statusIcons`
+  (off by default): `true` puts an icon before each table or matrix measure that is a rate or ratio whose target the
+  model's metadata names (a measure "<name> Target / Goal / Budget"), by a status measure written as a TMDL script next to
+  the project ("<report> - status icons.tmdl", at or above the target good, below it bad; the model never changed by
+  DataArcus); `[{ measure, good: ">= 0.97", bad: "< 0.94" }]` uses the user's own thresholds as rules (no measure, no
+  script). Thresholds are never guessed. Pinned by the plan, on the approval page; check_report knows the icons (a note
+  until the script is applied; the shapes carry the meaning, said in the a11y notes). (L5)
+- J18 (B-171, the owner, 20 Oct: "continue the held jobs"): the Arabic terminology sheet. An Arabic plan (plan_layout
+  lang "ar") and the Arabic twin (create_arabic_twin, both `into` forms) list every field the report shows with its
+  places (page, visual, role: title, table header, slicer header, tooltip, alt text), its English name and its Arabic:
+  approved (by the person now, or earlier in this session for the same field of the same model, with the same
+  description and DAX), draft (the fixed list's, approved only with the plan) or kept in English (declined, or none
+  yet, with why); one missing term is asked at a time (askNext). The approved alias is written on every title, table
+  header, slicer header, tooltip and alt text: the twin takes `terms` { "Table[Field]": "..." } and derives each
+  title and alt text made of those names. Latin identifiers inside Arabic text are wrapped in bidi isolates
+  (U+2068 ... U+2069, with U+200F where the run ends the text), so "KPI 2024" keeps its order. The approval page shows
+  the sheet side by side, EN | AR, escaped. The plan pins the map (another map at the write: refused, nothing written).
+- Two measures share a chart axis only when their units, scale and ISO currency match and the person confirms they
+  compare (`sharedAxes`); otherwise separate visuals, each with its unit on its axis, the reason in the plan (English and
+  Arabic). No secondary axis anywhere: the gallery's combo and the native copy's combos and multi-value charts follow
+  the rule; SAR and AED, minutes and hours, a percent and a count never share. No currency converted, nothing read from
+  the data. (J19, B-172)
+- J17 (B-170, the owner, 20 Oct: "continue the held jobs"): Gulf business dates and seasonal scope are asked, never
+  guessed. With the model, plan_layout lists the structural date candidates (each date column of the plan's fact
+  tables, its relationship to the calendar and whether it is active: an active relationship is not business intent)
+  and asks, one question at a time in English and Arabic (gulfDates.askNext): which date (order date, ship date or
+  another named one), which grain (Gregorian, Hijri, season day) and, for a seasonal page (a Ramadan, Eid or Hijri
+  filter or axis), one Hijri year or every season (the year only from the person). A role no active relationship or
+  plan measure (USERELATIONSHIP) serves stops the plan with why, as does any answer the plan contradicts (the year
+  filter, the grain's axis); an unanswered seasonal question is asked first (sayFirst) and shown as not answered on the
+  approval page; a missing calendar column offers add_gulf_calendar with the person's country and years. Estimated versus
+  announced dates and the country's limits are carried into the plan and the approval page. Answers are remembered
+  for the session per model and dropped when a relationship or column changes. Nothing edits a relationship and
+  nothing written holds USERELATIONSHIP.
+- W1: the beta page /power-bi-mcp/ (English, and its Arabic at /ar/power-bi-mcp/ and ?lang=ar) says testers get 0.3.0,
+  what is new in it (only what integration/0.3.0-wave merged) and what to try first; the plan_layout and
+  create_arabic_twin lines follow 0.3.0 (the native waterfall reads left to right; the EN-AR copy).
+  `scripts/test-whats-new.mjs` checks the section in both languages and that it names no 0.3.1 draft.
+- Q1: every answer stays under 40,000 characters on the 300-table model with every 0.3.0 option on, cut at its cause:
+  check_model_health keeps every finding (its object lists shortened evenly, `only` gives one part whole; it used to
+  drop 5 of 6 findings at maxItems 200), the Arabic twin's plan pages its texts (`textsFrom`), plan_layout's redesign
+  cuts its per-page lists (`redesignPages`), read_model `tables` names every table not shown, check_report says how many
+  findings are not listed; an answer over 34,000 characters indented is sent without indentation. New suite
+  `large-model-caps`; the golden baseline prints the largest answer per tool.
+- A2: the claims re-check of the 0.3.0 wave: every sentence DataArcus says about itself (PRIVACY.md, README.md, the
+  tool descriptions, the server's instructions, the skill, the approval pages, the beta page in English and Arabic)
+  checked against the code; 24 untrue or overstated sentences reworded at their source (read_report sends no static
+  title since S1; approval in the app's own prompt; the EN-AR button where there is room; check_report checks PBIR; the
+  flip cards' script was listed as a "Format script"; the 3:1 rule is WCAG 2.1's; PRIVACY names the wave's answers, its
+  model scripts and the session-only memory). `mcp/test-0.3.0-claims.mjs`: a check per fixed sentence and the
+  forbidden-words scan.
+- A3 (the owner's must-fix 1 for 0.3.0, "no English in Arabic reports"): every report DataArcus writes in Arabic
+  (directly, as a twin, as the EN-AR copy), with every wave option on, read text by text from the written files by
+  `test-0.3.0-arabic-sweep.mjs`: no Latin run on an Arabic page that the plan does not list as kept in English, with why.
+  Fixed: plan_layout no longer drops the approved Arabic names when the only fixed-list name comes from the lint's
+  fields; the terminology sheet lists the measures shown only on flip cards and the metric switcher's measures (a
+  declined one or one without an Arabic name is listed as kept, with why); the twin's plan keeps its texts whole
+  (answered compact, texts cut last), names the metric switcher's choices under cannot, lists the EN-AR copy's
+  «English» button as kept with why, and lists and labels a button's own title; an Arabic report's flip cards write their
+  units as Arabic words after a Western-digit number (3.43 ألف، 1.20 مليون، 2.05 مليار; English keeps K, M, B).
+- A1: the integration audit of the 0.3.0 wave (D1-D7, U1, X1, G1, R1, L1-L5, S1, J17-J19, W1, Q1, A2 together): every
+  suite, every tool on every fixture in English and Arabic over stdio, every wave option on one report (then its twin,
+  its EN-AR copy and its redesign), and the reproducible build; results in this file.
+- F1: the ship fixes from the laptop proof (Desktop 2.159): the button-slicer pills draw their text (the shipped
+  shape, with labelled variants for the laptop); every mixed Arabic/Latin name isolated, page and tooltip tabs included;
+  a Ramadan / Gulf-dates plan gets no plan id until grain and scope are answered; the metric switcher opens on its first
+  metric and its Arabic line chart reads right to left; a status icon sits beside its own value and never on a blank
+  row; the mirrored waterfall and the flip cards say plainly what they don't draw.
+- F2: the button-slicer pills get the height Desktop 2.159 was measured to need (140 at 15pt, scaled with the text):
+  the layout gives a pill slicer that height where the rail has room, else a smaller text, else the dropdown with why;
+  the laptop's variants report opens in Desktop and measures 120, 130 and 140.
+- F4: the button-slicer pills write every margin they have at 0 (the tiles' padding and spacing, the layout's cell, row,
+  column padding and outer margins, the container's padding and the space below its title), leaving the tiles the room;
+  a measurement grid for the laptop (8, 9, 10, 15pt at several heights, with the earlier shape as a control).
+- F6: the pill slicers keep room between their header and the pills (no Arabic descender on a pill, no "clear
+  selections" eraser over the first pill), and their height is the one measured on Desktop 2.159 with margins 0 (56 at
+  8-9pt, 72 at 10-15pt) plus that room, so the filter rail draws pills again.
+- C1 (the owner, 21 Oct): Arabic calendar columns. One shared builder (`assets/js/arabic-calendar.js`) gives a date
+  table the Arabic twins of what it has: Month Name/Month Short/Day Name/Day Short (Arabic), Quarter (Arabic) «الربع 1»,
+  Year Quarter (Arabic) «2025 الربع 1» (the year isolated), Fiscal Year/Quarter (Arabic), Hijri Month Name (Arabic), and
+  text labels for its flags (Is Weekend, Is Working Day, Is Ramadan, Is Eid al-Fitr/al-Adha (Arabic)), each sorted by the
+  English column's own sort column (or a hidden number written with it). The Calendar Generator (site and
+  add_gulf_calendar) writes them; every Arabic route (plan_layout/create_report lang "ar", create_arabic_twin, the EN-AR
+  copy) offers them as a TMDL script for the user's own date table, approved with the plan, never applied by DataArcus.
+  Until the script is applied the Arabic report binds the English calendar columns and says which fields show English
+  data and how to switch (apply the script, then plan again); after it, the Arabic twins are bound, flags included.
+- W2 (an outside review of the public repo and dataarcus.com, 21 Oct): the home page no longer says AI report
+  generation is "free and official" or that "every number" is "validated against the source"; README.md drops the
+  findings/ folder that does not exist and the stale suite count; PRODUCT_SPEC.md says 0.3.0's truth (11 tools, the
+  Gulf calendar and the Arabic calendar columns shipped, Arabic texts drafted by Claude and approved by the person,
+  never translated silently, the model never renamed); mcp/README.md documents the EN-AR copy, the Arabic calendar
+  script, checking the .mcpb's SHA-256, the developer install's prerequisites and the lowest Desktop version tested.
+  `test-0.3.0-claims.mjs` checks each.
+- F7 (the API red team, E1 round 2): the Arabic calendar script (C1) leaves out, and names with why, a date table or
+  column whose name holds a control character (a line break could end the script's quoted name and stand as script
+  lines; AUD-032's rule, as every other script writer); a report's formats script (plan_layout, create_report) changes
+  only the fields the report binds, exactly the objects its plan lists (it rewrote the whole model's: 3 listed, 11
+  changed); check_model_health's own script still covers the whole model. The Arabic calendar's flag labels say exactly
+  true and false (E1's F-4): Is Working Day «يوم عمل» / «يوم عطلة», Is Weekend «عطلة نهاية الأسبوع» / «خارج عطلة نهاية الأسبوع».
+- P7 (the owner, 21 Oct: "if English then the value in the pill LTR, if Arabic then RTL"): each pill's value centred
+  (text wrap off), the header at the reading start, Arabic tiles from the right; every Arabic calendar label that mixes
+  Arabic with digits («الربع 1», «2025 الربع 1», «السنة المالية 2025», «الربع المالي 1») written with its digit runs
+  isolated and a right-to-left mark at the end the run reaches, so it reads in the right order inside a pill.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

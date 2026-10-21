@@ -31,6 +31,13 @@
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
   const obj = (props, selector) => (selector ? [{ properties: props, selector }] : [{ properties: props }]);
+  // a line's style (L1, the owner's smooth lines of 19 Oct, from the lab of 13 Oct): 3 wide (P2); smooth by default,
+  // monotone ('monotoneX': never swings past the data), with a filled circle on each point so every value stays findable
+  // (the series' own colour: no markerColor), its size from the line's width. One entry, no selector: the form Desktop
+  // 2.158 drew in the lab of 7 Oct ("a smooth line, a dot per month"). smooth false: the straight line, no markers.
+  // Every name and value is in Microsoft's capabilities for lineChart and both combos' lineStyles.
+  const LINE_WIDTH = 3;
+  const lineStyle = (smooth) => Object.assign({ strokeWidth: num(LINE_WIDTH) }, smooth ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX'), showMarker: bool(true), markerShape: str('circle'), markerSize: num(LINE_WIDTH + 2) } : {});
   const resource = (item) => ({ expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: item } } });
   const json = (o) => JSON.stringify(o, null, 2);
   const rnd = () => {
@@ -77,6 +84,8 @@
   const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: shown(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? shown(f.name ? f.name : fname(f)) : null);
+  // (S1, B-181) a name whose letters are all Latin (a helper named in English stays in one script)
+  const latinOnly = (x) => !/[^\P{L}\p{Script=Latin}]/u.test(String(x));
   // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
   // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
   const hasControl = (x) => /\p{Cc}/u.test(String(x));
@@ -383,10 +392,11 @@
       freeExt, timeExt
     } = c;
     // (the cross-review's G4: the writer's own daxNames and valueDax, one DAX for a visual's value everywhere)
-    const extMeasure = (t, want, expression, dataType) => {
+    // (D1: with the value's format, formatString, for the right-to-left waterfall's measures)
+    const extMeasure = (t, want, expression, dataType, formatString) => {
       const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
       let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
-      timeExt.push({ t, m, expression, dataType }); return m;
+      timeExt.push(Object.assign({ t, m, expression, dataType }, formatString ? { formatString } : {})); return m;
     };
     const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
     // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
@@ -448,7 +458,11 @@
       let c; try { c = daxNames.column(f.t, f.c); } catch (e) { return null; }
       const y = 'CALCULATE ( ' + y0 + ' )', cap = n + extra + 1;
       const head = 'VAR _t = CALCULATETABLE ( FILTER ( VALUES ( ' + c + ' ), NOT ISBLANK ( ' + c + ' ) && NOT ISBLANK ( ' + y + ' ) ), REMOVEFILTERS ( ' + c + ' ) ) VAR _n = COUNTROWS ( _t ) VAR _k = IF ( MIN ( _n, ' + cap + ' ) = ' + cap + ', ' + n + ', _n )';
-      const keep = () => { const keepName = extMeasure(f.t, 'Keep: ' + shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property) + ' by ' + label(f), head + ' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
+      // (0.3.0 S1, B-181: "Keep: Web Orders Total Score by مجموعة الخطة" in the Fields pane) the hidden helper's name in one
+      // script, plain English: the measure by the shown name, else by the model's names, else "Keep: top categories"
+      const yName = shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property);
+      const keepWant = ['Keep: ' + yName + ' by ' + label(f), 'Keep: ' + yName + ' by ' + shown(f.c)].find(latinOnly) || 'Keep: top categories';
+      const keep = () => { const keepName = extMeasure(f.t, keepWant, head +' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
       const filter = { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, keepName),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: keepName } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
@@ -461,7 +475,7 @@
   }
 
   const api = {
-    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource,
+    S, SCHEMA, lit, str, S0, bool, num, color, obj, resource, LINE_WIDTH, lineStyle,
     json, rnd, guid, lum, contrast, mixHex, fieldCol, fieldMea, q, fname,
     shown, AGG, fieldAgg, isValue, proj, tproj, label, hasControl, daxSafe, daxNames,
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,

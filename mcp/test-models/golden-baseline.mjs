@@ -113,7 +113,10 @@ await task(3, 'Ramadan vs last Ramadan', async () => {
   const b = await build('ramadan', 'Golden Ramadan', th, { layout: 'focus', kpis: 3, filters: 'top', lang: 'en' }, { secondPage: false, fields: { kpis: RAMADAN_KPIS, slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] },
     // round 8: the page is limited to Ramadan by a page filter (the owner's decision 2026-10-04)
     // round 9: 'this Ramadan only' is the flag and the Hijri year the user gives (here 1447 stands for the user's answer)
-    pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }],
+    // F1 (STRICT, the owner's decision of 20 Oct): a seasonal page needs the person's grain and scope; this task's person
+    // means this Ramadan's days by month (the year they gave above)
+    gulfDates: { grain: 'gregorian', scope: 'year', year: 1447 } });
   const pagesDir = path.join(ROOT, 'ramadan', b.report, 'definition', 'pages');
   const filtersOnPages = fs.readdirSync(pagesDir).filter((n) => fs.existsSync(path.join(pagesDir, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(pagesDir, n, 'page.json'), 'utf8')))
     .map((pg) => `${pg.type === 'Tooltip' ? 'tooltip' : 'page'} ${((pg.filterConfig || {}).filters || []).map((x) => x.field.Column.Expression.SourceRef.Entity + '[' + x.field.Column.Property + '] In ' + x.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value).join()).join('; ') || 'none'}`).sort().join(' | ');
@@ -198,6 +201,10 @@ await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 const big = sizes.reduce((a, s) => (s.chars > a.chars ? s : a), { chars: 0 });
 console.log(`\n${results.length} golden tasks run (tool level). Largest answer: ${big.tool}, ${big.chars} characters.`);
+// (0.3.0 Q1) the largest answer of each tool, so a growth of any one is seen (the answers with every 0.3.0 option on, on
+// the large model, are measured and capped by test-0.3.0-large-model-caps.mjs; the cap: lib/scope.mjs LIMIT and AIM)
+const byTool = {}; sizes.forEach((x) => { if (!byTool[x.tool] || x.chars > byTool[x.tool]) byTool[x.tool] = x.chars; });
+console.log('Largest answer per tool: ' + Object.entries(byTool).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${n}`).join(', ') + '.');
 
 // The expected results (round 12b, AUD-030). Not compared: the health answer's size on the large model, which holds the
 // temporary folder's path (its length differs between Windows and Linux).

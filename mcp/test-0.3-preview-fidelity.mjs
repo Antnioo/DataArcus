@@ -5,10 +5,12 @@
 //   F-01: a title is drawn at its visual's own size (the theme's 18pt = 24 on a 1920 page for charts and tables; a KPI
 //         card's own 10pt) and wraps at the box's inner width by the writer's text measure: two lines in a ~508 slot
 //   F-02: the placeholder plot starts below the title's lines (it shrinks by the lines the title takes)
-//   F-03: "to check" (cut): a table whose column headers at its header size need more than its width; on the dense page,
-//         not on the exec page
-//   F-04: "to check" (cut): a column or line chart whose category labels will slant (months, quarters, weekdays: known
-//         lengths); an unknown category is said unknown, never assumed to fit and never a flag
+//   F-03: "to check" (cut): a table column narrower than its header needs (0.3.0 D5, changed on purpose: check_report's
+//         own measure, TABLE_HEADER_CUT, per column with a set width, no longer the sum of all headers); on the dense
+//         page, not on the exec page
+//   F-04: a column or line chart whose category labels will slant (months, quarters, weekdays: known lengths): a note
+//         (0.3.0 D5, changed on purpose: slanted labels are not cut, Desktop 2.159 drew the laptop's T1b line chart
+//         whole, check_report has no such finding); an unknown category is said unknown, never assumed to fit, never a flag
 //   F-05: page buttons drawn with their names, the current page's underlined; the report title at its own size
 //   F-06: a KPI card's value drawn where its file aligns it: right on an Arabic page as the writer (and the twin from
 //         rc.24, PR #55) writes it, left where a file still says left
@@ -85,14 +87,15 @@ try {
   // the laptop's written table had all 4: 610 of 471. The rule is tested on both)
   const dt = dense.visuals[ti];
   chk(() => dt && dt.columns.length === 3 && near(dt.headerSize, 10) && !P.check(dense).some((f) => f.i === ti), () => `F-03. the planned dense table (3 columns at 10pt, as the writer writes it) fits: ${JSON.stringify(dt && { columns: dt.columns, size: dt.headerSize })} ${JSON.stringify(P.check(dense).filter((f) => f.i === ti))}`);
-  const laptop = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === ti ? Object.assign({}, v, { columns: F.table.map((f) => ({ name: f.c != null ? f.c : f.m })) }) : v)) }), ls = P.render(laptop);
+  // (D5: the laptop's 4 columns in the writer's equal shares of the table's room, 471 / 4: a set width each, as check_report judges)
+  const laptop = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === ti ? Object.assign({}, v, { columns: F.table.map((f) => ({ name: f.c != null ? f.c : f.m, width: Math.floor((v.w - 36) / 4) })) }) : v)) }), ls = P.render(laptop);
   chk(() => P.check(laptop).some((f) => f.i === ti && f.kind === 'cut' && /column/.test(f.why || '')) && flagsOf(ls).some((f) => f.i === ti && f.kind === 'cut'), () => `F-03. the dense page's 507-wide table with the laptop's 4 columns is flagged cut (its headers need more than its width): ${JSON.stringify(P.check(laptop).filter((f) => f.i === ti))}`);
   chk(() => eti >= 0 && !efl.some((f) => f.i === eti), () => `F-03. the exec page's table is not flagged: ${JSON.stringify(efl)} ${JSON.stringify(exec.visuals[eti] && { w: exec.visuals[eti].w, columns: exec.visuals[eti].columns })}`);
 
   // ---------- F-04: slanted category labels ----------
-  chk(() => P.check(dense).some((f) => f.i === li && f.kind === 'cut' && /slant/.test(f.why || '')) && dfl.some((f) => f.i === li && f.kind === 'cut'), () => `F-04. the dense page's 509-wide line chart by 12 months (42 a month, a 3-letter month needs 65.5 at 15pt) is flagged: ${JSON.stringify(P.check(dense).filter((f) => f.i === li))}`);
+  chk(() => P.notes(dense).some((f) => f.i === li && f.kind === 'slant' && /slant/.test(f.why || '')) && notesOf(dsvg).some((f) => f.i === li && f.kind === 'slant') && !dfl.some((f) => f.i === li), () => `F-04. the dense page's 509-wide line chart by 12 months (42 a month, a 3-letter month needs 65.5 at 15pt) has the note, no flag: ${JSON.stringify(P.notes(dense).filter((f) => f.i === li))}`);
   chk(() => !efl.length && !P.check(exec).length, () => `F-04. nothing on the exec page is flagged: ${JSON.stringify(P.check(exec))}`);
-  const lab = (category, w, extra) => P.check({ w: 1920, h: 1080, visuals: [Object.assign({ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 400, title: 'x', category, labelSize: 15 }, extra || {})] });
+  const lab = (category, w, extra) => P.notes({ w: 1920, h: 1080, visuals: [Object.assign({ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 400, title: 'x', category, labelSize: 15 }, extra || {})] }).filter((f) => f.kind === 'slant');
   chk(() => lab('Month Short', 509).some((f) => /slant/.test(f.why)) && !lab('Month Short', 1242).length, () => 'F-04. 12 short months slant in 509, stand in 1242');
   chk(() => lab('Month Name', 1000).some((f) => /slant/.test(f.why)) && !lab('Month Name', 1400).length, () => `F-04. full month names (up to 9 letters: 116.5 a month) slant in 1000, stand in 1400: ${JSON.stringify(lab('Month Name', 1000))}`);
   chk(() => !lab('Quarter', 509).length && lab('Weekday Short', 400).some((f) => /slant/.test(f.why)), () => 'F-04. 4 quarters stand in 509; 7 short weekdays slant in 400');

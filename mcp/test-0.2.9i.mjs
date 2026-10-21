@@ -181,12 +181,13 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   // ---------- P2 (LAB-POLISH): through create_report, the written line 3 wide; smooth only with smoothLines; the donut's ring at 68 ----------
   {
     const one = async (name, extra) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 3 }); return ask('create_report', Object.assign({ path: 'i-hr', name, design: pl.j && pl.j.design, secondPage: false, noDataMessage: false, fields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]', timeAxis: 'Calendar[Month Name]', category: 'Hires[Department]' } }, extra || {})); };
-    const a = await one('I P2'), b = await one('I P2 smooth', { smoothLines: true });
+    // (L1, 19 Oct: smooth with markers is the default now; smoothLines false keeps the straight line)
+    const a = await one('I P2', { smoothLines: false }), b = await one('I P2 smooth');
     const ls = (x) => { const v = visualsOf(x, 'i-hr').find((w) => w.visual && w.visual.visualType === 'lineChart'); return v ? (((v.visual.objects || {}).lineStyles || [])[0] || {}).properties : null; };
     const dn = (x) => visualsOf(x, 'i-hr').filter((w) => w.visual && w.visual.visualType === 'donutChart' && w.page.type !== 'Tooltip').map((w) => JSON.stringify(((w.visual.objects || {}).slices || [])[0] || null));
     const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : null);
     chk(() => !a.err && !b.err && ls(a) && L(ls(a).strokeWidth) === '3D' && !ls(a).lineChartType && ls(b) && L(ls(b).lineChartType) === "'smooth'" && dn(a).every((d) => /"68L"/.test(d)),
-      () => `P2 through create_report: line 3 wide, smooth only on request, every donut's ring at 68: ${short(a)} ${JSON.stringify([ls(a), ls(b), dn(a)])}`);
+      () => `P2 through create_report: line 3 wide, smooth by default, straight with smoothLines false, every donut's ring at 68: ${short(a)} ${JSON.stringify([ls(a), ls(b), dn(a)])}`);
   }
 
   // ---------- P3 (LAYOUT-SWEEP-RC7, the laptop: a column "Agent" on two tables; Desktop: "Something's wrong with one or more
@@ -223,19 +224,23 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
       measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
     const AR = { 'Projects[Total Budget]': 'إجمالي الميزانية', 'Projects[Projects]': 'المشاريع', 'Projects[Product]': 'المنتج', 'Projects[Region]': 'المنطقة' };
     const F = { kpis: ['Projects[Total Budget]', 'Projects[Projects]'], measure: 'Projects[Total Budget]', category: 'Projects[Product]', category2: 'Projects[Region]', table: ['Projects[Region]', 'Projects[Total Budget]'] };
-    const titles = (x) => visualsOf(x, 'i-ar').filter((v) => v.visual && v.page.type !== 'Tooltip').map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; const val = t && t.properties.text && t.properties.text.expr.Literal ? t.properties.text.expr.Literal.Value : ''; return String(val).replace(/^'|'$/g, ''); }).filter(Boolean);
-    const designed = async (name, extra) => { const pl = await ask('plan_layout', { path: 'i-ar', layout: 'exec', lang: 'ar' }); return ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', design: pl.j && pl.j.design, secondPage: true, fields: F }, extra || {})); };
+    const titles = (x, dir) => visualsOf(x, dir || 'i-ar').filter((v) => v.visual && v.page.type !== 'Tooltip').map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; const val = t && t.properties.text && t.properties.text.expr.Literal ? t.properties.text.expr.Literal.Value : ''; return String(val).replace(/^'|'$/g, ''); }).filter(Boolean);
+    const designed = async (name, extra, dir) => { const pl = await ask('plan_layout', { path: dir || 'i-ar', layout: 'exec', lang: 'ar' }); return ask('create_report', Object.assign({ path: dir || 'i-ar', name, lang: 'ar', design: pl.j && pl.j.design, secondPage: true, fields: F }, extra || {})); };
     const handPages = [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 600, h: 280 }, { kind: 'table', x: 660, y: 100, w: 580, h: 280 }] }];
-    const hand = async (name, extra) => ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', pages: handPages, fields: F }, extra || {}));
+    const hand = async (name, extra, dir) => ask('create_report', Object.assign({ path: dir || 'i-ar', name, lang: 'ar', pages: handPages, fields: F }, extra || {}));
     const dAr = await designed('I ar names', { displayNames: AR }), hAr = await hand('I ar hand names', { displayNames: AR });
     const EN = /\b(by|detail)\b/;
     chk(() => !dAr.err && titles(dAr).length && !titles(dAr).some((t) => EN.test(t)) && titles(dAr).some((t) => /حسب/.test(t)) && !titles(hAr).some((t) => EN.test(t)),
       () => `P3-2: an Arabic report with Arabic names: "حسب" and no English "by"/"detail", designed and hand: ${short(dAr)} ${JSON.stringify([titles(dAr), titles(hAr)])}`);
     // English names in an Arabic report: one script a title (round 14), the same words on the designed path as on the hand one
-    const dEn = await designed('I ar en'), hEn = await hand('I ar hand en');
+    // (0.3.0 J18, changed on purpose: the Arabic names approved above for 'i-ar' are its confirmed terms in this session and
+    // are reused there; "English names" is a model with no approved terms: the same model in its own folder)
+    model('i-ar-en', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
+      measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
+    const dEn = await designed('I ar en', null, 'i-ar-en'), hEn = await hand('I ar hand en', null, 'i-ar-en');
     const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();
-    chk(() => !dEn.err && !hEn.err && words(titles(dEn)) && words(titles(dEn)).split(',').every((w) => words(titles(hEn)).split(',').includes(w) || w === 'detail'),
-      () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn)), words(titles(hEn))])}`);
+    chk(() => !dEn.err && !hEn.err && words(titles(dEn, 'i-ar-en')) && words(titles(dEn, 'i-ar-en')).split(',').every((w) => words(titles(hEn, 'i-ar-en')).split(',').includes(w) || w === 'detail'),
+      () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn, 'i-ar-en')), words(titles(hEn, 'i-ar-en'))])}`);
     // the source: texts(lang) holds by and newDesign; the server passes it as it is on both paths. "detail" is the writer's
     // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
     // so the design-engine fixtures (which record those labels) stay as they are

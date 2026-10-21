@@ -55,6 +55,8 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   (`if (part('id')) {`) listed in exactly one of `SHARDS`; a part that reads what an earlier part wrote goes in
   `TOGETHER` with it. The run fails otherwise. To rebalance: `DA_PART_TIMES=1 node test.mjs` prints each part's
   seconds and reports (G-13 validates about 2 s a report). The website: `run-all.mjs --shard k/3`, `SHARDS` there.
+- Every script in `npm test` ends with exactly one result line, `PASS  <name>  <N> checks` (or `FAIL  <name>  ...` /
+  `SKIP  <name>  ...`), as `scripts/ci-sum.mjs` counts them; `scripts/check-result-lines.mjs` (CI) names a script without one.
 - CI (`.github/workflows/tests.yml`) runs on pushes to `main`, on every pull request and by hand: a branch without a
   PR gets no automatic CI: open a (draft) PR, or use Run workflow (Actions > Tests > Run workflow, pick the branch).
 - Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).

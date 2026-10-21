@@ -319,6 +319,9 @@
       const add = (o, kind) => {
         const r = formatOf(o, kind, rawTables); if (!r) return;
         const object = kind === 'measure' ? t.name + '[' + o.name + ']' : t.name + '[' + o.name + ']', item = { object, kind, from: o.formatString || null, to: r.format, reason: r.reason };
+        // (0.3.0 F7, the red team's F-3: a report's plan lists its own fields, and the script wrote the whole model's)
+        // opts.only: the objects ("Table[Name]") the script may change; the others are left as they are
+        if (opts && opts.only && !opts.only.has(object)) return;
         if (count + byHand.length >= max) { more++; return; }
         if (kind === 'column' && o.type === 'calculatedTableColumn') { byHand.push(Object.assign(item, { why: 'a column of a DAX table: a script can\'t change it', steps: 'Select ' + object + ' in Power BI Desktop, then Column tools > Format: ' + r.format + '.' })); return; }
         const lines = kind === 'measure' ? measure(Object.assign({}, o, { formatString: r.format }), 2) : column(Object.assign({}, o, { formatString: r.format }), 2);

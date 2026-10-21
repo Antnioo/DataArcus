@@ -185,7 +185,8 @@
    * @property {boolean} [sample]  the sample model and data (without model)
    * @property {{byPath: string, byConnection: string, names: Object<string, string[]>, taken: string[]}} [model]  the user's
    *   model: byPath (its .SemanticModel folder) or byConnection; names: each table's column and measure names (the
-   *   report's own measures never take one); taken: report and .pbip names already in the folder
+   *   report's own measures never take one); taken: report and .pbip names already in the folder; columns (D1): each
+   *   table's columns { name: { type, sortBy } }, for a right-to-left waterfall's order
    * @property {Bind} [bind]  the fields (the sample's own with sample)
    * @property {Object<string, string>} [texts]  the report's words (design-engine REPORT_TEXTS): reset, resetTip, pages,
    *   close, filterPanel, openFilters, closeFilters, filtersOpen, filtersClosed, header, kpis, filters, slicer, logo,
@@ -196,13 +197,16 @@
    * @property {Object<string, string>} [subtitles]  a slot's role or title -> its subtitle
    * @property {string} [chartColors]  'gradient': bars fade by value
    * @property {string} [chartAxes]  'mirrored': right-to-left charts are mirrored
+   * @property {string} [waterfallRtl]  D7: a mirrored right-to-left report's waterfall: 'native' (visual-gallery.js WATERFALL_RTL_DEFAULT) Power BI's waterfallChart left to right, as in English; 'mirror' the stacked column chart read from the right (D1)
    * @property {boolean} [quietGrid]  quiet gridlines
    * @property {Array<{t: string, c: string, type: string, values: Array<boolean|string|number>, literals: string[]}>} [pageFilters]
    *   "is one of" filters on every report page: typed values (the writer writes Power BI's literals; type is the column's
    *   data type: boolean, string, int64 or double), or literals already written as Power BI writes them (checked)
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
-   * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
+   * @property {boolean} [smoothLines]  false: straight line charts without markers; smooth (monotone) with a dot on each point by default (L1)
+   * @property {string} [slicerStyle]  'pills': a slicer of 2-6 known values is Power BI's button slicer; 'dropdown' (default) (0.3.0 L2)
+   * @property {string} [grid]  'dotted' or 'none': the charts' value-axis gridlines; 'solid' (default) as before (0.3.0 L2)
    * @property {boolean} [phoneLayout]  false: no phone layout (no mobile.json); every page has one by default (0.3.0)
    * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
    *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
@@ -226,10 +230,13 @@
    * @property {Array} noPageButtons  pages without page buttons (no room)
    * @property {Array} tableColumns  tables that hold fewer fields than given
    * @property {Array} rowLabels  the Arabic tables' row-label measures
+   * @property {Array} [waterfallRtl]  D1: each waterfall of a mirrored right-to-left report: { page, title, written ('columnChart': drawn from the report's measures, read from the right; 'waterfallChart': kept left to right, or native: true, D7's "native"), what, why?, measures? }
    * @property {Array} rowLabelSkipped
    * @property {Array} extRenamed  report measures renamed because the model has the name
    * @property {Object} chartColors
    * @property {Object} chartAxes
+   * @property {?Object} slicerStyle  with slicerStyle 'pills': { asked, slicers: [{ page, field, written, why }] } (0.3.0 L2)
+   * @property {?Object} grid  with grid 'dotted' or 'none': { asked, charts } (0.3.0 L2)
    * @property {Array} tabRows  pages whose tabs take two or three rows
    * @property {Array} ringsSmall  ring pictures drawn without their number
    * @property {Array} shortDays  column charts that show Day Short
@@ -364,9 +371,10 @@
     const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
       .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
     // (0.3, J8) a gallery slot is written as its own visual only with o.gallery and where its fields fit (visual-gallery.js);
-    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why })
+    // otherwise as its plain kind, and told (gallery: { page, from, to, title, why }); (0.3.0 D2) a combo in two units is
+    // two panels, two line charts in its box (to: 'two panels')
     const galleryNotes = [];
-    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slot; }); });
+    if (Gallery) PAGES.forEach((pg) => { if (Array.isArray(pg.slots) && pg.slots.some((s) => s && Gallery.isKind(s.kind))) pg.slots = [].concat(...pg.slots.map((s) => { const r = Gallery.resolve(s, B, !!o.gallery, rtl); if (r.note) galleryNotes.push(Object.assign({ page: pg.name || base }, r.note)); return r.slots || [r.slot]; })); });
     const files = [];
     // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
     const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
@@ -493,7 +501,7 @@
     // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
     if (noData.length || rowLabels.length || timeExt.length) {
       const ents = extFile ? extFile.entities : [];
-      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }); });
+      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push(Object.assign({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }, c.formatString ? { formatString: String(c.formatString) } : {})); });
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
@@ -507,6 +515,10 @@
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
+    if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
+    // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
+    if (o.slicerStyle === 'pills') out.slicerStyle = { asked: 'pills', slicers: n.slicerStyles };
+    if (o.grid === 'dotted' || o.grid === 'none') out.grid = { asked: o.grid, charts: n.gridCharts.n };
     return o.gallery || galleryNotes.length ? Object.assign(out, { gallery: galleryNotes }) : out;
   }
 

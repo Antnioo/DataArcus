@@ -76,21 +76,29 @@ try {
   // ---------- AT-2: the gallery, English names, Arabic report ----------
   {
     const T = 'Sales', M = (m, x) => Object.assign({ t: T, m }, x || {}), C = (c, x) => Object.assign({ t: T, c }, x || {});
-    const AED = M('Sales PY', { cardFormat: '"AED" #,0' }), PCT = M('Margin %', { pct: true, pctFormat: '0.0%' });
+    // (0.3.0 D2, changed on purpose: a combo is written only for two measures in one unit, C13; two units are two panels)
+    const AED = M('Sales PY', { cardFormat: '"AED" #,0' }), PCT = M('Cost PY', { cardFormat: '"AED" #,0' });
     const QUARTER = C('Quarter', { kind: 'quarter' }), CITY = C('City'), REGION = C('Region', { kind: 'region', rows: 5 }), CH = C('Channel', { kind: 'channel', rows: 4 });
     const B = { kpis: [AED, PCT], measure: AED, date: QUARTER, cats: { bar: CITY, column: CH, donut: C('Channel'), split: REGION }, y: {}, table: [CITY, AED], slicers: [CITY, null, null], tip: { card: AED, cat: CITY, y: AED } };
-    const names = ['Sales PY', 'Margin %', 'Quarter', 'City', 'Region', 'Channel', 'Sales'];
+    // (0.3.0 J19, changed on purpose: one currency shares a combo's axis only when the person confirmed the pair compares)
+    const AXR = req('../assets/js/axis-units.js'); B.axes = { confirmed: [AXR.record(AED, PCT, 'comparable', []), AXR.record(M('Total Sales'), M('Total Cost'), 'comparable', [])] };
+    const names = ['Sales PY', 'Cost PY', 'Quarter', 'City', 'Region', 'Channel', 'Sales'];
     const t = ['combo', 'waterfall', 'multiples'].map((k) => G.title(k, B, 'حسب'));
     chk(() => t.every((x) => x && words(x).every((w) => words(names.join(' ')).includes(w))), () => `AT-2a. gallery titles in an Arabic report add no English word ("and", "per", "by", "last year"): ${JSON.stringify(t)}`);
-    chk(() => G.title('combo', Object.assign({}, B, { kpis: [M('Total Sales'), PCT], measure: M('Total Sales') }), 'by') === 'Total Sales and Margin % by Quarter', () => `AT-2b. unchanged in English: ${G.title('combo', Object.assign({}, B, { kpis: [M('Total Sales'), PCT], measure: M('Total Sales') }), 'by')}`);
+    const TS = M('Total Sales', { cardFormat: '"AED" #,0' }), TC = M('Total Cost', { cardFormat: '"AED" #,0' });
+    chk(() => G.title('combo', Object.assign({}, B, { kpis: [TS, TC], measure: TS }), 'by') === 'Total Sales and Total Cost by Quarter', () => `AT-2b. unchanged in English: ${G.title('combo', Object.assign({}, B, { kpis: [TS, TC], measure: TS }), 'by')}`);
     const d = E.fresh(); d.font = 'Tahoma'; E.repairState(d);
-    const r = get(() => Px.build({ name: 'GA', title: 'تقرير', pageName: 'الصفحة', lang: 'ar', rtl: true, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'ar'), sample: false, gallery: true,
+    const r = get(() => Px.build({ name: 'GA', title: 'تقرير', pageName: 'الصفحة', lang: 'ar', rtl: true, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'ar'), sample: false, gallery: true, waterfallRtl: 'mirror',
       model: { byPath: 'M.SemanticModel' }, bind: B, texts: E.REPORT_TEXTS.ar, chartAxes: 'mirrored', quietGrid: true,
       pages: [{ name: 'الصفحة', page: { w: 1280, h: 720 }, slots: [{ kind: 'combo', x: 20, y: 20, w: 610, h: 330 }, { kind: 'waterfall', x: 650, y: 20, w: 610, h: 330 }, { kind: 'multiples', x: 20, y: 370, w: 1240, h: 330 }], panel: null, hand: true, png: new Uint8Array([1]) }] }));
     const files = {}; (r.files || []).filter((f) => /\.json$/.test(f.path)).forEach((f) => { try { files[f.path] = JSON.parse(String(f.data)); } catch (e) { /* not JSON */ } });
     const types = Object.values(files).map((j) => j.visual && j.visual.visualType).filter(Boolean);
-    chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
-    const bad = stray(shownTexts(files), names);
+    // (D1, changed on purpose: a mirrored right-to-left waterfall is written as the stacked column chart, columnChart, read from the right;
+    // D7: the default became waterfallRtl "native", so this build asks for "mirror")
+    chk(() => types.includes('lineClusteredColumnComboChart') && types.includes('columnChart') && !types.includes('waterfallChart'), () => `AT-2c. the gallery kinds were written: ${r.threw || JSON.stringify(types)}`);
+    // (0.3.0 J19, changed on purpose: the combo's value axis is titled with its unit, an ISO code shown the same in both
+    // languages, isolated in Arabic: the brief's rule 6)
+    const bad = stray(shownTexts(files), names.concat('AED'));
     chk(() => r.files && !bad.length, () => `AT-2d. the Arabic gallery page shows no English word but the fields' names: ${JSON.stringify(uniq(bad).slice(0, 12))}`);
   }
 

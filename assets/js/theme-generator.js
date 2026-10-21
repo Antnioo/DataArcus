@@ -516,8 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let logo = null;
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261011a4', '/assets/js/story-titles.min.js?v=20261018st', '/assets/js/pbip-query.min.js?v=20261018st', '/assets/js/pbip-sizing.min.js?v=20261013p6', '/assets/js/pbip-notes.min.js?v=20261018a11y',
-      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261019r030', '/assets/js/report-a11y.min.js?v=20261018a11y', '/assets/js/pbip-export.min.js?v=20261019r030'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/pbip-query.min.js?v=20261020s1', '/assets/js/pbip-sizing.min.js?v=w15', '/assets/js/pbip-notes.min.js?v=20261019l2',
+      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261021p7', '/assets/js/report-a11y.min.js?v=20261020w8', '/assets/js/pbip-export.min.js?v=20261019w5'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261012i11')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=w15')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -693,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
     // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
     // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
-    const CHECK = ['../assets/js/visual-types.min.js?v=20261018c', '../assets/js/report-rules.min.js?v=20261018c', '../assets/js/layout-check.min.js?v=20261018c'];
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261020l4', '../assets/js/layout-check.min.js?v=20261020w8'];
     const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
     const ckBox = $('pbipCheck');
     const showCheck = (C, files, m) => {
@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261018b').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261020w7').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
       const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
         const files = P.build(input).files;

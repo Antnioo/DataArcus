@@ -5,7 +5,9 @@
 //   { questionHash, objectHash, answer, evidenceSignature, at, by: 'user' }
 // (R5, 0.3.0: the question's id and its object are hashed too; a record written before, with them in plain text, is read
 // and held hashed from then on. A stale answer is kept, not applied, until the person forgets their answers.)
-// No network: nothing here sends or loads anything.
+// (0.3.0 J18) The terminology sheet's confirmed terms are records of their own (termRecord below): hashes, and the Arabic
+// name the person approved for a field. (0.3.0 J17) The Gulf date questions' answers too (dateRecord below): hashes and
+// the answer. No network: nothing here sends or loads anything.
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -80,6 +82,13 @@
         t.otherTable || '', t.otherColumn || '', t.otherColumn ? columnType(rawTables, t.otherTable, t.otherColumn) : ''].concat(t.looksLike === 'date' ? dates : []);
       return sha256(JSON.stringify(['b148-table-v1'].concat(parts)));
     }
+    // (0.3.0 J19) an axis question (axis-units.js): may two measures share one chart axis; both measures' DAX and
+    // format strings, so a confirmation stops applying when either changes
+    if (q.axis) {
+      parts = ['axis', q.id, q.obj].concat(...(q.axis.measures || []).map((x) => { const hit = measureOf({ obj: x.name }, rawTables);
+        return [x.table, x.name, hit && lc(hit.table) === lc(x.table) ? sha256(text(hit.m.expression)) : 'missing', hit && lc(hit.table) === lc(x.table) ? text(hit.m.formatString) : '']; }));
+      return sha256(JSON.stringify(['b148-axis-v1'].concat(parts)));
+    }
     if (q.relationship) {
       const r = q.relationship;
       parts = ['rel', q.id, q.obj, r.fromTable, r.fromColumn, r.toTable, r.toColumn, r.candidateColumn,
@@ -138,6 +147,107 @@
   /** Every record an apply() result holds: the ones in use and the stale ones (nothing is dropped but by forget()). */
   const kept = (a) => a.keep.concat(a.stale);
 
+  // ---- (0.3.0 J18, B-171) the terminology sheet's confirmed terms: the Arabic display name a person approved for one
+  // field (or the model's own name they kept), reused only for the same model (modelKey, given by the caller), the same
+  // field (objectKey: its table and name, hashed), the same scope (the language) and the same metadata: its kind, type
+  // and description (evidenceHash) and what it is computed from (dependencyHashes: its DAX, its source column, its
+  // sort-by column). A renamed field, a changed description or DAX, another model: the term is asked again. A record
+  // holds hashes, the alias the person approved and its date, never the field's name, its DAX or data.
+  //   { modelKey, objectKey, scope, evidenceHash, dependencyHashes, alias, decision, at, by: 'user' }
+  const TERM_SCOPES = ['ar'], DECISIONS = ['approved', 'kept'];
+  const termKeyOf = (key) => { const m = /^'?(.+?)'?\[(.+)\]$/.exec(String(key == null ? '' : key).trim()); return m ? { table: m[1], field: m[2] } : null; };
+  const termObject = (k) => sha256(JSON.stringify(['term-object', k.table, k.field]));
+  const dep = (what, v) => sha256(JSON.stringify(['term-dep-v1', what, text(v)]));
+  /** The evidence of a field ("Table[Field]", its names exactly as the model has them) in the model's tables (model.bim
+   *  JSON): { evidenceHash, dependencyHashes }, or null when the model has no such field. */
+  function termEvidence(rawTables, key) {
+    const k = termKeyOf(key); if (!k) return null;
+    const t = (rawTables || []).find((x) => String(x.name) === k.table); if (!t) return null;
+    const c = (t.columns || []).find((x) => String(x.name) === k.field), m = c ? null : (t.measures || []).find((x) => String(x.name) === k.field), o = c || m;
+    if (!o) return null;
+    const deps = [];
+    if (o.expression != null) deps.push(dep('expression', o.expression));
+    if (c && c.sourceColumn != null) deps.push(dep('source', c.sourceColumn));
+    if (c && c.sortByColumn != null) deps.push(dep('sortBy', c.sortByColumn));
+    if (!deps.length) deps.push(dep('none', ''));
+    return { evidenceHash: sha256(JSON.stringify(['term-evidence-v1', k.table, k.field, c ? 'column' : 'measure', String(o.dataType || ''), text(o.description)])), dependencyHashes: deps.sort() };
+  }
+  /** A term record: { modelKey (64 hex), key ("Table[Field]"), scope ('ar'), evidence (termEvidence's), alias (the
+   *  approved text; null when kept), decision ('approved' | 'kept'), at (ISO date, default now) }. */
+  function termRecord(o) {
+    const k = termKeyOf(o && o.key), ev = o && o.evidence;
+    if (!k || !ev || !HEX.test(String(o.modelKey)) || !TERM_SCOPES.includes(o.scope) || !DECISIONS.includes(o.decision)) throw new Error('A term needs a model key, a field (Table[Field]) the model has, a scope and a decision.');
+    const alias = o.decision === 'kept' ? null : String(o.alias == null ? '' : o.alias);
+    if (alias !== null && (!alias.trim() || alias.length > 200)) throw new Error('An approved term has an alias of 1-200 characters.');
+    return { modelKey: o.modelKey, objectKey: termObject(k), scope: o.scope, evidenceHash: ev.evidenceHash, dependencyHashes: ev.dependencyHashes.slice().sort(), alias, decision: o.decision, at: o.at || new Date().toISOString(), by: 'user' };
+  }
+  function validTerm(r) {
+    return !!r && typeof r === 'object' && !Array.isArray(r) && keysAre(r, ['alias', 'at', 'by', 'decision', 'dependencyHashes', 'evidenceHash', 'modelKey', 'objectKey', 'scope'])
+      && HEX.test(r.modelKey) && HEX.test(r.objectKey) && HEX.test(r.evidenceHash) && TERM_SCOPES.includes(r.scope) && DECISIONS.includes(r.decision)
+      && Array.isArray(r.dependencyHashes) && r.dependencyHashes.length > 0 && r.dependencyHashes.length <= 8 && r.dependencyHashes.every((h) => HEX.test(h))
+      && (r.decision === 'kept' ? r.alias === null : typeof r.alias === 'string' && r.alias.length > 0 && r.alias.length <= 200)
+      && typeof r.at === 'string' && r.at.length <= 40 && r.by === 'user';
+  }
+  /** The confirmed term of each item ({ key, evidence }): a Map key -> record, only where a record matches the model
+   *  key, the field, the scope, the evidence and every dependency; the latest record wins. */
+  function applyTerms(items, records, modelKey, scope) {
+    const out = new Map(), recs = (records || []).filter(validTerm);
+    for (const it of items || []) {
+      const k = termKeyOf(it && it.key), ev = it && it.evidence; if (!k || !ev) continue;
+      const ok = termObject(k), deps = JSON.stringify(ev.dependencyHashes.slice().sort());
+      for (const r of recs) if (r.modelKey === modelKey && r.scope === scope && r.objectKey === ok && r.evidenceHash === ev.evidenceHash && JSON.stringify(r.dependencyHashes) === deps) out.set(it.key, r);
+    }
+    return out;
+  }
+
+  // ---- (0.3.0 J17, B-170) the Gulf date questions' answers: which date the report follows, its grain, its seasonal
+  // scope, the Hijri year and the Hijri-year column, as the person answered them. Reused only for the same model
+  // (modelKey, given by the caller), the same question and the same metadata (evidenceHash: each field the question is
+  // about, its type and sort-by column, and the relationships that start at it with their active flags). A flipped
+  // relationship or a changed column: asked again. A record holds hashes and the answer (a field hashed, a grain or scope
+  // word, a year the person gave), never a name or data:
+  //   { modelKey, questionHash, evidenceHash, answer, at, by: 'user' }
+  const DATE_QUESTIONS = ['dateRole', 'grain', 'scope', 'year', 'hijriYearColumn'];
+  const DATE_ANSWER = /^(gregorian|hijri|seasonDay|all|year|\d{3,4}|field:[0-9a-f]{64})$/;
+  const dateQuestion = (q) => sha256(JSON.stringify(['date-question', String(q)]));
+  /** A field as a date answer holds it: hashed ("Table[Field]", its names exactly as the model has them). */
+  const dateField = (key) => { const k = termKeyOf(key); return 'field:' + sha256(JSON.stringify(['date-field', k ? k.table : String(key), k ? k.field : ''])); };
+  /** The evidence of a date question: a SHA-256 of each field it is about (model.bim's model: tables and relationships):
+   *  its type and sort-by column, and every relationship from it with its target and active flag. */
+  function dateEvidence(model, question, keys) {
+    const tables = (model && model.tables) || [], rels = (model && model.relationships) || [];
+    const parts = (keys || []).map(String).slice().sort().map((key) => {
+      const k = termKeyOf(key), t = k && tables.find((x) => String(x.name) === k.table), c = t && (t.columns || []).find((x) => String(x.name) === k.field);
+      if (!c) return [key, 'missing'];
+      const from = rels.filter((r) => String(r.fromTable) === k.table && String(r.fromColumn) === k.field)
+        .map((r) => [String(r.toTable), String(r.toColumn), r.isActive === false ? 'inactive' : 'active']).sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
+      return [key, String(c.dataType || 'unknown'), String(c.sortByColumn || ''), from];
+    });
+    return sha256(JSON.stringify(['date-evidence-v1', String(question)].concat(parts)));
+  }
+  /** A date answer record: { modelKey (64 hex), question (one of DATE_QUESTIONS), evidence (dateEvidence's), answer
+   *  (a grain or scope word, a year, or dateField's), at (ISO date, default now) }. */
+  function dateRecord(o) {
+    if (!o || !HEX.test(String(o.modelKey)) || !DATE_QUESTIONS.includes(o.question) || !HEX.test(String(o.evidence)) || !DATE_ANSWER.test(String(o.answer))) throw new Error('A date answer needs a model key, a question, its evidence and an answer.');
+    return { modelKey: o.modelKey, questionHash: dateQuestion(o.question), evidenceHash: o.evidence, answer: String(o.answer), at: o.at || new Date().toISOString(), by: 'user' };
+  }
+  function validDate(r) {
+    return !!r && typeof r === 'object' && !Array.isArray(r) && keysAre(r, ['answer', 'at', 'by', 'evidenceHash', 'modelKey', 'questionHash'])
+      && HEX.test(r.modelKey) && HEX.test(r.questionHash) && HEX.test(r.evidenceHash) && typeof r.answer === 'string' && DATE_ANSWER.test(r.answer)
+      && typeof r.at === 'string' && r.at.length <= 40 && r.by === 'user';
+  }
+  /** The answers given before for these questions ({ question, evidence }): a Map question -> answer, only where a
+   *  record matches the model key, the question and the evidence; the latest record wins. */
+  function applyDates(items, records, modelKey) {
+    const out = new Map(), recs = (records || []).filter(validDate);
+    for (const it of items || []) {
+      if (!it || !DATE_QUESTIONS.includes(it.question)) continue;
+      const qh = dateQuestion(it.question);
+      for (const r of recs) if (r.modelKey === modelKey && r.questionHash === qh && r.evidenceHash === it.evidence) out.set(it.question, r.answer);
+    }
+    return out;
+  }
+
   // The browser's own storage, one entry per model fingerprint. Nothing leaves the browser. Every read and write is
   // guarded (a private window, blocked storage): without storage the answers last until the page is closed.
   const PREFIX = 'dataarcus-mh-answers:';
@@ -159,5 +269,6 @@
     try { if (!s) return; const keys = []; for (let i = 0; i < s.length; i++) { const k = s.key(i); if (k && k.startsWith(PREFIX)) keys.push(k); } keys.forEach((k) => s.removeItem(k)); } catch (e) { /* nothing stored */ }
   }
 
-  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget };
+  return { ANSWERS, PREFIX, sha256, signature, fingerprint, record, valid, upgrade, apply, kept, load, save, forget, termEvidence, termRecord, validTerm, applyTerms,
+    DATE_QUESTIONS, dateField, dateEvidence, dateRecord, validDate, applyDates };
 });
