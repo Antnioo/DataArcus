@@ -261,6 +261,8 @@ Every change, one line each (the pull request or the job that made it):
   in one sentence with the 3 steps to apply it, the folder is named, the inputs are in plain words and the items "worth
   a look" are listed; a report path that misses names the report found ("Did you mean ...?"); `add_gulf_calendar`
   `arabicColumnsOnly` writes only the Arabic calendar columns script for the model's own date table.
+- T2 (the laptop's final run of 0.3.0): on the Arabic approval page the preview's titles stay inside their boxes,
+  English names keep their order (each cell its own direction, quoted names isolated), and the title is Arabic.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

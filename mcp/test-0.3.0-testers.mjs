@@ -41,7 +41,7 @@ const cp = (from, to) => fs.cpSync(path.join(HERE, from), path.join(ROOT, to), {
 // (the testers' setup: the made-up project sat in a subfolder "Sales" of the working folder)
 cp('fixtures/twin-project', 'Sales');
 ['hp/Sales', 'rd/Sales'].forEach((d) => cp('fixtures/health-project', d));
-['tw/Sales', 'ar/Sales', 'cal/Sales', 'th/Sales'].forEach((d) => cp('fixtures/twin-project', d));
+['tw/Sales', 'ar/Sales', 'cal/Sales', 'th/Sales', 'en/Sales', 'ks/Sales'].forEach((d) => cp('fixtures/twin-project', d));
 
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const linkAt = async (i) => { for (let k = 0; k < 100 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
@@ -238,6 +238,46 @@ try {
       () => `C1-6. add_gulf_calendar's answer groups its columns ("12 date columns, 8 Hijri, ..."), no flat list of every name: ${short(g)}`);
     chk(() => g.j && g.j.plan && Array.isArray(g.j.plan.howToApplyScript) && g.j.plan.howToApplyScript.length === 3 && /a small text file/i.test(g.j.plan.scriptIs || ''), () => `C1-7. and the apply steps as in T-4: ${short(g)}`);
     chk(() => g.j && g.j.plan && g.j.plan.writesAfterGo.some((x) => /in the folder "cal\/Sales", next to "Twin Sales\.pbip"/.test(x)), () => `T9-5. the calendar's place is named: ${g.j && g.j.plan && g.j.plan.writesAfterGo.join(' | ')}`);
+  }
+  // ---------- T2 (the laptop's final run of 0.3.0, items 2-4: the Arabic approval pages) ----------
+  // item 3: `"Overview" (page name)` drawn `Overview" (page name)"`; item 4: `1. English "Overview"` drawn
+  // `"English "Overview .1`; item 2: `_Measures[Total]` drawn `Measures[Total]_`; the titles stayed English
+  {
+    const ar = await w.call('plan_layout', { path: 'ar/Sales', name: 'Arabic Testers', layout: 'exec', lang: 'ar' }), arId = ar.j && ar.j.plan && ar.j.plan.planId;
+    const arHtml = arId ? await pageOf(arId, false) : '';
+    const same = await w.call('create_arabic_twin', { path: 'en/Sales/Twin Sales.pbip', into: 'same' }), sameId = same.j && same.j.plan && same.j.plan.planId;
+    const sameHtml = sameId ? await pageOf(sameId, false) : '';
+    chk(() => arHtml && twinHtml && sameHtml, () => `T2 setup. the three Arabic pages: ${!!arHtml} ${!!twinHtml} ${!!sameHtml} ${short(same)}`);
+    const pages = [['the AR report', arHtml], ['the twin', twinHtml], ['the EN-AR copy', sameHtml]];
+    // every key cell has its own direction (dir="auto": the first strong letter, Unicode bidi rule P2-P3, decides it)
+    pages.forEach(([n, h]) => { const bare = (h.match(/<td class="k"(?![^>]*dir="auto")[^>]*>/g) || []).length, all = (h.match(/<td class="k"/g) || []).length;
+      chk(() => all > 5 && !bare, () => `T2-2a. ${n}: every key cell has dir="auto" (${bare} of ${all} without)`); });
+    // each quoted name inside a cell is isolated (<bdi>), so the cell's direction comes from the words around it and the
+    // name keeps its order; checked on the HTML: a quoted name ("..." or «...») not inside a <bdi> is a fail
+    pages.forEach(([n, h]) => { const cells = h.match(/<td[^>]*>[\s\S]*?<\/td>/g) || [], loose = [];
+      cells.forEach((c) => { const t = c.replace(/<bdi[^>]*>[\s\S]*?<\/bdi>/g, ''); (t.match(/&quot;[^&<]+&quot;|«[^»<]+»/g) || []).forEach((q) => loose.push(q)); });
+      chk(() => cells.length > 5 && !loose.length, () => `T2-2b. ${n}: every quoted name in a table is isolated: ${loose.slice(0, 5).join(' | ')}`); });
+    // the bidi rule a browser applies to a dir="auto" key: its first strong letter outside isolates. A key that starts
+    // with a neutral ("1.", "_", a quote) and is English is laid out left to right, as written
+    const firstStrong = (html) => { const t = unesc(html.replace(/<bdi[^>]*>[\s\S]*?<\/bdi>/g, ' ')); const m = /[A-Za-z\u00C0-\u024F]|[\u0590-\u08FF]/.exec(t); return m ? (/[A-Za-z\u00C0-\u024F]/.test(m[0]) ? 'ltr' : 'rtl') : 'none'; };
+    pages.forEach(([n, h]) => { const keys = (h.match(/<td class="k"[^>]*>[\s\S]*?<\/td>/g) || []).filter((k) => /^<td[^>]*>\s*(?:&quot;|«|_|\d+\.|<bdi)/.test(k)), wrong = keys.filter((k) => firstStrong(k.replace(/^<td[^>]*>/, '')) === 'rtl' && !/[\u0600-\u06FF]/.test(unesc(k)));
+      chk(() => !wrong.length, () => `T2-2c. ${n}: English keys starting with a neutral are laid out left to right: ${wrong.slice(0, 3).join(' | ')}`); });
+    // titles
+    const h1 = (h) => ((/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(h) || [])[1] || '');
+    chk(() => /[\u0600-\u06FF]/.test(h1(arHtml)) && /<bdi[^>]*>[^<]*Arabic Testers/.test(h1(arHtml)) && !/^Report /.test(unesc(h1(arHtml)).trim()), () => `T2-3a. the AR report's title is Arabic, its name isolated: ${h1(arHtml)}`);
+    chk(() => /[\u0600-\u06FF]/.test(h1(twinHtml)) && !/Arabic twin of a report/.test(h1(twinHtml)), () => `T2-3b. the twin's title is Arabic: ${h1(twinHtml)}`);
+    chk(() => /[\u0600-\u06FF]/.test(h1(sameHtml)) && !/English and Arabic in one report/.test(h1(sameHtml)), () => `T2-3c. the EN-AR copy's title is Arabic: ${h1(sameHtml)}`);
+    // 4c: no waterfall in this report: no waterfall row
+    chk(() => !/Waterfall, right to left/.test(arHtml), () => 'T2-4c. the AR report of a model with no waterfall shows no waterfall row');
+    // 4b (and the writes' counts): "1 columns"
+    chk(() => ar.j && ar.j.plan && !/\b1 columns\b/.test(ar.j.plan.writesAfterGo.join(' ')), () => `T2-4b1. "1 column", never "1 columns": ${ar.j && ar.j.plan && ar.j.plan.writesAfterGo.join(' | ')}`);
+    const c2 = await w.call('add_gulf_calendar', { path: 'ks/Sales', arabicColumnsOnly: true }), c2Id = c2.j && c2.j.plan && c2.j.plan.planId, c2Html = c2Id ? await pageOf(c2Id, false) : '';
+    const plainInputs = between(c2Html, '>Inputs<', '<details');
+    chk(() => c2Html && !/to your date table to your model/.test(unesc(c2Html)) && !/>Name<|Fiscal|Ramadan|Country/.test(plainInputs), () => `T2-4b2. arabicColumnsOnly: one "to", and only the inputs it uses: ${unesc(plainInputs).slice(0, 300)}`);
+    // 4a: Saudi Arabia: the dates the table really has (the UAE's announced dates; none of Saudi Arabia's own)
+    const k = await w.call('add_gulf_calendar', { path: 'ks/Sales', firstYear: 2024, lastYear: 2025, country: 'ksa', asOf: '2026-10-21' }), kId = k.j && k.j.plan && k.j.plan.planId, kHtml = kId ? await pageOf(kId, false) : '';
+    const ram = (/Ramadan and Eid dates<\/td><td[^>]*>([^<]*)/.exec(kHtml) || [])[1] || '';
+    chk(() => /UAE/.test(ram) && /Saudi Arabia/.test(ram), () => `T2-4a. for Saudi Arabia the page says the dates are the UAE's, none of Saudi Arabia's own: ${ram}`);
   }
 } finally {
   await w.close();
