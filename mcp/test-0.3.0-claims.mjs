@@ -67,6 +67,31 @@ check(/flip cards/i.test(pv) && /descriptions/.test(pv.slice(pv.indexOf('What a 
 // R README.md: the MCP runs Microsoft's validator on the reports it writes
 check(!/It does not run on the reports you make\./.test(flat('../README.md')), 'A2-R1. README.md says Microsoft\'s validator does not run on the reports you make (the MCP runs it on each report before writing it)');
 
+// W2 (an outside review of the public repo and dataarcus.com, 21 Oct; mcp/work/W2.md): each public sentence it found
+// untrue, one check each
+const home = { en: flat('../index.html'), ar: flat('../ar/index.html'), tr: flat('../assets/js/translations/homepage.js') };
+for (const [k, t] of Object.entries(home)) {
+  check(!/free and official/i.test(t) && !/مجانيًا، ومن Microsoft نفسها/.test(t), `W2-1a. ${k}: the home page says AI report generation is "free and official"`);
+  check(!/Every number validated against the source/.test(t) && !/كل رقم مُطابق مع المصدر/.test(t), `W2-1b. ${k}: the home page's badge says every number is validated against the source`);
+}
+check(/Microsoft and others now offer AI tools/.test(home.en) && /تقدّم Microsoft وغيرها/.test(home.ar), 'W2-1a. the home page (EN and AR) says what is true: Microsoft and others offer AI report tools');
+check(/checked with Microsoft's report validator/.test(home.en) && /بمدقّق التقارير من Microsoft/.test(home.ar), 'W2-1b. the home page badge (EN and AR) says the reports are checked with Microsoft\'s report validator');
+const rootReadme = flat('../README.md');
+check(!/\(findings\/\)/.test(rootReadme), 'W2-2. README.md links findings/, a folder that does not exist');
+check(!/\b\d+ website test suites\b/.test(rootReadme), 'W2-2. README.md gives a website suite count that goes stale');
+check(/DataArcus MCP runs it on your machine on each report before it is written/.test(rootReadme), 'W2-2. README.md keeps the wave\'s validator sentence');
+const spec = flat('./PRODUCT_SPEC.md');
+check(/## The 11 tools/.test(spec) && !/The 6 tools/.test(spec), 'W2-3. PRODUCT_SPEC.md says 6 tools (0.3.0 has 11)');
+for (const t of ['approve_plan', 'add_gulf_calendar', 'read_report', 'check_report', 'create_arabic_twin']) check(new RegExp('\\| `' + t + '` \\|').test(spec), `W2-3. PRODUCT_SPEC.md's tool table has no ${t} row`);
+check(!/Not yet \(planned\):\*\* the Gulf calendar pack/.test(spec) && /Arabic calendar/.test(spec), 'W2-3. PRODUCT_SPEC.md says the Gulf calendar is planned, or says nothing of the Arabic calendar columns (C1)');
+check(!/It doesn't translate\./.test(spec) && /never translates silently/.test(spec) && /approves/.test(spec), 'W2-3. PRODUCT_SPEC.md says the translation truth (Claude drafts, the person approves, never silent)');
+const mreadme = flat('./README.md');
+check(/into: "same"/.test(mreadme) && /\(EN-AR\)/.test(mreadme), 'W2-4. mcp/README.md documents create_arabic_twin into "same" (the EN-AR copy)');
+check(/Arabic calendar\.tmdl/.test(mreadme) && /English calendar columns/.test(mreadme), 'W2-4. mcp/README.md documents the Arabic calendar columns script (C1) and the English columns until it is applied');
+check(/certutil -hashfile/.test(mreadme) && /Get-FileHash/.test(mreadme), 'W2-4. mcp/README.md says how to check the .mcpb\'s SHA-256 on Windows');
+check(/Node\.js 20\.10/.test(mreadme) && /\bgit\b/.test(mreadme) && /spaces/.test(mreadme), 'W2-4. mcp/README.md lists the developer install\'s prerequisites and quoting a path with spaces');
+check(/2\.159\.883\.0/.test(mreadme) && !/to the latest version/.test(mreadme) && !/to its latest version/.test(mreadme), 'W2-4. mcp/README.md names the lowest Desktop version tested, not "latest"');
+
 // The forbidden words, in every file that speaks for DataArcus (EN and AR): no "first"/"only" of its kind, no
 // official, certified, partner, AI-powered; nothing on Microsoft's Power BI Report skill comparison; nothing of 0.3.1
 const SPEAK = ['./PRIVACY.md', './README.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',

@@ -13,7 +13,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   stays in that one file.
 - **Position (2026-10-04, owner's go after the Desktop test of 2026-10-03; replaces the three layers of 2026-10-01):
   the Gulf localisation and verification layer next to Microsoft's tools.**
-  - **Why:** generating a Power BI report with AI is now free and official. Microsoft's `powerbi-authoring` plugin
+  - **Why:** Microsoft now offers free AI report generation for Power BI. Microsoft's `powerbi-authoring` plugin
     plans, builds and screenshot-checks a report from a model through an AI agent, and Copilot builds on Power BI
     too: Microsoft 365 Copilot answers from Power BI reports and semantic models, and "This feature is enabled by
     default" (Microsoft Learn, "Use Power BI data in Microsoft Copilot", updated 2026-09-24). Generating the report is

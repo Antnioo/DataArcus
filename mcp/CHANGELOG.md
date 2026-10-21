@@ -225,6 +225,13 @@ The 0.3 drafts together, for beta testers (the owner's decision, 19 Oct); the re
   copy) offers them as a TMDL script for the user's own date table, approved with the plan, never applied by DataArcus.
   Until the script is applied the Arabic report binds the English calendar columns and says which fields show English
   data and how to switch (apply the script, then plan again); after it, the Arabic twins are bound, flags included.
+- W2 (an outside review of the public repo and dataarcus.com, 21 Oct): the home page no longer says AI report
+  generation is "free and official" or that "every number" is "validated against the source"; README.md drops the
+  findings/ folder that does not exist and the stale suite count; PRODUCT_SPEC.md says 0.3.0's truth (11 tools, the
+  Gulf calendar and the Arabic calendar columns shipped, Arabic texts drafted by Claude and approved by the person,
+  never translated silently, the model never renamed); mcp/README.md documents the EN-AR copy, the Arabic calendar
+  script, checking the .mcpb's SHA-256, the developer install's prerequisites and the lowest Desktop version tested.
+  `test-0.3.0-claims.mjs` checks each.
 
 ## [Unreleased]: 0.2.9.1
 Three fixes after 0.2.9; nothing else changes.

@@ -5,7 +5,7 @@
 Website: **[dataarcus.com](https://dataarcus.com)** · Contact: [hello@dataarcus.com](mailto:hello@dataarcus.com)
 
 This repository is the source of dataarcus.com: free Power BI tools that run in your browser (nothing you open in
-them is uploaded), articles in English and Arabic, and the public test notes behind DataArcus findings.
+them is uploaded), articles in English and Arabic, and the Power BI Desktop measurements behind the tools.
 
 ## Free tools
 
@@ -21,7 +21,8 @@ them is uploaded), articles in English and Arabic, and the public test notes beh
 
 ## How we check our work
 
-- **Automated tests on every change:** 19 website test suites (thousands of checks) run on each push.
+- **Automated tests on every change:** every website test suite (the list is `ALL` in `scripts/tests/run-all.mjs`)
+  and the MCP's tests run on each pull request and push to main.
 - **Microsoft's own validator:** our test runs check the reports the tools write, on our sample models, with
   Microsoft's report validator. The website's tools don't run it on the reports you make in your browser; the
   DataArcus MCP runs it on your machine on each report before it is written, and in `check_report`.
@@ -31,11 +32,10 @@ them is uploaded), articles in English and Arabic, and the public test notes beh
   announced Ramadan and Eid dates for the UAE and Saudi Arabia, each with its source, are in
   [`scripts/gulf-calendar/DATES-SOURCES.md`](scripts/gulf-calendar/DATES-SOURCES.md).
 
-## Findings
+## Measurements
 
-Every week DataArcus publishes one finding about AI-built and hand-built Power BI reports: what was tested, on
-which version and data, and what we found. The test notes, with a way to reproduce each result, live in
-[`findings/`](findings/) as they are published.
+What was measured in Power BI Desktop, on which version, how, and the quirks found, is in
+[`scripts/tests/DESKTOP-TESTS.md`](scripts/tests/DESKTOP-TESTS.md).
 
 ## The AI report designer
 
