@@ -116,6 +116,12 @@
     // x 4/3)). pillH = the measured minimum + pillRoom: 66 at 8pt, 65 at 9pt, 79 at 10pt, 76 at 15pt
     const PILL_ERASER = 21, pillRoom = (t) => Math.max(4, PILL_ERASER - Math.ceil(t * 4 / 3));
     const PILL_PAD = 0, pillH = (t) => (t <= 9 ? 56 : t <= 15 ? 72 : Math.ceil(72 * t / 15)) + pillRoom(t);
+    // (0.3.0 C1 add-on, the laptop's PILLS-F6 on e1f9e31: in a 274 px rail slicer three values at 15pt make 86 px pills, and
+    // "Medium" was drawn "Mediu…", EN and AR; the 179 px pills of the strip drew it whole) the width: each pill is the
+    // slicer's width less the 6 px gaps, shared; its widest known value must fit at its text size with the room the
+    // rounded ends and the button's own inner margin take (2 lines of the text, pt x 4/3 each: 40 at 15pt, cut at 86 - 40)
+    const PILL_GAP = 6, pillTextRoom = (t) => 2 * Math.ceil(t * 4 / 3), pillW = (n, w) => (w - PILL_GAP * (n - 1)) / n;
+    const pillFits = (texts, n, w, t) => !!(texts && texts.length) && n >= 1 && Math.max(...texts.map((x) => textWidth(String(x), t, false, font))) + pillTextRoom(t) <= pillW(n, w);
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
     // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:
@@ -188,7 +194,7 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
