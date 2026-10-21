@@ -89,7 +89,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "Download and install",
-        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it (<code>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>): <code class='text-break'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here. No payment.",
+        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here. No payment.",
         "name": "Name *",
         "email": "Email *",
         "model": "What is your model about? *",
@@ -188,7 +188,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "التنزيل والتثبيت",
-        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته (<code>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>): <code class='text-break'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا. دون أي دفع.",
+        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا. دون أي دفع.",
         "name": "الاسم *",
         "email": "البريد الإلكتروني *",
         "model": "عن ماذا يتحدث نموذجك؟ *",
