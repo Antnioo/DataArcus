@@ -334,8 +334,10 @@ export function monthOffer(model, loc, outBase) {
   built.columns.forEach((c) => lines.push(`\t\tcolumn ${tmdlName(c.name)} = ${c.dax}`, '\t\t\tdataType: string', `\t\t\tlineageTag: ${tag(c.name)}`, '\t\t\tsummarizeBy: none', ...(c.sortBy ? [`\t\t\tsortByColumn: ${tmdlName(c.sortBy)}`] : []), ''));
   const mc = built.columns.find((c) => c.name === MONTH_COLUMN);
   return { offered: true, table: visible(t.name), dateColumn: visible(date.name), column: mc ? MONTH_COLUMN : built.columns[0].name, sortBy: mc ? (mc.sortNew ? mc.sortBy + ' (written with it, hidden)' : visible(mc.sortBy)) : null,
-    columns: built.columns.map((c) => ({ name: c.name, of: visible(c.of), sortBy: c.sortBy ? visible(c.sortBy) : null })),
-    englishData: built.columns.filter((c) => cols.some((x) => x.name === c.of)).map((c) => ({ field: `${visible(t.name)}[${visible(c.of)}]`, why: `its values are English data (the model's own): an Arabic page shows them as they are until the script adds "${c.name}"` })),
+    // (kept short: a twin's plan answer has one size budget, its texts first)
+    columns: built.columns.map((c) => (c.sortBy ? { name: c.name, sortBy: visible(c.sortBy) } : { name: c.name })),
+    englishData: built.columns.filter((c) => cols.some((x) => x.name === c.of)).map((c) => `${visible(t.name)}[${visible(c.of)}]`),
+    englishDataWhy: 'their values are the model\'s own English data: an Arabic page shows them as they are until the script adds their "(Arabic)" twins',
     ...(built.skipped.length ? { leftOut: built.skipped.map((x) => ({ column: visible(x.of), why: x.why })) } : {}),
     ...(calculated ? { note: 'the date table is a DAX (calculated) table: the lab added the column to its formula; adding it as a calculated column is not yet proven in Desktop through TMDL view: check Preview before Apply' } : {}),
     scriptAfterGo: `${outBase} - Arabic calendar.tmdl`, script: lines.join('\n') + '\n',

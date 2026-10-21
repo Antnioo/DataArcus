@@ -83,7 +83,7 @@ try {
       () => `AC-1g. the fiscal year and quarter in Arabic (the quarter from the fiscal month number): ${block(sc, 'Fiscal Year (Arabic)').slice(0, 260)}`);
     const w1 = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم د' }, DES)), f1 = path.join(ROOT, 'large/تقويم د - Arabic calendar.tmdl');
     chk(() => !w1.err && fs.existsSync(f1) && fs.readFileSync(f1, 'utf8') === sc, () => 'AC-1h. the same model gives the same script (lineage tags by a seed, not random)');
-    chk(() => (CA.englishData || []).some((x) => /Is Weekend|Month/.test(x.field) && x.why) && /apply the script/i.test(CA.howToSwitch || '') && /plan/i.test(CA.howToSwitch || ''),
+    chk(() => (CA.englishData || []).some((x) => /Is Weekend|Month/.test(x)) && /English data/.test(CA.englishDataWhy || '') && /apply the script/i.test(CA.howToSwitch || '') && /plan/i.test(CA.howToSwitch || ''),
       () => `AC-3a. the plan says which calendar fields show English data until the script is applied, and how to switch: ${JSON.stringify({ e: CA.englishData, h: CA.howToSwitch }).slice(0, 500)}`);
   }
   // the generator writes the same twins (one builder)

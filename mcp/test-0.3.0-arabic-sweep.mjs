@@ -263,7 +263,7 @@ try {
       // calendar column the report binds that the script gives a twin is listed (calendarArabic.englishData)
       { const ca = j.calendarArabic, bound = new Set(); const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; if (o.Column && o.Column.Expression && o.Column.Expression.SourceRef) bound.add(`${o.Column.Expression.SourceRef.Entity}[${o.Column.Property}]`); Object.values(o).forEach(walk); };
         Object.entries(F).filter(([f]) => /visual\.json$/.test(f)).forEach(([, v]) => walk((v.visual || {}).query));
-        const twinned = ca ? (ca.columns || []).map((c) => `${ca.table}[${c.of}]`).filter((f) => bound.has(f)) : [], listed = new Set(((ca || {}).englishData || []).map((x) => x.field));
+        const twinned = ca ? (ca.columns || []).map((c) => `${ca.table}[${c.of}]`).filter((f) => bound.has(f)) : [], listed = new Set(((ca || {}).englishData || []));
         chk(() => twinned.every((f) => listed.has(f)), () => `${fx.id} ar/${wf}: calendar fields bound in English that the plan does not list (calendarArabic.englishData): ${JSON.stringify(twinned.filter((f) => !listed.has(f)))}`); }
       if (DUMP) { console.log(`   other literals: ${JSON.stringify(uniq(other.map((o) => `${o.what}=${o.s}`))).slice(0, 3000)}`); console.log(`   kept: ${JSON.stringify(kept)}`); }
       chk(() => !r.unlisted.length, () => `${fx.id} ar/${wf}: ${r.unlisted.length} English runs the plan does not list as kept: ${JSON.stringify(uniq(r.unlisted).slice(0, 12))}`);
