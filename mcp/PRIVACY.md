@@ -1,8 +1,10 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against 0.2.9 (the release candidate; the build writes its version into the package, and the
-source's `mcp/package.json` says 0.1.0 until then) on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`,
-`mcp/lib/`, the report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page
+Plain English. Checked against 0.3.0 (the release candidate; the build writes its version into the package, and the
+source's `mcp/package.json` says 0.1.0 until then): each 0.3 change updated this page for what it changed; the whole page
+was last read against the code on 2026-10-19 (R7: every sentence, with its evidence in `mcp/work/R7-claims.md`), with
+the version of Microsoft's validator that `mcp/package.json` pins: `mcp/server.mjs`, `mcp/lib/`, the report-design
+skill, and the shared engines it loads from `assets/js/`. If the code changes, this page
 is checked again before the next release. What is not true yet is listed under "Known gaps" at the end.
 
 ## In one paragraph
@@ -10,7 +12,9 @@ The DataArcus MCP runs on your own computer and sends nothing anywhere by itself
 (Claude Desktop, Claude Code, or another MCP client), and **everything a DataArcus tool returns is read by that AI
 app**. With Claude, that means it goes to Anthropic, under your Claude account's terms. DataArcus returns your model's
 **structure** (the names of tables, columns and measures, their types and formats, and similar metadata), never the
-data in your tables.
+data in your tables. From a report, it also returns the short texts a person typed there (page names, titles, text
+boxes): those are screened for instructions and length only, so a short title that holds a figure or a name is
+returned as it is (section 3).
 
 ## 1. The MCP runs on your machine and sends nothing itself
 - It is a Node.js program your AI app starts on your computer. It talks only to that app, over standard input and
@@ -25,9 +29,12 @@ data in your tables.
   `check_report` reads report files on your computer and runs Microsoft's report validator offline, in the same
   process: the schemas the validator would download are read from Microsoft's copies bundled in `mcp/schemas/`.)
   The validator's schema download is switched off (`skipSchema`) and is never called.
-- It reads and writes files only inside one working folder that you choose (`DATAARCUS_ROOT`; see section 4).
-- It writes one line to the app's local log when it starts ("DataArcus MCP ready. Folder: ..."), which your AI app
-  keeps on your computer.
+- It reads and writes your files only inside one working folder that you choose (`DATAARCUS_ROOT`; see section 4).
+  The one write outside it: `plan_layout`'s check copy of the report it plans, in a private folder of the computer's
+  temporary folder, deleted as soon as the check ends (section 4). To open the approval window it starts your default
+  browser with the page's local address.
+- It writes one line to the app's local log when it starts ("DataArcus MCP ready. Folder: ..." with the working
+  folder's full path, or why no tool will work), which your AI app keeps on your computer. It logs nothing else.
 
 ## 2. Whatever a tool returns goes to your AI app (with Claude: to Anthropic)
 An MCP tool's answer is read by the AI model so it can decide what to do next. With Claude, the model runs at
@@ -42,29 +49,40 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 | `add_gulf_calendar` | The path of the script file it wrote (relative to the working folder), the new table's name (yours, or "Gulf Calendar"), its number of rows and its column names (the generator's own), the date range (1 January of `firstYear` to 31 December of `lastYear`), the country and weekend chosen, the first day of the week, whether the announced Ramadan and Eid dates are used (up to which date, and from which date they are estimates), the relationships written (the names of the date columns you gave in `relateTo`, as `Table[Column]`), the steps to do by hand, how to apply the script, and a self-check of the new table (the gulfCalendar findings about it, with their counts). A note names the model's table when it already has a calendar made by the DataArcus generator. A refusal names the table, measure or column whose name the new table would take. Never the DAX, never data values. |
 | `generate_theme` | The theme's colours, fonts and settings (your inputs; with `path` and no colours asked, the colours of your report's own theme, hex only, with the report's and the theme's names), the contrast checks, and the path of the theme file it wrote (relative to the working folder); without an approved plan id, the file name it would write and a plan id instead. |
 | `approve_plan` | The plan id, whether it is approved or still waiting for your click, who approved it (`approvedBy`: `user-in-browser` when you clicked Approve in DataArcus's approval window, `user-in-app` when you answered the app's own prompt through MCP elicitation), which tools it allows and what they will write (file names, the table a calendar script adds). The approval window is a page DataArcus serves on your computer only (127.0.0.1, nothing leaves it) and opens in your default browser; it shows you the plan and the same list of files, and your click goes only to the DataArcus server. Its link holds a one-time secret that is never returned to the AI; it stops working when the plan expires or the server stops. |
-| `plan_layout` | Positions and sizes of the visuals, the tools' limits, a plan id; with `path`, the names of the plan's fields that have no right format (and the name of the script file create_report would write), and the problems of the plan's fields (names not in the model, counts over the limits); `colours`: when the design names no colours, the colours taken from your report (its theme's own colours and the colours written on its visuals: hex only, never a value; the report's and the theme's names, your other reports' names, the font, corner radius and shadow of its theme, the contrast checks); `designLint`: the design findings of the planned page (the rule, the visual by its type, title, place and size, the field names, the reason and the fix; no data, nothing written). |
-| `create_report` | How many files it wrote, the path of the new `.pbip` (relative to the working folder), the report and model folder names, the pages and visual counts, and `modelNotes`: the names of the fields it used that will display badly (months or days without a sort column, a percentage without a format). `kpiCards`: when the model has fewer measures than KPI cards, how many cards were built and the names of the measures on them. `boundFields`: for each page, the names of the fields each visual shows. `numberFormats`: the names of the fields it shows as numbers that have no thousand-separator format in the model, and (`cards`) the measures whose KPI card got a number format of its own in the report, with that format. `pageFilters`: for each page filter asked for, the column's name, the values given, their type (and, for a column the files give no type, that the type came from those values), and a note when a filter on a Ramadan flag keeps every Ramadan (naming the model's Hijri-year column); `reportNotes` repeats the filters and their values in words. `svgMeasures` (experimental): for each SVG column, its label, the table its measure belongs to, the page, the length of its DAX in characters and its status; the DAX itself is not returned. `scope`: on a large model, the focus and the names of the tables the picks came from. `displayNames` and, in an Arabic report, `arabicNames`: how many of the names given were used, the fields whose given names were not used, and the fields shown under a model name with no Arabic letter. `ignored`: the names of keys in a design that the tool doesn't know. |
-| `read_report` | About the report it reads: the pages (names capped at 60 characters, invisible characters written as code points) and page ids, visual ids and each visual's type, place, size, layer (z), hidden or not, group, its screened title and text box text (shown when short and plain; longer than 120 characters or reading like an instruction: withheld, with its length), the role names of each visual (screened; with Desktop's name for the role and its kind) and the field names in each role with their display names, sort fields, the field and kind of each filter (never its values), a custom visual's type, where it comes from and the names of its formatting objects (never their values), group and bookmark names, the theme's name, colours and label size. Slicer selections and bookmark states are read with the report's files but never returned; it reads no data. It writes nothing. |
-| `create_arabic_twin` | The report's page ids and names, its visuals' names and kinds counted, and the texts a reader sees (page names, visual titles, text boxes, button texts, field names as shown, bookmark names, and the fixed texts of a chart title given by one of the report's own measures, with the names of those measures; each capped at 200 characters, invisible characters written as code points, a text that reads like an instruction withheld), so the AI app can draft their Arabic for you to approve. The model's date table and column names when it offers the Arabic month column. After your go: the paths of the files it wrote (relative to the working folder). Never data values, filter values or slicer selections. |
+| `plan_layout` | Positions and sizes of the visuals, the tools' limits, a plan id; with `path`, the names of the plan's fields that have no right format (and the name of the script file create_report would write), and the problems of the plan's fields (names not in the model, counts over the limits); `colours`: when the design names no colours, the colours taken from your report (its theme's own colours and the colours written on its visuals: hex only, never a value; the report's and the theme's names, your other reports' names, the font, corner radius and shadow of its theme, the contrast checks); `designLint`: the design findings of the planned page (the rule, the visual by its type, title, place and size, the field names, the reason and the fix; no data, nothing written); `exactCheck` (0.3, J14): the check of the report create_report will write, every page: counts, rule ids, file paths inside the report (page and visual ids) and a digest, never a name, title or other text; `aggregation` (0.3): the names of the plan's measures that are not additive, what each is in words (a ratio, an average, a distinct count...) and where it is (a card, a table, a time axis), and a question for a measure whose name reads as a snapshot summed over time; read from the DAX's shape, the format and the name on your machine, never the DAX itself. `redesign` (with `redesignFrom`): the original report's page ids, names and sizes, its visuals by their names (ids), types, fields, places and sizes, never their title text (0.3.0 R6: a title is copied into the new report as it is, unread into the answer), each change (from, to; a new title as given), the theme's new colours, and counts of what is copied as it is (bookmarks, buttons, filters, slicer selections, tooltip links, groups, custom visuals); the files are copied as bytes, so filter values, slicer selections and bookmark states are never read into an answer. 0.3.0 adds, when asked for: `gallery` (each gallery visual the user asked for: its page, kind, the slot's title, what is written and why, in English and Arabic); `sharedAxes` (the charts whose two measures stay apart and why, the questions to ask you, naming the two measures and, for two percentages, their denominators, and your answers as given); `waterfallRtl` (in an Arabic plan, each waterfall's page and title and what it is written as); `metricSwitcher` (the measures' names and labels, its page, the new table's name and the script file's name); `flipCards` (the cards by page, title and measure names, what their back shows in words, never the description text or a value, the bookmarks counted and the script file's name); `statusIcons` (the table columns, each rule: the thresholds you gave, or the target measure's name, and the script file's name); `terminology` (in an Arabic plan: each field the report shows, where it shows, its English name, its Arabic name and whether it is a draft, approved or kept in English); `gulfDates` (the model's date columns and how they are related, by name, the questions to ask you and your answers as given, and whether the calendar was made by the DataArcus generator; no date is read from your rows). |
+| `create_report` | How many files it wrote, the path of the new `.pbip` (relative to the working folder), the report and model folder names, the pages and visual counts, and `modelNotes`: the names of the fields it used that will display badly (months or days without a sort column, a percentage without a format). `kpiCards`: when the model has fewer measures than KPI cards, how many cards were built and the names of the measures on them. `boundFields`: for each page, the names of the fields each visual shows. `numberFormats`: the names of the fields it shows as numbers that have no thousand-separator format in the model, and (`cards`) the measures whose KPI card got a number format of its own in the report, with that format. `pageFilters`: for each page filter asked for, the column's name, the values given, their type (and, for a column the files give no type, that the type came from those values), and a note when a filter on a Ramadan flag keeps every Ramadan (naming the model's Hijri-year column); `reportNotes` repeats the filters and their values in words. `svgMeasures` (experimental): for each SVG column, its label, the table its measure belongs to, the page, the length of its DAX in characters and its status; the DAX itself is not returned. `scope`: on a large model, the focus and the names of the tables the picks came from. `displayNames` and, in an Arabic report, `arabicNames`: how many of the names given were used, the fields whose given names were not used, and the fields shown under a model name with no Arabic letter. `ignored`: the names of keys in a design that the tool doesn't know. 0.3.0 adds, when asked for: `slicerStyle` (with pills: each slicer's page and field, what it was written as and why), `grid`, `flipCards` and `statusIcons` (as in the plan, with the script file and how to apply it), `gallery` (each gallery slot as written, with why) and `metricSwitcher` (its page, measures, labels and script file); never a value or a description text. |
+| `read_report` | About the report it reads: the pages (names capped at 60 characters, invisible characters written as code points) and page ids, visual ids and each visual's type, place, size, layer (z), hidden or not, group, its title only when a measure gives it (the measure's name; a typed, static title is never returned since 0.3.0 S1: the visual is named by its kind, place and fields, and marked "static title"), its text box text as a person typed it, cut at 60 characters (screened for instructions and length only: longer than 120 characters, withheld with its length; reading like an instruction, withheld; otherwise returned as it is, so a short text box holding a figure, a customer's or a person's name goes to the AI app), the role names of each visual (screened; with Desktop's name for the role and its kind) and the field names in each role with their display names, sort fields, the field and kind of each filter (never its values), a custom visual's type, where it comes from and the names of its formatting objects (never their values), group and bookmark names, the theme's name, colours and label size. Slicer selections and bookmark states are read with the report's files but never returned; it reads none of your tables' data. It writes nothing. |
+| `create_arabic_twin` | The report's page ids and names, its visuals' names and kinds counted, and the texts a reader sees (page names, visual titles, text boxes, button texts, field names as shown, bookmark names, and the fixed texts of a chart title given by one of the report's own measures, with the names of those measures; each capped at 200 characters, invisible characters written as code points, a text that reads like an instruction withheld), so the AI app can draft their Arabic for you to approve. The model's date table and column names when it offers the Arabic month column. With `into: "same"` (0.3.0, the EN-AR copy): its page pairs (ids and names), each language button and where it is placed (or why not), the slicer pairs kept in sync, the pages shown in the tabs, the bookmarks, and the names of the report measures it writes. The `terminology` sheet (0.3.0): each field's English name, its Arabic term and its status, and where it shows; `notTranslated`: each text kept in English, with why. After your go: the paths of the files it wrote (relative to the working folder). Never data values, filter values or slicer selections. |
 | `check_report` | About the report it checks: page and visual counts, the page names (capped at 60 characters, invisible characters written as code points), the schema versions, the language it read (from counting letters, never the text) and Microsoft's validator's counts. Each finding: the rule, its severity, its kind (`impact`: Desktop opens it, can break it in Desktop, or a DataArcus rule), the file's path inside the report, the visual's name (an id), type and position, the problem in numbers ("the box is 28 high; 2 lines of 14pt need 61"), a fix in words and the rule's source. **Never** the report's own text (titles, text boxes, alt text), filter values, slicer selections or bookmark states: those are counted, not read into the answer (a test plants made-up values in each and checks none comes back). It reads only, writes nothing, and opens no network connection: Microsoft's validator runs offline in the same process, and the schemas it would download are checked against Microsoft's copies bundled in `mcp/schemas`. |
 
-**Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And:** error messages. Since round 17 no answer or error holds a full local path: paths are relative to the working folder (for example `Sales Report/Sales Report.pbip`), the working folder is named by its last folder name only, and your home folder is written `~`, so your Windows user name is not sent. The full paths stay in the server's local log on your computer.
+**Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And:** error messages. Since round 17 no answer or error holds a full local path: paths are relative to the working folder (for example `Sales Report/Sales Report.pbip`), the working folder is named by its last folder name only, and your home folder is written `~`, so your Windows user name is not sent. The full path of the working folder is written once, in the start line of the app's local log (section 1); no other path is logged.
 
 ## 3. Metadata only: no data values
-- **No DataArcus tool reads or returns the data in your tables.** It reads only the model's definition files (TMDL
-  files, `model.bim`, or the model schema inside a `.pbit`) and the report's definition files. It never opens Power BI's
+- **No DataArcus tool returns the data in your tables to Claude.** It reads files on your machine to check and
+  fingerprint them: the model's definition files (TMDL files, `model.bim`, or the model schema inside a `.pbit`), the
+  report's own files (its definition, the images and themes in its StaticResources, a private custom visual's files),
+  the files you name (a logo, a background, a theme) and DataArcus's own answers file. Whole files are read and hashed
+  (SHA-256): a plan pins the model and the files it is made from by these hashes, and a write after one of them changed
+  is refused. It never opens Power BI's
   data cache, never connects to Power BI Desktop or to your data sources, and runs no queries. It refuses a `.pbix` (it
   holds Power BI's data cache) and data files (`.csv`, `.tsv`, `.xlsx`, `.xlsm`, `.xls`, `.parquet`) by their name,
   before opening them, and a template whose list of parts shows a data cache before reading the rest of it.
 - **Values inside a model's definition.** A model's definition can hold small tables typed into Power BI ("Enter data",
   their rows compressed inside the Power Query text) and DATATABLE values in DAX: DataArcus reads those definition
-  files on your machine, but never decodes such values and never returns them.
+  files on your machine, but never decodes such values and never returns them. The one DATATABLE it reads is the one
+  the DataArcus Calendar Generator writes into its own calendar table: its Hijri month start dates, which the Gulf check
+  compares with the announced ones and can name (section 2); those are the generator's dates, not your data.
   (Values you type yourself, such as a page filter's, are written into the new report and repeated in the answer: see
   "What a new report's files hold" below.)
 - **What metadata still says.** Names are information too: a table called "Salaries 2026" or a measure called
   "Bonus Pool" tells the AI something about your business. Measure, column and role expressions (DAX, Power Query)
   are read on your machine for the health check, but are **not** returned; only the names of the objects a finding
   concerns are. Descriptions are not returned either.
+  A report's own texts are information too: `read_report` returns a text box when it is at most 120 characters and
+  does not read like an instruction (cut at 60), never a typed, static title (since 0.3.0 S1), and
+  `create_arabic_twin` returns the texts a reader sees, titles included (each up to 200 characters), so their Arabic
+  can be drafted. The screen looks for instructions and length only: it cannot tell a figure, a customer's name or a
+  person's name typed into a title or a text box, so such a text is returned as it is.
   One exception, in `create_arabic_twin`: a chart title given by a measure of the report itself (in its
   `reportExtensions.json`, as DataArcus writes "Top N of M" titles) returns the fixed texts of that measure's DAX, the
   words the chart shows ("Top {1} of {2}: Sales by Region", its counted numbers as {1} and {2}), so you can approve
@@ -87,7 +105,7 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   they are asked for:
   - **page filters:** the values given in the request (for example `true` for a Ramadan flag, or a Hijri year),
     written into the filter of every report page (not the tooltip pages). They come from your request, never from
-    your data: DataArcus reads no data to find them. They are also in the answer, so the AI app sees them (it already
+    your data: DataArcus never looks them up (it checks only their type against the column's). They are also in the answer, so the AI app sees them (it already
     had them from the request);
   - **a KPI card's number format:** the measure's own format string with a thousand separator, made from the model's
     format string;
@@ -95,13 +113,24 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
     compiled from the design: its fixed text and colours, and the names of the measures and columns it uses. Power BI
     computes it on your computer when you open the report; the values it draws never pass through DataArcus or the AI
     app. The model is not changed.
+- **0.3.0's model scripts.** The metric switcher, the flip cards and the status icons need measures or a table the
+  model does not have: `create_report` writes them as TMDL scripts next to the project (new files, only with the
+  approved plan; you apply them in TMDL view; DataArcus never changes the model). The flip cards' script holds each
+  card measure's description from your model, as text, for the card's back; the descriptions are written into that
+  file, never returned in an answer. The values the cards, icons and switcher show are computed by Power BI when you
+  open the report; they never pass through DataArcus or the AI app.
+- **What DataArcus remembers in 0.3.0.** The Arabic terms you approve (after the report or twin is written) and your
+  answers to the Gulf date questions are kept in the server's memory for this session only, so the next plan on the
+  same model asks again only what changed: each record holds hashes of the model, the field and its metadata, and in
+  plain text the approved Arabic name or answer, its date and time, and "user". They are never written to a file, and they are gone when
+  the app closes.
 - **Data values only when you ask.** The other tools DataArcus is used with can read data: Microsoft's Power BI
   Authoring MCP runs DAX queries that return values, and a screenshot of a report page shows its numbers. Those are
   other tools with their own terms; the DataArcus report-design skill uses them only after asking you, each time
   telling you that what the report shows goes to the AI app. If you don't agree, those checks are not done and the
   skill says so.
 
-## 4. Your files: never overwritten, and paths stay inside the working folder
+## 4. Your files: new files only (DataArcus's own answers file aside), and paths stay inside the working folder
 - **One working folder.** Every path a tool is given is resolved inside `DATAARCUS_ROOT`, the folder you choose. A
   path that leads outside it (for example `..\Documents` or `C:\Other`) is refused.
 - **No working folder, no work.** If no folder was chosen (the setting is missing or empty), every tool refuses and
@@ -114,11 +143,14 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   the model folder a `.pbip` points at, and a model found by its folder's name. When searching a project for its model,
   links are never followed.
 - **What these checks are not:** DataArcus checks every path inside the working folder and never follows links, but
-  it is not a defence against another program on the same computer changing the folder while DataArcus is working.
+  it is not a defence against another program on the same computer changing the folder while DataArcus is working:
+  in the instant between DataArcus's last check of a name and its write or its clean-up of that name (a single call),
+  a swap by another program can still win.
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.
-- **Nothing is overwritten.**
+- **Nothing is overwritten**, except DataArcus's own answers file (below), and a write that fails part-way removes
+  what that call created and names anything it could not remove.
   - `create_report` writes a new report next to your model under a free name, and refuses to write at all if any of
     its files already exists. It never changes your model or an existing report.
   - `generate_theme` writes a new theme file and picks a free name (`name.json`, then `name-2.json`, `name-3.json`, ...).
@@ -126,16 +158,46 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
     when either name is taken; the original report is only read. The twin's Arabic chart titles are new measures
     ("Title AR: ...") in the twin's own `reportExtensions.json`; the model is never changed. Its Arabic month script (when you ask for it) is a
     new `.tmdl` file next to the project under a free name, as the scripts below.
+  - The twin and the native copy (`create_report` with `customVisualsFrom`) copy only the report's own files: its
+    definition JSON, `definition.pbir`, `.platform`, the StaticResources' images and themes, a private custom visual's
+    files. Any other file in the `.Report` folder (a `.csv` or `.xlsx` left there, `.pbi/localSettings.json`) is never
+    read, hashed or copied; the plan names it.
   - `check_model_health` and `add_gulf_calendar` write their scripts as new files next to the project, under free names; asked again, it
     names the file that already holds exactly that script instead of writing a second copy. When the working folder
     is the model folder itself it writes no script (nothing is ever written inside a model folder) and says so.
+  - (0.3) `check_model_health` keeps your answers to its "Please confirm" questions, when you ask it to, in
+    `<model>.dataarcus-answers.json` next to the project (its file name carries the model's name), written only after
+    you approve a plan that lists it. For each answer: a hash of the question (its id), a hash of the object it is about
+    (a measure's or a relationship's name), a hash of the metadata it was based on (a measure's DAX text and format
+    string, a relationship's columns, an unrelated table's key columns, with their types), and in plain text your
+    answer ("intended" or "mistake"), its date and time, and "user". No name, no DAX text, no data in plain text. The
+    hashes are plain SHA-256, not salted: they say nothing to a reader without the model, but someone who has the
+    model, or guesses a name, can check whether a record is about it. It is the one file
+    DataArcus replaces: the plan says so ("replaces the answers file DataArcus wrote"), and the replace happens only
+    when what is at that name is still the DataArcus answers file DataArcus checked (its identity, size and content
+    hash, checked again just before); anything else there is left as it is and named. A write that fails leaves
+    nothing, or names exactly what it could not remove. Answers that no longer apply are dropped from the file at an
+    approved write, which the plan says; forgetting your answers (again after an approved plan) empties it. (The
+    website's Health Check keeps the same records in your browser's local storage only, under a hash of the model's
+    table names, and keeps answers that no longer apply until you click "Forget my answers".)
   - A name counts as taken when anything at all is there, including a link whose target is missing, and every new
-    file is created in a way that fails if the name exists: nothing is written over a file or through a link.
-  - `read_model`, `suggest_fields`, `plan_layout` and `check_report` only read.
+    file is created in a way that fails if the name exists: nothing is written over a file or through a link (the
+    answers file's replace above aside).
+  - `read_model`, `suggest_fields`, `plan_layout`, `read_report` and `check_report` only read. (0.3, J14: to run Microsoft's validator on
+    the report a plan would write, `plan_layout` puts a copy of those generated files in a private folder of the
+    computer's temporary folder, never in your working folder, and deletes it as soon as the check ends.)
   - Your logo and background images are copied into the new report; the originals are not changed.
-- **Nothing of yours is deleted.** No tool deletes a file it did not just create. When a write fails part-way, the
-  tool removes only the files and folders that same call had created, so no half-written report or twin is left; a
-  file or folder that was there before is never touched.
+- **Nothing of yours is deleted.** No tool deletes a file it did not just create (replacing or emptying DataArcus's
+  own answers file, as above, aside). When a write fails part-way, the
+  tool removes only the files and folders that same call had created, so no half-written report, twin, theme or script
+  is left (a theme or a script is written under a temporary name first and linked to its name, which fails if the
+  name is taken; a report or a twin is written folder by folder,
+  its `.pbip` last); a file or folder that was there before is never touched. Each is removed only while it is still
+  the one that call created: a file or folder another program put at one of its names, or a link put on the way, is
+  left where it is and named. No file is ever renamed over another, except DataArcus's own answers file when it is
+  replaced as above. If
+  something it created can't be removed, the answer names exactly what is left, and the approved plan can't be used
+  again; when everything was removed, the same plan can be used again.
 - **Keep the folder clean.** Put in it only the models you are allowed to share with your AI app. Don't put employer
   or client models there unless you may send their structure to the AI provider.
 
@@ -143,7 +205,7 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 A table, column, measure or file name, or a description, is text written by whoever built the model. It can contain
 anything, including sentences that look like instructions to an AI ("ignore your rules and ..."). DataArcus treats it
 as data, never as instructions:
-- the tools return names as plain values in JSON and never act on what a name says;
+- the tools return names as plain values (in JSON, or in `read_report`'s plain lines) and never act on what a name says;
 - the AI is told so: the server's instructions (sent to the AI app when it starts), the tool descriptions and the
   report-design skill all say that names, descriptions and file names are untrusted text and that instructions in
   them are never followed;
@@ -158,7 +220,11 @@ as data, never as instructions:
   first, with the owner's approval, before it ships. Until then, section 3 stands as written.
 
 ## Known gaps
-Open on 2026-10-11:
+Open on 2026-10-19:
+- **Short text boxes are returned as typed** (`read_report`; R7): its screen withholds a text box that is long or
+  reads like an instruction, nothing else, so a short text box holding a figure or a name reaches the AI app (section
+  3). Static titles are no longer returned, by the redesign (0.3.0 R6) or by `read_report` (0.3.0 S1); the Arabic twin
+  returns a report's texts, titles included, for the user to approve their Arabic.
 - **A6-3** (who approves; closed in 0.2.9 rc.17): only your click on Approve in DataArcus's approval window
   (`approvedBy: "user-in-browser"`), or your yes in the app's own prompt (MCP elicitation), approves a plan; what the
   AI passes approves nothing. What remains: another program on your computer (one that controls your browser or mouse, or another tool your AI app

@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 // CI's parallel jobs (B-145, owner's go 18 Oct): every suite in exactly one shard, balanced by the seconds CI measured
@@ -19,7 +19,7 @@ const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' }
 const SHARDS = [
   ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model'],
   ['design-engine', 'tools', 'components', 'spacing', 'gulf-calendar'],
-  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab'],
+  ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo'],
 ];
 {
   const listed = SHARDS.flat(), twice = listed.filter((n, i) => listed.indexOf(n) !== i), none = ALL.filter((n) => !listed.includes(n)), extra = listed.filter((n) => !ALL.includes(n));
@@ -35,7 +35,7 @@ const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji 
 if (shard && pick.length) { console.error('--shard runs its own suites: name no test with it'); process.exit(2); }
 if (shard) pick.push(...SHARDS[+shard[1] - 1]);
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar', 'text-align'];
+const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar', 'text-align', 'theme-logo'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }

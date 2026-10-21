@@ -16,6 +16,7 @@ import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
 import { readableName } from './lib/display-names.mjs';
+import { proposeArabic } from './lib/arabic-names.mjs';
 import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
@@ -706,8 +707,10 @@ const cardProblems = (dir, rtl) => {
     // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; the row-label measure's header is its column's name, so it carries a displayName)
     // (design round 8, S6: an English plan's default names are the readable forms of database-style names, named in the
     // plan and pinned with it: a displayName here is only that, the field's own name made readable)
-    const planName = (p) => { const f = p.field.Column || p.field.Measure; return !rtl && f && p.displayName === readableName(f.Property); };
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic plan pins the fixed list's Arabic names too, named in
+    // the plan and approved with it: «إجمالي المبيعات» for Total Sales here; before, an Arabic report wrote none without input)
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)); };
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -718,7 +721,7 @@ const cardProblems = (dir, rtl) => {
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
         check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
-          && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === undefined),
+          && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === proposeArabic('Total Sales Last Ramadan')),   // (changed 19 Oct 2026, R2: the plan's pinned name; was none)
           `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
         check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
@@ -726,8 +729,8 @@ const cardProblems = (dir, rtl) => {
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
-          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 3, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
+        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && an.missing.includes('Sales[Total Sales vs Last Ramadan %]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
+          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 6, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
       }
@@ -1021,7 +1024,10 @@ if (part('gulf-health')) {
   const same = [];
   for (const p of ['dax-project', 'bim-project', 'tmdl-project', 'sample.pbit']) {
     const a = await ask({ path: p }), b = await ask({ path: p, country: 'ksa', asOf: ASOF });
-    if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.findings, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.findings, b.j.skipped])) same.push(p);
+    // (0.3.0 Q1, changed on purpose: an answer near the cap shortens its object lists to fit (listsCut), and the country's
+    // section takes room: the findings are compared by id, count and the objects both list, in the same order)
+    const fl = (j, o) => j.findings.map((f, i) => [f.id, f.count, f.items.slice(0, Math.min(f.items.length, ((o.findings[i] || {}).items || []).length))]);
+    if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.skipped]) || JSON.stringify(fl(a.j, b.j)) !== JSON.stringify(fl(b.j, a.j))) same.push(p);
   }
   check(!same.length, `gulfCalendar: the score or the findings moved with a country on: ${same}`);
 }
@@ -1203,8 +1209,8 @@ if (part('round5')) {
     const plan = await ask('plan_layout', {}), cr = await ask('create_report', { path: 'link5-project', name: 'Linked Five', design: (plan.j || {}).design });
     chk(() => !cr.err && cr.j.report !== 'Linked Five.Report' && fs.lstatSync(cr.j.open).isFile() && fs.lstatSync(path.join(d, 'Linked Five.pbip')).isSymbolicLink() && fs.readdirSync(OUT).length === 0,
       () => `create_report at a name held by a dangling ${kind}: ${cr.err ? cr.t.slice(0, 200) : cr.j.report}; outside now holds ${fs.readdirSync(OUT)}`);
-    // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server
-    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+    // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server  (B-153: the one new-file writer is lib/write-io.mjs)
+    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
     chk(() => !/fs\.writeFileSync\(/.test(src.replace(/fs\.writeFileSync\([^;]*flag: 'wx'[^;]*;/g, '')) && /flag: 'wx'/.test(src) && !/existsSync\(f\)\) return f/.test(src),
       () => 'a new file is still written without the wx flag, or a free name is still picked with existsSync');
     unlink(path.join(ROOT, 'dangling-theme.json')); unlink(path.join(d, first)); unlink(path.join(d, 'Linked Five.pbip'));
@@ -1287,7 +1293,8 @@ if (part('round6')) {
   {
     const fields = { kpis: RAM.kpis, measure: SALES('Total Sales Last Ramadan'), timeAxis: 'Calendar[Hijri Month Name]', category: 'Calendar[Day Name]', category2: 'Calendar[Quarter]',
       table: ['Calendar[Quarter]', SALES('Total Sales'), SALES('Total Sales vs Last Ramadan %')], slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] };
-    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields });
+    // (F1, STRICT: the Ramadan slicers and measures make it seasonal: the person's grain and scope)
+    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields, gulfDates: { grain: 'hijri', scope: 'all' } });
     const vs = x.err ? [] : visualsOf(path.join(ROOT, 'dax-project', x.j.report)), p1 = vs.filter((v) => v.page === 'Executive summary');
     const cards = p1.filter((v) => v.type === 'cardVisual' && !v.fields.some((f) => /\.No data: /.test(f))).sort((a, b) => a.x - b.x).map((v) => v.fields.join());   // (round 22: without the "No data" message cards)
     chk(() => cards.join('|') === 'Sales.Total Sales|Sales.Total Sales Last Ramadan|Sales.Total Sales vs Last Ramadan %', () => `fields.kpis: the cards must be the three given, in order (3 cards for 3 fields): ${cards.join(' | ')} ${short(x)}`);
@@ -1559,7 +1566,8 @@ if (part('round8')) {
 
   // 1. a boolean column: Calendar[Is Ramadan] = true on every report page (not on the tooltip pages), in Microsoft's shape.
   //    The Ramadan model's Calendar is a DAX table, so its files give the column no type: the value's own type is used
-  const ram = await ask('create_report', { path: 'dax-project', name: 'R8 Ramadan', design, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+  // (F1, STRICT: a seasonal page needs the person's grain and scope; here every Ramadan, by month)
+  const ram = await ask('create_report', { path: 'dax-project', name: 'R8 Ramadan', design, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
   const ramDir = ram.err ? null : path.join(ROOT, 'dax-project', ram.j.report), ramPages = ramDir ? pagesOf(ramDir) : [];
   chk(() => ramPages.filter((p) => !p.tooltip).length >= 1 && ramPages.filter((p) => !p.tooltip).every((p) => p.filters.length === 1 && wellFormed(p.filters[0]) && p.filters[0].field.Column.Expression.SourceRef.Entity === 'Calendar'
       && p.filters[0].field.Column.Property === 'Is Ramadan' && lit(p.filters[0]).join() === 'true') && ramPages.some((p) => p.tooltip) && ramPages.filter((p) => p.tooltip).every((p) => p.filters.length === 0),
@@ -1583,7 +1591,8 @@ if (part('round8')) {
   // 4. a model with no such column: the answer says the model has no column of that name and what to do, nothing written
   {
     const before = reportsIn('tmdl-project');
-    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 No column', design, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    // (F1, STRICT: the person's grain and scope given, so the refusal tested is the missing column's)
+    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 No column', design, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
     chk(() => x.err && /Nothing was written/.test(x.t) && /Calendar\[Is Ramadan\] is not in the model/.test(x.t) && /read_model/.test(x.t) && /page filter/i.test(x.t) && reportsIn('tmdl-project') === before, () => `a page filter on a column the model has not must give a clear message: ${short(x)}`);
   }
 
@@ -1673,12 +1682,14 @@ if (part('round9')) {
 
   // ----- R9.2: "this Ramadan only" is two page filters: the Ramadan flag and the Hijri year the user gives -----
   {
-    const both = await ask('create_report', { path: 'dax-project', name: 'R9 This Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    // (F1, STRICT: the person's grain and scope, this Ramadan: the year they gave)
+    const both = await ask('create_report', { path: 'dax-project', name: 'R9 This Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }], gulfDates: { grain: 'gregorian', scope: 'year', year: 1447 } });
     const pg = both.err ? [] : report(path.join(ROOT, 'dax-project', both.j.report)).filter((p) => !p.tooltip);
     const lits = (f) => f.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value).join();
     chk(() => pg.length === 1 && pg[0].filters.length === 2 && pg[0].filters[0].field.Column.Property === 'Is Ramadan' && lits(pg[0].filters[0]) === 'true' && pg[0].filters[1].field.Column.Property === 'Hijri Year' && lits(pg[0].filters[1]) === '1447L'
       && !(both.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)), () => `Is Ramadan = true and Hijri Year = 1447 on the page, with no "every Ramadan" note: ${JSON.stringify(pg.map((p) => p.filters.map(lits)))} ${JSON.stringify(both.j && both.j.reportNotes)} ${short(both)}`);
-    const one = await ask('create_report', { path: 'dax-project', name: 'R9 Every Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    // (F1, STRICT: the person chose every Ramadan; the note still says it keeps every one and how to get one)
+    const one = await ask('create_report', { path: 'dax-project', name: 'R9 Every Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }], gulfDates: { grain: 'gregorian', scope: 'all' } });
     chk(() => !one.err && (one.j.reportNotes || []).some((n) => /every Ramadan/i.test(n) && /Calendar\[Hijri Year\]/.test(n) && /ask the user/i.test(n)) && /every Ramadan/i.test(one.j.pageFilters[0].note),
       () => `a filter on Is Ramadan alone must say it keeps every Ramadan, name Calendar[Hijri Year] and say to ask the user for the year: ${JSON.stringify(one.j && [one.j.reportNotes, one.j.pageFilters])} ${short(one)}`);
     const other = await ask('create_report', { path: 'filter-project', name: 'R9 Open', design: focus, secondPage: false, pageFilters: [{ field: 'Shop Sales[Is Open]', values: [true] }] });
@@ -1797,7 +1808,7 @@ if (part('gulf-calendar')) {
   check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
   // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
-  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 40 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column */
+  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 51 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins */
   check(!g.err && g.j.columns.includes('Day Short') && /^\t\tcolumn 'Day Short'\n\t\t\tisNameInferred\n\t\t\tsourceColumn: \[Day Short\]\n\t\t\tsortByColumn: 'Day of Week'$/m.test(sc), `add_gulf_calendar: "Day Short" in the columns and the script, sorted by Day of Week: ${short(g)}`);
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
@@ -1805,7 +1816,7 @@ if (part('gulf-calendar')) {
   // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
   // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
   // 3 -> 6 sortByColumn (owner 2026-10-06): each Arabic name column is sorted by the same number as its English one
-  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 7, /* 6 -> 7: round 18, S3 (the owner's yes): Day Short sorted by Day of Week */ `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 9, /* 6 -> 7: round 18, S3 (the owner's yes): Day Short sorted by Day of Week; 7 -> 9: 0.3.0 C1, Month Short (Arabic) and Day Short (Arabic) */ `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -1969,7 +1980,10 @@ if (part('check-report')) {
       W(path.join(pg, 'visuals', id, 'visual.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name: id, position: { x: 10, y: 10, z: 5000 + i, width: 200, height: 12, tabOrder: 5000 + i },
         visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Twenty characters ok', textStyle: { fontSize: '14pt' } }] }] } }] } } }); }
     const a = await ask('check_report', { path: 'cr-project/CR Many.Report' }), b = await ask('check_report', { path: 'cr-project/CR Many.Report', maxFindings: 5 });
-    chk(() => !a.err && a.j.findings.length === 60 && a.j.counts.byRule.TEXTBOX_FITS === 300 && a.j.truncated === true && a.t.length < 40000 && b.j.findings.length === 5 && b.j.counts.byRule.TEXTBOX_FITS === 300,
+    // (0.3.0 Q1, changed on purpose: 60 findings made 34,000-40,000 characters, within 10% of the cap; the answer now aims
+    // at 34,000 and says how many are not listed: findingsNotListed)
+    const total = (j) => j.counts.errors + j.counts.warnings + j.counts.notes;
+    chk(() => !a.err && a.j.findings.length <= 60 && a.j.findings.length >= 30 && a.j.findings.length + a.j.findingsNotListed === total(a.j) && /again with checks/.test(a.j.findingsHow) && a.j.counts.byRule.TEXTBOX_FITS === 300 && a.j.truncated === true && a.t.length < 36000 && b.j.findings.length === 5 && b.j.counts.byRule.TEXTBOX_FITS === 300,
       () => `findings must be capped at maxFindings and counted per rule: ${a.err ? short(a) : JSON.stringify({ n: a.j.findings.length, counts: a.j.counts, truncated: a.j.truncated, size: a.t.length, b: b.j && b.j.findings.length })}`);
   }
 
@@ -2529,7 +2543,7 @@ if (part('round10-choices')) {
     // (round 12, #15, the owner's go 6 Oct: a table whose title is a chart's on the same page adds ": detail", so the
     // two never carry the same title; the first measure by the first text column stays its start)
     const titled = (t, base, detail) => t === base || t === base + ': ' + detail;
-    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales by Region', 'detail')) /* (round 14, the owner's ask: a title is never half Arabic, half English: two English names are joined by "by" on an Arabic report too; was "Total Sales حسب Region") */
+    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'إجمالي المبيعات حسب المنطقة', 'التفاصيل')) /* (round 14, the owner's ask: a title is never half Arabic, half English; changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: the Arabic plan pins the fixed list's names «إجمالي المبيعات» and «المنطقة», so the Arabic report's table is titled in Arabic; two English names are no longer joined by "by" in an Arabic report; was "Total Sales by Region") */
         && tt(siteEn).length >= 1 && tt(siteEn).every((t) => titled(t, 'Total Revenue by Region', 'detail')) && tt(siteAr).length >= 1 && tt(siteAr).every((t) => titled(t, 'إجمالي الإيرادات حسب المنطقة', 'التفاصيل')),
       () => `a table must be titled by its first measure and its first text column: ${JSON.stringify([tt(enV), tt(arV), tt(siteEn), tt(siteAr)])}`);
   }
@@ -3491,13 +3505,18 @@ if (part('round12')) {
   // #22 and #21: one Ramadan (page filters on the Ramadan flag and the Hijri year): no slicer on a column a page filter
   //   fixes, and the line chart by Ramadan Day (1 to 30), not by month (two points); both told
   {
-    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'] },
-      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    // (F1, STRICT: the person's grain is the season's days, so the plan takes its axis, Calendar[Ramadan Day], as given)
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'], timeAxis: 'Calendar[Ramadan Day]' },
+      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }],
+      // (F1, STRICT: the person's grain and scope: one Ramadan, 1447, by its days)
+      gulfDates: { grain: 'seasonDay', scope: 'year', year: 1447 } });
     const vs = pageVisuals(x, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].queryRef);
     const line = vs.find((v) => type(v) === 'lineChart'), notes = JSON.stringify((x.j || {}).reportNotes || []);
     chk(() => !x.err && sl.length >= 1 && !sl.includes('Calendar.Is Ramadan') && !sl.includes('Calendar.Hijri Year') && /slicer/i.test(notes),
-      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)}`);
-    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day' && /Ramadan Day/.test(notes),
+      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)} ${x.err ? x.t.slice(0, 600) : ''}`);
+    // (F1, STRICT: the person now gives the season-day axis, so the writer has no change of its own to tell: the note's
+    // part of this check is left out on purpose)
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day',
       () => `#21: one Ramadan's line chart by Ramadan Day: ${line && line.visual.query.queryState.Category.projections[0].queryRef}`);
   }
   // #16: month labels stay level: the line chart's axis takes the model's short month names ("Jan") where it has them
@@ -3590,7 +3609,7 @@ if (part('round12')) {
     const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
     const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
     // each name twice (owner 2026-10-06): the English column and its Arabic one, sorted by the same number
-    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'"]) /* round 18, S3 (the owner's yes): one more Day of Week, for Day Short */
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'"]) /* round 18, S3 (the owner's yes): one more Day of Week, for Day Short; 0.3.0 C1 (the owner, 21 Oct): Month Short (Arabic) and Day Short (Arabic), at the end */
         && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
         && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
       () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);
@@ -3734,7 +3753,11 @@ if (part('round12b')) {
     const tables = vis.filter((v) => v.visual && v.visual.visualType === 'tableEx'), projs = tables.flatMap((v) => v.visual.query.queryState.Values.projections);
     const fmtOf = (ref) => [...new Set(projs.filter((x) => x.queryRef === ref).map((x) => x.format || null))];
     const cardOf = (mname) => vis.filter((v) => v.visual && /card/i.test(v.visual.visualType) && JSON.stringify(v.visual.query || {}).includes(`"Property":"${mname}"`)).map((v) => JSON.stringify(v.visual.objects || {}));
-    chk(() => !cr.err && Object.keys(cr.j)[0] === 'formats' && cr.j.formats.fixScriptFile === hf.fixScriptFile
+    // (0.3.0 F7, changed on purpose: the red team's F-3, the report's script changes only the report's fields, so it is its
+    // own file next to the health check's whole-model one, never that file; the report's fields here: Return Rate, Orders,
+    // Order Date, Qty)
+    const crScript = !cr.err && cr.j.formats && cr.j.formats.fixScriptFile && fs.existsSync(path.isAbsolute(cr.j.formats.fixScriptFile) ? cr.j.formats.fixScriptFile : path.join(ROOT, cr.j.formats.fixScriptFile)) ? fs.readFileSync(path.isAbsolute(cr.j.formats.fixScriptFile) ? cr.j.formats.fixScriptFile : path.join(ROOT, cr.j.formats.fixScriptFile), 'utf8') : '';
+    chk(() => !cr.err && Object.keys(cr.j)[0] === 'formats' && crScript && cr.j.formats.fields.every((x) => ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Order Date]', 'Sales[Qty]', 'Sales[Revenue]'].includes(x.object))
         && JSON.stringify(fmtOf('Sales.Return Rate')) === '["0.0%"]' && JSON.stringify(fmtOf('Sales.Orders')) === '["#,0"]' && JSON.stringify(fmtOf('Sales.Order Date')) === '["dd mmm yyyy"]'
         && cardOf('Return Rate').length && cardOf('Return Rate').every((o) => /0\.0%/.test(o)) && cardOf('Orders').length && cardOf('Orders').every((o) => /#,0'/.test(o) && !/0\.00/.test(o))
         && fs.readFileSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel/model.bim'), 'utf8') === bim,
@@ -4362,7 +4385,11 @@ if (part('round18')) {
         // (a plan asked for one card is the same case: plan_layout keeps the layout's three slots and shows one, kpiCards 1)
         chk(() => c1.length === 1 && Math.abs(c1[0].w - quarter) <= 2 && (lang === 'ar' ? Math.abs(c1[0].x + c1[0].w - x1) <= 1 : Math.abs(c1[0].x - x0) <= 1), () => `${lang}: a plan asked for one card gives the quarter card too: ${JSON.stringify(c1.map((v) => [v.x, v.w]))}`);
         const F = { fields: { kpis: MS.map((n) => `Sales[${n}]`), table: ['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)) } };
-        for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, F), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
+        // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's Arabic names, wider than the model's; these
+        // shares were measured with the model's names, so the Arabic report keeps them through displayNames, the plan's
+        // way to keep a model's name; with the pinned names the 960 x 720 table leaves its fourth field out, and says so)
+        const KEEP = lang === 'ar' ? { displayNames: Object.fromEntries(['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)).map((k) => [k, k.replace(/^.*?\[(.*)\]$/, '$1')])) } : {};
+        for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, Object.assign({}, F, KEEP)), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
           // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
           const shown = tb ? shownOf(tb.v.visual).map((p) => p.queryRef).filter((q) => !/^Min\(/.test(q) && !/\.Ring|extension/.test(q)) : [], left = r.x.err ? [] : (r.x.j.tableColumns || []).flatMap((c) => c.leftOut || []);
           chk(() => tb && beside && shown.length === 4 && !left.length && (wider ? Math.abs(tb.w / beside.w - 1.5) < 0.03 : Math.abs(tb.w - beside.w) <= 1),
@@ -4523,7 +4550,9 @@ if (part('round20')) {
     for (const lang of ['en', 'ar']) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
-      chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && (lang === 'ar' ? pages.flat().some((t) => / \([^)]+\)$/.test(t)) : !pages.flat().some((t) => / \([^)]+\)$/.test(t))),
+      // (changed 19 Oct 2026, 0.3.0 R2: the Arabic plan pins the fixed list's names of the columns, «المنطقة», «المنتج»,
+      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs keeps the brackets' case)
+      chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && !pages.flat().some((t) => / \([^)]+\)$/.test(t)),
         () => `${lang}: every chart title of a page must be its own, a repeated one with its grouping column in brackets: ${JSON.stringify(pages)}`);
     }
   }

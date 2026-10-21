@@ -44,12 +44,15 @@
     const timeAxes = [];   // what was done to each time axis, for the answer
     let blankFiltered = 0;
     const topCharts = [];   // the design block's S5/D19: charts kept to the Top N their slot can show { page, title, top }
+    const waterfallRtl = [];   // D1: each right-to-left waterfall: { page, title, written: 'columnChart' | 'waterfallChart', what, measures? }
+    const slicerStyles = [];   // 0.3.0 L2: with slicerStyle 'pills', each slicer's style { page, field, written: 'pills' | 'dropdown', why }
+    const gridCharts = { n: 0 };   // 0.3.0 L2: the charts given the gridlines asked (grid 'dotted' or 'none')
     const bound = [];   // 0.2.9, A6-12: what each written visual shows, page by page: { page, visuals: [{ kind, fields }] }   // charts given the "is not blank" filter (the cross-review's G13: the note only then)
     return {
       tableColumns, tabRows, noPageButtons, leftOut, kpiTitles, titles, tableOrder, tableRows,
       headerGrew, tableSmaller, tableWide, subtitlesUsed, blankKept, noData, noDataSkipped, modelNames,
       extRenamed, freeExt, rowLabels, rowLabelSkipped, barCharts, kindChanges, shortDays, ringsSmall, svgSizes,
-      timeExt, timeAxes, blankFiltered, bound, topCharts
+      timeExt, timeAxes, blankFiltered, bound, topCharts, waterfallRtl, slicerStyles, gridCharts
     };
   }
 
@@ -59,7 +62,7 @@
     headerGrew: n.headerGrew, tableSmaller: n.tableSmaller, tableWide: n.tableWide, noDataSkipped: n.noDataSkipped, svgSizes: n.svgSizes, noPageButtons: n.noPageButtons, tableColumns: n.tableColumns,
     rowLabels: n.rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped: n.rowLabelSkipped, extRenamed: n.extRenamed, chartColors: r.chartColors, chartAxes: r.chartAxes,
     tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, kindChanges: n.kindChanges, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
-    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts });
+    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, topCharts: n.topCharts, a11y: r.a11y });
 
   const api = {
     make, result

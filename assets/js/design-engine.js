@@ -136,6 +136,143 @@
     return [brand].concat(out).slice(0, 8);
   };
 
+  // ---------- a theme from a logo (0.3.0 step 6) ----------
+  // The visitor's logo is read in the browser only: the page draws it on a small canvas and hands its pixels (RGBA, as
+  // getImageData gives them) to logoColours; nothing here sees a file or a network. logoTheme builds the palette from
+  // those colours with generate() (the generator's "Generate" from one brand colour), never a second palette system.
+  // CIE Lab (D65, 2 degrees) from sRGB [r, g, b] 0-255
+  const toLinear = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const fromLinear = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const rgbToLab = (rgb) => {
+    const [r, g, b] = rgb.map(toLinear), f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+    const x = f((0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047), y = f(0.2126729 * r + 0.7151522 * g + 0.072175 * b), z = f((0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883);
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+  };
+  const hexToLab = (h) => rgbToLab(hexToRgb(h));
+  // CIEDE2000 between two Lab colours (Sharma, Wu, Dalal 2005): under 2-3 most eyes see one colour
+  const deltaE = (p, q) => {
+    const rad = Math.PI / 180, [L1, a1, b1] = p, [L2, a2, b2] = q, s7 = (c) => Math.sqrt(Math.pow(c, 7) / (Math.pow(c, 7) + Math.pow(25, 7)));
+    const G = 0.5 * (1 - s7((Math.hypot(a1, b1) + Math.hypot(a2, b2)) / 2)), A1 = (1 + G) * a1, A2 = (1 + G) * a2;
+    const C1 = Math.hypot(A1, b1), C2 = Math.hypot(A2, b2), hue = (b, a) => (b === 0 && a === 0 ? 0 : (Math.atan2(b, a) / rad + 360) % 360);
+    const h1 = hue(b1, A1), h2 = hue(b2, A2), both = C1 * C2 !== 0;
+    let dh = both ? h2 - h1 : 0; if (dh > 180) dh -= 360; else if (dh < -180) dh += 360;
+    const dH = 2 * Math.sqrt(C1 * C2) * Math.sin(dh * rad / 2), Lm = (L1 + L2) / 2, Cm = (C1 + C2) / 2;
+    let hm = h1 + h2; if (both) { if (Math.abs(h1 - h2) > 180) hm += hm < 360 ? 360 : -360; hm /= 2; }
+    const T = 1 - 0.17 * Math.cos((hm - 30) * rad) + 0.24 * Math.cos(2 * hm * rad) + 0.32 * Math.cos((3 * hm + 6) * rad) - 0.2 * Math.cos((4 * hm - 63) * rad);
+    const SL = 1 + 0.015 * (Lm - 50) * (Lm - 50) / Math.sqrt(20 + (Lm - 50) * (Lm - 50)), SC = 1 + 0.045 * Cm, SH = 1 + 0.015 * Cm * T;
+    const RT = -2 * s7(Cm) * Math.sin(60 * Math.exp(-Math.pow((hm - 275) / 25, 2)) * rad), dC = (C2 - C1) / SC, dHs = dH / SH;
+    return Math.sqrt(Math.pow((L2 - L1) / SL, 2) + dC * dC + dHs * dHs + RT * dC * dHs);
+  };
+  // How a colour looks with no red cones (protanopia) or no green cones (deuteranopia): Machado, Oliveira and Fernandes
+  // (2009), severity 1, applied in linear RGB. 'normal' (or anything else) gives the colour back.
+  const CVD = { protan: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+    deutan: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]] };
+  const simulateCvd = (hex, kind) => {
+    const c = clampHex(hex || ''), M = CVD[kind]; if (!c || !M) return c;
+    const l = hexToRgb(c).map(toLinear);
+    return rgbToHex(M.map((r) => fromLinear(Math.max(0, Math.min(1, r[0] * l[0] + r[1] * l[1] + r[2] * l[2])))));
+  };
+  // What counts as background in a logo: a pixel under half opaque; a near-white or near-black one with almost no colour
+  // (Lab lightness 90+ or 12-, chroma under 12: a white page, a light frame, a black outline); a grey (chroma under 8)
+  // is no hue and counts only when the logo has nothing else. Colours are clustered (k-means in Lab, weighted by pixels,
+  // seeded the same way every time), clusters closer than 12 (CIEDE2000) merged, a cluster that is only the blend of a
+  // heavier one with white, black or another (the soft edge a canvas draws) dropped, and clusters under 4% of the
+  // coloured pixels left out; the 3 largest are the brand colours, each the logo's own most frequent colour in it.
+  const LOGO = { alpha: 128, light: 90, dark: 12, flat: 12, grey: 8, k: 6, merge: 12, blend: 6, share: 0.04, max: 3, apart: 20 };
+  const logoColours = (px) => {
+    px = px || []; const counts = new Map(), skipped = { transparent: 0, light: 0, dark: 0 };
+    for (let i = 0; i + 3 < px.length; i += 4) {
+      if (px[i + 3] < LOGO.alpha) { skipped.transparent++; continue; }
+      const key = (px[i] << 16) | (px[i + 1] << 8) | px[i + 2]; counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const hues = [], greys = [], darks = [];
+    counts.forEach((w, key) => {
+      const rgb = [(key >> 16) & 255, (key >> 8) & 255, key & 255], lab = rgbToLab(rgb), C = Math.hypot(lab[1], lab[2]), p = { hex: rgbToHex(rgb), lab, w };
+      if (lab[0] >= LOGO.light && C < LOGO.flat) skipped.light += w;
+      else if (lab[0] <= LOGO.dark && C < LOGO.flat) { skipped.dark += w; darks.push(p); }
+      else (C < LOGO.grey ? greys : hues).push(p);
+    });
+    // a logo with no hue (black, grey): its own dark or grey colour, said as mono
+    const pts = hues.length ? hues : greys.length ? greys : darks, mono = !hues.length;
+    if (!pts.length) return { colours: [], mono: false, skipped };
+    const d2 = (a, b) => (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]);
+    const P = pts.slice().sort((a, b) => b.w - a.w || (a.hex < b.hex ? -1 : 1));
+    const cs = [P[0].lab.slice()];
+    while (cs.length < Math.min(LOGO.k, P.length)) {
+      let best = null, bd = 0;
+      for (const p of P) { const d = Math.min(...cs.map((c) => d2(c, p.lab))) * p.w; if (d > bd) { bd = d; best = p; } }
+      if (!best) break; cs.push(best.lab.slice());
+    }
+    const as = new Array(P.length).fill(-1);
+    for (let it = 0; it < 30; it++) {
+      let moved = false;
+      P.forEach((p, i) => { let bi = 0, bd = Infinity; cs.forEach((c, j) => { const d = d2(c, p.lab); if (d < bd) { bd = d; bi = j; } }); if (as[i] !== bi) { as[i] = bi; moved = true; } });
+      if (!moved) break;
+      const sum = cs.map(() => [0, 0, 0, 0]);
+      P.forEach((p, i) => { const s = sum[as[i]]; for (let k = 0; k < 3; k++) s[k] += p.lab[k] * p.w; s[3] += p.w; });
+      sum.forEach((s, j) => { if (s[3]) cs[j] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]]; });
+    }
+    let groups = cs.map((c, j) => { const m = P.filter((_, i) => as[i] === j); return m.length ? { members: m, w: m.reduce((a, p) => a + p.w, 0) } : null; }).filter(Boolean)
+      .map((g) => Object.assign(g, { top: g.members[0] })).sort((a, b) => b.w - a.w || (a.top.hex < b.top.hex ? -1 : 1));
+    // merge near ones into the heavier
+    const merged = [];
+    for (const g of groups) { const into = merged.find((m) => deltaE(m.top.lab, g.top.lab) < LOGO.merge); if (into) { into.w += g.w; into.members = into.members.concat(g.members); } else merged.push(g); }
+    // drop the soft edges: a colour between a heavier cluster and white, black or another heavier cluster
+    const ends = (i) => ['#ffffff', '#000000'].concat(merged.slice(0, i).map((m) => m.top.hex));
+    groups = merged.filter((g, i) => i === 0 || !merged.slice(0, i).some((m) => ends(i).some((e) => e !== m.top.hex && [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].some((t) => deltaE(hexToLab(mix(m.top.hex, e, t)), g.top.lab) < LOGO.blend))));
+    const total = groups.reduce((a, g) => a + g.w, 0);
+    const kept = groups.filter((g) => g.w / total >= LOGO.share).slice(0, LOGO.max), all = kept.reduce((a, g) => a + g.w, 0);
+    return { colours: kept.map((g) => ({ hex: g.top.hex, share: Math.round(g.w / all * 1000) / 1000 })), mono, skipped };
+  };
+  // The palette from a logo's colours (hex strings or { hex }, the lead first; at most 3 are used): the logo's colours,
+  // then generate(lead, harmony) and, if that leaves too few apart, CALM, skipping any within 15 (CIEDE2000) of one taken.
+  // Every colour is taken to 3:1 on the visuals' background where it is under (toContrast: WCAG 2.1 1.4.11, bars, lines
+  // and large shapes); the logo's own ones are listed in adjusted (logo: true) so the page can say so. Then the order:
+  // the lead stays first and the other 7 are put in the order whose closest neighbours are farthest apart for normal
+  // vision, deuteranopia and protanopia (every order is tried; the logo's other colours keep places 2-3 when that costs
+  // under 10% of the best, or their closest neighbours still stand 20 apart: clearly two colours). ui: the design's page colours. null when no colour is given.
+  const deCache = new Map();
+  const visionsOf = (c) => { if (!deCache.has(c)) deCache.set(c, ['normal', 'deutan', 'protan'].map((v) => hexToLab(simulateCvd(c, v)))); return deCache.get(c); };
+  const apart = (a, b) => { const A = visionsOf(a), B = visionsOf(b); return [0, 1, 2].map((v) => deltaE(A[v], B[v])); };
+  const logoTheme = (brand, o) => {
+    o = o || {};
+    const own = []; (brand || []).forEach((c) => { const h = clampHex(typeof c === 'string' ? c : (c && c.hex) || ''); if (h && !own.includes(h) && own.length < 3) own.push(h); });
+    if (!own.length) return null;
+    const ui = colours({ ui: o.ui }).ui, card = ui.card, harmony = ['analogous', 'complementary', 'triadic', 'mono'].includes(o.harmony) ? o.harmony : 'analogous';
+    const picked = own.slice();
+    for (const c of generate(own[0], harmony).concat(CALM)) { if (picked.length === 8) break; if (picked.every((p) => deltaE(hexToLab(p), hexToLab(c)) >= 15)) picked.push(c); }
+    const adjusted = [], r2 = (x) => Math.round(x * 100) / 100, before = [];
+    picked.forEach((c, i) => {
+      const t = toContrast(c, card, 3);
+      if (t !== c) adjusted.push({ from: c, to: t, before: r2(contrast(c, card)), after: r2(contrast(t, card)), logo: i < own.length });
+      if (!before.includes(t)) before.push(t);
+    });
+    for (const c of CALM) {
+      if (before.length === 8) break; const t = toContrast(c, card, 3); if (before.includes(t)) continue;
+      before.push(t); if (t !== c) adjusted.push({ from: c, to: t, before: r2(contrast(c, card)), after: r2(contrast(t, card)), logo: false });
+    }
+    // the order: every order of colours 2-8 (5040), scored by the closest neighbours over the three visions
+    const n = before.length, D = before.map((a) => before.map((b) => (a === b ? [0, 0, 0] : apart(a, b))));
+    const score = (ord) => { let m = Infinity; for (let i = 1; i < ord.length; i++) m = Math.min(m, ...D[ord[i - 1]][ord[i]]); return m; };
+    let best = null, bestS = -1, keep = null, keepS = -1;
+    const ownAt = own.map((h) => before.indexOf(toContrast(h, card, 3)));
+    const perm = (arr, k) => {
+      if (k === arr.length) {
+        const ord = [0].concat(arr), s = score(ord);
+        if (s > bestS + 1e-9) { bestS = s; best = ord.slice(); }
+        if (ownAt.every((j, i) => i === 0 || ord[i] === j) && s > keepS + 1e-9) { keepS = s; keep = ord.slice(); }
+        return;
+      }
+      for (let i = k; i < arr.length; i++) { [arr[k], arr[i]] = [arr[i], arr[k]]; perm(arr, k + 1); [arr[k], arr[i]] = [arr[i], arr[k]]; }
+    };
+    perm(Array.from({ length: n - 1 }, (_, i) => i + 1), 0);
+    const ord = keep && (keepS >= 0.9 * bestS || keepS >= LOGO.apart) ? keep : best, data = ord.map((i) => before[i]);
+    const near = (v) => r2(Math.min(...data.slice(1).map((c, i) => apart(data[i], c)[v])));
+    const cvd = { normal: near(0), deutan: near(1), protan: near(2) }; cvd.min = Math.min(cvd.normal, cvd.deutan, cvd.protan);
+    const table = data.map((hex) => { const onCard = r2(contrast(hex, card)); return { hex, onCard, onPage: r2(contrast(hex, ui.background)), shapes: onCard >= 3, text: onCard >= 4.5 }; });
+    return { data, accent: data[0], brand: own, harmony, before, adjusted, table, cvd };
+  };
+
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
   // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
@@ -485,6 +622,25 @@
     });
     return vs;
   };
+  // (0.3.0 L5, the theme-icons lab of 10 Oct, Desktop 2.158.1304) DataArcus's three status icons, at the theme's top level
+  // ("icons", a root key Microsoft's validator knows), for conditional formatting: unused until a rule or a measure names
+  // them. They differ in shape as well as colour (a tick in a circle, a triangle with "!", a cross in a rounded square), so
+  // they read without colour. Each in the theme's good / neutral / bad taken to 3:1 on the visuals' background (WCAG 1.4.11,
+  // hue kept), its mark white or near black, whichever stands higher on it. Inside a data URI a colour is rgb(): a
+  // bare "#" ends the URI. ui: the design's ui
+  const ICON_NAMES = { good: 'daGood', neutral: 'daWarn', bad: 'daBad' };
+  const statusIcons = (ui) => {
+    const u = colours({ ui }).ui, rgb = (h) => 'rgb(' + hexToRgb(h).join(',') + ')';
+    const svg = (body) => "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'>" + body + '</svg>';
+    const line = (d, m) => `<path d='${d}' fill='none' stroke='${m}' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>`;
+    const one = (k) => { const f = toContrast(u[k], u.card, 3), m = contrast('#ffffff', f) >= contrast('#1f2329', f) ? '#ffffff' : '#1f2329'; return { f: rgb(f), m: rgb(m) }; };
+    const g = one('good'), n = one('neutral'), b = one('bad');
+    return {
+      daGood: { description: 'DataArcus good', url: svg(`<circle cx='8' cy='8' r='7' fill='${g.f}'/>` + line('M4.5 8.2l2.3 2.3 4.7-4.9', g.m)) },
+      daWarn: { description: 'DataArcus warning', url: svg(`<path d='M8 1.2L15.2 14.3H0.8Z' fill='${n.f}' stroke='${n.f}' stroke-width='1' stroke-linejoin='round'/>` + line('M8 5.8v4', n.m) + `<circle cx='8' cy='12.2' r='1' fill='${n.m}'/>`) },
+      daBad: { description: 'DataArcus bad', url: svg(`<rect x='1.5' y='1.5' width='13' height='13' rx='3' fill='${b.f}'/>` + line('M5.5 5.5l5 5M10.5 5.5l-5 5', b.m)) }
+    };
+  };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
   const buildTheme = (d0, lang) => {
@@ -501,6 +657,7 @@
       tableAccent: u.accent,
       good: u.good, neutral: u.neutral, bad: u.bad,
       maximum: u.good, center: u.neutral, minimum: u.bad,
+      icons: statusIcons(u),
       hyperlink: d.data[0], visitedHyperlink: mix(d.data[0], u.text, 0.3),
       textClasses: {
         callout: { fontSize: fs(28, l), fontFace: f, color: u.text },
@@ -762,6 +919,7 @@
       samples: { about: 'sample visuals in the preview (the website only)', type: 'boolean' },
       transparent: { about: 'transparent visuals over panels drawn in the background image', type: 'boolean' },
       wideTable: { about: 'on a narrow page a table takes the wider share of its row (default on)', type: 'boolean' },
+      phoneLayout: { about: 'a phone layout for every report page (mobile.json, Power BI\'s 323-wide phone canvas; default on)', type: 'boolean' },
       kpiBar: { about: 'the KPI cards\' accent bar', values: ['start', 'top', 'bottom', 'none'] },
       kpiBarC: { about: 'the KPI bar\'s colour (default accent)', values: BAR_COLORS },
       kpiBarW: { about: 'the KPI bar\'s thickness', range: RANGE.kpiBarW },
@@ -822,6 +980,7 @@
       opt('kpiBarC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`); opt('headLineC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`);
       opt('fpos', (v) => ['start', 'end', 'top'].includes(v), 'use start, end or top');
       opt('wideTable', (v) => typeof v === 'boolean', 'true or false');
+      opt('phoneLayout', (v) => typeof v === 'boolean', 'true or false');
     }
     return state;
   }
@@ -834,9 +993,9 @@
 
   const api = {
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

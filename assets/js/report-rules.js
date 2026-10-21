@@ -38,6 +38,8 @@
     textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font'),
     headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")')
   };
+  // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
+  const LINKS_SRC = { format: true, section: 'a visualLink\'s navigationSection is the name of a page of the same report (visualConfiguration schema, bundled in mcp/schemas)' };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
   const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
@@ -220,10 +222,16 @@
         R.pages.forEach((pg) => {
           const pos = (x) => { const p = x.mobile.position, b = { x: n(p.x), y: n(p.y), width: n(p.width), height: n(p.height) }; return Object.values(b).every(Number.isFinite) ? b : null; };
           const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup && pos(x));
+          // (0.3.0 L4) a flip card is image visuals stacked in one box on purpose, the page's and the phone's, its faces
+          // going to each other by bookmarks (the flip-card labs, Desktop 2.158, 10 Oct 2026): not an overlap
+          const same = (a, b) => a.parent === b.parent && ['x', 'y', 'width', 'height'].every((k) => n((a.json.position || {})[k]) === n((b.json.position || {})[k])) && JSON.stringify(pos(a)) === JSON.stringify(pos(b));
+          const linked = (x) => x.type === 'image' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'Bookmark';
+          const flipPair = (a, b) => a.type === 'image' && b.type === 'image' && same(a, b) && boxes.some((x) => linked(x) && same(x, a));
           boxes.forEach((a, i) => {
             const A = pos(a);
             if (A.x < -0.5 || A.x + A.width > 323.5) out(a, `the phone box is outside the 323-wide canvas (x ${A.x}, width ${A.width})`, 'Move or narrow it on the phone layout.', { file: a.mobileFile });
             boxes.slice(i + 1).forEach((b) => {
+              if (flipPair(a, b)) return;
               const B = pos(b);
               if (A.x < B.x + B.width - 0.5 && B.x < A.x + A.width - 0.5 && A.y < B.y + B.height - 0.5 && B.y < A.y + A.height - 0.5)
                 out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps another visual's phone box at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });
@@ -241,6 +249,18 @@
           const est = measuredFont(font) ? null : { estimate: true };
           if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${one} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${one} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est, SRC.round10);
           else if (half > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${half})`, `Make the button at least ${half} wide, or the name shorter.`, est, SRC.round10);
+        });
+      } },
+    // (0.3.0 X1: one report holding both languages, each page's language button going to its counterpart) a page button
+    // that goes to a page the report does not have: Power BI shows it and nothing happens when it is clicked. The page's
+    // id is never quoted (a report's text is untrusted input)
+    { id: 'PAGE_LINK_MISSING', group: 'navigation', severity: 'error', source: LINKS_SRC,
+      about: 'a page button (an actionButton that goes to a page) names a page of this report in navigationSection',
+      run(R, out) {
+        const ids = new Set((R.pages || []).map((p) => String(p.id)));
+        R.visuals.filter(isPageButton).forEach((x) => {
+          const to = str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).navigationSection);
+          if (to && !ids.has(to)) out(x, 'the page button goes to a page this report does not have (its navigationSection names no page of the report)', 'Point it at a page of the report (navigationSection: that page\'s name, its folder under definition/pages), or remove it: clicking it does nothing.');
         });
       } },
     { id: 'SORT_IN_VISUAL', group: 'sort', severity: 'warning', source: SRC.round2,
@@ -290,7 +310,11 @@
         if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
       } }
   ];
-  const GROUPS = ['sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl'];
+  // (0.3, J7) Power BI's accessibility basics, the family "a11y": report-a11y.js, sourced to Microsoft's guidance (not
+  // measured: each finding's source names the page)
+  const A11y = typeof module !== 'undefined' && module.exports ? require('./report-a11y.js') : root.DAA11y;
+  if (A11y) RULES.push(...A11y.RULES);
+  const GROUPS = ['sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl'].concat(A11y ? ['a11y'] : []);
 
   // R: { pages: [{ id, visuals: [x] }], visuals: [x], textSize, labelSize, slicerSize, font, theme: { file, ref, json },
   //      hasPlatform }, x: { name, type, file, mobileFile, json (visual.json), mobile (mobile.json or null), x, y, w, h }
@@ -314,10 +338,10 @@
       const mine = [];
       try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : e.page || null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
-          source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
+          source: source.guide ? `Microsoft's guidance: ${source.title}, "${source.section}": ${source.url}` : source.format ? `Microsoft's PBIR format: ${source.section}` : `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
       }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
     return { findings, ran, failed };

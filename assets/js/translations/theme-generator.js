@@ -40,7 +40,8 @@ window.themeGeneratorTranslations = {
         "pbipPages": "A second page and page buttons <small class=\"d-block text-white-50\">Details or overview, in the same design.</small>",
         "pbipPanel": "Filters as a slide-in panel <small class=\"d-block text-white-50\">A Filters button opens them over the page, so charts get the full width.</small>",
         "pbipLogo": "Add your logo (optional, PNG or JPG)",
-        "pbipBtn": "Download project"
+        "pbipBtn": "Download project",
+        "pbipPreview": "Preview the download"
       },
       "lab": {
         "note": "<b>Test page.</b> This is the theme generator with a new download: a ready Power BI project. It is not listed on the site yet."
@@ -53,6 +54,11 @@ window.themeGeneratorTranslations = {
         "complementary": "Complementary (contrast)",
         "triadic": "Triadic (vivid)",
         "mono": "Monochrome (shades)"
+      },
+      "logo": {
+        "title": "Or start from your logo",
+        "drop": "Drop a PNG, SVG or JPG logo here, or click to choose one",
+        "private": "Read in this tab only: the image is never uploaded or saved. The colours taken from it are saved in this browser, like any theme you make here."
       },
       "generate": "Generate",
       "dataColors": "Data colors (used in order)",
@@ -151,7 +157,8 @@ window.themeGeneratorTranslations = {
         "pbipPages": "صفحة ثانية وأزرار للتنقل <small class=\"d-block text-white-50\">تفاصيل أو نظرة عامة، بنفس التصميم.</small>",
         "pbipPanel": "الفلاتر كلوحة منزلقة <small class=\"d-block text-white-50\">زر الفلاتر يفتحها فوق الصفحة، فتأخذ المخططات العرض كاملًا.</small>",
         "pbipLogo": "أضف شعارك (اختياري، PNG أو JPG)",
-        "pbipBtn": "نزّل المشروع"
+        "pbipBtn": "نزّل المشروع",
+        "pbipPreview": "عاين التنزيل"
       },
       "lab": {
         "note": "<b>صفحة تجريبية.</b> هذا مولّد السمات مع تنزيل جديد: مشروع Power BI جاهز. لم يُضف إلى الموقع بعد."
@@ -164,6 +171,11 @@ window.themeGeneratorTranslations = {
         "complementary": "متكاملة (تباين)",
         "triadic": "ثلاثية (حيوية)",
         "mono": "أحادية (درجات)"
+      },
+      "logo": {
+        "title": "أو ابدأ من شعارك",
+        "drop": "أفلت شعارًا بصيغة PNG أو SVG أو JPG هنا، أو انقر لاختياره",
+        "private": "يُقرأ داخل هذه الصفحة فقط: لا تُرفع الصورة ولا تُحفظ أبدًا. أما الألوان المأخوذة منها فتُحفظ في هذا المتصفح، مثل أي سمة تصنعها هنا."
       },
       "generate": "إنشاء",
       "dataColors": "ألوان البيانات (تُستخدم بالترتيب)",

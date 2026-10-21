@@ -155,13 +155,18 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // (an Arabic report on English names: round 14 drops the English column from the title, so every chart reads the measure's name)
     // (golden task 7's shape: a model without measures, in Arabic: every chart reads "عدد Order Id")
     model('r22-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'string'), col('Region', 'string'), col('Channel', 'string')] }]);
-    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
+    // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's names, «المنطقة» and «القناة» here, and the titles
+    // are then their own; this case is the English names', so it keeps them through displayNames, the plan's way to keep them)
+    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
     const x = await mk('R22 same title', 470), xn = await mk('R22 same title narrow', 110);
     const pick = (r, w) => vis(r, 'r22-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === w), narrow = pick(xn, 110), wide = pick(x, 470);
     chk(() => narrow.length === 2 && narrow.every((v) => !/… \(/.test(titleOf(v))), () => `e. a bracket never follows a shortened title: ${JSON.stringify(narrow.map((v) => [titleOf(v), JSON.stringify(vco(v, 'title').properties.titleWrap || null)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
-    chk(() => wide.length === 2 && wide.map((v) => (titleOf(v).match(/\((Region|Channel)\)$/) || [])[1]).sort().join() === 'Channel,Region', () => `e. the wide charts end with "(Region)" and "(Channel)": ${JSON.stringify(wide.map(titleOf))}`);
+    // (changed 20 Oct 2026, F1: the owner's decision, every mixed Arabic/Latin text isolated: the names compared without
+    // the marks, and each Latin name checked isolated)
+    const bare = (t) => String(t || '').replace(/[\u2066-\u2069\u200e\u200f]/g, ''), iso = (t) => /\u2068(Region|Channel)\u2069/.test(String(t || ''));
+    chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/\((Region|Channel)\)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => iso(titleOf(v))), () => `e. the wide charts end with "(Region)" and "(Channel)", the names isolated: ${JSON.stringify(wide.map(titleOf))}`);
     const four = narrow.concat(wide);
-    chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(altOf(v) || '')), () => `h. each chart's alt text carries its bracketed name: ${JSON.stringify(four.map(altOf))}`);
+    chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(bare(altOf(v))) && iso(altOf(v))), () => `h. each chart's alt text carries its bracketed name, isolated: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
     // (changed in 0.2.9 rc1, item 4: a bar chart by a category that is not time shows its top N, its title starts
     // "Top N: "; the numbering is of the title without that prefix, so the prefix is left out of the comparison)
@@ -169,7 +174,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // (changed in round 22b, the reviewer's second review, item 8: two charts with the same measure and column kept the
     // same title and alt text; they are now numbered after the first, "(2)", like the charts of a bracket group)
     const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
-    chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales by Region (2)' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second numbered, "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
+    // (changed in 0.3 J4, B-130, the owner's go of 18 Oct: no "(2)"; the second says another true sentence of its own
+    // measure and column, story-titles.js alternate: "Total Sales per Region" for a chart not sorted by its measure)
+    chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales per Region' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second told apart without "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
   }
   // f. data labels above the columns only where the columns are four: "Quarter", never "Year Quarter" (8 to 40 values)
   {
@@ -391,7 +398,10 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const c = await ask('create_report', { path: 'r22-long', name: 'R22d titles', fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, category2: `Sales[${long1}]` },
       pages: [{ name: 'P', width: 1920, height: 1080, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 400, h: 400 }, { kind: 'column', x: 500, y: 100, w: 1380, h: 400 }] }] });
     const n = notes(c);
-    chk(() => !c.err && /shortened/.test(n) && n.includes(`${long2} by ${long1}\\"`), () => `3rd-4. the first chart's shortened title is still told: ${c.err ? c.t.slice(0, 200) : n.slice(0, 600)}`);
+    // (changed in 0.3 J4, B-131: the first chart's title is shortened by rule, "Net sales by Sales channel", not cut with
+    // "…", so no entry is owed; what stays checked: every "shortened" entry the notes tell names a title a chart shows)
+    const shownNow = vis(c, 'r22-long').map(titleOf).filter(Boolean), told = [...n.matchAll(/as \\"([^\\]*)\\"/g)].map((x) => x[1]);
+    chk(() => !c.err && shownNow.every((t) => !/…/.test(t)) && told.every((t) => shownNow.includes(t)), () => `3rd-4. no title cut, and every shortened title told is one a chart shows: ${c.err ? c.t.slice(0, 200) : JSON.stringify([shownNow, told, n.slice(0, 400)])}`);
   }
   // final item 4: DAX allows spaces between a table and its column: 'Sales' [Quantity] and Sales [Quantity] are columns
   {

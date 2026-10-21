@@ -144,6 +144,68 @@ document.addEventListener('DOMContentLoaded', () => {
     state.data = generate($('brand').value, $('harmony').value); state.ui.accent = state.data[0]; state.preset = null;
     renderInputs(); renderAll(); track('theme_generate', { harmony: $('harmony').value });
   });
+  // ---------- a theme from a logo (0.3.0 step 6) ----------
+  // The file is drawn on a small canvas in this tab and only its pixels are read (an object URL, revoked at once): it is
+  // never uploaded, never saved, and no request is made. The engine finds the brand colours (logoColours) and builds the
+  // palette with the generator's own generate() (logoTheme), each colour at 3:1 on the visuals and ordered for
+  // colour-blind readers; it is applied like "Generate". Only the result is kept, in memory, to redraw on a language change.
+  if ($('logoFile') && $('logoOut')) {
+    const LOGO_SIDE = 128, LOGO_MAX = 5 * 1024 * 1024;
+    let logoRes = null;
+    const esc = (x) => String(x).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    const pixelsOf = (file) => new Promise((resolve, reject) => {
+      const src = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(src);
+        try {
+          const w0 = img.naturalWidth || 300, h0 = img.naturalHeight || 150, k = Math.min(1, LOGO_SIDE / Math.max(w0, h0));
+          const cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(w0 * k)); cv.height = Math.max(1, Math.round(h0 * k));
+          const g = cv.getContext('2d', { willReadFrequently: true }); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, cv.width, cv.height);
+          resolve(g.getImageData(0, 0, cv.width, cv.height).data);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('IMAGE')); };
+      img.src = src;
+    });
+    // hex codes and the file name read left to right inside Arabic text (else "#ffd84a" shows as "ffd84a#")
+    const hx = (h) => `<bdi dir="ltr">${h}</bdi>`;
+    const sw = (hex, extra) => `<span data-hex="${hex}"><i style="background:${hex}"></i>${hx(hex)}${extra || ''}</span>`;
+    const ratio = (r) => r.toFixed(1) + ':1';
+    const renderLogo = () => {
+      const out = $('logoOut'), r = logoRes; if (!r) return;
+      out.hidden = false; out.dataset.n = String(r.n);
+      if (r.error) { out.innerHTML = `<div class="warn tg-logo-error"><i class="bi bi-exclamation-triangle me-1"></i>${r.error === 'EMPTY' ? L('No colours found in this image: it looks empty or white.', 'لم نجد ألوانًا في هذه الصورة: تبدو فارغة أو بيضاء.') : L('This file could not be read as an image. Use a PNG, SVG or JPG under 5 MB.', 'تعذّرت قراءة هذا الملف كصورة. استخدم ملف PNG أو SVG أو JPG أقل من 5 ميجابايت.')}</div>`; return; }
+      const t = r.theme, yes = L('Yes', 'نعم'), no = L('No', 'لا');
+      out.innerHTML = `<div><span>${L(`Read from ${hx(esc(r.name))} in this tab; nothing was uploaded.`, `قُرئ من ${hx(esc(r.name))} داخل هذه الصفحة؛ لم يُرفع شيء.`)}</span></div>`
+        + `<div><b>${L('Logo colours', 'ألوان الشعار')}</b>${r.mono ? ' ' + L('(no hue: the palette starts from its dark colour)', '(بلا لون واضح: تبدأ اللوحة من لونه الداكن)') : ''}<div class="sw tg-logo-swatches">${r.colours.map((c) => sw(c.hex, ` <small>${Math.round(c.share * 100)}%</small>`)).join('')}</div></div>`
+        + `<div><b>${L('Palette, in order', 'اللوحة بالترتيب')}</b><div class="sw tg-logo-palette">${t.data.map((c) => sw(c)).join('')}</div></div>`
+        + t.adjusted.filter((a) => a.logo).map((a) => `<div class="warn tg-logo-adjusted"><i class="bi bi-info-circle me-1"></i><span>${L(`Your logo's ${hx(a.from)} stands ${ratio(a.before)} on the visual background, under the 3:1 bars and lines need; the palette uses ${hx(a.to)} (${ratio(a.after)}) instead. Your logo itself is unchanged.`, `لون شعارك ${hx(a.from)} يبلغ تباينه ${ratio(a.before)} على خلفية العنصر المرئي، أقل من 3:1 الذي تحتاجه الأعمدة والخطوط؛ لذلك تستخدم اللوحة ${hx(a.to)} ‏(${ratio(a.after)}) بدلًا منه. شعارك نفسه لم يتغيّر.`)}</span></div>`).join('')
+        + `<table class="tg-logo-table"><thead><tr><th>${L('Colour', 'اللون')}</th><th>${L('On visuals', 'على العناصر')}</th><th>${L('On page', 'على الصفحة')}</th><th>${L('Bars, lines (3:1)', 'أعمدة وخطوط (3:1)')}</th><th>${L('Text (4.5:1)', 'نص (4.5:1)')}</th></tr></thead><tbody>`
+        + t.table.map((x) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${x.hex}"></i> ${hx(x.hex)}</td><td>${ratio(x.onCard)}</td><td>${ratio(x.onPage)}</td><td class="${x.shapes ? 'ok' : 'warn'}">${x.shapes ? yes : no}</td><td class="${x.text ? 'ok' : 'warn'}">${x.text ? yes : no}</td></tr>`).join('') + '</tbody></table>'
+        + `<div class="tg-logo-cvd ${t.cvd.min >= 10 ? 'ok' : 'warn'}"><i class="bi ${t.cvd.min >= 10 ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${L(`Colour-blind check: neighbouring colours stay at least ${t.cvd.min.toFixed(1)} apart (CIEDE2000; deuteranopia ${t.cvd.deutan.toFixed(1)}, protanopia ${t.cvd.protan.toFixed(1)}, normal vision ${t.cvd.normal.toFixed(1)}).`, `فحص عمى الألوان: تبقى الألوان المتجاورة متباعدة بمقدار ${t.cvd.min.toFixed(1)} على الأقل (CIEDE2000؛ عمى الأخضر ${t.cvd.deutan.toFixed(1)}، عمى الأحمر ${t.cvd.protan.toFixed(1)}، الرؤية العادية ${t.cvd.normal.toFixed(1)}).`)}${t.cvd.min >= 10 ? '' : ' ' + L('Some neighbours are close: add data labels or a legend.', 'بعض الألوان المتجاورة قريبة: أضف تسميات البيانات أو وسيلة إيضاح.')}</div>`
+        + `<small class="text-white-50">${L('Text in a data colour needs 4.5:1; Power BI writes labels in the text colour unless you change it.', 'النص بلون من ألوان البيانات يحتاج 4.5:1؛ يكتب Power BI التسميات بلون النص ما لم تغيّره.')}</small>`;
+    };
+    let logoN = 0;
+    const readLogo = (file) => {
+      const n = ++logoN, done = (res) => { if (n !== logoN) return; logoRes = Object.assign({ n }, res); renderLogo(); };
+      if (!file || file.size > LOGO_MAX || !/^image\/(png|jpeg|svg\+xml)$/.test(file.type) && !/\.(png|jpe?g|svg)$/i.test(file.name || '')) return done({ error: 'FILE' });
+      pixelsOf(file).then((px) => {
+        const found = E.logoColours(px);
+        if (!found.colours.length) return done({ error: 'EMPTY' });
+        const theme = E.logoTheme(found.colours, { ui: state.ui, harmony: $('harmony').value });
+        state.data = theme.data.slice(); state.ui.accent = theme.accent; state.preset = null; $('brand').value = found.colours[0].hex;
+        document.querySelectorAll('.tg-preset').forEach((b) => b.classList.remove('active'));
+        renderInputs(); renderAll();
+        done({ name: file.name || 'logo', colours: found.colours, mono: found.mono, theme });
+      }).catch(() => done({ error: 'FILE' }));
+    };
+    $('logoFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; readLogo(f); });
+    const drop = $('logoDrop');
+    ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, () => drop.classList.remove('over')));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); readLogo(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); });
+    new MutationObserver(renderLogo).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  }
   $('themeName').addEventListener('input', (e) => { state.name = e.target.value.slice(0, 60); renderJson(); save(); });
   $('font').addEventListener('change', (e) => { state.font = e.target.value; renderAll(); });
   Object.entries(CHART_INPUTS).forEach(([id, k]) => $(id).addEventListener('change', (e) => {
@@ -452,10 +514,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
   if (pbipBtn) {
     let logo = null;
-    // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
+    // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261011a4', '/assets/js/pbip-query.min.js?v=20261012r10', '/assets/js/pbip-sizing.min.js?v=20261013p6', '/assets/js/pbip-notes.min.js?v=20261018r22',
-      '/assets/js/pbip-page.min.js?v=20261019p2991', '/assets/js/pbip-export.min.js?v=20261013p6'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/pbip-query.min.js?v=20261020s1', '/assets/js/pbip-sizing.min.js?v=w15', '/assets/js/pbip-notes.min.js?v=20261019l2',
+      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261021p7', '/assets/js/report-a11y.min.js?v=20261020w8', '/assets/js/pbip-export.min.js?v=20261019w5'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -472,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261012i11')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=w15')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -538,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261018h')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261018u')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');
@@ -555,7 +617,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (out) out.textContent = f.name + (size && size.h > size.w ? '. ' + L('This logo is tall; a horizontal version will read much better in the header.', 'هذا الشعار طولي؛ نسخة أفقية منه ستكون أوضح بكثير في الشريط العلوي.') : '');
       });
     });
-    pbipBtn.addEventListener('click', () => {
+    // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
+    // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
+    const withProject = (then) => {
       const c = lay(), p = page(c), m = mode(), sample = m === 'sample';
       // your own model: where it is, and the fields picked for each visual
       let model = null;
@@ -569,7 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // the picker always shows the model of the current choice (see showPicker)
       const bind = model && own[m] && own.getBind ? own.getBind() : null;
-      pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
       // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
@@ -584,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
       const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined, noTime: !!(model && bind && !bind.date) });   // (D16: a model with no time axis gets the layout made for it, as the MCP's)
-      Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
+      return Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
         const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
@@ -600,6 +663,11 @@ document.addEventListener('DOMContentLoaded', () => {
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
           })
         };
+        return then(P, input, { c, m, sample, bind, specs, pages });
+      });
+    };
+    pbipBtn.addEventListener('click', () => {
+      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => loadCheck().catch(() => null).then((Ck) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
         // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
         // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
@@ -607,6 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Promise.all(specs.map((sp, i) => pngBlob(sp.layout, (sl) => E.fitSlots(sl, E.fitScale(fo[i], 1 / page(sp.layout).s)).slots).then((b) => b.arrayBuffer()))).then((bufs) => {
         bufs.forEach((b, i) => { pages[i].png = new Uint8Array(b); });
         const r = P.build(input);
+        if (Ck) showCheck(Ck, r.files, m);   // (0.3.0 step 2: checked before it is offered; the list stays in view)
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {
           const e = own.local, at = e.dir ? ` (${e.dir})` : '';
@@ -615,7 +684,57 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
         });
-      }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
+      }));
+      if (!run) return;
+      pbipBtn.disabled = true;
+      run.catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
+    });
+    // 0.3.0 step 2, "Check before download" (the owner's go, 18 Oct): the measured rules and the layout check
+    // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
+    // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
+    // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261020l4', '../assets/js/layout-check.min.js?v=20261020w8'];
+    const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
+    const ckBox = $('pbipCheck');
+    const showCheck = (C, files, m) => {
+      if (!ckBox) return null;
+      const tables = (m === 'local' || m === 'service') && own[m] && own[m].tables && own[m].tables.length ? own[m].tables : null;
+      const r = C.checkProject(files, { lang: isAr() ? 'ar' : 'en', model: tables });
+      ckBox.textContent = '';
+      const head = document.createElement('p'); head.className = 'tg-ck-sum ' + (r.desktop ? 'tg-warn' : 'tg-ok'); head.textContent = r.summary; ckBox.appendChild(head);
+      if (r.problems.length) {
+        const ul = document.createElement('ul');
+        r.problems.slice(0, 12).forEach((f) => { const li = document.createElement('li'); li.textContent = `${f.page && f.page.n ? L(`Page ${f.page.n}`, `الصفحة ${f.page.n}`) + ': ' : ''}${f.visual ? f.visual + ': ' : ''}${f.what}. ${f.fix}`; li.dir = 'auto'; ul.appendChild(li); });
+        ckBox.appendChild(ul);
+      }
+      const note = document.createElement('small'); note.textContent = L('Checked by the measured rules of what Power BI Desktop draws and the layout check, on the project as it is set now. Structure only, never data.', 'فحصته قواعد مقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على المشروع بإعداداته الحالية. البنية فقط، دون أي بيانات.');
+      ckBox.appendChild(note); ckBox.hidden = false;
+      return r;
+    };
+    // 0.3.0 step 1, "Preview before Approve": a picture of each page the download contains, drawn by the renderer the
+    // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
+    // names; grey placeholders, never a value
+    const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261020w7').then(() => window.DAPagePreview));
+    if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
+      const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+        const files = P.build(input).files;
+        if (Ck) showCheck(Ck, files, m);
+        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
+        pvBox.textContent = '';
+        pages.forEach((pg, i) => {
+          const fig = document.createElement('figure'), cap = document.createElement('figcaption');
+          fig.innerHTML = PV.render(pg, { lang: isAr() ? 'ar' : 'en', width: 640 });   // (every name in it escaped by the renderer)
+          cap.textContent = L(`Page ${i + 1}: ${pg.name}`, `الصفحة ${i + 1}: ${pg.name}`);
+          fig.appendChild(cap); pvBox.appendChild(fig);
+        });
+        const note = document.createElement('p');
+        note.textContent = L('Drawn from the project as it is set now: where each visual goes, its type and its title. The grey shapes are placeholders, not data. Press again after a change.', 'مرسومة من المشروع بإعداداته الحالية: موضع كل عنصر ونوعه وعنوانه. الأشكال الرمادية للعرض فقط وليست بيانات. اضغط مرة أخرى بعد أي تغيير.');
+        pvBox.appendChild(note); pvBox.hidden = false;
+      }));
+      if (!run) return;
+      pvBtn.disabled = true;
+      run.catch(() => toast(L('Could not draw the preview in this browser', 'تعذّر رسم المعاينة في هذا المتصفح'))).then(() => { pvBtn.disabled = false; });
     });
   }
 

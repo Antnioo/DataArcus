@@ -14,6 +14,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
+import { knownGap } from './lib/check-report.mjs';
 // the validator version is set once, in mcp/package.json; the texts name the installed one (16 Oct 2026)
 const VALIDATOR_PIN = JSON.parse(fs0.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).dependencies['@microsoft/powerbi-report-authoring-cli'];
 
@@ -40,10 +42,13 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     const visualOf = (R, type) => tree(path.join(R, 'definition/pages')).find((f) => f.endsWith('visual.json') && J(f).visual && J(f).visual.visualType === type);
     const themeOf = (R) => { const d = path.join(R, 'StaticResources/RegisteredResources'); return path.join(d, fs.readdirSync(d).find((n) => n.endsWith('.json'))); };
     const KINDS = ['desktopOpens', 'canBreak', 'dataarcusRule'];
-    // (polish round P2) every written slicer carries the dropdown slicer's rounded box, which Microsoft's validator 0.4.0
-    // does not know: one known note per slicer, counted exactly in every expectation below
+    // (polish round P2) every written slicer carries the dropdown slicer's rounded box. Microsoft's visual catalog 0.1.1
+    // did not list it (one known note per slicer); 0.1.3, the version mcp/package.json pins since U1 (19 Oct 2026), lists
+    // slicer.dropdown and the validator judges the box itself: no note (KN 0). Changed on purpose in U1: was SL notes.
     const SL = tree(path.join(D, 'Clean.Report/definition/pages')).filter((f) => f.endsWith('visual.json') && J(f).visual && J(f).visual.visualType === 'slicer').length;
     chk(() => SL >= 1, () => 'the made-up report must have a slicer');
+    const LISTED = !!((getCapabilities('slicer') || {}).objects || {}).dropdown, KN = LISTED ? 0 : SL;
+    chk(() => LISTED, () => 'U1: the pinned catalog lists slicer.dropdown (0.1.3)');
 
     // a. the five things a working hand-built report showed (VALIDATOR-LAB, 10 Oct): no $schema in the .pbip and in
     //    definition.pbir, the theme's own name not its file name, an unknown theme card and property, a gradient stop
@@ -60,10 +65,10 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     chk(() => !strict.err && CODES.every((c) => sf.some((f) => f.rule === c)), () => `C1. the fixture must reproduce the five codes, verbatim: ${JSON.stringify(strict.j && strict.j.counts.byRule)} ${strict.err ? strict.t.slice(0, 200) : ''}`);
     chk(() => CODES.every((c) => sf.filter((f) => f.rule === c && !f.known).every((f) => f.impact === 'desktopOpens' && f.severity === 'error' && new RegExp(`Microsoft validator [^:]+: ${c}$`).test(f.source))),
       () => `C2. each of the five is "desktopOpens", its severity and source kept: ${JSON.stringify(sf.filter((f) => CODES.includes(f.rule)).map((f) => [f.rule, f.impact, f.severity, f.source]))}`);
-    chk(() => strict.j.validator.reported.errors === 6 + SL && strict.j.validator.errors === 6 && strict.j.validator.known === SL && strict.j.counts.errors >= 6, () => `C3. the validator's own counts kept in reported (6 + ${SL} errors), errors the 6 that stay errors (rc.22, B-142), and ${SL} known, one per slicer: ${JSON.stringify([strict.j.validator, strict.j.counts])}`);
+    chk(() => strict.j.validator.reported.errors === 6 + KN && strict.j.validator.errors === 6 && strict.j.validator.known === KN && strict.j.counts.errors >= 6, () => `C3. the validator's own counts kept in reported (6 + ${KN} errors), errors the 6 that stay errors (rc.22, B-142), and ${KN} known: ${JSON.stringify([strict.j.validator, strict.j.counts])}`);
     const im = strict.j && strict.j.impact;
-    chk(() => im && KINDS.every((k) => im.kinds[k] && typeof im.kinds[k].count === 'number' && /\S/.test(im.kinds[k].means)) && im.kinds.desktopOpens.count === 6 + SL && im.kinds.canBreak.count === 0,
-      () => `C4. impact.kinds: each kind with its count and one sentence; 6 + ${SL} known desktopOpens, 0 canBreak: ${JSON.stringify(im)}`);
+    chk(() => im && KINDS.every((k) => im.kinds[k] && typeof im.kinds[k].count === 'number' && /\S/.test(im.kinds[k].means)) && im.kinds.desktopOpens.count === 6 + KN && im.kinds.canBreak.count === 0,
+      () => `C4. impact.kinds: each kind with its count and one sentence; 6 + ${KN} known desktopOpens, 0 canBreak: ${JSON.stringify(im)}`);
     chk(() => /Desktop opens/i.test(im.kinds.desktopOpens.means) && /Fabric/.test(im.kinds.desktopOpens.means) && /strict/i.test(im.kinds.desktopOpens.means), () => `C5. the desktopOpens sentence names Desktop, Fabric and strict validation: ${im.kinds.desktopOpens.means}`);
     chk(() => /not broken|opens in (Power BI )?Desktop/i.test(im.summary) && !/broken\b(?! in)/i.test(im.summary.replace(/not broken/ig, '')), () => `C6. with only desktopOpens errors the summary says the report is not broken in Desktop: ${im && im.summary}`);
     chk(() => KINDS.every((k) => (strict.j.counts.byImpact || {})[k] === sf.filter((f) => f.impact === k).length || strict.j.truncated), () => `C7. counts.byImpact matches the findings: ${JSON.stringify(strict.j.counts.byImpact)}`);
@@ -88,7 +93,7 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     // d. every finding of every answer has one of the three kinds; the clean report has no error and says so
     const clean = await ask('check_report', { path: `${dir}/Clean.pbip` });
     chk(() => [strict, broken, rule, clean].every((x) => x.j && x.j.findings.every((f) => KINDS.includes(f.impact))), () => `C13. every finding has one of the three kinds: ${JSON.stringify([strict, broken, rule, clean].map((x) => x.j && x.j.findings.filter((f) => !KINDS.includes(f.impact)).map((f) => f.rule)))}`);
-    chk(() => clean.j.counts.errors === 0 && clean.j.impact.kinds.canBreak.count === 0 && clean.j.impact.kinds.desktopOpens.count === SL && clean.j.validator.known === SL && clean.j.findings.filter((f) => f.impact === 'desktopOpens').every((f) => f.known && f.severity === 'note') && /\S/.test(clean.j.impact.summary), () => `C14. the clean report: no error of either kind; desktopOpens only the ${SL} known notes, one per slicer: ${JSON.stringify(clean.j && [clean.j.impact, clean.j.validator])}`);
+    chk(() => clean.j.counts.errors === 0 && clean.j.impact.kinds.canBreak.count === 0 && clean.j.impact.kinds.desktopOpens.count === KN && clean.j.validator.known === KN && clean.j.findings.filter((f) => f.impact === 'desktopOpens').every((f) => f.known && f.severity === 'note') && /\S/.test(clean.j.impact.summary), () => `C14. the clean report: no error of either kind; desktopOpens only the ${KN} known notes: ${JSON.stringify(clean.j && [clean.j.impact, clean.j.validator])}`);
     // W1. (polish round P2, the writer) every slicer is a Dropdown slicer with exactly the Desktop-proven rounded box:
     //     borderRadius 8D, borderIndividualCorners false, borderColor (the design's edge colour), no other property, no selector
     { const sls = tree(path.join(D, 'Clean.Report/definition/pages')).filter((f) => f.endsWith('visual.json') && J(f).visual && J(f).visual.visualType === 'slicer').map((f) => J(f).visual.objects);
@@ -100,8 +105,9 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
 
     // e. (polish round P2, the owner's rounded slicer boxes, 12 Oct) a dropdown slicer's dropdown.borderRadius,
     //    borderIndividualCorners and borderColor: Power BI Desktop 2.158 draws them (scripts/tests/DESKTOP-TESTS.md,
-    //    2026-10-12); Microsoft's validator 0.4.0 does not know the "dropdown" object (PBIR_FORMATTING_OBJECT_UNKNOWN, one
-    //    per slicer). Exactly that is a known note with its evidence; anything else unknown stays an error.
+    //    2026-10-12). Microsoft's catalog 0.1.1 did not list the "dropdown" object (PBIR_FORMATTING_OBJECT_UNKNOWN, one per
+    //    slicer, a known note). Changed on purpose in U1 (19 Oct 2026): the pinned catalog 0.1.3 lists it, so the
+    //    validator judges the box itself: no finding, no known note, and knownGap says none for the proven shape.
     const lit = (v) => ({ expr: { Literal: { Value: v } } });
     const ROUND = { borderRadius: lit('8D'), borderIndividualCorners: lit('false'), borderColor: { solid: { color: lit("'#9ca3af'") } } };
     const slicersOf = (R) => tree(path.join(R, 'definition/pages')).filter((f) => f.endsWith('visual.json') && J(f).visual && J(f).visual.visualType === 'slicer');
@@ -110,23 +116,18 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     const nSl = slicersOf(Rd).length;
     const round = await ask('check_report', { path: `${dir}/Round.pbip` }), rdf = (round.j && round.j.findings) || [];
     const unk = (fs2) => fs2.filter((f) => f.rule === 'PBIR_FORMATTING_OBJECT_UNKNOWN');
-    chk(() => nSl >= 1 && !round.err && unk(rdf).length === nSl && round.j.validator.reported.errors === nSl && round.j.validator.errors === 0, () => `P2a. the fixture reproduces the validator's error once per slicer (${nSl}), its own count kept: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
-    chk(() => unk(rdf).every((f) => f.severity === 'note' && f.impact === 'desktopOpens' && f.known && /Power BI Desktop 2\.158 draws it/.test(f.known.what) && f.known.what.includes(`validator ${VALIDATOR_PIN} does not list it yet`) && round.j.validator.version === VALIDATOR_PIN
-      && [...`${f.known.what} ${round.j.impact.summary}`.matchAll(/validator (\d+\.\d+\.\d+)/g)].every((m) => m[1] === VALIDATOR_PIN)
-      && /DESKTOP-TESTS\.md/.test(f.known.evidence) && /2026-10-12/.test(f.known.evidence) && /^Microsoft validator [^:]+: PBIR_FORMATTING_OBJECT_UNKNOWN$/.test(f.source)),
-      () => `P2b. each is a known note (Desktop 2.158 draws it, the installed validator ${VALIDATOR_PIN} does not list it yet; no other version named) with its evidence, the code and source verbatim: ${JSON.stringify(unk(rdf))}`);
-    chk(() => round.j.counts.errors === 0 && round.j.validator.known === nSl && round.j.impact.kinds.canBreak.count === 0 && !/can break/i.test(round.j.impact.summary),
-      () => `P2c. the report has no error: counts.errors 0, validator.known ${nSl}, nothing can break it: ${JSON.stringify([round.j.counts, round.j.validator, round.j.impact.summary])}`);
-    chk(() => /not broken/.test(round.j.impact.summary) && /known/i.test(round.j.impact.summary) && /2\.158/.test(round.j.impact.summary) && !/\b0 errors?\b/.test(round.j.impact.summary),
-      () => `P2c. the summary says the report is not broken and names the known notes (no "0 errors"): ${round.j.impact.summary}`);
-    // never hide a real error: another property in the object, another slicer mode, another visual, another object, a
-    // selector, a value of another shape
+    chk(() => nSl >= 1 && !round.err && unk(rdf).length === 0 && round.j.validator.reported.errors === 0 && round.j.validator.errors === 0 && (round.j.validator.known || 0) === 0 && round.j.validator.version === VALIDATOR_PIN,
+      () => `P2a. (U1) the catalog lists the rounded box: the validator ${VALIDATOR_PIN} reports nothing for it on ${nSl} slicers, no known note: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
+    chk(() => slicersOf(Rd).every((f) => knownGap('PBIR_FORMATTING_OBJECT_UNKNOWN', 'dropdown', J(f)) === null),
+      () => 'P2b. (U1) knownGap gives no note for the proven shape while the installed catalog lists the object');
+    chk(() => round.j.counts.errors === 0 && round.j.impact.kinds.canBreak.count === 0 && round.j.impact.kinds.desktopOpens.count === 0 && !/can break/i.test(round.j.impact.summary) && !/known/i.test(round.j.impact.summary),
+      () => `P2c. the report has no error and no known note: ${JSON.stringify([round.j.counts, round.j.validator, round.j.impact.summary])}`);
+    // never hide a real error: another object, a made-up object on a chart, the box on another visual stay the
+    // validator's errors. (U1, changed on purpose: one more property of the box, another slicer mode, a selector and a
+    // text radius were errors only because 0.1.1 did not know the object; with 0.1.3 they are the validator's to judge,
+    // and DataArcus adds no note to whatever it says.)
     const variants = {
-      otherProperty: (R) => withDropdown(R, Object.assign({}, ROUND, { accentBarShow: lit('true') })),
-      listSlicer: (R) => withDropdown(R, ROUND, (v) => { v.visual.objects.data = [{ properties: { mode: lit("'Basic'") } }]; }),
       otherObject: (R) => slicersOf(R).forEach((f) => { const v = J(f); v.visual.objects = Object.assign({}, v.visual.objects, { notAnObject: [{ properties: { show: lit('true') } }] }); W(f, v); }),
-      selector: (R) => withDropdown(R, ROUND, (v) => { v.visual.objects.dropdown[0].selector = { id: 'default' }; }),
-      radiusText: (R) => withDropdown(R, Object.assign({}, ROUND, { borderRadius: lit("'eight'") })),
       madeUpOnChart: (R) => { const f = visualOf(R, 'clusteredColumnChart') || visualOf(R, 'clusteredBarChart') || visualOf(R, 'lineChart'), v = J(f); v.visual.objects = Object.assign({}, v.visual.objects, { madeUpObject: [{ properties: { madeUpProperty: lit('true') } }] }); W(f, v); },
       otherVisual: (R) => { const f = visualOf(R, 'actionButton'), v = J(f); v.visual.objects = Object.assign({}, v.visual.objects, { dropdown: [{ properties: Object.assign({}, ROUND) }] }); W(f, v); }
     };
@@ -136,6 +137,18 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
       const xe = xf.filter((f) => f.severity === 'error');
       chk(() => !x.err && xe.length >= 1 && xe.every((f) => !f.known && f.impact === 'canBreak') && x.j.counts.errors === xe.length,
         () => `P2d. ${k}: not the Desktop-proven shape, so the validator's error stays an error: ${x.err ? x.t.slice(0, 200) : JSON.stringify(xf)}`);
+    }
+    const judged = {
+      otherProperty: (R) => withDropdown(R, Object.assign({}, ROUND, { accentBarShow: lit('true') })),
+      listSlicer: (R) => withDropdown(R, ROUND, (v) => { v.visual.objects.data = [{ properties: { mode: lit("'Basic'") } }]; }),
+      selector: (R) => withDropdown(R, ROUND, (v) => { v.visual.objects.dropdown[0].selector = { id: 'default' }; }),
+      radiusText: (R) => withDropdown(R, Object.assign({}, ROUND, { borderRadius: lit("'eight'") }))
+    };
+    for (const [k, make] of Object.entries(judged)) {
+      const Rv = copy('J' + k); make(Rv);
+      const x = await ask('check_report', { path: `${dir}/J${k}.pbip` }), xf = (x.j && x.j.findings) || [];
+      chk(() => !x.err && !unk(xf).length && !xf.some((f) => f.known) && (x.j.validator.known || 0) === 0,
+        () => `P2e. (U1) ${k}: the catalog knows the object: no unknown-object error and no DataArcus note: ${x.err ? x.t.slice(0, 200) : JSON.stringify(xf.filter((f) => f.origin === 'validator'))}`);
     }
   }
 

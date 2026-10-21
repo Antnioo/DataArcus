@@ -13,6 +13,14 @@
 //   W-06: reopen opens the same link again; without it no second window
 //   W-07: an expired plan's link answers "no longer valid" and approves nothing
 //   W-08: a browser that can't be started: refused, said so, nothing approved
+//   W-09: (0.3.0 step 1, "Preview before Approve") the page shows a picture of each planned page above Approve, drawn by
+//         the shared renderer (assets/js/page-preview.js) from the plan only: every name in it escaped, no value
+//   W-10: one picture per page of the plan (a second page: two); an Arabic plan's picture is right to left
+//   W-11: the pictures change nothing of the window's security: the same headers (no scripts), no image or link, and
+//         opening the page approves nothing
+//   W-12: (0.3.0 step 2, "Check before write") the page says what the check of the planned pages found ("0 problems Power
+//         BI Desktop would show", or the list) next to the preview, above Approve
+//   W-13: create_report checks the project before it writes it and its answer says the result; the check never approves
 import fs0 from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -68,6 +76,20 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /default-src 'none'/.test(page.h['content-security-policy'] || '') && !/script-src/.test(page.h['content-security-policy'] || '') && page.h['x-frame-options'] === 'DENY' && page.h['referrer-policy'] === 'same-origin' && /no-store/.test(page.h['cache-control'] || ''), () => `W-02. no scripts, no framing, no referrer to other sites, not cached: ${JSON.stringify(page.h)}`);
     chk(() => /Second page[\s\S]*no/.test(page.t) && /Executive summary/.test(page.t), () => 'W-02. the page shows the layout and options');
 
+    // ---------- W-09: the preview of the planned page, above Approve ----------
+    const svgs = (t) => [...t.matchAll(/<svg\b[\s\S]*?<\/svg>/g)].map((m) => m[0]);
+    const pics = svgs(page.t);
+    chk(() => pics.length === 1 && page.t.indexOf('<svg') < page.t.indexOf('Approve</button>') && /class="card preview"/.test(page.t), () => `W-09. one picture of the planned page, above Approve: ${pics.length} picture(s)`);
+    chk(() => pics.every((x) => /data-kind="card"/.test(x) && /data-kind="(bar|column|line)"/.test(x) && />preview<\/text>/.test(x)), () => 'W-09. the picture draws the plan\'s cards and charts and says "preview"');
+    chk(() => !/<script/i.test(page.t) && pics.join('').includes('Sales &lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;more&quot;'), () => 'W-09. the title in the picture is escaped text (no markup from it)');
+    // (a number only inside a title the plan names, "(2)" of the writer's second chart by the same field included; never in
+    // a placeholder or anywhere else)
+    const untitled = (x) => [...x.matchAll(/<text\b(?![^>]*class="t")[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
+    chk(() => pics.every((x) => untitled(x).every((t) => !/\d/.test(t)) && [...x.matchAll(/<g class="ph">([\s\S]*?)<\/g>/g)].every((m) => !/<text/.test(m[1]))), () => `W-09. no number in the picture outside the plan's titles: drawn from the plan, never a value: ${pics.flatMap(untitled).filter((t) => /\d/.test(t)).join(' | ')}`);
+
+    // ---------- W-12: the check, next to the preview, above Approve ----------
+    chk(() => /Checked before writing/.test(page.t) && /0 problems Power BI Desktop would show/.test(page.t) && page.t.indexOf('Checked before writing') < page.t.indexOf('Approve</button>'), () => `W-12. the page says the check's result above Approve: ${(/Checked before writing[\s\S]{0,300}/.exec(page.t) || [''])[0]}`);
+
     // ---------- W-03: only the page itself can click ----------
     const here = new URL(link).origin, body = 'decision=approve';
     const rebound = await req(link, { method: 'POST', host: 'evil.example:' + new URL(link).port, origin: here, body });
@@ -90,6 +112,8 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /Approved\./.test(later.t) && !ok.err && ok.j.status === 'approved' && ok.j.approvedBy === 'user-in-browser' && ok.j.allows.join() === 'create_report', () => `W-04. approved by the person in the window (a later "Not now" changes nothing): ${short(ok)}`);
     const wrote = await s.call('create_report', { path: 'aw', planId: pid, name: 'Window Test', title, fields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false, design: pl.j.design });
     chk(() => !wrote.err && fs.existsSync(path.join(ROOT, 'aw', 'Window Test.Report')), () => `W-04. the approved plan writes its report: ${short(wrote)}`);
+    chk(() => !wrote.err && wrote.j.check && /Power BI Desktop would show/.test(wrote.j.check.summary) && Number.isInteger(wrote.j.check.desktop) && Array.isArray(wrote.j.check.problems), () => `W-13. create_report says what the check before writing found: ${short(wrote)}`);
+    chk(() => !early.err === false && !(early.j && early.j.check), () => 'W-13. before the click nothing is written and nothing is checked: the check never approves');
 
     // ---------- W-05: Not now ----------
     const t1 = await s.call('generate_theme', { brand: '#0F766E', name: 'Window Theme' }), tid = t1.j && t1.j.plan && t1.j.plan.planId;
@@ -103,9 +127,22 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     // (rc.22, B-134: after "Not now" the plan is refused, no longer "not approved yet")
     chk(() => /Not approved\./.test(nope.t) && refused.err && /Not now/.test(refused.t) && tw.err && /refused/.test(tw.t) && tree(ROOT).length === before, () => `W-05. "Not now" refuses and writes nothing: ${short(refused)} / ${short(tw)}`);
 
+    // ---------- W-10: one picture per page; an Arabic plan right to left ----------
+    const two = await s.call('plan_layout', { path: 'aw', layout: 'analysis', name: 'Two Pages', planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' } });
+    await s.call('approve_plan', { planId: two.j.plan.planId }); const twoPage = await req(await linkAt(2));
+    chk(() => svgs(twoPage.t).length === 2 && /Two Pages/.test(twoPage.t), () => `W-10. a plan with a second page shows two pictures: ${svgs(twoPage.t).length}`);
+    const ar = await s.call('plan_layout', { path: 'aw', layout: 'exec', lang: 'ar', name: 'Arabic Plan', planFields: { kpis: ['Sales[Total Sales]'], category: 'Sales[Region]' }, secondPage: false });
+    await s.call('approve_plan', { planId: ar.j.plan.planId }); const arPage = await req(await linkAt(3));
+    chk(() => svgs(arPage.t).length === 1 && /معاينة/.test(svgs(arPage.t)[0]) && /<text class="t"[^>]*text-anchor="end"/.test(svgs(arPage.t)[0]), () => 'W-10. an Arabic plan\'s picture is right to left (titles from the right, "معاينة")');
+
+    // ---------- W-11: the same security with the pictures ----------
+    chk(() => [page, twoPage, arPage].every((x) => x.h['content-security-policy'] === "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" && !/<script|<img\b|<iframe|<object|<embed|\shref="|\ssrc="/i.test(x.t)), () => 'W-11. the window\'s policy is unchanged, and the page has no script, image, frame or link');
+    const twoState = await s.call('approve_plan', { planId: two.j.plan.planId });
+    chk(() => !twoState.err && twoState.j.status === 'waiting', () => `W-11. opening the page with its pictures approves nothing: ${short(twoState)}`);
+
     // ---------- W-06: reopen ----------
     const t2 = await s.call('generate_theme', { brand: '#123456', name: 'Reopen Theme' }), rid = t2.j.plan.planId;
-    await s.call('approve_plan', { planId: rid }); await linkAt(2); const n1 = links().length;
+    await s.call('approve_plan', { planId: rid }); await linkAt(4); const n1 = links().length;
     const re = await s.call('approve_plan', { planId: rid, reopen: true }); await linkAt(n1); const all = links();
     chk(() => !re.err && re.j.status === 'waiting' && re.j.window === 'opened again' && all.length === n1 + 1 && all[all.length - 1] === all[all.length - 2], () => `W-06. reopen opens the same link again: ${short(re)} ${all.slice(-2).join(' ')}`);
   } finally { await s.close(); }

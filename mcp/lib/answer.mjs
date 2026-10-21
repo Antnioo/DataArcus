@@ -23,20 +23,23 @@ export function out(o) {
 // 300-table model answered 166,053). Over it, the longest list is halved until the answer fits, each cut list named in
 // truncated.cut with what was kept, and truncated.how says how to get the rest.
 export const ANSWER_MAX = 40000;
-export function capAnswer(o, size) {
+// (0.3.0 A3) opts.last: top-level lists cut only when no other list is left to cut (the Arabic twin's texts: a text cut
+// from its plan could not be given an Arabic label, so it stayed English)
+export function capAnswer(o, size, opts) {
   if (!o || typeof o !== 'object' || size(o) <= ANSWER_MAX) return o;
-  const c = JSON.parse(JSON.stringify(o)), cut = {};
+  const c = JSON.parse(JSON.stringify(o)), cut = {}, last = new Set((opts && opts.last) || []);
   const longest = () => {
-    let best = null;
+    let best = null, held = null;
     const walk = (x, p) => {
       if (Array.isArray(x)) {
         const len = JSON.stringify(x).length;
-        if (x.length > 1 && (!best || len > best.len)) best = { x, p, len };
+        if (x.length > 1 && last.has(p)) { if (!held || len > held.len) held = { x, p, len }; }
+        else if (x.length > 1 && (!best || len > best.len)) best = { x, p, len };
         x.forEach((y, i) => walk(y, p + '[' + i + ']'));
       } else if (x && typeof x === 'object') Object.entries(x).forEach(([k, v]) => { if (k !== 'truncated') walk(v, p ? p + '.' + k : k); });
     };
     walk(c, '');
-    return best;
+    return best || held;
   };
   // the backstop when no list is left to cut: the longest string, shortened (a single string of 200,000 characters;
   // the fuzz test's F-TP), named in cut with what was kept
@@ -94,6 +97,22 @@ export function capAnswer(o, size) {
   // the last backstop: whatever is left, a small answer that says so
   if (size(c) > ANSWER_MAX) return { truncated: { cut: { '(the answer)': 'too large to cut into shape' }, how: `This answer was over ${ANSWER_MAX.toLocaleString('en-US')} characters and could not be cut into shape: nothing of it is shown. Ask for less: a smaller maxItems, a focus or tables, or one part at a time. Tell the user.` } };
   return c;
+}
+
+// (0.3.0 Q1) an answer that lists objects cuts its own lists, at their cause, before the backstop above has to: every
+// list named by lists(answer) (each [holder, key], an array at holder[key]) keeps its first k items, the same k for all,
+// the largest k that brings the answer under aim; each cut list gets "<key>NotListed": how many were left out, beside it.
+// Nothing else changes (no finding, statement or refusal is dropped). Returns { k, cut } (cut: the lists cut), or null
+// when nothing had to be cut.
+export function fitLists(answer, lists, size, aim) {
+  if (size(answer) <= aim) return null;
+  const all = lists(answer).filter(([h, k]) => h && Array.isArray(h[k]));
+  const full = all.map(([h, k]) => h[k].slice()), top = Math.max(0, ...full.map((x) => x.length));
+  const apply = (n) => all.forEach(([h, k], i) => { h[k] = full[i].slice(0, n); if (full[i].length > n) h[k + 'NotListed'] = full[i].length - n; else delete h[k + 'NotListed']; });
+  let lo = 0, hi = top;
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); apply(mid); if (size(answer) <= aim) lo = mid; else hi = mid - 1; }
+  apply(lo);
+  return { k: lo, cut: all.filter((x, i) => full[i].length > lo).length };
 }
 
 // A6-17: an error DataArcus did not make itself (a TypeError, a RangeError...) is told as an internal error, with what

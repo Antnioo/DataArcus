@@ -621,5 +621,38 @@ export default async function ({ browser, url }) {
       check(/horizontal version will read much better/.test(note) === tall, `${file} on the page: note "${note}"`);
     }
   }
+  // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the lab's preview of its download is the MCP's
+  // approval-window picture (assets/js/page-preview.js), drawn from the download itself: one picture per page the
+  // download shows (not the hidden tooltip page), every visual's box where the download places it, its type and title,
+  // right to left in Arabic, no value and no number in a placeholder
+  {
+    const require = createRequire(import.meta.url);
+    const PV = require('../../assets/js/page-preview.js');
+    const boxes = (svg) => [...svg.matchAll(/<g class="v" data-i="(\d+)" data-kind="([a-z]+)"[^>]*>\s*<rect class="box" x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)].map((m) => m.slice(2).join(' '));
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
+      await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.selectOption('#pbipData', 'sample');
+      await v.pg.click('#pbipPreviewBtn');
+      const shown = await v.pg.waitForFunction(() => { const b = document.getElementById('pbipPreview'); return b && !b.hidden && b.querySelectorAll('svg').length ? [...b.querySelectorAll('svg')].map((x) => x.outerHTML) : null; }, null, { timeout: 15000 }).then((h) => h.jsonValue()).catch(() => []);
+      const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
+      const files = unzip(fs.readFileSync(await dl.path()));
+      const want = PV.fromFiles(Object.entries(files).map(([p0, b]) => ({ path: p0, data: b.toString('utf8') })), { rtl: lang === 'ar' }).map((p0) => PV.render(p0, { lang, width: 640 }));
+      check(shown.length === want.length && want.length >= 2, `lab preview ${lang}: ${shown.length} pictures for the download's ${want.length} shown pages`);
+      check(shown.length === want.length && shown.every((x, i) => boxes(x).join('|') === boxes(want[i]).join('|') && boxes(x).length >= 6), `lab preview ${lang}: the boxes are the download's: ${shown.map((x) => boxes(x).length).join()} vs ${want.map((x) => boxes(x).length).join()}`);
+      check(shown.every((x) => /data-kind="card"/.test(x) && /data-kind="(bar|column|line)"/.test(x) && (lang === 'ar' ? /معاينة/ : />preview</).test(x) && [...x.matchAll(/<g class="ph">([\s\S]*?)<\/g>/g)].every((m) => !/<text/.test(m[1]))), `lab preview ${lang}: cards and charts drawn, "preview" said, no text in a placeholder`);
+      if (lang === 'ar') check(shown.every((x) => /<text class="t"[^>]*text-anchor="end"/.test(x)), 'lab preview ar: titles from the right');
+      // 0.3.0 step 2, "Check before download": the page shows the shared check's answer on what it offers (the same as
+      // layout-check.js gives on the downloaded files), and the download is offered with it
+      const LC = require('../../assets/js/layout-check.js');
+      const want2 = LC.checkProject(Object.entries(files).map(([p0, b]) => ({ path: p0, data: /\.(png|jpe?g)$/i.test(p0) ? new Uint8Array(b) : b.toString('utf8') })), { lang });
+      const said = await v.pg.$eval('#pbipCheck', (e) => (e.hidden ? null : { sum: (e.querySelector('.tg-ck-sum') || {}).textContent, items: e.querySelectorAll('li').length })).catch(() => null);
+      check(want2.pages >= 3 && want2.visuals >= 20, `lab check ${lang}: the check read the download's pages (${want2.pages} pages, ${want2.visuals} visuals)`);
+      check(said && said.sum === want2.summary && said.items === Math.min(12, want2.problems.length), `lab check ${lang}: the page says "${said && said.sum}", the download's check "${want2.summary}"`);
+      check(lang === 'ar' ? /سيُظهرها Power BI Desktop/.test(said && said.sum || '') : /Power BI Desktop would show/.test(said && said.sum || ''), `lab check ${lang}: the answer is in the page's language: ${said && said.sum}`);
+      if (v.errs.length) problems.push(`lab preview ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
   return { checks, problems };
 }
