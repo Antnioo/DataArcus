@@ -170,10 +170,9 @@ Q('clean','single',1,'Clean text',
 
 Q('clean','yesno',2,'Nulls',
 `You're cleaning a Discount column in Power Query.<br>For each of the following statements, select Yes if the statement is true. Otherwise, select No.`,
-[`Replace values can replace null with 0 in a numeric column.`,`Fill down copies the last non-null value into the null cells below it.`,`Remove empty on a column filter removes rows where the column is null or an empty text value.`],
-[true,true,true],
+[`Replace values can replace null with 0 in a numeric column.`,`Fill down copies the last non-null value into the null cells below it.`,`Remove empty on a column filter also removes rows where the column contains 0.`],[true,true,false],
 `Replace values accepts null as the value to find. Fill down fills nulls with the value above, which is common for report-style exports. Remove empty filters out null and empty values.`,
-[`Yes. Type null in Value to find.`,`Yes. Fill down and Fill up propagate existing values into nulls.`,`Yes. It removes null and blank rows for that column.`],
+[`Yes. Type null in Value to find.`,`Yes. Fill down and Fill up propagate existing values into nulls.`,`No. Remove empty removes only null and empty text values; zeros stay.`],
 `Replace values يستبدل null، وFill down ينسخ القيمة السابقة، وRemove empty يحذف الفراغات.`,['errors']),
 
 Q('clean','single',2,'Data quality',

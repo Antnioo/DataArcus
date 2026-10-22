@@ -103,5 +103,50 @@ Q('security','multi',3,'Workspace roles',
 [0,1],
 `Admins and Members can publish or unpublish the app and add users (Members can add roles up to Member). Contributors can only update the app when allowed, and Viewers read content.`,
 [`Correct.`,`Correct.`,`Contributors can't publish the app or add users.`,`Viewers only view.`,`Build permission is for building content.`],
-`نشر التطبيق وإضافة المستخدمين: Admin وMember.`,['roles'])
+`نشر التطبيق وإضافة المستخدمين: Admin وMember.`,['roles']),
+// Visual calculations (22 Oct 2026, for the renewal mode: the renewal assessment's skill "Create visual calculations in
+// Power BI Desktop"; every fact from Microsoft Learn's "Visual calculations" article, read 22 Oct 2026). Added last so
+// the numbers of the questions before them never change (saved progress is kept by question number).
+Q('dax','single',2,'Visual calculations',
+`A matrix shows Sales by Product. You need a visual calculation that shows each product's share of the grand total, without adding anything to the semantic model. Which expression should you use?`,
+[`DIVIDE([Sales], COLLAPSEALL([Sales], ROWS))`,`DIVIDE([Sales], COLLAPSE([Sales], ROWS))`,`DIVIDE([Sales], CALCULATE([Sales], ALL(Product)))`,`DIVIDE([Sales], EXPANDALL([Sales], ROWS))`],0,
+`COLLAPSEALL evaluates the expression at the total level of the axis, so the result is the share of the grand total. It's what the "Percent of grand total" template writes.`,
+[``,`COLLAPSE goes up one level, to the parent. With one level on rows that is the total, but in a hierarchy it gives the percent of parent, not of the grand total.`,`A visual calculation refers only to columns, measures and visual calculations on the same visual. Removing filters from a model table is a model measure pattern; here COLLAPSEALL gives the total.`,`EXPANDALL goes down to the leaf level, not up to the total.`],
+`نسبة كل منتج من الإجمالي العام داخل الـ visual فقط: COLLAPSEALL([Sales], ROWS).`,['visualcalc']),
+
+Q('dax','single',3,'Visual calculations',
+`A matrix has Year, Quarter and Month on rows. You need a running total of Sales that restarts at the start of every year, at every level of the matrix. Which visual calculation should you use?`,
+[`RUNNINGSUM([Sales], HIGHESTPARENT)`,`RUNNINGSUM([Sales])`,`RUNNINGSUM([Sales], LOWESTPARENT)`,`RUNNINGSUM([Sales], -2)`],0,
+`The Reset parameter decides when the running sum restarts. HIGHESTPARENT is an absolute reset by the highest level (Year), the same as 1 or [Year], at every level of the matrix.`,
+[``,`Without Reset (the default, NONE) the total never restarts.`,`LOWESTPARENT resets by the immediate parent: at the Month level that is each quarter, not each year.`,`-2 is a relative reset two levels up: at the Month level that is Year, but at the Quarter level there is nothing two levels up, so quarters don't restart each year.`],
+`لإعادة المجموع التراكمي مع كل سنة استخدم Reset بقيمة HIGHESTPARENT (أو 1 أو [Year]).`,['visualcalc']),
+
+Q('dax','single',2,'Visual calculations',
+`A matrix shows Sales with Region on rows and Month on columns. You need a visual calculation that shows each month's change from the previous month, across the columns. Which expression should you use?`,
+[`[Sales] - PREVIOUS([Sales], COLUMNS)`,`[Sales] - PREVIOUS([Sales])`,`[Sales] - PREVIOUS([Sales], ROWS)`,`[Sales] - NEXT([Sales], COLUMNS)`],0,
+`The Axis parameter sets the direction the visual calculation moves through the visual matrix. It defaults to the first axis, usually ROWS, so moving across months on columns needs COLUMNS.`,
+[``,`Without Axis, PREVIOUS uses the first axis (ROWS), so it compares regions, not months.`,`ROWS compares each region with the region above it.`,`NEXT compares with the following month, not the previous one.`],
+`للمقارنة مع الشهر السابق والأشهر على الأعمدة: PREVIOUS([Sales], COLUMNS).`,['visualcalc']),
+
+Q('dax','single',3,'Visual calculations',
+`A table visual shows Sales by Ship Date. The relationship from Sales to Date on Ship Date is inactive. You try to write the calculation as a visual calculation with USERELATIONSHIP, and it isn't accepted. What should you do?`,
+[`Create a model measure that uses CALCULATE with USERELATIONSHIP, and add it to the visual`,`Use RELATED in the visual calculation instead`,`Set the visual calculation's Axis parameter to COLUMNS`,`Hide the Order Date field on the visual`],0,
+`Functions that depend on model relationships, such as USERELATIONSHIP, RELATED and RELATEDTABLE, aren't available in visual calculations. Activating a relationship belongs in a model measure.`,
+[``,`RELATED isn't available in visual calculations either.`,`Axis changes the direction of the calculation, not the relationship used.`,`Hiding fields changes what the visual shows, not which relationship filters the data.`],
+`الدوال المعتمدة على العلاقات مثل USERELATIONSHIP غير متاحة في visual calculations: استخدم مقياسًا في النموذج.`,['visualcalc','userel']),
+
+Q('dax','yesno',2,'Visual calculations',
+`A report page has a column chart with a visual calculation named Margin %.<br>For each of the following statements, select Yes if the statement is true. Otherwise, select No.`,
+[`You can pin the column chart, with Margin %, to a dashboard.`,`You can use Margin % in a slicer.`,`Margin % can refer to Sales Amount when Sales Amount is on the chart but hidden.`],
+[false,false,true],
+`Visuals with visual calculations can't be pinned to dashboards, and slicers don't support visual calculations. Hidden fields stay in the visual matrix, so visual calculations can still refer to them.`,
+[`No. Visual calculations can't be pinned to dashboards.`,`No. Slicers don't support visual calculations.`,`Yes. Hidden fields remain in the visual matrix.`],
+`لا تُثبَّت على dashboards ولا تعمل في الـ slicers، لكن يمكنها استخدام الحقول المخفية في الـ visual.`,['visualcalc']),
+
+Q('dax','single',1,'Visual calculations',
+`In visual calculations edit mode, you choose the "Percent of parent" template. Which function does the template use?`,
+[`COLLAPSE`,`COLLAPSEALL`,`EXPAND`,`RUNNINGSUM`],0,
+`"Percent of parent" divides the value by the same value one level up, which is COLLAPSE. "Percent of grand total" uses COLLAPSEALL, and "Average of children" uses EXPAND.`,
+[``,`COLLAPSEALL is the "Percent of grand total" template.`,`EXPAND is the "Average of children" template.`,`RUNNINGSUM is the "Running sum" template.`],
+`قالب Percent of parent يستخدم COLLAPSE، وPercent of grand total يستخدم COLLAPSEALL.`,['visualcalc'])
 ];

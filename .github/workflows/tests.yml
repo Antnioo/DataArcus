@@ -52,6 +52,8 @@ jobs:
 
       - name: The weekly Microsoft watch compares and writes its issue correctly (fixed answers, no network)
         run: node scripts/test-microsoft-watch.mjs
+      - name: The PL-300 question file is what its source builds (no edit in the built file only)
+        run: node scripts/pl300-bank/build.js --check
 
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs

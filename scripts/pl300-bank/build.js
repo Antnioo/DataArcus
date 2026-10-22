@@ -1,4 +1,5 @@
 // Run: node scripts/pl300-bank/build.js  (validates every question, then rewrites assets/data/pl300-questions.js)
+//      node scripts/pl300-bank/build.js --check  (CI: fails when the committed file is not what the source builds)
 // Assembles and validates the PL-300 bank, then writes assets/data/pl300-questions.js
 const fs = require('fs');
 const L = 'https://learn.microsoft.com/en-us/';
@@ -78,7 +79,6 @@ const R = {
   decomp: ['Create and view decomposition tree visuals', 'power-bi/visuals/power-bi-visualization-decomposition-tree'],
   anomaly: ['Anomaly detection', 'power-bi/visuals/power-bi-visualization-anomaly-detection'],
   analytics: ['Use the Analytics pane in Power BI Desktop', 'power-bi/transform-model/desktop-analytics-pane'],
-  qa: ['Q&A visuals in Power BI', 'power-bi/visuals/power-bi-visualization-q-and-a'],
   roles: ['Roles in workspaces in Power BI', 'power-bi/collaborate-share/service-roles-new-workspaces'],
   createws: ['Create a workspace in Power BI', 'power-bi/collaborate-share/service-create-the-new-workspaces'],
   apps: ['Publish an app in Power BI', 'power-bi/collaborate-share/service-create-distribute-apps'],
@@ -142,7 +142,48 @@ console.log('by skill', JSON.stringify(counters)); console.log('by domain', JSON
 console.log('ERRORS', errs.length); errs.forEach((e) => console.log('  ' + e));
 console.log('warnings', warn.length); warn.forEach((e) => console.log('  ' + e));
 if (errs.length) process.exit(1);
+// The renewal assessment (Microsoft Learn, "Renewal for Microsoft Certified: Power BI Data Analyst Associate", read
+// 22 Oct 2026): its 9 skills as listed there, each with the Learn module of the same name, and the bank's tags that
+// belong to it. Microsoft says about 45 minutes and doesn't publish the number of questions: 25 is our choice.
+const M = 'https://learn.microsoft.com/en-us/training/modules/';
+const RENEWAL = {
+  updated: '2025-10-30', checked: '2026-10-22', n: 25, min: 45,
+  url: 'https://learn.microsoft.com/en-us/credentials/certifications/data-analyst-associate/renew/',
+  faq: 'https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification-faq',
+  topics: [
+    { k: 'clean', en: 'Clean, transform, and load data in Power BI', ar: 'تنظيف البيانات وتحويلها وتحميلها في Power BI', learn: M + 'clean-data-power-bi/',
+      tags: ['Profiling', 'Data quality', 'Errors', 'Unpivot', 'Pivot', 'Transpose', 'Semi-structured', 'Merge', 'Append', 'Merge and append', 'Group by', 'Data types', 'Columns', 'Reference vs duplicate', 'Query folding', 'Nulls', 'Clean text', 'Import errors', 'Unexpected values', 'Loading', 'Keys'] },
+    { k: 'model', en: 'Configure a semantic model', ar: 'إعداد النموذج الدلالي', learn: M + 'configure-semantic-model-power-bi/',
+      tags: ['Properties', 'Relationships', 'Cross-filter direction', 'Hierarchies', 'Quick measures', 'Field parameters', 'Many-to-many', 'Role-playing dimension', 'Date table', 'Star schema', 'Dimensions', 'Calculated tables', 'Calculated columns'] },
+    { k: 'time', en: 'Use DAX time intelligence functions in semantic models', ar: 'دوال الذكاء الزمني في DAX', learn: M + 'dax-power-bi-time-intelligence/',
+      tags: ['Time intelligence', 'Semi-additive'] },
+    { k: 'filter', en: 'Modify DAX filter context in semantic models', ar: 'تعديل سياق الفلترة في DAX', learn: M + 'dax-power-bi-modify-filter/',
+      tags: ['CALCULATE', 'Filter functions', 'Iterators', 'Calculated column vs measure', 'Measures', 'Calculation groups'] },
+    { k: 'perf', en: 'Optimize a model for performance in Power BI', ar: 'تحسين أداء النموذج في Power BI', learn: M + 'optimize-model-power-bi/',
+      tags: ['Reduce data', 'Performance Analyzer', 'Storage mode', 'Aggregation', 'DAX query view', 'Variables', 'Composite model'] },
+    { k: 'viscalc', en: 'Create visual calculations in Power BI Desktop', ar: 'إنشاء visual calculations في Power BI Desktop', learn: M + 'power-bi-visual-calculations/',
+      tags: ['Visual calculations'] },
+    { k: 'ux', en: 'Enhance Power BI report designs for the user experience', ar: 'تحسين تصميم التقارير لتجربة المستخدم', learn: M + 'power-bi-effective-user-experience/',
+      tags: ['Bookmarks', 'Drillthrough', 'Mobile', 'Tooltips', 'Selection pane', 'Interactions', 'Navigation', 'Sync slicers', 'Accessibility', 'Conditional formatting', 'Sorting', 'Personalization'] },
+    { k: 'ws', en: 'Manage workspaces in Power BI service', ar: 'إدارة مساحات العمل في خدمة Power BI', learn: M + 'manage-workspaces-power-bi-service/',
+      tags: ['Workspaces', 'Workspace roles', 'Apps', 'Publishing', 'Distribution', 'Subscriptions', 'Alerts', 'Dashboards'] },
+    { k: 'sec', en: 'Secure data access in Power BI', ar: 'تأمين الوصول إلى البيانات في Power BI', learn: M + 'row-level-security-power-bi/',
+      tags: ['RLS', 'Object-level security', 'Semantic model access', 'Item access'] }
+  ]
+};
+{
+  // every renewal tag is a tag of the bank, no tag is in two topics, and every topic can fill its share of a check
+  const bankTags = new Set(out.q.map((q) => q.tag)), seenT = new Set();
+  RENEWAL.topics.forEach((t) => {
+    t.tags.forEach((g) => { if (!bankTags.has(g)) errs.push('renewal ' + t.k + ': no question has the tag ' + g); if (seenT.has(g)) errs.push('renewal: tag in two topics ' + g); seenT.add(g); });
+    const n = out.q.filter((q) => t.tags.includes(q.tag)).length;
+    if (n < 6) errs.push('renewal ' + t.k + ': only ' + n + ' questions (6 or more, so two checks in a row differ)');
+    console.log('renewal', t.k, n);
+  });
+  if (errs.length) { errs.forEach((e) => console.log('  ' + e)); process.exit(1); }
+}
 const EXAM = {
+  renewal: RENEWAL,
   data: 'PL300', code: 'PL-300', store: 'dataarcus-pl300-v1', ev: 'pl300', outline: '/assets/data/pl300-outline.json',
   page: 'https://dataarcus.com/tools/pl-300-practice-exam.html',
   dom: {
@@ -176,5 +217,13 @@ const EXAM = {
 };
 const js = '/* DataArcus PL-300 practice questions. Original questions written from the public PL-300 skills outline (20 Apr 2026) and Microsoft Learn. Not affiliated with Microsoft. */\n'
   + 'window.EXAM=' + JSON.stringify(EXAM) + ';\nwindow.PL300=' + JSON.stringify(out) + ';\n';
-fs.writeFileSync(require('path').join(__dirname, '../../assets/data/pl300-questions.js'), js);
+const OUT = require('path').join(__dirname, '../../assets/data/pl300-questions.js');
+// --check (CI): the committed file must be exactly what the source builds. 22 Oct 2026: 22 audit fixes had been made in
+// the built file only, and the next build would have quietly undone them.
+if (process.argv.includes('--check')) {
+  const same = fs.existsSync(OUT) && fs.readFileSync(OUT, 'utf8') === js;
+  console.log(same ? 'PASS  pl300-bank  assets/data/pl300-questions.js is what the source builds' : 'FAIL  pl300-bank  assets/data/pl300-questions.js differs from the source: edit scripts/pl300-bank/, then run node scripts/pl300-bank/build.js');
+  process.exit(same ? 0 : 1);
+}
+fs.writeFileSync(OUT, js);
 console.log('written', js.length, 'bytes');
