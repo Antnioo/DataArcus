@@ -1,6 +1,6 @@
 // Spacing follows the scale in style.css (--space-xs 8, sm 16, md 24, lg 48 / 32 on phones).
 // On every page, a box and whatever sits directly above or below it in the same container
-// must be one step of the scale apart (or touching). Also checks the page top: content starts
+// must be one step of the scale apart (or touching, but two boxes never touch: the owner, 22 Oct 2026). Also checks the page top: content starts
 // one lg step below the navbar. (Sections meet with one xl step by construction: section padding is xl / 2.)
 import { pages, visitor, ready } from './lib.mjs';
 
@@ -22,7 +22,7 @@ const measure = () => {
       if (c.top < a.bottom - 1) continue;                          // side by side
       if (c.right <= a.left + 10 || c.left >= a.right - 10) continue; // not stacked
       if (!hasBox(kids[i - 1]) && !hasBox(kids[i])) continue;
-      pairs.push({ gap: Math.round(c.top - a.bottom), what: name(kids[i - 1]) + ' → ' + name(kids[i]) });
+      pairs.push({ gap: Math.round(c.top - a.bottom), what: name(kids[i - 1]) + ' → ' + name(kids[i]), both: hasBox(kids[i - 1]) && hasBox(kids[i]) });
     }
   }
   const nav = document.getElementById('navbar');
@@ -46,7 +46,8 @@ export default async function ({ browser, url }) {
     const tag = `${p} ${vp[0]}px`;
     for (const x of r.pairs) {
       checks++;
-      if (!steps.some((s) => Math.abs(s - x.gap) <= TOL)) problems.push(`${tag}: ${x.what} ${x.gap}px (scale: ${steps.join(', ')})`);
+      const ok = (x.both ? steps.slice(1) : steps);  // two boxes one above the other need space between them
+      if (!ok.some((s) => Math.abs(s - x.gap) <= TOL)) problems.push(`${tag}: ${x.what} ${x.gap}px (scale: ${ok.join(', ')})`);
     }
     // page top: the first content sits one lg step below the navbar (the homepage hero and the 404 page are centered full-screen designs)
     if (!r.hero && r.top !== null) { checks++; if (Math.abs(r.top - r.lg) > 12) problems.push(`${tag}: page content starts ${r.top}px below the navbar (scale: ${r.lg})`); }

@@ -175,6 +175,11 @@ export default async function ({ browser, url }) {
     await v.pg.evaluate(() => scrollTo({ top: document.getElementById('dpApp').getBoundingClientRect().top + scrollY + 500, behavior: 'instant' }));
     await v.pg.click('#dpSkip'); await settle(v.pg);
     landed(await below(v.pg, 'dpApp'), `${page} next question`);
+    // the weekly-check note keeps its space below the question card once the outline file fills it in (the owner,
+    // 22 Oct 2026: the note touched the card, because filling it in replaced its classes and dropped mt-4)
+    await v.pg.waitForFunction(() => document.getElementById('dpOutline').textContent.trim().length > 0, null, { timeout: 10000 }).catch(() => {});
+    const gap = await v.pg.evaluate(() => { const a = document.getElementById('dpApp').getBoundingClientRect(), b = document.getElementById('dpOutline').getBoundingClientRect(); return Math.round(b.top - a.bottom); });
+    check(gap >= 16, `${page}: the weekly-check note is ${gap}px below the question card (at least 16)`);
     if (v.errs.length) problems.push(`${page}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
