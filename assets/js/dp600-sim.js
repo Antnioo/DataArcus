@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const DOM = EX.dom;
   const SKILL = EX.skill;
+  // The renewal assessment, for an exam that gives one (EX.renewal: Microsoft's renewal skills, each with the bank's tags)
+  const REN = EX.renewal || null;
+  const renTopic = {};
+  if (REN) REN.topics.forEach((t) => t.tags.forEach((g) => { renTopic[g] = t.k; }));
+  const renName = (k) => { const t = REN.topics.find((x) => x.k === k); return L(t.en, t.ar); };
   const skillName = (s) => L(SKILL[s].en, SKILL[s].ar);
   const domName = (d) => L(DOM[d].en, DOM[d].ar);
 
@@ -297,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '</div></div>' +
       '<div class="col-lg-7"><div class="dp-modes">' +
       modeCard('mock', 'bi-stopwatch', L('Mock exam', 'اختبار تجريبي'), L('Timed, weighted like the real exam, with a case study, flag for review and a score out of 1000.', 'بوقت محدد وأوزان مثل الاختبار الحقيقي، مع دراسة حالة ومراجعة ونتيجة من 1000.'), true) +
+      (REN ? modeCard('renewal', 'bi-arrow-clockwise', L('Renewal check', 'اختبار التجديد'), L(num(REN.n) + ' questions · ' + num(REN.min) + ' minutes, only on the ' + num(REN.topics.length) + ' skills Microsoft\'s renewal assessment covers.', num(REN.n) + ' سؤالًا · ' + num(REN.min) + ' دقيقة، فقط على المهارات الـ' + num(REN.topics.length) + ' التي يغطيها تقييم التجديد من Microsoft.')) : '') +
       modeCard('practice', 'bi-lightning-charge', L('Practice by skill', 'تدريب حسب المهارة'), L('Pick a skill, answer, and see why each option is right or wrong.', 'اختر مهارة وأجب، وشاهد لماذا كل خيار صحيح أو خطأ.')) +
       modeCard('cases', 'bi-journal-text', L('Case studies', 'دراسات الحالة'), L('Read a full company scenario and answer its questions.', 'اقرأ سيناريو شركة كامل وأجب عن أسئلته.')) +
       modeCard('mistakes', 'bi-arrow-repeat', L('Review mistakes', 'مراجعة الأخطاء'), mk ? L(num(mk) + ' questions to fix', num(mk) + ' سؤال للمراجعة') : L('Nothing yet. Wrong answers land here.', 'لا شيء بعد. الإجابات الخاطئة تظهر هنا.'), false, !mk) +
@@ -308,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
     root.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
       const g = b.dataset.go;
       if (g === 'resume') return go('mock');
-      if (g === 'mock') return go('mockSetup');
+      if (g === 'mock') { if (mset === 'renewal') mset = 'full'; return go('mockSetup'); }
+      if (g === 'renewal') { mset = 'renewal'; return go('mockSetup'); }
       if (g === 'practice') return go('practiceSetup');
       if (g === 'cases') return go('cases');
       if (g === 'plan') return go('plan');
@@ -454,9 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
     half: { n: 25, cs: 0, min: 50 },
     quick: { n: 10, cs: 0, min: 15 }
   };
+  if (REN) MOCKS.renewal = { n: REN.n, cs: 0, min: REN.min };
   let mset = 'full';
   function mockSetup() {
     const card = (k, t, d) => '<button type="button" class="dp-mode' + (mset === k ? ' primary' : '') + '" data-len="' + k + '"><i class="bi ' + (k === 'full' ? 'bi-trophy' : k === 'half' ? 'bi-hourglass-split' : 'bi-lightning') + '"></i><span><b>' + t + '</b><small>' + d + '</small></span></button>';
+    if (mset === 'renewal' && REN) return renewalSetup();
     root.innerHTML = back() + '<div class="dp-panel dp-setup"><h2 class="h4 fw-bold">' + L('Mock exam', 'اختبار تجريبي') + '</h2>' +
       '<div class="dp-modes one">' +
       card('full', L('Full exam', 'اختبار كامل'), L('50 questions including a 6-question case study · 100 minutes', '50 سؤالًا منها دراسة حالة من 6 أسئلة · 100 دقيقة')) +
@@ -476,8 +485,49 @@ document.addEventListener('DOMContentLoaded', () => {
       else go2();
     });
   }
+  // Renewal check: what Microsoft's renewal assessment is (from its pages on Microsoft Learn), and the 9 skills it covers
+  function renewalSetup() {
+    const d = (iso) => new Date(iso + 'T00:00:00Z').toLocaleDateString(isAr() ? 'ar-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    root.innerHTML = back() + '<div class="dp-panel dp-setup"><h2 class="h4 fw-bold">' + L(EX.code + ' renewal check', 'اختبار تجديد ' + EX.code) + '</h2>' +
+      '<p class="dp-note">' + L('A short check on the skills Microsoft\'s renewal assessment covers, instead of a full mock exam.', 'اختبار قصير على المهارات التي يغطيها تقييم التجديد من Microsoft، بدل اختبار تجريبي كامل.') + '</p>' +
+      '<span class="tg-label mt-2">' + L('The real renewal, per Microsoft', 'التجديد الحقيقي كما تقول Microsoft') + '</span>' +
+      '<ul class="dp-rules">' +
+      '<li>' + L('Free and online on Microsoft Learn, and only on what has changed. Microsoft says it takes about ' + num(REN.min) + ' minutes; it doesn\'t publish the number of questions or the pass mark.', 'مجاني وعبر الإنترنت على Microsoft Learn، ويركّز فقط على ما تغيّر. تقول Microsoft إنه يستغرق نحو ' + num(REN.min) + ' دقيقة، ولا تنشر عدد الأسئلة ولا درجة النجاح.') + '</li>' +
+      '<li>' + L('It opens 6 months before your certification expires and must be passed before it expires. A pass updates your expiry date at once.', 'يُفتح قبل انتهاء الشهادة بستة أشهر ويجب اجتيازه قبل انتهائها. عند النجاح يتحدّث تاريخ الانتهاء فورًا.') + '</li>' +
+      '<li>' + L('Retakes are unlimited: one more try straight away, then at least 24 hours between attempts.', 'المحاولات غير محدودة: محاولة ثانية فورًا، ثم 24 ساعة على الأقل بين المحاولات.') + '</li></ul>' +
+      '<span class="tg-label mt-3">' + L('The ' + num(REN.topics.length) + ' skills it measures (Microsoft updated them on ' + d(REN.updated) + ')', 'المهارات الـ' + num(REN.topics.length) + ' التي يقيسها (حدّثتها Microsoft في ' + d(REN.updated) + ')') + '</span>' +
+      '<ol class="dp-rules">' + REN.topics.map((t) => '<li><a href="' + esc(t.learn) + '" target="_blank" rel="noopener" data-learn>' + esc(L(t.en, t.ar)) + '</a></li>').join('') + '</ol>' +
+      '<span class="tg-label mt-3">' + L('This check', 'هذا الاختبار') + '</span>' +
+      '<ul class="dp-rules">' +
+      '<li>' + L(num(REN.n) + ' questions in ' + num(REN.min) + ' minutes, about the same share from each skill. ' + num(REN.n) + ' is our choice, since Microsoft doesn\'t publish the count.', num(REN.n) + ' سؤالًا في ' + num(REN.min) + ' دقيقة، بحصة متقاربة من كل مهارة. عدد ' + num(REN.n) + ' اختيارنا لأن Microsoft لا تنشر العدد.') + '</li>' +
+      '<li>' + L('No answers until you submit. Your result shows each skill, with Microsoft\'s module to study for the ones to work on.', 'لا تظهر الإجابات حتى التسليم. النتيجة تُظهر كل مهارة، مع وحدة Microsoft للمذاكرة لما يحتاج تحسينًا.') + '</li>' +
+      '<li>' + L('Scored out of 1000 with 700 as a guide, as in our mock exams. The real renewal\'s pass mark isn\'t published.', 'النتيجة من 1000 وحد الـ700 دليل فقط كما في اختباراتنا التجريبية. درجة نجاح التجديد الحقيقي غير منشورة.') + '</li></ul>' +
+      '<p class="dp-note">' + L('From Microsoft Learn, checked ' + d(REN.checked) + ': ', 'من Microsoft Learn، تم التحقق في ' + d(REN.checked) + ': ') + '<a href="' + esc(REN.url) + '" target="_blank" rel="noopener" data-learn>' + L('the renewal page', 'صفحة التجديد') + '</a> · <a href="' + esc(REN.faq) + '" target="_blank" rel="noopener" data-learn>' + L('renewal FAQ', 'الأسئلة الشائعة عن التجديد') + '</a></p>' +
+      '<button type="button" class="btn btn-accent mt-2" id="dpGo">' + L('Start renewal check', 'ابدأ اختبار التجديد') + ' <i class="bi bi-arrow-right"></i></button></div>';
+    bindBack();
+    root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'renewal' })));
+    root.querySelector('#dpGo').addEventListener('click', () => {
+      const go2 = () => { buildMock('renewal'); go('mock'); };
+      if (P.mock && P.mock.endAt > Date.now()) modal(L('Replace the exam in progress?', 'استبدال الاختبار الحالي؟'), L('Your unfinished mock exam will be discarded.', 'سيتم حذف الاختبار غير المكتمل.'), L('Start new', 'ابدأ جديدًا'), go2);
+      else go2();
+    });
+  }
+  // the renewal check's questions: about the same number from each renewal skill (the leftover ones to random skills),
+  // unseen questions first, then ones answered wrongly
+  function renewalIds(n) {
+    const pri = (q) => (P.ans[q.id] ? (P.ans[q.id].last ? 2 : 1) : 0) + Math.random();
+    const base = Math.floor(n / REN.topics.length), extra = shuffle(REN.topics.map((t) => t.k)).slice(0, n - base * REN.topics.length);
+    return shuffle(REN.topics.flatMap((t) => QS.filter((q) => t.tags.includes(q.tag)).sort((a, b) => pri(a) - pri(b)).slice(0, base + (extra.includes(t.k) ? 1 : 0)).map((q) => q.id)));
+  }
   function buildMock(kind) {
     const cfg = MOCKS[kind];
+    if (kind === 'renewal') {
+      const ids = renewalIds(cfg.n);
+      P.mock = { kind, caseId: null, items: ids.map((id) => newInst(byId[id])), flags: [], i: 0, start: Date.now(), endAt: Date.now() + cfg.min * 60000, min: cfg.min };
+      save();
+      track(EX.ev + '_mock_start', { length: kind, questions: ids.length });
+      return;
+    }
     const pool = QS.slice();
     // questions per exam area: fixed shares when given, otherwise by the official weights; the last area takes the rest
     const doms = Object.keys(DOM), wsum = doms.reduce((a, d) => a + DOM[d].wt, 0), want = {};
@@ -507,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctx.review) return mockReview();
     const inst = M.items[M.i], q = byId[inst.id], cs = caseOf(q), flagged = M.flags.includes(M.i);
     root.innerHTML =
-      '<div class="dp-exambar"><span class="dp-ex-title">' + EX.code + ' ' + L('mock exam', 'اختبار تجريبي') + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
+      '<div class="dp-exambar"><span class="dp-ex-title">' + EX.code + ' ' + (M.kind === 'renewal' ? L('renewal check', 'اختبار التجديد') : L('mock exam', 'اختبار تجريبي')) + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
       bar(M.items.filter((it) => answered(byId[it.id], it.r)).length / M.items.length, 'thin') +
       '<div class="' + (cs ? 'dp-split' : '') + '">' + (cs ? caseHTML(cs) : '') +
       '<div class="dp-panel dp-qpanel">' + '<div class="dp-qmeta"><span class="dp-tag">' + (cs ? 'Case study' : L('Question', 'سؤال') + ' ' + (M.i + 1)) + '</span><button type="button" class="dp-flag' + (flagged ? ' on' : '') + '" id="dpFlag"><i class="bi bi-flag' + (flagged ? '-fill' : '') + '"></i> ' + L('Review later', 'مراجعة لاحقًا') + '</button></div>' +
@@ -554,18 +604,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function submitMock(timeUp) {
     const M = P.mock; if (!M) return;
     if (timer) { clearInterval(timer); timer = null; }
-    const dom = {}, sk = {}; Object.keys(DOM).forEach((d) => { dom[d] = [0, 0]; });
+    const dom = {}, sk = {}, ren = {}; Object.keys(DOM).forEach((d) => { dom[d] = [0, 0]; });
     let pts = 0;
     const res = M.items.map((it) => {
       const q = byId[it.id], g = answered(q, it.r) || q.type === 'multi' || q.type === 'yesno' ? grade(q, it.r) : 0;
       pts += g; dom[q.d][0] += g; dom[q.d][1]++;
       sk[q.s] = sk[q.s] || [0, 0]; sk[q.s][0] += g; sk[q.s][1]++;
+      if (M.kind === 'renewal' && renTopic[q.tag]) { const k = renTopic[q.tag]; ren[k] = ren[k] || [0, 0]; ren[k][0] += g; ren[k][1]++; }
       if (answered(q, it.r)) P.ans[q.id] = Object.assign(P.ans[q.id] || { n: 0, c: 0 }, { n: ((P.ans[q.id] || {}).n || 0) + 1, c: ((P.ans[q.id] || {}).c || 0) + (g === 1 ? 1 : 0), last: g === 1 ? 1 : 0, t: Date.now() });
       return g;
     });
     const score = Math.round((pts / M.items.length) * 1000);
     const used = Math.min(M.min * 60, Math.round((Date.now() - M.start) / 1000));
-    const rec = { t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk };
+    const rec = Object.assign({ t: Date.now(), kind: M.kind, score, pass: score >= 700, n: M.items.length, used, dom, sk }, M.kind === 'renewal' ? { ren } : {});
     P.mocks.push(rec); P.mocks = P.mocks.slice(-30);
     const last = { rec, items: M.items, flags: M.flags, res, timeUp };
     P.mock = null; markDay(); save();
@@ -586,17 +637,23 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div class="dp-ringwrap big">' + ring(r.score / 1000, '<b>' + r.score + '</b><span>/ 1000</span>', pass ? '#22c55e' : '#f59e0b') + '</div>' +
       '<div class="dp-passbadge cap-pill ' + (pass ? 'pass' : 'fail') + '">' + (pass ? L('Pass', 'ناجح') : L('Not yet', 'ليس بعد')) + '</div>' +
       '<p class="dp-note mt-2">' + L('Passing score: 700. Time used: ' + fmtTime(r.used) + '.', 'درجة النجاح: 700. الوقت المستخدم: ' + fmtTime(r.used) + '.') + '</p>' +
+      (r.ren ? '<p class="dp-note">' + L('Microsoft doesn\'t publish the renewal assessment\'s pass mark: 700 here is the same guide as our mock exams.', 'Microsoft لا تنشر درجة نجاح تقييم التجديد: الـ700 هنا دليل فقط كما في اختباراتنا التجريبية.') + '</p>' : '') +
       '<p class="dp-note">' + L('This is an estimate from original practice questions. Microsoft scales real exam scores differently.', 'هذه نتيجة تقديرية من أسئلة تدريبية أصلية. Microsoft تحسب نتائج الاختبار الحقيقي بطريقة مختلفة.') + '</p>' +
       '<div class="dp-actions justify-content-center"><button type="button" class="btn btn-accent" data-a="retake">' + L('New mock exam', 'اختبار جديد') + '</button><button type="button" class="tg-btn2" data-a="weak">' + L('Practice weak skills', 'تدرّب على نقاط الضعف') + '</button></div>' +
       '<button type="button" class="dp-share" data-a="share"><i class="bi bi-linkedin"></i> ' + L('Share my score', 'شارك نتيجتي') + '</button>' +
-      '</div></div><div class="col-lg-7"><div class="dp-panel"><span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' +
-      Object.keys(DOM).map((d) => { const v = r.dom[d]; const p = v[1] ? v[0] / v[1] : 0; return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (v[1] ? Math.round(p * 100) + '%' : '·') + '</b></div>' + bar(p, p >= 0.7 ? 'good' : 'warn') + '</div>'; }).join('') +
+      '</div></div><div class="col-lg-7"><div class="dp-panel">' + (r.ren && REN ?
+      // a renewal check: the renewal skills, each under 70% with Microsoft's module to study
+      '<span class="tg-label">' + L('By renewal skill', 'حسب مهارة التجديد') + '</span>' +
+      REN.topics.filter((t) => r.ren[t.k]).map((t) => { const v = r.ren[t.k], p = v[0] / v[1]; return '<div class="dp-domrow"><div class="dp-domtop"><span><bdi>' + esc(renName(t.k)) + '</bdi> <small><bdi>' + L(num(v[1]) + (v[1] === 1 ? ' question' : ' questions'), v[1] === 1 ? 'سؤال واحد' : v[1] === 2 ? 'سؤالان' : num(v[1]) + ' أسئلة') + '</bdi></small></span><b>' + Math.round(p * 100) + '%</b></div>' + bar(p, p >= 0.7 ? 'good' : 'warn') + (p < 0.7 ? '<div class="dp-domsub"><a href="' + esc(t.learn) + '" target="_blank" rel="noopener" data-learn><i class="bi bi-book"></i> ' + L('Study: Microsoft Learn module', 'ذاكر: وحدة Microsoft Learn') + '</a></div>' : '') + '</div>'; }).join('') :
+      '<span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' +
+      Object.keys(DOM).map((d) => { const v = r.dom[d]; const p = v[1] ? v[0] / v[1] : 0; return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (v[1] ? Math.round(p * 100) + '%' : '·') + '</b></div>' + bar(p, p >= 0.7 ? 'good' : 'warn') + '</div>'; }).join('')) +
       '<span class="tg-label mt-3">' + L('By skill', 'حسب المهارة') + '</span><div class="dp-skilltable">' + Object.keys(r.sk).map((s) => { const v = r.sk[s]; return '<div><span>' + skillName(s) + '</span>' + bar(v[0] / v[1], v[0] / v[1] >= 0.7 ? 'good' : 'warn') + '<b>' + Math.round(v[0] / v[1] * 100) + '%</b></div>'; }).join('') + '</div></div></div></div>' +
       '<div class="dp-panel mt-4"><div class="dp-revhead"><span class="tg-label mb-0">' + L('Review answers', 'مراجعة الإجابات') + '</span><div class="mb-seg">' +
       [['all', L('All', 'الكل')], ['wrong', L('Incorrect', 'الخاطئة')], ['flag', L('Flagged', 'المعلّمة')]].map((x) => '<button type="button" data-f="' + x[0] + '" class="' + (f === x[0] ? 'active' : '') + '">' + x[1] + '</button>').join('') + '</div></div>' +
       (rows.length ? rows.map((x) => '<details class="dp-rev"><summary><span class="dp-revn">' + (x.i + 1) + '</span><i class="bi ' + (x.g === 1 ? 'bi-check-circle-fill ok' : x.g > 0 ? 'bi-dash-circle-fill part' : 'bi-x-circle-fill bad') + '"></i><span class="dp-revq" lang="en" dir="ltr">' + esc(x.q.q.replace(/<pre>[\s\S]*?<\/pre>/g, ' [code] ').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').slice(0, 140)) + '…</span><span class="dp-tag">' + skillName(x.q.s) + '</span></summary><div class="dp-revbody" data-k="' + x.i + '"></div></details>').join('') : '<p class="dp-note">' + L('Nothing here.', 'لا يوجد شيء هنا.') + '</p>') + '</div>';
     bindBack();
     root.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { ctx.filter = b.dataset.f; results(); }));
+    root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'results' })));
     root.querySelectorAll('details.dp-rev').forEach((d) => d.addEventListener('toggle', () => {
       const body = d.querySelector('.dp-revbody'); if (!d.open || body.innerHTML) return;
       const i = +body.dataset.k, it = last.items[i], q = byId[it.id], cs = caseOf(q);
@@ -606,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     root.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => {
       const a = b.dataset.a;
-      if (a === 'retake') go('mockSetup');
+      if (a === 'retake') { mset = r.kind === 'renewal' ? 'renewal' : (mset === 'renewal' ? 'full' : mset); go('mockSetup'); }
       if (a === 'weak') { pset = Object.assign(pset, { skill: 'weak', diff: 0, count: 20, fresh: false }); go('practiceSetup'); }
       if (a === 'share') {
         track(EX.ev + '_share', { score: r.score });
@@ -632,8 +689,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Re-render in the new language, keeping the current screen
   new MutationObserver(() => { const y = window.scrollY; render(); window.scrollTo(0, y); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  // Deep links: ?mode=mock / practice / cases / plan
+  // Deep links: ?mode=mock / renewal / practice / cases / plan
   const qm = new URLSearchParams(location.search).get('mode');
-  if (qm === 'mock') go('mockSetup'); else if (qm === 'practice') go('practiceSetup'); else if (qm === 'cases') go('cases'); else if (qm === 'plan') go('plan');
+  if (qm === 'renewal' && REN) { mset = 'renewal'; go('mockSetup'); } else if (qm === 'mock') go('mockSetup'); else if (qm === 'practice') go('practiceSetup'); else if (qm === 'cases') go('cases'); else if (qm === 'plan') go('plan');
   else render();
 });

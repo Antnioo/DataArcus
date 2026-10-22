@@ -26,7 +26,7 @@ window.pl300Translations = {
         "q2": "How close is the mock exam to the real one?",
         "a2": "It follows the same weights, the same question styles (single answer, multiple answers, Yes/No statements, ordering and a case study), 100 minutes and a 700 pass mark. Your score here is an estimate, not a prediction.",
         "q3": "I'm renewing my certification. Is this useful?",
-        "a3": "Yes. Renewal is a free, unproctored online assessment on Microsoft Learn that you can take in the six months before your certification expires. It follows the current skills outline, so practicing here skill by skill is a good way to prepare. Read about <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">certification renewal</a>.",
+        "a3": "Yes. Renewal is a free online assessment on Microsoft Learn that opens six months before your certification expires. Microsoft says it takes about 45 minutes and covers only what has changed. The <b>Renewal check</b> here is built for it: 25 questions in 45 minutes on the 9 skills the renewal measures, with Microsoft's module to study for each skill you miss. Read about <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">certification renewal</a>.",
         "q4": "What else should I use to prepare?",
         "a4": "Hands-on time in Power BI Desktop, the free <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/pl-300/practice/assessment?assessment-type=practice&amp;assessmentId=48\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">Microsoft practice assessment</a>, and the Learn pages linked under every explanation here."
       }
@@ -58,7 +58,7 @@ window.pl300Translations = {
         "q2": "ما مدى قرب الاختبار التجريبي من الحقيقي؟",
         "a2": "يتبع نفس الأوزان ونفس أنواع الأسئلة (إجابة واحدة، إجابات متعددة، عبارات نعم/لا، ترتيب خطوات ودراسة حالة)، و100 دقيقة، ودرجة نجاح 700. نتيجتك هنا تقديرية وليست توقعًا مضمونًا.",
         "q3": "أجدد شهادتي، هل يفيدني هذا؟",
-        "a3": "نعم. التجديد تقييم مجاني عبر الإنترنت على Microsoft Learn بدون مراقبة، ويمكنك أداؤه خلال الأشهر الستة قبل انتهاء الشهادة. يتبع المنهج الحالي، لذلك التدرب هنا مهارة بمهارة طريقة جيدة للاستعداد. اقرأ عن <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">تجديد الشهادة</a>.",
+        "a3": "نعم. التجديد تقييم مجاني عبر الإنترنت على Microsoft Learn يُفتح قبل انتهاء الشهادة بستة أشهر، وتقول Microsoft إنه يستغرق نحو 45 دقيقة ويغطي ما تغيّر فقط. <b>اختبار التجديد</b> هنا مصمم له: 25 سؤالًا في 45 دقيقة على المهارات التسع التي يقيسها التجديد، مع وحدة Microsoft للمذاكرة لكل مهارة تخطئ فيها. اقرأ عن <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">تجديد الشهادة</a>.",
         "q4": "ماذا أستخدم أيضًا للتحضير؟",
         "a4": "تجربة عملية في Power BI Desktop، و<a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/pl-300/practice/assessment?assessment-type=practice&amp;assessmentId=48\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">التقييم التدريبي المجاني من Microsoft</a>، وصفحات Learn المرفقة تحت كل شرح هنا."
       }

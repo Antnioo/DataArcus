@@ -137,6 +137,44 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // PL-300 renewal check (22 Oct 2026, the owner: an exam like the renewal, not a full mock): a home card; the setup
+  // lists Microsoft's 9 renewal skills, each linked to its Learn module; 25 questions in 45 minutes, every renewal
+  // skill in it; time up submits; the result shows each renewal skill. DP-600 has no renewal data, so no card.
+  for (const lang of ['en', 'ar']) {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/pl-300-practice-exam.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    check(await v.pg.locator('[data-go="renewal"]').count() === 1, `pl-300 ${lang}: no Renewal check card on the home screen`);
+    await v.pg.click('[data-go="renewal"]');
+    const learn = await v.pg.$$eval('#dpApp ol.dp-rules a[data-learn]', (as) => as.map((a) => a.href));
+    check(learn.length === 9 && learn.every((h) => /^https:\/\/learn\.microsoft\.com\/en-us\/training\/modules\/[a-z-]+\/$/.test(h)), `pl-300 ${lang}: the setup must link the 9 renewal skills to their Learn modules: ${learn.join(' ')}`);
+    await v.pg.click('#dpGo'); await v.pg.waitForSelector('.dp-exambar');
+    const bar = await v.pg.textContent('.dp-ex-title');
+    check(lang === 'en' ? /PL-300 renewal check/.test(bar) : /اختبار التجديد/.test(bar), `pl-300 ${lang}: the exam bar says ${bar}`);
+    const st = await v.pg.evaluate(() => {
+      const P = JSON.parse(localStorage.getItem('dataarcus-pl300-v1')), byTag = {};
+      const topics = window.EXAM.renewal.topics, qs = window.PL300.q;
+      P.mock.items.forEach((it) => { const q = qs.find((x) => x.id === it.id); const t = topics.find((x) => x.tags.includes(q.tag)); byTag[t ? t.k : 'none'] = (byTag[t ? t.k : 'none'] || 0) + 1; });
+      return { n: P.mock.items.length, min: P.mock.min, kind: P.mock.kind, byTag };
+    });
+    check(st.n === 25 && st.min === 45 && st.kind === 'renewal', `pl-300 ${lang}: a renewal check is 25 questions in 45 minutes: ${JSON.stringify(st)}`);
+    check(!st.byTag.none && Object.keys(st.byTag).length === 9 && Object.values(st.byTag).every((c) => c >= 2 && c <= 3), `pl-300 ${lang}: 2 or 3 questions from each of the 9 renewal skills, nothing else: ${JSON.stringify(st.byTag)}`);
+    // time up: the check is submitted when it is resumed from the home screen
+    await v.pg.evaluate(() => { const P = JSON.parse(localStorage.getItem('dataarcus-pl300-v1')); P.mock.endAt = Date.now() - 1000; localStorage.setItem('dataarcus-pl300-v1', JSON.stringify(P)); });
+    await v.pg.goto(`${url}/tools/pl-300-practice-exam.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    await v.pg.click('[data-go="resume"]');
+    await v.pg.waitForSelector('.dp-score', { timeout: 10000 }).catch(() => {});
+    const res = await v.pg.evaluate(() => ({ rows: document.querySelectorAll('.col-lg-7 .dp-domrow').length, label: (document.querySelector('.col-lg-7 .tg-label') || {}).textContent || '', study: document.querySelectorAll('.col-lg-7 .dp-domrow a[data-learn]').length }));
+    check(res.rows === 9 && (lang === 'en' ? /By renewal skill/.test(res.label) : /حسب مهارة التجديد/.test(res.label)) && res.study === 9, `pl-300 ${lang}: the renewal result shows the 9 skills, each unanswered one with its module to study: ${JSON.stringify(res)}`);
+    if (v.errs.length) problems.push(`pl-300 renewal ${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/dp-600-practice-exam.html?lang=en`, { waitUntil: 'networkidle' });
+    check(await v.pg.locator('[data-go="renewal"]').count() === 0, 'dp-600: a Renewal check card without renewal data');
+    await v.ctx.close();
+  }
+
   // Exam simulators: moving to the next question from lower down scrolls back to the question
   for (const page of ['dp-600-practice-exam', 'pl-300-practice-exam']) {
     const v = await visitor(browser, { viewport: [1440, 900] });
