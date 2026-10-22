@@ -242,6 +242,53 @@ for (const [name, t] of Object.entries(tags)) {
   ok(/<form id="beta-form" action="https:\/\/api\.web3forms\.com\/submit"/.test(page), 'power-bi-mcp/index.html: no beta-form posting to Web3Forms');
 }
 
+// A click on a DataArcus release link (the MCP page's "Download 0.3.0", EN and AR) is its own event, mcp_download_click,
+// before the generic CTA and outbound rules (22 Oct 2026: the traffic report looked for a download event and found
+// none; the button was counted only as a cta_click among all the others)
+{
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const m = /const RELEASE_LINK = (\/.+\/[a-z]*);/.exec(main);
+  ok(m, 'main.js: no RELEASE_LINK pattern for the release links');
+  if (m) {
+    const re = new Function(`return ${m[1]}`)();
+    const pages = ['power-bi-mcp/index.html', 'ar/power-bi-mcp/index.html'];
+    for (const f of pages) {
+      const hrefs = [...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(/href=["']([^"']*dataarcus-releases[^"']*)["']/g)].map((x) => x[1]);
+      ok(hrefs.length >= 1, `${f}: no link to the releases repo`);
+      hrefs.forEach((h) => ok(re.test(h), `${f}: ${h} is not a release link for the download event`));
+    }
+    ok(!re.test('https://github.com/Antnioo/DataArcus') && !re.test('https://dataarcus.com/power-bi-mcp/'), 'RELEASE_LINK matches only the releases repo');
+    const iDl = main.indexOf("track('mcp_download_click'"), iCta = main.indexOf("track('cta_click'");
+    ok(iDl > 0 && iDl < iCta, "main.js: mcp_download_click must be tracked, before the generic cta_click rule");
+  }
+}
+
+// A visit an AI assistant sent (its referrer, or the utm_source it adds) is named once, by the assistant only: a Clarity
+// tag ai_source (so each recording says who sent the visitor) and the GA4 event ai_referral (22 Oct 2026, the owner:
+// "making sure AI refers us"). Never the referrer's address (a chat link can carry a conversation id).
+{
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const src = (main.match(/const aiSourceOf = ([^\r\n]+);\r?\n/) || [])[1];
+  let ai = null; try { ai = src && Function('return (' + src + ')')(); } catch (e) { ai = null; }
+  ok(typeof ai === 'function', 'main.js: aiSourceOf could not be read as one arrow function on one line');
+  if (typeof ai === 'function') {
+    const cases = [
+      ['https://chatgpt.com/', '', 'chatgpt'], ['https://chat.openai.com/c/abc', '', 'chatgpt'], ['', '?utm_source=chatgpt.com', 'chatgpt'],
+      ['https://www.perplexity.ai/search/xyz', '', 'perplexity'], ['https://claude.ai/chat/123', '', 'claude'],
+      ['https://gemini.google.com/app', '', 'gemini'], ['https://copilot.microsoft.com/', '', 'copilot'], ['https://edgeservices.bing.com/x', '', 'copilot'],
+      ['https://chat.deepseek.com/', '', 'deepseek'], ['https://grok.com/', '', 'grok'], ['https://chat.mistral.ai/chat', '', 'mistral'],
+      ['', '?utm_source=perplexity&utm_medium=referral', 'perplexity'],
+      ['https://www.google.com/', '', null], ['https://dataarcus.com/tools/', '', null], ['https://www.linkedin.com/', '?utm_source=linkedin', null],
+      ['https://notchatgpt.com.evil.net/', '', null], ['', '', null], ['not a url', '?utm_source=', null]
+    ];
+    for (const [ref, search, want] of cases) ok(ai(ref, search) === want, `aiSourceOf(${JSON.stringify(ref)}, ${JSON.stringify(search)}) must be ${want}, got ${ai(ref, search)}`);
+  }
+  ok(/clarity\('set', 'ai_source', /.test(main), "main.js: the Clarity tag ai_source is not set");
+  const code = main.split(/\r?\n/).filter((l) => !/^\s*\/\//.test(l)).join('\n');
+  const call = (code.match(/trackOnce\('ai_referral', 'ai_referral', \{[^}]*\}\)/) || [])[0] || '';
+  ok(/ai_source: aiSource/.test(call) && !/referrer/i.test(call), `main.js: ai_referral must send the assistant's name, never the referrer: ${call}`);
+}
+
 ok(calls > 50, `only ${calls} tracking calls found: the scan is broken`);
 
 if (fails.length) { console.error(`Analytics events: ${fails.length} problem(s)\n  ` + fails.join('\n  ')); process.exit(1); }
