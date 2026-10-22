@@ -11,8 +11,9 @@ Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 p
   measured rules, the layout, accessibility) before it is written.
 - **Arabic:** an Arabic copy of a report (`create_arabic_twin`), or one report with an EN-AR language button
   (`into: "same"`); every mixed Arabic and English text reads in the right order; Arabic calendar columns (months,
-  days, quarters, fiscal, Hijri) offered as a script, the report switching to them once it is applied; a waterfall
-  and a line chart read from the right.
+  days, quarters, fiscal, Hijri) offered as a script, the report switching to them once it is applied; a line chart
+  reads from the right (the waterfall stays as Power BI draws it, left to right; a mirrored one is an option, without
+  its Total column).
 - **New looks:** pill slicers sized to their text, centred in both languages; smooth lines; a metric switcher; flip
   cards; status icons from the theme; a native waterfall; a redesign of an existing report that leaves the original
   as it is; a phone layout on every page.
