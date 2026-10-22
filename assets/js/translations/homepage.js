@@ -12,7 +12,7 @@ window.homepageTranslations = {
       repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
       founder: "A photo of Abdelrahman M., Founder of DataArcus",
       googleCert: "Google Data Analytics Professional Certificate",
-      msCert: "Microsoft Certified: Data Analyst Associate"
+      msCert: "Microsoft Certified: Power BI Data Analyst Associate"
     },
     // Page Meta
     meta: {
@@ -305,7 +305,7 @@ portfolio: {
       repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
       founder: "صورة عبدالرحمن م.، مؤسس DataArcus",
       googleCert: "شهادة Google Data Analytics الاحترافية",
-      msCert: "شهادة Microsoft Certified: Data Analyst Associate"
+      msCert: "شهادة Microsoft Certified: Power BI Data Analyst Associate"
     },
     // Page Meta
     meta: {
