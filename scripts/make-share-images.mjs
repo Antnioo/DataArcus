@@ -179,6 +179,11 @@ const AUDIT = `<div class="card" style="padding:16px 22px">${pill('7 checks on y
   .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:7px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:19px;font-weight:700">${t}</span></div>`).join('')}</div>
   <div class="card" style="padding:14px 20px;font-size:18px;font-weight:700;text-align:center">Plus the Model Health Check findings, each with its fix</div>`;
 
+// the custom-visual article: the four checks, from Microsoft's pages
+const CVCHECKS = `<div class="card" style="padding:16px 22px">${pill('4 checks before you build on it')}${['Visuals from a file allowed?', '“Certified visuals only” on?', 'Desktop is not the service', 'Uncertified: no PowerPoint or email']
+  .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:9px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:20px;font-weight:700">${t}</span></div>`).join('')}</div>
+  <div class="card" style="padding:14px 20px;font-size:17px;font-weight:600;text-align:center;color:#cbd5e1">Each one from Microsoft's own pages</div>`;
+
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['7 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
@@ -189,6 +194,7 @@ const PAGES = [
   ['licensing-guide', 'Power BI licensing · 2026', 'Pro, PPU or Fabric: Which License Do You Need?', { size: 46, sub: 'Real prices and the F64 break-even point.' }, LICENSING, '480px 1fr'],
   ['report-styles', 'Report design · 7 styles', 'One Design Doesn’t Fit All: 7 Power BI Report Styles', { size: 44, sub: 'Every department asks a different question.' }, STYLES, '470px 1fr'],
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
+  ['custom-visual-ai-checks', 'AI agents · Power BI', 'Before an AI Builds Your Power BI Custom Visual', { size: 44, sub: 'Four checks before you rely on one at work.' }, CVCHECKS, '470px 1fr'],
   ['best-practice-exceptions', 'Best practice · Power BI', 'Power BI Best Practices Have Exceptions: 5 We Missed', { size: 44, sub: 'Our own tool was wrong 206 times, each where a rule does not fit.' }, EXCEPTIONS, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 85.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],

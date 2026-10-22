@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dataarcus.com/ar/articles/article-power-bi-custom-visual-ai-checks.html">
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html">
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-custom-visual-ai-checks.html">
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html">
+
+  <title>قبل أن يبني وكيل ذكاء اصطناعي مرئيًا مخصصًا في Power BI</title>
+  <meta name="description" content="صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص قبل أن تعتمد على واحد منها في العمل.">
+  <meta name="author" content="DataArcus">
+  <meta name="keywords" content="مرئيات Power BI المخصصة، المرئيات المعتمدة، المرئيات التنظيمية، custom visual، pbiviz، مهارة Power BI Report Authoring، وكيل ذكاء اصطناعي Power BI">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="قبل أن يبني وكيل ذكاء اصطناعي مرئيًا مخصصًا في Power BI">
+  <meta property="og:description" content="صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص قبل أن تعتمد على واحد منها في العمل.">
+  <meta property="og:url" content="https://dataarcus.com/ar/articles/article-power-bi-custom-visual-ai-checks.html">
+  <meta property="og:site_name" content="DataArcus">
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="Before an AI Builds Your Power BI Custom Visual: 4 Checks">
+  <meta property="og:locale" content="ar_AE">
+  <meta property="article:published_time" content="2026-10-23T09:00:00Z">
+  <meta property="article:author" content="Abdelrahman M.">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="قبل أن يبني وكيل ذكاء اصطناعي مرئيًا مخصصًا في Power BI">
+  <meta name="twitter:description" content="صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص قبل أن تعتمد على واحد منها في العمل.">
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg">
+  <meta name="twitter:image:alt" content="Before an AI Builds Your Power BI Custom Visual: 4 Checks">
+
+  <link rel="icon" href="/assets/img/favicon.svg">
+  <link rel="icon" href="/assets/img/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#0a0f1c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+
+  <link href="/assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="/assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Before an AI Builds Your Power BI Custom Visual: 4 Checks",
+      "description": "AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft's own pages.",
+      "url": "https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html",
+      "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html",
+      "author": {
+        "@type": "Person",
+        "name": "Abdelrahman M."
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DataArcus",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dataarcus.com/assets/img/logo.svg"
+        }
+      },
+      "datePublished": "2026-10-23",
+      "dateModified": "2026-10-23",
+      "image": "https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can a custom visual made by an AI agent be certified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not while it stays private. Microsoft certifies only visuals published on AppSource (\"Private visuals aren't certified\"), after a review that can take up to four weeks for a new visual. For a visual used inside one organization, the usual route is an organizational visual, added by the Fabric admin."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does my custom visual work in Power BI Desktop but show an error after publishing?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Desktop and the service follow different rules. The tenant settings (Allow visuals created using the Power BI SDK, and Add and use certified visuals only) apply to the Power BI service; Desktop follows Windows group policy. If your tenant blocks uncertified visuals, a visual from a file shows an error in the service until your admin adds it as an organizational visual."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are uncertified Power BI visuals unsafe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not necessarily. Microsoft says uncertified visuals \"aren't necessarily unsafe\": some can't be certified because they call an outside service, like a map. Certification means Microsoft's tests checked that the visual doesn't access external services or resources. For a visual you or an agent wrote, the checking is yours."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body class="rtl">
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/ar/#hero">
+        <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="فتح القائمة أو إغلاقها" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/ar/#services" data-i18n="nav.services">الخدمات</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/portfolio.html" data-i18n="nav.portfolio">نماذج الحلول</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/tools/" data-i18n="nav.tools">أدوات مجانية</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/power-bi-mcp/" data-i18n="nav.agent">الوكيل الذكي (تجريبي)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#about" data-i18n="nav.about">عن الشركة</a></li>
+          <li class="nav-item"><a class="nav-link" href="/ar/#contact" data-i18n="nav.contact">تواصل معنا</a></li>
+        <li class="nav-item desktop-lang-switcher"><a class="nav-link lang-btn-desktop" href="/articles/article-power-bi-custom-visual-ai-checks.html" hreflang="en" lang="en" aria-label="التبديل إلى الإنجليزية"><i class="bi bi-globe2 me-1"></i> <span lang="en">English</span></a></li>
+</ul>
+        <a href="/ar/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">وكلاء الذكاء الاصطناعي</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">نُشر في 23 أكتوبر 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">أضاف <a href="https://community.fabric.microsoft.com/blog/fbc_pbiupdatesblog/power-bi-october-2026-feature-summary/5374650" target="_blank" rel="noopener noreferrer" class="text-accent">ملخص ميزات أكتوبر 2026</a> من Microsoft المرئيات المخصصة (custom visuals) إلى مهارة Power BI Report Authoring، وهي مهارة الوكيل التي تكتب ملفات التقرير نيابةً عنك. صار الوكيل قادرًا على إضافة مرئي مخصص وربطه ببياناتك وتنسيقه والتحقق منه. ويعمل مع المرئيات المخصصة الموجودة في التقرير، ومنها ما استُورد من ملف، ويمكنه أن يقترح مرئيًا من AppSource حين لا تكفي مرئيات Power BI الأساسية. وذهب عرض منشور هذا الشهر أبعد من ذلك: طلب واحد، فكتب الوكيل مرئيًا جديدًا من الصفر، مع التنقل إلى التفاصيل (drill-down) والتلميحات (tooltips).</p>
+              <p data-i18n-html="content.p2">هذا مثير للإعجاب، ويستحق خمس دقائق من الفحص قبل أن تبني عليه في العمل. المرئي المخصص ليس إعداد تنسيق، بل حزمة من الشيفرة، ملف <bdi><code>.pbiviz</code></bdi>، يعطيها Power BI البيانات التي تعرضها. وهذا <a href="https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals#custom-visual-files" target="_blank" rel="noopener noreferrer" class="text-accent">تحذير Microsoft نفسها</a>: <em><bdi>"A Power BI custom visual could contain code with security or privacy risks. Make sure you trust the author and source before importing it to your report."</bdi></em> أي قد يحتوي المرئي المخصص على شيفرة فيها مخاطر على الأمان أو الخصوصية، فتأكد أنك تثق بكاتبه ومصدره قبل استيراده إلى تقريرك. وحين يكتب الوكيل المرئي لك، لا يوجد كاتب خارجي تثق به: الشيفرة شيفرتك، وهذه الفحوص الأربعة مسؤوليتك.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">1. هل تسمح مؤسستك بالمرئيات من ملف؟</h2>
+              <p data-i18n-html="content.p3">مسؤول Fabric في مؤسستك هو من يقرر من يستطيع إضافة مرئيات من AppSource أو من ملف <bdi><code>.pbiviz</code></bdi>، عبر إعداد المستأجر <strong>Allow visuals created using the Power BI SDK</strong>. وتقول <a href="https://learn.microsoft.com/fabric/admin/organizational-visuals#visuals-from-appsource-or-a-file" target="_blank" rel="noopener noreferrer" class="text-accent">صفحة الإدارة من Microsoft</a> إن هذا الإعداد <em><bdi>"is disabled by default"</bdi></em> أي معطّل افتراضيًا، ويمكن للمسؤول تشغيله للمؤسسة كلها أو لمجموعات أمان معينة فقط. ومن دونه لا تستطيع إضافة المرئي في خدمة Power BI، ولا يستطيع قرّاؤك رؤيته هناك، مهما كان جيدًا. اسأل المسؤول قبل أن تقضي عصرًا كاملًا عليه.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">2. هل خيار "المرئيات المعتمدة فقط" مفعّل؟</h2>
+              <p data-i18n-html="content.p4">إعداد ثانٍ يذهب أبعد: <strong>Add and use certified visuals only (block uncertified)</strong>. حين يكون مفعّلًا: <em><bdi>"only certified Power BI visuals render in your organization's reports and dashboards. Power BI visuals from AppSource or files that aren't certified return an error message."</bdi></em> أي لا تظهر في تقارير المؤسسة ولوحاتها إلا المرئيات المعتمدة (certified)، وتعرض المرئيات غير المعتمدة من AppSource أو من ملفات رسالة خطأ.</p>
+              <p data-i18n-html="content.p5">والمرئي المكتوب لتقريرك لا يمكن اعتماده. ففي <a href="https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-faq#certified-power-bi-visuals" target="_blank" rel="noopener noreferrer" class="text-accent">الأسئلة الشائعة عن المرئيات المخصصة</a> تسأل Microsoft هل يجب أن يكون المرئي المعتمد في المتجر، وتجيب: <em><bdi>"Yes. Private visuals aren't certified."</bdi></em> أي نعم، المرئيات الخاصة لا تُعتمد. والاعتماد يعني نشر المرئي في AppSource عبر Partner Center، ثم مراجعة قد تستغرق للمرئي الجديد <em><bdi>"up to four weeks"</bdi></em> أي حتى أربعة أسابيع. كما تمنع <a href="https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-certified#certification-requirements" target="_blank" rel="noopener noreferrer" class="text-accent">شروط الاعتماد</a> شيفرة قد يكتبها الوكيل ما لم تطلب منه غير ذلك: لا <code>fetch</code> ولا <code>XMLHttpRequest</code>، ولا <code>innerHTML</code>، ولا <code>eval</code>، ولا ملفات مصغّرة (minified).</p>
+              <p data-i18n-html="content.p6">والطريق المعتاد لمرئي صُنع داخل المؤسسة هو <strong>المرئي التنظيمي</strong> (organizational visual): يضيف المسؤول ملف <bdi><code>.pbiviz</code></bdi> إلى قائمة المرئيات التنظيمية في بوابة الإدارة، معتمدًا كان أو لا، <em><bdi>"even if they contradict the tenant settings of your organization"</bdi></em> أي حتى لو خالف ذلك إعدادات المستأجر في المؤسسة، ويحدد من يستطيع استخدامه. ويصل إلى Power BI Desktop تلقائيًا أيضًا. لكن لا بد أن يتولاه أحد بعد ذلك: فالمسؤول يرفع كل إصدار جديد من جديد.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">3. جهازك ليس الخدمة</h2>
+              <p data-i18n-html="content.p7">الإعدادات السابقة تخص خدمة Power BI وحدها، وتقول Microsoft ذلك صراحة: <em><bdi>"The UI tenant settings only affect the Power BI service."</bdi></em> أي إعدادات المستأجر في الواجهة لا تؤثر إلا في خدمة Power BI. أما Power BI Desktop فيتبع سياسة المجموعة في Windows (group policy): <code>EnableCustomVisuals</code> و<code>EnableUncertifiedVisuals</code>، وكلاهما مفعّل افتراضيًا. لذلك قد يعمل المرئي تمامًا في Desktop على جهازك، ثم يعرض خطأ بعد النشر. وتنصح <a href="https://learn.microsoft.com/power-bi/guidance/powerbi-implementation-planning-user-tools-devices#group-policy-settings" target="_blank" rel="noopener noreferrer" class="text-accent">إرشادات التخطيط من Microsoft</a> بإبقاء الجهتين متوافقتين. وقبل أن تعرض مرئيًا جديدًا على أحد، انشر نسخة تجريبية في مساحة العمل التي يستخدمها قرّاؤك وافتحها هناك.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">4. ما لا يستطيعه المرئي غير المعتمد</h2>
+              <p data-i18n-html="content.p8">حتى حين يسمح به المسؤول، يفوت المرئي غير المعتمد أمرين تعتمد عليهما فرق كثيرة. <a href="https://learn.microsoft.com/power-bi/collaborate-share/end-user-powerpoint#considerations-and-limitations" target="_blank" rel="noopener noreferrer" class="text-accent">التصدير إلى PowerPoint</a> لا يدعم المرئيات المخصصة إلا المعتمدة منها. وفي <a href="https://learn.microsoft.com/power-bi/collaborate-share/end-user-subscribe#considerations-and-limitations" target="_blank" rel="noopener noreferrer" class="text-accent">اشتراكات البريد</a> تظهر المرئيات المخصصة غير المعتمدة <em><bdi>"display an error symbol"</bdi></em> أي برمز خطأ. ولا يغيّر المرئي التنظيمي ذلك: <a href="https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-organization#considerations-and-limitations" target="_blank" rel="noopener noreferrer" class="text-accent">صفحة Microsoft عن المرئيات التنظيمية</a> تقول إنها <em><bdi>"can't be exported to PowerPoint or displayed in emails"</bdi></em> أي لا تُصدَّر إلى PowerPoint ولا تظهر في رسائل الاشتراك، وإن هذه الميزات لا تدعمها إلا المرئيات المعتمدة المستوردة من المتجر مباشرة. فإن كان مديروك يقرؤون التقرير في رسالة بريد صباح الاثنين، فسيصلهم المرئي الجديد رمزَ خطأ.</p>
+              <p data-i18n-html="content.p9">وإعداد آخر يجب أن تعرفه: <strong>Allow downloads from custom visuals</strong>، وهو يسمح للمرئي المخصص بحفظ بياناته في ملف. وهو <em><bdi>"disabled by default"</bdi></em> أي معطّل افتراضيًا، ومستقل عن بقية إعدادات التصدير لديك.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">قائمة الفحص</h2>
+              <div class="table-responsive rs-table"><table class="table table-dark mb-0"><thead><tr><th scope="col" data-i18n="table.thQ">السؤال</th><th scope="col" data-i18n="table.thWhere">أين يُحسم</th><th scope="col" data-i18n="table.thWho">من تسأل</th></tr></thead><tbody><tr><th scope="row" data-i18n="table.r1q">هل أستطيع إضافة مرئيات من ملف؟</th><td data-i18n="table.r1w">إعدادات المستأجر › Power BI visuals › Allow visuals created using the Power BI SDK</td><td data-i18n="table.r1o">مسؤول Fabric</td></tr><tr><th scope="row" data-i18n="table.r2q">هل سيظهر المرئي غير المعتمد أصلًا؟</th><td data-i18n="table.r2w">إعدادات المستأجر › Power BI visuals › Add and use certified visuals only</td><td data-i18n="table.r2o">مسؤول Fabric</td></tr><tr><th scope="row" data-i18n="table.r3q">هل يتبع Power BI Desktop القواعد نفسها؟</th><td data-i18n="table.r3w">سياسة المجموعة: EnableCustomVisuals وEnableUncertifiedVisuals</td><td data-i18n="table.r3o">قسم تقنية المعلومات</td></tr><tr><th scope="row" data-i18n="table.r4q">هل سيظهر في التصدير إلى PowerPoint ورسائل الاشتراك؟</th><td data-i18n="table.r4w">فقط إن كان معتمدًا في AppSource</td><td data-i18n="table.r4o">لا أحد: إنه حد في المنتج</td></tr><tr><th scope="row" data-i18n="table.r5q">من سيحدّثه العام القادم؟</th><td data-i18n="table.r5w">بوابة الإدارة › Organizational visuals</td><td data-i18n="table.r5o">أنت والمسؤول</td></tr></tbody></table></div>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">حين تكفي مرئيات Power BI نفسها</h2>
+              <p data-i18n-html="content.p10">كثير من طلبات المرئي الجديد تقدر عليه المرئيات الأساسية أصلًا. المبيعات حسب الفئة والفئة الفرعية مع التنقل إلى التفاصيل هي مخطط أعمدة على محوره تسلسل هرمي. والتلميح الغني هو صفحة تلميح (report page tooltip). والمخططات والبطاقات والجداول وأدوات التقطيع (slicers) لا تحتاج موافقة المسؤول، وتعمل في التصدير إلى PowerPoint وفي رسائل الاشتراك، وMicrosoft تتولى تحديثها. وطلب يبدأ بعبارة <em>"استخدم مرئيات Power BI الأساسية فقط، وأخبرني إن لم يستطع أحدها ذلك"</em> يغنيك عن الفحوص الأربعة كلها.</p>
+              <p data-i18n-html="content.p11">وإن احتجت مرئيًا مخصصًا فعلًا، فاطلب من الوكيل أن يلتزم بشروط الاعتماد على أي حال، وشغّل فحص Microsoft نفسها على الحزمة: <code>pbiviz package --certification-audit</code> (في powerbi-visuals-tools من الإصدار 6.1.0 فما بعده) يبحث عن استدعاءات غير آمنة لـ <code>fetch</code> و<code>XMLHttpRequest</code> و<code>eval</code>. ثم سلّم المسؤول الشيفرة المصدرية، لا الملف وحده.</p>
+              <p data-i18n-html="content.p12">ونحن نتبع النهج نفسه في أدواتنا. التقارير التي يكتبها <a href="/ar/power-bi-mcp/" class="text-accent">وكيل DataArcus</a> تستخدم مرئيات Power BI نفسها، فلا شيء يحتاج موافقة المسؤول، ولا يرسل قيم بياناتك إلى الذكاء الاصطناعي أبدًا. ولجانب النموذج، راجع <a href="/ar/articles/article-power-bi-model-ai-ready.html" class="text-accent">فحصنا من 7 نقاط</a>.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">أسئلة</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">هل يمكن اعتماد مرئي مخصص كتبه وكيل ذكاء اصطناعي؟</h3>
+              <p data-i18n-html="content.a1">ليس ما دام خاصًا. لا تعتمد Microsoft إلا المرئيات المنشورة في AppSource ("Private visuals aren't certified"، أي المرئيات الخاصة لا تُعتمد)، بعد مراجعة قد تستغرق حتى أربعة أسابيع للمرئي الجديد. ولمرئي يُستخدم داخل مؤسسة واحدة، الطريق المعتاد هو المرئي التنظيمي الذي يضيفه مسؤول Fabric.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">لماذا يعمل مرئيي المخصص في Power BI Desktop ثم يعرض خطأ بعد النشر؟</h3>
+              <p data-i18n-html="content.a2">لأن Desktop والخدمة يتبعان قواعد مختلفة. إعدادات المستأجر (Allow visuals created using the Power BI SDK وAdd and use certified visuals only) تنطبق على خدمة Power BI، أما Desktop فيتبع سياسة المجموعة في Windows. وإن كان المستأجر يحظر المرئيات غير المعتمدة، فالمرئي القادم من ملف يعرض خطأ في الخدمة حتى يضيفه المسؤول مرئيًا تنظيميًا.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">هل المرئيات غير المعتمدة في Power BI غير آمنة؟</h3>
+              <p data-i18n-html="content.a3">ليس بالضرورة. تقول Microsoft إن المرئيات غير المعتمدة "aren't necessarily unsafe"، أي ليست بالضرورة غير آمنة: فبعضها لا يمكن اعتماده لأنه يتصل بخدمة خارجية، كالخرائط. والاعتماد يعني أن اختبارات Microsoft تحققت من أن المرئي لا يصل إلى خدمات أو موارد خارجية. أما المرئي الذي كتبته أنت أو كتبه وكيل، فالتحقق منه مسؤوليتك.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">ابنِ بمرئيات Power BI نفسها</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">اضبط ألوانك وخطوطك وتخطيطك مرة واحدة بمولّد السمات المجاني، فتتبعها كل المرئيات الأساسية.</p>
+                <div class="cta-actions">
+                  <a href="/ar/tools/power-bi-theme-generator.html" class="btn btn-accent"><i class="bi bi-palette me-2"></i><span data-i18n="exploreMore.button1">افتح مولّد السمات</span></a>
+                  <a href="/ar/power-bi-mcp/" class="btn btn-glass"><i class="bi bi-robot me-2"></i><span data-i18n="exploreMore.button2">تعرّف على وكيل DataArcus</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">تريد رأيًا ثانيًا في تقريرك؟</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">نراجع تقارير Power BI ونماذجه قبل أن تصل إلى مستخدميك: المرئيات والنموذج والإعدادات من حولهما.</p>
+                <div class="cta-actions">
+                  <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/ar/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="/assets/img/logo.svg" alt="شعار DataArcus" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">الخدمات</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">هندسة البيانات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">التحليلات</a></li>
+              <li class="mb-2"><a href="/ar/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">الاستشارات</a></li>
+              <li class="mb-2"><a href="/ar/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">أدوات Power BI و Fabric مجانية</a></li>
+              <li class="mb-2"><a href="/ar/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus لـ Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">الشركة</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/ar/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">عن الشركة</a></li>
+              <li class="mb-2"><a href="/ar/portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">نماذج الحلول</a></li>
+              <li class="mb-2"><a href="/ar/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">تواصل معنا</a></li>
+              <li class="mb-2"><a href="/ar/blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">المدونة</a></li>
+              <li class="mb-2"><a href="/ar/privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">الخصوصية</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">للتواصل</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">© <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">جميع الحقوق محفوظة.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">صُنع في دبي</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=20261023a" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261023a" defer=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
+  <script src="/assets/js/main.min.js?v=20261022d" defer=""></script>
+
+
+</body></html>

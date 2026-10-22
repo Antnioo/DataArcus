@@ -71,6 +71,11 @@ Last updated 2026-10-01 by the reviewer.
 al-Qura; the UAE's 2022 weekend change), (2) tip: the Eid window measure, (3) tool demo: the Calendar Generator with
 announced dates and country weekends. Two weeks, Tuesday to Thursday; best before Ramadan 2027 (around 8 February).
 
+**Ready to queue (after the custom-visual article is live):** three posts, English then Arabic, in
+`content/linkedin-custom-visual-checks.md`: (1) the trap: works in Desktop, error after publishing; (2) tip: the
+Monday email shows an error symbol for an uncertified visual; (3) tip: one line for every report prompt ("core visuals
+only") and Microsoft's certification audit. Don't name the demo's author unless the author agrees.
+
 ## Measure (once a month)
 Followers, profile views, impressions and website clicks per post (LinkedIn analytics, and the site's analytics for
 visits from LinkedIn). Write what worked and what didn't below, and change the next month's queue accordingly.

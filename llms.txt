@@ -20,6 +20,7 @@
 - [Power BI model health check](https://dataarcus.com/articles/article-power-bi-model-health-check.html)
 - [Power BI best practices and their exceptions](https://dataarcus.com/articles/article-power-bi-best-practice-exceptions.html)
 - [Is your Power BI model ready for AI? A 7-point check](https://dataarcus.com/articles/article-power-bi-model-ai-ready.html)
+- [Before an AI builds your Power BI custom visual: 4 checks](https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html)
 - [Power BI licensing guide](https://dataarcus.com/articles/article-power-bi-licensing-guide.html)
 - [All articles](https://dataarcus.com/blog.html)
 

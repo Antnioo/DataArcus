@@ -51,7 +51,7 @@ window.aiReadyArticleTranslations = {
       "list2_1": "In Power BI Desktop: <strong>File > Export > Power BI template</strong> (a .pbit has the model's definition, not the data Power BI loaded; small tables typed in with Enter data or written in DAX with DATATABLE stay in it, and so do values saved in the report's filters, slicers and formatting, for example a filtered customer name).",
       "list2_2": "Drop it on the <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>. It runs in your browser and nothing is uploaded.",
       "list2_3": "Fix the unused fields, missing sort orders and formats first, then add names, descriptions and Prep data for AI.",
-      "p12": "AI in Power BI is moving fast. The models that get good answers will be the ones that were clear for people first."
+      "p12": "AI in Power BI is moving fast. The models that get good answers will be the ones that were clear for people first. And if an agent builds the report too, read <a href='article-power-bi-custom-visual-ai-checks.html' class='text-accent'>the four checks before it writes a custom visual</a>."
     },
     "exploreMore": {
       "title": "Check how ready your model is",
@@ -115,7 +115,7 @@ window.aiReadyArticleTranslations = {
       "list2_1": "في Power BI Desktop: <strong>File > Export > Power BI template</strong> (ملف ‎.pbit يحمل تعريف النموذج، لا البيانات التي حمّلها Power BI، وتبقى فيه الجداول الصغيرة المكتوبة يدويًا عبر Enter data أو في DAX عبر DATATABLE، وكذلك القيم المحفوظة في فلاتر التقرير والـ slicers والتنسيق، مثل اسم عميل مختار في فلتر).",
       "list2_2": "أفلته على أداة <a href='../tools/power-bi-model-health-check.html' class='text-accent'>فحص صحة النموذج</a>. تعمل في متصفحك ولا يُرفع أي شيء.",
       "list2_3": "أصلح الحقول غير المستخدمة وترتيب الفرز والتنسيقات أولًا، ثم الأسماء والأوصاف وPrep data for AI.",
-      "p12": "الذكاء الاصطناعي في Power BI يتطور بسرعة. والنماذج التي ستحصل على إجابات جيدة هي التي كانت واضحة للناس أولًا."
+      "p12": "الذكاء الاصطناعي في Power BI يتطور بسرعة. والنماذج التي ستحصل على إجابات جيدة هي التي كانت واضحة للناس أولًا. وإن كان وكيل سيبني التقرير أيضًا، فاقرأ <a href='article-power-bi-custom-visual-ai-checks.html' class='text-accent'>الفحوص الأربعة قبل أن يكتب مرئيًا مخصصًا</a>."
     },
     "exploreMore": {
       "title": "افحص مدى جاهزية نموذجك",
