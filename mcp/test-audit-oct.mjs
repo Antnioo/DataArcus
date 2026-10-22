@@ -63,6 +63,10 @@ try {
   // ---------- AUD-039 ----------
   {
     const { screenWhy, shownPath } = await import('./lib/model.mjs');
+    // the screen's list of tool names is the server's tools, all of them
+    const { TOOL_NAMES } = await import('./lib/tool-names.mjs');
+    const registered = [...fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8').matchAll(/registerTool\('([a-z_]+)'/g)].map((m) => m[1]).sort();
+    chk(() => JSON.stringify([...TOOL_NAMES].sort()) === JSON.stringify(registered), () => `AUD-039. the screen knows every tool the server registers: ${registered.join(', ')} vs ${TOOL_NAMES.join(', ')}`);
     // written for this test (the private red team's families: approval, outside the folder, data, tool misuse, hidden
     // text, Arabic, file names), never a real model's text
     const asks = [

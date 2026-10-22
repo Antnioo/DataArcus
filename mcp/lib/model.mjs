@@ -1,5 +1,6 @@
 // Reading a user's Power BI model from disk, for the MCP tools.
 // Same engines as the website (assets/js), so the MCP and the tools on dataarcus.com give the same answers.
+import { TOOL_NAMES } from './tool-names.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -52,7 +53,7 @@ const SCREEN = [
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
   [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user'],
   // (AUD-039 / the red team's F-1: the asks the screen missed) a DataArcus tool named in a name is never a model's own
-  [/\b(read_model|suggest_fields|check_model_health|generate_theme|plan_layout|approve_plan|create_report|add_gulf_calendar|read_report|create_arabic_twin|check_report)\b/i, 'names a DataArcus tool'],
+  [new RegExp(`\\b(${TOOL_NAMES.join('|')})\\b`, 'i'), 'names a DataArcus tool'],
   [/\b(pre-?approved|already\s+approved|(user|owner|admin)\s+(has\s+)?(approved|said\s+go|clicked\s+approve)|clicked\s+approve|approval\s+(is\s+)?(granted|not\s+(required|needed))|admin\s+override|skip\s+the\s+plan|without\s+(a|the)\s+plan|no\s+plan\s+(is\s+)?needed|do\s+not\s+show\s+a\s+plan|without\s+asking)\b/i, 'claims an approval'],
   [/\[\s*(user|system|assistant)\s*\]\s*:|\b(system|note\s+(for|to)\s+the\s+ai)\s*:/i, 'speaks as the user or the system'],
   [/(^|[\s"'(])\.\.[\\/]|\b[a-z]:\\|(^|\s)~[\\/]|^\\\\|\s\\\\[a-z0-9]|(^|\s)\/(etc|usr|var|tmp|root|home)\/|%2f/i, 'holds a path outside the folder'],
