@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-custom-visual-ai-checks.html" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html" />
+
+  <title>Before an AI Builds Your Power BI Custom Visual</title>
+  <meta name="description" content="AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft&#x27;s own pages." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI custom visual, certified Power BI visuals, organizational visuals, Allow visuals created using the Power BI SDK, Power BI Report Authoring skill, pbiviz, AI agent Power BI" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Before an AI Builds Your Power BI Custom Visual" />
+  <meta property="og:description" content="AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft&#x27;s own pages." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="Before an AI Builds Your Power BI Custom Visual: 4 Checks" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-10-23T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Before an AI Builds Your Power BI Custom Visual" />
+  <meta name="twitter:description" content="AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft&#x27;s own pages." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg" />
+  <meta name="twitter:image:alt" content="Before an AI Builds Your Power BI Custom Visual: 4 Checks" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Before an AI Builds Your Power BI Custom Visual: 4 Checks",
+      "description": "AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft's own pages.",
+      "url": "https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html",
+      "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-custom-visual-ai-checks.html",
+      "author": {
+        "@type": "Person",
+        "name": "Abdelrahman M."
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DataArcus",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dataarcus.com/assets/img/logo.svg"
+        }
+      },
+      "datePublished": "2026-10-23",
+      "dateModified": "2026-10-23",
+      "image": "https://dataarcus.com/assets/img/og/custom-visual-ai-checks.jpg"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can a custom visual made by an AI agent be certified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not while it stays private. Microsoft certifies only visuals published on AppSource (\"Private visuals aren't certified\"), after a review that can take up to four weeks for a new visual. For a visual used inside one organization, the usual route is an organizational visual, added by the Fabric admin."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does my custom visual work in Power BI Desktop but show an error after publishing?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Desktop and the service follow different rules. The tenant settings (Allow visuals created using the Power BI SDK, and Add and use certified visuals only) apply to the Power BI service; Desktop follows Windows group policy. If your tenant blocks uncertified visuals, a visual from a file shows an error in the service until your admin adds it as an organizational visual."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are uncertified Power BI visuals unsafe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not necessarily. Microsoft says uncertified visuals \"aren't necessarily unsafe\": some can't be certified because they call an outside service, like a map. Certification means Microsoft's tests checked that the visual doesn't access external services or resources. For a visual you or an agent wrote, the checking is yours."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">AI AGENTS</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Before an AI Builds Your Power BI Custom Visual: 4 Checks</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 23, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Microsoft's <a href='https://community.fabric.microsoft.com/blog/fbc_pbiupdatesblog/power-bi-october-2026-feature-summary/5374650' target='_blank' rel='noopener noreferrer' class='text-accent'>October 2026 feature summary</a> brought custom visuals to the Power BI Report Authoring skill, the agent skill that writes report files for you. The agent can now add a custom visual, bind it to your data, format it and validate it. It works with custom visuals already in the report, including ones imported from a file, and it can suggest an AppSource visual when Power BI's own visuals can't do the job. A public demo this month went further: one prompt, and the agent wrote a brand-new visual from scratch, with drill-down and tooltips.</p>
+              <p data-i18n-html="content.p2">That is impressive, and worth five minutes of checks before you build on it at work. A custom visual is not a format setting. It is a package of code, a <code>.pbiviz</code> file, and Power BI gives it the data it shows. Microsoft's own <a href='https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals#custom-visual-files' target='_blank' rel='noopener noreferrer' class='text-accent'>warning</a>: <em>"A Power BI custom visual could contain code with security or privacy risks. Make sure you trust the author and source before importing it to your report."</em> When an agent writes the visual for you, there is no outside author to trust: the code is yours, and so are these four checks.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">1. Can your organization use visuals from a file?</h2>
+              <p data-i18n-html="content.p3">Your Fabric admin decides who can add visuals from AppSource or from a <code>.pbiviz</code> file, with the tenant setting <strong>Allow visuals created using the Power BI SDK</strong>. Microsoft's <a href='https://learn.microsoft.com/fabric/admin/organizational-visuals#visuals-from-appsource-or-a-file' target='_blank' rel='noopener noreferrer' class='text-accent'>admin page</a> says this setting <em>"is disabled by default"</em>, and an admin can turn it on for the whole organization or only for some security groups. Without it, you can't add the visual in the Power BI service and your readers can't view it there, however good it is. Ask your admin before you spend an afternoon on one.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">2. Is "certified visuals only" turned on?</h2>
+              <p data-i18n-html="content.p4">A second setting, <strong>Add and use certified visuals only (block uncertified)</strong>, goes further. With it on, <em>"only certified Power BI visuals render in your organization's reports and dashboards. Power BI visuals from AppSource or files that aren't certified return an error message."</em></p>
+              <p data-i18n-html="content.p5">A visual written for your report can't be certified. Microsoft's <a href='https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-faq#certified-power-bi-visuals' target='_blank' rel='noopener noreferrer' class='text-accent'>custom visuals FAQ</a> asks whether a certified visual has to be in the marketplace, and answers: <em>"Yes. Private visuals aren't certified."</em> Certification means publishing the visual on AppSource through Partner Center, then a review that, for a new visual, <em>"can take up to four weeks"</em>. The <a href='https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-certified#certification-requirements' target='_blank' rel='noopener noreferrer' class='text-accent'>requirements</a> also rule out code an agent may write unless you tell it not to: no <code>fetch</code> or <code>XMLHttpRequest</code>, no <code>innerHTML</code>, no <code>eval</code>, no minified files.</p>
+              <p data-i18n-html="content.p6">The usual way in for a visual made in-house is an <strong>organizational visual</strong>: your admin adds the <code>.pbiviz</code> to the organizational visuals list in the admin portal, certified or not, <em>"even if they contradict the tenant settings of your organization"</em>, and decides who can use it. It reaches Power BI Desktop automatically too. Someone has to own it after that: the admin uploads every new version again.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">3. Your laptop is not the service</h2>
+              <p data-i18n-html="content.p7">The admin settings above only cover the Power BI service. Microsoft says it plainly: <em>"The UI tenant settings only affect the Power BI service."</em> Power BI Desktop follows Windows group policy instead: <code>EnableCustomVisuals</code> and <code>EnableUncertifiedVisuals</code>, both on by default. So a visual can work perfectly in Desktop on your laptop and show an error once it is published. Microsoft's <a href='https://learn.microsoft.com/power-bi/guidance/powerbi-implementation-planning-user-tools-devices#group-policy-settings' target='_blank' rel='noopener noreferrer' class='text-accent'>planning guidance</a> recommends keeping the two aligned. Before you show a new visual to anyone, publish a test copy to the workspace your readers use and open it there.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">4. What an uncertified visual can't do</h2>
+              <p data-i18n-html="content.p8">Even when your admin allows it, a visual that isn't certified misses two things many teams rely on. <a href='https://learn.microsoft.com/power-bi/collaborate-share/end-user-powerpoint#considerations-and-limitations' target='_blank' rel='noopener noreferrer' class='text-accent'>Export to PowerPoint</a> doesn't support custom visuals unless they are certified. And in <a href='https://learn.microsoft.com/power-bi/collaborate-share/end-user-subscribe#considerations-and-limitations' target='_blank' rel='noopener noreferrer' class='text-accent'>email subscriptions</a>, uncertified custom visuals <em>"display an error symbol"</em>. The organizational route doesn't change this: Microsoft's <a href='https://learn.microsoft.com/power-bi/developer/visuals/power-bi-custom-visuals-organization#considerations-and-limitations' target='_blank' rel='noopener noreferrer' class='text-accent'>page on organizational visuals</a> says they <em>"can't be exported to PowerPoint or displayed in emails"</em> from subscriptions, and that only certified visuals imported directly from the marketplace support those features. If your managers read the report in a Monday email, the new visual reaches them as an error icon.</p>
+              <p data-i18n-html="content.p9">One more setting to know: <strong>Allow downloads from custom visuals</strong> lets a custom visual save its data to a file. It is <em>"disabled by default"</em> and separate from your other export settings.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">The checklist</h2>
+              <div class="table-responsive rs-table"><table class="table table-dark mb-0"><thead><tr><th scope="col" data-i18n="table.thQ">Question</th><th scope="col" data-i18n="table.thWhere">Where it is decided</th><th scope="col" data-i18n="table.thWho">Who to ask</th></tr></thead><tbody><tr><th scope="row" data-i18n="table.r1q">Can I add visuals from a file?</th><td data-i18n="table.r1w">Tenant settings › Power BI visuals › Allow visuals created using the Power BI SDK</td><td data-i18n="table.r1o">Fabric admin</td></tr><tr><th scope="row" data-i18n="table.r2q">Will an uncertified visual show at all?</th><td data-i18n="table.r2w">Tenant settings › Power BI visuals › Add and use certified visuals only</td><td data-i18n="table.r2o">Fabric admin</td></tr><tr><th scope="row" data-i18n="table.r3q">Does Power BI Desktop follow the same rules?</th><td data-i18n="table.r3w">Group policy: EnableCustomVisuals, EnableUncertifiedVisuals</td><td data-i18n="table.r3o">IT</td></tr><tr><th scope="row" data-i18n="table.r4q">Will it appear in PowerPoint exports and subscription emails?</th><td data-i18n="table.r4w">Only if it is certified on AppSource</td><td data-i18n="table.r4o">No one: it is a product limit</td></tr><tr><th scope="row" data-i18n="table.r5q">Who updates it next year?</th><td data-i18n="table.r5w">Admin portal › Organizational visuals</td><td data-i18n="table.r5o">You and your admin</td></tr></tbody></table></div>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">When Power BI's own visuals are enough</h2>
+              <p data-i18n-html="content.p10">Many requests for a new visual are things the core visuals already do. Sales by category and subcategory with drill-down is a bar chart with a hierarchy on its axis. A rich tooltip is a report page tooltip. Charts, cards, tables and slicers need no admin approval, work in PowerPoint exports and subscription emails, and Microsoft keeps them up to date. A prompt that starts with <em>"Use Power BI's core visuals only, and tell me if one can't do this"</em> saves you all four checks.</p>
+              <p data-i18n-html="content.p11">If you do need a custom visual, ask the agent to follow the certification rules anyway, and run Microsoft's own check on the package: <code>pbiviz package --certification-audit</code> (powerbi-visuals-tools 6.1.0 or later) looks for unsafe calls to <code>fetch</code>, <code>XMLHttpRequest</code> and <code>eval</code>. Then bring your admin the source code, not just the file.</p>
+              <p data-i18n-html="content.p12">We take the same line in our own tools. The reports our <a href='../power-bi-mcp/' class='text-accent'>DataArcus agent</a> writes use Power BI's own visuals, so there is nothing for an admin to approve, and it never sends your data values to the AI. For the model side, see <a href='article-power-bi-model-ai-ready.html' class='text-accent'>our 7-point check</a>.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">Questions</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">Can a custom visual made by an AI agent be certified?</h3>
+              <p data-i18n-html="content.a1">Not while it stays private. Microsoft certifies only visuals published on AppSource ("Private visuals aren't certified"), after a review that can take up to four weeks for a new visual. For a visual used inside one organization, the usual route is an organizational visual, added by the Fabric admin.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">Why does my custom visual work in Power BI Desktop but show an error after publishing?</h3>
+              <p data-i18n-html="content.a2">Desktop and the service follow different rules. The tenant settings (Allow visuals created using the Power BI SDK, and Add and use certified visuals only) apply to the Power BI service; Desktop follows Windows group policy. If your tenant blocks uncertified visuals, a visual from a file shows an error in the service until your admin adds it as an organizational visual.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">Are uncertified Power BI visuals unsafe?</h3>
+              <p data-i18n-html="content.a3">Not necessarily. Microsoft says uncertified visuals "aren't necessarily unsafe": some can't be certified because they call an outside service, like a map. Certification means Microsoft's tests checked that the visual doesn't access external services or resources. For a visual you or an agent wrote, the checking is yours.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Build with Power BI's own visuals</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Set your colours, fonts and layout once with the free Theme Generator, and every core visual follows them.</p>
+                <div class="cta-actions">
+                  <a href="../tools/power-bi-theme-generator.html" class="btn btn-accent"><i class="bi bi-palette me-2"></i><span data-i18n="exploreMore.button1">Open the Theme Generator</span></a>
+                  <a href="/power-bi-mcp/" class="btn btn-glass"><i class="bi bi-robot me-2"></i><span data-i18n="exploreMore.button2">See the DataArcus agent</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Want a second pair of eyes on your report?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We review Power BI reports and models before they reach your users: the visuals, the model and the settings around them.</p>
+                <div class="cta-actions">
+                  <a href="/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js?v=20261009h" defer></script>
+  <script src="../assets/js/translations/article-power-bi-custom-visual-ai-checks.min.js?v=20261023a" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261023a" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="../assets/js/main.min.js?v=20261022d" defer></script>
+</body>
+</html>

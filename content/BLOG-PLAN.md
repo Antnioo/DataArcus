@@ -1,7 +1,7 @@
 # DataArcus blog: the plan (read before writing a post)
 
 The memory for the blog. Read it before planning or writing an article; update it after each one is published
-(the log, the map, "Next up"). Last updated 2026-10-03 by the reviewer (Gulf calendar published; "Next up" from the SEO research).
+(the log, the map, "Next up"). Last updated 2026-10-22 by the reviewer (the custom-visual article; before that 2026-10-03, "Next up" from the SEO research).
 
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, in minutes, and checked in Power BI, not just generated.
@@ -26,7 +26,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 | Pillar | Published | Free tool it leads to |
 |---|---|---|
 | Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23), Gulf calendar in DAX (2026-10-03) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
-| Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25) | Model Health Check, DAX Measure Builder |
+| Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25), AI-built custom visuals: 4 checks (2026-10-23) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
 | E-commerce analytics (2025; **no new posts**, owner 2026-10-01: the existing ones stay online) | CLV, 5 KPIs, Shopify dashboard, ETL vs Power Query, EVM (project risk) | none |
@@ -81,7 +81,9 @@ The memory for the blog. Read it before planning or writing an article; update i
 Questions people ask in LinkedIn comments and messages, Microsoft's monthly Power BI updates (only what matters to
 our readers), and problems found while building the tools (the model health check finds unused columns: that
 became a post). Add ideas here with the date and where they came from:
-- (none yet)
+- 2026-10-22, LinkedIn: an MVP's demo of Microsoft's Report Authoring skill writing a custom visual from one prompt,
+  and the author's reply to the owner's question. Became the custom-visual article (2026-10-23). Follow-up when 0.3.1
+  starts: run the same kind of prompt on our made-up Arabic model (Finding #3) and add what we see as a dated update.
 
 ## Checklist for every post (a post isn't done until all of these are)
 - [ ] `articles/article-<slug>.html`, written from an existing article (same head, nav, footer, scripts).
@@ -113,4 +115,5 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |
 | 2026-10-03 | A Gulf calendar in Power BI: Hijri dates, Ramadan, Eid and the right weekend | Gulf | Calendar generator, Measure Builder |
 | 2026-10-17 | Power BI best practices have exceptions: 5 we missed (the Health Check benchmark: 23 models, 206 wrong findings before, 1 after; Microsoft's own words, quotes checked on Microsoft Learn 16 Oct) | Craft | Model Health Check |
+| 2026-10-03 | 2026-10-23 | Before an AI builds your Power BI custom visual: 4 checks (the admin settings, certification, Desktop vs the service, what an uncertified visual can't do; every fact from Microsoft Learn, read 22 Oct; Microsoft's October 2026 feature summary is behind a bot check, its wording confirmed from a verbatim copy) | Craft (AI agents) | Theme Generator, the DataArcus agent |
 | 2026-10-03 | Copilot readiness audit (a service page in `services/`, not a post; linked from the home page, the AI-ready article and the licensing guide) | Craft (AI-ready models) | Model Health Check |

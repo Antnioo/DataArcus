@@ -59,6 +59,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      customVisualChecks: {
+        badge: "AI AGENTS",
+        title: "Before an AI Builds Your Power BI Custom Visual: 4 Checks",
+        date: "October 23, 2026",
+        excerpt: "AI agents now work with Power BI custom visuals, and some write new ones. Four checks from Microsoft's own pages before you rely on one at work: the admin settings, certification, Desktop vs the service, and what an uncertified visual can't do.",
+        button: "Read Playbook"
+      },
       bestPracticeExceptions: {
         badge: "BEST PRACTICE",
         title: "We Checked 23 Power BI Models Against Microsoft's Rules. Our Own Tool Was Wrong 206 Times.",
@@ -214,6 +221,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      customVisualChecks: {
+        badge: "وكلاء الذكاء الاصطناعي",
+        title: "قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص",
+        date: "23 أكتوبر 2026",
+        excerpt: "صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص من صفحات Microsoft قبل أن تعتمد على واحد منها في العمل: إعدادات المسؤول، والاعتماد، وDesktop مقابل الخدمة، وما لا يستطيعه المرئي غير المعتمد.",
+        button: "اقرأ الدليل"
+      },
       bestPracticeExceptions: {
         badge: "أفضل الممارسات",
         title: "فحصنا 23 نموذج Power BI مقابل قواعد Microsoft. أخطأت أداتنا نفسها 206 مرات.",
