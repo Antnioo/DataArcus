@@ -27,6 +27,32 @@ document.addEventListener('DOMContentLoaded', () => {
     outlineNames: { prep: 'prepare data', model: 'implement and manage semantic models', maintain: 'maintain a data analytics solution' },
     mix: { prep: 0.48, model: 0.26 },
     mixText: ['Questions are drawn by exam weight: about half on preparing data, a quarter each on semantic models and maintenance.', 'الأسئلة موزعة حسب أوزان الاختبار: نحو النصف لتجهيز البيانات، والربع لكل من النماذج الدلالية والصيانة.'],
+    // The renewal assessment (Microsoft Learn, "Renewal for Microsoft Certified: Fabric Analytics Engineer Associate", read
+    // 22 Oct 2026): its 8 skills as listed there, each with the Learn module of the same name (each address checked: its
+    // page title is the skill), and the bank's tags that belong to it. About 45 minutes per Microsoft; 25 is our choice.
+    renewal: ((M) => ({
+      updated: '2026-07-21', checked: '2026-10-22', n: 25, min: 45,
+      url: 'https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/renew/',
+      faq: 'https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification-faq',
+      topics: [
+        { k: 'sec', en: 'Secure data access in Microsoft Fabric', ar: 'تأمين الوصول إلى البيانات في Microsoft Fabric', learn: M + 'secure-data-access-in-fabric/',
+          tags: ['Item permissions', 'Workspace roles', 'OneLake security', 'Warehouse RLS', 'Object-level security', 'Column-level security', 'Dynamic data masking', 'Semantic model RLS', 'Direct Lake security'] },
+        { k: 'life', en: 'Manage the semantic model development lifecycle', ar: 'إدارة دورة تطوير النموذج الدلالي', learn: M + 'manage-semantic-model-lifecycle/',
+          tags: ['Deployment pipelines', 'Git integration', 'Git branches', 'Power BI project (.pbip)', 'Deployment rules', 'XMLA endpoint', 'TMDL', 'PBIR', 'Power BI template (.pbit)', 'Power BI data source (.pbids)', 'Reusable assets', 'Impact analysis', 'Lineage view'] },
+        { k: 'lake', en: 'Get started with lakehouses in Microsoft Fabric', ar: 'البدء مع الـ lakehouses في Microsoft Fabric', learn: M + 'get-started-lakehouses/',
+          tags: ['Data stores', 'Shortcuts', 'SQL analytics endpoint', 'SQL analytics endpoint views', 'SQL analytics endpoint limits', 'SQL analytics endpoint objects', 'Notebooks', 'Ingest options'] },
+        { k: 'onelake', en: 'Discover and connect to data in OneLake', ar: 'اكتشاف البيانات والاتصال بها في OneLake', learn: M + 'discover-data-onelake/',
+          tags: ['OneLake catalog', 'Discovery', 'Connections', 'Real-Time hub', 'Endorsement', 'Mirroring', 'Semantic model OneLake integration', 'Shared semantic models'] },
+        { k: 'dim', en: 'Design dimensional models for analytics in Microsoft Fabric', ar: 'تصميم النماذج البُعدية للتحليلات في Microsoft Fabric', learn: M + 'design-dimensional-models-fabric/',
+          tags: ['Star schema', 'Surrogate keys', 'IDENTITY behavior', 'SCD type 2', 'SCD type 3', 'SCD type 2 load', 'Table constraints', 'Denormalize snowflake', 'Denormalization', 'Role-playing dimensions'] },
+        { k: 'rti', en: 'Get started with Real-Time Intelligence in Microsoft Fabric', ar: 'البدء مع Real-Time Intelligence في Microsoft Fabric', learn: M + 'get-started-kusto-fabric/',
+          tags: ['Eventstreams', 'Eventhouse OneLake availability', 'KQL summarize bin', 'KQL top', 'KQL render', 'KQL project extend', 'KQL join', 'KQL where', 'KQL query pipeline', 'KQL project'] },
+        { k: 'scale', en: 'Design semantic models for scale in Microsoft Fabric', ar: 'تصميم نماذج دلالية قابلة للتوسع في Microsoft Fabric', learn: M + 'design-semantic-models-scale/',
+          tags: ['Storage modes', 'Dual storage mode', 'Composite models', 'Relationships', 'Many-to-many relationships', 'Cross-filter direction', 'USERELATIONSHIP', 'Bridge tables', 'Large semantic model storage format', 'Calculation groups', 'Calculation group precedence', 'Dynamic format strings', 'Field parameters', 'DAX variables', 'Iterators', 'Window functions', 'Information functions', 'Information and window functions', 'Incremental refresh', 'Hybrid tables', 'Detect data changes', 'Direct Lake on OneLake', 'Direct Lake on SQL'] },
+        { k: 'perf', en: 'Optimize semantic model performance', ar: 'تحسين أداء النموذج الدلالي', learn: M + 'optimize-semantic-model-performance/',
+          tags: ['Performance analyzer', 'DAX query view', 'DAX query tools', 'Storage engine', 'Cardinality', 'Model size', 'Aggregations', 'Query reduction', 'Report visuals', 'Filter arguments', 'DIVIDE', 'Context transition', 'KEEPFILTERS', 'REMOVEFILTERS', 'RANKX', 'DirectLakeBehavior', 'Framing', 'Fallback diagnostics', 'V-Order', 'Guardrails', 'Automatic updates'] }
+      ]
+    }))('https://learn.microsoft.com/en-us/training/modules/'),
     official: [
       ['https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600', 'DP-600 study guide: the skills measured', 'دليل مذاكرة DP-600: المهارات المقاسة'],
       ['https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-600/practice/assessment?assessment-type=practice&assessmentId=90', 'Microsoft\'s free practice assessment', 'التقييم التدريبي المجاني من Microsoft'],
@@ -34,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ['https://aka.ms/examdemo', 'Exam sandbox: try the real exam interface', 'بيئة تجربة واجهة الاختبار الحقيقية']
     ]
   }, window.EXAM || {});
+  // the renewal data above is DP-600's: another exam has its own or none
+  if (window.EXAM && !Object.prototype.hasOwnProperty.call(window.EXAM, 'renewal')) EX.renewal = null;
   const DATA = window[EX.data];
   const root = document.getElementById('dpApp');
   if (!DATA || !root) return;
