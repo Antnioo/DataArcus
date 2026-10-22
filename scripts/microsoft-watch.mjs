@@ -196,6 +196,7 @@ export function compare(base, up) {
 
 // ---------- the issue ----------
 const KEYLINE = 'microsoft-watch-keys:';
+const BOT_LOGIN = 'github-actions[bot]';   // who writes the workflow's comments (GITHUB_TOKEN)
 export const keysIn = (text) => new Set([...String(text || '').matchAll(new RegExp(`<!-- ${KEYLINE} ([^>]*?) -->`, 'g'))].flatMap((m) => m[1].split(/\s+/).filter(Boolean)));
 function sections(changes) {
   const lines = [];
@@ -235,8 +236,10 @@ export async function syncIssue({ changes, gh, dryRun, runUrl, log }) {
     open = (list || []).find((i) => !i.pull_request) || null;
   }
   if (open) {
+    // the keys already reported: the issue's own (only the workflow and the owner label it) and the workflow's
+    // comments; anyone can comment on a public issue, so a key line in another comment is ignored (AUD-044)
     const known = keysIn(open.body);
-    for (const c of await gh('GET', `issues/${open.number}/comments?per_page=100`) || []) for (const k of keysIn(c.body)) known.add(k);
+    for (const c of await gh('GET', `issues/${open.number}/comments?per_page=100`) || []) if (c.user && c.user.login === BOT_LOGIN) for (const k of keysIn(c.body)) known.add(k);
     const fresh = changes.filter((c) => !known.has(c.key));
     if (!fresh.length) { log(`Already reported in issue #${open.number}: nothing to add.`); return { action: 'already' }; }
     const body = commentBody(fresh, { runUrl });

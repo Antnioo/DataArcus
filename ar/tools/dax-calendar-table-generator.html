@@ -139,6 +139,10 @@
     .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
     .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
     .cg-err { color: #f59e0b; font-size: .85rem; }
+    /* the preview and the Ramadan dates are drawn after load: their default heights are kept free until then, so the
+       DAX panel below them does not jump (AUD-042; measured with the default range, EN and AR) */
+    @media (min-width: 992px) { .cg-pending #preview { min-height: 268px; } .cg-pending #ramadan { min-height: 231px; } }
+    @media (min-width: 1200px) { .cg-pending #ramadan { min-height: 115px; } }
     .tg-actions button:disabled { opacity: .5; cursor: not-allowed; }
     @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
     /* Code and hex values always read left to right, even on the Arabic page */
@@ -220,7 +224,7 @@
           </div>
         </div>
 
-        <div class="col-lg-7 d-flex flex-column gap-4">
+        <div class="col-lg-7 d-flex flex-column gap-4 cg-pending">
           <div class="tg-panel">
             <div class="d-flex justify-content-between flex-wrap gap-2"><span class="tg-label" data-i18n="cg.preview">معاينة</span><span class="small text-white-50" id="stats"></span></div>
             <div id="preview" style="overflow-x:auto"></div>
@@ -327,13 +331,13 @@
 
   <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
   <script src="/assets/js/translations/calendar-generator.min.js?v=20261006a" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=20261018ar3" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261022a" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
   <script src="/assets/js/main.min.js?v=20261018ar3" defer=""></script>
   <script src="/assets/js/gulf-dates.min.js" defer=""></script>
   <script src="/assets/js/arabic-calendar.min.js?v=20261021w16" defer=""></script>
-  <script src="/assets/js/calendar-generator.min.js?v=w15" defer=""></script>
+  <script src="/assets/js/calendar-generator.min.js?v=20261022a" defer=""></script>
 
 
 </body></html>

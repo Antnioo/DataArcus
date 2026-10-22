@@ -4,6 +4,13 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]
+- **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
+  your working folder or ask for your data's values are now flagged as instructions and never followed, including
+  ones written with look-alike letters.
+- A page filter on a column whose type a hand-edited model gives as an internal name is refused with the right reason.
+- The Health Check also flags Arabic percentage measures (the ٪ sign and نسبة) that are not formatted as a percent.
+
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
 2.159.883.0, build 332beac). In short:

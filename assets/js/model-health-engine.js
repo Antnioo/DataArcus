@@ -1000,7 +1000,9 @@
       // a measure returning text takes no number format; a hidden one no visual shows is not seen (BPA's rule is for visible measures)
       if (!ms.formatString && !ms.fsExpr && !returnsText(ms.expr) && !(msHidden(ms) && !vis.measures.has(lc(ms.name)))) noFmt.push({ obj: name });
       // (a ratio such as Current Ratio or Asset Turnover is a multiple, 0.00 on purpose; a count is a whole number whatever its name)
-      if (/(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|hourly|exchange|run rate|\bper\b|\bcount\b|▲|▼)/i.test(ms.name) && ms.formatString && !/[%@]|pp|percent/i.test(ms.formatString) && !ms.fsExpr && !countRoot(ms.expr)) pctFmt.push({ obj: name, detail: ms.formatString });
+      // (AUD-043: the Arabic and full-width percent signs ٪ ％ and نسبة "ratio, percentage" too; not معدل, which is also
+      // "average": a wrong finding is worse than a missed one. تغير/فرق are change/diff, left out like them)
+      if (/(%|٪|％|نسبة|\bpct\b|\bpercent(age)?\b|\brate\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|hourly|exchange|run rate|\bper\b|\bcount\b|▲|▼|تغير|فرق)/i.test(ms.name) && ms.formatString && !/[%@]|pp|percent/i.test(ms.formatString) && !ms.fsExpr && !countRoot(ms.expr)) pctFmt.push({ obj: name, detail: ms.formatString });
       // folders and descriptions are for the field list: hidden measures are not in it
       if (!ms.displayFolder && !msHidden(ms)) noFolder.push({ obj: name });
       if (!ms.description && !msHidden(ms)) noDesc.push({ obj: name });

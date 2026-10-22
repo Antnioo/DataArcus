@@ -27,7 +27,7 @@ const doc = (css, body, dir = 'ltr') => `<!doctype html><html lang="${dir === 'r
 
 // ---------------------------------------------------------------------------------------------------------------
 // 1. The redesign article: a leads report for Contoso, a made-up electronics retailer (Microsoft's own sample name).
-//    Same numbers, visuals and lesson as before; only the business changed (owner 2026-10-03: nothing automotive).
+//    Same numbers, visuals and lesson as before; only the business changed (owner 2026-10-03: made-up businesses only, never a real sector or company).
 // ---------------------------------------------------------------------------------------------------------------
 const CAMPAIGNS = [   // name, leads, qualified, declined, never contacted
   ['Back to School · Laptops', 648, 91, 162, 142], ['Smart Home Week', 402, 31, 151, 104], ['4K TV Upgrade', 356, 47, 66, 88],

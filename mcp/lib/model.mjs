@@ -50,11 +50,27 @@ const SCREEN = [
   [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\s+((كل|جميع)\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],
   [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
-  [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user']
+  [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user'],
+  // (AUD-039 / the red team's F-1: the asks the screen missed) a DataArcus tool named in a name is never a model's own
+  [/\b(read_model|suggest_fields|check_model_health|generate_theme|plan_layout|approve_plan|create_report|add_gulf_calendar|read_report|create_arabic_twin|check_report)\b/i, 'names a DataArcus tool'],
+  [/\b(pre-?approved|already\s+approved|(user|owner|admin)\s+(has\s+)?(approved|said\s+go|clicked\s+approve)|clicked\s+approve|approval\s+(is\s+)?(granted|not\s+(required|needed))|admin\s+override|skip\s+the\s+plan|without\s+(a|the)\s+plan|no\s+plan\s+(is\s+)?needed|do\s+not\s+show\s+a\s+plan|without\s+asking)\b/i, 'claims an approval'],
+  [/\[\s*(user|system|assistant)\s*\]\s*:|\b(system|note\s+(for|to)\s+the\s+ai)\s*:/i, 'speaks as the user or the system'],
+  [/(^|[\s"'(])\.\.[\\/]|\b[a-z]:\\|(^|\s)~[\\/]|^\\\\|\s\\\\[a-z0-9]|(^|\s)\/(etc|usr|var|tmp|root|home)\/|%2f/i, 'holds a path outside the folder'],
+  [/\b(show|return|list|quote|send|copy|put|give|print|paste)\b[^.]{0,30}\b((first|top|last)\s+\d+\s+rows?|rows?\s+of|values?\s+of|raw\s+data|data\s+values?|all\s+(the\s+)?(rows|values)|every\s+\w+\s+values?|datatable\s+source)\b|\bsend\b[^.]{0,30}\b(rows?|data|values?)\b[^.]{0,20}\bto\b/i, 'asks for data values'],
+  [/\b(rows?|values?|data|figures)\b[^.]{0,40}\b(in|into)\s+(the\s+|your\s+)?(title|answer|chat|subtitles?|text\s+box)\b/i, 'asks for data values'],
+  [/\b(of|in|from)\s+row\s+\d+\b|\b(copy|put|write|place)\b[^.]{0,40}\binto\s+(the\s+)?(page\s+|report\s+)?(titles?|subtitles?|text\s+box(es)?|answer|chat)\b|\bdatatable\b[^.]{0,40}\bquote\b|\bquote\b[^.]{0,40}\bdatatable\b/i, 'asks for data values'],
+  [/\bparent\s+folder\b|\(\s*\.\.\s*\)/i, 'holds a path outside the folder'],
+  [/(استدع|استخدم\s+اداة)/, 'asks to call a tool'], [/(وافق\s+مسبقا|تمت\s+الموافقة|موافق\s+عليه\s+مسبقا|دون\s+سؤال|بدون\s+سؤال|لا\s+حاجة\s+(ل|الى\s+)?خطة)/, 'claims an approval'],
+  [/(اعرض|ارسل|انسخ|ضع|اكتب)\s+[^.]{0,30}(صف|صفوف|صفا|قيم|البيانات)/, 'asks for data values']
 ];
+// (AUD-039) Cyrillic and Greek letters that look like Latin ones, read as Latin before the screen: "Саll сreate_report"
+// written with a Cyrillic С and а must not pass. Only the screen reads the folded text; the name is shown as it is.
+const LOOKALIKE = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'Х': 'X', 'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'х': 'x', 'і': 'i', 'ј': 'j', 'ѕ': 's', 'ԁ': 'd', 'ӏ': 'l',
+  'Α': 'A', 'Β': 'B', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'H', 'Ι': 'I', 'Κ': 'K', 'Μ': 'M', 'Ν': 'N', 'Ο': 'O', 'Ρ': 'P', 'Τ': 'T', 'Υ': 'Y', 'Χ': 'X', 'ο': 'o', 'ν': 'v', 'ι': 'i', 'α': 'a', 'ρ': 'p' };
 // (A5-5, audit 5: one zero-width character, a soft hyphen or full-width letters got past the screen: the text is
 // screened with format and control characters removed and compatibility forms folded, NFKC; it is shown as visible() writes it)
-const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627');
+const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627')
+  .replace(/[\u0370-\u03FF\u0400-\u04FF\u0500-\u052F]/g, (ch) => LOOKALIKE[ch] || ch).replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
 export const LONG_NAME = 120;
 // why a name or text reads like an instruction (empty when it doesn't); a long one is said too
 export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };

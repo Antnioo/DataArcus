@@ -1,8 +1,34 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (21 Oct): "T1" just below (branch `fix/0.3.0-testers`); before it (19 Oct): "R7" (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (22 Oct): "Night-audit fixes, October" just below; before it (21 Oct): "T1" (branch `fix/0.3.0-testers`); before it (19 Oct): "R7" (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Night-audit fixes, October (22 Oct, reviewer; branch `fix/night-audit-oct` from main 361dcc0; one PR, the owner merges)
+The owner, 22 Oct: "fix all other findings" (the night audit's open list, the private engine repo
+`business/audit/STATE.md`). Each written red first, in `mcp/test-audit-oct.mjs` (new, in `npm test`) or the suite that owns it:
+- AUD-036: a column type named like an object's own property (`constructor`, `__proto__`) is not a known type
+  (`server.mjs` `resolvePageFilters`, `Object.hasOwn`): 4 red -> pass.
+- AUD-039 (the red team's F-1): the screen (`lib/model.mjs` SCREEN) catches a DataArcus tool to call, a claimed
+  approval, a path outside the folder, data asked for, look-alike Cyrillic/Greek letters (folded for the screen only),
+  Arabic digits; folder names go through the same screen (`shownPath`). 38 asks written for the test: 34 missed before,
+  0 after; the private red team's 70 texts: 70 flagged (F-1 measured 10 of 43). No name of the made-up models
+  (fixtures, test-models: over 100) and none of 30 plain names and report texts is flagged.
+- AUD-043: PCT_FORMAT knows ٪, ％ and نسبة (`model-health-engine.js`, shared with the website); معدل left out on
+  purpose (it also means "average"). 4 missed -> 0.
+- AUD-044: the Microsoft watch counts "already reported" keys only from the issue and github-actions[bot]'s comments
+  (`scripts/microsoft-watch.mjs`; `test-microsoft-watch.mjs` W9, red first).
+- AUD-038: the Arabic gloss of the bridge quote (best-practice-exceptions article, p5). The owner reads the Arabic.
+- AUD-041: `/ar/` jumped 0.24 at 1440 when the 500-700 Arabic weights came after 400: `lang-manager.js` waits for every
+  weight (400-700) and the Latin letters inside Arabic text, still at most 1.5 s. Measured locally with the font files
+  slowed (first 300 ms, the rest 800 ms): 8 of 10 runs over 0.1 before, 0 of 8 after; normal speed 0; the Gulf
+  calendar article and licensing tool 0.
+- AUD-042: the calendar generator keeps the preview's and the Ramadan dates' default heights free until the first draw
+  (`cg-pending`): 0.11 in 4 of 4 runs -> 0.003 (EN, AR, 1100, 1440). At 390 a 0.022 shift of the form row was there
+  before and is still there (Seen, not in scope).
+- `scripts/make-article-mockups.mjs`: its comment no longer names the sector (the last such word in today's files;
+  AUD-012's history rewrite is the owner's, private plan in the engine `ops/history/`).
+- ?v= stamps 20261022a on every page that loads a changed .min.js; Arabic copies re-rendered.
 
 ## T1: the simulated beta testers' fixes, into 0.3.0 (21 Oct, cloud builder; branch `fix/0.3.0-testers` from main 2befc8d = 0.3.0 819f4b5 + #87; no PR yet: the reviewer opens it; never merged by the builder)
 The reviewer's brief (the owner, 21 Oct: "fix as much as we can in 2 rounds, one builder and one laptop session, so we
