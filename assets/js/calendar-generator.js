@@ -272,6 +272,8 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
 
   // ---------- render ----------
   const render = () => {
+    // the space kept for the first draw is let go: what is drawn now sets the heights (AUD-042)
+    document.querySelectorAll('.cg-pending').forEach((el) => el.classList.remove('cg-pending'));
     const s = parse(state.start), e = parse(state.end);
     // 1970-01-01 is timestamp 0, so test for NaN rather than falsy; 60 calendar years, leap days included
     const outside = !Number.isNaN(s) && !Number.isNaN(e) && (s < MIN_DATE || e < MIN_DATE || s > MAX_DATE || e > MAX_DATE);

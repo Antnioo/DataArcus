@@ -293,7 +293,7 @@ function resolvePageFilters(tables, list) {
     const key = `${t.name}[${col.name}]`;
     if (seen.has(key)) { problems.push(`${where}: ${key} is given twice: give one filter with all its values`); return null; }
     seen.add(key);
-    const type = String(col.dataType || 'unknown').toLowerCase(), known = KINDS[type];
+    const type = String(col.dataType || 'unknown').toLowerCase(), known = Object.hasOwn(KINDS, type) ? KINDS[type] : undefined;   // (AUD-036: never an inherited name such as constructor)
     if (/^date/.test(type)) { problems.push(`${where}: ${key} is a date column, and a page filter on a date is not supported yet (filter a year, month or flag column instead)`); return null; }
     if (!known && type !== 'unknown') { problems.push(`${where}: ${key} has the type ${type}, and a page filter takes a true/false, text, whole number or decimal number column`); return null; }
     const values = [];   // (0.2.9, audit 6's A6-14: typed; the report writer writes the literals, Pbip.pageFilterOf)

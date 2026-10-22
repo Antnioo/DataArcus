@@ -621,7 +621,10 @@ class LanguageManager {
     const link = this.currentLang === 'ar' && document.fonts && document.getElementById('ar-font');
     if (!link) { show(); return; }
     const css = link.sheet ? Promise.resolve() : new Promise((done) => { link.addEventListener('load', done); link.addEventListener('error', done); });
-    Promise.race([css.then(() => document.fonts.load('400 1em "IBM Plex Sans Arabic"', 'عربي')), new Promise((done) => setTimeout(done, 1500))]).then(show, show);
+    // every weight the head script loads: the headings and buttons are 500-700, and when only 400 was waited for they
+    // re-wrapped in front of the reader as the heavier files arrived (AUD-041: /ar/ jumped 0.24 at 1440)
+    const weights = () => Promise.all(['400', '500', '600', '700'].map((w) => document.fonts.load(`${w} 1em "IBM Plex Sans Arabic"`, 'عربي Power BI')));
+    Promise.race([css.then(weights), new Promise((done) => setTimeout(done, 1500))]).then(show, show);
   }
 }
 

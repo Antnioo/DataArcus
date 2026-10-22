@@ -184,10 +184,16 @@ for (const src of ['schemas', 'theme', 'npm', 'feed']) {
   ok(keysIn(com.body.body).has('theme:2.160'), 'W9 the comment carries its key line');
 
   // everything already listed (in the body or a comment): nothing written
-  const w3 = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: [{ body: com.body.body }] } });
+  const BOT = { login: 'github-actions[bot]' };
+  const w3 = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: [{ body: com.body.body, user: BOT }] } });
   const r3 = await run(w3);
   eq([r3.code, r3.posts.length], [0, 0], 'W9 all already listed: nothing written');
   ok(/already/i.test(r3.out), 'W9 the log says already reported');
+
+  // AUD-044: a key line in someone else's comment (anyone can comment on a public issue) silences nothing
+  const w3b = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: [{ body: 'Thanks! ' + com.body.body, user: { login: 'someone' } }, { body: com.body.body }] } });
+  const r3b = await run(w3b);
+  ok(r3b.posts.some((p) => /issues\/5\/comments$/.test(p.url) && /2\.160/.test(p.body.body)), 'W9 AUD-044: keys only from the issue and the workflow\'s own comments, never a stranger\'s');
 
   // a pull request in the issues list is not the issue
   const w4 = world({ cli: '0.6.0', issues: [{ number: 7, title: 'pr', body: '', pull_request: {} }] });
