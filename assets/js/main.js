@@ -515,6 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Clicks: CTAs, email/phone/WhatsApp, outbound links
+  const RELEASE_LINK = /^https:\/\/github\.com\/Antnioo\/dataarcus-releases\/releases\b/i;
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[href]');
     if (!a) return;
@@ -525,6 +526,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (/^tel:/i.test(href)) return track('contact_click', { method: 'phone', link_text: text });
     if (/wa\.me|whatsapp\.com/i.test(href)) return track('contact_click', { method: 'whatsapp', link_text: text });
 
+    // a DataArcus release (the MCP page's "Download 0.3.0"): its own event, so downloads from the site are counted by
+    // name and can be a GA4 key event (22 Oct 2026); the tag only, never the file's address
+    if (RELEASE_LINK.test(href)) {
+      return track('mcp_download_click', { release_tag: (/\/tag\/(v[\w.-]+)/.exec(href) || [])[1] || 'latest', link_text: text });
+    }
     if (/#contact\b/.test(href) || a.classList.contains('btn-accent')) {
       return track('cta_click', { cta_text: text, cta_target: href });
     }
