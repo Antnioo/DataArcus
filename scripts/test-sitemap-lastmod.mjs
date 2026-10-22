@@ -44,9 +44,9 @@ eq(dubaiDate(Date.parse('2026-10-03T20:39:35Z') / 1000), '2026-10-04', 'a commit
 eq(dubaiDate(Date.parse('2026-10-03T19:59:59Z') / 1000), '2026-10-03', 'a commit at 19:59 UTC is still on 3 October in Dubai');
 
 // ---------- this repository ----------
-// as of 3ff4ca9 (main, 4 October: the site bug fixes merged), so later edits to these pages don't make the test fail;
-// it needs the full history (CI checks out with fetch-depth: 0)
-const AT = '3ff4ca9';
+// as of e0eb2db (main, 4 October: the site bug fixes merged; 3ff4ca9 before the history was rewritten on 22 October),
+// so later edits to these pages don't make the test fail; it needs the full history (CI checks out with fetch-depth: 0)
+const AT = 'e0eb2db';
 // the 16 pages whose only change since 29 September is the Bootstrap 5.3.8 tags keep 29 September (the 17th of the
 // earlier list, report styles, had a real change on 4 October: 4f6a984)
 const UNCHANGED = ['dashboards/adventureworks-dashboard.html', 'dashboards/call-center-dashboard.html', 'dashboards/maven-market-dashboard.html',
