@@ -7,10 +7,11 @@ For testers on Windows, no command line needed.
 1. **Power BI Desktop 2.159.883.0 (October 2026) or later**, the lowest version the 0.3.0 laptop proofs ran on
    (Help > About shows yours; the Microsoft Store version updates itself), and save your reports as Power BI projects
    (File > Save as > `.pbip`).
-2. **Get the extension:** download the `.mcpb` file from https://github.com/Antnioo/dataarcus-releases/releases (the beta
-   release is shared with testers), or use the file you were sent. **Check it** against the SHA-256 we send: in a
-   Command Prompt, `certutil -hashfile "<file>.mcpb" SHA256`, or in PowerShell, `Get-FileHash "<file>.mcpb"` (SHA-256
-   is its default); the two must match before you install.
+2. **Get the extension:** download the latest `.mcpb` file (for 0.3.0, `dataarcus-0.3.0.mcpb`) from
+   https://github.com/Antnioo/dataarcus-releases/releases into your Downloads folder. **Check it** against the SHA-256
+   in that release's notes: open a Command Prompt in the Downloads folder and run
+   `certutil -hashfile "dataarcus-0.3.0.mcpb" SHA256` (or in PowerShell, `Get-FileHash "dataarcus-0.3.0.mcpb"`). The two
+   must match before you install; if they don't, delete the file and download it again.
 3. **Install it:** with Claude Desktop installed, double-click the `.mcpb` file and choose Install (if Windows asks
    which app opens the `.mcpb`, choose Claude). Or, in Claude Desktop: Settings > Extensions > Advanced settings >
    Install Extension..., then pick the `.mcpb` file. Settings > Extensions then shows "DataArcus for Power BI".
