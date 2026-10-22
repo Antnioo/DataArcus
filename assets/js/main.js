@@ -501,6 +501,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
 
+  // --- AI assistants (22 Oct 2026, the owner: "making sure AI refers us"): a visit an assistant sent, by its referrer or
+  //     the utm_source it adds, is named once, by the assistant only: a Clarity tag (each recording then says who sent
+  //     the visitor) and the GA4 event ai_referral with the landing page's path. Never the referrer's address: a chat
+  //     link can carry a conversation id. Consent works as for every other event (track and Clarity's own queue).
+  const aiSourceOf = (ref, search) => { const hosts = [['chatgpt', /(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/], ['perplexity', /(^|\.)perplexity\.ai$/], ['claude', /(^|\.)claude\.ai$/], ['gemini', /(^|\.)(gemini|bard)\.google\.com$/], ['copilot', /(^|\.)(copilot\.microsoft\.com|copilot\.cloud\.microsoft|edgeservices\.bing\.com)$/], ['you', /(^|\.)you\.com$/], ['phind', /(^|\.)phind\.com$/], ['poe', /(^|\.)poe\.com$/], ['meta', /(^|\.)meta\.ai$/], ['deepseek', /(^|\.)deepseek\.com$/], ['grok', /(^|\.)(grok\.com|x\.ai)$/], ['mistral', /(^|\.)mistral\.ai$/], ['kagi', /(^|\.)kagi\.com$/]]; const byHost = (h) => { const m = hosts.find(([, re]) => re.test(String(h || '').toLowerCase())); return m ? m[0] : null; }; let host = ''; try { host = ref ? new URL(ref).hostname : ''; } catch (e) { host = ''; } const utm = (new URLSearchParams(search || '').get('utm_source') || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0]; return byHost(host) || byHost(utm) || (hosts.some(([n]) => n === utm) ? utm : null); };
+  const aiSource = aiSourceOf(document.referrer, location.search);
+  if (aiSource && !(document.referrer && new URL(document.referrer, location.href).hostname === location.hostname)) {
+    try { if (typeof window.clarity === 'function') { window.clarity('set', 'ai_source', aiSource); window.clarity('set', 'ai_landing', location.pathname.slice(0, 100)); } } catch (e) { /* ignore */ }
+    trackOnce('ai_referral', 'ai_referral', { ai_source: aiSource, landing_path: location.pathname.slice(0, 100) });
+  }
+
   // --- Leads: fired by the form handler in section 5 after a successful send
   // (the beta page's request form is its own event, beta_request, so the home form's generate_lead keeps its meaning)
   document.addEventListener('dataarcus:lead', (e) => {
