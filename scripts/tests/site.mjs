@@ -400,7 +400,7 @@ export default async function ({ browser, url }) {
       });
       checks++;
       const bad = (m) => problems.push(`${tag}: ${m}`);
-      if (!r.subtitleLink) bad('"private beta" in the hero line is not a link to /power-bi-mcp/');
+      if (!r.subtitleLink) bad('"public beta" in the hero line is not a link to /power-bi-mcp/');
       if (!r.heroLinks.some((t) => is(t, w.button))) bad(`no hero button "${w.button}" to /power-bi-mcp/ (${r.heroLinks.join(' | ')})`);
       if (vp[0] === 1440 && r.trustRows !== 1) bad(`the trust badges sit on ${r.trustRows} rows, want 1`);
       if (!r.trustSide) bad('a trust badge runs off the screen');
@@ -415,7 +415,7 @@ export default async function ({ browser, url }) {
       if (lang === 'en' && !/^Explore my /.test(r.showcase || '')) bad(`showcases intro is not in the "I" voice: "${r.showcase}"`);
       if (r.stats[0] !== blogCards) bad(`articles stat ${r.stats[0]}, the blog lists ${blogCards}`);
       if (r.stats[2] !== dashboards) bad(`dashboard builds stat ${r.stats[2]}, the showcases page shows ${dashboards}`);
-      if (!r.agentStat || r.stats[4] !== 1) bad('no stat "1 AI agent in private beta" linking to /power-bi-mcp/');
+      if (!r.agentStat || r.stats[4] !== 1) bad('no stat "1 AI agent in public beta" linking to /power-bi-mcp/');
       if (!r.faq) bad('no FAQ answer linking /power-bi-mcp/ and mcp/PRIVACY.md');
       if (!r.faqConnect) bad('the FAQ\'s "I connect to" list lost SQL databases');
       if (JSON.stringify(r.heroBtns) !== JSON.stringify([['#contact', 'main'], ['/power-bi-mcp/', 'second']])) bad(`hero buttons ${JSON.stringify(r.heroBtns)}, want the call (main) and the AI agent (second)`);

@@ -91,7 +91,7 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
   const beta = read('assets/js/translations/beta-page.js'), home = read('assets/js/translations/homepage.js'), page = read('power-bi-mcp/index.html');
   const [betaEn, betaAr] = [beta.slice(0, beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m)), beta.slice(beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m))];
   ok(new RegExp(`"title": "The ${n} tools"`).test(betaEn) && new RegExp(`"title": "[^"]*${n}[^"]*أداة`).test(betaAr), `the beta page's tools title must say ${n} tools in English and Arabic (the server has ${n})`);
-  ok(new RegExp(`private beta \\(${n} tools\\)`).test(home) && new RegExp(`\\(${n} أداة\\)`).test(home), `the home page's agent line must say ${n} tools in English and Arabic`);
+  ok(new RegExp(`public beta \\(${n} tools\\)`).test(home) && new RegExp(`\\(${n} أداة\\)`).test(home), `the home page's agent line must say ${n} tools in English and Arabic`);
   ok(new RegExp(`>The ${n} tools<`).test(page), `power-bi-mcp/index.html must say "The ${n} tools"`);
   const missing = tools.filter((t) => !page.includes(`<code translate="no">${t}</code>`) || (beta.match(new RegExp(`"${t}":`, 'g')) || []).length < 2);
   ok(!missing.length, `the beta page must have a line for each tool in English and Arabic: missing ${missing.join(', ')}`);

@@ -39,7 +39,7 @@ window.homepageTranslations = {
     // Hero Section
     hero: {
       title: "Power BI reports checked in Power BI, not just generated",
-      subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>private beta</a>).",
+      subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>public beta</a>).",
       buttonDiscuss: "Book a Free Data Clarity Call",
       buttonAgent: "Try the AI agent (beta)",
       badgeSecurity: "Enterprise Security",
@@ -132,7 +132,7 @@ portfolio: {
         { title: "Languages: English and Arabic" },
         { title: "End-to-End Dashboard Builds" },
         { title: "Free Power BI & Fabric Tools Published" },
-        { title: "AI agent in private beta (11 tools)" }
+        { title: "AI agent in public beta (11 tools)" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
@@ -332,7 +332,7 @@ portfolio: {
     // Hero Section
     hero: {
       title: "تقارير Power BI نتحقق منها في Power BI نفسه، ولا نكتفي بتوليدها",
-      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>تجربة خاصة</a>).",
+      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>نسخة تجريبية عامة</a>).",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       buttonAgent: "جرّب الوكيل الذكي (تجريبي)",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -425,7 +425,7 @@ portfolio: {
         { title: "لغتان: العربية والإنجليزية" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
         { title: "أدوات Power BI و Fabric مجانية منشورة" },
-        { title: "وكيل ذكاء اصطناعي في نسخة تجريبية خاصة (11 أداة)" }
+        { title: "وكيل ذكاء اصطناعي في نسخة تجريبية عامة (11 أداة)" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",

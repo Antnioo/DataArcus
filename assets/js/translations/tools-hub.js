@@ -164,7 +164,7 @@ window.toolsHubTranslations = {
           "tag3": "درس تفاعلي"
         }
       },
-      "nextUp": "قريبًا",
+      "nextUp": "التالي",
       "soon": {
         "licensing": {
           "title": "حاسبة تكلفة تراخيص Power BI",
