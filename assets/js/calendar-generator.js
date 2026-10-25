@@ -331,8 +331,9 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   });
   document.querySelectorAll('[data-quick]').forEach((b) => b.addEventListener('click', () => {
     const p = b.dataset.quick;
-    if (p === 'uae') Object.assign(state, { week: 'mon', weekend: 'sat-sun', hijri: true });
-    if (p === 'ksa') Object.assign(state, { week: 'sun', weekend: 'fri-sat', hijri: true });
+    // (0.3.1 GC) the country's dated weekend, so a range that starts before its change keeps the old weekend there
+    if (p === 'uae') Object.assign(state, { week: 'mon', weekend: 'uae', hijri: true });
+    if (p === 'ksa') Object.assign(state, { week: 'sun', weekend: 'ksa', hijri: true });
     if (p === 'egypt') Object.assign(state, { week: 'sat', weekend: 'fri-sat', hijri: true });
     if (p === 'global') Object.assign(state, { week: 'mon', weekend: 'sat-sun', hijri: false });
     ['cgWeek', 'cgWeekend'].forEach((id) => { $(id).value = state[id === 'cgWeek' ? 'week' : 'weekend']; });
