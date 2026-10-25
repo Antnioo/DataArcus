@@ -35,6 +35,11 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   `mcp/work/V1.md`.
 - Next waves (after these): X2 (bilingual create_report, rebase on R1's button), the Arabic audit lens on check_report
   (after S1), the sample project, Arabic terms, Finding #3, K1.
+- **L1 (wave 2, the Arabic lens): done (25 Oct, cloud builder), branch `feat/0.3.1-arabic-lens`, not merged:** 73a330b
+  plan, c53226d red tests, f3e87bc the lens. check_report `lens: "arabic"` (`mcp/lib/arabic-lens.mjs`): "Is this report
+  ready for Arabic?" page by page, a summary first, each fix a DataArcus call, a Desktop setting or "Power BI has no setting".
+  New suite `test-0.3.1-arabic-lens.mjs` (31) in `npm test`. Results, decisions, "For the laptop", "For the website",
+  "Seen, not in scope": `mcp/work/L1.md`.
 
 ## Night-audit fixes, October (22 Oct, reviewer; branch `fix/night-audit-oct` from main 361dcc0; one PR, the owner merges)
 The owner, 22 Oct: "fix all other findings" (the night audit's open list, the private engine repo

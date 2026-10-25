@@ -172,6 +172,8 @@ try {
   chk(() => !plain.err && Array.isArray(PJ.findings) && !('lens' in PJ) && !('summary' in PJ) && PJ.validator && PJ.counts, () => `X4. check_report without lens answers as before (no lens keys): ${short(plain)}`);
 } finally {
   await w.close();
+  // (L1_KEEP=<an empty folder>: the four fixtures and the twin copied there for the laptop; nothing else changes)
+  if (process.env.L1_KEEP) fs.cpSync(ROOT, process.env.L1_KEEP, { recursive: true });
   try { fs.rmSync(log, { force: true }); fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* the OS cleans its temp folder */ }
 }
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  arabic-lens  ${problems.length} of ${checks} checks`); process.exit(1); }
