@@ -65,9 +65,6 @@ const PLAN = 'behind approve_plan\'s gate: runs only inside a tool\'s write afte
 const TMP = 'the temporary check copy: a folder of its own in the OS temp folder (fs.mkdtempSync), removed when the check ends; never the working folder';
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
-  'server.mjs': {
-    'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }
-  },
   'lib/write-io.mjs': {
     'fs.writeFileSync': { n: 1, why: 'kept as REAL.writeFileSync (the real call behind io), not a call' },
     'fs.mkdirSync': { n: 1, why: 'kept as REAL.mkdirSync, not a call' },
@@ -134,6 +131,9 @@ const LIST = {
     'writeScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.step): ${PLAN}` },
     'formatsAnswer()': { n: 1, why: `writes only with write = true, inside check_model_health's approved planWrites: ${PLAN}` },
     'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` }
+  },
+  'tools/create_arabic_twin.mjs': {
+    'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }
   },
   'tools/create_report.mjs': {
     'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
