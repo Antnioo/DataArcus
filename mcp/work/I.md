@@ -72,13 +72,62 @@ Cloud builder, 25 Oct. Branch `feat/0.3.1-site-card-study` from `origin/integrat
   event (letters and _, no reserved prefix or attribution name).
 
 ## Results
-(filled in after the run)
+Commits: 34a6c93 plan, 4f2aa69 red tests, 8629ea1 I-1 score card, ccff6f8 I-2 study links, then this note.
+
+- Red first (the run on 4f2aa69's tests with the old code): `model-health` crashed at I-1 (no download, no button);
+  `tools` 16 of the 24 new checks failed (no `data-dom` rows, no links; the 8 others hold over an empty list).
+- Before -> after, all 20 website suites (`node scripts/tests/run-all.mjs`, spacing and text-align included):
+  **11,130 -> 11,174 checks, 20 of 20 pass.** model-health 232 -> 252 (+20, as expected), tools 367 -> 391 (+24, as
+  expected); every other suite unchanged (site 473, anchors 120, spacing 1,056, components 919, consent 38,
+  lang-switcher 1,405, theme-generator 894, -lab 894, pbip 100, dax 51, layout 512, -lab 512, svg-kpi 854, tmdl-model
+  70, design-engine 598, gulf-calendar 814, text-align 468, theme-logo 753). (Before: model-health measured on 6bed05d's
+  own test file, 232; tools 391 - 24.)
+- Node checks: `check-min` all 72 match, every changed .min.js has a new ?v= stamp; `pl300-bank/build.js --check` PASS;
+  `csp.mjs` 137 pages current; `ar-pages.mjs` 37 copies match; `sitemap-lastmod.mjs` all dates match (no date moved:
+  the pages' own HTML changed only in ?v= stamps); `test-site-config.mjs` PASS; `test-analytics-events.mjs` 89 calls
+  follow GA4's rules (`health_card_download` among them); `check-result-lines` 65, `test-whats-new` 88,
+  `check-exam-outline` pl-300 and dp-600 unchanged.
+- The card (sample model, 1280 px): EN and AR, names shown and hidden, 1200 x 630; the panel at 1280 (two by two) and
+  390 (one column); the study links in the mock and practice results of both exams, EN and AR, 1280 and 390. Shots
+  attached to the session, not committed.
 
 ## CHANGELOG line
-(filled in after the run)
+Website: the Power BI Model Health Check can download a score card to share (a 1200 x 630 picture with the score, the
+model's size and the top 5 findings, names optional, drawn in your browser), and the PL-300 and DP-600 practice exams
+link each exam area under 70% to its section of Microsoft's study guide.
 
 ## Decisions I made
-(filled in as I go)
+1. **Study pages = the study guide's own sections**, one per exam area (PL-300 4, DP-600 3), not the renewal modules:
+   the renewal modules are per renewal skill and don't map one to one onto the areas (PL-300's "Visualize and analyze"
+   has one module, "Manage and secure" two). The link is the study guide with the area heading's id. Checked the way the
+   renewal links were (the page read on Learn, its title and the heading's text = the area's name and weight), and the
+   tools suite holds the 7 verified addresses. The anchors carry the weight ("-2530"): when Microsoft changes a weight,
+   the anchor changes, and the weekly outline check already flags a changed outline for review.
+2. **Under 70% = the percent as shown, rounded** (`Math.round(p * 100) < 70`), so a row reading 70% never has the
+   link and 69% always does. The renewal rows keep their own `p < 0.7` (untouched, as asked).
+3. **The practice summary gets a "By exam area" block** above its skills (only the areas it asked about): it had no
+   area rows to hang the links on.
+4. **The card's object name is the first item's name only** (`items[0].obj`, cut at 60 characters and to the line's
+   width), on its own line below the rule, with "+k" (Arabic "وk أخرى") for the rest; never `detail`, which can hold
+   DAX advice. Hidden names: the rule and its count "(k)".
+5. **"Hide object names" is off by default**, as the brief lists the names first; the switch keeps its state while the
+   page is open (not stored).
+6. **The card's text is also a visually hidden list `#mhCardText`** (for screen readers, and what the tests read): the
+   PNG itself carries no text metadata.
+7. **The four export panels sit two by two below 1400 px** (`col-md-6 col-xxl-3`): at four across, 1280 px wrapped
+   "Download score card" onto two lines.
+8. **Event parameters**: `names_hidden` (true/false) and `lang` (en/ar); no score or name sent.
+9. **Font**: the card uses the page's own font stack (`getComputedStyle(body).fontFamily`: Inter, and IBM Plex Sans
+   Arabic on the Arabic page), loaded before drawing (at most 1.5 s); Latin digits on both, as the page writes them.
+10. My own red test counted the rule title "FILTER over a whole table inside CALCULATE" as DAX; it now looks for DAX
+    calls (`CALCULATE(`, `SUM(`, `FILTER(`, `LEN(`) plus the planted strings (said in the I-1 commit).
 
 ## Seen, not in scope
-(filled in as I go)
+- `sitemap-lastmod.mjs --write` on a shallow clone (this cloud container's) moved 38 dates to 2026-10-16, the oldest
+  commit it could see; after `git fetch --unshallow` nothing moved. A builder in a shallow checkout gets wrong dates
+  without a warning.
+- PL-300 / DP-600 results, Arabic: the area weights read "25–30%" with the percent sign placed by the bidi rules
+  (pre-existing, every area row and the renewal rows).
+- The practice summary's skill table shows its bars blue (the default) while the area rows are green / amber
+  (pre-existing look of the skill table; the mock's skill table is green / amber).
+- `scripts/deny-scan.mjs` needs `DENY_TERMS` (a CI secret): not run here.

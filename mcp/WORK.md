@@ -43,6 +43,10 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
 - **Running (25 Oct):** M1 the matrix mirror lab and one mirror engine for every Arabic path (`feat/0.3.1-matrix-mirror`;
   the owner: "when I opened the last one myself it was not mirrored; make sure the AR and twin use the same engine");
   L1 the Arabic audit lens on check_report (`feat/0.3.1-arabic-lens`).
+- **I (wave 3, the website's score card and the exams' study links; the owner's "Yes", 22 Oct). Done (25 Oct, cloud
+  builder), branch `feat/0.3.1-site-card-study`, not merged:** 34a6c93 plan, 4f2aa69 red tests, 8629ea1 score card,
+  ccff6f8 study links. Website suites 11,130 -> 11,174, 20 of 20 pass (model-health +20, tools +24). Results,
+  decisions, CHANGELOG line, "Seen, not in scope": `mcp/work/I.md`.
 - Next: X2 (bilingual create_report, after M1: it shares the Arabic writers), then wave 3 (the sample project, Arabic
   terms, the website's score card, exam study links and the "ready for Arabic?" page), wave 4 (K1, Finding #3, drafts
   #82 and #84), wave 5 (release prep).
