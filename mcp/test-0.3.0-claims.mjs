@@ -307,5 +307,21 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
   check(/يحددان أيام العيد لا العطلات العامة في كل دولة/.test(t), `Eid al-Adha 10-13: ${k}: "the days of Eid, not a country's public holidays" is missing (AR)`);
 }
 
+// AF1 (0.3.1, the release audit's honest limits): each new PRIVACY.md sentence, and the code it describes
+{
+  const model = read('./lib/model.mjs'), server = read('./server.mjs'), twinTexts = read('./lib/twin-texts.mjs'), twinPreview = read('./lib/twin-preview.mjs'), preview = read('../assets/js/page-preview.js');
+  check(/The server does this once, when it starts, for the folder you chose in the settings only \(never a chain of folders\); nothing inside it is written without your approval\./.test(pv)
+    && /if \(ROOT && !fs\.existsSync\(ROOT\) && isDir\(path\.dirname\(ROOT\)\)\) \{ try \{ fs\.mkdirSync\(ROOT\); \}/.test(model) && (server.match(/prepareRoot\(\)/g) || []).length === 1,
+    'AF1-P1. PRIVACY.md section 4 does not say the server makes the chosen working folder once at start (its parent there, never a chain), or the code no longer does exactly that');
+  check(/DataArcus checks a file or folder right before it writes, renames or removes it; another program changing the same place at that same instant is outside what it can check\./.test(pv),
+    'AF1-P2. PRIVACY.md section 4 does not say the check right before each write, rename or removal, and the same-instant limit');
+  check(/The same holds for a report measure a visual shows as text \(such as the empty state's message\): its fixed texts are returned so their Arabic can be approved, the rest of its DAX is not\./.test(pv)
+    && /kind: 'measureText', text: b\.template/.test(twinTexts),
+    'AF1-P3. PRIVACY.md section 3 does not say the twin returns a text measure\'s fixed texts (the empty state), or the twin no longer lists them');
+  check(/A chart whose title is a DataArcus "Top N" title measure \(named "Title: \.\.\."\) is drawn there with the text that measure's DAX shows when every category is shown, read from the plan's own `reportExtensions\.json`; it is drawn on the page only, never put in an answer\./.test(pv)
+    && /\\bIF \\\( _s = _n, "/.test(preview) && /\^Title: \//.test(preview) && /reportExtensions\\\.json\$/.test(twinPreview),
+    'AF1-P4. PRIVACY.md section 3 does not say the approval page draws a Top N title measure\'s text, or the page no longer reads it from reportExtensions.json');
+}
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);

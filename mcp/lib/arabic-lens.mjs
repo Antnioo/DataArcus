@@ -13,7 +13,7 @@
 //   - what Power BI's matrix cannot do: arabic-twin.mjs MATRIX_SAID; the Arabic calendar columns: arabic-calendar.js
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { loadModel, ROOT, visible } from './model.mjs';
+import { loadModel, ROOT, shownName } from './model.mjs';
 import { AIM } from './scope.mjs';
 import { safeName, readJson, locate, inventory, diskSource } from './read-report.mjs';
 import { rulesInput, pageLanguages, builtByOf, fixRoutesOf } from './check-report.mjs';
@@ -156,9 +156,9 @@ export function arabicLens(p) {
     // 5. calendar values: a date table's month, day, quarter or Hijri names in English
     const cal = live.map((x) => ({ x, cs: projections(x).map(fieldName).filter((f) => f && f.column && CAL[f.table + '.' + f.name]) })).filter((v) => v.cs.length);
     if (cal.length) { const names = [...new Set(cal.flatMap((v) => v.cs.map((f) => f.table + '.' + f.name)))];
-      add(pg, 'CALENDAR_VALUES', `${cal.length} visual${cal.length === 1 ? ' shows' : 's show'} calendar names from the model in English (${names.slice(0, 4).map((k) => { const i = k.indexOf('.'); return `${visible(k.slice(0, i)).slice(0, 40)}[${visible(k.slice(i + 1)).slice(0, 40)}]`; }).join(', ')}): they are the model's data, no report setting changes them`,
+      add(pg, 'CALENDAR_VALUES', `${cal.length} visual${cal.length === 1 ? ' shows' : 's show'} calendar names from the model in English (${names.slice(0, 4).map((k) => { const i = k.indexOf('.'); return `${shownName(k.slice(0, i), 40)}[${shownName(k.slice(i + 1), 40)}]`; }).join(', ')}): they are the model's data, no report setting changes them`,
         { kind: 'model', tool: 'add_gulf_calendar', options: Object.assign(modelPath ? { path: modelPath } : {}, { arabicColumnsOnly: true }),
-          how: `add_gulf_calendar with arabicColumnsOnly writes a TMDL script that adds the Arabic calendar columns to the model's date table (${[...new Set(names.map((k) => CAL[k]))].slice(0, 4).map((n) => visible(n)).join(', ')}, each sorted like its English column); the user applies it in TMDL view (DataArcus never changes the model). Then show those columns in place of the English ones (in Desktop, or by making the Arabic pages again with create_arabic_twin, whose arabicMonth offers the same script).` }, { count: cal.length }); }
+          how: `add_gulf_calendar with arabicColumnsOnly writes a TMDL script that adds the Arabic calendar columns to the model's date table (${[...new Set(names.map((k) => CAL[k]))].slice(0, 4).map((n) => shownName(n, 80)).join(', ')}, each sorted like its English column); the user applies it in TMDL view (DataArcus never changes the model). Then show those columns in place of the English ones (in Desktop, or by making the Arabic pages again with create_arabic_twin, whose arabicMonth offers the same script).` }, { count: cal.length }); }
     // 6. slicers: items (no setting), pills (one row of buttons: the order and P7's centred values)
     const slicers = ofKind('slicer'), pill = (x) => x.type === 'advancedSlicerVisual' && String(litOf(plainOf(objs(x).layout).rowCount)) === '1L';
     const items = slicers.filter((x) => !pill(x));

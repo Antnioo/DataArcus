@@ -89,6 +89,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   `reportExtensions.json`, as DataArcus writes "Top N of M" titles) returns the fixed texts of that measure's DAX, the
   words the chart shows ("Top {1} of {2}: Sales by Region", its counted numbers as {1} and {2}), so you can approve
   their Arabic; the rest of its DAX is not returned. A title measure of any other shape is named, never quoted.
+  The same holds for a report measure a visual shows as text (such as the empty state's message): its fixed texts are
+  returned so their Arabic can be approved, the rest of its DAX is not.
 - **Fix scripts are files, not answers.** A ready fix (sort order, number formats) is a TMDL script that rewrites
   whole measures or columns, so it holds their expressions and descriptions as they are in your model. The health
   check writes each script to a new `.tmdl` file next to your project and returns only the file's path, the names of
@@ -128,7 +130,10 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   the app closes.
 - **0.3.1: the approval page draws each Arabic page.** For the Arabic twin, the EN-AR copy and one report in English
   and Arabic, DataArcus's approval window draws each Arabic page (and each English page beside it) from the plan's own
-  build, on your computer only, like the report's preview: no picture is sent to the AI app or anywhere else.
+  build, on your computer only, like the report's preview: no picture is sent to the AI app or anywhere else. A chart
+  whose title is a DataArcus "Top N" title measure (named "Title: ...") is drawn there with the text that measure's DAX
+  shows when every category is shown, read from the plan's own `reportExtensions.json`; it is drawn on the page only,
+  never put in an answer.
 - **0.3.1: the plugin folder (not published yet).** `mcp/skills-packaging/` holds a plugin for Claude Code and GitHub
   Copilot CLI: two skills and the address of the release's `.mcpb`. It installs the same `.mcpb` the release page gives
   (Claude Code downloads it from the release; Copilot CLI by hand), so everything on this page holds for it; the plugin
@@ -145,7 +150,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 - **No working folder, no work.** If no folder was chosen (the setting is missing or empty), every tool refuses and
   says so; the server never falls back to whatever folder it happens to start in. A chosen folder that doesn't exist
   yet is created when the folder above it exists (for example `Documents\DataArcus` on a new computer); otherwise the
-  tools tell you to create it.
+  tools tell you to create it. The server does this once, when it starts, for the folder you chose in the settings
+  only (never a chain of folders); nothing inside it is written without your approval.
 - **Links are not followed out of the folder.** A shortcut-like link inside the working folder (a symbolic link or a
   Windows junction) that points to a folder outside it is refused, for reading and for writing: the tools check where
   a path really is, not only its name. The same holds for the paths a tool picks itself:
@@ -154,7 +160,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 - **What these checks are not:** DataArcus checks every path inside the working folder and never follows links, but
   it is not a defence against another program on the same computer changing the folder while DataArcus is working:
   in the instant between DataArcus's last check of a name and its write or its clean-up of that name (a single call),
-  a swap by another program can still win.
+  a swap by another program can still win. DataArcus checks a file or folder right before it writes, renames or
+  removes it; another program changing the same place at that same instant is outside what it can check.
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.

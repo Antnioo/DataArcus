@@ -62,6 +62,8 @@ const MUTANTS = [
   { id: 'D-inside', file: MO, edits: [['  const full = underRoot(ROOT, p);\n  if (full == null)', "  const full = path.resolve(ROOT, String(p || '.'));\n  if (full == null)"]], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-nfc', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFC'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
   { id: 'D-nfd', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFD'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
+  // (AF1) the report reader opens a file through a linked folder: diskSource's check of every folder on the way skipped
+  { id: 'R-ancestors', file: 'mcp/lib/read-report.mjs', edits: [['  const at = (rel) => {\n    const parts', "  const at = (rel) => { return path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));\n    const parts"]], guards: ['test-0.3.1-audit-readers.mjs'] },
 
   // 3. writes and their clean-up
   { id: 'W-wx', file: WI, edits: [["const NEW_FILE = { flag: 'wx' };", "const NEW_FILE = { flag: 'w' };"]], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs', 'test-z.mjs'] },

@@ -2,7 +2,10 @@
 // column's offer, and the right-to-left waterfall's facts.
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import path from 'node:path';
-import { loadModel, visible } from './model.mjs';
+import { loadModel, shownName } from './model.mjs';
+// (AF1, the release audit's F11) a model name as the month offer's answer shows it: the one screen (withheld when it reads
+// like an instruction), invisible characters as code points, never cut (the plan's lists match these names)
+const nm = (s) => shownName(s, Infinity);
 import { tagOf } from './model-script.mjs';
 import { relRoot, byPathOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
@@ -65,16 +68,16 @@ export function monthOffer(model, loc, outBase) {
   // into a script) the date table, its date column or a column with one is left out and named, with why; a bidi or
   // zero-width name stays (inside its quotes, as every script writes it)
   const CC = 'its name holds a control character (a tab or a line break): no script names it; rename it in Power BI Desktop, then ask again';
-  if (hasControl(cands[0].name)) return { offered: false, why: `the date table "${visible(cands[0].name)}": ${CC}`, leftOut: [{ table: visible(cands[0].name), why: CC }] };
+  if (hasControl(cands[0].name)) return { offered: false, why: `the date table "${nm(cands[0].name)}": ${CC}`, leftOut: [{ table: nm(cands[0].name), why: CC }] };
   const t = cands[0], ccCols = (t.columns || []).filter((c) => hasControl(c.name)), cols = (t.columns || []).filter((c) => !hasControl(c.name));
-  const ccLeft = ccCols.map((c) => ({ column: visible(c.name), why: CC }));
+  const ccLeft = ccCols.map((c) => ({ column: nm(c.name), why: CC }));
   const has = (re) => cols.find((c) => re.test(String(c.name)));
   const arabicMonthThere = !!(has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/));
   const raw = ((m.tmsl && m.tmsl.model && m.tmsl.model.tables) || []).find((x) => x.name === t.name) || {};
   const date = (raw.columns || []).find((c) => c.name && !hasControl(c.name) && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
   // the month number to sort by: an integer column named like one (an untyped DAX column of that name counts: its DAX makes it a number)
   const typedRaw = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return untyped(x ? x.dataType : c.dataType); };
-  if (!date) return { offered: false, why: `the date table "${visible(t.name)}" has no date column a script can name`, ...(ccLeft.length ? { leftOut: ccLeft } : {}) };
+  if (!date) return { offered: false, why: `the date table "${nm(t.name)}" has no date column a script can name`, ...(ccLeft.length ? { leftOut: ccLeft } : {}) };
   // (rc.5: an untyped column of a calculated calendar is a number only when its DAX there is MONTH ( ... ): a plain
   // "Month" there was FORMAT ( [Date], "MMM" ), a text, and sorting by it puts the months in alphabetical order)
   const calcExpr = (raw.partitions || []).filter((p) => p && p.source && p.source.type === 'calculated').map((p) => (Array.isArray(p.source.expression) ? p.source.expression.join('\n') : String(p.source.expression || ''))).join('\n');
@@ -101,17 +104,17 @@ export function monthOffer(model, loc, outBase) {
   // the month column's sort as before: its English column's own, else the month number found, else a hidden one
   built.columns.filter((c) => c.kind === 'month').forEach((c) => { const en = list.find((x) => x.name === c.of); if (!(en && en.sortBy) && num) { c.sortBy = num.name; delete c.sortNew; } else if (!(en && en.sortBy) && !num) { c.sortBy = MONTH_SORT; c.sortNew = { name: MONTH_SORT, dax: `MONTH ( ${dref} )` }; } });
   built.skipped = ccLeft.map((x) => ({ of: x.column, why: x.why })).concat(built.skipped);
-  if (!built.columns.length) return { offered: false, why: `the date table "${visible(t.name)}" has its Arabic calendar columns already${built.skipped.length ? ` (left out: ${built.skipped.map((x) => `${visible(x.of)}: ${x.why}`).join('; ')})` : ''}` };
+  if (!built.columns.length) return { offered: false, why: `the date table "${nm(t.name)}" has its Arabic calendar columns already${built.skipped.length ? ` (left out: ${built.skipped.map((x) => `${nm(x.of)}: ${x.why}`).join('; ')})` : ''}` };
   const seed = 'arabic-calendar\0' + t.name, tag = (n) => tagOf(seed, n), lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''], made = new Set();
   built.columns.forEach((c) => { if (c.sortNew && !made.has(c.sortNew.name)) { made.add(c.sortNew.name); lines.push(`\t\tcolumn ${tmdlName(c.sortNew.name)} = ${c.sortNew.dax}`, '\t\t\tdataType: int64', '\t\t\tisHidden', `\t\t\tlineageTag: ${tag(c.sortNew.name)}`, '\t\t\tsummarizeBy: none', ''); } });
   built.columns.forEach((c) => lines.push(`\t\tcolumn ${tmdlName(c.name)} = ${c.dax}`, '\t\t\tdataType: string', `\t\t\tlineageTag: ${tag(c.name)}`, '\t\t\tsummarizeBy: none', ...(c.sortBy ? [`\t\t\tsortByColumn: ${tmdlName(c.sortBy)}`] : []), ''));
   const mc = built.columns.find((c) => c.name === MONTH_COLUMN);
-  return { offered: true, table: visible(t.name), dateColumn: visible(date.name), column: mc ? MONTH_COLUMN : built.columns[0].name, sortBy: mc ? (mc.sortNew ? mc.sortBy + ' (written with it, hidden)' : visible(mc.sortBy)) : null,
+  return { offered: true, table: nm(t.name), dateColumn: nm(date.name), column: mc ? MONTH_COLUMN : built.columns[0].name, sortBy: mc ? (mc.sortNew ? mc.sortBy + ' (written with it, hidden)' : nm(mc.sortBy)) : null,
     // (kept short: a twin's plan answer has one size budget, its texts first)
-    columns: built.columns.map((c) => (c.sortBy ? { name: c.name, sortBy: visible(c.sortBy) } : { name: c.name })),
-    englishData: built.columns.filter((c) => cols.some((x) => x.name === c.of)).map((c) => `${visible(t.name)}[${visible(c.of)}]`),
+    columns: built.columns.map((c) => (c.sortBy ? { name: nm(c.name), sortBy: nm(c.sortBy) } : { name: nm(c.name) })),
+    englishData: built.columns.filter((c) => cols.some((x) => x.name === c.of)).map((c) => `${nm(t.name)}[${nm(c.of)}]`),
     englishDataWhy: 'their values are the model\'s own English data: an Arabic page shows them as they are until the script adds their "(Arabic)" twins',
-    ...(built.skipped.length ? { leftOut: built.skipped.map((x) => ({ column: visible(x.of), why: x.why })) } : {}),
+    ...(built.skipped.length ? { leftOut: built.skipped.map((x) => ({ column: nm(x.of), why: x.why })) } : {}),
     ...(calculated ? { note: 'the date table is a DAX (calculated) table: the lab added the column to its formula; adding it as a calculated column is not yet proven in Desktop through TMDL view: check Preview before Apply' } : {}),
     scriptAfterGo: `${outBase} - Arabic calendar.tmdl`, script: lines.join('\n') + '\n',
     howToApply: `Save a copy of the Power BI file first. Open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (${built.columns.length} Arabic column${built.columns.length === 1 ? ' is' : 's are'} added to the date table, each sorted like its English column), then Apply. DataArcus never applies it: the model is changed only when the user applies it. Then ask for the Arabic report again (plan, approve, write): it binds the Arabic columns (يناير، الأحد، الربع 1، عطلة نهاية الأسبوع...) in place of the English ones.`,
