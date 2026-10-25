@@ -18,7 +18,7 @@
 import { createRequire } from 'node:module';
 import { modelOf, shownName } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF } from './model-script.mjs';
-import { calendarFor, frontValue } from './flip-cards.mjs';
+import { calendarFor, frontValue, UNITS_AR } from './flip-cards.mjs';
 import { targetOf } from './status-icons.mjs';
 
 const require = createRequire(import.meta.url);
@@ -145,7 +145,10 @@ const obj = (p) => [{ properties: p }];
 const litOf = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value) : '');
 const textOf = (p) => litOf(p).replace(/^'|'$/g, '').replace(/''/g, "'");
 const measureRef = (t, m) => ({ Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } });
-const WORDS = { en: { period: 'last year' }, ar: { period: 'العام الماضي' } };
+const WORDS = { en: { period: 'last year', units: null }, ar: { period: 'العام الماضي', units: UNITS_AR } };
+// (0.3.1 SQ2, L6-S2) the value's text as the flip cards say it, K/M/B in the report's language: the number, then in
+// Arabic E's word (plain text: the functions escape their own text)
+const valueDax = (mo, mref, lang) => { const fv = frontValue(mo, mref, WORDS[lang === 'ar' ? 'ar' : 'en'].units, true); return fv.t + (fv.u ? ' & ' + fv.u : ''); };
 // the year on year of a measure by the marked date table, or BLANK () without one
 const yoyDax = (mref, cal) => (cal ? `VAR _p = CALCULATE ( ${mref}, SAMEPERIODLASTYEAR ( ${dax.column(cal.t, cal.c)} ) )\nVAR _d = IF ( ISBLANK ( _v ) || ISBLANK ( _p ) || _p = 0, BLANK (), DIVIDE ( _v - _p, ABS ( _p ) ) )` : 'VAR _d = BLANK ()');
 // the points of the last SPARK.months months with data (by the marked date table), whole numbers in en-US
@@ -156,11 +159,11 @@ export const sparkDax = (t, m, cal, c) => [
 export const bulletDax = (t, m, target, c) => [`VAR _a = ${dax.column(t, m)}`, `VAR _t = ${dax.column(target.t, target.m)}`,
   `RETURN DA.BulletBar ( _a, _t, MAX ( _a, _t ) * 1.25, TRUE (), ${dax.string(c.good)}, ${dax.string(c.bad)}, ${dax.string(c.track)}, ${dax.string(c.mark)} )`].join('\n');
 export const cardDax = (t, mo, title, cal, c, w, h, lang) => { const mref = dax.column(t, mo.name);
-  return [`VAR _v = ${mref}`, `VAR _s = ${frontValue(mo, mref).t}`, yoyDax(mref, cal),
+  return [`VAR _v = ${mref}`, `VAR _s = ${valueDax(mo, mref, lang)}`, yoyDax(mref, cal),
     `RETURN DA.KpiCard ( ${dax.string(title)}, _s, _d, TRUE (), ${w}, ${h}, ${dax.string(c.good)}, ${dax.string(c.bad)}, ${dax.string(c.text)}, ${dax.string(c.card)}, ${dax.string(lang)} )`].join('\n'); };
 export const storyDax = (t, mo, cat, noun, cal, lang) => { const mref = dax.column(t, mo.name), cref = dax.column(cat.t, cat.c);
   return [`VAR _top = TOPN ( 1, FILTER ( VALUES ( ${cref} ), NOT ISBLANK ( ${mref} ) ), ${mref}, DESC )`, `VAR _k = MAXX ( _top, ${cref} )`,
-    `VAR _v = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ) )`, `VAR _s = ${frontValue(mo, mref).t}`,
+    `VAR _v = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ) )`, `VAR _s = ${valueDax(mo, mref, lang)}`,
     cal ? `VAR _p = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ), SAMEPERIODLASTYEAR ( ${dax.column(cal.t, cal.c)} ) )\nVAR _d = IF ( ISBLANK ( _v ) || ISBLANK ( _p ) || _p = 0, BLANK (), DIVIDE ( _v - _p, ABS ( _p ) ) )` : 'VAR _d = BLANK ()',
     `RETURN IF ( ISBLANK ( _k ), BLANK (), DA.StoryTitle ( _k & "", _s, ${dax.string(noun)}, _d, ${dax.string(WORDS[lang].period)}, ${dax.string(lang)} ) )`].join('\n'); };
 

@@ -30,9 +30,11 @@ const SUFFIX = { front: 'flip front', back: 'flip back', backdrop: 'flip backdro
 // the turn (the lab's v2, measured): .3 s at most, from 25 degrees and opacity .6
 export const TURN = { seconds: 0.3, degrees: 25, opacity: 0.6, perspective: 700 };
 const DESC_MAX = 90;
+/** E's Arabic words for K, M, B (0.3.0 A3): the one list, for the flip cards and the DAX function library's pictures. */
+export const UNITS_AR = Object.freeze({ K: ' ألف', M: ' مليون', B: ' مليار' });
 const W = {
   en: { units: null, yoy: ' vs last year', front: (t) => `${t}, KPI card: select to see what it means`, back: (t) => `${t}: what it means; select to turn back`, bmFront: (t) => `Flip ${t}: front`, bmBack: (t) => `Flip ${t}: back` },
-  ar: { units: { K: ' ألف', M: ' مليون', B: ' مليار' }, yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
+  ar: { units: UNITS_AR, yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
 };
 
 // ---- text for the picture: XML-escaped, then every %, # and " and every non-ASCII character URL-encoded (a data URL) ----
@@ -55,15 +57,17 @@ const cssFont = (f) => String(f || 'Segoe UI').replace(/[^A-Za-z0-9 -]/g, '').tr
 // the KPI rule's shapes for the front (pbip-bind's card rule, as DAX): a percent, a whole count, else automatic units
 // (0.3.0 A3, the reviewer's decision of 20 Oct: no English in Arabic reports) units: null writes K, M, B after the number
 // (English, as before); { K, M, B } the Arabic unit words: the number (Western digits) is _t, the word is _u, already
-// encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number
-export function frontValue(m, mref, units) {
+// encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number.
+// (0.3.1 SQ2, L6-S2) plain: the word as plain DAX text, for a caller whose function escapes its own text (dax-functions)
+export function frontValue(m, mref, units, plain) {
   const f = String(m.formatString || ''), pct = /%/.test(f) || /%|\b(rate|ratio|share|margin)\b/i.test(String(m.name));
   if (pct) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )` };
   if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )` };
   const u = (n, s) => `FORMAT ( _v / ${n}, "#,0.00" )` + (units ? '' : ` & "${s}"`);
   const t = `IF ( ISBLANK ( _v ), "--", IF ( ABS ( _v ) >= 1E9, ${u('1E9', 'B')}, IF ( ABS ( _v ) >= 1E6, ${u('1E6', 'M')}, IF ( ABS ( _v ) >= 1E3, ${u('1E3', 'K')}, FORMAT ( _v, "#,0.00" ) ) ) ) )`;
   if (!units) return { t };
-  return { t, u: `IF ( ISBLANK ( _v ), "", IF ( ABS ( _v ) >= 1E9, ${lt(units.B)}, IF ( ABS ( _v ) >= 1E6, ${lt(units.M)}, IF ( ABS ( _v ) >= 1E3, ${lt(units.K)}, "" ) ) ) )` };
+  const w = plain ? dax.string : lt;
+  return { t, u: `IF ( ISBLANK ( _v ), "", IF ( ABS ( _v ) >= 1E9, ${w(units.B)}, IF ( ABS ( _v ) >= 1E6, ${w(units.M)}, IF ( ABS ( _v ) >= 1E3, ${w(units.K)}, "" ) ) ) )` };
 }
 // the value's DAX lines (VAR _t, and VAR _u with units) and its text in the picture
 const valueVars = (fv) => ['VAR _t = ' + fv.t].concat(fv.u ? ['VAR _u = ' + fv.u] : []);

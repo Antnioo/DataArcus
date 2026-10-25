@@ -274,6 +274,13 @@ try {
     chk(() => /dir='" & IF \( ar, "rtl", "ltr" \)/.test(kc) && /<span dir='ltr'/.test(kc), () => 'AR2. the card is right to left in Arabic, its pill kept left to right');
     chk(() => sa.ms.filter((m) => /\(story title\)$/.test(m.name)).every((m) => /"العام الماضي", "ar" \)/.test(m.expression)) && sa.ms.filter((m) => /\(KPI card\)$/.test(m.name)).every((m) => /, "ar" \)$/.test(m.expression)), () => 'AR3. the Arabic measures pass "ar" and the Arabic period');
     chk(() => sa.ms.some((m) => m.name === 'Total Sales (KPI card)' && /DA\.KpiCard \( "إجمالي المبيعات"/.test(m.expression)), () => `AR4. the card's title is its Arabic display name: ${(sa.ms.find((m) => /Total Sales \(KPI card\)/.test(m.name)) || {}).expression}`);
+    // (0.3.1 SQ2, L6-S2) the card's and the story's value in Arabic: E's unit words (the flip cards' own), never Latin K/M/B
+    const kmb = (m) => / & "[KMB]"/.test(m.expression), auto = (ms) => ms.filter((m) => /\((KPI card|story title)\)$/.test(m.name) && /1E9/.test(m.expression));
+    const arAuto = auto(sa.ms), enAuto = auto((scriptAt(EN && EN.script) || { ms: [] }).ms);
+    chk(() => arAuto.length >= 2 && arAuto.some((m) => /\(story title\)$/.test(m.name)) && arAuto.every((m) => !kmb(m) && /" ألف"/.test(m.expression) && /" مليون"/.test(m.expression) && /" مليار"/.test(m.expression) && /VAR _s = [^\n]+ & IF \( ISBLANK \( _v \), ""/.test(m.expression)),
+      () => `AR7. the Arabic KPI card and story title say K/M/B as «ألف», «مليون», «مليار» (the flip cards' words), never Latin: ${arAuto.map((m) => m.name + ': ' + m.expression.split('\n').find((l) => /VAR _s/.test(l))).join(' | ').slice(0, 600)}`);
+    chk(() => enAuto.length >= 2 && enAuto.every((m) => kmb(m) && !/[؀-ۿ]/.test(m.expression.split('\n').find((l) => /VAR _s/.test(l)))),
+      () => `EN8. the English KPI card and story title keep K, M, B as before: ${enAuto.map((m) => m.name).join(', ')}`);
     const at = visualsOf(A.dir || '').find((v) => v.visual.visualType === 'tableEx'), aps = at ? at.visual.query.queryState.Values.projections : [], acw = at ? widthsOf(at) : null;
     const firstShown = aps.findIndex((p) => acw.cols.some((x) => x.ref === p.queryRef));
     chk(() => at && / \((sparkline|bullet bar)\)$/.test(aps[firstShown].queryRef) && acw.cols.reduce((a, x) => a + x.w, 0) <= acw.box, () => `AR6. the Arabic table's pictures are at its reading end (the left: its first shown columns), inside its box: ${aps.map((p) => p.queryRef)}`);
