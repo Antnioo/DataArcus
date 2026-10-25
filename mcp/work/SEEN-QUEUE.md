@@ -184,9 +184,9 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S1 | plan's slots miss header growth for two tab rows | OPEN | `mcp/lib/design.mjs:268` computeSlots without headerRows | verify first; pass headerRows to the plan's slots when pages and names need two rows · M · low · design → **SQ13** |
 | 0.2.9-writer-S2 | theme-generator stamp merge conflicts | OBSOLETE | merges done; informational | — |
 | 0.2.9-writer-S3 | mirrorChart writes invertAxis | DONE | `assets/js/pbip-export.js:359-361` uses report-mirror rules | f1216d6 (M1: one mirror engine) |
-| 0.2.9-writer-S4 | control character (tab) in model name reaches a title | OPEN | `assets/js/pbip-query.js:76` drops \p{Cf} only | also replace \p{Cc} with a space in shown() · S · low · writer → **SQ1** |
+| 0.2.9-writer-S4 | control character (tab) in model name reaches a title | DONE f026240 | `assets/js/pbip-query.js:76` drops \p{Cf} only | also replace \p{Cc} with a space in shown() · S · low · writer → **SQ1** |
 | 0.2.9-writer-S5 | page names keep format characters | OBSOLETE | informational, no action (caller's names, by design) | — |
-| 0.2.9-writer-S6 | iconH never called; comment says 320 x 240 | OPEN | `pbip-sizing.js:103` no iconH( call; `pbip-page.js:169` "320 x 240" | drop iconH, fix comment to 320 x 284 · S · none · writer → **SQ1** |
+| 0.2.9-writer-S6 | iconH never called; comment says 320 x 240 | DONE f026240 | `pbip-sizing.js:103` no iconH( call; `pbip-page.js:169` "320 x 240" | drop iconH, fix comment to 320 x 284 · S · none · writer → **SQ1** |
 | 0.2.9-writer-S7 | B-06/B-23 text not in repo; readings may be partial | OWNER | B-list absent from repo (grep) | confirm B-06 = text column room 12 letters, B-23 = table grid entry |
 | 0.2.9-writer-S8 | golden pins no table text size | OPEN | `mcp/test-models/golden-expected.json` no table size key | pin the table text size per task in golden-expected · S · low · tests-ci → **SQ11** |
 | 0.2.9-writer-S9 | column top N uses 12-letter label guess | OWNER | `scripts/tests/DESKTOP-TESTS.md:2493` S5 still to measure | laptop: run DESKTOP-TESTS S5 (columns per width), set categoryFit from it |
@@ -194,7 +194,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S11 | S3, S6, D9-D12 not the writer's | OBSOLETE | informational, no action (routing) | — |
 | 0.2.9-writer-S12 | TIP_ROWS still 22 a row + 46; measured 22.2 + 53 | OPEN | `assets/js/report-rules.js:69,306` 22/46 | set TIP_ROWS to 22.2 + 53 with its source; update texts · S · low · checker → **SQ5** |
 | 0.2.9-writer-S13 | table panel one row shorter on solid theme | OWNER | note's S3 change; edge alignment is visual | laptop: look whether the table's bottom edge misaligns on a solid theme |
-| 0.2.9-writer-S14 | quarter column labels automatic units ("8.0Kkg") | OPEN | `assets/js/pbip-page.js:825` labelDisplayUnits 0 always | use num(1) when yf.wholeFormat and not pct, as tooltips at :1511 · S · low · writer → **SQ1** |
+| 0.2.9-writer-S14 | quarter column labels automatic units ("8.0Kkg") | DONE f026240 | `assets/js/pbip-page.js:825` labelDisplayUnits 0 always | use num(1) when yf.wholeFormat and not pct, as tooltips at :1511 · S · low · writer → **SQ1** |
 | 0.2.9-writer-S15 | T3, T4, T5, T7, A2 picker or design | OBSOLETE | informational, no action (routing) | — |
 | 0.2.9-writer-S16 | multi-line header 26.9, title-off/subtitle/960x720 unmeasured, 8pt header | OWNER | prose at `mcp/work/0.2.9-writer.md:225` | laptop: measure title-off, subtitle, 960 x 720; find page 1 header's 8pt source |
 | 0.2.9-writer-S17 | table shadow/grey border inside panel | OWNER | prose at `mcp/work/0.2.9-writer.md:238` | laptop: look at solid and light themes' table edges |
@@ -759,7 +759,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | M1-S1 | text-box panels: twin drops, create_report keeps | OWNER | `mcp/WORK.md:27` open decision M1 Seen 1 | decide which rule both follow: panel kept or switched off on Arabic pages |
 | M1-S2 | twin's mirrored table loses "Total" | OWNER | `mcp/WORK.md:27` open decision M1 Seen 2 | decide the writer's table design for the twin, after a laptop check |
 | M1-S3 | twin keeps number continuous axes left to right | OWNER | `mcp/lib/twin-model.mjs:25` isDateCol dates only | measure a reversed number axis on the laptop, then pass number columns |
-| M1-S4 | narrow Arabic slicer slot gives negative widths | OPEN | `assets/js/pbip-page.js:657-658` sw has no minimum | drop Reset (or a slicer) when sw < minimum, say it in the plan · M · low · writer → **SQ1** |
+| M1-S4 | narrow Arabic slicer slot gives negative widths | DONE f026240 | `assets/js/pbip-page.js:657-658` sw has no minimum | drop Reset (or a slicer) when sw < minimum, say it in the plan · M · low · writer → **SQ1** |
 | M1-S5 | parity suite skips mobile.json and Reset formatting | OPEN | `mcp/test-0.3.1-mirror-parity.mjs:104` slicerBar known; no mobile check | compare mobile.json and Reset objects in the parity suite · M · none · tests-ci → **SQ11** |
 | M1-S6 | matrix columns cut at top 100 | OBSOLETE | informational: Power BI's own limit, nothing to change |  |
 | M1-S7 | R1's matrix sentence stays | OBSOLETE | informational, no action: MATRIX_SAID `mcp/lib/twin-plan.mjs:25` |  |
@@ -837,7 +837,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | S1-S6 | no Desktop step needed | OBSOLETE | informational, no action |  |
 | S1-S7 | read_report returns short text box as typed | DUPLICATE | `mcp/lib/read-report.mjs:23,377` safeText screens only; PRIVACY.md:240 known gap | R7-claims N1 |
 | S1-S8 | SCHEMA finding pointer() keeps plain-word segments | OPEN | `mcp/lib/check-report.mjs:78` any [A-Za-z0-9_$] segment kept | verify first: keep only schema property names, others "…" · S · low · checker → **SQ14** |
-| S1-S9 | "Last N months: measure" helper can mix scripts | OPEN | `assets/js/pbip-query.js:410` no latinOnly; Keep uses it at :455 | same latinOnly fallback as Keep (e.g. "Last N months") · S · low · writer → **SQ1** |
+| S1-S9 | "Last N months: measure" helper can mix scripts | DONE f026240 | `assets/js/pbip-query.js:410` no latinOnly; Keep uses it at :455 | same latinOnly fallback as Keep (e.g. "Last N months") · S · low · writer → **SQ1** |
 | S1-S10 | fuzz 8199 checks Linux vs 8226 Windows | OBSOLETE | informational, no action |  |
 
 ### S9

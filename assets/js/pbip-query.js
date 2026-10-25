@@ -73,7 +73,9 @@
   // a measure's name reversed the title it was shown in. Shown text (titles, alt text, display names, the report
   // measures' own names) drops them, as the report's file name does; the joiners U+200C and U+200D stay (Arabic and
   // Persian words and emoji need them). The model's names are untouched: the DAX and the field references keep them.
-  const shown = (x) => String(x).replace(/(?![\u200C\u200D])\p{Cf}/gu, '');
+  // (0.3.1 SQ1, 0.2.9-writer-S4: "Total\tSales" in a title) a run of control characters (Cc: a tab, a line break) is
+  // shown as one space.
+  const shown = (x) => String(x).replace(/(?![\u200C\u200D])\p{Cf}/gu, '').replace(/\p{Cc}+/gu, ' ');
   // Round 12 (#25): a model without measures still gets numbers: a column counted or summed by the visual itself (what
   // Desktop writes when a column is dropped on a value well), f.agg being Microsoft's QueryAggregateFunction (semantic
   // query schema: 0 Sum, 2 Distinct count, 5 Count of the non-null values). Such a field is a value, like a measure.
@@ -405,15 +407,18 @@
       : extMeasure(f.t, 'Month start (sort)', asDate('MIN ( ' + daxNames.column(f.t, f.c) + ' )'), 'DateTime'));
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
+      // (0.3.1 SQ1, S1-S9) the hidden helper's name in one script, plain English, as B-181's "Keep:": with the measure's
+      // name where it is all Latin, else "Last N months"
+      const lastName = (ym) => (latinOnly(shown(ym)) ? 'Last ' + n + ' months: ' + shown(ym) : 'Last ' + n + ' months');
       if (!f.dateOf) {
         const c = daxNames.column(f.t, f.c), yn = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-        const m = extMeasure(f.t, 'Last ' + n + ' months: ' + shown(yn), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + c + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + asDate(c) + ' ), ALL ( ' + daxNames.table(f.t) + ' ) ) RETURN IF ( ISBLANK ( _last ), 1, IF ( ' + asDate('MAX ( ' + c + ' )') + ' > EDATE ( _last, -' + n + ' ), 1 ) )', 'Integer');
+        const m = extMeasure(f.t, lastName(yn), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + c + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + asDate(c) + ' ), ALL ( ' + daxNames.table(f.t) + ' ) ) RETURN IF ( ISBLANK ( _last ), 1, IF ( ' + asDate('MAX ( ' + c + ' )') + ' > EDATE ( _last, -' + n + ' ), 1 ) )', 'Integer');
         return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, m),
           filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
             Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
       }
       const d = daxNames.column(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + shown(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      const m = extMeasure(f.dateOf.t, lastName(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
