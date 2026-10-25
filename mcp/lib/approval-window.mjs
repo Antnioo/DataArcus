@@ -436,7 +436,7 @@ export function summary(kind, data) {
     // use is left out (the plan's data says how many waterfalls and picture pages it has; an older plan shows them all)
     const uses = (k) => d[k] == null || d[k] > 0;
     sections.push({ heading: 'Options', rows: [['Charts over time', d.timeRightToLeft === false ? 'left to right, as in English' : 'right to left, like the rest of the page'], ['Arabic calendar columns', d.arabicMonth ? 'yes: a script adds them to your date table (see "About the script")' : 'no']]
-      .concat(uses('picturePages') ? [['Pages drawn on a background picture', d.mirrorPicturePages ? 'mirrored anyway (their picture is not)' : 'kept left to right (the picture can\'t be mirrored)']] : [], uses('waterfalls') ? [['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] : []) });
+      .concat(uses('picturePages') ? [['Pages drawn on a background picture', d.mirrorPicturePages ? 'mirrored anyway (their picture is not)' : 'kept left to right (the picture can\'t be mirrored)']] : [], uses('waterfalls') ? [['Waterfall, right to left', wfRtlSaid(d.waterfallRtl)]] : [], d.matrices ? [['Matrices', String(d.matrices)]] : []) });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click

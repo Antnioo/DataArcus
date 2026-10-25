@@ -42,7 +42,7 @@ const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../asse
 import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { columnsByKind } from './lib/gulf-calendar.mjs';
 import { scriptIs as scriptIsSaid, APPLY_STEPS, NEVER_APPLIED, whereSaid } from './lib/plain-words.mjs';   // (0.3.0 T1, T-4 and T-9)
-import { planTwin, twinKey, twinOutputs, writeTwin, monthOffer as calendarOffer } from './lib/arabic-twin.mjs';
+import { planTwin, twinKey, twinOutputs, writeTwin, monthOffer as calendarOffer, MATRIX_SAID } from './lib/arabic-twin.mjs';
 import { Memory, answerKey, answersName, readAnswers, writeAnswers, REPLACES, writesNote } from './lib/answers.mjs';
 import { writeTree, writeFileNew, readUserFile, noteWritten, writtenSince } from './lib/files.mjs';
 import { testEditBeforeWrite } from './lib/write-io.mjs';
@@ -1924,7 +1924,7 @@ server.registerTool('create_arabic_twin', {
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" ${whereSaid(path.dirname(inside(a.path)))} (the Arabic calendar columns: ${(P.month.columns || []).length || 1}); ${NEVER_APPLIED}`] : []);
   return compact(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', { key, print: P.modelPrint }, writes, { labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path), outputs: twinOutputs(P),
     // (0.3.0 T1, T-7) the options the report uses: its waterfalls and its pages drawn on a picture, counted
-    waterfalls: (P.answer.mirrors || []).filter((x) => /^waterfall/.test(x.kind)).reduce((n, x) => n + (x.count || 0), 0) + ((P.answer.cannot || []).find((x) => /waterfall/.test(x.what)) || { where: [] }).where.length, picturePages: (P.answer.picturePages || []).length,
+    waterfalls: (P.answer.mirrors || []).filter((x) => /^waterfall/.test(x.kind)).reduce((n, x) => n + (x.count || 0), 0) + ((P.answer.cannot || []).find((x) => /waterfall/.test(x.what)) || { where: [] }).where.length, picturePages: (P.answer.picturePages || []).length, matrices: (P.answer.cannot || []).some((x) => x.what === 'matrices') ? MATRIX_SAID : null,
     ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) })) }), TWIN_CAP);
 }));
 

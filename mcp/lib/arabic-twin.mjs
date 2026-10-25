@@ -32,6 +32,8 @@ const Mirror = require('../../assets/js/report-mirror.js'), Gallery = require('.
 const Rules = require('../../assets/js/report-rules.js');
 // (0.3.0 D3) the writer's phone tab rule (one copy, the writer's own), for the twin's phone page tabs
 const Sizing = require('../../assets/js/pbip-sizing.js');
+// (0.3.1 R1) the contrast of the plain language button's text
+const Engine = require('../../assets/js/design-engine.js'), A11y = require('../../assets/js/report-a11y.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -233,6 +235,7 @@ function textsOf(R) {
     if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
     add({ id, kind: 'measureText', text: b.template, what: 'Text a report measure shows (such as the empty state\'s message)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
   }));
+  const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
     const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
@@ -241,8 +244,31 @@ function textsOf(R) {
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
     const text = visible(raw);
-    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: draftText(raw) });
+    const row = t.kind === 'field' ? rowShown.get(String(t.id).slice('field:'.length)) : null;
+    if (row) out.what = row.only ? ROW_WHAT : ROW_AND_MORE;
+    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: row && row.only ? draftText(raw.replace(AVG, '$1')) : draftText(raw) });
   });
+}
+// (0.3.1 R1: a real user's per-row "Days open" column, a measure named "Avg days open", was drafted «متوسط أيام الفتح») A
+// measure (or a field's sum) in a table whose rows are items (the table lists a column of the model) shows, on each row,
+// that one item's value: its header names what one row shows, not the average or total over the rows (the Total row is
+// Power BI's own). Such a field says it (what), and, shown only in such tables, its draft leaves out "Avg" / "Average"
+// (the glossary's draft of the rest, else none). Shown elsewhere too (a card, a chart, a matrix), one name serves both:
+// its draft is kept and both are said. queryRef -> { only }
+const AVG = /^\s*(?:avg\.?|average)\s+(.+)$/i;
+const ROW_WHAT = 'Table column header: each row of the table is one item, so name what ONE row shows (a measure named "Avg ..." gives that item\'s own value on its row; the Total row is Power BI\'s own)';
+const ROW_AND_MORE = 'Shown as a table column (each row one item: that item\'s own value) and elsewhere (over many items): one Arabic name serves both';
+function rowFieldsOf(R) {
+  const seen = new Map();
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => {
+    const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : null, qs = vis && isObj(vis.query) && isObj(vis.query.queryState) ? vis.query.queryState : null;
+    if (!qs) return;
+    const ps = Object.values(qs).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections.filter((x) => isObj(x) && isObj(x.field) && typeof x.queryRef === 'string') : []));
+    const items = vis.visualType === 'tableEx' && ps.some((x) => isObj(x.field.Column));
+    ps.forEach((x) => { const agg = isObj(x.field.Measure) || isObj(x.field.Aggregation), e = seen.get(x.queryRef) || { inItems: false, other: false };
+      if (items && agg) e.inItems = true; else e.other = true; seen.set(x.queryRef, e); });
+  }));
+  return new Map([...seen].filter(([, e]) => e.inItems).map(([k, e]) => [k, { only: !e.other }]));
 }
 // the labels by the ids the answer gave, as the mirror engine's ids (the report's own names); (0.3.0 J18) each as it is
 // written: a Latin run inside Arabic text isolated (terminology.mjs)
@@ -395,6 +421,46 @@ function fitButtons(page, visuals, ctx, at) {
   });
   return out;
 }
+// (0.3.1 R1: a real user's Arabic title kept its English box, 54 high, and wrapped: about 97 needed) A text box whose
+// Arabic needs more lines than its height holds (check_report's TEXTBOX_FITS: 10 + 1.8 x pt a line, the lines wrapped at
+// 0.55 em a character) is widened toward its end first (the left on an Arabic page), then toward its start, into the free
+// room of its page or group; then, if it still needs more, made taller into the free room under it. It is never laid
+// over another visual (one holding it whole, its panel, aside) nor over the box kept for the language button (reserved);
+// the visuals beside it don't move. A text box the mirror kept with the visual it sits on or names (a badge on a tile, the
+// names beside a bar list: report-mirror.js unitsOf) keeps its place there (skip). What still can't fit is said (textboxesCut)
+function fitTextboxes(page, visuals, ctx, at, reserved, skip) {
+  const out = { textboxes: [], textboxesCut: [] }, byName = {};
+  visuals.forEach((v) => { if (isObj(v) && v.name != null) byName[v.name] = v; });
+  const runsOf = (v) => { const g = isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general.find((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs)) : null;
+    return g ? g.properties.paragraphs.filter(isObj).map((pa) => (Array.isArray(pa.textRuns) ? pa.textRuns.filter(isObj) : [])) : []; };
+  visuals.forEach((v) => {
+    const p = posOf(v); if (typeOf(v) !== 'textbox' || !p || (skip && skip.has(String(v.name)))) return;
+    const paras = runsOf(v), size = (r) => parseFloat(isObj(r.textStyle) ? r.textStyle.fontSize : '') || ctx.text.labelSize;
+    const lens = paras.map((rs) => rs.reduce((a, r) => a + String(r.value == null ? '' : r.value).length, 0)), sizes = paras.map((rs) => Math.max(0, ...rs.map(size)));
+    if (!lens.some(Boolean)) return;
+    const top = Math.max(...sizes), lines = (w) => paras.reduce((n, rs, i) => n + Math.max(1, Math.ceil(lens[i] * Rules.MEASURED.CH(sizes[i] || top) / Math.max(1, w - 10))), 0), need = (w) => Rules.MEASURED.BOX(top, lines(w));
+    if (p.height + 0.5 >= need(p.width)) return;
+    const g = v.parentGroupName != null ? byName[v.parentGroupName] : null, A = absBox(visuals, v), off = { x: A.x - p.x, y: A.y - p.y };
+    const box = g ? absBox(visuals, g) : { x: 0, y: 0, width: isObj(page) ? page.width : NaN, height: isObj(page) ? page.height : NaN };
+    if (!box || !Number.isFinite(box.width) || !Number.isFinite(box.height)) return;
+    const obst = visuals.filter((x) => x !== v && isObj(x) && !isObj(x.visualGroup) && posOf(x)).map((x) => absBox(visuals, x)).filter((b) => b && !holdsBox(b, A)).concat(reserved || []);
+    const free = (b) => b.x >= box.x - 0.5 && b.x + b.width <= box.x + box.width + 0.5 && b.y >= box.y - 0.5 && b.y + b.height <= box.y + box.height + 0.5 && !obst.some((o) => overlaps(o, b));
+    const room = (side) => { let d = 0; while (d < 4000 && free(side < 0 ? { x: A.x - d - 1, y: A.y, width: A.width + d + 1, height: A.height } : { x: A.x, y: A.y, width: A.width + d + 1, height: A.height })) d++; return d; };
+    const first = ctx.rtl ? -1 : 1, r1 = room(first), r2 = room(-first);
+    let g1 = 0, g2 = 0;
+    while (need(A.width + g1 + g2) > A.height + 0.5 && (g1 < r1 || g2 < r2)) { if (g1 < r1) g1++; else g2++; }
+    // (as little as needed: it stops growing as soon as its lines fit)
+    const dl = first < 0 ? g1 : g2, dr = first < 0 ? g2 : g1, before = { width: p.width, height: p.height };
+    A.x -= dl; A.width += dl + dr;
+    let h = A.height; const want = need(A.width);
+    if (want > h + 0.5) { let d = 0; while (h + d < want && free({ x: A.x, y: A.y, width: A.width, height: h + d + 1 })) d++; h += d; }
+    p.x = Mirror.round(A.x - off.x); p.width = Mirror.round(A.width); p.height = Mirror.round(Math.max(p.height, Math.min(h, Math.ceil(want))));
+    const what = { page: safeName(at), visual: safeName(String(v.name)), needs: { width: Math.ceil(A.width), height: Math.ceil(need(p.width)) }, was: before, now: { width: p.width, height: p.height } };
+    if (p.width !== before.width || p.height !== before.height) out.textboxes.push(what);
+    if (p.height + 0.5 < need(p.width)) out.textboxesCut.push(Object.assign({}, what, { why: `its Arabic text needs ${lines(p.width)} line${lines(p.width) === 1 ? '' : 's'} of ${top}pt, ${Math.ceil(need(p.width))} high, in ${p.width} wide; the room beside and under it holds ${p.height}: give a shorter Arabic text, or Power BI shows a scrollbar or cuts it` }));
+  });
+  return out;
+}
 // A table column with a set width (DataArcus's tables) narrower than its Arabic header (check_report's own measure,
 // report-rules.js headerNeed: bold, + 24 a page of 1080 high, the writer's cellRoom) takes the table's spare width, then
 // width from its text columns down to their own need; a number column is never narrowed. What can't fit is said in
@@ -497,6 +563,31 @@ function rewireMeasures(vj, rename) {
   walk(vj);
 }
 
+// (0.3.1 R1: a real user's title and subtitle text boxes drew as bordered white panels) A text box left to a theme whose
+// visuals have a background (visualStyles "*" or "textbox", "*") is drawn as the theme's panel: its colour, border,
+// corners and shadow (mcp/CLAUDE.md, Round 1). A text box WITH text is a heading or a note, and every such text box
+// DataArcus writes has the three off (create_report's header title: pbip-page.js frame); so on the Arabic pages the twin
+// switches off the background, border and shadow of a text box with text that leaves all three to such a theme. One that
+// sets any of them itself keeps its own (its author chose); an empty text box keeps its panel (that is what it is for).
+// The English pages are the original's. Returns how many were switched off
+const themeCard0 = (theme, type, card) => { const vs = isObj(theme) && isObj(theme.visualStyles) ? theme.visualStyles : {}, one = (t) => (isObj(vs[t]) && isObj(vs[t]['*']) && Array.isArray(vs[t]['*'][card]) ? vs[t]['*'][card][0] : undefined); const x = one(type); return x !== undefined ? x : one('*'); };
+const PANEL = ['background', 'border', 'dropShadow'];
+function textPanelsOff(visuals, theme) {
+  const shows = (e) => isObj(e) && (e.show === true || (isObj(e.show) && litStr(e.show) === 'true'));
+  if (!PANEL.some((k) => shows(themeCard0(theme, 'textbox', k)))) return 0;
+  let n = 0;
+  visuals.forEach((v) => {
+    if (typeOf(v) !== 'textbox') return;
+    const g = isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [];
+    const text = g.some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && Array.isArray(pa.textRuns) && pa.textRuns.some((r) => isObj(r) && String(r.value == null ? '' : r.value).trim())));
+    const vco = isObj(v.visual.visualContainerObjects) ? v.visual.visualContainerObjects : null;
+    if (!text || (vco && PANEL.some((k) => k in vco))) return;
+    v.visual.visualContainerObjects = Object.assign(vco || {}, Object.fromEntries(PANEL.map((k) => [k, [{ properties: { show: Lv('false') } }]])));
+    n++;
+  });
+  return n;
+}
+
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
@@ -550,7 +641,8 @@ function buildTwin(P, labels) {
     } else m.expression = arabicDax(x.pd, ls);
     rewritten++; applied++;
   });
-  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
+  let panelsOff = 0;
+  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -563,11 +655,16 @@ function buildTwin(P, labels) {
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
     });
+    panelsOff += textPanelsOff(r.visuals, R.theme);
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
-      const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
+      const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
       try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
+      // (0.3.1 R1) the text boxes; in one report with both languages, the box the language button will take is kept free
+      try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
+        const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
+        const t = fitTextboxes(page, r.visuals, c, pg.id, keep, kept); fitted.textboxes.push(...t.textboxes); fitted.textboxesCut.push(...t.textboxesCut); } catch (e) { /* a shape not expected: left as it is */ }
     }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
@@ -581,7 +678,7 @@ function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, panelsOff, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }
 
 // ---- (0.3.0 X1, the owner, 19 Oct: "add the toggle") English and Arabic in ONE report: the copy "<name> (EN-AR)" ----
@@ -594,6 +691,8 @@ function buildTwin(P, labels) {
 // a report's .platform as create_report writes it (pbip-export.js): its type, its name, a new logical id
 const newPlatform = (name) => json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json', metadata: { type: 'Report', displayName: name }, config: { version: '2.0', logicalId: crypto.randomUUID() } });
 export const COPY_TAG = ' (EN-AR)';
+// (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
+export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
 const LANG = { en: { text: 'العربية', alt: 'Show this page in Arabic', on: 'English' }, ar: { text: 'English', alt: 'اعرض هذه الصفحة بالإنجليزية', on: 'Arabic' } };
 const VC_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
 const MOBILE_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.1.0/schema.json';
@@ -619,7 +718,24 @@ const textLook = (v) => { const es = isObj(v) && isObj(v.visual) && isObj(v.visu
 // holding it whole, the header's band, is its panel): the tabs' group (else the top of the page), from its end, the right on
 // an English page, the left on an Arabic page. On the phone (when the page has a phone layout): the tabs' row, as wide as
 // the writer's phone tab rule (phoneTabWidth), from the same end. Returns { json, mobile, phone, why } or { json: null, why }
-function langButton(page, visuals, mobiles, lang, target, name) {
+// (0.3.1 R1: a real user's report without page tabs drew its 4 language buttons as empty white boxes) the plain button
+// sets what every button DataArcus writes sets (pbip-page.js: the tabs, Reset, Open and Close filters): its text colour,
+// and its container's background, border and shadow off. Left unset, the text took Power BI's own button colour (a theme
+// default: Microsoft's "Create custom report themes", structural colours) over the theme's white visual panel. The text
+// is the theme's own text colour, at 4.5:1 against the page behind the button (else Power BI's dark or white text,
+// whichever reads); the outline the same colour. No text margins: Desktop ignored them (round 13, DESKTOP-TESTS.md)
+const HEX = /^#[0-9a-f]{6}$/i, hexOf = (c) => (typeof c === 'string' && HEX.test(c) ? c : isObj(c) && isObj(c.solid) ? hexOf(typeof c.solid.color === 'string' ? c.solid.color : litStr(c.solid.color)) : null);
+function plainLook(page, theme) {
+  const th = isObj(theme) ? theme : {}, tc = isObj(th.textClasses) && isObj(th.textClasses.label) ? th.textClasses.label : {};
+  const pageBg = (() => { const o = isObj(page) && isObj(page.objects) && Array.isArray(page.objects.background) ? page.objects.background.find((e) => isObj(e) && isObj(e.properties) && !e.selector) : null; return o ? hexOf(o.properties.color) : null; })();
+  const vs = isObj(th.visualStyles) && isObj(th.visualStyles.page) && isObj(th.visualStyles.page['*']) && Array.isArray(th.visualStyles.page['*'].background) ? th.visualStyles.page['*'].background[0] : null;
+  const bg = pageBg || (isObj(vs) ? hexOf(vs.color) : null) || hexOf(th.background) || '#FFFFFF';
+  const want = hexOf(th.foreground) || hexOf(th.firstLevelElements) || hexOf(tc.color) || '#252423';
+  const text = Engine.contrast(want, bg) >= 4.5 ? want : (Engine.contrast('#252423', bg) >= Engine.contrast('#FFFFFF', bg) ? '#252423' : '#FFFFFF');
+  return { text, bg };
+}
+const solid = (c) => ({ solid: { color: Lv("'" + c + "'") } });
+function langButton(page, visuals, mobiles, lang, target, name, theme) {
   const W = LANG[lang], pw = isObj(page) && Number.isFinite(page.width) ? page.width : 1280, ph = isObj(page) && Number.isFinite(page.height) ? page.height : 720;
   const tabs = visuals.filter((v) => isObj(v) && isObj(v.visual) && isPageBtn(v) && posOf(v));
   const tpl = tabs.find((v) => !textLook(v).bold) || tabs[0] || null, look = tpl ? textLook(tpl) : {};
@@ -636,9 +752,10 @@ function langButton(page, visuals, mobiles, lang, target, name) {
     let d = o.text.find((e) => isObj(e.selector) && e.selector.id === 'default'); if (!d) o.text.push(d = { properties: {}, selector: { id: 'default' } });
     Object.assign(d.properties, { text: Ls(W.text), bold: Lv('false') });
   } else {
+    const c = plainLook(page, theme).text, offs = { background: [{ properties: { show: Lv('false') } }], border: [{ properties: { show: Lv('false') } }], dropShadow: [{ properties: { show: Lv('false') } }] };
     btn = { $schema: VC_SCHEMA, name, position: {}, visual: { visualType: 'actionButton', objects: { icon: [{ properties: { shapeType: Ls('blank') }, selector: { id: 'default' } }],
-      text: [{ properties: { show: Lv('true') } }, { properties: { text: Ls(W.text), fontFamily: Ls(font), fontSize: Lv(t + 'D') }, selector: { id: 'default' } }],
-      fill: [{ properties: { show: Lv('false') } }], outline: [{ properties: { show: Lv('true') } }] }, visualContainerObjects: { title: [{ properties: { show: Lv('false') } }] } } };
+      text: [{ properties: { show: Lv('true') } }, { properties: { text: Ls(W.text), fontColor: solid(c), fontFamily: Ls(font), fontSize: Lv(t + 'D') }, selector: { id: 'default' } }],
+      fill: [{ properties: { show: Lv('false') } }], outline: [{ properties: { show: Lv('true') } }, { properties: { lineColor: solid(c) }, selector: { id: 'default' } }] }, visualContainerObjects: Object.assign({ title: [{ properties: { show: Lv('false') } }] }, offs) } };
   }
   btn.name = name;
   const vco = btn.visual.visualContainerObjects = isObj(btn.visual.visualContainerObjects) ? btn.visual.visualContainerObjects : {};
@@ -675,6 +792,25 @@ function langButton(page, visuals, mobiles, lang, target, name) {
   // the group's phone box holds what is in it (a grouped visual's phone position is a page position)
   if (g) { const gi = visuals.indexOf(g), gb = mobiles[gi] && posOf(mobiles[gi]); if (gb) { const x0 = Math.min(gb.x, mx), x1 = Math.max(gb.x + gb.width, mx + mw), y0 = Math.min(gb.y, my), y1 = Math.max(gb.y + gb.height, my + mh); Object.assign(gb, { x: x0, width: x1 - x0, y: y0, height: y1 - y0 }); } }
   return { json: btn, mobile, phone: true, at };
+}
+
+// (0.3.1 R1: check_report found 8 and 7 Tab stop pairs against the reading order on a real user's two Arabic pages) the
+// mirror maps a page's reading order to the right-to-left one exactly (each place mirrored, the numbers kept); what broke
+// it was the language button, last in the tab order at the top of the page. It takes its place in its page's (or
+// group's) reading order instead (left to right on an English page, right to left on an Arabic one: check_report's own
+// count, report-a11y.js inversions): a free number between its neighbours, else the stops after it move up by one, in
+// their order. The other stops keep their order: the page's tab order is its author's
+function tabInOrder(visuals, btn, dir) {
+  const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : ''), box = (v) => ({ x: posOf(v).x, y: posOf(v).y, w: posOf(v).width, h: posOf(v).height });
+  const sibs = visuals.filter((v) => v !== btn && isObj(v) && posOf(v) && Number.isFinite(posOf(v).tabOrder) && parent(v) === parent(btn)).sort((a, b) => posOf(a).tabOrder - posOf(b).tabOrder);
+  if (!sibs.length) return;
+  let at = sibs.length, least = Infinity;
+  for (let k = 0; k <= sibs.length; k++) { const n = A11y.inversions(sibs.slice(0, k).concat([btn], sibs.slice(k)).map(box), dir); if (n < least) { least = n; at = k; } }
+  if (at === sibs.length) return;   // last already
+  const prev = at > 0 ? posOf(sibs[at - 1]).tabOrder : null, next = posOf(sibs[at]).tabOrder;
+  if (prev == null ? next >= 1 : next - prev >= 2) { btn.position.tabOrder = prev == null ? Math.floor(next / 2) : prev + Math.floor((next - prev) / 2); return; }
+  btn.position.tabOrder = next;
+  sibs.slice(at).forEach((v) => { v.position.tabOrder = posOf(v).tabOrder + 1; });
 }
 
 // P: the plan's own (R, keepLtr, tabsShown); built: buildTwin's; labels: by the mirror engine's ids. Returns the copy as
@@ -736,11 +872,11 @@ function languageCopy(P, built, labels) {
     // the language buttons (a tooltip or drillthrough page is reached by its visual, not by the tabs: none)
     const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
     if (!tooltip && !drill) {
-      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id));
-      if (en.json) { enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
+      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
+      if (en.json) { tabInOrder(enV, en.json, 'ltr'); enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
       say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
-      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId));
-      if (ar.json) { arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
+      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
+      if (ar.json) { tabInOrder(arV, ar.json, P.keepLtr(pg) ? 'ltr' : 'rtl'); arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
       say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
     }
     // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
@@ -964,7 +1100,8 @@ export function planTwin(a) {
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
   if (where.other.length) cannot.push({ what: 'other visuals (scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
   if (where.waterfallKept.length) cannot.push({ what: 'waterfall charts the running total can\'t follow', why: Mirror.KIND_WHAT.waterfallKept, where: where.waterfallKept.slice(0, 30) });
-  if (where.matrix.length) cannot.push({ what: 'matrix rows', why: 'a matrix keeps its row headers at the left (a hierarchy keeps its order); only its values are reversed', where: where.matrix.slice(0, 30) });
+  // (0.3.1 R1: a real user's Arabic matrix read left to right, its first column at the left) said plainly, nothing faked
+  if (where.matrix.length) cannot.push({ what: 'matrices', why: MATRIX_SAID, where: where.matrix.slice(0, 30) });
   if (pictureIds.size) cannot.push({ what: 'pages drawn on a background picture', why: mirrorPictures ? 'mirrored as asked (mirrorPicturePages), but the picture is not: its panels stay where they are, so the visuals no longer sit on them' : 'kept left to right: Power BI has no setting that mirrors a page picture, and the visuals would leave its panels. To mirror them anyway (the picture stays as it is), ask again with mirrorPicturePages true', where: [...pictureIds].map((x) => safeName(x)).slice(0, 30) });
   // (T-4: data bars inside a table or a matrix have no proven direction setting)
   if (R.pages.some((pg) => pg.visuals.some((v) => ['table', 'matrix'].includes(Mirror.kindOf(v.json))))) cannot.push({ what: 'data bars inside tables and matrices', why: 'they keep their direction (no right-to-left setting is proven for them); the columns themselves are reversed' });
@@ -994,7 +1131,7 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
-  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown }, built, rawLabels(texts, labels)) : null;
+  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, keepLtr }, built, rawLabels(texts, labels)) : null;
   const languages = copy ? { copy: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.' },
     how: 'One report holding both languages: the original\'s English pages as they are, and after them each page\'s Arabic page, mirrored as the twin is (the same Arabic texts, phone layout, waterfalls and empty state). Every page has a small language button to its counterpart; the slicers of each page pair are kept in sync; the Arabic pages\' links (page tabs, tooltip pages, bookmarks) go to Arabic pages.',
     pairs: copy.pairs, buttons: copy.buttons, syncGroups: copy.syncGroups, tabs: copy.tabs, activePage: copy.activePage,
@@ -1013,13 +1150,17 @@ export function planTwin(a) {
   const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
     how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
-  const F = built.fitted, fitted = F.buttons.length || F.buttonsCut.length || F.headers.length || F.headersCut.length ? { fitted: Object.assign({}, ...['buttons', 'buttonsCut', 'headers', 'headersCut'].filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it) and each table column to its Arabic header, within the page and the table. Say each one in the plan, and every buttonsCut and headersCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
+  const FK = ['buttons', 'buttonsCut', 'headers', 'headersCut', 'textboxes', 'textboxesCut'];
+  const F = built.fitted, fitted = FK.some((k) => F[k].length) ? { fitted: Object.assign({}, ...FK.filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it), each table column to its Arabic header, within the page and the table, and each text box to its Arabic lines (wider into the free room beside it, then taller into the free room under it; nothing beside it moves). Say each one in the plan, and every buttonsCut, headersCut and textboxesCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
   return { loc, R, labels, texts, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot, phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    // (0.3.1 R1) the text boxes that drew as the theme's panels
+    ...(built.panelsOff ? { textBoxes: { panelsOff: built.panelsOff, how: 'The report\'s theme draws every visual on a panel (a background, a border, a shadow), text boxes too: on the Arabic pages the twin switches the panel off for each text box with text that left it to the theme, so a title or a note reads as text on the page (one that sets its own panel keeps it; an empty text box keeps its panel).',
+      ...(same ? { englishPages: 'The English pages are the original\'s: their text boxes still draw as panels. To match, select a text box in Power BI Desktop, Format > General > Effects: switch Background, Visual border and Shadow off.' } : {}), sayInPlan: 'Say it in the plan, and what the English pages keep (englishPages).' } } : {}),
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
