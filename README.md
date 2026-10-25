@@ -43,6 +43,11 @@ An AI report designer for Power BI (it works with Claude on your own machine and
 public beta: download 0.3.0 from [the release page](https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0)
 (check its SHA-256 there), install steps in [mcp/README.md](mcp/README.md). Questions: [hello@dataarcus.com](mailto:hello@dataarcus.com).
 
+## How it is built
+
+The parts (the website, the engines it shares with the MCP, the MCP server and its approval gate, the tests), how one
+write flows from plan to approval to file, and the rules that always hold: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Licence
 
 Copyright © 2025-2026 Abdelrahman Mohammed, trading as DataArcus. All rights reserved: the code is published for
