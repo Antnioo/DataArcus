@@ -16,8 +16,6 @@ import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar } from './lib/gulf-calendar.mjs';
 import { resolveSwitch, switchSaid, scriptModel, SCRIPT_SUFFIX } from './lib/metric-switcher.mjs';
-import { checkReport, CHECKS } from './lib/check-report.mjs';
-import { arabicLens } from './lib/arabic-lens.mjs';
 import { existingTheme, readReport, reportPrint } from './lib/read-report.mjs';
 import { planNative } from './lib/native-copy.mjs';
 import { planRedesign } from './lib/redesign.mjs';
@@ -35,7 +33,7 @@ const require = createRequire(import.meta.url);
 const Bind = require('../assets/js/pbip-bind.js'), Pbip = require('../assets/js/pbip-export.js');
 const Gallery = require('../assets/js/visual-gallery.js');
 const Fix = require('../assets/js/model-health-tmdl.js'), Gulf = require('../assets/js/gulf-health.js');
-import { instructions, UNTRUSTED, REPORT_UNTRUSTED, ARABIC_LENS, planSources } from './lib/agent-text.mjs';
+import { instructions, UNTRUSTED, REPORT_UNTRUSTED, planSources } from './lib/agent-text.mjs';
 import { columnsByKind } from './lib/gulf-calendar.mjs';
 import { scriptIs as scriptIsSaid, APPLY_STEPS, NEVER_APPLIED, whereSaid } from './lib/plain-words.mjs';   // (0.3.0 T1, T-4 and T-9)
 import { planTwin, twinKey, twinOutputs, writeTwin, monthOffer as calendarOffer, MATRIX_SAID } from './lib/arabic-twin.mjs';
@@ -58,6 +56,7 @@ import { register as registerSuggestFields } from './tools/suggest_fields.mjs';
 import { register as registerCheckModelHealth } from './tools/check_model_health.mjs';
 import { register as registerCreateReport } from './tools/create_report.mjs';
 import { register as registerGenerateTheme } from './tools/generate_theme.mjs';
+import { register as registerCheckReport } from './tools/check_report.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -136,18 +135,7 @@ function bilingualSaid(bi) {
     sayFirst: 'Show the user: one report, each English page and its Arabic page (pairs), the language buttons (and any not placed, with why), the slicers in sync, the tabs shown, notTranslated and cannot; then the terminology sheet (ask one missing term at a time: terminology.askNext) and texts (draftArabic from a fixed glossary; draft the rest yourself in modern, simple Standard Arabic, each shown as a DRAFT); then call plan_layout again with the approved names as arabicTerms ({ "Table[Field]": "..." }, the English name back keeps it) and texts as arabicTexts ({ "<the English text as listed>": "..." }), show the new plan, and after the user\'s go approve_plan, then create_report with the planId. A text without approved Arabic stays English.' };
 }
 registerGenerateTheme(server, ctx);
-
-server.registerTool('check_report', {
-  title: 'Check a Power BI report',
-  description: 'Checks a PBIR report that already exists, whoever built it, and never changes it: Microsoft\'s report validator (offline: the JSON schemas it would download are checked against Microsoft\'s own copies bundled with DataArcus; no network connection is opened) and the rules DataArcus measured in Power BI Desktop (will a text fit its box, will a button cut its label, will Desktop ignore a formatting entry, do phone boxes overlap). Each finding names the file, the rule, its severity, where the rule comes from (the validator\'s code, or the measurement with its date and Desktop version) and a fix in words, never a patch. Findings never quote the report\'s own text, and filter values, slicer selections and bookmark states are never returned. notChecked lists what could not be judged, custom visuals among them (counted: their sizes and formats are not judged). ' + ARABIC_LENS + REPORT_UNTRUSTED,
-  inputSchema: {
-    path: z.string().describe('The report: a .pbip file, a .Report folder, or a folder holding definition/, inside the working folder'),
-    checks: z.array(z.enum(CHECKS)).min(1).optional().describe('Only these checks (default all): validator (Microsoft\'s, offline, with the bundled schemas), schemas (the bundled schemas alone), sizes, selectors, phone, tooltips, theme, navigation (page buttons), sort (a chart\'s sort field), rtl (right-to-left reports only), a11y (Power BI\'s accessibility basics from Microsoft\'s guidance: alt text, tab order in reading order, titles, data colours at 3:1, colour never the only means), lint (the design lint, in its own section: a time axis sorted A to Z, cut bar labels, tables that grow past their width, missing titles, placeholder text, overlaps, visuals off the page; read with the model the report names; findings marked guess come from names and types, not data: show them as worth a look)'),
-    lang: z.enum(['auto', 'en', 'ar']).default('auto').describe('The report\'s language: auto counts the letters of its titles and text boxes (never returned)'),
-    maxFindings: z.number().int().min(1).max(200).default(60).describe('At most this many findings (errors first); counts.byRule always has every count'),
-    lens: z.enum(['arabic']).optional().describe('"arabic": instead of the checks, answer "Is this report ready for Arabic?" page by page (the reading direction, texts, charts, tables, calendar names, slicers and navigation), each finding with its fix: a DataArcus call through approval, a setting in Power BI Desktop, or a line Power BI has no setting for. Read-only; the validator is not run')
-  }, annotations: READS
-}, safe(async (a) => compact(a.lens === 'arabic' ? arabicLens(a.path) : await checkReport(a.path, { checks: a.checks, lang: a.lang, maxFindings: a.maxFindings }))));
+registerCheckReport(server, ctx);
 
 server.registerTool('read_report', {
   title: 'Read a Power BI report',
