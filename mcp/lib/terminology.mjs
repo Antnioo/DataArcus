@@ -11,6 +11,9 @@ import { visible, shownName } from './model.mjs';
 const require = createRequire(import.meta.url);
 const Memory = require('../../assets/js/confirm-memory.js');
 export const SCOPE = 'ar';
+// (0.3.1 E) DataArcus's own Arabic vocabulary: one term per concept (the sheet's `concepts` in the fixed list), and the
+// check of a text against it
+export { CONCEPTS, termHits } from './arabic-terms.mjs';
 
 // ---- bidi isolation (B-171 item 5) ----
 // Power BI draws a title as a left-to-right paragraph (DESKTOP-TESTS.md, round 13: a "…" after Arabic words went to the
