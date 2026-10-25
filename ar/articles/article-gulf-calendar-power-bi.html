@@ -138,14 +138,14 @@
             </header>
 
             <article class="article-body">
-              <p data-i18n-html="content.p1">جدول التواريخ المعتاد في Power BI يعرف الأشهر من يناير إلى ديسمبر وعطلة واحدة فقط. أما الأعمال في الخليج فتسير على أكثر من ذلك: <strong>رمضان والعيد يتحركان كل عام، والشهر الهجري يحدد الموسم، وعطلة نهاية الأسبوع تختلف حسب الدولة والسنة.</strong> إذا أغفلت أيًا منها، أظهر التقرير اتجاهات هي في الحقيقة مجرد تقويم.</p>
+              <p data-i18n-html="content.p1">جدول التواريخ التلقائي في Power BI (auto date/time) فيه السنوات والأرباع والأشهر والأيام الميلادية، ولا شيء عن عطلة نهاية الأسبوع أو الأشهر الهجرية أو رمضان (<a href="https://learn.microsoft.com/ar-sa/power-bi/transform-model/desktop-auto-date-time" class="text-accent" target="_blank" rel="noopener">Microsoft Learn</a>). أما الأعمال في الخليج فتسير على أكثر من ذلك: <strong>رمضان والعيد يتحركان كل عام، والشهر الهجري يحدد الموسم، وعطلة نهاية الأسبوع تختلف حسب الدولة والسنة.</strong> إذا أغفلت أيًا منها، فقد يُظهر التقرير اتجاهات هي في الحقيقة مجرد تقويم.</p>
               <p data-i18n-html="content.p2">يبني هذا الدليل بلغة DAX جدول تقويم واحدًا يعالج كل ذلك، ومعه ثلاثة مقاييس تستخدمه.</p>
-              <h2 class="mt-5 mb-3" data-i18n="content.h1">أربعة أمور يخطئ فيها التقويم المعتاد في الخليج</h2>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">أربعة أمور لا يعرفها التقويم المعتاد في الخليج</h2>
               <ul>
                 <li data-i18n-html="content.list1_1"><strong>رمضان يتحرك.</strong> بدأ في 1 مارس في 2025، وفي 18 فبراير في 2026، ويُتوقع أن يبدأ نحو 8 فبراير في 2027: أي قبل نحو 11 يومًا كل عام. مقارنة مارس 2026 بمارس 2025 تقارن موسمين مختلفين.</li>
-                <li data-i18n-html="content.list1_2"><strong>العيد فترة وليس يومًا.</strong> يزداد الشراء في الأيام التي تسبق عيد الفطر وعيد الأضحى، وتقع هذه الأيام في شهر ميلادي مختلف من سنة إلى أخرى.</li>
+                <li data-i18n-html="content.list1_2"><strong>العيد فترة وليس يومًا.</strong> العطلة العامة لعيد الفطر في الإمارات من 1 إلى 3 شوال، ولعيد الأضحى من 10 إلى 12 ذي الحجة (<a href="https://u.ae/en/information-and-services/public-holidays-and-religious-affairs/public-holidays" class="text-accent" target="_blank" rel="noopener">u.ae</a>). وإذا كانت مبيعاتك تزداد في الأيام التي تسبق العيد، فهذه الأيام تأتي قبل نحو 11 يومًا كل عام، وتنتقل من شهر ميلادي إلى آخر.</li>
                 <li data-i18n-html="content.list1_3"><strong>العطلة تغيّرت.</strong> نقلت الإمارات عطلة القطاع الحكومي من الجمعة والسبت إلى السبت والأحد في 1 يناير 2022 (<a href="https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector" class="text-accent" target="_blank" rel="noopener">بإعلان من وام</a>). وتبقى السعودية والكويت وقطر والبحرين وعُمان على الجمعة والسبت. وأيًا كانت العطلة الثابتة في تقويم إماراتي، فأحد جانبي 2022 خاطئ: السبت والأحد يجعلان الجمعة 31 ديسمبر 2021 يوم عمل، والجمعة والسبت يجعلان الجمعة 7 يناير 2022 يوم عطلة.</li>
-                <li data-i18n-html="content.list1_4"><strong>الأسماء تُرتَّب أبجديًا.</strong> فيأتي أبريل قبل يناير، والأربعاء قبل الثلاثاء، والأشهر الهجرية بترتيب لا يستخدمه أحد، ما لم يُرتَّب كل اسم برقمه.</li>
+                <li data-i18n-html="content.list1_4"><strong>الأسماء تُرتَّب أبجديًا.</strong> يرتّب Power BI النصوص أبجديًا ما لم يُحدَّد عمود لترتيبها (<a href="https://learn.microsoft.com/ar-sa/power-bi/create-reports/desktop-tips-and-tricks-for-creating-reports#sort-by-another-column" class="text-accent" target="_blank" rel="noopener">Microsoft Learn</a>). فيأتي أبريل قبل يناير، والأربعاء قبل الثلاثاء، والأشهر الهجرية بترتيب لا يستخدمه أحد، ما لم يُرتَّب كل اسم برقمه.</li>
               </ul>
               <h2 class="mt-5 mb-3" data-i18n="content.h2">المواعيد المعلنة أم التقويم المحسوب؟</h2>
               <p data-i18n-html="content.p3">دوال التاريخ في Power BI (مثل YEAR وMONTH وDATE) تعمل بالتقويم الميلادي، ولا تعطي شهراً هجرياً ولا علامة لرمضان، لذلك يحمل جدول التقويم التواريخ الهجرية. والمصدر المعتاد هو تقويم أم القرى، التقويم المحسوب الرسمي في السعودية. لكن رمضان والعيدين تحددهما رؤية الهلال، وقد يختلف الإعلان عن الحساب بيوم واحد.</p>
@@ -184,7 +184,7 @@ IF (
               <h2 class="mt-5 mb-3" data-i18n="content.h5">ثلاثة مقاييس تستخدمه</h2>
               <p data-i18n-html="content.p10"><strong>1. اليوم N من رمضان مقارنة بالعام الماضي.</strong> يُرجع مقياس <em>Last Ramadan</em> من <a href="/ar/articles/article-ramadan-sales-power-bi.html" class="text-accent">دليل مبيعات رمضان</a> كل يوم من رمضان المعروض سنة هجرية واحدة. ضع Ramadan Day على المحور فيقابل اليوم الخامس اليوم الخامس.</p>
               <p data-i18n-html="content.p11"><strong>2. رمضان هذا العام مقارنة برمضان الماضي.</strong> في بطاقة مفلترة على سنة، يقارن <em>vs Last Ramadan %</em> أيام رمضان في تلك السنة بالأيام نفسها من رمضان الذي سبقه. وإذا جاء رمضان من 30 يومًا بعد رمضان من 29 يومًا، فلا مقابل لليوم الثلاثين ولا يضيف شيئًا إلى جانب العام الماضي.</p>
-              <p data-i18n-html="content.p12"><strong>3. فترة العيد.</strong> الأيام التي تسبق العيد كثيرًا ما تكون أهم من العيد نفسه. يجمع هذا المقياس الأيام السبعة قبل كل عيد فطر وأيامه الثلاثة، لكل عيد يقع أول أيامه ضمن التواريخ المعروضة:</p>
+              <p data-i18n-html="content.p12"><strong>3. فترة العيد.</strong> إذا كانت مبيعاتك تزداد قبل العيد، فانظر إلى تلك الأيام مع العيد نفسه. يجمع هذا المقياس الأيام السبعة قبل كل عيد فطر وأيامه الثلاثة، لكل عيد يقع أول أيامه ضمن التواريخ المعروضة:</p>
               <pre><code>Sales Eid al-Fitr Window =
 VAR _DaysBefore = 7
 VAR _EidDays = 3
@@ -208,7 +208,7 @@ RETURN
         CALCULATE ( [Total Sales], REMOVEFILTERS ( 'Calendar' ), _Window )
     )</code></pre>
               <p data-i18n-html="content.p13">وقع عيد الفطر 2025 يوم الأحد 30 مارس، فتمتد فترته من 23 مارس إلى 1 أبريل وتُحسب لمارس: يُظهر المرئي حسب الشهر الفترة كاملة في مارس، ويظهر أبريل فارغًا. ويكتب <a href="/ar/tools/dax-measure-builder.html" class="text-accent">منشئ مقاييس DAX</a> هذا المقياس بأسماء جداولك وأعمدتك، ومعه المقياس نفسه لعيد الأضحى، وفترة العام الماضي، ونسبة التغيّر.</p>
-              <p data-i18n-html="content.p14">نختبر هذه المقاييس على نموذج مختلَق (متجران، ومبالغ من معادلة، بلا بيانات حقيقية). فحوصه الثلاثة والأربعون، ولكل منها الرقم المحسوب مسبقًا، موجودة <a href="https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model" class="text-accent" target="_blank" rel="noopener">على GitHub</a>، فتستطيع تشغيلها في Power BI Desktop لديك.</p>
+              <p data-i18n-html="content.p14">نختبر هذه المقاييس على نموذج مختلَق (متجران، ومبالغ من معادلة، بلا بيانات حقيقية). فحوصه الثلاثة والأربعون، ولكل منها الرقم المحسوب مسبقًا، موجودة <a href="https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/test-model/README.md" class="text-accent" target="_blank" rel="noopener">على GitHub</a>، فتستطيع تشغيلها في Power BI Desktop لديك.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h6">ثلاثة أمور يجب الانتباه لها</h2>
               <ul>
                 <li data-i18n-html="content.list4_1"><strong>عطلة شركتك.</strong> تتبع خيارات الدول العطلة الحكومية الرسمية. كثير من شركات القطاع الخاص لها عطلة أخرى، وحكومة الشارقة تعطل من الجمعة إلى الأحد منذ 2022: اختر لها <em>حكومة الشارقة</em>. وإن لم تكن عطلتك بين الخيارات، فاختر أقربها وغيّر الأيام في كود DAX لعمودي Is Weekend وIs Working Day.</li>
@@ -233,7 +233,7 @@ RETURN
               <hr class="divider">
               <div class="glass-card cta">
                 <h3 class="h4 mb-3" data-i18n="finalCta.title">تريد لوحة جاهزة للخليج قبل رمضان؟</h3>
-                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">تبني داتا أركوس تقارير Power BI تفهم التقويم الخليجي، بالعربية والإنجليزية.</p>
+                <p class="text-white-50 mb-4" data-i18n-html="finalCta.subtitle">تبني DataArcus تقارير Power BI تفهم التقويم الخليجي، بالعربية والإنجليزية: انظر <a href="/ar/power-bi-mcp/" class="text-accent">DataArcus لـ Power BI</a> (أداة التقويم الخليجي والنسخة العربية من التقرير).</p>
                 <div class="cta-actions">
                   <a href="/ar/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">احجز مكالمة مجانية</span></a>
                 </div>
@@ -301,7 +301,7 @@ RETURN
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261025gc" defer=""></script>
+  <script src="/assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261025gc2" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>

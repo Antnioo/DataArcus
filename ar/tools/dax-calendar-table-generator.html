@@ -249,7 +249,7 @@
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
             <h2 class="h4 fw-bold mb-2" data-i18n="cg.cta.title">رمضان يتحرك كل عام، وأرقامك معه</h2>
-            <p class="text-white-50 mb-3" data-i18n="cg.cta.desc">قارن رمضان هذا العام برمضان الماضي، لا مارس بمارس. تبني DataArcus تقارير Power BI تفهم التقويم الخليجي.</p>
+            <p class="text-white-50 mb-3" data-i18n-html="cg.cta.desc">قارن رمضان هذا العام برمضان الماضي، لا مارس بمارس. تبني DataArcus تقارير Power BI تفهم التقويم الخليجي: انظر <a href="/ar/power-bi-mcp/" class="text-accent">DataArcus لـ Power BI</a>.</p>
             <div class="d-flex flex-wrap justify-content-center gap-2">
               <a href="/ar/#contact" class="btn btn-accent" data-i18n="nav.consultation">احجز مكالمة مجانية</a>
               <a href="/ar/tools/dax-measure-builder.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="cg.cta.next">التالي: أنشئ مقاييس YoY و YTD</a>
@@ -261,6 +261,7 @@
             <h3 data-i18n="cg.faq.q1">كيف أضيف هذا الجدول في Power BI؟</h3>
             <p data-i18n-html="cg.faq.a1">في Power BI Desktop اذهب إلى <strong>Modeling → New table</strong>، والصق كود DAX واضغط Enter. ثم انقر بزر الفأرة الأيمن على الجدول واختر <strong>Mark as date table</strong> وحدد عمود Date. اربط عمود Date بعمود التاريخ في جدول الحقائق.</p>
             <h3 data-i18n="cg.faq.q2">كيف يحصل على التاريخ الهجري دون Power Query؟</h3>
+            <!-- FAQ a2's measurement: scripts/tests/DESKTOP-TESTS.md, "DAX FORMAT with Arabic locales" (2026-10-05, round 10, Power BI Desktop 2.158) -->
             <p data-i18n="cg.faq.a2">لا توجد في Power BI دالة مدمجة تعطي الشهر الهجري أو تحدد أيام رمضان. (قسناه في Power BI Desktop 2.158 في أكتوبر 2026: الدالة FORMAT في DAX مع "ar-SA" أو "ar-AE" تعطي التاريخ الميلادي.) يحسب المولّد بداية كل شهر هجري ضمن النطاق ويضمّنها في جدول DATATABLE صغير داخل كود DAX. ثم يبحث كل تاريخ عن شهره الهجري، فلا يحتاج الجدول مصدر بيانات ويعمل دون اتصال.</p>
             <h3 data-i18n="cg.faq.q3">هل تواريخ رمضان والعيد دقيقة؟</h3>
             <p data-i18n="cg.faq.a3">تتبع افتراضيًا تقويم أم القرى السعودي، وقد تختلف عنه رؤية الهلال، بيوم واحد في العادة. فعّل خيار تواريخ رمضان والعيد المعلنة لاستخدام التواريخ التي أعلنتها الإمارات منذ 2018 (اختلف عن أم القرى رمضان 2018 فقط). وهي تواريخ الإمارات: أعلنت عُمان 11 منها بعد يوم من 2019 إلى 2026. التواريخ المستقبلية تقديرية حتى تُعلن وتُضاف هنا.</p>
@@ -331,7 +332,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/calendar-generator.min.js?v=20261025f" defer=""></script>
+  <script src="/assets/js/translations/calendar-generator.min.js?v=20261025gc2" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>
