@@ -23,6 +23,7 @@ window.calendarGeneratorTranslations = {
         "sat": "Saturday"
       },
       "weekend": "Weekend",
+      "weekendNote": "Is Weekend and Is Working Day follow this weekend only: they don't know public holidays, half days (the UAE government works a half day on Friday) or an employer's own rest days.",
       "we": {
         "satsun": "Saturday + Sunday",
         "frisat": "Friday + Saturday",
@@ -118,6 +119,7 @@ window.calendarGeneratorTranslations = {
         "sat": "السبت"
       },
       "weekend": "عطلة نهاية الأسبوع",
+      "weekendNote": "يتبع العمودان Is Weekend وIs Working Day هذه العطلة فقط: لا يعرفان العطل الرسمية، ولا أنصاف الأيام (تعمل حكومة الإمارات نصف يوم يوم الجمعة)، ولا أيام الراحة التي يحددها صاحب العمل.",
       "we": {
         "satsun": "السبت + الأحد",
         "frisat": "الجمعة + السبت",
