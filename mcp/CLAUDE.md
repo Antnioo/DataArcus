@@ -24,7 +24,8 @@ starts with `## Summary` (40 lines at most). After each step: update, commit, pu
 - `cd mcp && npm test` (registry `mcp/tests.json`; `-- <area>`, `-- --keep-going`, `-- --list`). A new suite: one line
   in `tests.json`, never in `package.json`. In full: [docs/TESTS.md](docs/TESTS.md).
 - Every script ends with one line, `PASS  <name>  <N> checks` (or FAIL / SKIP), as `scripts/ci-sum.mjs` counts them;
-  `scripts/check-result-lines.mjs` names a script without one.
+  `scripts/check-result-lines.mjs` names a script without one. A failure: one `FAIL script=... cause=...` line first.
+- `npm test -- --affected`: local runs only; CI and the final gate run every suite.
 - A new `test.mjs` block is a part listed in one of `SHARDS`. After an `assets/js/` edit: `npm run build:min`.
 
 ## Constraints
