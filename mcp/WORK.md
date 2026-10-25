@@ -11,7 +11,7 @@ CHANGELOG's `[Unreleased]: 0.3.1` reordered and merged. Plan, results, the relea
 (what to flip at the release), decisions, "Seen, not in scope": `mcp/work/D5.md` (top section).
 - Done: cffc8e6 plan, e3896e8 red (claims 15 of 194, whats-new 13 of 149), 4b7ca19 docs, 47cbd24 (Slicer) once.
   After: claims 194/194, whats-new 167/167, release-text 36, changelog-words 60 lines, website 20/20, full npm test
-  exit 0 (71 lines PASS).
+  exit 0 (71 lines PASS); test-arabic-terms 2 of 65 fail until E2 (the owner's terms) merges: D5.md "For the reviewer" 6.
 - Next: the reviewer reviews and merges; at the release, D5.md "For the reviewer" 1-4 (CHANGELOG heading, the page's
   flag and download, README download lines, the engine's release notes); L6 stays out unless merged (item 5).
 
