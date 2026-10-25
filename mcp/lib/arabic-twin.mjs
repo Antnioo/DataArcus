@@ -32,6 +32,8 @@ const Mirror = require('../../assets/js/report-mirror.js'), Gallery = require('.
 const Rules = require('../../assets/js/report-rules.js');
 // (0.3.0 D3) the writer's phone tab rule (one copy, the writer's own), for the twin's phone page tabs
 const Sizing = require('../../assets/js/pbip-sizing.js');
+// (0.3.1 R1) the contrast of the plain language button's text
+const Engine = require('../../assets/js/design-engine.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -619,7 +621,24 @@ const textLook = (v) => { const es = isObj(v) && isObj(v.visual) && isObj(v.visu
 // holding it whole, the header's band, is its panel): the tabs' group (else the top of the page), from its end, the right on
 // an English page, the left on an Arabic page. On the phone (when the page has a phone layout): the tabs' row, as wide as
 // the writer's phone tab rule (phoneTabWidth), from the same end. Returns { json, mobile, phone, why } or { json: null, why }
-function langButton(page, visuals, mobiles, lang, target, name) {
+// (0.3.1 R1: a real user's report without page tabs drew its 4 language buttons as empty white boxes) the plain button
+// sets what every button DataArcus writes sets (pbip-page.js: the tabs, Reset, Open and Close filters): its text colour,
+// and its container's background, border and shadow off. Left unset, the text took Power BI's own button colour (a theme
+// default: Microsoft's "Create custom report themes", structural colours) over the theme's white visual panel. The text
+// is the theme's own text colour, at 4.5:1 against the page behind the button (else Power BI's dark or white text,
+// whichever reads); the outline the same colour. No text margins: Desktop ignored them (round 13, DESKTOP-TESTS.md)
+const HEX = /^#[0-9a-f]{6}$/i, hexOf = (c) => (typeof c === 'string' && HEX.test(c) ? c : isObj(c) && isObj(c.solid) ? hexOf(typeof c.solid.color === 'string' ? c.solid.color : litStr(c.solid.color)) : null);
+function plainLook(page, theme) {
+  const th = isObj(theme) ? theme : {}, tc = isObj(th.textClasses) && isObj(th.textClasses.label) ? th.textClasses.label : {};
+  const pageBg = (() => { const o = isObj(page) && isObj(page.objects) && Array.isArray(page.objects.background) ? page.objects.background.find((e) => isObj(e) && isObj(e.properties) && !e.selector) : null; return o ? hexOf(o.properties.color) : null; })();
+  const vs = isObj(th.visualStyles) && isObj(th.visualStyles.page) && isObj(th.visualStyles.page['*']) && Array.isArray(th.visualStyles.page['*'].background) ? th.visualStyles.page['*'].background[0] : null;
+  const bg = pageBg || (isObj(vs) ? hexOf(vs.color) : null) || hexOf(th.background) || '#FFFFFF';
+  const want = hexOf(th.foreground) || hexOf(th.firstLevelElements) || hexOf(tc.color) || '#252423';
+  const text = Engine.contrast(want, bg) >= 4.5 ? want : (Engine.contrast('#252423', bg) >= Engine.contrast('#FFFFFF', bg) ? '#252423' : '#FFFFFF');
+  return { text, bg };
+}
+const solid = (c) => ({ solid: { color: Lv("'" + c + "'") } });
+function langButton(page, visuals, mobiles, lang, target, name, theme) {
   const W = LANG[lang], pw = isObj(page) && Number.isFinite(page.width) ? page.width : 1280, ph = isObj(page) && Number.isFinite(page.height) ? page.height : 720;
   const tabs = visuals.filter((v) => isObj(v) && isObj(v.visual) && isPageBtn(v) && posOf(v));
   const tpl = tabs.find((v) => !textLook(v).bold) || tabs[0] || null, look = tpl ? textLook(tpl) : {};
@@ -636,9 +655,10 @@ function langButton(page, visuals, mobiles, lang, target, name) {
     let d = o.text.find((e) => isObj(e.selector) && e.selector.id === 'default'); if (!d) o.text.push(d = { properties: {}, selector: { id: 'default' } });
     Object.assign(d.properties, { text: Ls(W.text), bold: Lv('false') });
   } else {
+    const c = plainLook(page, theme).text, offs = { background: [{ properties: { show: Lv('false') } }], border: [{ properties: { show: Lv('false') } }], dropShadow: [{ properties: { show: Lv('false') } }] };
     btn = { $schema: VC_SCHEMA, name, position: {}, visual: { visualType: 'actionButton', objects: { icon: [{ properties: { shapeType: Ls('blank') }, selector: { id: 'default' } }],
-      text: [{ properties: { show: Lv('true') } }, { properties: { text: Ls(W.text), fontFamily: Ls(font), fontSize: Lv(t + 'D') }, selector: { id: 'default' } }],
-      fill: [{ properties: { show: Lv('false') } }], outline: [{ properties: { show: Lv('true') } }] }, visualContainerObjects: { title: [{ properties: { show: Lv('false') } }] } } };
+      text: [{ properties: { show: Lv('true') } }, { properties: { text: Ls(W.text), fontColor: solid(c), fontFamily: Ls(font), fontSize: Lv(t + 'D') }, selector: { id: 'default' } }],
+      fill: [{ properties: { show: Lv('false') } }], outline: [{ properties: { show: Lv('true') } }, { properties: { lineColor: solid(c) }, selector: { id: 'default' } }] }, visualContainerObjects: Object.assign({ title: [{ properties: { show: Lv('false') } }] }, offs) } };
   }
   btn.name = name;
   const vco = btn.visual.visualContainerObjects = isObj(btn.visual.visualContainerObjects) ? btn.visual.visualContainerObjects : {};
@@ -736,10 +756,10 @@ function languageCopy(P, built, labels) {
     // the language buttons (a tooltip or drillthrough page is reached by its visual, not by the tabs: none)
     const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
     if (!tooltip && !drill) {
-      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id));
+      const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
       if (en.json) { enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
       say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
-      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId));
+      const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
       if (ar.json) { arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
       say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
     }
