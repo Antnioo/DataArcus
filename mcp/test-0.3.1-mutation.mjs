@@ -1,6 +1,6 @@
 // T1 (0.3.1, wave 6; the owner, 25 Oct, after an outside review: "prioritise confidence in critical invariants over
 // more checks"): a mutation suite. It proves the existing tests catch a broken invariant. For each mutant: a COPY of
-// mcp/ (its node_modules linked) and assets/js + assets/data in a temp folder, one small change to one source file of
+// mcp/ (its node_modules linked), assets/js, assets/data and scripts/tests in a temp folder, one small change to one source file of
 // the copy (it must match exactly once and still parse), then the existing suites that guard it, run in the copy; at
 // least one must fail ("killed"). The repo's own files are never edited. Plan, mutants and results: mcp/work/T1.md.
 // Why a copied tree: the suites find the server and lib/ from their own folder (import.meta.url), so a copy runs them
@@ -8,6 +8,7 @@
 //   node test-0.3.1-mutation.mjs                    every mutant, each until its first failing guard
 //   DA_MUTATION_ALL=1 node test-0.3.1-mutation.mjs  every guard of every mutant (the results table in T1.md)
 //   DA_MUTATION_ONLY=G-used,W-wx node ...           some mutants
+//   DA_MUTATION_EXTRA=test-z.mjs,test-r.mjs node ... more guards for every mutant (to find what kills a survivor)
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -110,6 +111,7 @@ function makeCopy(k) {
   fs.cpSync(path.join(REPO, 'mcp'), path.join(dst, 'mcp'), { recursive: true, filter: (src) => !SKIP_DIRS.has(path.basename(src)) });
   fs.symlinkSync(path.join(REPO, 'mcp', 'node_modules'), path.join(dst, 'mcp', 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   for (const a of ['js', 'data']) fs.cpSync(path.join(REPO, 'assets', a), path.join(dst, 'assets', a), { recursive: true });
+  fs.cpSync(path.join(REPO, 'scripts', 'tests'), path.join(dst, 'scripts', 'tests'), { recursive: true });   // (the website's fixtures and report-check.mjs, which some suites read)
   return dst;
 }
 // the suites run as npm test runs them, with none of this run's own settings
@@ -143,7 +145,9 @@ function apply(copy, m) {
 }
 
 // ---------- the run: the guards' baselines first, then the mutants, on WORKERS copies ----------
-const mutants = MUTANTS.filter((m) => (!ONLY.size || ONLY.has(m.id)) && (!m.only || m.only.includes(process.platform)));
+const EXTRA = String(process.env.DA_MUTATION_EXTRA || '').split(',').map((g) => g.trim()).filter(Boolean);
+const mutants = MUTANTS.filter((m) => (!ONLY.size || ONLY.has(m.id)) && (!m.only || m.only.includes(process.platform)))
+  .map((m) => (EXTRA.length ? Object.assign({}, m, { guards: [...new Set(m.guards.concat(EXTRA))] }) : m));
 const skipped = MUTANTS.filter((m) => m.only && !m.only.includes(process.platform)).map((m) => m.id);
 ok(new Set(MUTANTS.map((m) => m.id)).size === MUTANTS.length, 'two mutants share an id');
 const guards = [...new Set(mutants.flatMap((m) => m.guards))];
