@@ -55,6 +55,11 @@ package's manifest; this file says what is in it.
   ones written with look-alike letters.
 - A page filter on a column whose type a hand-edited model gives as an internal name is refused with the right reason.
 - The Health Check also flags Arabic percentage measures (the ٪ sign and نسبة) that are not formatted as a percent.
+- **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
+  Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
+  it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
+  Refresh. The answer then suggests four next steps on it: a first report, the same report in English and Arabic, the
+  Gulf calendar, and "is it ready for Arabic?". Every name and number in it is made up.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

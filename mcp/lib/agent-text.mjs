@@ -30,7 +30,7 @@ export const visualWords = (LIMITS) => LIMITS.visuals.map((k) => VISUAL_WORDS[k]
 
 // Which tool gives the plan id each writing tool needs, from the plan kinds (Plans.ALLOWS): approve_plan's description
 // and rule 1 say it in these words, so a new writing tool is named once it has a plan kind
-const SOURCE_OF = { report: 'plan_layout', theme: 'generate_theme', scripts: 'check_model_health', calendar: 'add_gulf_calendar', twin: 'create_arabic_twin' };
+const SOURCE_OF = { report: 'plan_layout', theme: 'generate_theme', scripts: 'check_model_health', calendar: 'add_gulf_calendar', twin: 'create_arabic_twin', sample: 'plan_layout with sample' };
 export const planSources = () => Object.entries(ALLOWS).map(([kind, tools]) => (SOURCE_OF[kind] === tools[0] && tools.length === 1
   ? `${tools[0]} (its own proposal)` : `${tools.join(' and ')} (from ${SOURCE_OF[kind] || kind})`)).join('; ');
 export const writingTools = () => [...new Set(Object.values(ALLOWS).flat())];

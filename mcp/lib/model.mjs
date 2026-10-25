@@ -398,7 +398,7 @@ export function loadModel(p, opts) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
     if (linked) realIn(linked);
-    if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it. No project yet? DataArcus can write a made-up sample to try: plan_layout with sample true.`);
     throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);

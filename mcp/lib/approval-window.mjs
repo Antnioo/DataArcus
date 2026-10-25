@@ -129,13 +129,13 @@ const WORDS = {
     files: 'الملفات التي ستُكتب', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
     // (T2: the page's title stayed English on an Arabic page) the titles per plan kind
-    titles: { report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', columns: 'سكربت أعمدة التقويم العربية' },
+    titles: { report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات مختلَقة)', columns: 'سكربت أعمدة التقويم العربية' },
     plan: (id) => `الخطة <bdi dir="ltr">${esc(id)}</bdi>. لا يوافق عليها إلا نقرة هنا: ما يُكتب في المحادثة لا يوافق عليها. لا توافق إلا على خطة طلبتها.` }
 };
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'العناصر المرئية', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم العناصر المرئية المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
-  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Status icons script': 'سكربت أيقونات الحالة', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
 const kindLabel = (label, ar) => (ar && KIND_AR[label] ? `${KIND_AR[label]} · ${label}` : label);
@@ -150,14 +150,17 @@ export function kindsLine(paths, kind, ar) {
     const inner = [[n(/\/page\.json$/), 'page', 'pages', 'الصفحات'], [n(/\/visual\.json$/), 'visual', 'visuals', 'العناصر المرئية'], [n(/\.bookmark\.json$/), 'bookmark', 'bookmarks', 'الإشارات المرجعية'], [n(/\/mobile\.json$/), 'phone layout', 'phone layouts', 'تخطيطات الهاتف']].filter((x) => x[0]);
     parts.push(ar ? `التقارير: ${reports}${inner.length ? ` (${inner.map((x) => `${x[3]}: ${x[0]}`).join('، ')})` : ''}` : `${en(reports, 'report', 'reports')}${inner.length ? ': ' + inner.map((x) => en(x[0], x[1], x[2])).join(', ') : ''}`);
   }
-  const themes = kind === 'theme' ? n(/\.json$/i) : n(/RegisteredResources\/[^/]+\.json$/i), scripts = n(/\.tmdl$/i);
+  const themes = kind === 'theme' ? n(/\.json$/i) : n(/RegisteredResources\/[^/]+\.json$/i), scripts = P.filter(isScript).length, models = n(/\.SemanticModel\/definition\/model\.tmdl$/i), tables = n(/\.SemanticModel\/definition\/tables\/[^/]+\.tmdl$/i);
+  if (models) parts.push(ar ? `النموذج: ${models} (الجداول: ${tables})` : `${en(models, 'model', 'models')} (${en(tables, 'table', 'tables')})`);
   if (themes) parts.push(ar ? `السمة: ${themes}` : en(themes, 'theme', 'themes'));
   if (scripts) parts.push(ar ? `السكربتات: ${scripts}` : en(scripts, 'script', 'scripts'));
   return parts.join(ar ? '؛ ' : '; ');
 }
 // the files the person asked for, named on top: the project file (the report), each script, the theme file
-const mainFiles = (paths, kind) => (paths || []).map(String).filter((f) => /\.pbip$/i.test(f) || /\.tmdl$/i.test(f) || (kind === 'theme' && /\.json$/i.test(f)))
-  .map((f) => [f, /\.pbip$/i.test(f) ? 'report' : /\.tmdl$/i.test(f) ? 'script' : 'theme']);
+// (0.3.1 C: a .tmdl inside a .SemanticModel folder is the model itself, as the sample project writes it, not a script)
+const isScript = (f) => /\.tmdl$/i.test(String(f)) && !/\.SemanticModel\//i.test(String(f));
+const mainFiles = (paths, kind) => (paths || []).map(String).filter((f) => /\.pbip$/i.test(f) || isScript(f) || (kind === 'theme' && /\.json$/i.test(f)))
+  .map((f) => [f, /\.pbip$/i.test(f) ? 'report' : isScript(f) ? 'script' : 'theme']);
 const filesHtml = (groups, kind, ar) => {
   if (!groups || !groups.length) return '';
   const W = WORDS[ar ? 'ar' : 'en'], all = [].concat(...groups.map((g) => g.paths)), n = all.length, line = kindsLine(all, kind, ar), main = mainFiles(all, kind);
@@ -166,7 +169,7 @@ const filesHtml = (groups, kind, ar) => {
 };
 // (T-4) what a script is and the 3 steps, where the person decides
 const scriptHtml = (s, writes, ar) => {
-  const any = (s.files || []).some((g) => g.paths.some((f) => /\.tmdl$/i.test(f))) || (writes || []).some((x) => /\.tmdl\b/i.test(String(x)));
+  const any = (s.files || []).some((g) => g.paths.some(isScript)) || (writes || []).some((x) => /\.tmdl\b/i.test(String(x)));
   if (!any) return '';
   const W = WORDS[ar ? 'ar' : 'en'];
   return `<h2>${esc(W.about)}</h2><div class="card"><p>${esc(ar ? SCRIPT_IS_AR : scriptIs(s.scriptWhat))}</p><ol>${(ar ? APPLY_STEPS_AR : APPLY_STEPS).map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
@@ -177,7 +180,7 @@ const scriptHtml = (s, writes, ar) => {
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
   ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'مقسمات طريقة العرض المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
-  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان']];
+  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول']];
 // (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
 const headingOf = (h, ar) => { if (!ar) return h; const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); return x ? `${x[1]} · ${h}` : h; };
 
@@ -453,6 +456,15 @@ export function summary(kind, data) {
     const rFiles = Array.isArray(d.outputs) ? groupFiles(d.outputs, [["Theme (the original's, copied)", /RegisteredResources\/[^/]+\.json$/i], ["Images (the original's, copied)", /\.(png|jpe?g|gif|svg)$/i]]) : null;
     const themed = S.theme && S.theme.tokens && Object.keys(S.theme.tokens).length;
     return { title: 'Redesign of a report', sections, files: rFiles, kind, lostNote: d.copied ? `Nothing is left out: all ${d.copied} files of the original are copied, with only the changes below (the copy is checked before it is written, and a missing file stops the write). The redesign writes no format script; the theme file and the images listed are the original's, copied${themed ? ', the theme with the changes listed under Changes' : ' as they are'}.` : null };
+  }
+  // (0.3.1 C) the sample project: what it holds (names and counts, never a row), every file grouped; no preview (its
+  // report is empty) and no script (its .tmdl files are the model itself)
+  if (kind === 'sample') {
+    const S = d.sample || {}, T = Array.isArray(S.tables) ? S.tables : [], own = pins.create_report || {};
+    sections.push({ heading: 'Sample project (made-up data)', rows: [['What it is', S.what], ['Made up', S.madeUp], ['Folder', S.folder ? `"${String(S.folder)}": a new folder in the working folder` : null],
+      ['To open', S.project], ['Date table', S.dateTable], ['Report', S.report], ['Relationships', S.relationships != null ? String(S.relationships) : null], ['The rows', S.rows]].filter((r) => r[1] != null).map(([k, v]) => [k, val(v)]) });
+    sections.push({ heading: `Tables (${T.length})`, rows: T.map((t) => [String(t.table), `${Number(t.rows)} made-up rows, ${Number(t.columns)} columns${t.measures ? `, ${Number(t.measures)} measures` : ''}`]) });
+    return { title: 'Sample project (made-up data)', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Model (TMDL)', /\.SemanticModel\//i], ['Empty report', /\.Report\//i]]) : null, kind, lang: own.lang === 'ar' ? 'ar' : 'en', titleKey: 'sample' };
   }
   if (kind === 'twin') {
     const labels = Object.entries(d.labels || {});

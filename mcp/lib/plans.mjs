@@ -23,7 +23,8 @@ export const ALLOWS = {
   scripts: ['check_model_health'],                // check_model_health's fix scripts
   calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
   twin: ['create_arabic_twin'],                   // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
-  redesign: ['create_report']                     // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
+  redesign: ['create_report'],                    // plan_layout with redesignFrom (0.3, J13): the copy "<name> redesigned" with its approved patches
+  sample: ['create_report']                       // plan_layout with sample (0.3.1 C): the made-up sample project in a new folder
 };
 const plans = new Map();
 const now = () => Date.now();
