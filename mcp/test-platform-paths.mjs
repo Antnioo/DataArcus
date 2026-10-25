@@ -44,7 +44,7 @@ for (const [k, rel] of FOLDERS) copy(TWIN, path.join(ROOT, rel), k === 'crlf');
 copy(PLAIN, path.join(ROOT, 'crlf-tmdl'), true);
 const longPbip = path.join(ROOT, 'long', LONG, 'Twin Sales.pbip');
 
-const servers = [];
+const servers = []; let fsSays = '';
 const start = async (root) => { const s = await serverClient(root); servers.push(s); return s; };
 try {
   const w = await start(ROOT);
@@ -74,6 +74,7 @@ try {
   // ---------- the same name in NFC and NFD: what the file system says ----------
   const nfc = path.join(ROOT, 'nf', NFC), nfd = path.join(ROOT, 'nf', NFD);
   const oneFolder = fs.existsSync(nfd); // macOS: one folder, two spellings; Linux and Windows: no such folder yet
+  fsSays = `NFC and NFD: ${oneFolder ? 'one folder' : 'two folders'} on ${process.platform}`;
   if (!oneFolder) copy(PLAIN, nfd); // another project under the other spelling: it must never be taken for the first
   const ino = (p) => fs.statSync(p, { bigint: true }).ino;
   chk(() => (ino(nfc) === ino(nfd)) === oneFolder, () => `nf-1. NFC and NFD are ${oneFolder ? 'one folder' : 'two folders'} on this file system (${process.platform})`);
@@ -101,4 +102,4 @@ try {
 }
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  test-platform-paths  ${problems.length} of ${checks} checks`); process.exit(1); }
-console.log(`PASS  test-platform-paths  ${checks} checks`);
+console.log(`PASS  test-platform-paths  ${checks} checks (${fsSays})`);
