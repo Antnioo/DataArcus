@@ -66,8 +66,6 @@ const TMP = 'the temporary check copy: a folder of its own in the OS temp folder
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
   'server.mjs': {
-    'writeScript()': { n: 2, why: `the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
-    'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` },
     'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }
   },
   'lib/write-io.mjs': {
@@ -128,6 +126,10 @@ const LIST = {
   'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
   'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `fix-scripts.mjs's writeScript (or add_gulf_calendar's scriptNameNow, which writes nothing) passed in: ${PLAN}` } },
   'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } },
+  'tools/add_gulf_calendar.mjs': {
+    'writeScript()': { n: 2, why: `the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
+    'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` }
+  },
   'tools/check_model_health.mjs': {
     'writeScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.step): ${PLAN}` },
     'formatsAnswer()': { n: 1, why: `writes only with write = true, inside check_model_health's approved planWrites: ${PLAN}` },
