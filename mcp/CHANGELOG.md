@@ -13,6 +13,10 @@ package's manifest; this file says what is in it.
   off). A table column of a per-item measure is named in Arabic for what one row shows, not as an average.
 - A matrix keeps its row headers on the left: Power BI has no right-to-left setting for it, and the plan and the
   approval page now say so plainly.
+- **One set of right-to-left rules for charts:** an Arabic report written from scratch and an Arabic copy of an English
+  report now turn their bar, column, line and combo charts round with the same shared rules, so both give the same
+  chart. A column or line chart over month names no longer carries an axis setting Power BI ignores; how it looks does
+  not change. The matrix is unchanged while its right-to-left options are tried in Power BI Desktop.
 - **Arabic and English in one report:** the checker now judges each page in its own language, so the English pages of
   an English/Arabic report are no longer flagged for right-to-left rules. Approved long Arabic texts are no longer
   called suspicious because of their length.

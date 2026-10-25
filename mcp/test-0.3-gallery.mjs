@@ -193,7 +193,9 @@ let RA = null;
   // order (test-0.3.0-waterfall-rtl2.mjs checks its measures and the order Desktop draws))
   const vs = r.files ? visuals(r) : [], wf = vs.find((v) => v.visual.visualType === 'columnChart'), cb = vs.find((v) => v.visual.visualType === 'lineClusteredColumnComboChart');
   const va = (v) => (((v.visual.objects || {}).valueAxis || [])[0] || { properties: {} }).properties, ca = (v) => (((v.visual.objects || {}).categoryAxis || [])[0] || { properties: {} }).properties;
-  chk(() => cb && S(va(cb).switchAxisPosition) === 'true' && S(ca(cb).invertAxis) === 'true' && wf && S(va(wf).switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending' && wf.visual.query.sortDefinition.sort[0].field.Column.Property === 'الربع',
+  // (0.3.1 M1, changed on purpose: the combo follows the twin's rules, report-mirror.js: on its categorical axis no
+  // invertAxis, which Desktop ignores there (round 13); its months from the right by the sort turned round)
+  chk(() => cb && S(va(cb).switchAxisPosition) === 'true' && S(ca(cb).invertAxis) === undefined && cb.visual.query.sortDefinition.sort[0].direction === 'Descending' && wf && S(va(wf).switchAxisPosition) === 'true' && !(wf.visual.objects || {}).categoryAxis && wf.visual.query.sortDefinition.sort[0].direction === 'Descending' && wf.visual.query.sortDefinition.sort[0].field.Column.Property === 'الربع',
     () => `T: a right-to-left report mirrors the gallery charts (the waterfall by its sort: its category axis has no invertAxis): ${JSON.stringify(cb && cb.visual.objects)} ${JSON.stringify(wf && [wf.visual.objects, wf.visual.query.sortDefinition])}`);
 }
 

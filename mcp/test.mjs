@@ -3032,7 +3032,10 @@ if (part('round13')) {
     // the right); time categories keep the sorts below)
     const byY = (v, dir) => { const s = sortOf(v), y = qs(v).Y && qs(v).Y.projections[0]; return !!s && !!y && s.direction === dir && JSON.stringify(s.field) === JSON.stringify(y.field) && vt(v) !== 'lineChart'; };
     const mirroredUp = (v) => { const s = sortOf(v), want = qs(v).Tooltips ? qs(v).Tooltips.projections[0].field : qs(v).Category.projections[0].field;
-      return on(P1(v, 'valueAxis').switchAxisPosition) && on(P1(v, 'categoryAxis').invertAxis) && !!s && ((s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want)) || byY(v, 'Ascending')); };
+      // (0.3.1 M1, changed on purpose: the writer follows the twin's rules, report-mirror.js: categoryAxis.invertAxis only on
+      // a continuous axis (a date column here, Sales[Date]); a categorical axis, which ignores it, has none)
+      const dateAxis = qs(v).Category.projections[0].queryRef === 'Sales.Date';
+      return on(P1(v, 'valueAxis').switchAxisPosition) && (dateAxis ? on(P1(v, 'categoryAxis').invertAxis) : !on(P1(v, 'categoryAxis').invertAxis)) && !!s && ((s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want)) || byY(v, 'Ascending')); };
     const mirroredBar = (v) => on(P1(v, 'valueAxis').invertAxis) && on(P1(v, 'categoryAxis').switchAxisPosition) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
     const plain = (v) => !/invertAxis|switchAxisPosition/.test(JSON.stringify(v.visual.objects || {})) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
     const tellM = (r) => JSON.stringify(r.vis.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), v.tooltipPage ? 'tip' : 'page', Object.keys(v.visual.objects || {}).join('+'), sortOf(v) && sortOf(v).direction])).slice(0, 800);
