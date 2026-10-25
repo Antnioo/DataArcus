@@ -42,12 +42,12 @@ export async function writeButtons(out) {
     const w = await s.call('create_arabic_twin', { path: 'case/Service Orders.pbip', into: 'same', planId: id });
     if (w.err) throw new Error(w.t);
     const COPY = path.join(ROOT, 'case/Service Orders (EN-AR).Report'), PJ = path.join(COPY, 'definition/pages/pages.json'), pages = JSON.parse(fs.readFileSync(PJ, 'utf8'));
-    // the shipped button, as written on the first Arabic page (its look, its font and size)
-    const arFirst = pages.pageOrder[2], vdir = path.join(COPY, 'definition/pages', arFirst, 'visuals');
-    const shipped = fs.readdirSync(vdir).map((n) => JSON.parse(fs.readFileSync(path.join(vdir, n, 'visual.json'), 'utf8'))).find((v) => v.visual && v.visual.visualType === 'actionButton');
+    // the shipped buttons, as written on the first English page («العربية») and the first Arabic page ("English")
+    const btnOf = (pg) => { const vdir = path.join(COPY, 'definition/pages', pg, 'visuals'); return fs.readdirSync(vdir).map((n) => JSON.parse(fs.readFileSync(path.join(vdir, n, 'visual.json'), 'utf8'))).find((v) => v.visual && v.visual.visualType === 'actionButton'); };
+    const SHIPPED = { ar: btnOf(pages.pageOrder[0]), en: btnOf(pages.pageOrder[2]) }, shipped = SHIPPED.en;
     const def = (v, card) => v.visual.objects[card].find((e) => e.selector && e.selector.id === 'default').properties;
-    const make = (variant, text, h) => {
-      const b = JSON.parse(JSON.stringify(shipped)), o = b.visual.objects, vco = b.visual.visualContainerObjects, t = def(b, 'text');
+    const make = (variant, lang, h) => {
+      const b = JSON.parse(JSON.stringify(SHIPPED[lang])), text = lang === 'ar' ? 'العربية' : 'English', o = b.visual.objects, vco = b.visual.visualContainerObjects, t = def(b, 'text');
       t.text = Ls(text);
       vco.visualLink = [{ properties: { show: Lv('true'), type: Ls('PageNavigation'), navigationSection: Ls(pages.pageOrder[0]) } }];
       const old = () => { delete t.fontColor; o.outline = [{ properties: { show: Lv('true') } }]; ['background', 'border', 'dropShadow'].forEach((x) => delete vco[x]); };
@@ -69,7 +69,7 @@ export async function writeButtons(out) {
       const y = 20 + i * 84;
       put({ $schema: shipped.$schema, name: 'label' + v, position: { x: 20, y, z: z++, height: 34, width: 560, tabOrder: z },
         visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: `${v}  ${what}`, textStyle: { fontFamily: 'Segoe UI', fontSize: '11pt' } }], horizontalTextAlignment: 'left' }] } }] }, visualContainerObjects: off } });
-      [['ar', 'العربية', 620], ['en', 'English', 820]].forEach(([l, text, x]) => { const b = make(v, text, h); b.name = 'btn' + v + l; b.parentGroupName = undefined; b.position = { x, y, z: z++, height: h, width: shipped.position.width + (l === 'en' ? 14 : 0), tabOrder: z }; put(JSON.parse(JSON.stringify(b))); });
+      [['ar', 620], ['en', 820]].forEach(([l, x]) => { const b = make(v, l, h); b.name = 'btn' + v + l; delete b.parentGroupName; b.position = { x, y, z: z++, height: h, width: SHIPPED[l].position.width, tabOrder: z }; put(b); });
     });
     pages.pageOrder.push(pid); fs.writeFileSync(PJ, JSON.stringify(pages, null, 2) + '\n');
     const ck = await s.call('check_report', { path: 'case/Service Orders (EN-AR).pbip', checks: ['validator'] });
