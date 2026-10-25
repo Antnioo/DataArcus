@@ -117,7 +117,7 @@ const LIST = {
     'writeTree()': { n: 1, why: `create_report's report, inside withPlan after Plans.gate: ${PLAN}` },
     'formatsAnswer()': { n: 1, why: `create_report's format script with its report, inside the same withPlan: ${PLAN}` }
   },
-  'lib/arabic-twin.mjs': { 'writeTree()': { n: 1, why: `writeTwin: the twin or the EN-AR copy, new files next to the original: ${PLAN}` } },
+  'lib/twin-write.mjs': { 'writeTree()': { n: 1, why: `writeTwin: the twin or the EN-AR copy, new files next to the original: ${PLAN}` } },
   'lib/native-copy.mjs': { 'writeTree()': { n: 1, why: `writeNative: the native copy, new files next to the original: ${PLAN}` } },
   'lib/redesign.mjs': { 'writeTree()': { n: 1, why: `writeRedesign: the copy "<name> redesigned", new files next to the original: ${PLAN}` } },
   'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
