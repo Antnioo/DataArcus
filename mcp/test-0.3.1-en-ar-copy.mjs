@@ -65,14 +65,14 @@ const tabPairs = (vs, dir) => { const g = {}; vs.filter((v) => v.position && v.p
   return Object.values(g).reduce((n, list) => n + A11y.inversions(list.slice().sort((a, b) => a.position.tabOrder - b.position.tabOrder).map((v) => ({ x: v.position.x, y: v.position.y, w: v.position.width, h: v.position.height })), dir), 0); };
 
 // the approved texts: the fixed list's draft, else a made-up Arabic text; the title the Arabic of 45 characters
-const TITLE_AR = 'أوامر العمل المفتوحة حسب القسم والفني والحالة';
+const TITLE_AR = 'أوامر العمل المفتوحة حسب القسم والحالة', LONG_AR = 'أوامر العمل المفتوحة حسب القسم والفني والحالة';
 try {
   const p0 = await w.call('create_arabic_twin', { path: PBIP, into: 'same' }), T0 = (p0.j && p0.j.texts) || [];
   let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || `نص ${++k}`; });
-  L['textbox:overview0001/ovTitle/0.0'] = TITLE_AR; L['field:Work Orders.Avg days open'] = 'أيام الفتح'; L['field:Work Orders.Avg Cost'] = 'التكلفة';
+  L['textbox:overview0001/ovTitle/0.0'] = TITLE_AR; L['textbox:detail000002/dtTitle/0.0'] = LONG_AR; L['field:Work Orders.Avg days open'] = 'أيام الفتح'; L['field:Work Orders.Avg Cost'] = 'التكلفة';
   const p1 = await w.call('create_arabic_twin', { path: PBIP, into: 'same', labels: L }), J = p1.j || {}, LG = J.languages || {};
   const B = Array.isArray(LG.buttons) ? LG.buttons : [];
-  chk(() => !p1.err && TITLE_AR.length === 45 && (LG.pairs || []).length === 2 && B.length === 4 && B.every((b) => b.placed), () => `S0. the copy's plan: 2 page pairs and 4 language buttons, all placed: ${short(p1)}`);
+  chk(() => !p1.err && TITLE_AR.length === 38 && LONG_AR.length === 45 && (LG.pairs || []).length === 2 && B.length === 4 && B.every((b) => b.placed), () => `S0. the copy's plan: 2 page pairs and 4 language buttons, all placed: ${short(p1)}`);
 
   // ---------- 6: a table row's value (the plan's texts) ----------
   const text = (id) => (J.texts || []).find((t) => t.id === id) || {};
@@ -113,7 +113,10 @@ try {
   const arV = AR.flatMap((p) => visualsOf(COPY, p)), arBoxes = arV.filter((v) => typeOf(v) === 'textbox' && textOfBox(v).trim());
   const need = (v) => { const runs = v.visual.objects.general[0].properties.paragraphs.flatMap((p) => p.textRuns), t = Math.max(...runs.map((r) => parseFloat(r.textStyle.fontSize))), len = runs.reduce((a, r) => a + r.value.length, 0);
     const lines = Math.max(1, Math.ceil(len * Rules.MEASURED.CH(t) / Math.max(1, v.position.width - 10))); return { lines, h: Rules.MEASURED.BOX(t, lines) }; };
-  chk(() => arBoxes.length === 4 && arBoxes.every((v) => v.position.height + 0.5 >= need(v).h), () => `F1. every Arabic text box holds its lines (TEXTBOX_FITS): ${JSON.stringify(arBoxes.map((v) => [v.name, v.position.width, v.position.height, need(v)]))}`);
+  const cut = ((J.fitted || {}).textboxesCut || []), long = visualsOf(COPY, AR[1]).find((v) => textOfBox(v) === LONG_AR);
+  chk(() => arBoxes.length === 4 && arBoxes.every((v) => (long && v.name === long.name) || v.position.height + 0.5 >= need(v).h), () => `F1. every Arabic text box but the one said in textboxesCut holds its lines (TEXTBOX_FITS): ${JSON.stringify(arBoxes.map((v) => [v.name, v.position.width, v.position.height, need(v)]))}`);
+  chk(() => long && cut.length === 1 && cut[0].visual === 'dtTitle' && cut[0].page === 'detail000002' && /shorter Arabic text/.test(cut[0].why) && !visualsOf(COPY, AR[1]).some((v) => v.name !== long.name && v.position && over(v.position, long.position) && !holds(v.position, long.position)),
+    () => `F3. a text box whose Arabic can't fit beside and under it is said (textboxesCut) and laid over nothing: ${JSON.stringify(cut)} ${JSON.stringify(long && long.position)}`);
   { const t = visualsOf(COPY, AR[0]).find((v) => textOfBox(v) === TITLE_AR), others = visualsOf(COPY, AR[0]).filter((v) => v !== t && v.position);
     chk(() => t && need(t).lines === 1 && t.position.x >= 0 && t.position.x + t.position.width <= 1280 && !others.some((v) => over(v.position, t.position) && !holds(v.position, t.position)),
       () => `F2. the Arabic title is on one line, inside the page, over no visual: ${JSON.stringify(t && t.position)}`); }
