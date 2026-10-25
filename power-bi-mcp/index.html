@@ -124,6 +124,22 @@
             <article class="article-body">
               <p class="small text-white-50 mt-4" data-i18n-html="beta.hero.ga">Microsoft: <em>"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available."</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)</p>
 
+              <!-- RELEASE 0.3.1: at the release remove "hidden" below, set beta.new31.date (EN and AR, assets/js/translations/beta-page.js) to the release day and change the download to 0.3.1; scripts/test-whats-new.mjs checks the three agree -->
+              <section id="new-031" hidden>
+                <h2 class="mt-5 mb-3" data-i18n="beta.new31.title">What's new in 0.3.1</h2>
+                <p class="small text-white-50" data-i18n="beta.new31.date">Released on [release day].</p>
+                <ul class="beta-steps">
+                  <li data-i18n-html="beta.new31.l1"><strong>Try it without a model of your own.</strong> Ask "show me what DataArcus can do": after you approve, it writes a made-up Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report) to a new folder, then suggests four next steps on it.</li>
+                  <li data-i18n-html="beta.new31.l2"><strong>Is your report ready for Arabic?</strong> <code translate="no">check_report</code> with its Arabic lens reads any report, whoever built it, and says page by page what reads wrong in Arabic. Each finding comes with its fix: a DataArcus request you approve, a setting in Power BI Desktop, or plainly that Power BI has no setting for it. It only reads.</li>
+                  <li data-i18n-html="beta.new31.l3"><strong>One report in English and Arabic, straight from the plan.</strong> Ask for one report in both languages: the plan builds the English pages and each page's Arabic page, mirrored, with a language button on every page and each slicer pair kept in sync. You approve the Arabic texts and field names first.</li>
+                  <li data-i18n-html="beta.new31.l4"><strong>See the Arabic pages before you approve.</strong> The approval page of the Arabic twin and of the EN-AR copy now draws each Arabic page as it will be written, and each English page beside its Arabic page. A title that won't fit its box is marked to check.</li>
+                  <li data-i18n-html="beta.new31.l5"><strong>A better EN-AR copy.</strong> On a report without page tabs the language buttons now show their text; the Arabic pages move through the keyboard right to left; an Arabic title that needs more room is widened into free space, and the Arabic title and subtitle are no longer drawn as bordered cards; button slicers stay in sync between the two languages.</li>
+                  <li data-i18n-html="beta.new31.l6"><strong>One set of right-to-left rules.</strong> An Arabic report written from scratch and an Arabic copy of an English report now turn their charts round with the same shared rules, and the checker judges each page of a report in English and Arabic in its own language.</li>
+                  <li data-i18n-html="beta.new31.l7"><strong>One Arabic word for each idea.</strong> Reports, the approval page, the health checks and this website write DataArcus in Latin letters and use the same Arabic term for each Power BI and DataArcus idea.</li>
+                  <li data-i18n-html="beta.new31.l8"><strong>Names that read like instructions are never followed.</strong> A name in a model or a folder that asks the AI to call a tool, claims you already approved or asks for your data's values is flagged and never followed, look-alike letters included; ordinary names such as "Execute Time" are no longer hidden.</li>
+                </ul>
+              </section>
+
               <section id="new">
                 <h2 class="mt-5 mb-3" data-i18n="beta.new.title">What's new in 0.3.0</h2>
                 <p data-i18n="beta.new.version">Version 0.3.0 adds:</p>
@@ -158,10 +174,10 @@
                 <li class="mb-2"><code translate="no">read_model</code>: <span data-i18n="beta.tools.read_model">Reads the tables, the columns with their types, the measures with their formats and the date tables. Changes nothing.</span></li>
                 <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">Picks the measures and columns for each KPI card, chart, table and slicer.</span></li>
                 <li class="mb-2"><code translate="no">check_model_health</code>: <span data-i18n="beta.tools.check_model_health">The Model Health Check: a score and every finding, with fix scripts for you to review (never applied).</span></li>
-                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">The exact position of every visual on the page, mirrored for right to left (a waterfall reads left to right, as Power BI draws it). Writes nothing.</span></li>
+                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">The exact position of every visual on the page, mirrored for right to left (a waterfall reads left to right, as Power BI draws it). Writes nothing. From 0.3.1: one report in English and Arabic, and a made-up sample project to try DataArcus without a model of your own.</span></li>
                 <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">Asks for your approval in DataArcus's approval window in your browser, with the plan and every file it writes (in an app that has its own approval prompt, that prompt asks instead): only your Approve lets a tool write, and no tool writes a file in your folder without an approved plan. (A program already running on your computer that controls your browser or mouse could still click it: see the privacy notes.)</span></li>
                 <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">A new report next to your model, every visual placed and bound to your fields.</span></li>
-                <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">Checks a report that already exists, offline: Microsoft's validator and the rules measured in Power BI Desktop. Changes nothing.</span></li>
+                <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">Checks a report that already exists, offline: Microsoft's validator and the rules measured in Power BI Desktop. Changes nothing. From 0.3.1, its Arabic lens says page by page whether a report is ready for Arabic, each finding with its fix.</span></li>
                 <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">Reads a report you already have, one line per visual, before a redesign. Changes nothing.</span></li>
                 <li class="mb-2"><code translate="no">create_arabic_twin</code>: <span data-i18n="beta.tools.create_arabic_twin">An Arabic, right-to-left copy of an existing report, next to it, with Arabic texts you approve; or one copy with the English and the Arabic pages and a button to switch. The original is never changed.</span></li>
                 <li class="mb-2"><code translate="no">generate_theme</code>: <span data-i18n="beta.tools.generate_theme">A Power BI report theme, exactly as the DataArcus Theme Generator makes it.</span></li>
@@ -295,7 +311,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261025e" defer></script>
-  <script src="../assets/js/translations/beta-page.min.js?v=20261025e" defer></script>
+  <script src="../assets/js/translations/beta-page.min.js?v=20261025d5" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

@@ -152,7 +152,7 @@ const mrow = (tool) => (mreadme.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(
 check(/languages: "en\+ar"/.test(mrow('plan_layout')) && /bilingual/.test(mrow('plan_layout')), 'D5-R1. mcp/README.md\'s plan_layout row does not document languages: "en+ar" (and its bilingual answer)');
 check(/languages: "en\+ar"/.test(mrow('create_report')) && /after them, each page's Arabic page/.test(mrow('create_report')) && /off by default/.test(mrow('create_report')), 'D5-R2. mcp/README.md\'s create_report row does not say what languages: "en+ar" writes (off by default)');
 check(/draws each Arabic page/.test(mrow('create_arabic_twin')) && /button slicers \(pills\)/.test(mrow('create_arabic_twin')), 'D5-R3. mcp/README.md\'s create_arabic_twin row does not say the approval page draws the Arabic pages, nor that the copy keeps button slicers (pills) in sync');
-check(/`skills-packaging\/`/.test(mreadme) && /[Nn]ot published yet/.test(mreadme) && /same `\.mcpb`/.test(mreadme), 'D5-R4. mcp/README.md does not name the plugin folder as not published yet (it starts the same .mcpb)');
+check(/`mcp\/skills-packaging\/`/.test(mreadme) && /[Nn]ot published yet/.test(mreadme) && /same `\.mcpb`/.test(mreadme), 'D5-R4. mcp/README.md does not name the plugin folder as not published yet (it starts the same .mcpb)');
 // D5-P PRIVACY.md: what each 0.3.1 path reads and writes
 check(/`lens: "arabic"`/.test(row('check_report')) && /writes nothing/.test(row('check_report')), 'D5-P1. PRIVACY.md\'s check_report row does not say what the Arabic lens returns and that it writes nothing');
 check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.test(pl), 'D5-P2. PRIVACY.md\'s plan_layout row does not name languages "en+ar" (bilingual) and the sample');

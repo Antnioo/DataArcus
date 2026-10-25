@@ -81,7 +81,7 @@ for (const [lang, html] of Object.entries(pages)) {
   const used = [...sec.matchAll(/data-i18n(?:-html)?="beta\.new31\.([^"]+)"/g)].map((m) => m[1]);
   ok(used.length >= 8, `${lang}: the 0.3.1 section uses ${used.length} beta.new31 keys, want the title, the date and every line`);
   for (const k of used) ok(T.en.beta.new31 && T.en.beta.new31[k] != null && T.ar.beta.new31 && T.ar.beta.new31[k] != null, `${lang}: beta.new31.${k} missing in a language`);
-  const hidden = /^<section id="new-031"[^>]*\shidden[\s>]/.test(sec), hero = (html.match(/<a [^>]*>[^<]*<i [^>]*bi-download[^>]*><\/i><span data-i18n="beta\.hero\.button">([^<]*)<\/span>/) || [])[1] || '';
+  const hidden = /^<section id="new-031"[^>]*\shidden(?:="")?[\s>]/.test(sec), hero = (html.match(/<a [^>]*>[^<]*<i [^>]*bi-download[^>]*><\/i><span data-i18n="beta\.hero\.button">([^<]*)<\/span>/) || [])[1] || '';
   if (hidden) ok(/0\.3\.0/.test(hero) && !/0\.3\.1/.test(hero), `${lang}: the 0.3.1 section is hidden, but the download says "${hero}" (0.3.0 until the release)`);
   else {
     ok(/0\.3\.1/.test(hero), `${lang}: the 0.3.1 section is shown, but the download says "${hero}" (show it at the release, with the 0.3.1 download)`);
