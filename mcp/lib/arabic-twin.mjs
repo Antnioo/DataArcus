@@ -539,6 +539,31 @@ function rewireMeasures(vj, rename) {
   walk(vj);
 }
 
+// (0.3.1 R1: a real user's title and subtitle text boxes drew as bordered white panels) A text box left to a theme whose
+// visuals have a background (visualStyles "*" or "textbox", "*") is drawn as the theme's panel: its colour, border,
+// corners and shadow (mcp/CLAUDE.md, Round 1). A text box WITH text is a heading or a note, and every such text box
+// DataArcus writes has the three off (create_report's header title: pbip-page.js frame); so on the Arabic pages the twin
+// switches off the background, border and shadow of a text box with text that leaves all three to such a theme. One that
+// sets any of them itself keeps its own (its author chose); an empty text box keeps its panel (that is what it is for).
+// The English pages are the original's. Returns how many were switched off
+const themeCard0 = (theme, type, card) => { const vs = isObj(theme) && isObj(theme.visualStyles) ? theme.visualStyles : {}, one = (t) => (isObj(vs[t]) && isObj(vs[t]['*']) && Array.isArray(vs[t]['*'][card]) ? vs[t]['*'][card][0] : undefined); const x = one(type); return x !== undefined ? x : one('*'); };
+const PANEL = ['background', 'border', 'dropShadow'];
+function textPanelsOff(visuals, theme) {
+  const shows = (e) => isObj(e) && (e.show === true || (isObj(e.show) && litStr(e.show) === 'true'));
+  if (!PANEL.some((k) => shows(themeCard0(theme, 'textbox', k)))) return 0;
+  let n = 0;
+  visuals.forEach((v) => {
+    if (typeOf(v) !== 'textbox') return;
+    const g = isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [];
+    const text = g.some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && Array.isArray(pa.textRuns) && pa.textRuns.some((r) => isObj(r) && String(r.value == null ? '' : r.value).trim())));
+    const vco = isObj(v.visual.visualContainerObjects) ? v.visual.visualContainerObjects : null;
+    if (!text || (vco && PANEL.some((k) => k in vco))) return;
+    v.visual.visualContainerObjects = Object.assign(vco || {}, Object.fromEntries(PANEL.map((k) => [k, [{ properties: { show: Lv('false') } }]])));
+    n++;
+  });
+  return n;
+}
+
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
@@ -592,6 +617,7 @@ function buildTwin(P, labels) {
     } else m.expression = arabicDax(x.pd, ls);
     rewritten++; applied++;
   });
+  let panelsOff = 0;
   const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
   const pages = R.pages.map((pg) => {
     let page = pg.page;
@@ -605,6 +631,7 @@ function buildTwin(P, labels) {
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
     });
+    panelsOff += textPanelsOff(r.visuals, R.theme);
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
@@ -627,7 +654,7 @@ function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, panelsOff, ext: written.length || rewritten || wfWritten.length ? ext : null, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }
 
 // ---- (0.3.0 X1, the owner, 19 Oct: "add the toggle") English and Arabic in ONE report: the copy "<name> (EN-AR)" ----
@@ -1104,6 +1131,9 @@ export function planTwin(a) {
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot, phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    // (0.3.1 R1) the text boxes that drew as the theme's panels
+    ...(built.panelsOff ? { textBoxes: { panelsOff: built.panelsOff, how: 'The report\'s theme draws every visual on a panel (a background, a border, a shadow), text boxes too: on the Arabic pages the twin switches the panel off for each text box with text that left it to the theme, so a title or a note reads as text on the page (one that sets its own panel keeps it; an empty text box keeps its panel).',
+      ...(same ? { englishPages: 'The English pages are the original\'s: their text boxes still draw as panels. To match, select a text box in Power BI Desktop, Format > General > Effects: switch Background, Visual border and Shadow off.' } : {}), sayInPlan: 'Say it in the plan, and what the English pages keep (englishPages).' } } : {}),
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
