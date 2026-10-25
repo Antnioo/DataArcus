@@ -89,6 +89,44 @@ const fresh = (n) => { const d = path.join(ROOT, n); fs.rmSync(d, { recursive: t
   const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { fs.appendFileSync(mine, ' theirs'); throw new Error('simulated failure'); } } }));
   chk(() => e && fs.existsSync(mine) && / theirs$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine), () => `S2c. a file of the tree another program appended to survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
 }
+// (0.3.1 RB, T1's "Seen, not in scope" 1: dev + ino + size can't tell a file from the one another program wrote after
+// deleting it, when the file system gives the new file the freed inode number) S2d-S2g: only the content hash taken at
+// the write tells them apart, and theirs survives.
+// S2d. writeTree: a file of the tree is deleted and one of as many bytes, other content, written at its name (on ext4
+// the inode number is reused at once: the real case; where it is not, dev + ino already tell)
+{
+  const D = fresh('s2d'), mine = path.join(D, 'R.Report/definition/report.json'); let reused = null;
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { const was = ino(mine), n = fs.statSync(mine).size; fs.unlinkSync(mine); fs.writeFileSync(mine, 'T'.repeat(n)); reused = ino(mine) === was; throw new Error('simulated failure'); } } }));
+  chk(() => e && fs.existsSync(mine) && /^T+$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine) && JSON.stringify(tree(D)) === JSON.stringify(['R.Report/', 'R.Report/definition/', 'R.Report/definition/report.json']),
+    () => `S2d. a tree file deleted and written again by another program, as many bytes (inode number ${reused ? 'reused' : 'not reused'} here), survives the rollback with its folders, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
+// S2e. writeTree: a file of the tree rewritten in place by another program, as many bytes: the same dev, ino and size on
+// every file system (the identity inode reuse gives, without relying on the file system to reuse it)
+{
+  const D = fresh('s2e'), mine = path.join(D, 'R.Report/definition/report.json');
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { const n = fs.statSync(mine).size, fd = fs.openSync(mine, 'r+'); fs.writeSync(fd, 'U'.repeat(n), 0); fs.closeSync(fd); throw new Error('simulated failure'); } } }));
+  chk(() => e && fs.existsSync(mine) && /^U+$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine), () => `S2e. a tree file rewritten in place with as many bytes survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
+// S2f. writeFileNew: the file is in place, then rewritten in place with as many bytes before the rollback: theirs survives
+{
+  const D = fresh('s2f'), f = path.join(D, 'Theme.json'); let once = false;
+  W.setIo({ unlinkSync(p) { if (!once && /\.dataarcus-tmp-/.test(String(p))) { once = true; const fd = fs.openSync(f, 'r+'); fs.writeSync(fd, 'V'.repeat(Buffer.byteLength(data)), 0); fs.closeSync(fd); throw errOf('EIO'); } return fs.unlinkSync(p); } });
+  const e = threw(() => W.writeFileNew(f, data));
+  W.setIo();
+  chk(() => e && fs.existsSync(f) && /^V+$/.test(fs.readFileSync(f, 'utf8')) && e.left.foreign.includes(f), () => `S2f. a placed file rewritten in place with as many bytes survives the rollback, named: ${fs.existsSync(f) ? fs.readFileSync(f, 'utf8').slice(0, 20) : 'gone'} ${e && e.message}`);
+}
+// S2g. a write the disk cut off part-way, whose half another program rewrites in place before the clean-up (as many
+// bytes as landed): theirs survives (the hash covers the bytes that landed, not only a complete file)
+{
+  const D = fresh('s2g'), f = path.join(D, 'Theme.json'); let tmp = null; const fds = new Map();
+  W.setIo({
+    openSync(p, flags, mode) { const fd = fs.openSync(p, flags, mode); fds.set(fd, String(p)); return fd; },
+    writeFileSync(fd, d) { tmp = fds.get(fd); const b = Buffer.from(d), half = b.subarray(0, Math.floor(b.length / 2)); fs.writeFileSync(fd, half); const o = fs.openSync(tmp, 'r+'); fs.writeSync(o, 'W'.repeat(half.length), 0); fs.closeSync(o); throw errOf('ENOSPC'); }
+  });
+  const e = threw(() => W.writeFileNew(f, data));
+  W.setIo();
+  chk(() => e && tmp && fs.existsSync(tmp) && /^W+$/.test(fs.readFileSync(tmp, 'utf8')) && e.left.foreign.includes(tmp) && !fs.existsSync(f), () => `S2g. a half-written file another program rewrote in place survives the clean-up, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
 // S3b. writeTree: a folder of the tree is moved away and another folder put at its name, holding the very file this call
 // wrote (a hard link: same identity, same size): the folder on the way is not ours, so the file is left
 {
