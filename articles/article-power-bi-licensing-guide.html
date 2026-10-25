@@ -193,7 +193,7 @@
               <h2 class="mt-5 mb-3" data-i18n="content.h4">When the cheapest option is not the right one</h2>
               <ul>
   <li data-i18n-html="content.list2_1"><strong>You need Fabric workloads.</strong> Lakehouses, pipelines and notebooks only run on capacity. A small F2 plus Pro seats is often the cheapest way in.</li>
-  <li data-i18n-html="content.list2_2"><strong>Your models are outgrowing Pro.</strong> Pro caps model size at 1 GB and scheduled refresh at 8 times a day. PPU or capacity removes both limits.</li>
+  <li data-i18n-html="content.list2_2"><strong>Your models are outgrowing Pro.</strong> Pro caps model size at 1 GB and scheduled refresh at 8 times a day. PPU or capacity raises both limits: PPU allows models up to 100 GB and 48 scheduled refreshes a day; on a Fabric capacity the model size depends on its SKU, with 48 scheduled refreshes a day (Microsoft Learn: <a href='https://learn.microsoft.com/fabric/enterprise/powerbi/service-premium-per-user-faq' class='text-accent' target='_blank' rel='noopener'>Premium Per User</a>, <a href='https://learn.microsoft.com/power-bi/guidance/powerbi-implementation-planning-subscriptions-licenses-trials' class='text-accent' target='_blank' rel='noopener'>Pro, PPU and Fabric capacity compared</a>).</li>
   <li data-i18n-html="content.list2_3"><strong>You have Microsoft 365 E5.</strong> E5 already includes Pro, so Pro costs you nothing extra, and Microsoft lists the step up to PPU as an add-on of $14 per user per month.</li>
   <li data-i18n-html="content.list2_4"><strong>You want to show reports to customers.</strong> Embedding reports in your own app or portal needs capacity, not per user licenses.</li>
 </ul>
@@ -299,7 +299,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
-  <script src="../assets/js/translations/article-power-bi-licensing-guide.min.js" defer></script>
+  <script src="../assets/js/translations/article-power-bi-licensing-guide.min.js?v=20261025ds1" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

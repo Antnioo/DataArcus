@@ -144,7 +144,7 @@
                 <h2 class="mt-5 mb-3" data-i18n="beta.new.title">الجديد في الإصدار 0.3.0</h2>
                 <p data-i18n="beta.new.version">ما يضيفه الإصدار 0.3.0:</p>
                 <ul class="beta-steps">
-                  <li data-i18n-html="beta.new.l1"><strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.</li>
+                  <li data-i18n-html="beta.new.l1"><strong>عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك.</li>
                   <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس المقسم والتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
                   <li data-i18n-html="beta.new.l3"><strong>تقرير واحد باللغتين.</strong> تستطيع <code translate="no">create_arabic_twin</code> أن تكتب نسخة باسم "(EN-AR)" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.</li>
                   <li data-i18n-html="beta.new.l4"><strong>مخطط الشلال والمخطط المركّب والمخططات المتعددة الصغيرة.</strong> عناصر Power BI المرئية نفسها (waterfall وcombo وsmall multiples)، حين تطلبها وتناسبها الحقول. وفي التقرير العربي يُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI، وتبقى بقية الصفحة معكوسة.</li>
@@ -204,14 +204,15 @@
                 <li data-i18n="beta.safe.model">لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.</li>
                 <li data-i18n="beta.safe.ask">يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).</li>
                 <li data-i18n="beta.safe.validator">تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.</li>
-                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير النصوص المكتوبة فيه: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية (فإن كُتب فيها رقم أو اسم يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>.</li>
+                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">المتطلبات والحدود</h2>
               <ul>
-                <li data-i18n="beta.req.windows">Windows فقط.</li>
+                <li data-i18n="beta.req.windows">Windows للتثبيت بنقرة واحدة؛ وPower BI Desktop، الذي يفتح التقارير، لا يعمل إلا على Windows.</li>
                 <li data-i18n="beta.req.desktop">Power BI Desktop بالإصدار 2.159.883.0 (أكتوبر 2026) أو أحدث: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.</li>
                 <li data-i18n="beta.req.claude">Claude Desktop.</li>
+                <li data-i18n-html="beta.req.clients">ويمكن للمطورين أيضًا تشغيله من نسخة من المستودع في Claude Code أو VS Code (وضع الوكيل) أو Cursor، على Windows أو macOS أو Linux: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md#other-mcp-clients-and-platforms-developers" class="text-accent" target="_blank" rel="noopener">ملاحظات الإعداد</a> (جُرّب Claude Code على Linux، ولم يُجرَّب VS Code وCursor بعد). أما ملف .mcpb للتثبيت بنقرة واحدة فهو لـ Windows.</li>
                 <li data-i18n="beta.req.beta">نسخة تجريبية عامة: الحزمة غير موقّعة بعد، فتحقّق من بصمتها SHA-256 (أدناه وفي ملاحظات الإصدار) قبل تثبيتها.</li>
                 <li data-i18n="beta.req.large">النماذج التي تتجاوز نحو 50 جدولًا تجريبية.</li>
               </ul>
@@ -311,7 +312,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=20261025g" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=20261025ds1" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
