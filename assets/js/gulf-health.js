@@ -32,6 +32,8 @@
     bhr: { name: 'Bahrain', nameAr: 'البحرين', weekendOption: 'Bahrain: Fri + Sat since 2006' },
     omn: { name: 'Oman', nameAr: 'عُمان', weekendOption: 'Oman: Fri + Sat since 2013' }
   };
+  // weekend rules of gulf-dates.js that are not a country, with the Calendar Generator's option for each (0.3.1 GC)
+  const WEEKEND_RULES = { shj: { name: 'Sharjah\'s government', nameAr: 'حكومة الشارقة', weekendOption: 'Sharjah government: Fri-Sun since 2022' } };
   const TOOLS = { calendar: 'https://dataarcus.com/tools/dax-calendar-table-generator.html', measures: 'https://dataarcus.com/tools/dax-measure-builder.html' };
   // the Measure Builder's Ramadan and Eid measures, by the end of their names
   const MEASURES = ['Last Ramadan', 'vs Last Ramadan %', 'Eid al-Fitr Window', 'Eid al-Fitr Window Last Year', 'Eid al-Fitr Window vs Last Year %', 'Eid al-Adha Window', 'Eid al-Adha Window Last Year', 'Eid al-Adha Window vs Last Year %'];
@@ -310,5 +312,5 @@
     }
   }
 
-  return { analyze, hasGulfColumns, findCalendar, readGenerated, weekendRule, countryWeekend, COUNTRIES, MEASURES };
+  return { analyze, hasGulfColumns, findCalendar, readGenerated, weekendRule, countryWeekend, COUNTRIES, WEEKEND_RULES, MEASURES };
 });

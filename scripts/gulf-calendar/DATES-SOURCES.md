@@ -72,13 +72,15 @@ is Wednesday 16 May 2018, as in the UAE. The Saudi dates are **not** in `assets/
 no country, so a second country needs a change to the file's structure (see "Open").
 
 ## Official weekends in the GCC
-Government (public sector) weekends. Private companies may keep a different one, and Sharjah's government has had a
-Friday-to-Sunday weekend since 2022 (a four-day week); the generator does not model either.
+Government (public sector) weekends. Private companies may keep a different one (the employer sets its rest days); the
+generator does not model that, nor public holidays or the UAE government's Friday half day. Sharjah's government is
+not a country but has its own rule (the generator's option "Sharjah government", the MCP's `weekend: "shj"`).
 
 | Country | Weekend | Since | Source |
 |---|---|---|---|
 | UAE | Saturday-Sunday (Friday afternoon off for the government) | 1 January 2022 | Announced by WAM on 7 December 2021: [Al Jazeera](https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector), [Gulf News](https://gulfnews.com/uae/uae-saturday-sunday-weekend-abu-dhabi-announces-four-and-half-day-working-week-1.1638867209602) |
 | UAE | Friday-Saturday (before: Thursday-Friday) | 1 September 2006 | Cabinet decree 21/2006: [Gulf News](https://gulfnews.com/amp/story/uae%2Ffriday-saturday-weekend-in-uae-from-september-1.237326), [Khaleej Times](https://www.khaleejtimes.com/uae/new-weekend-holidays-from-september-1?amp=1) |
+| UAE, Sharjah government | Friday-Saturday-Sunday (before: Friday-Saturday, as the UAE) | 1 January 2022 | Sharjah Executive Council's decision, published 9 December 2021: [ec.shj.ae](https://ec.shj.ae/news/%D8%AA%D9%86%D9%81%D9%8A%D8%B0%D9%8A-%D8%A7%D9%84%D8%B4%D8%A7%D8%B1%D9%82%D8%A9-%D9%8A%D8%B9%D8%AA%D9%85%D8%AF-%D8%AA%D8%BA%D9%8A%D9%8A%D8%B1-%D9%86%D8%B8%D8%A7%D9%85-%D8%A7%D9%84%D8%B9%D9%85%D9%84/) |
 | Saudi Arabia | Friday-Saturday (before: Thursday-Friday) | 29 June 2013 | Royal decree of 23 June 2013: [Arab News](https://www.arabnews.com/news/455923), [Crowell](https://www.crowell.com/en/insights/client-alerts/saudi-arabia-changes-weekend-to-friday-saturday-from-29-june-2013) |
 | Oman | Friday-Saturday (before: Thursday-Friday) | 1 May 2013 | Royal decree: [Gulf Business](https://gulfbusiness.com/en/2013/industry/oman-to-shift-to-friday-saturday-weekend), [The Peninsula](https://thepeninsulaqatar.com/article/07/04/2013/oman-to-shift-weekend) |
 | Kuwait | Friday-Saturday (before: Thursday-Friday) | 1 September 2007 | [Asharq Al-Awsat](https://en-archive.aawsat.com/2007/05/27/kuwait-switches-to-friday-saturday-weekend/) |

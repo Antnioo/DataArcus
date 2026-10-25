@@ -11,6 +11,8 @@ const GD = require('../../assets/js/gulf-dates.js');
 
 const COUNTRY_CODES = ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'];
 const FIXED = { 'sat-sun': 'Saturday + Sunday', 'fri-sat': 'Friday + Saturday', fri: 'Friday only', sun: 'Sunday only' };
+// weekend rules that are not a country (0.3.1 GC: Sharjah's government, Friday to Sunday from 2022), dated like a country's
+const RULES = ['shj'];
 const WEEK = { sunday: 'sun', monday: 'mon', saturday: 'sat' };
 // the generator's names that sort by a number. Round 12 (the owner's go on round 11's recommendation 4a): written in the
 // script as sortByColumn, since Desktop 2.158 applied a script with them, Problems 0, and three slicers came out January
@@ -104,7 +106,7 @@ export function addGulfCalendar(m, a, env) {
   // the generator's own table for these settings (the website's defaults for what isn't asked: fiscal and relative
   // columns on, Hijri on, as the page)
   const weekend = a.weekend === 'country' || a.weekend == null ? country : a.weekend;
-  if (!(COUNTRY_CODES.includes(weekend) || FIXED[weekend])) refuse(`Unknown weekend "${a.weekend}".`);
+  if (!(COUNTRY_CODES.includes(weekend) || RULES.includes(weekend) || FIXED[weekend])) refuse(`Unknown weekend "${a.weekend}".`);
   const st = Object.assign({}, Cal.DEFAULTS, { name: table, start, end, fy: a.fiscalStart || 1, week: WEEK[a.weekStart || 'sunday'], weekend, lang: a.lang || 'en',
     hijri: true, fiscal: true, relative: true, observed: a.announced !== false, arabicNames: a.arabicNames !== false });
   if (!Cal.hijriFmt) refuse('This Node.js has no Umm al-Qura calendar (it needs full ICU), so the Hijri dates can\'t be worked out.');
@@ -134,7 +136,7 @@ export function addGulfCalendar(m, a, env) {
   if (!rels.length) byHand.push(`Relate your fact tables' date columns to ${q}[Date] (Model view: drag each date column onto Date; many to one, single direction).`);
   return {
     scriptFile: file, table, rows: built.rows, columns: built.columns, range: { from: start, to: end },
-    country: { code: country, name: C.name }, weekend: COUNTRY_CODES.includes(weekend) ? Gulf.COUNTRIES[weekend].weekendOption : FIXED[weekend], weekStart: a.weekStart || 'sunday',
+    country: { code: country, name: C.name }, weekend: COUNTRY_CODES.includes(weekend) ? Gulf.COUNTRIES[weekend].weekendOption : RULES.includes(weekend) ? Gulf.WEEKEND_RULES[weekend].weekendOption : FIXED[weekend], weekStart: a.weekStart || 'sunday',
     announced: st.observed ? { on: true, checkedTo: GD.checked, estimatesFrom: later, why: 'Ramadan, Shawwal and Dhu al-Hijjah start on the UAE\'s announced dates up to ' + GD.checked + '; later ones are Umm al-Qura estimates, flagged in Is Estimated Date. Sources: scripts/gulf-calendar/DATES-SOURCES.md.' }
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
     relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction)`),

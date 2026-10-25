@@ -242,8 +242,8 @@ function calendarOffer(g) {
   if (Number.isInteger(g.firstYear)) inputs.firstYear = g.firstYear; else ask.push('firstYear');
   if (Number.isInteger(g.lastYear)) inputs.lastYear = g.lastYear; else ask.push('lastYear');
   return { tool: 'add_gulf_calendar', inputs, askTheUser: ask, weekend: inputs.country ? Gulf.COUNTRIES[inputs.country].weekendOption : null,
-    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption),
-    notModelled: 'The weekend differs by country (the generator\'s own options above), and the generator has no option for an emirate\'s own government weekend (Sharjah\'s differs from the federal one) or the Friday half day: ask the person which weekend their business keeps.',
+    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption).concat(Object.values(Gulf.WEEKEND_RULES).map((r) => r.weekendOption)),
+    notModelled: 'The weekend differs by country (the generator\'s own options above, with Sharjah\'s government weekend as add_gulf_calendar\'s weekend "shj"), and the generator has no option for another emirate\'s own government weekend, the Friday half day, public holidays or an employer\'s own rest days: ask the person which weekend their business keeps.',
     what: 'add_gulf_calendar writes the calendar as a TMDL script in a new file next to the project, for the person to apply in TMDL view; nothing is written into the model. Ask the person for their country and the years their data covers: never take a default.' };
 }
 

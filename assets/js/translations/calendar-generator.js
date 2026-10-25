@@ -33,7 +33,8 @@ window.calendarGeneratorTranslations = {
         "kwt": "Kuwait: Fri + Sat since 2007",
         "qat": "Qatar: Fri + Sat since 2003",
         "bhr": "Bahrain: Fri + Sat since 2006",
-        "omn": "Oman: Fri + Sat since 2013"
+        "omn": "Oman: Fri + Sat since 2013",
+        "shj": "Sharjah government: Fri-Sun since 2022"
       },
       "fyStart": "Fiscal year starts",
       "m": {
@@ -127,7 +128,8 @@ window.calendarGeneratorTranslations = {
         "kwt": "الكويت: الجمعة والسبت منذ 2007",
         "qat": "قطر: الجمعة والسبت منذ 2003",
         "bhr": "البحرين: الجمعة والسبت منذ 2006",
-        "omn": "عُمان: الجمعة والسبت منذ 2013"
+        "omn": "عُمان: الجمعة والسبت منذ 2013",
+        "shj": "حكومة الشارقة: من الجمعة إلى الأحد منذ 2022"
       },
       "fyStart": "بداية السنة المالية",
       "m": {

@@ -26,7 +26,7 @@
       // Ramadan 1452 starts in 2030; its Eids fall in 2031, outside the checked range
       { hijriYear: 1452, ramadan: '2030-12-26', estimate: ['ramadan'] }
     ],
-    // Official (government) weekend by country: each rule holds from its date until the next one. Days are
+    // Official (government) weekend by country (and Sharjah's government): each rule holds from its date until the next one. Days are
     // WEEKDAY ( [Date], 1 ) numbers: 1 Sunday ... 5 Thursday, 6 Friday, 7 Saturday. The first rule is the weekend the
     // first change replaced; earlier history was not checked. Private companies can differ.
     weekends: {
@@ -35,7 +35,10 @@
       kwt: [{ from: null, days: [5, 6] }, { from: '2007-09-01', days: [6, 7] }],
       qat: [{ from: null, days: [5, 6] }, { from: '2003-08-01', days: [6, 7] }],
       bhr: [{ from: null, days: [5, 6] }, { from: '2006-09-01', days: [6, 7] }],
-      omn: [{ from: null, days: [5, 6] }, { from: '2013-05-01', days: [6, 7] }]
+      omn: [{ from: null, days: [5, 6] }, { from: '2013-05-01', days: [6, 7] }],
+      // not a country: Sharjah's government, Friday + Saturday + Sunday from 2022 (Sharjah Executive Council, 9 Dec 2021);
+      // its first rule is the weekend that change replaced, as above
+      shj: [{ from: null, days: [6, 7] }, { from: '2022-01-01', days: [6, 7, 1] }]
     },
     // the day the UAE's federal government moved to the Saturday-Sunday weekend
     uaeWeekendChange: '2022-01-01'
