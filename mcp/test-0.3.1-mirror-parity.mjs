@@ -33,7 +33,6 @@ const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const unesc = (s) => String(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 const req = (url, method, body) => new Promise((resolve) => {
   const u = new URL(url), r = http.request(u, { method, headers: Object.assign({ Host: u.host }, body ? { Origin: u.origin, 'Content-Type': 'application/x-www-form-urlencoded' } : {}) }, (res) => { let t = ''; res.setEncoding('utf8'); res.on('data', (c) => { t += c; }); res.on('end', () => resolve(t)); });
   r.on('error', () => resolve('')); if (body) r.write(body); r.end();
@@ -92,6 +91,7 @@ const OWN = [
   vc('ownImage', 20, 850, 120, 60, { visualType: 'image', objects: { general: [{ properties: { imageUrl: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: 'parity-background.png' } } } } }] } })];
 
 // ---------- what is meant to differ, with why (taken out before comparing) ----------
+// eslint-disable-next-line no-unused-vars -- the record of the meant differences: the comparison's comments cite it (INTENDED.table ...)
 const INTENDED = {
   names: 'visual names, filter names and the tooltip page\'s id: each path makes its own (the copy names its Arabic pages\' visuals anew)',
   texts: 'texts: the writer writes its own Arabic words (design-engine REPORT_TEXTS, the field names it gives), the twins the approved labels',
@@ -109,6 +109,7 @@ const INTENDED = {
   bilingual: 'the bilingual report (B) against the copy (C) of the same English report: the report\'s own name (its .platform\'s displayName, and a new logicalId as every report gets; the folder and the .pbip named without " (EN-AR)": it is a new report, not a copy). Nothing else: the same engine builds both'
 };
 // a difference found, not meant: two decisions of the owner meet; taken out here, said in M1.md for the owner to decide
+// eslint-disable-next-line no-unused-vars -- the record of the known difference, said in M1.md: the comparison's comments cite it
 const KNOWN = {
   textPanel: 'a text box with text on a theme that draws panels: create_report writes its text slot as a panel on purpose (round 13: a panel with a title), the twins switch the panel off on the Arabic pages (R1, item 4: a text box with text is a heading). The owner decides which one both follow'
 };

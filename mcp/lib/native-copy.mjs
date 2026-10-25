@@ -10,7 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
-import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
+import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
 import { writeTree } from './files.mjs';
 

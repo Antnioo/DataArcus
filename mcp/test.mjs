@@ -425,9 +425,6 @@ const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(
 if (part('design-report')) {
 const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
-const besideRail = (got, wp, s, v) => { const r = wp.slots.find((x) => x.rail), sl = got.visuals.filter((x) => x.type === 'slicer');
-  if (!r || !sl.length || s.y < Math.max(...sl.map((x) => x.y + x.h))) return false;
-  return v.x === Math.min(s.x, r.x) && v.x + v.w === Math.max(s.x + s.w, r.x + r.w); };
 const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
   const bad = [];
   want.forEach((wp, i) => {
@@ -662,7 +659,6 @@ const cardProblems = (dir, rtl) => {
   const filesOf = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(path.dirname(dir), f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
   // Microsoft's validator on a report folder: { errors, what } (warnings are not errors)
   const validate = (dir) => {
-    const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
     // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
     const r = validatorCounts(dir);
     return r.ran ? { errors: r.errorCount, what: r.errors.map((e) => `${e.code}: ${e.message}`).join('; ') } : { errors: -1, what: 'the validator did not run: ' + r.why };
@@ -1039,7 +1035,6 @@ if (part('round4')) {
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
   fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'plain'), { recursive: true });
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
@@ -1543,7 +1538,6 @@ if (part('round8')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   // every page.json of a written report: { tooltip, filters }
@@ -1633,7 +1627,6 @@ if (part('round9')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -1895,8 +1888,8 @@ if (part('check-report')) {
     measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )', formatString: '#,0.00' }] }] } }));
   fs.copyFileSync(path.join(REPO, 'scripts/tests/fixtures/logos/wide.png'), path.join(ROOT, 'cr-project/logo.png'));
   const plan = async (lang) => (await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end', lang })).j.design;
-  const goldEn = await ask('create_report', { path: 'cr-project', name: 'CR Gold EN', design: await plan('en'), logo: 'cr-project/logo.png' });
-  const goldAr = await ask('create_report', { path: 'cr-project', name: 'CR Gold AR', lang: 'ar', design: await plan('ar') });
+  await ask('create_report', { path: 'cr-project', name: 'CR Gold EN', design: await plan('en'), logo: 'cr-project/logo.png' });
+  await ask('create_report', { path: 'cr-project', name: 'CR Gold AR', lang: 'ar', design: await plan('ar') });
   const RP = (name) => path.join(ROOT, 'cr-project', name + '.Report');
   const measured = (a) => (a.j.findings || []).filter((f) => /^measured:/.test(f.source));
 
@@ -2116,7 +2109,6 @@ if (part('round10')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -2218,7 +2210,6 @@ if (part('round10')) {
     const many = {};
     for (const [tag, names, lang] of [['EN 4', NAMES.slice(0, 4), 'en'], ['EN 8', NAMES, 'en'], ['AR 4', AR.slice(0, 4), 'ar'], ['AR 8', AR, 'ar']]) many[tag] = await ask('create_report', { path: 'r10-project', name: 'R10 Nav ' + tag, lang, rtl: lang === 'ar', font: lang === 'ar' ? 'Tahoma' : 'Segoe UI', pages: handPages(names, lang === 'ar') });
     const read = (x) => (x.err ? [] : report(path.join(ROOT, 'r10-project', x.j.report)).filter((p) => !p.tooltip));
-    const accentOf = (x) => String(JSON.parse(fs.readFileSync(path.join(ROOT, 'r10-project', x.j.report, 'definition', 'report.json'), 'utf8')).themeCollection ? '' : '');
     // 1. the look: no page navigator; one button per page on every page; no fill and no outline; the current page's name bold in the accent colour with a line under it; the others not bold
     chk(() => { const pgs = read(two); return pgs.length === 2 && pgs.every((pg, pi) => { const b = navOf(pg), line = pg.visuals.filter((v) => type(v) === 'shape');
       const cur = b.filter((v) => L(lookOf(v, 'text').bold) === 'true');
@@ -2228,7 +2219,6 @@ if (part('round10')) {
       () => `the navigator must be tabs without boxes, the current page bold in the accent colour with a line under it: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => [textOf(v), L(lookOf(v, 'text').bold), L(lookOf(v, 'fill').show), L(lookOf(v, 'outline').show)]))).slice(0, 500)} ${short(two)}`);
     // 2. no name is cut: every button is at least its (bold) text's width + 10; the buttons don't overlap each other, the title's text or the logo, and stay on the page; 2, 4 and 8 pages, both languages
     const widthBad = (x, tag) => read(x).flatMap((pg) => { const b = navOf(pg).sort((p, q) => p.at.x - q.at.x), bad = [];
-      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"')), logo = pg.visuals.filter((v) => type(v) === 'textbox' || type(v) === 'image').sort((p, q) => p.at.x - q.at.x);
       if (b.length !== read(x).length) bad.push(`${tag} ${pg.name}: ${b.length} buttons`);
       b.forEach((v, i) => { const t = lookOf(v, 'text'), need = tw(textOf(v), N(t.fontSize), true, String(L(t.fontFamily)).slice(1, -1)) + 10;
         if (v.at.w < need) bad.push(`${tag} ${pg.name}: "${textOf(v)}" ${v.at.w} wide, needs ${need.toFixed(0)}`);
@@ -2238,6 +2228,23 @@ if (part('round10')) {
       return bad; });
     const allBad = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : widthBad(x, t)));
     chk(() => allBad.length === 0 && read(many['EN 8']).length === 8 && read(many['AR 8']).length === 8, () => `no page name may be cut and no button may overlap (2, 4, 8 pages, English and Arabic): ${allBad.slice(0, 6).join(' | ')}`);
+    // (Q1 T-2, 0.3.1: the comment above promised it; the title box is wider than its text by design, so a button may sit
+    // in the box but not on the title's own text (its measured width at its size, from the side it is aligned to, plus 16),
+    // nor on an image (the logo))
+    const coverBad = (x, tag) => read(x).flatMap((pg) => {
+      const b = navOf(pg), bad = [], hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"'));
+      const para = title && (((title.visual.objects.general || [])[0] || {}).properties || {}).paragraphs, run = para && para[0] && para[0].textRuns && para[0].textRuns[0];
+      if (!run) bad.push(`${tag} ${pg.name}: no title text found`);
+      else {
+        const st = run.textStyle || {}, tl = tw(String(run.value), parseFloat(st.fontSize) || 20, st.fontWeight === 'bold', st.fontFamily || 'Segoe UI') + 16;
+        const right = para[0].horizontalTextAlignment === 'right', text = { x: right ? title.at.x + title.at.w - tl : title.at.x, y: title.at.y, w: tl, h: title.at.h };
+        b.forEach((v) => { if (hit(v.at, text)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the title's text (${Math.round(text.x)}-${Math.round(text.x + text.w)})`); });
+      }
+      pg.visuals.filter((v) => type(v) === 'image').forEach((im) => b.forEach((v) => { if (hit(v.at, im.at)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the logo`); }));
+      return bad; });
+    const covered = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : coverBad(x, t)));
+    chk(() => covered.length === 0, () => `no page button may sit on the title's text or the logo (2, 4, 8 pages, English and Arabic): ${covered.slice(0, 6).join(' | ')}`);
     // 3. mirrored: English first page leftmost, Arabic first page rightmost (rows of a wrapped navigator each in that order)
     const order = (x) => read(x).map((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.slice().sort((p, q) => (Math.abs(p.at.y - q.at.y) > 2 ? p.at.y - q.at.y : p.at.x - q.at.x)).map((v) => names.indexOf(textOf(v))); });
     const rowsOk = (x, rtl) => read(x).every((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.every((p) => b.every((q) => Math.abs(p.at.y - q.at.y) > 2 || p === q || ((names.indexOf(textOf(p)) < names.indexOf(textOf(q))) === (rtl ? p.at.x > q.at.x : p.at.x < q.at.x)))); });
@@ -2755,7 +2762,6 @@ if (part('round11')) {
     const all = reps.flatMap(vis).concat(site), types = new Set(all.map((v) => v.visual.visualType));
     const show = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; return t && t.properties && t.properties.show && t.properties.show.expr ? t.properties.show.expr.Literal.Value : null; };
     const loose = all.filter((v) => show(v) !== 'true' && show(v) !== 'false');
-    const titled = all.filter((v) => ['tableEx', 'cardVisual', 'pivotTable'].includes(v.visual.visualType) && v.parentGroupName !== undefined);
     chk(() => reps.every((x) => !x.err) && ['tableEx', 'cardVisual', 'slicer', 'gauge', 'treemap', 'map', 'funnel', 'donutChart', 'textbox', 'actionButton'].every((t) => types.has(t)) && all.length > 150 && loose.length === 0
         && all.filter((v) => v.visual.visualType === 'tableEx').every((v) => show(v) === 'true') && all.filter((v) => v.visual.visualType === 'cardVisual' && !isMessageCard(v)).every((v) => show(v) === 'true') && all.filter(isMessageCard).every((v) => show(v) === 'false'),   /* round 22: a message card writes its title off */
       () => `every visual must set its title on or off explicitly (tables and cards on): ${loose.length} without: ${[...new Set(loose.map((v) => v.visual.visualType))].join(', ')}; types ${[...types].join(', ')} ${reps.filter((x) => x.err).map(short).join(' | ')}`);
@@ -2944,7 +2950,6 @@ if (part('round13')) {
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const P = 'r13-project';
@@ -3322,8 +3327,17 @@ if (part('round12')) {
       // end and not at its start: seen in Desktop 2.158 on 6 Oct, DESKTOP-TESTS.md round 13; the words before it are unchanged)
       if (!full.startsWith(t.text.replace(/…\u200f?$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
     });
-    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, size = 10, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      seen.push(`slicer "${shown}"`); });
+    // (Q1 T-1, 0.3.1: the size and room were computed and never checked) each slicer's header, as the writer sizes it
+    // (pbip-page slicerHeader: bold, its own font, 10pt down to 8, one line in the slicer's width less 8 a side, scaled): it
+    // fits on one line, and a shortened one (header.text) is the start of the field's name and ends in "…"
+    const headBad = [];
+    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
+      const lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value) : null), h = (((v.visual.objects || {}).header || [])[0] || {}).properties || {};
+      const size = parseFloat(lit(h.textSize)) || 10, hf = (lit(h.fontFamily) || "'Segoe UI'").replace(/^'|'$/g, ''), cut = lit(h.text), text = cut != null ? cut.replace(/^'|'$/g, '') : shown;
+      seen.push(`slicer "${shown}"${cut != null ? ` as "${text}"` : ''} ${size}pt`);
+      if (size < 8 || tw(text, size, true, hf) > room + 0.5) headBad.push(`slicer "${text}" ${Math.round(tw(text, size, true, hf))} wide at ${size}pt, room ${room}`);
+      if (cut != null && !(/…\u200f?$/.test(text) && shown.startsWith(text.replace(/…\u200f?$/, '').trim()))) headBad.push(`slicer "${text}" is not the start of "${shown}" ending in "…"`); });
+    chk(() => !ar.err && vs.some((v) => type(v) === 'slicer') && headBad.length === 0, () => `#24: each slicer's header fits its slicer on one line (smaller or shortened at its end): ${headBad.join(' | ')} [${seen.join('; ')}]`);
     chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…‏?$/.test(titleOf(v).text))),
       () => `#24: long titles must wrap or end in "…", never be cut at their start: ${bad.slice(0, 5).join(' | ')} [${seen.join('; ')}] ${short(ar)}`);
   }
@@ -3567,7 +3581,7 @@ if (part('round12')) {
   // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
   //   in the theme's text colour on the phone; the current tab's line under it on the phone too
   {
-    const vs = pageVisuals(en, 'r12-project').filter((v) => v.pg === pagesOf(en, 'r12-project')[0] || true), p1 = pagesOf(en, 'r12-project')[0];
+    const p1 = pagesOf(en, 'r12-project')[0];
     const tabs = p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])) && v.mobile).sort((a, b) => a.mobile.position.x - b.mobile.position.x);
     const need = (v) => Math.ceil(tw(S(v.visual.objects.text.find((e) => e.selector).properties.text), 10, true, 'Segoe UI') + 10);
     const line = p1.visuals.find((v) => type(v) === 'shape' && v.mobile), cur = tabs.find((v) => /'bold'|true/.test(JSON.stringify(v.visual.objects.text.find((e) => e.selector).properties.bold || '')));
@@ -3972,7 +3986,6 @@ if (part('round15')) {
     { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Quarter', 'string'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
     { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Region', 'string'), col('Channel', 'string')],
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
-  const lit = (x) => x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null;
 
   // Round 13, recommendation 3: a brand colour too dark to fade on its card (under the 3:1 floor) fades the other way:
   // the smallest bar the brand colour, the largest a brighter tint towards the text colour, told in the answer
@@ -4131,7 +4144,7 @@ if (part('round16')) {
       const vd = path.join(pagesDir, order[0], 'visuals'), vs = fs.readdirSync(vd).map((n) => JSON.parse(fs.readFileSync(path.join(vd, n, 'visual.json'), 'utf8')));
       const btns = vs.filter((v) => v.visual && v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects || {})))
         .map((v) => { const t = (v.visual.objects.text || []).find((e) => e.selector) || {}; const pr = t.properties || {}; return { x: v.position.x, y: v.position.y, w: v.position.width, size: parseFloat(pr.fontSize.expr.Literal.Value), name: String(pr.text.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") }; });
-      const logo = slots[1], rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
+      const rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
       const fitText = btns.every((b) => b.w >= Px.textWidth(b.name, b.size, true, rtl ? 'Tahoma' : 'Segoe UI') + 10);
       // (positions inside the header group are relative to the group: the logo's own visual is in the same frame)
       const lv = vs.find((v) => v.visual && v.visual.visualType === 'image'), lp = lv ? lv.position : null;
@@ -4235,7 +4248,6 @@ if (part('round17')) {
 
 // G-13: every report created above still passes the validator: 0 errors each
 {
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   partTime(); timing = null; const g13t = Date.now();
   const errors = validatorErrors;

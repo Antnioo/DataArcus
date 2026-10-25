@@ -21,3 +21,5 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
 - Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
 - After editing a file in `assets/js/`, rebuild its `.min.js` (`npm run build:min` in the repo root: terser, pinned to 5.51.2 in the root `package.json`, rebuilds every stale one; CI fails when a committed `.min.js` is not what its source gives); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
+- Lint and coverage (Q1, 0.3.1; root `package.json`): `npm run lint` (ESLint, bug rules only, `eslint.config.mjs`;
+  CI's website-checks) and `npm run coverage:mcp` (c8 over `npm test`, `.c8rc.json`; CI's `coverage` job, not a gate).

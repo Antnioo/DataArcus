@@ -152,7 +152,7 @@ chk(() => nameOfProj(ys(wa2)[0]) === 'Waterfall base: Total Sales (2)' && measur
     const js = ok[1].replace(/BLANK \(\)/g, 'null').replace(/ISBLANK \(/g, 'ISBLANK(').replace(/\bIF \(/g, 'IF(').replace(/\bMIN \(/g, 'Math.min(').replace(/\bMAX \(/g, 'Math.max(').replace(/\bSIGN \(/g, 'Math.sign(').replace(/\bNOT \(/g, '!(').replace(/ = /g, ' === ');
     if (/[A-Za-z]{3,}/.test(js.replace(/Math\.(min|max|sign)|ISBLANK|IF|null|_lo|_hi|_e|_s|_y/g, ''))) throw new Error('a DAX word the golden does not know: ' + js);
     const IF = (c, a, b) => (c ? a : b === undefined ? null : b), ISBLANK = (x) => x == null;
-    return new Function('IF', 'ISBLANK', '_y', '_e', '_s', '_lo', '_hi', 'return (' + js + ');')(IF, ISBLANK, _y, _e, _s, _lo, _hi);   // eslint-disable-line no-new-func
+    return new Function('IF', 'ISBLANK', '_y', '_e', '_s', '_lo', '_hi', 'return (' + js + ');')(IF, ISBLANK, _y, _e, _s, _lo, _hi);   // (built from the golden's DAX, its words checked above)
   };
   let drawn = null, err = '';
   try {

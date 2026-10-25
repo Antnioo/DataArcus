@@ -38,6 +38,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (Q1, 0.3.1) bugs only (eslint.config.mjs: no-undef, unused variables, unreachable code, duplicate keys ...), no style
+      - name: Lint the MCP and the site's engines for bugs (ESLint, pinned in package.json)
+        run: npm run lint
+
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
@@ -227,6 +231,51 @@ jobs:
       - name: Every part ran exactly once; the checks added up
         if: always()
         run: node scripts/ci-sum.mjs mcp ci-logs
+
+  # (Q1, 0.3.1; the owner 25 Oct, after an outside review: "coverage reporting to identify untested branches") the MCP's
+  # npm test once under c8 (pinned in the root package.json; .c8rc.json: mcp/server.mjs, lib, tools and the engines in
+  # assets/js), per file lines and branches % in the job summary and an artifact. Not a gate in 0.3.1: no threshold, no
+  # required check needs it, and a failing suite here is reported by the mcp check, not this job.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mcp/package-lock.json
+
+      - name: Install
+        run: npm ci && (cd mcp && npm ci)
+
+      - name: The MCP's npm test under c8
+        run: |
+          mkdir -p ci-logs
+          npm run coverage:mcp > ci-logs/coverage-run.log 2>&1 || echo "npm test exit $? under c8 (the mcp check reports the failure)" | tee -a ci-logs/coverage-run.log
+          tail -5 ci-logs/coverage-run.log
+
+      - name: Lines and branches per file (job summary)
+        if: always()
+        run: |
+          node scripts/coverage-summary.mjs > ci-logs/coverage-summary.md
+          cat ci-logs/coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+          cp coverage/coverage-summary.json ci-logs/
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 14
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
   # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).

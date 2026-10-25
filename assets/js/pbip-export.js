@@ -15,7 +15,7 @@
   // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
   const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
   const {
-    AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
+    AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
   const { barNameShare, cellRoom, columnRoom, textWidth } = Sizing;

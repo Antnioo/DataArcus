@@ -1,0 +1,8 @@
+{
+  "include": ["mcp/server.mjs", "mcp/lib/**/*.mjs", "mcp/tools/**/*.mjs", "assets/js/*.js"],
+  "exclude": ["assets/js/*.min.js", "**/node_modules/**"],
+  "reporter": ["text", "json-summary"],
+  "reportsDir": "coverage",
+  "tempDirectory": "coverage/tmp",
+  "excludeAfterRemap": false
+}

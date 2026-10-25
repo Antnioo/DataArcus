@@ -10,7 +10,7 @@
 (function (root) {
   'use strict';
   const Measure = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
-  const AR = /[؀-ۿ]/, LAT = /[A-Za-z]/;
+  const AR = /[؀-ۿ]/;
   const arabic = (x) => AR.test(String(x || ''));
 
   // Time intelligence written as an abbreviation in a measure's name, said in words (English, or Arabic for an Arabic

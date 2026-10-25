@@ -22,7 +22,6 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args, c = call) => { try { return await c(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
-  const get = (fn) => { try { return fn(); } catch (e) { return undefined; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   const model = (dir, tables, relationships) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: relationships || [] } })); };
   const ms = (name, expression, formatString) => Object.assign({ name, expression }, formatString ? { formatString } : {});
@@ -143,6 +142,12 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const lint = c.j && c.j.lint, txt = JSON.stringify(c.j || {});
     chk(() => lint && (lint.findings || []).length && !/Shipments by Carrier|Planted|"[^"]*\bby\b[^"]*" at/.test(JSON.stringify(lint.findings)) && /at \d+,\d+ \d+x\d+/.test(JSON.stringify(lint.findings)),
       () => `R5: the lint must name visuals by type and position only: ${JSON.stringify(lint && lint.findings).slice(0, 400)} ${short(c)}`);
+    // (Q1 T-4, 0.3.1: txt was computed and never read) no part of check_report's answer names a visual by its title: the
+    // titles the report holds (the writer titles from the fields, so the planted ones above never reach it), those of more
+    // than one word (a one-word title can be a field's own name, which the answer may give)
+    const titlesIn = (dir) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') { const t = ((JSON.parse(fs.readFileSync(p, 'utf8')).visual || {}).visualContainerObjects || {}).title; (t || []).forEach((x) => { const v = x && x.properties && x.properties.text && x.properties.text.expr && x.properties.text.expr.Literal && x.properties.text.expr.Literal.Value; if (typeof v === 'string') out.push(v.replace(/^'|'$/g, '')); }); } }); walk(dir); return out; };
+    const held = x.err ? [] : titlesIn(path.join(ROOT, 'i-ship', x.j.report)).filter((t) => /\s/.test(t.trim()));
+    chk(() => !c.err && held.length >= 1 && held.every((t) => !txt.includes(t)), () => `R5: no part of check_report's answer names a visual by its title: ${held.filter((t) => txt.includes(t)).join(' | ') || `(${held.length} titles of more than one word)`}`);
   }
 
   // ---------- G7: one calm brand palette, in the design engine ----------
@@ -161,6 +166,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');
+    // (Q1 T-5, 0.3.1: the check above passes on the name alone; the twin declares AR_MONTHS and writes its month column
+    // from arabic-calendar.js's MONTHS) the months the twin writes are the writer's, word for word
+    chk(() => { const C = req('../assets/js/arabic-calendar.js'); return C.MONTHS.length === 12 && C.MONTHS.join() === Px.AR_MONTHS.join() && /ArabicCal\.columnsFor/.test(twin); }, () => `one Arabic month list: the twin's month column (arabic-calendar.js MONTHS) names the months as the writer's AR_MONTHS: ${req('../assets/js/arabic-calendar.js').MONTHS.join()} / ${Px.AR_MONTHS.join()}`);
     chk(() => !/\^\[a-z\]\[A-Za-z\]\*\$/.test(cr) && /isCustom/.test(cr), () => 'one custom-visual test: check_report imports the reading block\'s isCustom');
     chk(() => !/export function approvedFor/.test(plans), () => 'G12: no unused approvedFor');
   }

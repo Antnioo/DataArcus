@@ -156,7 +156,7 @@ Object.assign(fs, orig);
 
 // ---------- F3: the privacy texts say what is read and what is returned, exactly ----------
 {
-  const privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8'), readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8'), server = serverSource();
+  const privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8'), server = serverSource();
   const flat = (s) => s.replace(/\s+/g, ' ');
   // (G1, 0.3.1) read_report's row moved with the tool table to mcp/TOOLS.md; its check reads it there
   const p = flat(privacy), rm = flat(fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8'));

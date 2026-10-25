@@ -24,7 +24,6 @@ export async function v029designEngine({ check }) {
   const E = req('../assets/js/design-engine.js');
   const D = await import('./lib/design.mjs');
   const get = (fn) => { try { return fn(); } catch (e) { return 'threw: ' + e.message; } };
-  const copy = (o) => JSON.parse(JSON.stringify(o));
   const base = () => ({ name: 'Bike shop', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui) });
   const design = (layout) => E.repairState(Object.assign(base(), { layout: Object.assign({ v: 3 }, layout) }));
   const kinds = (slots) => slots.map((s) => s.kind).join();

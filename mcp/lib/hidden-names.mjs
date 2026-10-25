@@ -1,7 +1,6 @@
 // What a model hides and which of its names read like an instruction (flagged as data, never altered).
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import { visible, nameWhy, shownName, nameOut } from './model.mjs';
-import { out } from './answer.mjs';
 
 // Names with characters nobody sees (Unicode category Cf: direction overrides and marks, zero-width characters, the
 // byte order mark): a name can then read as another one, or two names can look the same (audit AUD-017). The model

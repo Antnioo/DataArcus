@@ -12,7 +12,7 @@ import { takenNames, nameKey, tagOf, scriptFileOf } from './model-script.mjs';  
 
 const require = createRequire(import.meta.url);
 const Q = require('../../assets/js/pbip-query.js'), Fix = require('../../assets/js/model-health-tmdl.js'), Tmdl = require('../../assets/js/tmdl-model.js');
-const { SCHEMA, json, q, proj, obj, str, bool, num, mirrorChart, sorted, daxNames, hasControl, shown, lineStyle, timeAxisPlan, label } = Q;
+const { SCHEMA, json, q, proj, obj, str, bool, mirrorChart, sorted, daxNames, hasControl, shown, lineStyle, timeAxisPlan, label } = Q;
 
 export const SWITCH_MIN = 2, SWITCH_MAX = 5;
 export const PAGE_NAME = { en: 'Metric', ar: 'المؤشر' };

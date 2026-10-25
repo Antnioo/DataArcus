@@ -75,6 +75,9 @@ try {
   const one = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === li ? Object.assign({}, v, { title: 'Net by Month' }) : v)) });
   const lg1 = groupOf(P.render(one), li), top2 = phTop(lg), top1 = phTop(lg1);
   chk(() => top2 != null && top2 > ll[1].y, () => `F-02. the plot starts below the title's 2nd line: plot ${top2}, 2nd line ${ll[1] && ll[1].y}`);
+  // (Q1 T-3, 0.3.1: top1 was computed and never compared) the same chart with a 1-line title: its plot starts higher, by
+  // no more than the one line it saves (36 at 24; the line's highest point moves with the plot: 26.8 measured here)
+  chk(() => titleLines(lg1).length === 1 && top1 != null && top2 != null && top1 < top2 && top2 - top1 <= 40, () => `F-02. a 1-line title gives the plot back its line: plot ${top1} with 1 line, ${top2} with 2`);
   // (measured on the 508 bar chart: its first bar sits at a fixed share of the plot, a line's highest point moves with it)
   const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(dsvg, bi), bone = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === bi ? Object.assign({}, v, { title: 'Net by Hub' }) : v)) });
   const btop2 = phTop(bg), btop1 = phTop(groupOf(P.render(bone), bi));
@@ -100,6 +103,10 @@ try {
   chk(() => lab('Month Name', 1000).some((f) => /slant/.test(f.why)) && !lab('Month Name', 1400).length, () => `F-04. full month names (up to 9 letters: 116.5 a month) slant in 1000, stand in 1400: ${JSON.stringify(lab('Month Name', 1000))}`);
   chk(() => !lab('Quarter', 509).length && lab('Weekday Short', 400).some((f) => /slant/.test(f.why)), () => 'F-04. 4 quarters stand in 509; 7 short weekdays slant in 400');
   chk(() => lab('Month Short', 509, { labelSize: 10 }).length === 0 || lab('Month Short', 300, { labelSize: 10 }).some((f) => /slant/.test(f.why)), () => 'F-04. the rule follows the label size');
+  // (Q1 P-1, 0.3.1: notes() computed the page's scale, page.h / 1080, and never used it) the rule is in page units, as
+  // every PBIR size and font is: the same box and label size give the same note on a 1280 x 720 page as on 1920 x 1080
+  const labOn = (pw, ph, w) => P.notes({ w: pw, h: ph, visuals: [{ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 300, title: 'x', category: 'Month Short', labelSize: 9 }] }).map((f) => f.kind + ' ' + (f.why || '')).join();
+  chk(() => [300, 509, 700, 1000].every((w) => labOn(1280, 720, w) === labOn(1920, 1080, w)) && labOn(1280, 720, 300) !== labOn(1280, 720, 1000), () => `F-04. the slant note is in page units, the same on a 720 and a 1080 page: ${[300, 509, 700, 1000].map((w) => `${w}: "${labOn(1280, 720, w)}" / "${labOn(1920, 1080, w)}"`).join('; ')}`);
   const unk = { w: 1920, h: 1080, visuals: [{ type: 'clusteredColumnChart', x: 10, y: 10, w: 509, h: 400, title: 'Net by Lane Region', category: 'Lane Region', labelSize: 15 }] };
   chk(() => !P.check(unk).length && P.notes(unk).some((f) => f.i === 0 && f.kind === 'labels'), () => `F-04. an unknown category: no flag (no guess), a note that its labels' length is unknown: ${JSON.stringify(P.check(unk))} ${JSON.stringify(P.notes ? P.notes(unk) : null)}`);
   const us = P.render(unk), usa = P.render(Object.assign({}, unk, { rtl: true }), { lang: 'ar' });

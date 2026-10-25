@@ -125,7 +125,6 @@ function hintsOf(type) {
   const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, ''));
   return Object.entries(FAMILY_HINTS).filter(([, list]) => w.some((x) => list.includes(x))).map(([kind]) => kind);
 }
-const hintOf = (type) => hintsOf(type)[0] || null;
 // the format objects' hint (OBJECT_HINTS): names only, never their values
 const objectHintOf = (objects) => { const w = (Array.isArray(objects) ? objects : []).flatMap((x) => wordsOf(x)); const e = Object.entries(OBJECT_HINTS).find(([, list]) => w.some((x) => list.includes(x))); return e ? e[0] : null; };
 // a value shown as a percentage, by its format string (quoted text left out): null when the format is not known
@@ -138,7 +137,7 @@ function rolesOf(v, customRoles, temporal) {
   const disp = Object.fromEntries((Array.isArray(customRoles) ? customRoles : []).filter((r) => r && r.name).map((r) => [String(r.name), String(r.displayName || '')]));
   const R = Object.entries(v.fields || {}).map(([role, list]) => {
     const fields = (list || []).filter((f) => f && (isValue(f) || isCol(f)));
-    const { cls, word } = classOf(role, disp[role]), { set, words } = classesOf(role, disp[role]), cols = fields.filter(isCol), vals = fields.filter(isValue);
+    const { cls } = classOf(role, disp[role]), { set, words } = classesOf(role, disp[role]), cols = fields.filter(isCol), vals = fields.filter(isValue);
     const shape = !fields.length ? 'none' : !vals.length ? 'columns' : !cols.length ? 'values' : 'mixed';
     const has = (c) => set.has(c), toWord = words.some((w) => TO_WORDS.has(w));
     // dates only: a date column, or the first or last of one (Min/Max)

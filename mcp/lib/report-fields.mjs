@@ -2,8 +2,6 @@
 // the model's relationships for the field picker.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import { modelOf } from './model.mjs';
-import { out } from './answer.mjs';
-import { text } from './tool-answer.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');

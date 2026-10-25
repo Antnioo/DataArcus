@@ -2,7 +2,6 @@
 // Arabic texts: buttons, text boxes, table headers, phone tabs, the panels a text box must not become.
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { safeName } from './read-report.mjs';
-import { out } from './answer.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Lv, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
 import { arabicDax, titleMeasuresOf, textMeasuresOf } from './twin-texts.mjs';

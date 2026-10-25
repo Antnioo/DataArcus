@@ -177,7 +177,7 @@ try {
   for (const w of reportsWritten) {
     const rel = path.posix.join(MP, String(w.report).split(/[\\/]/).pop());
     await call(`read_report text ${w.label}`, 'read_report', { path: rel });
-    const rj = await call(`read_report json ${w.label}`, 'read_report', { path: rel, format: 'json' });
+    await call(`read_report json ${w.label}`, 'read_report', { path: rel, format: 'json' });
     const c = await call(`check_report ${w.label}`, 'check_report', { path: rel, maxFindings: 200 }), j = c.j || {};
     chk(() => !c.err && j.validator && j.validator.ran && j.validator.errors === 0 && j.impact.kinds.canBreak.count === 0,
       () => `C-4 ${w.label}: validator 0 errors and check_report 0 "can break": ${c.err ? c.t.slice(0, 300) : JSON.stringify({ v: j.validator, canBreak: j.impact && j.impact.kinds.canBreak, f: (j.findings || []).filter((f) => f.impact === 'canBreak').slice(0, 3).map((f) => [f.rule, f.file, f.what]) }).slice(0, 900)}`);

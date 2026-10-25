@@ -8,7 +8,7 @@
 import fs0 from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { E } from './lib/design.mjs';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';

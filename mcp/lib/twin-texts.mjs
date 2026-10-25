@@ -5,7 +5,6 @@ import crypto from 'node:crypto';
 import { visible, shownName } from './model.mjs';
 import { INSTRUCTION, safeName } from './read-report.mjs';
 import { draftText } from './arabic-names.mjs';
-import { out } from './answer.mjs';
 import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
 import { TEXT_CAP, isObj, pageOf } from './twin-read.mjs';

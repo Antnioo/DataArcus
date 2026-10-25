@@ -49,8 +49,10 @@ export function writesIn(src) {
     const e = a.replace(/\$/g, '\\$');
     for (const m of src.matchAll(new RegExp(`(?<![\\w$.])${e}\\s*\\.\\s*(?:promises\\s*\\.\\s*)?([A-Za-z]+)\\b`, 'g'))) if (WRITES.includes(m[1])) add(`${a === 'io' || a === 'REAL' ? a : 'fs'}.${m[1]}`);
     if (new RegExp(`(?<![\\w$.])${e}\\s*\\[`).test(src)) add(`${a}[...]`);
+    // eslint-disable-next-line no-unused-vars -- one entry a match; the match itself is not needed
     for (const m of src.matchAll(new RegExp(`\\{[^{}]*\\}\\s*=\\s*${e}\\b(?!\\s*\\.)`, 'g'))) add(`{...} = ${a}`);
   }
+  // eslint-disable-next-line no-unused-vars -- one entry a match; the match itself is not needed
   for (const n of named) for (const m of src.matchAll(new RegExp(`(?<![\\w$.])${n}\\s*\\(`, 'g'))) add(`${n} (imported)`);
   for (const w of WRAPPERS) for (const m of src.matchAll(new RegExp(`(?<![\\w$.])${w}\\s*\\(`, 'g'))) {
     const before = src.slice(Math.max(0, m.index - 12), m.index);
