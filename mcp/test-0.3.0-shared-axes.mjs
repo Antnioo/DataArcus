@@ -244,8 +244,9 @@ try {
       const rj = rd(path.join(RD, 'definition/report.json')); rj.publicCustomVisuals = (rj.publicCustomVisuals || []).concat(Object.values(CV)); wr(path.join(RD, 'definition/report.json'), rj);
       return { P, RD, NPG: path.join(P, 'Twin Sales native.Report/definition/pages/p1overview/visuals'), ND: path.join(P, 'Twin Sales native.Report') };
     };
-    const native = async (dir, extra) => {
+    const native = async (dir, extra, tweak) => {
       const s = setup(dir), from = dir + '/Twin Sales.Report';
+      if (tweak) tweak(s);
       const pl = await w.call('plan_layout', Object.assign({ path: dir, customVisualsFrom: from }, extra || {})), id = pl.j && pl.j.plan && pl.j.plan.planId;
       if (id) await approve(id);
       const made = id ? await w.call('create_report', Object.assign({ path: dir, planId: id, customVisualsFrom: from }, extra || {})) : null;
@@ -270,6 +271,29 @@ try {
     const twoB = B.vis.filter((v) => /^cvTwo/.test(v.id));
     chk(() => two.length === 2 && two.every((v) => v.j.visual.query.queryState.Y.projections.length === 1) && twoB.length === 1 && twoB[0].j.visual.query.queryState.Y.projections.length === 2,
       () => `N3: two AED amounts: two panels until the person confirms, then one chart: ${JSON.stringify(two.map((v) => v.id))} ${JSON.stringify(twoB.map((v) => [v.id, v.j.visual.visualType]))} ${short(B.made || B.pl)}`);
+    // (0.3.1 SQ2) J19-S1: the panels' axis titles in the page's language; J19-S5: each panel's title says its unit
+    const panelsOf = (X, re) => X.vis.filter((v) => re.test(v.id)).sort((a, b) => a.id.localeCompare(b.id));
+    const titleOf = (v) => S(((((v.j.visual.visualContainerObjects || {}).title) || [])[0] || { properties: {} }).properties.text);
+    chk(() => JSON.stringify(mixed.map((v) => axisTitle(v.j)).sort()) === JSON.stringify(['%', 'AED']), () => `N5: an English page's panels keep their axis titles "AED" and "%": ${JSON.stringify(mixed.map((v) => axisTitle(v.j)))}`);
+    const titled = (t) => ({ title: [{ properties: { show: { expr: { Literal: { Value: 'true' } } }, text: { expr: { Literal: { Value: "'" + t + "'" } } } } }] });
+    const setTitle = (dir, id, t) => { const f = path.join(dir, id, 'visual.json'), j = rd(f); j.visual.visualContainerObjects = titled(t); wr(f, j); };
+    // an Arabic report: every page's name and every text in Arabic (made-up words)
+    const arabize = (RD) => { const PD = path.join(RD, 'definition/pages');
+      const walk = (o) => { if (!o || typeof o !== 'object') return; Object.entries(o).forEach(([k, x]) => {
+        if (k === 'text' && x && x.expr && x.expr.Literal && /^'.*[A-Za-z]/.test(String(x.expr.Literal.Value))) x.expr.Literal.Value = "'نص عربي'";
+        else if (k === 'value' && typeof x === 'string' && /[A-Za-z]/.test(x) && o.textStyle !== undefined) o.value = 'نص عربي';
+        else walk(x); }); };
+      fs.readdirSync(PD).filter((d) => fs.existsSync(path.join(PD, d, 'page.json'))).forEach((d) => {
+        const pf = path.join(PD, d, 'page.json'), pj = rd(pf); pj.displayName = 'صفحة ' + d.length; wr(pf, pj);
+        const VD = path.join(PD, d, 'visuals'); if (fs.existsSync(VD)) fs.readdirSync(VD).forEach((v) => { const f = path.join(VD, v, 'visual.json'); if (!fs.existsSync(f)) return; const j = rd(f); walk(j); wr(f, j); }); }); };
+    const T3 = await native('cv3', {}, (s) => { setTitle(path.join(s.RD, 'definition/pages/p1overview/visuals'), 'cvMix', 'Sales and margin'); setTitle(path.join(s.RD, 'definition/pages/p1overview/visuals'), 'cvTwo', 'Sales and cost'); });
+    const cm = panelsOf(T3, /^cvMix/), ct = panelsOf(T3, /^cvTwo/);
+    chk(() => cm.length === 2 && JSON.stringify(cm.map(titleOf).sort()) === JSON.stringify(['Sales and margin (%)', 'Sales and margin (AED)']) && ct.length === 2 && JSON.stringify(ct.map(titleOf)) === JSON.stringify(['Sales and cost (AED · 1/2)', 'Sales and cost (AED · 2/2)']),
+      () => `N6: each panel's title says its unit (and its place when the units are the same): ${JSON.stringify(cm.concat(ct).map((v) => [v.id, titleOf(v)]))} ${short(T3.made || T3.pl)}`);
+    const T4 = await native('cv4', {}, (s) => { arabize(s.RD); setTitle(path.join(s.RD, 'definition/pages/p1overview/visuals'), 'cvMix', 'المبيعات والهامش'); });
+    const dm = panelsOf(T4, /^cvMix/), dt = dm.map((v) => axisTitle(v.j)).sort();
+    chk(() => dm.length === 2 && JSON.stringify(dt) === JSON.stringify([FSI + '%' + PDI, FSI + 'AED' + PDI].sort()) && dm.every((v) => /^المبيعات والهامش \(⁨(AED|%)⁩\)$/.test(titleOf(v))),
+      () => `N4: an Arabic page's panels: the axis titles in Arabic form (the ISO code and % isolated), the titles too: ${JSON.stringify(dm.map((v) => [v.id, axisTitle(v.j), titleOf(v)]))} ${short(T4.made || T4.pl)}`);
   }
 
   // ---------- X: no secondary axis anywhere ----------

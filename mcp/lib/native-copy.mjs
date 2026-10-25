@@ -12,6 +12,7 @@ import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
 import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
+import { rulesInput, filledLanguages } from './check-report.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 
@@ -46,7 +47,9 @@ export function planNative(reportPath, model, axes) {
   const loc = locate(reportPath);
   const left = []; strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.', left });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
-  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes });
+  // (0.3.1 SQ2, J19-S1) each page's language, as check_report tells it: an Arabic page's panels say their units in Arabic
+  const langs = filledLanguages(inv, rulesInput(inv).R).pages, langOf = (p) => (langs[p.id] === 'ar' ? 'ar' : 'en');
+  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes, langOf });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
   const free = nothingAt(loc.outDir) && nothingAt(loc.outPbip);
   const answer = {

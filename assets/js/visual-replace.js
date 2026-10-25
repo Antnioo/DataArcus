@@ -14,7 +14,7 @@
  * (0.3.0 J19, B-172) mapping.panels: [{ native, roles, unit }]: the values may not share one axis (axis-units.js), so the
  * visual becomes one native chart per group in its own box, side by side (one above the other in a box taller than
  * wide), the first keeping its name, the others "<name>_2", "_3" (more: [{ name, json }]); each value axis titled with
- * its unit. A combo is never written with a second axis: mapping.secShowOff writes valueAxis.secShow false.
+ * its unit, and a title typed as text followed by it (0.3.1 SQ2: mapping.panels[].titleTag). A combo is never written with a second axis: mapping.secShowOff writes valueAxis.secShow false.
  * dropUnusedCustomVisuals(report.json, used types): the report stops declaring custom visuals no visual uses any more,
  * so Power BI does not ask to sign in for them. Browser and Node (module.exports / window.DAReplace). */
 (function (root) {
@@ -140,6 +140,12 @@
       j.position = Object.assign({}, pos, { x: (pos.x || 0) + (across ? i * (w + GAP) : 0), y: (pos.y || 0) + (across ? 0 : i * (h + GAP)), width: Math.floor(w), height: Math.floor(h) },
         pos.z != null ? { z: pos.z + i } : {}, pos.tabOrder != null ? { tabOrder: pos.tabOrder + i } : {});
       if (p.unit) { const o = j.visual.objects = j.visual.objects || {}, va = o.valueAxis || (o.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, { showAxisTitle: lit('true'), titleText: lit(quote(p.unit)) }); }
+      // (0.3.1 SQ2, J19-S5) a title typed as text says the panel's unit (titleTag: with its place when the units are the
+      // same), so two panels never show one title twice; a title from a measure, or none (Power BI's own from the
+      // panel's fields), is left as it is
+      const tag = p.titleTag || p.unit, vco = j.visual.visualContainerObjects;
+      if (tag && vco && Array.isArray(vco.title)) vco.title.forEach((e) => { const t = e && !e.selector && e.properties ? litOf(e.properties.text) : undefined;
+        if (typeof t === 'string' && /^'[\s\S]*'$/.test(t)) e.properties.text = lit(quote(t.slice(1, -1).replace(/''/g, "'") + ' (' + tag + ')')); });
       return j;
     });
     // a field kept in another panel is not lost
