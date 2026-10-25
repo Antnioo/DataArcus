@@ -5,8 +5,8 @@
 //   - every job note mcp/work/<ID>.md written from A1 on (not in BEFORE_A1) starts with "## Summary" (its first "##"
 //     heading), at most 40 lines, naming Approval, Scope, Base, Expected checks and Resume; an older note given a
 //     summary is held to the same; mcp/work/archive/ is history and never read;
-//   - every relative link in the startup files, in mcp/docs/*.md and in the summaries resolves: the file, and the
-//     section when the link names one (GitHub's heading anchors);
+//   - every relative link in the startup files, in mcp/docs/*.md, in mcp/TOOLS.md (its per-tool sections) and in the
+//     summaries resolves: the file, and the section when the link names one (GitHub's heading anchors);
 //   - the task routes: every path in ARCHITECTURE.md's routes table exists, and each symbol named after it in the same
 //     code span (`file: symbolA, symbolB`) is in that file.
 // What is cut from a startup file moves, unchanged, into mcp/docs/ (by subject) and is linked: never deleted.
@@ -140,9 +140,8 @@ export function check(root = ROOT) {
   checks++;
   if (total > TOTAL_CAP) problems.push(`the startup pack is ${total} characters, ${TOTAL_CAP} at most`);
   const docs = path.join(root, 'mcp/docs');
-  for (const f of fs.existsSync(docs) ? fs.readdirSync(docs).filter((x) => x.endsWith('.md')).sort() : []) {
-    const md = read(root, 'mcp/docs/' + f); checks += links(md).length; problems.push(...linkProblems(root, 'mcp/docs/' + f, md));
-  }
+  const linked = (fs.existsSync(docs) ? fs.readdirSync(docs).filter((x) => x.endsWith('.md')).sort().map((x) => 'mcp/docs/' + x) : []).concat(fs.existsSync(path.join(root, 'mcp/TOOLS.md')) ? ['mcp/TOOLS.md'] : []);
+  for (const f of linked) { const md = read(root, f); checks += links(md).length; problems.push(...linkProblems(root, f, md)); }
   const work = path.join(root, 'mcp/work'), summaries = {};
   for (const f of fs.readdirSync(work).filter((x) => x.endsWith('.md')).sort()) {
     const md = read(root, 'mcp/work/' + f), s = summaryOf(md), required = !BEFORE_A1.includes(f);

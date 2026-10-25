@@ -152,7 +152,9 @@ for (const [k, t] of Object.entries(W)) {
 // D5 (0.3.1 wave 5, 25 Oct; mcp/work/D5.md): every public sentence the release-prep sweep added, one check each, and the
 // forbidden words over the texts it touched that the scan above does not read (PRODUCT_SPEC, llms.txt, the CHANGELOG's
 // [Unreleased])
-const mrow = (tool) => (mtools.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(?: \\| \`| \\*\\*|$)`)) || [])[1] || '';
+// (A1, 0.3.1) each tool's row now sits under its own "## `tool`" heading in TOOLS.md: a row also ends where the next
+// heading starts (" #"); the rows read are the same text as before
+const mrow = (tool) => (mtools.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(?: \\| \`| \\*\\*| #|$)`)) || [])[1] || '';
 // D5-R the MCP README: the 0.3.1 options in their tools' rows, the plugin folder said as not published
 check(/languages: "en\+ar"/.test(mrow('plan_layout')) && /bilingual/.test(mrow('plan_layout')), 'D5-R1. mcp/TOOLS.md\'s plan_layout row does not document languages: "en+ar" (and its bilingual answer)');
 check(/languages: "en\+ar"/.test(mrow('create_report')) && /after them, each page's Arabic page/.test(mrow('create_report')) && /off by default/.test(mrow('create_report')), 'D5-R2. mcp/TOOLS.md\'s create_report row does not say what languages: "en+ar" writes (off by default)');
