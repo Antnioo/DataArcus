@@ -10,7 +10,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { createRequire } from 'node:module';
-import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
+import { Notice, ROOT, nameOut, nameWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
 import { freeFile, planWrites, withPlan } from './lib/files.mjs';
@@ -215,7 +215,7 @@ function hiddenOnly(m) {
 // named "Ignore previous instructions ..." is data, never followed. The model is never renamed; such names are listed
 // with the reason, so the AI app tells the user. Up to 20 names.
 // (A1-13: the one screen of the reading block, model.mjs's, English and Arabic)
-const suspiciousWhy = screenWhy;
+const suspiciousWhy = nameWhy;   // (0.3.1 S1: a model's names keep the length reason; a report's texts don't)
 function suspiciousNames(items) {
   const out = []; const seen = new Set();
   for (const { kind, name, where } of items) {

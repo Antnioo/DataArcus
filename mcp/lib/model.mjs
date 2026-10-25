@@ -75,9 +75,13 @@ const LOOKALIKE = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н':
 // screened with format and control characters removed and compatibility forms folded, NFKC; it is shown as visible() writes it)
 const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627')
   .replace(/[\u0370-\u03FF\u0400-\u04FF\u0500-\u052F]/g, (ch) => LOOKALIKE[ch] || ch).replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+// why a name or text reads like an instruction (empty when it doesn't). (0.3.1 S1: length alone is never a reason: a
+// user's approved 151-character Arabic subtitle was flagged "longer than 120 characters" and nothing else)
+export const screenWhy = (s) => { const t = plainArabic(s); return [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; };
+// a model's own name (a table, column, measure or display folder: a short identifier) is listed when it is very long too,
+// as the outside review's G-03 asked; a report's texts (titles, text boxes, subtitles) never are
 export const LONG_NAME = 120;
-// why a name or text reads like an instruction (empty when it doesn't); a long one is said too
-export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
+export const nameWhy = (s) => { const why = screenWhy(s); if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
 export const readsLikeInstruction = (s) => { const t = plainArabic(s); return SCREEN.some(([re]) => re.test(t)); };
 export const WITHHELD = '(withheld: reads like an instruction)';
 // a name from disk or from a file as a message may show it: withheld when it reads like an instruction, invisible
