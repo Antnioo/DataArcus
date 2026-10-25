@@ -19,44 +19,45 @@ const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE
 const T0 = Date.now(), ALL = !!process.env.DA_MUTATION_ALL;
 const ONLY = new Set(String(process.env.DA_MUTATION_ONLY || '').split(',').map((s) => s.trim()).filter(Boolean));
 const WORKERS = Math.max(1, Math.min(4, os.cpus().length));
-const GUARD_TIMEOUT = 240000;
+const GUARD_TIMEOUT = 240000;   // (a guard that times out kills nothing: a hang is not a failing check)
 
-// ---------- the mutants: { id, file (from the repo root), edits: [[exactly this, becomes this], ...], guards, only? } ----------
+// ---------- the mutants: { id, file (from the repo root), edits: [[exactly this, becomes this], ...], guards, only?, equivalent? } ----------
+// equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
 // guards: the existing suites (mcp/), the first expected to kill first. only: the platforms where the mutant means
 // something (NFC/NFD: macOS keeps one folder for both forms, so normalising changes nothing there).
 const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs';
 const MUTANTS = [
   // 1. the approval gate
-  { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
-  { id: 'G-tool', file: PL, edits: [['if (!ALLOWS[p.kind].includes(tool)) throw', 'if (false) throw']], guards: ['test-z.mjs', 'test-r.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
+  { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
+  { id: 'G-tool', file: PL, edits: [['if (!ALLOWS[p.kind].includes(tool)) throw', 'if (false) throw']], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-r.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
   { id: 'G-used', file: PL, edits: [['if (p.used && p.used[tool]) throw', 'if (false) throw']], guards: ['test-partial-writes.mjs', 'test-0.3.0-write-safety.mjs', 'test-z.mjs'] },
   { id: 'G-consume', file: PL, edits: [['p.used = p.used || {}; p.used[tool] = true;', 'p.used = p.used || {};']], guards: ['test-partial-writes.mjs', 'test-0.3.0-write-safety.mjs', 'test-z.mjs'] },
   { id: 'G-inputs', file: PL, edits: [["if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ", "if (false) throw new Error(`Nothing was written: ${tool}'s inputs differ"]], guards: ['test-r.mjs', 'test-approval-hardening.mjs', 'test-z.mjs', 'test-audit6.mjs'] },
   { id: 'G-nopin', file: PL, edits: [['if (want && pin === undefined) throw', 'if (false) throw']], guards: ['test-r.mjs', 'test-z.mjs', 'test-approval-hardening.mjs'] },
   { id: 'G-nopins', file: PL, edits: [["if (!want && tool !== 'create_arabic_twin') throw", 'if (false) throw']], guards: ['test-z.mjs', 'test-r.mjs', 'test-approval-hardening.mjs'] },
-  { id: 'G-print', file: PL, edits: [['if (p.modelPrint && print && print !== p.modelPrint) throw', 'if (false) throw']], guards: ['test-approval-hardening.mjs', 'test-0.3.0-approval-complete.mjs', 'test-0.3.0-approval-disclosure.mjs'] },
-  { id: 'G-noprint', file: PL, edits: [["if (p.modelPrint && !print && tool !== 'create_arabic_twin') throw", 'if (false) throw']], guards: ['test-approval-hardening.mjs', 'test-z.mjs', 'test-r.mjs'] },
-  { id: 'G-model', file: PL, edits: [['if (p.model && model && p.model !== model) throw', 'if (false) throw']], guards: ['test-z.mjs', 'test-r.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
+  { id: 'G-print', file: PL, edits: [['if (p.modelPrint && print && print !== p.modelPrint) throw', 'if (false) throw']], guards: ['test-0.3.0-approval-complete.mjs', 'test-approval-hardening.mjs', 'test-0.3.0-approval-disclosure.mjs'] },
+  { id: 'G-noprint', file: PL, edits: [["if (p.modelPrint && !print && tool !== 'create_arabic_twin') throw", 'if (false) throw']], guards: ['test-z.mjs', 'test-approval-hardening.mjs', 'test-r.mjs'] },
+  { id: 'G-model', file: PL, edits: [['if (p.model && model && p.model !== model) throw', 'if (false) throw']], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-r.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
   { id: 'G-expired', file: PL, edits: [['const alive = (p) => p && now() - p.created <= TTL;', 'const alive = (p) => !!p;']], guards: ['test-z.mjs', 'test-approval.mjs', 'test-0.2.9.mjs'] },
-  { id: 'G-ttl-longer', file: PL, edits: [['? Math.min(TTL_DEFAULT, v) : TTL_DEFAULT', '? v : TTL_DEFAULT']], guards: ['test-z.mjs', 'test-approval.mjs', 'test-0.2.9.mjs'] },
+  { id: 'G-ttl-longer', file: PL, edits: [['? Math.min(TTL_DEFAULT, v) : TTL_DEFAULT', '? v : TTL_DEFAULT']], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval.mjs'] },
   { id: 'G-who', file: PL, edits: [["if (by !== 'user-in-browser' && by !== 'user-in-app') throw", 'if (false) throw']], guards: ['test-audit6.mjs', 'test-z.mjs', 'test-approval.mjs'] },
-  { id: 'G-refused', file: PL, edits: [["if (p.status === 'refused') throw new Error(REFUSED(p).replace(", 'if (false) throw new Error(REFUSED(p).replace(']], guards: ['test-rc23.mjs', 'test-rc22.mjs', 'test-approval.mjs'] },
+  { id: 'G-refused', file: PL, edits: [["if (p.status === 'refused') throw new Error(REFUSED(p).replace(", 'if (false) throw new Error(REFUSED(p).replace(']], guards: ['test-z.mjs', 'test-rc23.mjs', 'test-rc22.mjs', 'test-approval.mjs'] },
   // an approval living past the server process: saved next to the module at each approval, read back when it loads
   { id: 'G-persist', file: PL, edits: [
     ['const plans = new Map();', "const plans = new Map(); const KEEP_F = new URL('./.mutant-plans.json', import.meta.url), KEEP_FS = await import('node:fs'); try { for (const [k, v] of JSON.parse(KEEP_FS.readFileSync(KEEP_F, 'utf8'))) plans.set(k, v); } catch (e) { /* none yet */ } const keepPlans = () => KEEP_FS.writeFileSync(KEEP_F, JSON.stringify([...plans]));"],
     ["p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by;", "p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by; keepPlans();"]
   ], guards: ['test-z.mjs', 'test-approval-hardening.mjs', 'test-r.mjs'] },
-  { id: 'G-artifact', file: 'mcp/server.mjs', edits: [['if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw', 'if (false) throw']], guards: ['test-j14-exact.mjs'] },
-  { id: 'G-binding', file: PL, edits: [['const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;', 'const art = artifacts.get(p.id);']], guards: ['test-j14-exact.mjs', 'test-z.mjs'] },
+  { id: 'G-artifact', equivalent: "no tool reaches it: the artifact is kept in this process only and its id is random, so it can't differ from the approved one unless the server's own code changes it; the gate's binding (G-binding) is what a tool can reach", file: 'mcp/server.mjs', edits: [['if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw', 'if (false) throw']], guards: ['test-j14-exact.mjs'] },
+  { id: 'G-binding', file: PL, edits: [['const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;', 'const art = artifacts.get(p.id);']], guards: ['test-r.mjs', 'test-j14-exact.mjs', 'test-z.mjs'] },
 
   // 2. path safety
   { id: 'D-within', file: MO, edits: [["const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };", 'const within = (root, p) => { const rel = path.relative(root, p); return !path.isAbsolute(rel); };']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
-  { id: 'D-underRoot-any', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return full;']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
+  { id: 'D-underRoot-any', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return full;']], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-underRoot-nolink', file: MO, edits: [['  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;', '  return null;']], guards: ['test-platform-paths.mjs'] },
-  { id: 'D-real', file: MO, edits: [['  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(', '  if (false) throw linkError(']], guards: ['test-0.3.0-write-safety.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-z.mjs'] },
+  { id: 'D-real', file: MO, edits: [['  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(', '  if (false) throw linkError(']], guards: ['test-platform-paths.mjs', 'test-0.3.0-write-safety.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-z.mjs'] },
   { id: 'D-realIn', file: MO, edits: [['const realIn = (full, shown) => { const r = realOf(full); if (!r || !within(fs.realpathSync.native(root), r)) throw', 'const realIn = (full, shown) => { const r = realOf(full); if (false) throw']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-platform-paths.mjs'] },
-  { id: 'D-dangling', file: MO, edits: [['    if (isLink(cur)) return null;\n', '']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-z.mjs'] },
-  { id: 'D-inside', file: MO, edits: [['  const full = underRoot(ROOT, p);\n  if (full == null)', "  const full = path.resolve(ROOT, String(p || '.'));\n  if (full == null)"]], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs', 'test-platform-paths.mjs'] },
+  { id: 'D-dangling', file: MO, edits: [['    if (isLink(cur)) return null;\n', '']], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-z.mjs'] },
+  { id: 'D-inside', file: MO, edits: [['  const full = underRoot(ROOT, p);\n  if (full == null)', "  const full = path.resolve(ROOT, String(p || '.'));\n  if (full == null)"]], guards: ['test-platform-paths.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },
   { id: 'D-nfc', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFC'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
   { id: 'D-nfd', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFD'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
 
@@ -69,7 +70,7 @@ const MUTANTS = [
   { id: 'W-size', file: WI, edits: [[' || (e.size != null && st.size !== e.size)) return', ') return']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-root', file: WI, edits: [['  const root = rootReal(); if (root && !within(', '  const root = null; if (root && !within(']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-tree-real', file: FI, edits: [['  real(dir);\n  tops.forEach((t) => real(path.join(dir, t)));\n', '']], guards: ['test-0.3.0-write-safety.mjs', 'test-z.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
-  { id: 'W-free-real', file: FI, edits: [['    real(dir);   // (still inside', '    // (still inside']], guards: ['test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
+  { id: 'W-free-real', equivalent: "only a race reaches it: freeFile's folder was checked by inside() before its mkdirs and every folder made is this call's own; a link put there in between needs another program at that instant, which no test can time without a hook in product code", file: FI, edits: [['    real(dir);   // (still inside', '    // (still inside']], guards: ['test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-nothingAt', file: MO, edits: [['export const nothingAt = (f) => { try { fs.lstatSync(f); return false; }', 'export const nothingAt = (f) => { try { fs.statSync(f); return false; }']], guards: ['test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-z.mjs', 'test-0.2.9d.mjs'] },
   { id: 'W-taken', file: FI, edits: [['  if (taken.length) throw new Error(`Nothing was written: ${taken.length === 1', '  if (false) throw new Error(`Nothing was written: ${taken.length === 1']], guards: ['test-0.3.0-write-safety.mjs', 'test-z.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-answers-identity', file: 'mcp/lib/answers.mjs', edits: [['const same = (a, b) => !!a && !!b && a.dev === b.dev && a.ino === b.ino && a.size', 'const same = (a, b) => !!a && !!b && a.size']], guards: ['test-0.3.0-answers-safety.mjs', 'test-confirm-memory.mjs'] },
@@ -84,21 +85,21 @@ const MUTANTS = [
   { id: 'S-nfkc', file: MO, edits: [["const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\\p{Cf}\\p{Cc}]/gu, '')", 'const plainArabic = (s) => String(s)']], guards: ['test-audit6.mjs', 'test-audit-oct.mjs', 'test-0.2.9d.mjs'] },
   { id: 'S-lookalike', file: MO, edits: [["  .replace(/[\\u0370-\\u03FF\\u0400-\\u04FF\\u0500-\\u052F]/g, (ch) => LOOKALIKE[ch] || ch)", '  ']], guards: ['test-audit-oct.mjs', 'test-audit6.mjs', 'test-0.2.9d.mjs'] },
   { id: 'S-shown', file: MO, edits: [['export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD;', 'export const shownName = (s, cap = 60) => {']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
-  { id: 'S-suspicious', file: MO, edits: [['readsLikeInstruction(t.name) ? { suspicious: true } : {}', '{}']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
+  { id: 'S-suspicious', file: MO, edits: [['readsLikeInstruction(t.name) ? { suspicious: true } : {}', '{}']], guards: ['test-0.2.9f.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-nameOut', file: 'mcp/lib/answer.mjs', edits: [['export const nameOut = (s) => (FORMAT.test(String(s)) ?', 'export const nameOut = (s) => (false ?']], guards: ['test-audit6.mjs', 'test-z.mjs', 'test-0.2.9d.mjs'] },
-  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs', 'test-models/golden-baseline.mjs'] },
+  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs'] },
   { id: 'V-title', file: 'mcp/lib/redesign.mjs', edits: [['const shown = { visual: safeName(v.id),', 'const shown = { title: JSON.stringify(((v.json.visual || {}).visualContainerObjects || {}).title || null), visual: safeName(v.id),']], guards: ['test-0.3.0-approval-disclosure.mjs', 'test-0.3-redesign.mjs'] },
 
   // 5. check_report: "can break" versus a note
   { id: 'C-schema', file: CR, edits: [["  if (f.origin === 'schema') return 'canBreak';", "  if (f.origin === 'schema') return 'dataarcusRule';"]], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },
   { id: 'C-desktopOpens', file: CR, edits: [['  PBIR_THEME_FILE_NAME_MISMATCH: () => true,\n', '']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
-  { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },
+  { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
   { id: 'C-image', file: CR, edits: [["rule: 'IMAGE_MEASURE_PENDING', severity: 'note'", "rule: 'IMAGE_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-flip-cards.mjs', 'test-0.3.1-dax-functions.mjs'] },
   { id: 'C-icon', file: CR, edits: [["rule: 'ICON_MEASURE_PENDING', severity: 'note'", "rule: 'ICON_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-theme-icons.mjs', 'test-0.3.0-flip-cards.mjs'] },
   { id: 'C-dax', file: CR, edits: [["rule: 'DAX_MEASURE_PENDING', severity: 'note'", "rule: 'DAX_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.1-dax-functions.mjs'] },
-  { id: 'C-instruction', file: CR, edits: [["rule: 'INSTRUCTION_TEXT', severity: 'note', file: `definition/pages/", "rule: 'INSTRUCTION_TEXT', severity: 'error', file: `definition/pages/"]], guards: ['test-0.3.0-check.mjs', 'test-audit6.mjs', 'test-0.3.1-checker.mjs'] },
+  { id: 'C-instruction', file: CR, edits: [["rule: 'INSTRUCTION_TEXT', severity: 'note', file: `definition/pages/", "rule: 'INSTRUCTION_TEXT', severity: 'error', file: `definition/pages/"]], guards: ['test-0.3.1-checker.mjs', 'test-0.3.0-check.mjs', 'test-audit6.mjs'] },
   { id: 'C-validator-sev', file: CR, edits: [["severity: known ? 'note' : d.severity === 'error' ? 'error' :", "severity: known ? 'note' : d.severity === 'error' ? 'warning' :"]], guards: ['test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs', 'test-0.2.9-a4.mjs'] },
-  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
+  { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
 ];
 
 // ---------- the copies ----------
@@ -128,7 +129,7 @@ function runGuard(copy, guard) {
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       const result = outText.trim().split('\n').filter((l) => /^(PASS|FAIL|SKIP) {2}/.test(l)).pop() || outText.trim().split('\n').pop() || '';
-      resolve({ failed: code !== 0 || /^FAIL/.test(result), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), seconds: (Date.now() - t) / 1000 });
+      resolve({ failed: signal !== 'SIGKILL' && (code !== 0 || /^FAIL/.test(result)), timedOut: signal === 'SIGKILL', result: result.slice(0, 160), seconds: (Date.now() - t) / 1000 });
     });
   });
 }
@@ -148,7 +149,8 @@ function apply(copy, m) {
 
 // ---------- the run: the guards' baselines first, then the mutants, on WORKERS copies ----------
 const EXTRA = String(process.env.DA_MUTATION_EXTRA || '').split(',').map((g) => g.trim()).filter(Boolean);
-const mutants = MUTANTS.filter((m) => (!ONLY.size || ONLY.has(m.id)) && (!m.only || m.only.includes(process.platform)))
+const equivalent = MUTANTS.filter((m) => m.equivalent && (!ONLY.size || ONLY.has(m.id)));   // (not run: why in each, and in T1.md)
+const mutants = MUTANTS.filter((m) => !m.equivalent && (!ONLY.size || ONLY.has(m.id)) && (!m.only || m.only.includes(process.platform)))
   .map((m) => (EXTRA.length ? Object.assign({}, m, { guards: [...new Set(m.guards.concat(EXTRA))] }) : m));
 const skipped = MUTANTS.filter((m) => m.only && !m.only.includes(process.platform)).map((m) => m.id);
 ok(new Set(MUTANTS.map((m) => m.id)).size === MUTANTS.length, 'two mutants share an id');
@@ -188,4 +190,4 @@ if (problems.length) {
   console.log(`FAIL  mutation  ${problems.length} of ${checks} checks (${mutants.length} mutants, ${mutants.length - killed.length} not killed, ${secs}s)`);
   process.exit(1);
 }
-console.log(`PASS  mutation  ${checks} checks (${mutants.length} mutants, all killed, ${guards.length} guard suites, ${secs}s${skipped.length ? `; not on ${process.platform}: ${skipped.join(', ')}` : ''})`);
+console.log(`PASS  mutation  ${checks} checks (${mutants.length} mutants, all killed, ${guards.length} guard suites, ${secs}s${equivalent.length ? `; equivalent, not run: ${equivalent.map((m) => m.id).join(', ')}` : ''}${skipped.length ? `; not on ${process.platform}: ${skipped.join(', ')}` : ''})`);

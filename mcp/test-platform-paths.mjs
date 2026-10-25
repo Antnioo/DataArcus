@@ -99,19 +99,25 @@ try {
   chk(() => !l2.err && tablesOf(l2).includes('Sales'), () => `link-2. working folder through a link, an absolute path in its real form is inside: ${short(l2)}`);
 
   // ---------- a folder link inside the working folder that leads outside it (0.3.1 T1, the mutation suite: real()'s check
-  // could be taken out and no test failed: every link test went through loadModel's own check) ----------
+  // could be taken out and no test failed: every link test went through loadModel's own check; link-4 and link-5 guard
+  // underRoot and realOf in this fast suite, which only test.mjs's slower parts did) ----------
   const outside = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-paths-out-')));
   try {
     fs.writeFileSync(path.join(outside, 'theme.json'), JSON.stringify({ name: 'outside-theme-T1' }));
     const wk = path.join(ROOT, 'with-link'); fs.mkdirSync(wk);
     fs.symlinkSync(outside, path.join(wk, 'out'), process.platform === 'win32' ? 'junction' : 'dir');
+    let fileLink = true; try { fs.symlinkSync(path.join(outside, 'missing.json'), path.join(wk, 'gone.json')); } catch (e) { fileLink = false; /* no file links here (Windows without the right) */ }
     const script = `const M = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib/model.mjs')).href)}), F = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib/files.mjs')).href)});
       const t = (fn) => { try { return { ok: JSON.stringify(fn()).slice(0, 200) }; } catch (e) { return { err: String(e.message).slice(0, 200) }; } };
-      console.log(JSON.stringify({ inside: t(() => M.inside('out/theme.json')), read: t(() => F.readUserFile('out/theme.json', { kind: 'theme', json: true })), free: t(() => F.freeFile('out', 'Theme', '.json')) }));`;
+      console.log(JSON.stringify({ inside: t(() => M.inside('out/theme.json')), read: t(() => F.readUserFile('out/theme.json', { kind: 'theme', json: true })), free: t(() => F.freeFile('out', 'Theme', '.json')),
+        abs: t(() => M.inside(${JSON.stringify(path.join(outside, 'theme.json'))})), model: t(() => M.loadModel(${JSON.stringify(outside)})), gone: t(() => M.inside('gone.json')) }));`;
     const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, DATAARCUS_ROOT: wk }, encoding: 'utf8' });
     let o = {}; try { o = JSON.parse(r.stdout.trim().split('\n').pop()); } catch (e) { o = { none: r.stderr.slice(0, 300) }; }
     chk(() => o.inside.err && /through a link/.test(o.inside.err) && o.read.err && !/outside-theme-T1/.test(JSON.stringify(o)) && o.free.err && /through a link/.test(o.free.err),
       () => `link-3. a path through a folder link leading outside is refused by inside(), readUserFile and freeFile, and nothing of the outside file comes back: ${JSON.stringify(o)}`);
+    chk(() => o.abs.err && /outside the allowed folder/.test(o.abs.err) && o.model.err && /outside the allowed folder/.test(o.model.err),
+      () => `link-4. an absolute path outside the working folder is "outside the allowed folder" for inside() and loadModel: ${JSON.stringify(o)}`);
+    chk(() => !fileLink || (o.gone.err && /through a link/.test(o.gone.err)), () => `link-5. a link whose target is missing counts as leading outside: ${JSON.stringify(o.gone)}`);
   } finally { fs.rmSync(outside, { recursive: true, force: true }); }
 } finally {
   for (const s of servers) { try { await s.close(); } catch (e) { /* closed */ } }
