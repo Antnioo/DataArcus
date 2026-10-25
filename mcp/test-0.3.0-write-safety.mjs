@@ -61,6 +61,31 @@ const fresh = (n) => { const d = path.join(ROOT, n); fs.rmSync(d, { recursive: t
   chk(() => !linked || (e && e.left && e.left.foreign.concat(e.left.ours).includes(path.join(D, 'R.Report', 'definition')) && fs.lstatSync(path.join(D, 'R.Report', 'definition')).isSymbolicLink()), () => `S3. the link is left where it is and named: ${e && e.message}`);
   chk(() => linked, () => 'S3. (a folder link could be made here)');
 }
+// (0.3.1 T1, the mutation suite: S2 and S3 still passed with the identity check or the folders-on-the-way check taken
+// out of removeOurs, since the size or the link told the change first) S2b-S3c close that:
+// S2b. writeTree: a file of the tree is moved away by another program and a file of as many bytes put at its name: only
+// its identity (dev + ino) tells it is not ours, and it survives. (Moved, not deleted: a deleted file's inode number can be
+// given to the next new file at once, and then nothing tells the two apart: T1.md, "Seen, not in scope")
+{
+  const D = fresh('s2b'), mine = path.join(D, 'R.Report/definition/report.json');
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { const n = fs.statSync(mine).size; fs.renameSync(mine, path.join(D, 'kept.json')); fs.writeFileSync(mine, 'T'.repeat(n)); throw new Error('simulated failure'); } } }));
+  chk(() => e && fs.existsSync(mine) && /^T+$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine), () => `S2b. a tree file replaced by one of the same size survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
+// S3b. writeTree: a folder of the tree is moved away and another folder put at its name, holding the very file this call
+// wrote (a hard link: same identity, same size): the folder on the way is not ours, so the file is left
+{
+  const D = fresh('s3b'), d = path.join(D, 'R.Report', 'definition'); let linked = false;
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { fs.renameSync(d, path.join(D, 'moved')); fs.mkdirSync(d); try { fs.linkSync(path.join(D, 'moved', 'report.json'), path.join(d, 'report.json')); linked = true; } catch (x) { /* no hard links here */ } throw new Error('simulated failure'); } } }));
+  chk(() => !linked || (e && fs.existsSync(path.join(d, 'report.json')) && e.left.foreign.includes(path.join(d, 'report.json'))), () => `S3b. a file reached through a folder that is not ours any more is left and named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+  chk(() => linked, () => 'S3b. (a hard link could be made here)');
+}
+// S3c. freeFile: a name held by a link whose target is missing is taken (AUD-005: lstat, not stat), so the next name is given
+{
+  const D = fresh('s3c'); let linked = false;
+  try { fs.symlinkSync(path.join(OUT, 'missing-target.json'), path.join(D, 'Theme.json')); linked = true; } catch (x) { /* no file links here (Windows without the right) */ }
+  const f = linked ? F.freeFile('s3c', 'Theme', '.json') : null;
+  chk(() => !linked || path.basename(f) === 'Theme-2.json', () => `S3c. a dangling link's name is skipped: ${f}`);
+}
 // S4. freeFile: another program makes a missing folder between the look and the mkdir: that folder survives a failed write
 {
   const D = fresh('s4'), theirs = path.join(D, 'themes'), mk0 = fs.mkdirSync;

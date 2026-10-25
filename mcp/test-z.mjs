@@ -63,6 +63,27 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
     chk(() => /expired/.test(exp), () => `Z-02b. a plan's life counts from its proposal, never extended by the approval: ${exp || 'still alive'}`);
   }
 
+  // ---------- T1 (0.3.1, the mutation suite: three breaks of the gate no test caught) ----------
+  {
+    // (a) a refused plan is never approved later
+    const P = await freshImport('lib/plans.mjs');
+    const rid = P.propose('theme', null, ['x'], { pins: { generate_theme: {} } }); P.refuse(rid, 'window');
+    let rerr = ''; try { P.approve(rid, 'user-in-browser'); } catch (e) { rerr = e.message; }
+    chk(() => /refused/.test(rerr) && P.approval(rid) === null, () => `T1-a. a refused plan can't be approved afterwards: ${rerr || 'approved'}`);
+    // (b) a plan pinned to a model print is written only by a write that read the model again (fails closed)
+    const mid = P.propose('theme', { key: 'm', print: 'p1' }, ['x'], { pins: { generate_theme: {} } }); P.approve(mid, 'user-in-browser');
+    let nerr = ''; try { P.gate('generate_theme', mid, { key: 'm' }, {}); } catch (e) { nerr = e.message; }
+    let perr = ''; try { P.gate('generate_theme', mid, { key: 'm', print: 'p1' }, {}); } catch (e) { perr = e.message; }
+    chk(() => /did not read the model again/.test(nerr) && perr === '', () => `T1-b. a write that gives no model print is refused, the same print passes: ${nerr || 'passed'} / ${perr}`);
+    // (c) an approval lives only in its server process: a new process does not know the plan
+    const aid = P.propose('theme', null, ['x'], { pins: { generate_theme: {} } }); P.approve(aid, 'user-in-browser');
+    const script = `const P = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib/plans.mjs')).href)});
+      let m = ''; try { P.gate('generate_theme', ${JSON.stringify(aid)}, null, {}); } catch (e) { m = e.message; } console.log(JSON.stringify(m));`;
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' });
+    let msg = ''; try { msg = JSON.parse(r.stdout.trim().split('\n').pop()); } catch (e) { msg = 'no answer: ' + r.stderr.slice(0, 200); }
+    chk(() => /unknown/.test(msg) && P.approval(aid) !== null, () => `T1-c. an approved plan id is unknown to a new server process: ${msg || 'accepted'}`);
+  }
+
   // ---------- Z-06: control characters (C0, C1) as code points too, not only format characters ----------
   {
     const A = await freshImport('lib/answer.mjs');

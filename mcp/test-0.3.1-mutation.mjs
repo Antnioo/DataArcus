@@ -118,7 +118,9 @@ function makeCopy(k) {
 const childEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(DATAARCUS_|DA_SHARD$|DA_MUTATION_|DA_PART_TIMES$)/.test(k)));
 function runGuard(copy, guard) {
   return new Promise((resolve) => {
-    const t = Date.now(), child = spawn(process.execPath, [guard], { cwd: path.join(copy, 'mcp'), env: childEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
+    // "test.mjs@3": one shard of test.mjs (DA_SHARD=3/4), as CI runs it
+    const [file, shard] = guard.split('@'), env = Object.assign(childEnv(), shard ? { DA_SHARD: `${shard}/4` } : {});
+    const t = Date.now(), child = spawn(process.execPath, [file], { cwd: path.join(copy, 'mcp'), env, stdio: ['ignore', 'pipe', 'pipe'] });
     let outText = '';
     child.stdout.on('data', (d) => { outText += d; if (outText.length > 200000) outText = outText.slice(-100000); });
     child.stderr.on('data', (d) => { outText += d; if (outText.length > 200000) outText = outText.slice(-100000); });

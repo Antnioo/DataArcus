@@ -10,7 +10,8 @@ import './test-env.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -96,6 +97,22 @@ try {
   chk(() => !l1.err && tablesOf(l1).includes('Sales'), () => `link-1. working folder through a link, a relative path: ${short(l1)}`);
   const l2 = await wl.call('read_model', { path: path.join(fs.realpathSync.native(real), 'Twin Sales.pbip') });
   chk(() => !l2.err && tablesOf(l2).includes('Sales'), () => `link-2. working folder through a link, an absolute path in its real form is inside: ${short(l2)}`);
+
+  // ---------- a folder link inside the working folder that leads outside it (0.3.1 T1, the mutation suite: real()'s check
+  // could be taken out and no test failed: every link test went through loadModel's own check) ----------
+  const outside = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-paths-out-')));
+  try {
+    fs.writeFileSync(path.join(outside, 'theme.json'), JSON.stringify({ name: 'outside-theme-T1' }));
+    const wk = path.join(ROOT, 'with-link'); fs.mkdirSync(wk);
+    fs.symlinkSync(outside, path.join(wk, 'out'), process.platform === 'win32' ? 'junction' : 'dir');
+    const script = `const M = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib/model.mjs')).href)}), F = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib/files.mjs')).href)});
+      const t = (fn) => { try { return { ok: JSON.stringify(fn()).slice(0, 200) }; } catch (e) { return { err: String(e.message).slice(0, 200) }; } };
+      console.log(JSON.stringify({ inside: t(() => M.inside('out/theme.json')), read: t(() => F.readUserFile('out/theme.json', { kind: 'theme', json: true })), free: t(() => F.freeFile('out', 'Theme', '.json')) }));`;
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, DATAARCUS_ROOT: wk }, encoding: 'utf8' });
+    let o = {}; try { o = JSON.parse(r.stdout.trim().split('\n').pop()); } catch (e) { o = { none: r.stderr.slice(0, 300) }; }
+    chk(() => o.inside.err && /through a link/.test(o.inside.err) && o.read.err && !/outside-theme-T1/.test(JSON.stringify(o)) && o.free.err && /through a link/.test(o.free.err),
+      () => `link-3. a path through a folder link leading outside is refused by inside(), readUserFile and freeFile, and nothing of the outside file comes back: ${JSON.stringify(o)}`);
+  } finally { fs.rmSync(outside, { recursive: true, force: true }); }
 } finally {
   for (const s of servers) { try { await s.close(); } catch (e) { /* closed */ } }
   fs.rmSync(ROOT, { recursive: true, force: true });

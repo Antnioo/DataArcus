@@ -58,6 +58,15 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   W.setIo();
   chk(() => e1 && /Nothing was written/.test(e1.message) && /changed after/.test(e1.message), () => `F04-1. a file swapped in after the check is refused, nothing written: ${e1 && e1.message}`);
   chk(() => fs.readFileSync(file, 'utf8') === swapped, () => 'F04-2. the swapped file is byte-identical');
+  // (0.3.1 T1, the mutation suite: F04-1 passed with dev+ino left out of the check, since the swapped file's size and hash
+  // differ) a byte-identical copy put in its place (a new inode only) is refused too
+  {
+    const checkedB = A.readAnswers(dir, 'M'), same = fs.readFileSync(file);
+    W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'copy.json'); fs.writeFileSync(x, same); fs.renameSync(x, file); } return fs.writeFileSync(f, data, opts); } });
+    let eb = null; try { A.writeAnswers(dir, 'M', [rec('intended'), rec('mistake')], checkedB); } catch (e) { eb = e; }
+    W.setIo();
+    chk(() => eb && /changed after/.test(eb.message) && fs.readFileSync(file).equals(same), () => `F04-1b. a byte-identical copy swapped in after the check (a new inode) is refused: ${eb ? eb.message : 'replaced'}`);
+  }
   chk(() => !tmpLeft(dir).length, () => `F04-3. no temporary file left: ${tmpLeft(dir)}`);
   // (b) the same file edited in place (same inode, same size, other bytes) after the check: refused too
   const checked2 = A.readAnswers(dir, 'M');
