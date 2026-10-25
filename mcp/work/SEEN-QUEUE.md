@@ -433,7 +433,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| AF1-S1 | twin write nextSteps names pbip unscreened | OPEN | `mcp/lib/twin-write.mjs:115` raw path.basename(twinPbip) | use the screened name (pathOut) in nextSteps · S · low · twin → **SQ4** |
+| AF1-S1 | twin write nextSteps names pbip unscreened | DONE (SQ4 082860a) | `mcp/lib/twin-write.mjs:115` raw path.basename(twinPbip) | use the screened name (pathOut) in nextSteps · S · low · twin → **SQ4** |
 | AF1-S2 | L6 plan returns typed KPI/chart static titles; PRIVACY silent | OWNER | `mcp/PRIVACY.md:242` names twin only; `dax-functions.mjs:265` | decide: keep and say it in PRIVACY section 3, or drop typed titles from daxSaid |
 | AF1-S3 | lens calendar names now cut with ellipsis past 40 | OBSOLETE | informational change note | informational, no action |
 
@@ -483,7 +483,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| D3-S1 | phone header keeps 14pt; long Arabic title not shrunk | OPEN | `assets/js/report-mirror.js:513` mirrorMobile moves boxes only, no size rule | apply pbip-page.js title size rule to phone texts in labelMobile · M · low · twin → **SQ4** |
+| D3-S1 | phone header keeps 14pt; long Arabic title not shrunk | DONE (SQ4 082860a) | `assets/js/report-mirror.js:513` mirrorMobile moves boxes only, no size rule | apply pbip-page.js title size rule to phone texts in labelMobile · M · low · twin → **SQ4** |
 | D3-S2 | original "Title:" measures stay unused in reportExtensions.json | OBSOLETE | informational, as the brief said; no risk recorded | - |
 | D3-S3 | tab font: button's or theme's; writer measures report font | OBSOLETE | informational, same font in practice | - |
 | D3-S4 | 3 PBIR_FORMATTING_OBJECT_UNKNOWN notes, 8 "labelled by title" | DONE | U1 catalog 0.1.3: `mcp/test-0.2.9-checks.mjs:110-121` no finding, no known note | - |
@@ -648,7 +648,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | J18-S1 | twin plan answer 37,018 chars near 40,000 cap | OBSOLETE | informational: cap works as designed |  |
 | J18-S2 | website Arabic download does not isolate Latin runs | OPEN | `assets/js/pbip-export.js` no isolate; only `mcp/lib/twin-texts.mjs:195` | move isolateLatin to a shared engine, call in pbip-export · M · low · website → **SQ15** |
 | J18-S3 | check_report/read_report show isolates as code points | OBSOLETE | informational: screening rule by design |  |
-| J18-S4 | Arabic month column swap lists it, not English term's column | OPEN | `mcp/lib/twin-plan.mjs:174` sheetOf by T.keys | verify first: which column the sheet should name · S · low · twin → **SQ4** |
+| J18-S4 | Arabic month column swap lists it, not English term's column | OBSOLETE (SQ4: the twin never swaps a column; its sheet names what its pages bind, sq4 J18-S4a; create_report's swap: SQ4.md Seen 1) | `mcp/lib/twin-plan.mjs:174` sheetOf by T.keys | verify first: which column the sheet should name · S · low · twin → **SQ4** |
 | J18-S5 | terms forgotten when session ends | OWNER | `mcp/lib/terminology.mjs:159` in-memory CONFIRMED | decide: persist terms/date answers in the answers file via approved write |
 
 ### J19
@@ -789,7 +789,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Q1-S4 | R5's planted titles never reach the report | DONE | 05f55b0 (T-4) `mcp/test-0.2.9i.mjs:145-150` checks the report's real titles |  |
 | Q1-S5 | calendar-generator.js 40% unrun; website suites lack coverage | OPEN | c8 job `tests.yml:244-279` covers the MCP npm test only | Chromium coverage (page.coverage) over website suites, report only · L · low · tests-ci → **SQ15** |
 | Q1-S6 | Tahoma header title 20pt in 46-high box trips validator floor | OWNER | `assets/js/pbip-page.js:691` size from header height; no Tahoma case | laptop: measure Tahoma header in Desktop, then pick 48-high box or 18pt title |
-| Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | OPEN | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
+| Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | DONE (SQ4 082860a) | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
 | Q1-S8 | plan_layout flipCards.cards repeats each card per page | OPEN | `mcp/tools/plan_layout.mjs:493` flipPlan.cards passed whole, one per page | group cards by measure with a pages list · S · low · design → **SQ10** |
 | Q1-S9 | suggest_fields accepts 60 tables, read_model 100 | OPEN | `mcp/lib/tool-inputs.mjs:18` max(60); `mcp/tools/read_model.mjs:15` max(100) | one shared constant (or say why 60) in tool-limits · S · low · reader → **SQ9** |
 
@@ -923,7 +923,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | X1-S1 | button look, hidden-page sync, No data AR card, bookmark Reset | OWNER | Desktop-only proofs | on the laptop: one run of the EN-AR copy checking these four |
-| X1-S2 | bookmark group name not in twin texts | OPEN | `mcp/lib/twin-copy.mjs:227` group cloned with English displayName; `twin-texts.mjs:145` bookmarks only | add bookmarkGroup text ids, apply approved label · M · low · twin → **SQ4** |
+| X1-S2 | bookmark group name not in twin texts | DONE (SQ4 082860a) | `mcp/lib/twin-copy.mjs:227` group cloned with English displayName; `twin-texts.mjs:145` bookmarks only | add bookmarkGroup text ids, apply approved label · M · low · twin → **SQ4** |
 | X1-S3 | page navigator lists English pages; bookmark navigator both | OBSOLETE | informational: said in plan notes `mcp/lib/twin-copy.mjs:246` |  |
 | X1-S4 | language button last in tab order | DONE | R1 3e03ab9: `mcp/lib/twin-copy.mjs:108` tabInOrder |  |
 | X1-S5 | validator dropdown notes, labelled-by-title, D3 phone header | DUPLICATE | dropdown notes gone since U1 catalog 0.1.3 (RB VG-2); phone header unchecked | of D3-S1 (dropdown notes done since U1; the phone header is D3-S1) |
@@ -932,8 +932,8 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| X2-S1 | demo Arabic Reset button BUTTON_ONE_LINE, not widened | OPEN | `assets/js/report-rules.js:155` rule; copy's button not widened (X2.md:194) | verify first: apply twin's button fit to copy's own buttons · M · low · twin → **SQ4** |
+| X2-S1 | demo Arabic Reset button BUTTON_ONE_LINE, not widened | DONE (SQ4 082860a) | `assets/js/report-rules.js:155` rule; copy's button not widened (X2.md:194) | verify first: apply twin's button fit to copy's own buttons · M · low · twin → **SQ4** |
 | X2-S2 | TOOLTIP_SCROLL note on tooltip pages | OBSOLETE | informational: note stays by design (no data read) |  |
-| X2-S3 | sync groups numbered in random file-name order | OPEN | `mcp/lib/twin-read.mjs:51` sort by file; `twin-copy.mjs:176` ++n | number by page order then position (y, x) · S · low · twin → **SQ4** |
+| X2-S3 | sync groups numbered in random file-name order | DONE (SQ4 082860a) | `mcp/lib/twin-read.mjs:51` sort by file; `twin-copy.mjs:176` ++n | number by page order then position (y, x) · S · low · twin → **SQ4** |
 | X2-S4 | inherited X1 items (group name, navigator, flip cards) | DUPLICATE | same as X1-S2, X1-S3 | X1-S2 |
 | X2-S5 | M1/R1 open items: panels, lost "Total", matrix variant | DUPLICATE | `mcp/WORK.md:27` lists M1 Seen 1-2 and the matrix variant | M1-S1, M1-S2 |
