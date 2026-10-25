@@ -17,7 +17,7 @@
 2. **M1-S4** (`pbip-page.js`, the slicer row): a strip whose slicers would be narrower than 24 px (the narrowest Desktop
    was seen to draw, as a sliver; a negative width is not drawn: DESKTOP-TESTS.md, round 23 facts) leaves out the
    Reset button first, then slicers from the last, until each slicer gets 24 at least; each part left out goes in
-   `leftOut` with `narrow: true`, and `report-run.mjs` says it in its own note (the plan and the write say the same).
+   `leftOut` with `narrow: true`, and `report-run.mjs` says it in its own note of the write's answer, as every visual left out is told today.
    No size below a measured floor is written; nothing that fits today moves.
 3. **0.2.9-writer-S4** (`pbip-query.js` `shown`): a run of control characters (`\p{Cc}`: a tab, a line break) in a
    shown name becomes one space ("Total\tSales" -> "Total Sales"); format characters are dropped as before, the
@@ -32,8 +32,8 @@
   0 and 1 decimal; A3 guard: a percent keeps 0, no decimal.
 - B (M1-S4): B1 Arabic 240 x 80 with two slicers: each slicer 24 wide or more, no two at one x; B2 the Reset left out,
   told (`narrow`); B3 English, same slot: the same; B4 guard: a 620 x 100 slot keeps Reset and today's widths; B5 a
-  60 x 80 slot: one slicer kept, the second left out and told; B6 plan_layout (Arabic, the 240 x 80 slot): the note
-  says the Reset was left out because the slot is too narrow.
+  60 x 40 slot: one slicer kept, the second left out and told; B6 create_report after the plan and the click (the 240 x
+  80 slot): its notes and leftOutVisuals say the Reset was left out because the slot is too narrow.
 - C (S4): C1 `shown("Total\tSales")` is "Total Sales"; C2 a report on a measure named with a tab writes no control
   character in a title or display name; C3 guard: U+200C kept; C4 guard: U+202E dropped.
 - D (S1-S9): D1 an Arabic measure: "Last 12 months", one script (the date-table path); D2 guard: "Last 12 months:

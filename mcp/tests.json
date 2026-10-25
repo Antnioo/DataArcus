@@ -102,6 +102,7 @@
     { "file": "test-skill-packaging.mjs", "name": "skill-packaging", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "name": "dax-functions", "area": "report", "purpose": "the DAX function library as one TMDL script" },
     { "file": "test-0.3.1-validator-gap.mjs", "name": "validator-gap", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
+    { "file": "test-0.3.1-sq1.mjs", "name": "sq1", "area": "report", "purpose": "the written report's numbers and text: five seen items of the night run (SQ1, 0.3.1)" },
     { "file": "test-0.3.1-mutation.mjs", "name": "mutation", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],
