@@ -113,6 +113,15 @@ summary with only strict errors), P2c (test-0.2.9-checks: `!/known/` became `!/k
 now holds the word), VG-2 (this branch's validator-gap suite, the same). After: claims 232, v029a4 40, v029checks 37,
 check 31, checker 23, validator-gap 5, powerbi-2026-10 26, arabic-lens 31, smooth-lines 29, approval window 31: PASS.
 
+**Full `cd mcp && npm test -- --keep-going`** (once, on 77ff02f, the final product code; 25 min 35 s): 73 of 74 suites
+PASS, 1 FAIL: `test-0.3.1-write-gate 1 of 4 checks`: `lib/write-io.mjs: fs.openSync x2 (listed x1)`. The cause: the gate
+lists every call in product code that can write a file, and sameBytes' new read-only open was not in its list; I had
+not run that suite with the touched ones (my miss). Fix (a deliberate move of another suite's list, test only): the
+entry is `n: 2` with why ("sameBytes: read only, O_RDONLY | O_NOFOLLOW, to hash a file before the clean-up removes
+it"). After: `test-0.3.1-write-gate 4 checks` PASS. Not rerun whole: no product code changed after the run.
+In that run: `mcp 1585` (unchanged), `golden 12 tasks`, `0.3.0-claims 232`, `validator-gap 5`, `r4-write-safety 46`,
+`mutation 151 checks (58 mutants, all killed, 31 guard suites, 163s)`. `check-result-lines`: 74.
+
 ## CHANGELOG line
 - A write that fails half-way now never removes a file that another program put in the same place, even one of the
   same size that the disk gave the same file number: DataArcus checks the file's content against what it wrote first.
