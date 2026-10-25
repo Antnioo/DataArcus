@@ -2,7 +2,7 @@
 // write writes): one engine, kept whole.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
-import { loadModel, visible, inside, modelOf } from './model.mjs';
+import { loadModel, visible, inside, modelOf, nothingAt } from './model.mjs';
 import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme } from './design.mjs';
 import { withPlan } from './files.mjs';
 import { scopeOf } from './scope.mjs';
@@ -19,7 +19,7 @@ import * as Terms from './terminology.mjs';
 import { monthOffer as calendarOffer } from './arabic-twin.mjs';
 import { readUserFile, writeTree } from './files.mjs';
 import { modelRef, sameModelBeforeWrite } from './plan-keys.mjs';
-import { formatsAnswer } from './fix-scripts.mjs';
+import { formatsAnswer, formatsScriptOf } from './fix-scripts.mjs';
 import { hiddenOf } from './hidden-names.mjs';
 import { relsOf, resolveFields, resolvePageFilters, SVG_STATUS, resolveSvgColumns, boundOf, axesProblems, axesOf } from './report-fields.mjs';
 import { unknownKeys, THEME_MAX, LOGO_MAX, BACKGROUND_MAX, reportPin } from './report-inputs.mjs';
@@ -384,6 +384,12 @@ export function reportRun(a, mode) {
   // anything at a name refuses the whole write, a link whose target is missing included)
   // 0.3.0 step 2, "Check before write" (the owner's go, 18 Oct): the shared check on the project in memory, before it is
   // written (the measured rules and the layout check; structure only, never data). It reports; it never writes or approves
+  // (0.3.1 AF2, the release audit's F09) the format script the plan names joins the built files, under the free name chosen
+  // now: inside the plan's digest, and written by the one writeTree, all or nothing (a name taken at the write: nothing is written).
+  // Already there with exactly this script: named again, not written twice
+  const FS = m.projectDir ? formatsScriptOf(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))) : null;
+  const fsInTree = !!FS && path.resolve(FS.scriptDir) === path.resolve(m.projectDir) && nothingAt(FS.file);
+  if (fsInTree) r.files.splice(r.files.findIndex((f) => /\.pbip$/.test(f.path)), 0, { path: path.basename(FS.file), data: FS.script });
   let projectCheck = null;
   try { projectCheck = checkSummary(checkFiles(r.files.filter((f) => /^[^/]+\.Report\//.test(f.path)), m, a.lang)); }
   catch (e) { projectCheck = { notChecked: 'the check could not read this project: ' + String(e && e.message || e).slice(0, 160) }; }
@@ -394,7 +400,7 @@ export function reportRun(a, mode) {
   // (0.3.0 R4, F06: the format script the plan lists is written in the same write, after the report)
   // (R6, F07: the model read again right before the first write)
   let fmt = null;
-  withPlan(planId, 'create_report', () => { sameModelBeforeWrite(planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); writeTree(m.projectDir, r.files); fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))); });
+  withPlan(planId, 'create_report', () => { sameModelBeforeWrite(planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); writeTree(m.projectDir, r.files); fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)), undefined, true, '', () => { if (!FS || (!fsInTree && nothingAt(FS.file))) throw new Error('the script is not one of this write\'s files'); return FS.file; }); });
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid

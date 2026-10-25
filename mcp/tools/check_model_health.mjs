@@ -13,8 +13,8 @@ import { readAnswers, Memory, answerKey, writeAnswers, answersName, REPLACES } f
 import { fitLists, out } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
 import { planIdInput, ADDS, modelPath } from '../lib/tool-inputs.mjs';
-import { modelRef } from '../lib/plan-keys.mjs';
-import { notWrittenWhy, writeScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
+import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
+import { notWrittenWhy, freeScriptName, plannedTaken, writePlannedScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -65,11 +65,17 @@ export function register(server, ctx) {
     // working folder is the model folder itself there is no such place inside it: no file, and the answer says why
     const scriptDir = m.folder ? m.projectDir : path.dirname(inside(p));
     const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(p)).replace(/\.[^.]+$/, '');
+    // (0.3.1 AF2, the release audit's F09) each script's file is named by the plan (the free name now, scriptNames in its
+    // data) and shown; the write queues each script under that name and writes them all after checking every name
+    const scriptNames = {}, queue = [];
+    const put = (dir, base, script) => { const name = planNames[base]; queue.push({ base, name, script, file: name ? path.join(dir, name) : null }); return path.join(dir, name || base + '.tmdl'); };
+    let planNames = {};
     const scriptAnswer = (what, script, refresh) => {
       if (!script) return {};
       if (!scriptDir) return { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again; until then use the object names above and make the changes by hand in Power BI Desktop.' };
-      if (!write) { wouldWrite.push(scriptBase + ' - fix ' + what + '.tmdl'); return { scriptAfterGo: scriptBase + ' - fix ' + what + '.tmdl', notWrittenYet: 'Not written yet: ' + AFTER_GO }; }
-      let file; try { file = pw.step(() => writeScript(scriptDir, scriptBase + ' - fix ' + what, script)); } catch (e) { return { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Use the object names above and make the changes by hand in Power BI Desktop.' }; }
+      const base = scriptBase + ' - fix ' + what;
+      if (!write) { const name = path.basename(freeScriptName(scriptDir, base, script)); scriptNames[base] = name; wouldWrite.push(name); return { scriptAfterGo: name, notWrittenYet: 'Not written yet: ' + AFTER_GO }; }
+      const file = put(scriptDir, base, script);
       return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", next to the project. ' + howToApply + (refresh ? refreshAfter : '') };
     };
     const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
@@ -83,7 +89,8 @@ export function register(server, ctx) {
     const answerPin = given.length ? given : undefined, writeAnswersFile = !!forgetAnswers || given.length > 0;
     // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
     const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
-    const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelRef(m, p), pinH);
+    const print0 = m.print, gated = planId != null && planId !== '' ? Plans.gate('check_model_health', planId, modelRef(m, p), pinH) : null, write = !!gated;
+    if (gated) planNames = (gated.data && gated.data.scriptNames) || {};
     // (0.3.0 R4, F06: every write of this call follows the plan policy: files.mjs planWrites)
     const pw = write ? planWrites(planId, 'check_model_health') : null;
     // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
@@ -139,8 +146,8 @@ export function register(server, ctx) {
     // formats fixed at the source (the owner's ask, 6 Oct 2026): every measure and column whose format is not the right
     // one by the shared rule, in one script; plan_layout and create_report hand over this same file
     {
-      const f = formatsAnswer(m, p, null, maxItems, write, AFTER_GO, pw);
-      if (f && f.scriptAfterGo) wouldWrite.push(f.scriptAfterGo);
+      const f = formatsAnswer(m, p, null, maxItems, write, AFTER_GO, put);
+      if (f && f.scriptAfterGo) { wouldWrite.push(f.scriptAfterGo); scriptNames[scriptBase + ' - fix formats'] = f.scriptAfterGo; }
       if (f) fixes.FORMATS = Object.assign({ note: 'Not a finding and not part of the score. The right format of each measure and column by one rule: a ratio 0.0%, a count or whole number #,0, money its own currency format, other numbers #,0.00, a date dd mmm yyyy; anything already well formatted is left alone. plan_layout and create_report name the same fixes and hand over the same file.' }, f);
     }
     // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
@@ -149,6 +156,19 @@ export function register(server, ctx) {
     // the same fix as add_gulf_calendar's inputs (the tool writes the generator's table as a script file)
     const addGulf = gulfFixInputs(gulfCalendar);
     if (addGulf) gulfCalendar.fixes.addGulfCalendar = addGulf;
+    // (0.3.1 AF2, F10) right before the first write, the model read again: changed since the gate, nothing is written
+    if (write) sameModelBeforeWrite(planId, () => loadModel(p).print, print0);
+    // (AF2, F09) every name the plan showed checked before the first write: one taken by another file, nothing is written
+    for (const q of queue) {
+      if (!q.name) throw new Error(`Nothing was written: plan ${planId} did not name the script "${q.base}.tmdl" (the model's findings changed since the plan). Make the plan again (call check_model_health without planId), show it to the user and wait for their go.`);
+      const taken = plannedTaken(scriptDir, q.name, q.script); if (taken) throw taken;
+    }
+    for (const q of queue) {
+      try { pw.step(() => writePlannedScript(scriptDir, q.name, q.script)); } catch (e) {
+        const fx = Object.entries(fixes).find(([, x]) => x && x.fixScriptFile === q.file);
+        if (fx) { delete fx[1].fixScriptFile; delete fx[1].howToApply; fx[1].scriptNotWritten = notWrittenWhy(scriptDir, e) + (fx[0] === 'FORMATS' ? ' Set the formats by hand in Power BI Desktop.' : ' Use the object names above and make the changes by hand in Power BI Desktop.'); }
+      }
+    }
     // (B-148) the answers file: written only with the approved plan, which lists it; never without a place next to the model
     let answersDone = {}, shown = applied;
     if (writeAnswersFile && !scriptDir) answersDone = { answersNotWritten: 'The working folder is the model folder itself, and nothing is written inside a model folder: choose the project folder as the working folder to keep answers.' };
@@ -169,7 +189,7 @@ export function register(server, ctx) {
     // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
     // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
     const answersWrite = writeAnswersFile && scriptDir && !write ? [`the answers file "${answersName(scriptBase)}" ${whereSaid(scriptDir)}, ${mem.ours ? REPLACES : 'a new file'}: ${forgetAnswers ? 'emptied (the user\'s recorded answers forgotten)' : `the user's answers to ${given.length} "Please confirm" question${given.length === 1 ? '' : 's'}${mem.ours && applied.stale.length ? `; ${applied.stale.length} earlier answer${applied.stale.length === 1 ? '' : 's'} that no longer appl${applied.stale.length === 1 ? 'ies' : 'y'} dropped` : ''}`} (hashes, the answer and its date; no name, no DAX)`] : [];
-    const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" ${whereSaid(scriptDir)} (${NEVER_APPLIED})`).concat(answersWrite), { pins: { check_model_health: pinH }, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
+    const plan = !write && (wouldWrite.length || answersWrite.length) ? { plan: Plans.proposal(Plans.propose('scripts', modelRef(m, p), wouldWrite.map((f) => `the fix script "${f}" ${whereSaid(scriptDir)} (${NEVER_APPLIED})`).concat(answersWrite), { pins: { check_model_health: pinH }, scriptNames, answersShown: (answers || []).filter((x) => byKey.has(x.answerKey)).map((x) => { const q = byKey.get(x.answerKey); return { object: q.obj, question: (q.message && q.message.en) || q.id, answer: x.answer }; }), forgetAnswers: !!forgetAnswers })) } : {};
     return text(healthFit({
       source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan, ...(planUse ? { planUse } : {}),
       // (rc.22, B-144) when no report was read, the answer says so and why, beside the unused-columns figures it leaves out

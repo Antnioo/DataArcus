@@ -21,7 +21,7 @@ Boundaries, one write, invariants, task routes. Every module and the reading tab
 2. **Approval page**: `approve_plan` opens the window (every file, a preview of each page); only the person's click
    approves.
 3. The approval is recorded against the plan's digest, its pinned inputs and the model's print (ids expire in 2 h).
-4. **Write**: the tool refuses if anything changed since the click and writes exactly the approved files (create_report
+4. **Write**: the tool refuses if anything changed since the click and writes exactly the approved files (every report
    and the twin: the plan's kept files, by digest), as new files, through `files.mjs`; a failed write removes only what
    it created.
 5. **Check**: validated before writing; `check_report` and Desktop confirm after.

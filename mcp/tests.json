@@ -91,6 +91,7 @@
     { "file": "test-0.3.1-en-ar-copy.mjs", "name": "test-0.3.1-en-ar-copy", "area": "twin", "purpose": "the EN-AR copy on a real user's report shape" },
     { "file": "test-0.3.1-twin-preview.mjs", "name": "twin-preview", "area": "twin", "purpose": "the twin's approval page draws each Arabic page" },
     { "file": "test-0.3.1-twin-artifact.mjs", "name": "twin-artifact", "area": "twin", "purpose": "the twin and the EN-AR copy write exactly the files their plan kept (digest, .platform id, refusal of any other build)" },
+    { "file": "test-0.3.1-audit-writes.mjs", "name": "audit-writes", "area": "safety", "purpose": "every approved write writes the plan's files and names or nothing (the native copy and the redesign by digest, script and theme names chosen at the plan, the model read again before the write, the answers file's temp)" },
     { "file": "test-platform-paths.mjs", "name": "test-platform-paths", "area": "platform", "purpose": "working folders as users name them, on Linux, Windows and macOS" },
     { "file": "test-0.3.1-mirror-parity.mjs", "name": "test-0.3.1-mirror-parity", "area": "twin", "purpose": "every Arabic path gives the same visual (one mirror engine)" },
     { "file": "test-0.3.1-arabic-lens.mjs", "name": "arabic-lens", "area": "checker", "purpose": "check_report lens \"arabic\": is this report ready for Arabic?" },

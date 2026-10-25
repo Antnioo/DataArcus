@@ -13,6 +13,7 @@ import { real, nothingAt, ROOT } from './model.mjs';
 import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
 import { writeTree } from './files.mjs';
+import { digestOf } from './artifact.mjs';
 
 const require = createRequire(import.meta.url);
 const Replace = require('../../assets/js/visual-replace.js');
@@ -60,15 +61,10 @@ export function planNative(reportPath, model, axes) {
   return { loc, entries: replace, answer, ask: replace.flatMap((e) => e.ask || []), writes: replace.length ? [`the report "${safeName(loc.base + SUFFIX)}.Report" and its "${safeName(loc.base + SUFFIX)}.pbip" next to "${safeName(loc.base)}": a copy with ${replace.length} custom visual(s) replaced by native ones (create_report with customVisualsFrom)`] : [] };
 }
 
-// plan: the approved plan (its data.customVisuals: the entries the user approved)
-export function writeNative(reportPath, model, plan, axes) {
-  const approved = ((plan && plan.data) || {}).customVisuals;
-  if (!Array.isArray(approved)) throw new Error('Nothing was written: the approved plan holds no custom-visual replacements. Call plan_layout with customVisualsFrom, show the user the replacements and wait for their go.');
-  const P = planNative(reportPath, model, axes), { loc } = P;
-  if (keyOf(P.entries) !== keyOf(approved)) throw new Error('Nothing was written: the report\'s custom visuals are not what the approved plan replaces (the report changed since the plan). Make the plan again with plan_layout, show it and wait for the user\'s go.');
-  if (!approved.length) throw new Error('Nothing was written: the approved plan replaces no custom visual.');
-  if (!nothingAt(loc.outDir) || !nothingAt(loc.outPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(loc.outDir) ? loc.outPbip : loc.outDir)}" is already there. DataArcus never writes over a file: rename or move it, then ask again.`);
-  real(loc.outDir); real(loc.outPbip);
+// (0.3.1 AF2, the release audit's F08, as K2 did for the twin) every file the write writes, built from the report as it
+// is now: the approved replacements, the report's other files, .platform with the logical id chosen at plan time, the
+// .pbip; with their digest. The plan keeps these files; the write builds them again only to compare, and writes the kept
+export function nativeTree(loc, approved, logicalId) {
   const files = strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.' });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const byId = new Map(); inv.pages.forEach((p) => p.visuals.forEach((v) => byId.set(v.id, v)));
@@ -87,7 +83,7 @@ export function writeNative(reportPath, model, plan, axes) {
   const used = []; inv.pages.forEach((p) => p.visuals.forEach((v) => { const e = approved.find((x) => x.visual === v.id); used.push(e ? e.native : v.type); }));
   let dropped = [];
   if (files.includes('definition/report.json')) { const rj = mustJson(path.join(loc.dir, 'definition', 'report.json'), 'definition/report.json'); const d = Replace.dropUnusedCustomVisuals(rj, used); dropped = d.dropped; out.set('definition/report.json', json(d.json)); }
-  if (files.includes('.platform')) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + SUFFIX }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); }
+  if (files.includes('.platform')) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + SUFFIX }); pl.config = Object.assign({}, pl.config, { logicalId }); out.set('.platform', json(pl)); }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(loc.outDir) } }], settings: { enableAutoRecovery: true } };
   if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(loc.outDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(loc.outDir) } }); pbip = o; }
   // a private custom visual's own package folder stays in the copy only while a visual still uses it
@@ -96,7 +92,26 @@ export function writeNative(reportPath, model, plan, axes) {
   // (0.3.0 J19) the panels' new visual folders
   out.forEach((data, rel) => { if (!files.includes(rel)) tree.push({ path: path.basename(loc.outDir) + '/' + rel, data }); });
   tree.push({ path: path.basename(loc.outPbip), data: json(pbip) });
-  writeTree(loc.project, tree);
-  return { written: true, report: pathOut(loc.outDir), pbip: pathOut(loc.outPbip), replaced: lost.length, lost, customVisualsNoLongerDeclared: dropped.map(safeName), original: 'only read: not changed',
+  return { files: tree, digest: digestOf(tree), lost, dropped };
+}
+/** (AF2) The native copy's exact artifact for its plan: the files, their digest and the logical id chosen now. */
+export function nativeArtifact(P) { const logicalId = crypto.randomUUID(), T = nativeTree(P.loc, P.entries, logicalId); return { files: T.files, digest: T.digest, logicalId, copy: 'native' }; }
+
+// plan: the approved plan (its data.customVisuals: the entries the user approved); art: the files its plan kept (AF2)
+export function writeNative(reportPath, model, plan, axes, art) {
+  const approved = ((plan && plan.data) || {}).customVisuals;
+  if (!Array.isArray(approved)) throw new Error('Nothing was written: the approved plan holds no custom-visual replacements. Call plan_layout with customVisualsFrom, show the user the replacements and wait for their go.');
+  const P = planNative(reportPath, model, axes), { loc } = P;
+  if (keyOf(P.entries) !== keyOf(approved)) throw new Error('Nothing was written: the report\'s custom visuals are not what the approved plan replaces (the report changed since the plan). Make the plan again with plan_layout, show it and wait for the user\'s go.');
+  if (!approved.length) throw new Error('Nothing was written: the approved plan replaces no custom visual.');
+  if (!nothingAt(loc.outDir) || !nothingAt(loc.outPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(loc.outDir) ? loc.outPbip : loc.outDir)}" is already there. DataArcus never writes over a file: rename or move it, then ask again.`);
+  real(loc.outDir); real(loc.outPbip);
+  if (!art || !Array.isArray(art.files)) throw new Error('Nothing was written: the files kept for this plan are gone (DataArcus keeps a plan\'s exact files in this session of the server only). Make the plan again with plan_layout, show it to the user and wait for their go.');
+  // (AF2) the kept files are the approved ones (their digest), and the copy built again now gives the same files
+  const T = nativeTree(loc, approved, art.logicalId);
+  if (digestOf(art.files) !== art.digest || T.digest !== art.digest) throw new Error('Nothing was written: the native copy built again now is not the one that was approved (something it is made from changed since the go, such as the .pbip next to the report). Make the plan again with plan_layout, show it to the user and wait for their go.');
+  writeTree(loc.project, art.files);
+  return { written: true, report: pathOut(loc.outDir), pbip: pathOut(loc.outPbip), replaced: T.lost.length, lost: T.lost, customVisualsNoLongerDeclared: T.dropped.map(safeName), original: 'only read: not changed',
+    exact: { digest: art.digest, files: art.files.length, note: 'These are the files the plan built before the go, written byte for byte (the digest is the plan\'s).' },
     nextSteps: `Open "${path.basename(loc.outPbip)}" in Power BI Desktop (the original stays as it was), look at each replaced visual, and check the report with check_report. Tell the user what each replacement lost (lost).` };
 }

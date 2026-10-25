@@ -156,6 +156,23 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
 // at a time, and only those its own mkdir made are told (a folder another program made in between is not ours); a mkdir
 // that fails half-way removes what it made and says so (writeFailed).
 export function freeFile(folder, base, ext, made) {
+  const dir = folderFor(folder, made);
+  for (let n = 1; ; n++) {
+    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
+    if (nothingAt(f)) return f;
+  }
+}
+/** (0.3.1 AF2, the release audit's F09) The name freeFile would give now, for a plan to show: nothing is made or written
+ *  (a folder not there yet holds nothing, so the first name is free). The write then writes that name or nothing. */
+export function freeName(folder, base, ext) {
+  const dir = inside(folder || '.');
+  for (let n = 1; ; n++) {
+    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
+    if (nothingAt(f)) return path.basename(f);
+  }
+}
+/** (AF2) freeFile's folder: made one level at a time (made: the folders this call made, outermost first). */
+export function folderFor(folder, made) {
   const dir = inside(folder || '.');
   // (the folders missing before, found by walking up from dir to the first one that is there, never by comparing a
   // path with mkdirSync's answer: on Windows the two can spell one folder differently, a short name like RUNNER~1)
@@ -170,8 +187,5 @@ export function freeFile(folder, base, ext, made) {
   }
   mine.forEach(noteDir);
   if (Array.isArray(made)) made.push(...mine.map((r) => r.path));
-  for (let n = 1; ; n++) {
-    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
-    if (nothingAt(f)) return f;
-  }
+  return dir;
 }

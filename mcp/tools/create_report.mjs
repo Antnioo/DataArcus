@@ -42,20 +42,30 @@ export function register(server, ctx) {
       if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles and restyle if it has them.');
       if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles and restyle if it has them.');
       const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
-      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }); }));
+      const art = keptCopy(a.planId);
+      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }, art); }));
     }
     // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
     if (a.customVisualsFrom != null) {
       if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
       const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
-      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes)); }));
+      const art = keptCopy(a.planId);
+      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes), art); }));
     }
     // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
     // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
     // the write
     const art = a.planId != null ? Plans.artifactOf(a.planId) : null;
+    if (art && art.copy) throw new Error(`Nothing was written: plan ${a.planId} is the ${art.copy === 'native' ? 'native copy of a report (customVisualsFrom)' : 'redesign of a report (redesignFrom)'}. Call create_report with ${art.copy === 'native' ? 'customVisualsFrom' : 'redesignFrom'}, path and the approved planId.`);
     return text(art ? writeApproved(a, art) : reportRun(a, 'write'));
   }));
+}
+// (0.3.1 AF2, the release audit's F08) a copy's kept files (the native copy's, the redesign's), after the gate: the ones
+// the approval recorded (their binding, as writeApproved checks it), or none (the writer then refuses)
+function keptCopy(planId) {
+  const art = Plans.artifactOf(planId);
+  if (art && bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(planId)) throw new Error(`Nothing was written: the files kept for plan ${planId} are not the ones that were approved. Make the plan again with plan_layout, show it to the user and wait for their go.`);
+  return art;
 }
 // J14 (0.3, B-168): create_report with an approved plan's artifact: the plan's inputs and model checked again (the gate
 // compares every pinned input and the theme, logo and background files' contents; the model's print and the approval's

@@ -13,16 +13,31 @@ const Fix = require('../../assets/js/model-health-tmdl.js');
 // A fix script goes to a new file, never into an answer: a script rewrites whole objects, so it holds the user's own
 // expressions and descriptions, and everything a tool returns is read by the AI app (audit AUD-006). The file gets a
 // free name; asked again, the file that already holds exactly this script is named again instead of a second copy.
+// (0.3.1 AF2, the release audit's F09) the name is chosen once, by the plan (freeScriptName: it writes nothing), and shown
+// with it; the write writes that name (writePlannedScript) or nothing, never another name.
 // (R4) a script that was not written: the write's own words, which name exactly what it left on disk, if anything
 export const notWrittenWhy = (dir, e) => 'The script could not be written to ' + dir + ' (' + String((e && e.code) || 'error') + ')' + (e && e.left ? ': ' + e.message : '.');
 const sameFile = (f, data) => { try { const st = fs.lstatSync(f); return st.isFile() && st.size === Buffer.byteLength(data) && fs.readFileSync(f, 'utf8') === data; } catch (e) { return false; } };
-export function writeScript(dir, base, script, plan) {
+export function freeScriptName(dir, base, script) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
-    if (nothingAt(f)) { if (plan) return f; try { writeNew(f, script); noteWritten(f); return f; } catch (e) { if (e.code !== 'EEXIST') throw e; } }
-    else if (sameFile(f, script)) return f;
+    if (nothingAt(f) || sameFile(f, script)) return f;
   }
   throw new Error('no free file name');
+}
+/** (AF2) Why the file a plan named can't be written now: null when nothing is there or it already holds exactly this
+ *  script; else the refusal. */
+export function plannedTaken(dir, name, script) {
+  const f = path.join(dir, path.basename(String(name)));
+  return nothingAt(f) || sameFile(f, script) ? null : new Error(`Nothing was written: "${path.basename(String(name))}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call the tool without planId), show it to the user and wait for their go.`);
+}
+/** (AF2) Writes the script to the file the plan named, as a new file; the same script already there is named again and
+ *  nothing is written; anything else at that name: nothing is written (plannedTaken's refusal). Returns the file. */
+export function writePlannedScript(dir, name, script) {
+  const f = path.join(dir, path.basename(String(name))), taken = plannedTaken(dir, name, script);
+  if (taken) throw taken;
+  if (sameFile(f, script)) return f;
+  writeNew(f, script); noteWritten(f); return f;
 }
 // The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
 // same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
@@ -39,9 +54,15 @@ export function scriptTables(m) {
     return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
   return { raw0, raw, skipped };
 }
-// write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it; afterGo says who writes it;
-// pw: the plan policy of the call's writes (check_model_health's planWrites; create_report writes it inside its withPlan)
-export function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '', pw = null) {
+// (AF2) the format script of these keys, and the free name the plan gives it now (nothing written): { scriptDir, base,
+// file, script, count } or null (no script, or no place for one)
+export function formatsScriptOf(m, p, keys, maxItems) {
+  const f = formatsOf(m, p, keys, maxItems);
+  if (!f || !f.s.script || !f.scriptDir) return null;
+  const base = f.scriptBase + ' - fix formats';
+  return { scriptDir: f.scriptDir, base, file: freeScriptName(f.scriptDir, base, f.s.script), script: f.s.script, count: f.s.count };
+}
+function formatsOf(m, p, keys, maxItems) {
   const raw = scriptTables(m).raw, s0 = Fix.formatReview(raw);
   const all = s0.items.concat(s0.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
   if (!mine.length) return null;
@@ -52,10 +73,19 @@ export function formatsAnswer(m, p, keys, maxItems, write = true, afterGo = '', 
   const list = shownMine.map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(p));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(p)).replace(/\.[^.]+$/, '');
+  return { mine, cap, s, list, scriptDir, scriptBase };
+}
+// write: false (0.2.9, the gate: no approved plan yet) names the script's file without writing it (AF2: the free name
+// now, the one the write then writes); afterGo says who writes it. write: true with put (AF2): put(dir, base, script)
+// writes the script, or hands it to the caller's write, and returns its file
+export function formatsAnswer(m, p, keys, maxItems, write = false, afterGo = '', put = null) {
+  const F = formatsOf(m, p, keys, maxItems);
+  if (!F) return null;
+  const { mine, cap, s, list, scriptDir, scriptBase } = F;
   let file = {};
   if (s.script && !scriptDir) file = { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder as the working folder and ask again; until then set the formats by hand in Power BI Desktop (Measure tools or Column tools > Format).' };
-  else if (s.script && !write) file = { scriptAfterGo: scriptBase + ' - fix formats.tmdl', notWrittenYet: 'Not written yet: ' + afterGo };
-  else if (s.script) { try { const f = pw ? pw.step(() => writeScript(scriptDir, scriptBase + ' - fix formats', s.script)) : writeScript(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
+  else if (s.script && (!write || !put)) file = { scriptAfterGo: path.basename(freeScriptName(scriptDir, scriptBase + ' - fix formats', s.script)), notWrittenYet: 'Not written yet: ' + afterGo };
+  else if (s.script) { try { const f = put(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
     catch (e) { file = { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Set the formats by hand in Power BI Desktop.' }; } }
   return Object.assign({ fields: list }, mine.length > cap ? { more: mine.length - cap } : {}, s.more ? { scriptCovers: `The script covers ${s.count} objects; ${s.more} more need the same fix (a script is kept under 30,000 characters): apply it, then check the model again.` } : {}, file);
 }
