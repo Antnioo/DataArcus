@@ -119,6 +119,8 @@ export function sampleSaid(folder) {
     rows: 'The rows are written into the model\'s files only: no answer holds them. Power BI Desktop loads them when the user clicks Refresh.' };
 }
 export const sampleWrites = (folder, n) => [`the new folder "${folder}" in the working folder: a made-up Gulf retail project, the model "${SAMPLE_NAME}" (4 tables of made-up rows, 4 measures, 3 relationships, a date table) and an empty report, ${n} new files; nothing else is touched`];
+// (SQ3, T1-S6) the same line in Arabic, for the sample's Arabic approval page
+export const sampleWritesAr = (folder, n) => [`المجلد الجديد «${folder}» في مجلد العمل: مشروع تجزئة خليجي ببيانات مختلَقة، النموذج «${SAMPLE_NAME}» (4 جداول من صفوف مختلَقة، 4 مقاييس، 3 علاقات، جدول تاريخ) وتقرير فارغ، الملفات الجديدة: ${n}؛ لا يُمَسّ أي شيء آخر`];
 /** create_report's write of the approved sample: the files the plan listed, new, in their own new folder */
 export function writeSample(folder) { const files = sampleFiles(folder); writeTree(ROOT, files); return files.length; }
 

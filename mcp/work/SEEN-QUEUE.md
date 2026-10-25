@@ -413,7 +413,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A2-S6 | README "19 website test suites" vs 20 | DONE | `README.md:24` now names `ALL` in run-all.mjs, no count | - |
 | A2-S7 | mcp/package.json description lists 4 tools | OPEN | `mcp/package.json:4` four tools only | describe all tools generically (no list) · S · none · packaging → **SQ9** |
 | A2-S8 | beta page "A real run" is 0.2.8 | DUPLICATE | `power-bi-mcp/index.html:188` "DataArcus 0.2.8" | of 0.2.9-design-S11 |
-| A2-S9 | app prompt (elicitation) lacks "Not checked before writing" | OPEN | `mcp/lib/approval-window.mjs:101` promptSummary ignores exact.notChecked | add a notChecked line in promptSummary within the cap · S · low · approval → **SQ3** |
+| A2-S9 | app prompt (elicitation) lacks "Not checked before writing" | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:101` promptSummary ignores exact.notChecked | add a notChecked line in promptSummary within the cap · S · low · approval → **SQ3** |
 | A2-S10 | page's "never returns data values" pinned only as text | OPEN | `mcp/test-0.3.0-approval-disclosure.mjs:175` text; T1 pin covers reads only | verify first: assert a fixture data value never appears on the page · S · low · approval → **SQ11** |
 | A2-S11 | SKILL.md omits metric switcher, terms, gulfDates | OPEN | no match in `mcp/skills/report-design/SKILL.md` | add one line each to SKILL.md (both copies) · S · none · tools-docs → **SQ9** |
 | A2-S12 | SKILL.md gallery limits vaguer than code | OPEN | `mcp/skills/report-design/SKILL.md:164-168` "few members" | state waterfall <=12, small multiples <=9, combo time or ordered · S · none · tools-docs → **SQ9** |
@@ -422,7 +422,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| A3-S1 | create_report refuses repeated displayNames when plan pinned fixed-list name | OPEN | `mcp/lib/plans.mjs:150-154` full differences(want, pin); no later fix found | verify first; compare only given displayNames keys to pinned map · M · low · approval → **SQ3** |
+| A3-S1 | create_report refuses repeated displayNames when plan pinned fixed-list name | OBSOLETE (SQ3: fixed before; create_report merges the pinned names under the given ones; sq3 A3-S1a-b) | `mcp/lib/plans.mjs:150-154` full differences(want, pin); no later fix found | verify first; compare only given displayNames keys to pinned map · M · low · approval → **SQ3** |
 | A3-S2 | kept English names raw inside Arabic titles | OWNER | J18 left isolation to the owner | decide whether to isolate kept Latin names in Arabic titles; laptop check reading order |
 | A3-S3 | twin/EN-AR keep English flip-card faces and switcher choices | OWNER | listed under cannot (by design) | decide whether a second Arabic script per report is worth building |
 | A3-S4 | twin plan answer near 40,000 cap; textsFrom proposed | DONE | Q1: `mcp/lib/twin-plan.mjs:44-58`, `create_arabic_twin.mjs:46` textsFrom | - |
@@ -517,7 +517,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | D6-S1 | theme page shows raw Inputs table above Colours | DONE | 0.3.0 T1 (fab795c): `mcp/lib/approval-window.mjs:503,516-517` Colours first, raw folded | - |
 | D6-S2 | taken theme name: freeFile picks "x 2", page silent | DONE | AF2 20c888a: `mcp/tools/generate_theme.mjs:65,74` name fixed at plan, else nothing | - |
-| D6-S3 | StaticResources/SharedResources themes grouped as Report settings | OPEN | `mcp/lib/approval-window.mjs:85` Theme regex RegisteredResources only | widen Theme group regex to StaticResources/SharedResources · S · low · approval → **SQ3** |
+| D6-S3 | StaticResources/SharedResources themes grouped as Report settings | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:85` Theme regex RegisteredResources only | widen Theme group regex to StaticResources/SharedResources · S · low · approval → **SQ3** |
 
 ### D7
 
@@ -858,14 +858,14 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | T1-S3 | some behaviour guarded only by test.mjs parts | OBSOLETE | informational; T1 gave each a fast check (RB.md Seen 2) |  |
 | T1-S4 | golden baseline differs under parallel workers | DONE | RB 932f61b: copy holds gulf-calendar; `mcp/test-0.3.1-mutation.mjs:140` |  |
 | T1-S5 | known-gap path dead with today's catalog | DONE | RB fe96c24: `mcp/test-0.3.1-validator-gap.mjs`, `mcp/tests.json:104` |  |
-| T1-S6 | Arabic page: writes lines and row texts stay English | OPEN | `mcp/lib/approval-window.mjs:210` writes printed as given; `create_arabic_twin.mjs:61` English | Arabic writes line per tool (writesAr) shown when ar · M · low · approval → **SQ3** |
+| T1-S6 | Arabic page: writes lines and row texts stay English | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:210` writes printed as given; `create_arabic_twin.mjs:61` English | Arabic writes line per tool (writesAr) shown when ar · M · low · approval → **SQ3** |
 | T1-S7 | worth-a-look names visual by type and box | OPEN | `assets/js/layout-check.js:304` rule findings `${type} at x,y wxh` | plain place words (top left, second row) not titles (R5) · M · low · checker → **SQ5** |
-| T1-S8 | twin plan says "0 Arabic texts as approved" before approval | OPEN | `mcp/tools/create_arabic_twin.mjs:62` prints labels.given even when 0 | when 0 say "no Arabic texts approved yet" · S · low · approval → **SQ3** |
-| T1-S9 | Arabic heading keeps English count words | OPEN | `mcp/lib/approval-window.mjs:492` "Shown in English (n, no Arabic text)" | count words via the ar table (as line 183) · S · low · approval → **SQ3** |
+| T1-S8 | twin plan says "0 Arabic texts as approved" before approval | DONE (SQ3 a6130f7) | `mcp/tools/create_arabic_twin.mjs:62` prints labels.given even when 0 | when 0 say "no Arabic texts approved yet" · S · low · approval → **SQ3** |
+| T1-S9 | Arabic heading keeps English count words | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:492` "Shown in English (n, no Arabic text)" | count words via the ar table (as line 183) · S · low · approval → **SQ3** |
 | T1-S10 | judge's unplanned slicer not reproduced | OWNER | needs a tester's model; not reproducible on fixtures | if a tester sees it, get that model's layout to find the visual |
 | T1-S11 | one Arabic term per concept (E1 F-4) | DONE | job E 7893922 (merged 11df69b); no عوامل التصفية in engines or MCP |  |
 | T1-S12 | suggest_fields off target on large-synthetic | OBSOLETE | informational: the fixture model has no revenue or cost measures |  |
-| T1-S13 | twin Options row: English "About the script" quote, English rows | OPEN | `mcp/lib/approval-window.mjs:487` Options rows English only | Arabic Options rows and quote when ar · S · low · approval → **SQ3** |
+| T1-S13 | twin Options row: English "About the script" quote, English rows | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:487` Options rows English only | Arabic Options rows and quote when ar · S · low · approval → **SQ3** |
 | T1-S14 | Saudi Ramadan/Eid dates missing from gulf-dates.js | OBSOLETE | `scripts/gulf-calendar/DATES-SOURCES.md:58` KSA sourced, every year same as UAE |  |
 | T1-S15 | laptop items: aea6d74, clean-up script, stash, items 8, 10 | OWNER | laptop-only state, not in this tree | on the laptop: drop or push aea6d74, run clean-up, drop stale stash, finish items 8 and 10 |
 
@@ -885,7 +885,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | V1-S1 | Arabic "Details" tab drawn cut in preview | OWNER | only Desktop shows whether the twin's tab is really cut | on the laptop open the twin's Details page, check the tab text fits |
 | V1-S2 | line placeholder shows "label length unknown" note | OPEN | `assets/js/page-preview.js:151` labels: 'طول التسميات غير معروف' | hide the labels note on approval previews or reword plainly · S · low · design → **SQ13** |
-| V1-S3 | preview tag Arabic on the copy's English pages | OPEN | `mcp/lib/approval-window.mjs:198` lang from previews.lang ('ar') for all pages | pass lang per page (p.rtl ? 'ar' : 'en') · S · low · design → **SQ3** |
+| V1-S3 | preview tag Arabic on the copy's English pages | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:198` lang from previews.lang ('ar') for all pages | pass lang per page (p.rtl ? 'ar' : 'en') · S · low · design → **SQ3** |
 | V1-S4 | time-chart placeholder gives no time direction cue | OPEN | `assets/js/page-preview.js:166` mirrors glyph by page.rtl only, no direction cue | verify first: draw an axis arrow showing time direction (timeRightToLeft) · S · low · design → **SQ13** |
 
 ### W

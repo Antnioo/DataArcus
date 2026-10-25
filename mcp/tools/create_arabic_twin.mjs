@@ -7,7 +7,7 @@ import { withPlan } from '../lib/files.mjs';
 import { reportPrint } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
 import { REPORT_UNTRUSTED, UNTRUSTED } from '../lib/agent-text.mjs';
-import { whereSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
+import { whereSaid, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { twinKey, writeTwin, planTwin, twinOutputs, twinTree, MATRIX_SAID } from '../lib/arabic-twin.mjs';
 import { bindingOf } from '../lib/artifact.mjs';
 import { twinPreview } from '../lib/arabic-twin.mjs';
@@ -58,9 +58,17 @@ export function register(server, ctx) {
     const P = planTwin(a);
     if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
     const LG = P.answer.languages;
-    const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${P.answer.labels.given} Arabic texts as approved), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
-      : `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
-      .concat(P.month.offered ? [`the TMDL script "${P.answer.arabicMonth.scriptAfterGo}" ${whereSaid(path.dirname(inside(a.path)))} (the Arabic calendar columns: ${(P.month.columns || []).length || 1}); ${NEVER_APPLIED}`] : []);
+    // (SQ3, T1-S8: "0 Arabic texts as approved" before any text was approved) the count, or that none is approved yet
+    const given = P.answer.labels.given, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';
+    const textsAr = given ? `النصوص العربية كما وُوفق عليها: ${given}` : 'لم يُوافق بعد على أي نص عربي: يبقى كل نص كما هو';
+    const where = path.dirname(inside(a.path)), cols = (P.month.columns || []).length || 1;
+    const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${texts}), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
+      : `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${texts}); the original is not changed`]
+      .concat(P.month.offered ? [`the TMDL script "${P.answer.arabicMonth.scriptAfterGo}" ${whereSaid(where)} (the Arabic calendar columns: ${cols}); ${NEVER_APPLIED}`] : []);
+    // (SQ3, T1-S6) the same lines in Arabic, for the approval page (which is Arabic), one for each line above
+    const writesAr = [LG ? `التقرير الجديد «${P.answer.twin.report}» و«${P.answer.twin.pbip}» بجانب الأصل: صفحاته الإنجليزية كما هي (${LG.pairs.length}) وصفحاتها العربية (${LG.pairs.length}) (${textsAr})، أزرار اللغة: ${LG.buttons.filter((b) => b.placed).length}، أزواج المقسمات المتزامنة: ${LG.syncGroups.length}، والصفحات ${P.copy.tabsShown === 'ar' ? 'الإنجليزية' : 'العربية'} مخفية في علامات التبويب؛ لا يتغيّر الأصل`
+      : `التقرير الجديد «${P.answer.twin.report}» و«${P.answer.twin.pbip}» بجانب الأصل (الصفحات المعكوسة: ${P.answer.pages.length}، ${textsAr})؛ لا يتغيّر الأصل`]
+      .concat(P.month.offered ? [`سكربت TMDL «${P.answer.arabicMonth.scriptAfterGo}» ${whereSaid(where, undefined, true)} (أعمدة التقويم العربية: ${cols})؛ ${NEVER_APPLIED_AR}`] : []);
     // (0.3.1 V1) the approval page draws each Arabic page from the plan's own build (kept with the plan, never in the answer)
     P.answer.approvalPreview = `The approval page shows each Arabic page as it will be written${LG ? ', beside its English page' : ''}: where each visual goes, its type and its Arabic title${LG ? ', and the language buttons' : ''} (grey placeholders, never data). Tell the user to look at it before Approve.`;
     // (0.3.1 K2) the exact files the write will write, built now and kept with the plan (this session only), with their
@@ -68,7 +76,7 @@ export function register(server, ctx) {
     const T = twinTree(P), source = reportPrint(a.path);
     const pin = { labels: P.labels, terms: P.terms, timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, into: LG ? 'same' : 'separate', tabsShown: LG ? P.copy.tabsShown : null, source };
     P.answer.exact = { digest: T.digest, files: T.files.length, note: 'The exact files the write will write, built now: after the go they are written byte for byte, or nothing is.' };
-    return compact(Object.assign(P.answer, { plan: Plans.proposal(attached(Plans.propose('twin', { key, print: P.modelPrint }, writes, { preview: twinPreview(P, T.files), labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source, outputs: twinOutputs(P, T), ...(P.answer.notFullyArabic ? { notFullyArabic: P.answer.notFullyArabic } : {}),
+    return compact(Object.assign(P.answer, { plan: Plans.proposal(attached(Plans.propose('twin', { key, print: P.modelPrint }, writes, { writesAr, preview: twinPreview(P, T.files), labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source, outputs: twinOutputs(P, T), ...(P.answer.notFullyArabic ? { notFullyArabic: P.answer.notFullyArabic } : {}),
       // (0.3.0 T1, T-7) the options the report uses: its waterfalls and its pages drawn on a picture, counted
       waterfalls: (P.answer.mirrors || []).filter((x) => /^waterfall/.test(x.kind)).reduce((n, x) => n + (x.count || 0), 0) + ((P.answer.cannot || []).find((x) => /waterfall/.test(x.what)) || { where: [] }).where.length, picturePages: (P.answer.picturePages || []).length, matrices: (P.answer.cannot || []).some((x) => x.what === 'matrices') ? MATRIX_SAID : null,
       ...(LG ? { into: 'same', tabsShown: P.copy.tabsShown, languages: { copy: LG.copy, pairs: LG.pairs, buttons: LG.buttons, syncGroups: LG.syncGroups, tabs: LG.tabs, bookmarks: LG.bookmarks, measures: LG.measures || [] } } : {}) }), Object.assign({}, T, { modelPrint: P.modelPrint, pin, binding: bindingOf(T.digest, pin, P.modelPrint) }))) }), TWIN_CAP);

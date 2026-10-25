@@ -26,15 +26,20 @@ export function scriptWords(writes, what) {
 }
 // what the writes say about a script they name: DataArcus never applies it, the person does, with the steps given
 export const NEVER_APPLIED = 'never applied by DataArcus: you apply it yourself in Power BI Desktop, with the 3 steps shown with this plan';
+// (SQ3, T1-S6) the same on an Arabic plan's approval page
+export const NEVER_APPLIED_AR = 'لا يطبّقه DataArcus أبدًا: تطبّقه أنت في Power BI Desktop، بالخطوات الثلاث المعروضة مع هذه الخطة';
 
 /** Where a file goes, by the folder's name: 'in the folder "Sales", next to "Sales.pbip"' (the project file of that
- *  folder, base preferred), or 'in the working folder itself' when the folder is the working folder. dir: absolute. */
-export function whereSaid(dir, base) {
-  if (!dir) return 'next to the project';
+ *  folder, base preferred), or 'in the working folder itself' when the folder is the working folder. dir: absolute.
+ *  ar: the same in Arabic (SQ3: «في المجلد «Sales»، بجانب «Sales.pbip»»), for an Arabic plan's approval page. */
+export function whereSaid(dir, base, ar) {
+  if (!dir) return ar ? 'بجانب المشروع' : 'next to the project';
   const rel = ROOT ? path.relative(ROOT, dir).split(path.sep).join('/') : path.basename(dir);
   let pbips = [];
   try { pbips = fs.readdirSync(dir).filter((n) => /\.pbip$/i.test(n)).sort(); } catch (e) { pbips = []; }
   const pb = (base && pbips.find((n) => n.toLowerCase() === (String(base) + '.pbip').toLowerCase())) || pbips[0];
+  if (ar) return (!rel || rel === '.' ? 'في مجلد العمل نفسه' : rel.startsWith('..') ? 'بجانب المشروع' : `في المجلد «${shownPath(rel)}»`) + (pb ? `، بجانب «${shownPath(pb)}»` : '');
   const at = !rel || rel === '.' ? 'in the working folder itself' : rel.startsWith('..') ? 'next to the project' : `in the folder "${shownPath(rel)}"`;
   return at + (pb ? `, next to "${shownPath(pb)}"` : '');
 }
+
