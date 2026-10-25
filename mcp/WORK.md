@@ -12,7 +12,8 @@ together: `ARCHITECTURE.md` (repo root). Every finished round and wave, unchange
 - Merged into `integration/0.3.1` (head 6acddba): wave 1 S1, R1, P1; wave 2 V1, M1, L1, X2; wave 3 I, E, W, C;
   wave 4 K1, L6; wave 5 E2, D5. Each entry, unchanged: `mcp/work/archive/WORK-2026-10-25.md`.
 - Wave 6, consolidation (running, 25 Oct): G1 the test registry, this file's archive, `ARCHITECTURE.md` and the README
-  split (branch `chore/0.3.1-registry-docs`, `mcp/work/G1.md` top section); S9 splits `mcp/server.mjs` and
+  split (branch `chore/0.3.1-registry-docs`, done, not merged: full npm test 72 PASS through the runner;
+  `mcp/work/G1.md` top section); S9 splits `mcp/server.mjs` and
   `mcp/lib/arabic-twin.mjs` (product code); T1 adds `mcp/test-0.3.1-mutation.mjs` (its line waits in `mcp/tests.json`
   `pending`: move it into `suites` when the file lands).
 
