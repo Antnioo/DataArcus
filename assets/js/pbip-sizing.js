@@ -100,7 +100,7 @@
     // pt(t): a size within 8-60pt. LABEL: button text, the theme's label size.
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
-    const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    const slicerH = (t) => Math.ceil(16 + 4 * t);
     // (0.3.0 F1, F2) a pill slicer's height (its header, the container title written at the tiles' size, and one row of
     // tiles): MEASURED on Desktop 2.159 (dataarcus-engine, business/beta/ship030/RECHECK-F1.md, 20 Oct 2026): at 15pt a
     // pill slicer 88 high cuts the text to its top third, 140 draws it whole (a button slicer hides a text its tile is too
@@ -194,7 +194,7 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    return { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).

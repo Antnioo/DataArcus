@@ -32,7 +32,7 @@
   0 and 1 decimal; A3 guard: a percent keeps 0, no decimal.
 - B (M1-S4): B1 Arabic 240 x 80 with two slicers: each slicer 24 wide or more, no two at one x; B2 the Reset left out,
   told (`narrow`); B3 English, same slot: the same; B4 guard: a 620 x 100 slot keeps Reset and today's widths; B5 a
-  60 x 40 slot: one slicer kept, the second left out and told; B6 create_report after the plan and the click (the 240 x
+  60 x 40 slot: one slicer kept, the second left out and told; B6 create_report after the plan and the click (a 160 x
   80 slot): its notes and leftOutVisuals say the Reset was left out because the slot is too narrow.
 - C (S4): C1 `shown("Total\tSales")` is "Total Sales"; C2 a report on a measure named with a tab writes no control
   character in a title or display name; C3 guard: U+200C kept; C4 guard: U+202E dropped.

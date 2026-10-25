@@ -166,7 +166,7 @@
     // 1920 x 1080 page, as in Microsoft's recipe, and scales with the page. The value keeps the callout size unless the
     // box is too short, or too narrow for 7 characters ("101.91K"); below 8 the inner padding goes first.
     const { TH, TITLE, CALLOUT, LABEL, SLICER_TEXT } = themeSizes(o);
-    // the theme's text sizes are made for the report's full page; the 320 x 240 tooltip page and the phone get their own
+    // the theme's text sizes are made for the report's full page; the 320 x 284 tooltip page and the phone get their own
     const TIP_VALUE = 20, TIP_TITLE = 10;
     // m (KPI cards on a page): { top, side }, the margin above the title (round(12k), k = page height / 1080: measured
     // in Desktop 2.158 as the smallest that looks right) and the padding on the reading-start side that keeps the title
@@ -309,12 +309,12 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
-      iconH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
+      slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
       kpiTitleFit, titleFit, oneLine
     };
   }
@@ -643,7 +643,7 @@
         // stacked in a side panel, side by side in a top strip
         // (sizes from 1920 x 1080 scaled by k; Reset as wide or as high as its text needs, slicers the height a dropdown needs)
         // (on a user's own model a slicer the model has no column for is left out and told, and the others share the room)
-        const all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), fields = B && own ? all3.filter(Boolean) : all3, pad = 10 * k, gap = 8 * k, n = Math.max(1, fields.length);
+        const all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), fields = B && own ? all3.filter(Boolean) : all3.slice(), pad = 10 * k, gap = 8 * k, n = Math.max(1, fields.length);
         all3.forEach((f, i) => { if (B && own && !f) leftOut.push({ page: pg.name || base, kind: 'slicer', title: (W.slicer || 'Slicer') + ' ' + (i + 1) }); });
         const resetText = W.reset || 'Reset filters';
         const bw = resetW(resetText, k, s.w - 2 * pad);
@@ -654,8 +654,17 @@
         // them (a slot that holds them neither way stays a strip, as before).
         const stripW = (s.w - 2 * pad - bw - gap - gap * (n - 1)) / n, stackH = n * slicerH(SLICER_TEXT) + gap * n + bh + 2 * pad;
         const across = !s.stack && s.w > s.h && (stripW >= 160 * k || stackH > s.h);
-        const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
-        const sw = across ? (room - gap * (n - 1)) / n : room;
+        // (0.3.1 SQ1, M1-S4: a 240 x 80 strip gave its two Arabic slicers -5 each beside a 227 Reset) a strip never writes a
+        // slicer narrower than SLICER_MIN (Desktop draws one 24 wide as a sliver, and one with a negative width not at all:
+        // DESKTOP-TESTS.md, round 23's facts): the Reset button is left out first, then slicers from the last; each is told
+        // (narrow). A slot that holds them is as before.
+        const SLICER_MIN = 24;
+        let withReset = true;
+        const roomOf = () => (across ? (withReset ? s.w - 2 * pad - bw - gap : s.w - 2 * pad) : s.w - 2 * pad);   // (the same sums as before, to the last bit)
+        const swOf = () => (across ? (roomOf() - gap * (fields.length - 1)) / Math.max(1, fields.length) : roomOf());
+        if (across && swOf() < SLICER_MIN) { withReset = false; leftOut.push({ page: pg.name || base, kind: 'reset', title: resetText, narrow: true }); }
+        while (across && fields.length && swOf() < SLICER_MIN) { const i = fields.length - 1, f = fields.pop(); leftOut.push({ page: pg.name || base, kind: 'slicer', title: label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1), narrow: true }); }
+        const sw = swOf();
         const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
         // (0.3.0 F2) stacked, a pill slicer gets the height measured for it (pillH) where the rail has room, else its share
         // of what is left; a strip keeps its height (the pills' text, then the dropdown, decide in slicerVisual)
@@ -671,6 +680,7 @@
           slicerNames.push(v.name);
           z += 1000;
         });
+        if (!withReset) return;
         // Reset button: applies a bookmark that clears these slicers
         // (across: at the end of the strip; in a rail: at the reading start, lined up with the slicers)
         const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
@@ -813,7 +823,9 @@
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
         // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
         // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
-        // number of columns is known from the model's names: a quarter (4); other columns could have any number
+        // number of columns is known from the model's names: a quarter (4); other columns could have any number.
+        // (0.3.1 SQ1, 0.2.9-writer-S14: "8.0Kkg") a measure the cards show whole (wholeFormat: a unit, a count) keeps its own
+        // format there, display units None and no decimal added, as on its card and its tooltip's bars (T10, tipLook)
         if (query && s.kind === 'column') { const cf = query.queryState.Category.projections[0], cn = String(cf.nativeQueryRef || cf.queryRef || '');
           // (round 22, the code review's f: "Year Quarter" and "Fiscal Year Quarter" end the same way and hold 8 to 40 values:
           // a name with a year in it is never taken for four columns)
@@ -822,7 +834,8 @@
           if (cf0.kind ? String(cf0.kind) === 'quarter' && (catKind(cf0) || {}).rows === 4 : four(cn) || four(String(cf0.c || ''))) {
             const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
             visual.objects = visual.objects || {};
-            visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
+            const whole = !pct && !!yf.wholeFormat;
+            visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(whole ? 1 : 0) }, pct || whole ? {} : { labelPrecision: lit('1L') }));
           } }
         // P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): a line chart's line 3 wide (1 px was the weakest mark
         // on every page); L1: smooth with a dot on each point unless the design's smoothLines is false (pbip-query.js lineStyle)

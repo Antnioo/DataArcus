@@ -101,11 +101,11 @@ const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataa
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }] } }));
   const s = await elicitClient(ROOT, () => ({ action: 'accept', content: { approve: true } }));
   try {
-    const args = { path: 'sq1', name: 'SQ1 narrow', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'slicer', x: 20, y: 20, w: 240, h: 80 }] }] };
+    const args = { path: 'sq1', name: 'SQ1 narrow', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'slicer', x: 20, y: 20, w: 160, h: 80 }] }] };   // (two slicers of 6 beside a 124 Reset, as written before)
     const pl = await s.call('plan_layout', args), planId = pl.j && pl.j.plan && pl.j.plan.planId;
     await s.call('approve_plan', { planId });
     const x = await s.call('create_report', Object.assign({ planId }, args)), said = JSON.stringify(x.j || x.t);
-    chk(() => !x.err && /Reset filters[^"]*too narrow/.test(said) && /"visual":"Reset filters"/.test(said), () => `B6. create_report says the Reset button was left out of the too narrow slot (its notes and leftOutVisuals): ${said.slice(0, 600)}`);
+    chk(() => !x.err && /too narrow for it: Reset filters on/.test(said) && /"visual":"Reset filters"/.test(said), () => `B6. create_report says the Reset button was left out of the too narrow slot (its notes and leftOutVisuals): ${said.slice(0, 600)}`);
   } finally { await s.close(); }
 }
 fs.rmSync(ROOT, { recursive: true, force: true });
