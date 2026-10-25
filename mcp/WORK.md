@@ -10,7 +10,14 @@ sure the AR and twin are using the same engine". Plan, expected numbers, variant
 `mcp/work/M1.md`. Part A: `mcp/lab/matrix-mirror.mjs` (one project, 7 pages, every matrix property Microsoft's
 capabilities give that could make it read from the right). Part B: `mcp/test-0.3.1-mirror-parity.mjs` and every Arabic
 path through `assets/js/report-mirror.js`. No new matrix behaviour for users before the laptop picks a variant.
-- Status: plan pushed; next: red tests.
+- Done (builder, 25 Oct): e977406 plan, b9c4c31 red (6 of 46), f1216d6 one engine (the writer's, the tooltip pages' and
+  the metric switcher's charts through report-mirror.js chartRtl; the matrix's switch matrixRtl, default unchanged),
+  0561231 the lab (11 pages, 41 visuals, validator 0), f79accb, 86ffb65, 773f277 (the website loads report-mirror.min.js).
+  Parity 49/49; full npm test exit 0 (64 lines PASS); website 20/20 after the fix. 4 checks in other suites changed on
+  purpose (no invertAxis on a categorical axis).
+- Next: the reviewer reviews and merges; the laptop runs "For the laptop" in M1.md and the owner picks a matrix variant
+  (or none); then the chosen value becomes MATRIX_RTL_DEFAULT for every path. Open for the owner: M1.md "Seen, not in
+  scope" 1 (text-box panels: create_report vs the twin) and 2 (the twin's tables lose "Total").
 
 ## 0.3.1, wave 1 (25 Oct, reviewer; the owner: "proceed with 0.3.1 ... 3 builders at a time ... fix the things I saw myself in the MCP")
 Branch model: `integration/0.3.1` from main d501c78. Each builder branches from it, pushes only its own branch, never
