@@ -5,6 +5,14 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]
+- **English/Arabic copy (one report with a language button):** the language buttons now always show their text, in the
+  theme's text colour, even with a theme that draws every visual as a white card; the Arabic pages move through the
+  keyboard right to left; an Arabic title gets the room it needs on one line; the Arabic pages' title and subtitle are
+  no longer drawn as bordered cards.
+- The checker says when a table or matrix shows fewer rows than it could, and how to fix it (a smaller text, word wrap
+  off). A table column of a per-item measure is named in Arabic for what one row shows, not as an average.
+- A matrix keeps its row headers on the left: Power BI has no right-to-left setting for it, and the plan and the
+  approval page now say so plainly.
 - **Arabic and English in one report:** the checker now judges each page in its own language, so the English pages of
   an English/Arabic report are no longer flagged for right-to-left rules. Approved long Arabic texts are no longer
   called suspicious because of their length.
