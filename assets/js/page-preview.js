@@ -135,8 +135,7 @@
   // D5: labels that may slant (J12's rough rule, kept as a note: slanted labels are not cut, and check_report has no such
   // finding), [{ i, kind: 'slant', why }]
   function notes(page) {
-    // eslint-disable-next-line no-unused-vars -- Q1 finding P-1 (mcp/work/Q1.md): the page's scale is never applied to the slant rule; the reviewer decides
-    const kk = +page.h ? +page.h / 1080 : 1, out = [];
+    const out = [];
     (page.visuals || []).forEach((v, i) => {
       const k = kindOf(v); if (!((k === 'column' || k === 'line') && v.category)) return;
       const L = labelsOf(v.category);
