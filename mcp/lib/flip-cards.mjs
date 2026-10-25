@@ -56,7 +56,7 @@ const cssFont = (f) => String(f || 'Segoe UI').replace(/[^A-Za-z0-9 -]/g, '').tr
 // (0.3.0 A3, the reviewer's decision of 20 Oct: no English in Arabic reports) units: null writes K, M, B after the number
 // (English, as before); { K, M, B } the Arabic unit words: the number (Western digits) is _t, the word is _u, already
 // encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number
-function frontValue(m, mref, units) {
+export function frontValue(m, mref, units) {
   const f = String(m.formatString || ''), pct = /%/.test(f) || /%|\b(rate|ratio|share|margin)\b/i.test(String(m.name));
   if (pct) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )` };
   if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )` };
@@ -102,7 +102,7 @@ function measuresOf(c, t, m, cal, words) {
 
 // the calendar a measure's year on year may use: the key date column of a table marked as a date table (dataCategory
 // Time), related directly to the measure's table; else null with why
-function calendarFor(model, table) {
+export function calendarFor(model, table) {
   const cals = (model.tables || []).filter((t) => /^time$/i.test(String(t.dataCategory || '')));
   for (const t of cals) {
     const c = (t.columns || []).find((x) => x.isKey && /^date(time)?$/i.test(String(x.dataType || '')));

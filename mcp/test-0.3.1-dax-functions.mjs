@@ -261,7 +261,7 @@ try {
     chk(() => EN.beforeGo === false, () => 'GATE1. after plan_layout and before the go, no report and no script exist');
     // GA: user-defined functions are never called a preview
     const PREV = /(user-defined function|UDF)[^.]{0,120}\bpreview\b|\bpreview\b[^.]{0,120}(user-defined function|UDF)/i;
-    const said = [JSON.stringify(EN.pl.j.daxFunctions || {}), JSON.stringify(EN.r.j.daxFunctions || {}), unesc(String(EN.html || '').replace(/<[^>]+>/g, ' ')), fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8')];
+    const said = [JSON.stringify(EN.pl.j.daxFunctions || {}), JSON.stringify(EN.r.j.daxFunctions || {}), unesc(String(EN.html || '').replace(/<[^>]+>/g, ' ')), fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8'), JSON.stringify(((await w.c.listTools()).tools.find((t) => t.name === 'plan_layout').inputSchema.properties || {}).daxFunctions || {})];
     chk(() => said.every((t) => !PREV.test(t)) && /user-defined functions/.test(said[0]), () => `GA1. no text the option adds calls user-defined functions a preview: ${said.map((t) => (PREV.exec(t) || [''])[0]).join(' | ')}`);
   }
 

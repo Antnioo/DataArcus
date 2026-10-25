@@ -195,6 +195,14 @@ them from the same model open in Power BI Desktop:
   Target / Goal / Budget"); the list form `[{ measure, good: ">= 0.97", bad: "< 0.94" }]` takes thresholds the user
   gives you. Never invent a threshold: ask the user for good and bad. A target needs a status measure, written as a TMDL
   script next to the project (`statusIcons.scriptFile`): tell the user to apply it first (`howToApply`).
+- **DAX function library** (`daxFunctions`, off by default; pinned by the plan): four DAX user-defined functions
+  (DA.Sparkline, DA.BulletBar, DA.KpiCard, DA.StoryTitle; generally available since the June 2026 release) and measures
+  that call them, as one TMDL script next to the project (`daxFunctions.scriptFile`). Use it only when the user asks.
+  Say FIRST, before anything else in the plan, in the user's language: applying the script raises the model's
+  compatibility level to 1702, which cannot be undone (`daxFunctions.sayFirst`; the plan says when the model is already
+  there). Then list the functions, each measure and where it shows, and what was not used and why. Not with `flipCards`
+  on the KPI cards. In a twin or the Arabic half of a bilingual report they stay as the English measures draw them
+  (`cannot`). Never apply the script yourself: the user applies it in TMDL view (`howToApply`).
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.

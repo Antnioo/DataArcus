@@ -100,6 +100,8 @@ export const PROMPT_SUMMARY_CAP = 600;
 export const PREVIEW_PAGES_MAX = 12;
 export function promptSummary(kind, data) {
   const d = data || {}, groups = summary(kind, d).files || [], lines = [];
+  // (0.3.1 L6) the compatibility step first in the app's prompt too
+  if (kind === 'report' && d.daxFunctions && d.daxFunctions.compatibility && d.daxFunctions.compatibility.raises) lines.push('First: applying the DAX functions script raises the model\'s compatibility level to 1702; it cannot be undone.');
   if (groups.length) {
     const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${g.label} (${g.paths.length})`);
     let line = `${n} file${n === 1 ? '' : 's'}: `, k = 0;
@@ -135,7 +137,7 @@ const WORDS = {
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'العناصر المرئية', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم العناصر المرئية المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
-  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
 const kindLabel = (label, ar) => (ar && KIND_AR[label] ? `${KIND_AR[label]} · ${label}` : label);
@@ -180,7 +182,7 @@ const scriptHtml = (s, writes, ar) => {
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
   ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'مقسمات طريقة العرض المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
-  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول']];
+  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX']];
 // (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
 const headingOf = (h, ar) => { if (!ar) return h; const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); return x ? `${x[1]} · ${h}` : h; };
 
@@ -204,7 +206,7 @@ function askPage(w) {
   const ckHtml = ck ? `<h2>${esc(W.checked)}</h2><div class="card"><p class="${ck.desktop ? 'warn' : ''}"><strong>${esc(ck.summary)}</strong></p>${ck.problems && ck.problems.length ? `<ul>${ck.problems.map((f) => `<li dir="auto">${esc(f.page ? `${W.page} ${f.page}: ` : '')}${esc(f.visual || '')}${f.visual ? ': ' : ''}${esc(f.what)}. <span class="note">${esc(f.fix)}</span></li>`).join('')}</ul>` : ''}${wl.length ? `<p>${esc(W.worth)}:</p><ul>${wl.map((x) => `<li dir="auto">${esc(x)}</li>`).join('')}</ul>` : ''}<p class="note">${esc(W.checkNote)}</p></div>` : '';
   const arTitle = ar && s.titleKey && W.titles[s.titleKey] ? W.titles[s.titleKey] : null;
   const h1 = arTitle ? `${esc(arTitle)}${s.name ? ` «<bdi>${esc(cut(s.name, 80))}</bdi>»` : ''}` : esc(s.title);
-  return page(W.ask + (arTitle ? `${arTitle}${s.name ? ` «${cut(s.name, 80)}»` : ''}` : s.title), `<h1 dir="auto">${h1}</h1><p class="lead">${esc(W.lead)}</p>
+  return page(W.ask + (arTitle ? `${arTitle}${s.name ? ` «${cut(s.name, 80)}»` : ''}` : s.title), `<h1 dir="auto">${h1}</h1>${s.first ? `<h2>${esc(s.first.heading)}</h2><div class="card">${s.first.text.map((t) => `<p class="warn" dir="auto"><strong>${esc(t)}</strong></p>`).join('')}</div>` : ''}<p class="lead">${esc(W.lead)}</p>
 ${pv}${ckHtml}<h2 id="files">${esc(W.files)}</h2><div class="card"><ul>${w.plan.writes.map((x) => `<li dir="auto">${esc(s.name ? String(x).split('<name>').join(s.name) : x)}</li>`).join('')}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files, s.kind, ar)}<p class="note">${esc(ar ? writesNoteAr(w.plan.writes) : writesNote(w.plan.writes))}</p></div>
 ${scriptHtml(s, w.plan.writes, ar)}${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">${esc(W.approve)}</button></form>
@@ -337,10 +339,16 @@ export function summary(kind, data) {
   // (0.3.0 T1, T-6: "There is no background image." under a list holding the background PNG) a page background the writer
   // writes blank (a see-through pixel, so the page shows the theme's colour) is listed as what it is
   const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i]]) : null;   // (L3: the switch's own script)
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     const T = { title: (d.bilingual ? 'English and Arabic in one report' : 'Report') + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files, kind, lang: p.lang === 'ar' ? 'ar' : 'en', scriptWhat: 'the changes listed with the plan', titleKey: d.bilingual ? 'same' : 'report' };
+    // (0.3.1 L6) the DAX function library's compatibility step, the FIRST thing on the page, in the plan's language: applying
+    // its script raises the model's compatibility level to 1702, which cannot be undone (or the model is already there)
+    const DF = d.daxFunctions && d.daxFunctions.compatibility ? d.daxFunctions : null;
+    if (DF) { const C = DF.compatibility, ar = T.lang === 'ar' && C.sayFirstAr;
+      T.first = { heading: (ar ? (C.raises ? 'أولًا: هذا يرفع مستوى التوافق في نموذجك (لا يمكن التراجع عنه) · ' : 'أولًا: مستوى التوافق في نموذجك · ') : '') + (C.raises ? 'First: this raises your model\'s compatibility level (cannot be undone)' : 'First: your model\'s compatibility level'),
+        text: ar ? [String(C.sayFirstAr), String(C.sayFirst || '')] : [String(C.sayFirst || '')] }; }
     sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
@@ -381,8 +389,13 @@ export function summary(kind, data) {
         SI.themeAdded ? [['Theme', String(SI.themeAdded)]] : [],
         (SI.notShown || []).map((x) => [`No icon: ${cut(String(x.measure || ''), 120)}`, String(x.why || '')]),
         SI.none ? [['No icon', String(SI.none)]] : []) });
+    // (0.3.1 L6) the DAX function library: every function and every measure the script adds, where each shows, before the click
+    if (DF) sections.push({ heading: `DAX function library (${(DF.functions || []).length} functions, ${(DF.measures || []).length} measures)`, rows: (DF.functions || []).map((f) => [`Function ${String(f.name || '')}`, `(${String(f.params || '')})${f.inScript === false ? ': already in the model, left out of the script' : ''}`])
+      .concat((DF.measures || []).map((x) => [`Measure ${cut(String(x.measure || ''), 140)}`, `${({ sparkline: 'sparkline column', bulletBar: 'bullet bar column', kpiCards: 'KPI card picture', storyTitles: 'story title' })[x.use] || String(x.use || '')} of ${cut(String(x.of || ''), 140)}`]),
+        [['Colours', String(DF.colours || '')], ['Model change', String(DF.modelChange || '')], ['User-defined functions', String(DF.status || '')]],
+        (DF.notUsed || []).map((x) => [`Not used: ${String(x.use || '')}${x.page ? ` (${cut(String(x.page), 60)})` : ''}`, String(x.why || '')])) });
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
-    const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
+    const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', daxFunctions: 'DAX function library', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
     const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || ((p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true) && (!Array.isArray(d.waterfallRtl) || d.waterfallRtl.length) && (d.waterfalls == null || d.waterfalls > 0)))).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
