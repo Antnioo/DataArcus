@@ -289,7 +289,8 @@
           if ((/^(shape|basicShape|image)$/.test(x.type)) || (x.type === 'textbox' && !shown(textOf(x.json.visual)).length)) out(x, `a ${x.type === 'textbox' ? 'text box without text' : x.type === 'image' ? 'picture without alt text' : 'shape without alt text'} is a Tab stop`, 'Hide it from the tab order (View > Selection > Tab order: select its number), or give it alt text if it means something.');
         }));
       } },
-    { id: 'A11Y_TAB_ORDER', group: 'a11y', severity: 'warning', source: SRC(GUIDE.tab, 'Tab order'),
+    // (0.3.1 S1, byDir: in a report holding both languages each page is judged in its own reading direction)
+    { id: 'A11Y_TAB_ORDER', group: 'a11y', severity: 'warning', source: SRC(GUIDE.tab, 'Tab order'), byDir: true,
       about: 'the Tab stops of a page (and of each group) follow the reading order: top to bottom, then left to right, or right to left in a right-to-left report; a visual that shows data is a Tab stop',
       run(R, out) {
         const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');

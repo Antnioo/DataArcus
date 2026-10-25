@@ -328,25 +328,39 @@
     (R.visuals || []).forEach((x) => { x.x = fin(x.x); x.y = fin(x.y); x.w = fin(x.w); x.h = fin(x.h); });
     return R;
   }
+  // (0.3.1 S1: a report holding both languages, an EN-AR copy, was judged all Arabic: its English pages told to put
+  // their titles right and their Tab order right to left) R.pageDir: { <page id>: 'rtl' | 'ltr' }, each page's own
+  // direction. A rule that keys on the direction (dir: 'rtl', or byDir) then runs once per direction, on that
+  // direction's pages and their visuals; the others run on the whole report. Without pageDir: R.dir for every page.
+  function byDirection(R, dir) {
+    const pd = R.pageDir && typeof R.pageDir === 'object' ? R.pageDir : null;
+    if (!pd) return [{ dir, R }];
+    const of = (p) => (pd[p.id] === 'rtl' || pd[p.id] === 'ltr' ? pd[p.id] : dir), dirs = [...new Set((R.pages || []).map(of))];
+    if (dirs.length < 2) return [{ dir: dirs[0] || dir, R }];
+    return dirs.map((d) => { const pages = R.pages.filter((p) => of(p) === d), ids = new Set(pages.map((p) => p.id));
+      return { dir: d, R: Object.assign({}, R, { pages, visuals: (R.visuals || []).filter((x) => x.page && ids.has(x.page.id)), dir: d, lang: d === 'rtl' ? (R.lang === 'he' ? 'he' : 'ar') : 'en' }) }; });
+  }
   function check(R, opts) {
     normalize(R);
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
-    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.dir || r.dir === dir)).forEach((rule) => {
+    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr'), parts = byDirection(R, dir);
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+      const runs = rule.dir || rule.byDir ? parts.filter((v) => !rule.dir || rule.dir === v.dir) : [{ dir, R }];
+      if (!runs.length) return;
       ran.push(rule.id);
       const mine = [];
-      try { rule.run(R, (x, what, fix, extra, src) => {
+      try { runs.forEach(({ R }) => rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
         mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : e.page || null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: source.guide ? `Microsoft's guidance: ${source.title}, "${source.section}": ${source.url}` : source.format ? `Microsoft's PBIR format: ${source.section}` : `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
-      }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
+      })); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, buttonNeed, headerNeed, tableHeaders };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, byDirection, buttonNeed, headerNeed, tableHeaders };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);

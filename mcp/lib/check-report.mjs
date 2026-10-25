@@ -191,6 +191,63 @@ export function impactSummary(n, ctx) {
   return 'Nothing found: the report opens in Power BI Desktop and passes the checks that ran.';
 }
 
+// ---- each page's language (0.3.1 S1: an EN-AR copy, the English pages and their hidden Arabic copies with language
+// buttons, was judged all Arabic: its English pages were told to put their titles right and their Tab order right to
+// left) ----
+// a list of texts: 'ar' or 'he' when most of its letters are Arabic or Hebrew, 'en' when most are Latin, else null
+// (counted only, never returned)
+const AR_LETTERS = /[؀-ۿݐ-ݿﭐ-﻿]/g, HE_LETTERS = /[֐-׿יִ-ﭏ]/g, LAT_LETTERS = /[A-Za-z]/g;
+const langOfTexts = (list, latin) => { const l = list.join(' '), ar = (l.match(AR_LETTERS) || []).length, he = (l.match(HE_LETTERS) || []).length, lat = (l.match(LAT_LETTERS) || []).length;
+  return ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : latin && lat > ar + he ? 'en' : null; };
+const litOfS = (p) => { const v = litOf(p); return v == null ? null : String(v).replace(/^'|'$/g, '').replace(/''/g, "'"); };
+const plainOf = (list) => arr(list).filter((e) => plainObj(e) && !e.selector && plainObj(e.properties)).reduce((a, e) => Object.assign(a, e.properties), {});
+const linkTo = (x) => { const l = plainOf((((x.json || {}).visual || {}).visualContainerObjects || {}).visualLink); return litOfS(l.type) === 'PageNavigation' ? litOfS(l.navigationSection) : null; };
+const buttonText = (x) => { const es = arr((((x.json || {}).visual || {}).objects || {}).text).filter((e) => plainObj(e) && plainObj(e.properties));
+  const d = es.find((e) => plainObj(e.selector) && e.selector.id === 'default') || es.find((e) => !e.selector); return d ? litOfS(d.properties.text) || '' : ''; };
+const titleOf = (x) => { const t = plainOf((((x.json || {}).visual || {}).visualContainerObjects || {}).title); return typeof litOf(t.text) === 'string' ? litOfS(t.text) : null; };
+/** Each page's language, told in this order: (1) a pair of page buttons going to each other's page (the language
+ *  buttons of an EN-AR copy): the page whose button reads in Arabic (or Hebrew) letters is the Latin one, its counterpart
+ *  the right-to-left one; (2) a page reached only from pages of one language (a tooltip or drillthrough page, a page
+ *  button) takes it; (3) the page's own texts: its name and text boxes, and its visuals' titles, when they agree; (2) again; (4) else
+ *  the report's language. inv: the reading layer's inventory; R: rulesInput's; fallback: the report's language.
+ *  Returns { pages: { id: lang }, by: { buttons, links, texts, report } } (counts). The texts are counted, never returned. */
+export function pageLanguages(inv, R, fallback) {
+  const lang = {}, how = {}, set = (id, l, by) => { if (lang[id] == null && l) { lang[id] = l; how[id] = by; } };
+  const ids = new Set(R.pages.map((p) => String(p.id)));
+  // (1) the language buttons: reciprocal page buttons whose texts are in different scripts
+  const btns = R.visuals.filter((x) => x.type === 'actionButton' && x.page).map((x) => ({ from: String(x.page.id), to: linkTo(x), text: buttonText(x) })).filter((b) => b.to && ids.has(b.to) && b.to !== b.from);
+  const votes = {}, vote = (id, l) => { (votes[id] = votes[id] || new Set()).add(l); };
+  btns.forEach((b) => { const back = btns.find((c) => c.from === b.to && c.to === b.from); if (!back) return;
+    const mine = langOfTexts([b.text], true), theirs = langOfTexts([back.text], true);
+    if (!mine || !theirs || (mine === 'en') === (theirs === 'en')) return;
+    // the button names the other page's language
+    vote(b.from, mine === 'en' ? theirs : 'en'); vote(b.to, mine); });
+  Object.entries(votes).forEach(([id, v]) => { if (v.size === 1) set(id, [...v][0], 'buttons'); });
+  // (2) the pages that link to a page (tooltip, drillthrough, page buttons): all of one known language
+  const sources = {};
+  R.visuals.forEach((x) => { if (!x.page) return; const vco = ((x.json || {}).visual || {}).visualContainerObjects || {};
+    [linkTo(x), litOfS(plainOf(vco.visualTooltip).section), litOfS(plainOf(vco.visualLink).drillthroughSection)].forEach((to) => { if (to && ids.has(to) && to !== String(x.page.id)) (sources[to] = sources[to] || new Set()).add(String(x.page.id)); }); });
+  const byLinks = () => Object.entries(sources).forEach(([id, from]) => { if (lang[id] != null) return; const ls = new Set([...from].map((f) => lang[f]));
+    if (ls.size === 1 && !ls.has(undefined)) set(id, [...ls][0], 'links'); });
+  byLinks();
+  // (3) the page's own texts
+  inv.pages.forEach((pg) => { const id = String(pg.id); if (lang[id] != null) return;
+    const own = [pg.rawName].concat(pg.visuals.map((x) => x.rawText).filter((t) => typeof t === 'string'));
+    const page = R.pages.find((p) => String(p.id) === id), titles = page ? page.visuals.map(titleOf).filter(Boolean) : [];
+    // (its name and text boxes, and its titles, each on its own: when they disagree, as an English page name over Arabic
+    // titles, the report's language stands)
+    const a = langOfTexts(own, true), b = langOfTexts(titles, true);
+    set(id, a && b && a !== b ? null : a || b, 'texts'); });
+  byLinks();
+  // (4) the report's language
+  R.pages.forEach((p) => set(String(p.id), fallback, 'report'));
+  const by = {}; Object.values(how).forEach((k) => { by[k] = (by[k] || 0) + 1; });
+  return { pages: lang, by };
+}
+// what the answer says of it: the counts, how they were told, and each page's (60 at most; the ids as safeName writes them)
+const pageLanguagesOut = (P) => { const e = Object.entries(P.pages), counts = {}; e.forEach(([, l]) => { counts[l] = (counts[l] || 0) + 1; });
+  return Object.assign({ counts, by: P.by, pages: Object.fromEntries(e.slice(0, 60).map(([id, l]) => [safeName(id), l])) }, e.length > 60 ? { more: e.length - 60 } : {},
+    { note: 'Each page judged by its own language: the right-to-left rules ran on the Arabic (or Hebrew) pages, the left-to-right reading order on the others. "by" says how the pages were told: buttons (the language buttons going to each other), links (the pages that reach it), texts (its own), report (the report\'s).' }); };
 // ---- the tool ----
 // p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60) }
 export async function checkReport(p, opts) {
@@ -213,11 +270,15 @@ export async function checkReport(p, opts) {
     const v = t && t.properties.text.expr && t.properties.text.expr.Literal && t.properties.text.expr.Literal.Value; if (typeof v === 'string') titles.push(v); });
   // each source on its own: the text boxes and page names, then the titles (a right-to-left report's titles can hold the
   // model's English field names; its page names can be English while its titles are Arabic)
-  const langOf = (list) => { const l = list.join(' '), ar = (l.match(/[؀-ۿݐ-ݿﭐ-﻿]/g) || []).length, he = (l.match(/[\u0590-\u05FF\uFB1D-\uFB4F]/g) || []).length, lat = (l.match(/[A-Za-z]/g) || []).length;
-    return ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : null; };
+  const langOf = (list) => langOfTexts(list, false);
   const lang = o.lang && o.lang !== 'auto' ? o.lang : langOf(texts) || langOf(titles) || 'en';
   texts.push(...titles);
   const dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr';
+  // (0.3.1 S1) each page by its own language, unless the caller gave one for the whole report: when the pages differ, the
+  // rules that key on the direction judge each page in its own (R.pageDir)
+  const PLg = o.lang && o.lang !== 'auto' ? null : pageLanguages(inv, R, lang);
+  const isRtl = (l) => l === 'ar' || l === 'he';
+  const mixed = PLg && new Set(Object.values(PLg.pages).map(isRtl)).size > 1;
   // 1. Microsoft's validator, offline (its schema download skipped: the bundled schemas below do that part)
   const validator = { ran: false, mode: 'not run', errors: 0, warnings: 0, version: VALIDATOR_VERSION };
   // (A4-4, audit 4: the validator reads the report's folder itself and would follow a link out of it; with a link inside
@@ -251,6 +312,7 @@ export async function checkReport(p, opts) {
   Rules.normalize(R);
   const groups = Rules.GROUPS.filter((g) => checks.includes(g));
   R.lang = lang; R.dir = dir;
+  if (mixed) R.pageDir = Object.fromEntries(Object.entries(PLg.pages).map(([id, l]) => [id, isRtl(l) ? 'rtl' : 'ltr']));
   const ruled = groups.length ? Rules.check(R, { groups }) : { findings: [], ran: [] };
   ruled.findings.forEach(add);
   // (A4-2: a rule that could not read this report is named; the others ran)
@@ -318,8 +380,9 @@ export async function checkReport(p, opts) {
           : 'The field parameter tables the visuals switch by are in the model.' };
     } }
   // what the tool could not judge
-  if (dir === 'rtl') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
+  if (dir === 'rtl' || mixed) notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
+  if (mixed) { const n = Object.values(R.pageDir).filter((d) => d === 'rtl').length; notChecked.push({ rule: 'RTL_MIRROR', why: `the report holds both directions: the right-to-left rules ran on its ${n} right-to-left page${n === 1 ? '' : 's'} only, and the tab order of each page was judged in its own reading direction (pass lang "ar" or "en" to judge every page in one)` }); }
   if (checks.includes('a11y')) notChecked.push({ rule: 'A11Y (accessibility)', why: 'not judged: colours set by value (a gradient or rules), data drawn over a page picture, the 4.5:1 contrast of text, and what alt text says (only whether it is there); a page without any tabOrder keeps Power BI\'s own order' });
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
@@ -362,7 +425,7 @@ export async function checkReport(p, opts) {
   }
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: 'unknown' },
-    lang, validator, schemas, rulesRun: ruled.ran,
+    lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
     impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
