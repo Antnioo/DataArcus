@@ -218,7 +218,7 @@
               <label><input type="checkbox" id="cgObserved"><span><span data-i18n="cg.col.observed">تواريخ رمضان والعيد المعلنة (الإمارات)</span><small data-i18n-html="cg.col.observedNote">تنقل بداية رمضان وشوال وذي الحجة إلى التواريخ التي أعلنتها الإمارات منذ 2018، أيًّا كانت العطلة التي تختارها. وطابقتها تواريخ السعودية، وأعلنت عُمان 11 منها بعد يوم (2019-2026)، وقد تختلف قطر والكويت والبحرين بيوم. التواريخ التي لم تُعلن بعد تبقى على تقويم أم القرى، ويُشار إليها في عمود <bdi>Is Estimated Date</bdi> بأنها تقديرية.</small></span></label>
               <label><input type="checkbox" id="cgFiscal"><span><span data-i18n="cg.col.fiscal">السنة والربع والشهر المالي</span><small data-i18n="cg.col.fiscalNote">تسميات مثل FY2026 و FQ1 حسب شهر بداية سنتك المالية.</small></span></label>
               <label><input type="checkbox" id="cgArabic"><span><span data-i18n="cg.col.arabic">إضافة أعمدة الأسماء العربية</span><small data-i18n="cg.col.arabicNote">أعمدة Day Name (Arabic) وMonth Name (Arabic) وHijri Month Name (Arabic) بجانب الأسماء الإنجليزية، لصفحات التقارير العربية. رتّب كلًا منها حسب Day of Week أو Month Number أو Hijri Month Number.</small></span></label>
-              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">الإزاحات النسبية</span><small data-i18n="cg.col.relNote">إزاحة اليوم والشهر والسنة عن اليوم الحالي، لفلاتر مثل "آخر 3 أشهر" التي لا تحتاج أي تحديث.</small></span></label>
+              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">الإزاحات النسبية</span><small data-i18n="cg.col.relNote">إزاحة اليوم والشهر والسنة عن يوم آخر تحديث، لفلاتر مثل "آخر 3 أشهر" تتقدم مع كل تحديث.</small></span></label>
             </div>
             <div class="cg-err" id="err" role="alert"></div>
           </div>
@@ -266,7 +266,7 @@
             <h3 data-i18n="cg.faq.q4">كيف أقارن رمضان هذا العام برمضان الماضي؟</h3>
             <p data-i18n-html="cg.faq.a4">ضع <strong>Ramadan Day</strong> على المحور و<strong>Hijri Year</strong> في وسيلة الإيضاح. سيتطابق كل رمضان يومًا بيوم، رغم أن التاريخ الميلادي يتقدم نحو 11 يومًا كل عام.</p>
             <h3 data-i18n="cg.faq.q5">لماذا الإزاحات النسبية؟</h3>
-            <p data-i18n-html="cg.faq.a5">صفِّ على <strong>Month Offset</strong> بين 2- و 0 لعرض آخر ثلاثة أشهر دائمًا. يتحدث تلقائيًا كل يوم، فلا يحتاج أحد لتغيير الفلتر مرة أخرى.</p>
+            <p data-i18n-html="cg.faq.a5">صفِّ على <strong>Month Offset</strong> بين 2- و 0 لعرض آخر ثلاثة أشهر. تُحسب الإزاحات عند حساب الجدول، فتتقدم مع كل تحديث للنموذج (أو عند فتح الملف من جديد)، لا عند منتصف الليل: حدّث النموذج كل يوم ويبقى الفلتر على آخر ثلاثة أشهر.</p>
           </section>
         </div>
       </div>

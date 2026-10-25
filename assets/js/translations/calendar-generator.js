@@ -61,7 +61,7 @@ window.calendarGeneratorTranslations = {
         "fiscal": "Fiscal year, quarter and month",
         "fiscalNote": "Labels like FY2026 and FQ1, based on your fiscal start month.",
         "rel": "Relative offsets",
-        "relNote": "Day, month and year offsets from today, for \"last 3 months\" slicers that never need updating.",
+        "relNote": "Day, month and year offsets from the day of the last refresh, for \"last 3 months\" slicers that move on with each refresh.",
         "arabic": "Add Arabic name columns",
         "arabicNote": "Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, for Arabic report pages. Sort each by Day of Week, Month Number or Hijri Month Number."
       },
@@ -88,7 +88,7 @@ window.calendarGeneratorTranslations = {
         "q4": "How do I compare this Ramadan with last Ramadan?",
         "a4": "Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.",
         "q5": "Why relative offsets?",
-        "a5": "Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again."
+        "a5": "Filter on <strong>Month Offset</strong> between -2 and 0 to show the last three months. The offsets are worked out when the table is calculated, so they move on with each refresh of the model (or when the file is opened again), not at midnight: refresh it every day and the filter keeps showing the last three months."
       }
     },
     "meta": {
@@ -156,7 +156,7 @@ window.calendarGeneratorTranslations = {
         "fiscal": "السنة والربع والشهر المالي",
         "fiscalNote": "تسميات مثل FY2026 و FQ1 حسب شهر بداية سنتك المالية.",
         "rel": "الإزاحات النسبية",
-        "relNote": "إزاحة اليوم والشهر والسنة عن اليوم الحالي، لفلاتر مثل \"آخر 3 أشهر\" التي لا تحتاج أي تحديث.",
+        "relNote": "إزاحة اليوم والشهر والسنة عن يوم آخر تحديث، لفلاتر مثل \"آخر 3 أشهر\" تتقدم مع كل تحديث.",
         "arabic": "إضافة أعمدة الأسماء العربية",
         "arabicNote": "أعمدة Day Name (Arabic) وMonth Name (Arabic) وHijri Month Name (Arabic) بجانب الأسماء الإنجليزية، لصفحات التقارير العربية. رتّب كلًا منها حسب Day of Week أو Month Number أو Hijri Month Number."
       },
@@ -183,7 +183,7 @@ window.calendarGeneratorTranslations = {
         "q4": "كيف أقارن رمضان هذا العام برمضان الماضي؟",
         "a4": "ضع <strong>Ramadan Day</strong> على المحور و<strong>Hijri Year</strong> في وسيلة الإيضاح. سيتطابق كل رمضان يومًا بيوم، رغم أن التاريخ الميلادي يتقدم نحو 11 يومًا كل عام.",
         "q5": "لماذا الإزاحات النسبية؟",
-        "a5": "صفِّ على <strong>Month Offset</strong> بين 2- و 0 لعرض آخر ثلاثة أشهر دائمًا. يتحدث تلقائيًا كل يوم، فلا يحتاج أحد لتغيير الفلتر مرة أخرى."
+        "a5": "صفِّ على <strong>Month Offset</strong> بين 2- و 0 لعرض آخر ثلاثة أشهر. تُحسب الإزاحات عند حساب الجدول، فتتقدم مع كل تحديث للنموذج (أو عند فتح الملف من جديد)، لا عند منتصف الليل: حدّث النموذج كل يوم ويبقى الفلتر على آخر ثلاثة أشهر."
       }
     },
     "meta": {

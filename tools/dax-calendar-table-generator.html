@@ -218,7 +218,7 @@
               <label><input type="checkbox" id="cgObserved"><span><span data-i18n="cg.col.observed">Announced Ramadan and Eid dates (UAE)</span><small data-i18n-html="cg.col.observedNote">Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018, whichever weekend you pick. Saudi Arabia's matched them; Oman announced 11 of them a day later (2019-2026), and Qatar, Kuwait and Bahrain may differ by a day. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.</small></span></label>
               <label><input type="checkbox" id="cgFiscal"><span><span data-i18n="cg.col.fiscal">Fiscal year, quarter and month</span><small data-i18n="cg.col.fiscalNote">Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
               <label><input type="checkbox" id="cgArabic"><span><span data-i18n="cg.col.arabic">Add Arabic name columns</span><small data-i18n="cg.col.arabicNote">Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, for Arabic report pages. Sort each by Day of Week, Month Number or Hijri Month Number.</small></span></label>
-              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">Relative offsets</span><small data-i18n="cg.col.relNote">Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
+              <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">Relative offsets</span><small data-i18n="cg.col.relNote">Day, month and year offsets from the day of the last refresh, for "last 3 months" slicers that move on with each refresh.</small></span></label>
             </div>
             <div class="cg-err" id="err" role="alert"></div>
           </div>
@@ -266,7 +266,7 @@
             <h3 data-i18n="cg.faq.q4">How do I compare this Ramadan with last Ramadan?</h3>
             <p data-i18n-html="cg.faq.a4">Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
             <h3 data-i18n="cg.faq.q5">Why relative offsets?</h3>
-            <p data-i18n-html="cg.faq.a5">Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again.</p>
+            <p data-i18n-html="cg.faq.a5">Filter on <strong>Month Offset</strong> between -2 and 0 to show the last three months. The offsets are worked out when the table is calculated, so they move on with each refresh of the model (or when the file is opened again), not at midnight: refresh it every day and the filter keeps showing the last three months.</p>
           </section>
         </div>
       </div>
