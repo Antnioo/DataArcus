@@ -32,7 +32,6 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DUMP = !!process.env.A3_DUMP;
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
-const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const uniq = (a) => [...new Set(a)];
 const short = (x) => (x && x.err ? String(x.t).slice(0, 400) : JSON.stringify(x && x.j).slice(0, 400));
 const AR_DIGITS = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
@@ -81,7 +80,6 @@ function classify(fx, mode, texts, kept, cats) {
 const structureRows = [];
 function structure(fx, mode, F, pages) {
   const order = ((F['definition/pages/pages.json'] || {}).pageOrder || []).filter((p) => !pages || pages.has(p));
-  const shownPages = order.filter((p) => ((F[`definition/pages/${p}/page.json`] || {}).visibility) !== 'HiddenInViewMode' || pages);
   const vis = (pg) => Object.entries(F).filter(([f]) => f.startsWith(`definition/pages/${pg}/visuals/`) && f.endsWith('/visual.json')).map(([, j]) => j);
   const L = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '') : null);
   const row = { fx: fx.id, mode, navPages: 0, navBad: [], kpiPages: 0, kpiBad: [], pills: 0, pillsBad: [], fields: 0, fieldsBad: [], isolated: 0, isoBad: [], rawMixed: [] };

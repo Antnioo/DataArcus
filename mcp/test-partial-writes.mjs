@@ -18,7 +18,6 @@ const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } ca
 const short = (x) => (x.err ? x.t.slice(0, 500) : JSON.stringify(x.j).slice(0, 500));
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-b153-')));
 process.env.DATAARCUS_ROOT = ROOT;   // (before the modules are loaded: the working folder of the in-process checks)
-const rel = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 // every file and folder under d (relative, '/'), folders with a trailing '/'
 const tree = (d) => { const out = []; const walk = (x) => { if (!fs.existsSync(x)) return; for (const e of fs.readdirSync(x, { withFileTypes: true })) { const f = path.join(x, e.name), r = path.relative(d, f).split(path.sep).join('/'); if (e.isDirectory()) { out.push(r + '/'); walk(f); } else out.push(r); } }; walk(d); return out.sort(); };
 const threw = (fn) => { try { fn(); return null; } catch (e) { return e; } };

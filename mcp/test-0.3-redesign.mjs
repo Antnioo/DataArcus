@@ -106,7 +106,6 @@ try {
   fs.rmSync(ROOT, { recursive: true, force: true });
 }
 async function rest(pl, R, pages) {
-  const pageBy = (id) => pages.find((p) => p.id === id) || { changes: [], notChanged: [] };
   // ---------- C2: the approval page ----------
   { const pw = await call(w, 'plan_layout', { path: MODEL, redesignFrom: FROM }), n = links().length; await call(w, 'approve_plan', { planId: pw.j.plan.planId }); const page = await get(await linkAt(n));
     // (0.3.0 T1, T-7, changed on purpose: a move is said in words now, "moves 2 up, 2 wider", not "moves from x, y, w x h to ...")

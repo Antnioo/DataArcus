@@ -73,6 +73,7 @@ try {
 
   // ---------- F-02: the plot shrinks by the title's lines ----------
   const one = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === li ? Object.assign({}, v, { title: 'Net by Month' }) : v)) });
+  // eslint-disable-next-line no-unused-vars -- Q1 test gap T-3 (mcp/work/Q1.md): top1 is never compared; the reviewer decides
   const lg1 = groupOf(P.render(one), li), top2 = phTop(lg), top1 = phTop(lg1);
   chk(() => top2 != null && top2 > ll[1].y, () => `F-02. the plot starts below the title's 2nd line: plot ${top2}, 2nd line ${ll[1] && ll[1].y}`);
   // (measured on the 508 bar chart: its first bar sits at a fixed share of the plot, a line's highest point moves with it)

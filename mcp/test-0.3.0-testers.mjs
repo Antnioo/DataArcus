@@ -51,7 +51,6 @@ const pageOf = async (planId, approve) => {
   if (approve && url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId }); }
   return html;
 };
-const FILES = 'Files that will be written';
 // the files part of a page, and what stands before its fold
 const filesPart = (html) => between(html, `id="files"`, "</div>");
 const beforeFold = (html) => { const f = filesPart(html), i = f.indexOf('<details'); return i < 0 ? f : f.slice(0, i); };

@@ -15,7 +15,6 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { withPlans } from '../test-plan.mjs';
 import { validatorCounts } from '../test-validator.mjs';

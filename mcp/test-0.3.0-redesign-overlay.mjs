@@ -67,9 +67,9 @@ const ND_COL = () => card('ndCol', pos(40, 250, 600, 430, 9500));            // 
 const ND_LINE = (extra) => card('ndLine', pos(660, 250, 580, 430, 12000), extra);   // above its chart, the same box
 const TTL_LINE = () => textbox('ttlLine', pos(676, 258, 240, 36, 13000));    // a title box inside the chart, above it
 const ov = project('ov', [ND_COL(), ND_LINE(), TTL_LINE()]);
-const neg = project('neg', [card('cardBeside', pos(660, 20, 200, 50, 500)), column2('chartIn', pos(100, 300, 200, 200, 9000)), shape('bgShape', pos(30, 240, 1220, 450, 100))]);
-const hid = project('hid', [ND_COL(), ND_LINE({ isHidden: true })]);
-const tbl = project('tbl', [Object.assign(textbox('panelTbl', pos(60, 120, 900, 940, 1500)), { page: 'p2details' })]);
+project('neg', [card('cardBeside', pos(660, 20, 200, 50, 500)), column2('chartIn', pos(100, 300, 200, 200, 9000)), shape('bgShape', pos(30, 240, 1220, 450, 100))]);
+project('hid', [ND_COL(), ND_LINE({ isHidden: true })]);
+project('tbl', [Object.assign(textbox('panelTbl', pos(60, 120, 900, 940, 1500)), { page: 'p2details' })]);
 const ORIG = path.join(ov, 'Twin Sales.Report'), OUT = path.join(ov, 'Twin Sales redesigned.Report');
 const MODEL = (n) => `${n}/Twin Sales.SemanticModel`, FROM = (n) => `${n}/Twin Sales.pbip`;
 

@@ -165,7 +165,7 @@ export async function v029visuals({ check }) {
   chk(() => Object.values(FAMILY_HINTS).length > 0 && Object.values(FAMILY_HINTS).length <= 20, () => 'the family hints are a small table (at most 20 entries)');
   // ---------- the reviewer's addition (audit 5 A5-6, A5-14; audit 6 A6-13): one catalog, and nativeFor by capabilities ----------
   const VT = req('../assets/js/visual-types.js'), Mirror = req('../assets/js/report-mirror.js');
-  const { listVisualTypes, getCapabilities } = await import('@microsoft/powerbi-core-visual-schema');
+  const { listVisualTypes } = await import('@microsoft/powerbi-core-visual-schema');
   const catalog = listVisualTypes();
   chk(() => JSON.stringify(VT.NATIVE_TYPES.slice().sort()) === JSON.stringify(catalog.slice().sort()), () => `A5-6: visual-types.js's list is Microsoft's catalog (${VT.CATALOG}), type for type: missing ${catalog.filter((t) => !VT.NATIVE_TYPES.includes(t))}, extra ${VT.NATIVE_TYPES.filter((t) => !catalog.includes(t))}`);
   const MADE_UP = ['drilldownpie', 'ChicletSlicer1448559807354', 'acmeRingChart' + HEX, 'vendorChartA' + HEX, 'PBI_CV_0A1B2C3D_4E5F_6789_ABCD_EF0123456789', 'myVisual'];

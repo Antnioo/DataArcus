@@ -22,7 +22,6 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args, c = call) => { try { return await c(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
-  const get = (fn) => { try { return fn(); } catch (e) { return undefined; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   const model = (dir, tables, relationships) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: relationships || [] } })); };
   const ms = (name, expression, formatString) => Object.assign({ name, expression }, formatString ? { formatString } : {});
@@ -140,6 +139,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const x = await ask('create_report', { path: 'i-ship', name: 'I overlap', fields: { kpis: ['Shipments[Shipments]'], measure: 'Shipments[Shipments]', category: 'Shipments[Carrier]', category2: 'Shipments[Carrier]' }, noDataMessage: false, subtitles: {},
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'bar', title: 'Planted Secret Title', x: 24, y: 80, w: 600, h: 400 }, { kind: 'column', title: 'Another Planted Title', x: 200, y: 150, w: 600, h: 400 }] }] });
     const c = x.err ? x : await ask('check_report', { path: path.join(path.dirname(x.j.open), x.j.report), checks: ['lint'] });
+    // eslint-disable-next-line no-unused-vars -- Q1 test gap T-4 (mcp/work/Q1.md): the whole answer (txt) is never screened; the reviewer decides
     const lint = c.j && c.j.lint, txt = JSON.stringify(c.j || {});
     chk(() => lint && (lint.findings || []).length && !/Shipments by Carrier|Planted|"[^"]*\bby\b[^"]*" at/.test(JSON.stringify(lint.findings)) && /at \d+,\d+ \d+x\d+/.test(JSON.stringify(lint.findings)),
       () => `R5: the lint must name visuals by type and position only: ${JSON.stringify(lint && lint.findings).slice(0, 400)} ${short(c)}`);
