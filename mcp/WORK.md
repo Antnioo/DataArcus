@@ -4,6 +4,17 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 5: D5 release prep, the docs (25 Oct, builder; branch `docs/0.3.1-sweep` from integration/0.3.1 e8ccecc)
+Every public text says what 0.3.1 does and nothing it doesn't: mcp/README.md, PRIVACY.md (checked against 0.3.1),
+PRODUCT_SPEC.md, llms.txt, the MCP page EN/AR (0.3.1 tool lines; "What's new in 0.3.1" hidden behind one flag), the
+CHANGELOG's `[Unreleased]: 0.3.1` reordered and merged. Plan, results, the release-notes draft, "For the reviewer"
+(what to flip at the release), decisions, "Seen, not in scope": `mcp/work/D5.md` (top section).
+- Done: cffc8e6 plan, e3896e8 red (claims 15 of 194, whats-new 13 of 149), 4b7ca19 docs, 47cbd24 (Slicer) once.
+  After: claims 194/194, whats-new 167/167, release-text 36, changelog-words 60 lines, website 20/20, full npm test
+  exit 0 (71 lines PASS); test-arabic-terms 2 of 65 fail until E2 (the owner's terms) merges: D5.md "For the reviewer" 6.
+- Next: the reviewer reviews and merges; at the release, D5.md "For the reviewer" 1-4 (CHANGELOG heading, the page's
+  flag and download, README download lines, the engine's release notes); L6 stays out unless merged (item 5).
+
 ## 0.3.1, wave 4: L6 the DAX function library, ported onto today's code (25 Oct, builder; branch `feat/0.3.1-dax-functions-2` from integration/0.3.1 e8ccecc)
 Draft #82 (`origin/feat/0.3.1-dax-functions`, pre-0.3.0 history) ported, not merged: `daxFunctions` (off by default) on
 plan_layout and create_report writes DA.Sparkline, DA.BulletBar, DA.KpiCard, DA.StoryTitle and the measures that call them

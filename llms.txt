@@ -26,7 +26,7 @@
 - [All articles](https://dataarcus.com/blog.html)
 
 ## Services
-- [DataArcus for Power BI (public beta): an AI agent in Claude Desktop that writes a new Power BI report next to your model](https://dataarcus.com/power-bi-mcp/)
+- [DataArcus for Power BI (public beta): an AI agent in Claude Desktop that writes a new Power BI report next to your model, in English, Arabic, or both in one report, and checks whether a report is ready for Arabic](https://dataarcus.com/power-bi-mcp/)
 - [Copilot readiness audit](https://dataarcus.com/services/copilot-readiness-audit.html)
 
 ## Contact
