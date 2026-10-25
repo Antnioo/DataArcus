@@ -1,0 +1,59 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "ovCard1",
+  "position": {
+    "x": 24,
+    "y": 110,
+    "z": 5000,
+    "height": 100,
+    "width": 296,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Open Orders"
+                }
+              },
+              "queryRef": "Work Orders.Open Orders",
+              "nativeQueryRef": "Open Orders"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Open Orders'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

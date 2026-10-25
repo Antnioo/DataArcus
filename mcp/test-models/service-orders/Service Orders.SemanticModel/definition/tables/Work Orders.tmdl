@@ -1,0 +1,86 @@
+/// Made up for DataArcus's tests (0.3.1 R1): facility maintenance work orders, 600 rows built by DAX. No real data.
+table 'Work Orders'
+
+	measure 'Open Orders' = CALCULATE ( COUNTROWS ( 'Work Orders' ), 'Work Orders'[Status] <> "Done Not Billed" )
+		formatString: #,0
+
+	measure 'Avg days open' = AVERAGE ( 'Work Orders'[Days Open] )
+		formatString: #,0.0
+
+	measure 'Total Labour' = SUM ( 'Work Orders'[Labour] )
+		formatString: #,0
+
+	measure 'Total Materials' = SUM ( 'Work Orders'[Materials] )
+		formatString: #,0
+
+	measure 'Total Cost' = [Total Labour] + [Total Materials]
+		formatString: #,0
+
+	measure 'Avg Cost' = AVERAGEX ( 'Work Orders', 'Work Orders'[Labour] + 'Work Orders'[Materials] )
+		formatString: #,0
+
+	measure 'Average Cost' = AVERAGEX ( 'Work Orders', 'Work Orders'[Labour] + 'Work Orders'[Materials] )
+		formatString: #,0
+
+	column 'Order Id'
+		isNameInferred
+		sourceColumn: [Order Id]
+
+	column Created
+		isNameInferred
+		sourceColumn: [Created]
+
+	column Department
+		isNameInferred
+		sourceColumn: [Department]
+
+	column Technician
+		isNameInferred
+		sourceColumn: [Technician]
+
+	column Status
+		isNameInferred
+		sourceColumn: [Status]
+
+	column Labour
+		isNameInferred
+		sourceColumn: [Labour]
+		summarizeBy: sum
+
+	column Materials
+		isNameInferred
+		sourceColumn: [Materials]
+		summarizeBy: sum
+
+	column 'Days Open'
+		isNameInferred
+		sourceColumn: [Days Open]
+		summarizeBy: sum
+
+	column 'Age Bucket'
+		isNameInferred
+		sourceColumn: [Age Bucket]
+
+	partition 'Work Orders' = calculated
+		mode: import
+		source = ```
+				VAR AsOf = DATE ( 2026, 10, 25 )
+				VAR Base =
+				    SELECTCOLUMNS (
+				        GENERATESERIES ( 1, 600, 1 ),
+				        "Order Id", 40000 + [Value],
+				        "Created", DATE ( 2025, 6, 1 ) + MOD ( [Value] * 37, 517 ),
+				        "Department", SWITCH ( MOD ( [Value], 3 ), 0, "HVAC", 1, "Electrical", "Plumbing" ),
+				        "Technician", SWITCH ( MOD ( [Value] * 7, 10 ), 0, "Unassigned", 1, "Omar Haddad", 2, "Lena Fischer", 3, "Ravi Menon", 4, "Sara Lindqvist", 5, "Christopher Northwoo", 6, "Ana Ruiz", 7, "Anastasia Kowalczyks", 8, "Yusuf Demir", "Mei Tanaka" ),
+				        "Status", SWITCH ( MOD ( [Value] * 3, 8 ), 0, "Logged", 1, "Assigned", 2, "In Progress", 3, "Awaiting Approval", 4, "Awaiting Materials", 5, "Awaiting Labour", 6, "Done Not Billed", "On Hold" ),
+				        "Labour", 50 + MOD ( [Value] * 13, 400 ),
+				        "Materials", MOD ( [Value] * 29, 900 )
+				    )
+				RETURN
+				    ADDCOLUMNS (
+				        Base,
+				        "Days Open", INT ( AsOf - [Created] ),
+				        "Age Bucket", VAR d = INT ( AsOf - [Created] ) RETURN IF ( d <= 30, "0-30 days", IF ( d <= 90, "31-90 days", IF ( d <= 180, "91-180 days", "Over 180 days" ) ) )
+				    )
+				```
+

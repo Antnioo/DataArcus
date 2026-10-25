@@ -1,0 +1,237 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "dtTable",
+  "position": {
+    "x": 440,
+    "y": 110,
+    "z": 8000,
+    "height": 594,
+    "width": 816,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Order Id"
+                }
+              },
+              "queryRef": "Work Orders.Order Id",
+              "nativeQueryRef": "Order Id"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Department"
+                }
+              },
+              "queryRef": "Work Orders.Department",
+              "nativeQueryRef": "Department"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Technician"
+                }
+              },
+              "queryRef": "Work Orders.Technician",
+              "nativeQueryRef": "Technician"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Work Orders.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Created"
+                }
+              },
+              "queryRef": "Work Orders.Created",
+              "nativeQueryRef": "Created"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Avg days open"
+                }
+              },
+              "queryRef": "Work Orders.Avg days open",
+              "nativeQueryRef": "Avg days open"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Total Labour"
+                }
+              },
+              "queryRef": "Work Orders.Total Labour",
+              "nativeQueryRef": "Total Labour"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Total Materials"
+                }
+              },
+              "queryRef": "Work Orders.Total Materials",
+              "nativeQueryRef": "Total Materials"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Avg Cost"
+                }
+              },
+              "queryRef": "Work Orders.Avg Cost",
+              "nativeQueryRef": "Avg Cost"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Work Orders"
+                  }
+                },
+                "Property": "Created"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Open work orders'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

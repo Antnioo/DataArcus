@@ -1,0 +1,95 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "ovBarTech",
+  "position": {
+    "x": 24,
+    "y": 226,
+    "z": 9000,
+    "height": 230,
+    "width": 400,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Technician"
+                }
+              },
+              "queryRef": "Work Orders.Technician",
+              "nativeQueryRef": "Technician"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Work Orders"
+                    }
+                  },
+                  "Property": "Open Orders"
+                }
+              },
+              "queryRef": "Work Orders.Open Orders",
+              "nativeQueryRef": "Open Orders"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Work Orders"
+                  }
+                },
+                "Property": "Open Orders"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Open orders by technician'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

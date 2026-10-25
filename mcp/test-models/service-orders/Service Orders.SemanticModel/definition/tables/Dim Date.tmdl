@@ -1,0 +1,35 @@
+/// Made up: a calendar over the 17 months of the work orders (a calculated table, as Power BI users often make one).
+table 'Dim Date'
+	dataCategory: Time
+
+	column Date
+		isNameInferred
+		sourceColumn: [Date]
+		isKey
+
+	column Year
+		isNameInferred
+		sourceColumn: [Year]
+		summarizeBy: none
+
+	column 'Month Key'
+		isNameInferred
+		sourceColumn: [Month Key]
+		summarizeBy: none
+
+	column Month
+		isNameInferred
+		sourceColumn: [Month]
+		sortByColumn: 'Month Key'
+
+	partition 'Dim Date' = calculated
+		mode: import
+		source = ```
+				ADDCOLUMNS (
+				    CALENDAR ( DATE ( 2025, 6, 1 ), DATE ( 2026, 10, 31 ) ),
+				    "Year", YEAR ( [Date] ),
+				    "Month Key", YEAR ( [Date] ) * 100 + MONTH ( [Date] ),
+				    "Month", FORMAT ( [Date], "MMM yyyy" )
+				)
+				```
+
