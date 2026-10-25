@@ -12,4 +12,4 @@ export { monthOffer } from './twin-model.mjs';
 export { COPY_TAG } from './twin-copy.mjs';
 export { MATRIX_SAID, twinKey, planTwin } from './twin-plan.mjs';
 export { twinPreview } from './twin-preview.mjs';
-export { twinOutputs, writeTwin } from './twin-write.mjs';
+export { twinOutputs, twinTree, writeTwin } from './twin-write.mjs';

@@ -48,7 +48,7 @@ fs.readFileSync = function (p, ...rest) { if (typeof p === 'string') opened.add(
 const strayRead = () => strayFull.filter((f) => opened.has(keyOf(f))).map(rel);
 
 const { reportPrint, strictFiles } = await import('./lib/read-report.mjs');
-const { planTwin, writeTwin } = await import('./lib/arabic-twin.mjs');
+const { planTwin, writeTwin, twinTree } = await import('./lib/arabic-twin.mjs');
 const { planNative, writeNative } = await import('./lib/native-copy.mjs');
 const { loadModel } = await import('./lib/model.mjs');
 
@@ -77,7 +77,8 @@ const { loadModel } = await import('./lib/model.mjs');
   chk(() => nc.count === 5 && Object.keys(STRAY).every((r) => (nc.files || []).some((f) => f.includes(path.basename(r)))) && /not copied/i.test(nc.note || ''),
     () => `B152-6. the twin's plan names the 5 files it leaves out: ${JSON.stringify(P.answer.notCopied)}`);
   opened.clear();
-  const done = writeTwin({ path: 'twin/Twin Sales.pbip' }, { data: { labels: {}, arabicMonth: false, source: reportPrint('twin/Twin Sales.pbip') } });
+  // (0.3.1 K2: the write writes the exact files a plan kept, here twinTree's of the same plan)
+  const done = writeTwin({ path: 'twin/Twin Sales.pbip' }, { data: { labels: {}, arabicMonth: false, source: reportPrint('twin/Twin Sales.pbip') } }, twinTree(planTwin({ path: 'twin/Twin Sales.pbip', labels: {}, arabicMonth: false, memory: false })));
   const TD = path.join(ROOT, 'twin/Twin Sales AR.Report'), written = tree(TD);
   chk(() => done.written && strayRead().length === 0, () => `B152-7. writing the twin opens no stray file: ${JSON.stringify(strayRead())}`);
   chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)) && !written.some((f) => /\.(csv|xlsx|txt)$/.test(f) || /\/\.pbi\//.test(f)),

@@ -2,6 +2,7 @@
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { nothingAt, visible } from './model.mjs';
 import { safeName, notCopiedOf } from './read-report.mjs';
 import { capAnswer, fitLists, out } from './answer.mjs';
@@ -22,6 +23,23 @@ const Gallery = require('../../assets/js/visual-gallery.js');
 
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
+// (0.3.1 K2, the outside review's point 5: say plainly what stays English or unmirrored) one short line, in English and
+// Arabic, of what applies to THIS report, from what the plan already found (cannot) and whether a visual shows a column
+// of the model (its own values: category names, slicer items, legends); null when nothing applies
+const NOT_FULLY = [
+  ['model', 'texts that come from the model (category names, slicer items, legends: the model\'s own values)', 'النصوص التي تأتي من النموذج (أسماء الفئات، عناصر المقسم، وسائل الإيضاح: قيم النموذج نفسها)'],
+  ['matrices', 'a matrix\'s months across (they stay left to right: only its measures\' order changes)', 'أشهر المصفوفة عبر الأعمدة (تبقى من اليسار إلى اليمين: يتغير ترتيب مقاييسها فقط)'],
+  ['the metric switcher\'s choices', 'the field parameter\'s choices (as the model\'s table names them)', 'خيارات معلمة الحقول (كما يسميها جدول النموذج)'],
+  ['the DAX function library\'s pictures and titles', 'the DAX function library\'s pictures and titles', 'صور مكتبة دوال DAX وعناوينها'],
+  ['flip cards\' faces', 'the flip cards\' faces', 'وجوه البطاقات القابلة للقلب'],
+  ['custom visuals', 'inside custom visuals (moved, not mirrored)', 'ما بداخل المرئيات المخصصة (تُنقل ولا تُعكس)']];
+const showsColumn = (o) => (Array.isArray(o) ? o.some(showsColumn) : isObj(o) && (isObj(o.Column) || isObj(o.HierarchyLevel) || Object.values(o).some(showsColumn)));
+function notFullyArabicOf(cannot, R) {
+  const has = new Set(cannot.map((c) => c.what));
+  const model = R.pages.some((pg) => pg.visuals.some((v) => isObj(v.json) && isObj(v.json.visual) && showsColumn(v.json.visual.query)));
+  const on = NOT_FULLY.filter(([k]) => (k === 'model' ? model : has.has(k)));
+  return on.length ? { en: `Not fully Arabic: ${on.map((x) => x[1]).join('; ')}.`, ar: `ليست عربية بالكامل: ${on.map((x) => x[2]).join('؛ ')}.` } : null;
+}
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
 
 // (0.3.0 Q1) the twin's plan on a large report: 46,660 characters (52,412 into "same") for a two-page report with every
@@ -132,7 +150,9 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
-  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, keepLtr, name: a.inMemory ? loc.base : null }, built, rawLabels(texts, labels)) : null;
+  // (0.3.1 K2) the .platform logical id, chosen once here (the write builds again with the plan's: the approved bytes hold it)
+  const logicalId = typeof a.logicalId === 'string' && a.logicalId ? a.logicalId : crypto.randomUUID();
+  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, keepLtr, name: a.inMemory ? loc.base : null, logicalId }, built, rawLabels(texts, labels)) : null;
   const languages = copy ? { copy: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.' },
     how: 'One report holding both languages: the original\'s English pages as they are, and after them each page\'s Arabic page, mirrored as the twin is (the same Arabic texts, phone layout, waterfalls and empty state). Every page has a small language button to its counterpart; the slicers of each page pair are kept in sync; the Arabic pages\' links (page tabs, tooltip pages, bookmarks) go to Arabic pages.',
     pairs: copy.pairs, buttons: copy.buttons, syncGroups: copy.syncGroups, tabs: copy.tabs, activePage: copy.activePage,
@@ -153,12 +173,13 @@ export function planTwin(a) {
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const FK = ['buttons', 'buttonsCut', 'headers', 'headersCut', 'textboxes', 'textboxesCut'];
   const F = built.fitted, fitted = FK.some((k) => F[k].length) ? { fitted: Object.assign({}, ...FK.filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it), each table column to its Arabic header, within the page and the table, and each text box to its Arabic lines (wider into the free room beside it, then taller into the free room under it; nothing beside it moves). Say each one in the plan, and every buttonsCut, headersCut and textboxesCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
+  const notFullyArabic = notFullyArabicOf(cannot, R);
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, labels, texts, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, logicalId, labels, texts, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    pages, mirrors, cannot, ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     // (0.3.1 R1) the text boxes that drew as the theme's panels
     ...(built.panelsOff ? { textBoxes: { panelsOff: built.panelsOff, how: 'The report\'s theme draws every visual on a panel (a background, a border, a shadow), text boxes too: on the Arabic pages the twin switches the panel off for each text box with text that left it to the theme, so a title or a note reads as text on the page (one that sets its own panel keeps it; an empty text box keeps its panel).',
       ...(same ? { englishPages: 'The English pages are the original\'s: their text boxes still draw as panels. To match, select a text box in Power BI Desktop, Format > General > Effects: switch Background, Visual border and Shadow off.' } : {}), sayInPlan: 'Say it in the plan, and what the English pages keep (englishPages).' } } : {}),

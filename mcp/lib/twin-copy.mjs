@@ -22,7 +22,8 @@ const A11y = require('../../assets/js/report-a11y.js');
 // slicer pair one sync group (visual.syncGroup, the visualConfiguration schema's VisualSyncGroup); the counterpart
 // language's pages are hidden from the tabs (HiddenInViewMode). The original is only read.
 // a report's .platform as create_report writes it (pbip-export.js): its type, its name, a new logical id
-export const newPlatform = (name) => json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json', metadata: { type: 'Report', displayName: name }, config: { version: '2.0', logicalId: crypto.randomUUID() } });
+// (0.3.1 K2) id: the logical id the plan chose, so the approved bytes hold it
+export const newPlatform = (name, id) => json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json', metadata: { type: 'Report', displayName: name }, config: { version: '2.0', logicalId: id || crypto.randomUUID() } });
 export const COPY_TAG = ' (EN-AR)';
 export const LANG = { en: { text: 'العربية', alt: 'Show this page in Arabic', on: 'English' }, ar: { text: 'English', alt: 'اعرض هذه الصفحة بالإنجليزية', on: 'Arabic' } };
 const VC_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
@@ -237,9 +238,9 @@ export function languageCopy(P, built, labels) {
     changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   if (built.ext) changed.set(EXT, json(built.ext));
   // (0.3.1 X2) a report built in English and Arabic keeps its own name (P.name): it is new, not a copy
-  if (R.hasPlatform) { const pl = loc.mem ? jsonAt(loc, '.platform') : mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: P.name || loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); changed.set('.platform', json(pl)); }
+  if (R.hasPlatform) { const pl = loc.mem ? jsonAt(loc, '.platform') : mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: P.name || loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: P.logicalId || crypto.randomUUID() }); changed.set('.platform', json(pl)); }
   // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
-  else changed.set('.platform', newPlatform(P.name || loc.base + COPY_TAG));
+  else changed.set('.platform', newPlatform(P.name || loc.base + COPY_TAG, P.logicalId));
   const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(R.hasPlatform ? [] : [{ rel: '.platform', data: changed.get('.platform') }], built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
   const anyNav = R.pages.some((pg) => pg.visuals.some((v) => Mirror.kindOf(v.json) === 'navigator')), anyBmNav = R.pages.some((pg) => pg.visuals.some((v) => typeOf(v.json) === 'bookmarkNavigator'));
   const notes = [].concat(anyNav ? ['A page navigator lists the pages shown in the tabs only: on an Arabic page it lists the English pages (use page buttons there)'] : [], anyBmNav ? ['A bookmark navigator lists every bookmark: the English and the Arabic ones'] : [],
