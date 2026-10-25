@@ -88,15 +88,17 @@ for (const t of ['approve_plan', 'add_gulf_calendar', 'read_report', 'check_repo
 check(!/Not yet \(planned\):\*\* the Gulf calendar pack/.test(spec) && /Arabic calendar/.test(spec), 'W2-3. PRODUCT_SPEC.md says the Gulf calendar is planned, or says nothing of the Arabic calendar columns (C1)');
 check(!/It doesn't translate\./.test(spec) && /never translates silently/.test(spec) && /approves/.test(spec), 'W2-3. PRODUCT_SPEC.md says the translation truth (Claude drafts, the person approves, never silent)');
 const mreadme = flat('./README.md');
-check(/into: "same"/.test(mreadme) && /\(EN-AR\)/.test(mreadme), 'W2-4. mcp/README.md documents create_arabic_twin into "same" (the EN-AR copy)');
-check(/Arabic calendar\.tmdl/.test(mreadme) && /English calendar columns/.test(mreadme), 'W2-4. mcp/README.md documents the Arabic calendar columns script (C1) and the English columns until it is applied');
+// (G1, 0.3.1: the tool table moved from mcp/README.md to mcp/TOOLS.md, text unchanged; the checks of its rows moved with it)
+const mtools = flat('./TOOLS.md');
+check(/into: "same"/.test(mtools) && /\(EN-AR\)/.test(mtools), 'W2-4. mcp/TOOLS.md documents create_arabic_twin into "same" (the EN-AR copy)');
+check(/Arabic calendar\.tmdl/.test(mtools) && /English calendar columns/.test(mtools), 'W2-4. mcp/TOOLS.md documents the Arabic calendar columns script (C1) and the English columns until it is applied');
 check(/certutil -hashfile/.test(mreadme) && /Get-FileHash/.test(mreadme), 'W2-4. mcp/README.md says how to check the .mcpb\'s SHA-256 on Windows');
 check(/Node\.js 20\.10/.test(mreadme) && /\bgit\b/.test(mreadme) && /spaces/.test(mreadme), 'W2-4. mcp/README.md lists the developer install\'s prerequisites and quoting a path with spaces');
 check(/2\.159\.883\.0/.test(mreadme) && !/to the latest version/.test(mreadme) && !/to its latest version/.test(mreadme), 'W2-4. mcp/README.md names the lowest Desktop version tested, not "latest"');
 
 // The forbidden words, in every file that speaks for DataArcus (EN and AR): no "first"/"only" of its kind, no
 // official, certified, partner, AI-powered; nothing on Microsoft's Power BI Report skill comparison; nothing of 0.3.1
-const SPEAK = ['./PRIVACY.md', './README.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',
+const SPEAK = ['./PRIVACY.md', './README.md', './TOOLS.md', '../README.md', './server.mjs', './lib/agent-text.mjs', './skills/report-design/SKILL.md',
   './lib/approval-window.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
 const BANNED = [
   [/\b(?:world'?s|our) first\b|\bthe first (?:MCP|tool|Power BI tool|of its kind)\b|\bfirst of its kind\b|\bonly (?:tool|MCP) (?:that|to|for)\b|\bthe only (?:tool|MCP|one that)\b/i, 'a first-of-kind or only-one claim'],
@@ -150,11 +152,11 @@ for (const [k, t] of Object.entries(W)) {
 // D5 (0.3.1 wave 5, 25 Oct; mcp/work/D5.md): every public sentence the release-prep sweep added, one check each, and the
 // forbidden words over the texts it touched that the scan above does not read (PRODUCT_SPEC, llms.txt, the CHANGELOG's
 // [Unreleased])
-const mrow = (tool) => (mreadme.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(?: \\| \`| \\*\\*|$)`)) || [])[1] || '';
+const mrow = (tool) => (mtools.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(?: \\| \`| \\*\\*|$)`)) || [])[1] || '';
 // D5-R the MCP README: the 0.3.1 options in their tools' rows, the plugin folder said as not published
-check(/languages: "en\+ar"/.test(mrow('plan_layout')) && /bilingual/.test(mrow('plan_layout')), 'D5-R1. mcp/README.md\'s plan_layout row does not document languages: "en+ar" (and its bilingual answer)');
-check(/languages: "en\+ar"/.test(mrow('create_report')) && /after them, each page's Arabic page/.test(mrow('create_report')) && /off by default/.test(mrow('create_report')), 'D5-R2. mcp/README.md\'s create_report row does not say what languages: "en+ar" writes (off by default)');
-check(/draws each Arabic page/.test(mrow('create_arabic_twin')) && /button slicers \(pills\)/.test(mrow('create_arabic_twin')), 'D5-R3. mcp/README.md\'s create_arabic_twin row does not say the approval page draws the Arabic pages, nor that the copy keeps button slicers (pills) in sync');
+check(/languages: "en\+ar"/.test(mrow('plan_layout')) && /bilingual/.test(mrow('plan_layout')), 'D5-R1. mcp/TOOLS.md\'s plan_layout row does not document languages: "en+ar" (and its bilingual answer)');
+check(/languages: "en\+ar"/.test(mrow('create_report')) && /after them, each page's Arabic page/.test(mrow('create_report')) && /off by default/.test(mrow('create_report')), 'D5-R2. mcp/TOOLS.md\'s create_report row does not say what languages: "en+ar" writes (off by default)');
+check(/draws each Arabic page/.test(mrow('create_arabic_twin')) && /button slicers \(pills\)/.test(mrow('create_arabic_twin')), 'D5-R3. mcp/TOOLS.md\'s create_arabic_twin row does not say the approval page draws the Arabic pages, nor that the copy keeps button slicers (pills) in sync');
 check(/`mcp\/skills-packaging\/`/.test(mreadme) && /[Nn]ot published yet/.test(mreadme) && /same `\.mcpb`/.test(mreadme), 'D5-R4. mcp/README.md does not name the plugin folder as not published yet (it starts the same .mcpb)');
 // D5-P PRIVACY.md: what each 0.3.1 path reads and writes
 check(/`lens: "arabic"`/.test(row('check_report')) && /writes nothing/.test(row('check_report')), 'D5-P1. PRIVACY.md\'s check_report row does not say what the Arabic lens returns and that it writes nothing');
@@ -180,7 +182,7 @@ for (const [f, t] of Object.entries(D5_TEXTS)) {
   for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `D5-W. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'empty'}`); }
 }
 const MAC = /runs? Power BI (?:Desktop )?on (?:a )?Mac|Power BI Desktop (?:on|for) macOS|يشغّل Power BI على Mac/i;
-for (const [f, t] of Object.entries(Object.assign({}, D5_TEXTS, { 'mcp/README.md': mreadme, 'PRIVACY.md': pv, 'beta-page.js': bp }))) {
+for (const [f, t] of Object.entries(Object.assign({}, D5_TEXTS, { 'mcp/README.md': mreadme, 'mcp/TOOLS.md': mtools, 'PRIVACY.md': pv, 'beta-page.js': bp }))) {
   const m = MAC.exec(t); check(!m, `D5-W. ${f} says DataArcus runs Power BI on a Mac: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`);
 }
 const promises = unrel.replace(/\s+/g, ' ').split(/(?<=[.:])\s+/).filter((s) => /\bmatri(?:x|ces)\b/i.test(s) && /\b(?:soon|coming|will (?:be|get|read|mirror)|planned|next (?:version|release))\b/i.test(s));

@@ -26,7 +26,7 @@ check(!rule("0.2.9: in main since 2026-10-16 (rc.21)") && rule('[Unreleased]: 0.
 // does: DataArcus reads model and report files (it never claims to read no data), every "never overwritten" names the
 // one exception (DataArcus's own answers file), the answers file is not said to hold only hashes, and read_report's
 // titles are said to be screened for instructions and length only (a short one is returned as typed)
-const CLAIM_FILES = ['./PRIVACY.md', './README.md', '../README.md', './PRODUCT_SPEC.md', './skills/report-design/SKILL.md', './lib/agent-text.mjs',
+const CLAIM_FILES = ['./PRIVACY.md', './README.md', './TOOLS.md', '../README.md', './PRODUCT_SPEC.md', './skills/report-design/SKILL.md', './lib/agent-text.mjs',
   './lib/approval-window.mjs', '../power-bi-mcp/index.html', '../ar/power-bi-mcp/index.html', '../assets/js/translations/beta-page.js'];
 const flatText = (f) => read(f).replace(/\s+/g, ' ');
 for (const f of CLAIM_FILES) {

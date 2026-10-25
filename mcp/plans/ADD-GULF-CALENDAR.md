@@ -167,7 +167,7 @@ tool's script for `name: 'Calendar'`, 2018-2030, UAE, announced, `relateTo: ['Sa
 ## Build, cloud part (2026-10-04, branch `feat/add-gulf-calendar`): expected numbers written before any run
 The owner's answers: years required, default name `Gulf Calendar`, relationships only for `relateTo` columns. No
 Desktop here: what Desktop has not measured (G2 mark as date table, G3 sort by column) stays **by hand** in the
-answer, never in the script; the Desktop rows are D-GC1 to D-GC6 in `mcp/WORK.md`.
+answer, never in the script; the Desktop rows are D-GC1 to D-GC6 in `mcp/WORK.md` (since 0.3.1: `mcp/work/archive/WORK-2026-10-01-04.md`, the table; results in `WORK-2026-10-05-09.md`).
 - **Website (`gulf-calendar` suite, new section 8):** `DataArcusCalendar.build()` in Node equals the page's DAX and
   column count for the 16 saved outputs and the test model's options: **17 equal**, plus 1 check that `build` exists:
   788 -> **806** checks (main had 788); every other website suite unchanged.
