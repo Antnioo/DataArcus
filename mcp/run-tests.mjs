@@ -81,5 +81,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.error(`run-tests: ${failed.length} of ${suites.length} suites failed:\n` + failed.map((f) => '  - ' + f).join('\n'));
     process.exit(1);
   }
-  console.log(`run-tests: ${suites.length} suites passed${areas.length ? ` (${areas.join(', ')})` : ''}`);
+  console.log(`run-tests: ${suites.length} suite${suites.length === 1 ? '' : 's'} passed${areas.length ? ` (${areas.join(', ')})` : ''}`);
 }
