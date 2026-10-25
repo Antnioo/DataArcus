@@ -71,6 +71,30 @@ May 2018 after the crescent was not seen on 15 May (Sha'ban completed 30 days), 
 is Wednesday 16 May 2018, as in the UAE. The Saudi dates are **not** in `assets/js/gulf-dates.js`: its `events` list has
 no country, so a second country needs a change to the file's structure (see "Open").
 
+## Ramadan and Eid in Oman: the days Oman announced differently, 2018-2026
+Sourced 2026-10-25 for 0.3.1 (the outside audit of 25 Oct found these 11; each page below was opened and read). In Oman
+the Main Committee for Sighting the Crescent (Ministry of Endowments and Religious Affairs) decides, and ONA (the Oman
+News Agency) announces it; no ONA page was found, so each source is a newspaper's report of the announcement. These are
+`own.omn` in `assets/js/gulf-dates.js`. **The generator keeps the UAE's dates for Oman:** moving Oman's Ramadan a day
+later would make Sha'ban 31 days long (1440, 1441, 1442) and moving Eid al-Adha 1440 would make Dhu al-Hijjah 28 days,
+and Oman's Sha'ban and Muharram starts are not sourced. The pages and the MCP say Oman's difference instead, and
+`check_model_health`'s Gulf check counts a calendar on one of these days as no difference. No difference was established for Saudi
+Arabia (sourced above), Qatar, Kuwait or Bahrain, which is not proof that none exist.
+
+| Hijri year | Event | Oman | The UAE | Source |
+|---|---|---|---|---|
+| 1440 | Ramadan | Tue 2019-05-07 | Mon 2019-05-06 | report, [Khaleej Times, 6 May 2019](https://khaleejtimes.com/world/oman-will-not-begin-ramadan-on-monday) |
+| 1440 | Eid al-Fitr | Wed 2019-06-05 | Tue 2019-06-04 | report, [Oman Observer, 4 June 2019](https://www.omanobserver.om/article/30845/Front%20Stories/oman-to-celebrate-eid-al-fitr-on-wednesday) |
+| 1440 | Eid al-Adha | Mon 2019-08-12 | Sun 2019-08-11 | report, [Oman Observer citing ONA, 2 August 2019](https://www.omanobserver.om/ampArticle/27342) (1 Dhu al-Hijjah announced as Saturday 3 August, so the 10th is 12 August) |
+| 1441 | Ramadan | Sat 2020-04-25 | Fri 2020-04-24 | report, [Gulf News, 23 April 2020](https://gulfnews.com/world/gulf/oman/oman-announces-saturday-april-25-first-day-of-ramadan-1.1587656118787) |
+| 1442 | Ramadan | Wed 2021-04-14 | Tue 2021-04-13 | report, [Times of Oman, 12 April 2021](https://timesofoman.com/article/100198-moon-not-sighted-in-oman-ramadan-from-wednesday) |
+| 1443 | Ramadan | Sun 2022-04-03 | Sat 2022-04-02 | report, [Times of Oman, 1 April 2022 (Ministry of Endowments and Religious Affairs)](https://timesofoman.com/article/115094-first-day-of-ramadan-announced-in-oman-4) |
+| 1444 | Eid al-Fitr | Sat 2023-04-22 | Fri 2023-04-21 | report, [Times of Oman, 20 April 2023](https://timesofoman.com/article/129795-first-day-of-eid-al-fitr-announced-in-oman-3) |
+| 1445 | Ramadan | Tue 2024-03-12 | Mon 2024-03-11 | report, [Times of Oman, 10 March 2024](https://timesofoman.com/article/143081-ramadan-to-start-from-march-12-in-oman) |
+| 1445 | Eid al-Adha | Mon 2024-06-17 | Sun 2024-06-16 | report, [Oman Observer](https://www.omanobserver.om/article/1154789/oman/eid-al-adha-on-june-17-as-moon-not-sighted-in-oman) |
+| 1446 | Eid al-Fitr | Mon 2025-03-31 | Sun 2025-03-30 | report, [Times of Oman, 29 March 2025](https://timesofoman.com/article/156393-oman-announces-first-day-of-eid-al-fitr) |
+| 1447 | Ramadan | Thu 2026-02-19 | Wed 2026-02-18 | report, [Times of Oman, 11 February 2026](https://timesofoman.com/article/168180-thursday-19-february-2026-is-first-day-of-ramadan-1447-ah) |
+
 ## Official weekends in the GCC
 Government (public sector) weekends. Private companies may keep a different one (the employer sets its rest days); the
 generator does not model that, nor public holidays or the UAE government's Friday half day. Sharjah's government is

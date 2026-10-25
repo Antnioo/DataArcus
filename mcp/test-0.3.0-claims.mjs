@@ -215,17 +215,17 @@ for (const [k, t] of [['article', GC.article], ['articleTr', GC.articleTr]]) {
   check(/Sharjah government/.test(t) && /Is Weekend and Is Working Day columns' DAX/.test(t), `GC-1a. ${k}: Sharjah's own option and how to set another weekend are not said`);
   check(/once DataArcus has added it/.test(t), `GC-6. ${k}: "generate again after an announcement" does not say it helps once DataArcus's table has the date`);
   check(/24 come from a dated announcement/.test(t) && /confirmed by the official celebrations/.test(t), `GC-7. ${k}: the 24 dated announcements and the 3 Eid al-Adha dates are not said`);
-  check(/Oman's own/.test(t) && /Qatar, Kuwait and Bahrain/.test(t), `GC-2. ${k}: whose announced dates they are (the UAE's, Oman's own) is not said`);
+  check(/Oman announced 11 of them a day later/.test(t) && /Qatar, Kuwait and Bahrain/.test(t), `GC-2. ${k}: whose announced dates they are (the UAE's; Oman 11 a day later) is not said`);
   check(/public holidays/.test(t), `GC-5. ${k}: the working-day flag's scope is not said`);
 }
 for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', GC.articleTr]]) {
   check(/حكومة الشارقة/.test(t) && /Is Weekend وIs Working Day/.test(t), `GC-1a. ${k}: Sharjah's option and another weekend, in Arabic`);
-  check(/بعد أن تضيفه DataArcus/.test(t) && /24 منها من إعلان مؤرَّخ/.test(t) && /مواعيد عُمان نفسها/.test(t) && /قطر والكويت والبحرين/.test(t) && /العطل الرسمية/.test(t) && /والأربعاء قبل الثلاثاء/.test(t),
-    `GC-1..8. ${k}: a new Arabic sentence is missing (DataArcus adds the date, 24 dated, Oman's own, Qatar Kuwait Bahrain, public holidays, the sort example)`);
+  check(/بعد أن تضيفه DataArcus/.test(t) && /24 منها من إعلان مؤرَّخ/.test(t) && /أعلنت عُمان 11 منها بعد يوم/.test(t) && /قطر والكويت والبحرين/.test(t) && /العطل الرسمية/.test(t) && /والأربعاء قبل الثلاثاء/.test(t),
+    `GC-1..8. ${k}: a new Arabic sentence is missing (DataArcus adds the date, 24 dated, Oman 11 a day later, Qatar Kuwait Bahrain, public holidays, the sort example)`);
 }
-for (const [k, t] of [['page', GC.page], ['pageTr', GC.pageTr]]) check(/move on with each refresh/.test(t) && /Sharjah government/.test(t) && /public holidays/.test(t) && /Oman's own/.test(t), `GC-1b/3/5/2. ${k}: the refresh, Sharjah, the working-day scope or Oman's own dates are not said`);
-for (const [k, t] of [['pageAr', GC.pageAr], ['pageTr', GC.pageTr]]) check(/تتقدم مع كل تحديث/.test(t) && /حكومة الشارقة/.test(t) && /العطل الرسمية/.test(t) && /تواريخ عُمان نفسها/.test(t), `GC-1b/3/5/2. ${k}: the same in Arabic`);
-check(/only as a note/.test(GC.mcp) && /Oman's own/.test(GC.mcp), 'GC-1c. add_gulf_calendar\'s note does not say what the check does for another country (only as a note) and Oman\'s own dates');
+for (const [k, t] of [['page', GC.page], ['pageTr', GC.pageTr]]) check(/move on with each refresh/.test(t) && /Sharjah govt/.test(t) && /public holidays/.test(t) && /Oman announced 11 of them a day later/.test(t), `GC-1b/3/5/2. ${k}: the refresh, Sharjah, the working-day scope or Oman's 11 dates are not said`);
+for (const [k, t] of [['pageAr', GC.pageAr], ['pageTr', GC.pageTr]]) check(/تتقدم مع كل تحديث/.test(t) && /حكومة الشارقة/.test(t) && /العطل الرسمية/.test(t) && /أعلنت عُمان 11 منها بعد يوم/.test(t), `GC-1b/3/5/2. ${k}: the same in Arabic`);
+check(/only as a note/.test(GC.mcp) && /of them a day later/.test(GC.mcp), 'GC-1c. add_gulf_calendar\'s note does not say what the check does for another country (only as a note) and Oman\'s days a day later');
 
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);

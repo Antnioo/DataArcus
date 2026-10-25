@@ -39,7 +39,7 @@ window.gulfCalendarArticleTranslations = {
       "h3": "Build the calendar in a minute",
       "p6": "Open the free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> and set three things:",
       "list2_1": "<strong>Hijri dates, Ramadan and Eid</strong>: on.",
-      "list2_2": "<strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the announced dates; every other month follows Umm al-Qura.",
+      "list2_2": "<strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the UAE's announced dates, whichever weekend you pick; every other month follows Umm al-Qura.",
       "list2_3": "<strong>Weekend</strong>: your country. Each country's option knows the date its weekend changed.",
       "p7": "Copy the DAX, then in Power BI Desktop choose <strong>Modeling → New table</strong> and paste it. Next to the usual year, quarter, month and fiscal columns, the table has these Gulf columns:",
       "list3_1": "<strong>Hijri Year, Hijri Month Number, Hijri Day, Hijri Month Name, Hijri Date</strong>: the Hijri date of every day.",
@@ -61,7 +61,7 @@ window.gulfCalendarArticleTranslations = {
       "h6": "Three things to watch",
       "list4_1": "<strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has had a Friday-to-Sunday weekend since 2022. If yours differs, pick the fixed weekend that matches it.",
       "list4_2": "<strong>Update after each announcement.</strong> When Ramadan 2027 is announced, generate the table again: the announced dates replace the estimates.",
-      "list4_3": "<strong>Other countries' sightings.</strong> The announced dates are the UAE's. A country that relies on its own sighting can start a day apart, so check the official announcement where you report.",
+      "list4_3": "<strong>Other countries' sightings.</strong> The announced dates are the UAE's. Saudi Arabia's matched them from 2018 to 2026; Oman announced 11 of them a day later from 2019 to 2026 (each in the sources file), and Qatar, Kuwait and Bahrain can start a day apart. Check the official announcement where you report.",
       "p15": "Ramadan 1448 is expected around 8 February 2027. Build the calendar now, and the first comparison is ready on day one."
     },
     "exploreMore": {
@@ -115,7 +115,7 @@ window.gulfCalendarArticleTranslations = {
       "h3": "ابنِ التقويم في دقيقة",
       "p6": "افتح <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>مولّد جدول التقويم بلغة DAX</a> المجاني واضبط ثلاثة أمور:",
       "list2_1": "<strong>التاريخ الهجري ورمضان والعيد</strong>: مفعّل.",
-      "list2_2": "<strong>مواعيد رمضان والعيد المعلنة (الإمارات)</strong>: مفعّل. يبدأ رمضان وشوال وذو الحجة في المواعيد المعلنة، وتتبع بقية الأشهر تقويم أم القرى.",
+      "list2_2": "<strong>مواعيد رمضان والعيد المعلنة (الإمارات)</strong>: مفعّل. يبدأ رمضان وشوال وذو الحجة في مواعيد الإمارات المعلنة أيًّا كانت العطلة التي تختارها، وتتبع بقية الأشهر تقويم أم القرى.",
       "list2_3": "<strong>عطلة نهاية الأسبوع</strong>: دولتك. يعرف خيار كل دولة تاريخ تغيّر عطلتها.",
       "p7": "انسخ كود DAX، ثم اختر في Power BI Desktop <bdi><strong>Modeling → New table</strong></bdi> والصقه. إلى جانب أعمدة السنة والربع والشهر والسنة المالية المعتادة، يضم الجدول هذه الأعمدة الخليجية:",
       "list3_1": "<strong>Hijri Year وHijri Month Number وHijri Day وHijri Month Name وHijri Date</strong>: التاريخ الهجري لكل يوم.",
@@ -137,7 +137,7 @@ window.gulfCalendarArticleTranslations = {
       "h6": "ثلاثة أمور يجب الانتباه لها",
       "list4_1": "<strong>عطلة شركتك.</strong> تتبع خيارات الدول العطلة الحكومية الرسمية. كثير من شركات القطاع الخاص لها عطلة أخرى، وحكومة الشارقة تعطل من الجمعة إلى الأحد منذ 2022. إن اختلفت عطلتك، فاختر العطلة الثابتة المطابقة لها.",
       "list4_2": "<strong>حدّث بعد كل إعلان.</strong> عندما يُعلن رمضان 2027، أنشئ الجدول من جديد لتحل المواعيد المعلنة محل التقديرات.",
-      "list4_3": "<strong>رؤية الدول الأخرى.</strong> المواعيد المعلنة هي مواعيد الإمارات. الدولة التي تعتمد على رؤيتها الخاصة قد تبدأ بفارق يوم، فراجع الإعلان الرسمي في البلد الذي تُعدّ له التقرير.",
+      "list4_3": "<strong>رؤية الدول الأخرى.</strong> المواعيد المعلنة هي مواعيد الإمارات. وطابقتها مواعيد السعودية من 2018 إلى 2026، وأعلنت عُمان 11 منها بعد يوم من 2019 إلى 2026 (لكلٍّ منها مصدره في ملف المصادر)، وقد تبدأ قطر والكويت والبحرين بفارق يوم. فراجع الإعلان الرسمي في البلد الذي تُعدّ له التقرير.",
       "p15": "من المتوقع أن يبدأ رمضان 1448 نحو 8 فبراير 2027. ابنِ التقويم الآن، وستكون أول مقارنة جاهزة من اليوم الأول."
     },
     "exploreMore": {

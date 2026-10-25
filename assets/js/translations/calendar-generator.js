@@ -34,7 +34,7 @@ window.calendarGeneratorTranslations = {
         "qat": "Qatar: Fri + Sat since 2003",
         "bhr": "Bahrain: Fri + Sat since 2006",
         "omn": "Oman: Fri + Sat since 2013",
-        "shj": "Sharjah government: Fri-Sun since 2022"
+        "shj": "Sharjah govt: Fri-Sun since 2022"
       },
       "fyStart": "Fiscal year starts",
       "m": {
@@ -57,7 +57,7 @@ window.calendarGeneratorTranslations = {
         "hijri": "Hijri dates, Ramadan and Eid",
         "hijriNote": "Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.",
         "observed": "Announced Ramadan and Eid dates (UAE)",
-        "observedNote": "Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.",
+        "observedNote": "Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018, whichever weekend you pick. Saudi Arabia's matched them; Oman announced 11 of them a day later (2019-2026), and Qatar, Kuwait and Bahrain may differ by a day. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.",
         "fiscal": "Fiscal year, quarter and month",
         "fiscalNote": "Labels like FY2026 and FQ1, based on your fiscal start month.",
         "rel": "Relative offsets",
@@ -84,7 +84,7 @@ window.calendarGeneratorTranslations = {
         "q2": "How does it get Hijri dates without Power Query?",
         "a2": "Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with \"ar-SA\" or \"ar-AE\" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.",
         "q3": "Are the Ramadan and Eid dates exact?",
-        "a3": "By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed). Future dates are estimates until they are announced.",
+        "a3": "By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed from Umm al-Qura). They are the UAE's dates: Oman announced 11 of them a day later from 2019 to 2026. Future dates are estimates until they are announced and added here.",
         "q4": "How do I compare this Ramadan with last Ramadan?",
         "a4": "Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.",
         "q5": "Why relative offsets?",
@@ -129,7 +129,7 @@ window.calendarGeneratorTranslations = {
         "qat": "قطر: الجمعة والسبت منذ 2003",
         "bhr": "البحرين: الجمعة والسبت منذ 2006",
         "omn": "عُمان: الجمعة والسبت منذ 2013",
-        "shj": "حكومة الشارقة: من الجمعة إلى الأحد منذ 2022"
+        "shj": "حكومة الشارقة: الجمعة-الأحد منذ 2022"
       },
       "fyStart": "بداية السنة المالية",
       "m": {
@@ -152,7 +152,7 @@ window.calendarGeneratorTranslations = {
         "hijri": "التاريخ الهجري ورمضان والعيد",
         "hijriNote": "تقويم أم القرى: السنة والشهر واليوم الهجري، ويوم رمضان، وعلامات عيد الفطر وعيد الأضحى.",
         "observed": "تواريخ رمضان والعيد المعلنة (الإمارات)",
-        "observedNote": "تنقل بداية رمضان وشوال وذي الحجة إلى التواريخ التي أعلنتها الإمارات منذ 2018. التواريخ التي لم تُعلن بعد تبقى على تقويم أم القرى، ويُشار إليها في عمود <bdi>Is Estimated Date</bdi> بأنها تقديرية.",
+        "observedNote": "تنقل بداية رمضان وشوال وذي الحجة إلى التواريخ التي أعلنتها الإمارات منذ 2018، أيًّا كانت العطلة التي تختارها. وطابقتها تواريخ السعودية، وأعلنت عُمان 11 منها بعد يوم (2019-2026)، وقد تختلف قطر والكويت والبحرين بيوم. التواريخ التي لم تُعلن بعد تبقى على تقويم أم القرى، ويُشار إليها في عمود <bdi>Is Estimated Date</bdi> بأنها تقديرية.",
         "fiscal": "السنة والربع والشهر المالي",
         "fiscalNote": "تسميات مثل FY2026 و FQ1 حسب شهر بداية سنتك المالية.",
         "rel": "الإزاحات النسبية",
@@ -179,7 +179,7 @@ window.calendarGeneratorTranslations = {
         "q2": "كيف يحصل على التاريخ الهجري دون Power Query؟",
         "a2": "لا توجد في Power BI دالة مدمجة تعطي الشهر الهجري أو تحدد أيام رمضان. (قسناه في Power BI Desktop 2.158 في أكتوبر 2026: الدالة FORMAT في DAX مع \"ar-SA\" أو \"ar-AE\" تعطي التاريخ الميلادي.) يحسب المولّد بداية كل شهر هجري ضمن النطاق ويضمّنها في جدول DATATABLE صغير داخل كود DAX. ثم يبحث كل تاريخ عن شهره الهجري، فيعمل الجدول دون اتصال ويتحدث فورًا.",
         "q3": "هل تواريخ رمضان والعيد دقيقة؟",
-        "a3": "تتبع افتراضيًا تقويم أم القرى السعودي الرسمي، وقد تختلف رؤية الهلال عنه بيوم واحد. فعّل خيار تواريخ رمضان والعيد المعلنة لاستخدام التواريخ التي أعلنتها الإمارات منذ 2018 (اختلف رمضان 2018 فقط). التواريخ المستقبلية تقديرية حتى يتم إعلانها.",
+        "a3": "تتبع افتراضيًا تقويم أم القرى السعودي، وقد تختلف عنه رؤية الهلال، بيوم واحد في العادة. فعّل خيار تواريخ رمضان والعيد المعلنة لاستخدام التواريخ التي أعلنتها الإمارات منذ 2018 (اختلف عن أم القرى رمضان 2018 فقط). وهي تواريخ الإمارات: أعلنت عُمان 11 منها بعد يوم من 2019 إلى 2026. التواريخ المستقبلية تقديرية حتى تُعلن وتُضاف هنا.",
         "q4": "كيف أقارن رمضان هذا العام برمضان الماضي؟",
         "a4": "ضع <strong>Ramadan Day</strong> على المحور و<strong>Hijri Year</strong> في وسيلة الإيضاح. سيتطابق كل رمضان يومًا بيوم، رغم أن التاريخ الميلادي يتقدم نحو 11 يومًا كل عام.",
         "q5": "لماذا الإزاحات النسبية؟",

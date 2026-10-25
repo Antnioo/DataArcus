@@ -26,6 +26,20 @@
       // Ramadan 1452 starts in 2030; its Eids fall in 2031, outside the checked range
       { hijriYear: 1452, ramadan: '2030-12-26', estimate: ['ramadan'] }
     ],
+    // (0.3.1 GC, the outside audit of 25 Oct) a country's own announcements where they differ from the UAE's dates above,
+    // each sourced in DATES-SOURCES.md; its other dates are the UAE's. Oman: 11 dates, each one day after the UAE's.
+    own: {
+      omn: [
+        { hijriYear: 1440, ramadan: '2019-05-07', fitr: '2019-06-05', adha: '2019-08-12' },
+        { hijriYear: 1441, ramadan: '2020-04-25' },
+        { hijriYear: 1442, ramadan: '2021-04-14' },
+        { hijriYear: 1443, ramadan: '2022-04-03' },
+        { hijriYear: 1444, fitr: '2023-04-22' },
+        { hijriYear: 1445, ramadan: '2024-03-12', adha: '2024-06-17' },
+        { hijriYear: 1446, fitr: '2025-03-31' },
+        { hijriYear: 1447, ramadan: '2026-02-19' }
+      ]
+    },
     // Official (government) weekend by country (and Sharjah's government): each rule holds from its date until the next one. Days are
     // WEEKDAY ( [Date], 1 ) numbers: 1 Sunday ... 5 Thursday, 6 Friday, 7 Saturday. The first rule is the weekend the
     // first change replaced; earlier history was not checked. Private companies can differ.

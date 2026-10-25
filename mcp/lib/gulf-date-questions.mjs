@@ -250,8 +250,10 @@ function calendarOffer(g) {
 // whether the season's dates are announced or estimated, from the calendar's files and gulf-dates.js (never from rows)
 function statusOf({ gen, columns, cal, answers, country, season, seasonAr }) {
   const C = COUNTRY_CODES.includes(country) ? Gulf.COUNTRIES[country] : null, other = C && country !== 'uae' && country !== 'ksa';
-  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} may announce another day.` : '';
-  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، وقد تُعلن ${C.nameAr} يومًا آخر.` : '';
+  // (0.3.1 GC) a country whose own differing announcements are sourced (Oman: gulf-dates.js own) says so
+  const own = other && GD.own && GD.own[country];
+  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} ${own ? 'announced some of them a day later (sourced, 2019-2026) and ' : ''}may announce another day.` : '';
+  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، و${own ? `قد أعلنت ${C.nameAr} بعضها بعد يوم (موثَّق، 2019-2026)، وقد ` : 'قد '}تُعلن ${C.nameAr} يومًا آخر.` : '';
   if (!gen) return { dates: 'cantTell', en: `The ${season} dates in ${shown(cal || 'the calendar')} come from its data: DataArcus can't tell whether they are announced or estimated (the tools read no rows).${limit}`,
     ar: `تواريخ ${seasonAr} في ${shown(cal || 'التقويم')} تأتي من بياناته، ولا يمكن لـ DataArcus معرفة هل هي معلنة أم تقديرية (الأدوات لا تقرأ الصفوف).${limitAr}` };
   const observed = !!columns.estimated, est = shown(columns.estimated ? columns.estimated.field : `${cal}[Is Estimated Date]`);

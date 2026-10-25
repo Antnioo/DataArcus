@@ -109,6 +109,9 @@ export function addGulfCalendar(m, a, env) {
   if (!(COUNTRY_CODES.includes(weekend) || RULES.includes(weekend) || FIXED[weekend])) refuse(`Unknown weekend "${a.weekend}".`);
   const st = Object.assign({}, Cal.DEFAULTS, { name: table, start, end, fy: a.fiscalStart || 1, week: WEEK[a.weekStart || 'sunday'], weekend, lang: a.lang || 'en',
     hijri: true, fiscal: true, relative: true, observed: a.announced !== false, arabicNames: a.arabicNames !== false });
+  // (0.3.1 GC) a country whose own differing announcements are sourced (Oman: gulf-dates.js own.omn); the table keeps the
+  // UAE's dates, since moving one month would need the months around it, which are not sourced
+  const ownDates = (GD.own && GD.own[country]) || null;
   if (!Cal.hijriFmt) refuse('This Node.js has no Umm al-Qura calendar (it needs full ICU), so the Hijri dates can\'t be worked out.');
   const built = Cal.build(st), body = built.dax.split('\n').slice(1).join('\n');
 
@@ -121,7 +124,10 @@ export function addGulfCalendar(m, a, env) {
   const notes = [];
   if (before.calendar && before.calendar.kind === 'dataarcus-dax') notes.push(`The model already has a calendar made by the DataArcus generator (${JSON.stringify(before.calendar.table)}). This adds a second one; use one of them for the relationships.`);
   if (untyped.length) notes.push(`The type of ${untyped.join(', ')} is not in the model's files (a DAX table's column), so it could not be checked: make sure ${untyped.length === 1 ? 'it is a date column' : 'they are date columns'}. If not, Preview shows the relationship as an error and nothing should be applied.`);
-  if (st.observed && country !== 'uae' && country !== 'ksa') notes.push(`The announced dates are the UAE's; none are sourced for ${C.name} yet. Where ${C.name} announces another date, it shows in check_model_health's gulfCalendar section.`);
+  // (0.3.1 GC, the outside audit: the check has no table of another country's dates, so it can't show them)
+  if (st.observed && country !== 'uae' && country !== 'ksa') notes.push(ownDates
+    ? `The announced dates are the UAE's. ${C.name} announced ${ownDates.reduce((n, e) => n + ['ramadan', 'fitr', 'adha'].filter((k) => e[k]).length, 0)} of them a day later from 2019 to 2026 (sourced: scripts/gulf-calendar/DATES-SOURCES.md); the table keeps the UAE's, and ${C.name} can announce a day apart again. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura, counts ${C.name}'s own sourced days as no difference and lists any other difference only as a note.`
+    : `The announced dates are the UAE's; none of ${C.name}'s own are sourced, and ${C.name} can announce a day apart. check_model_health's gulfCalendar section compares ${C.name}'s calendar with Umm al-Qura and lists a difference only as a note, never as an error.`);
 
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
   if (!scriptDir) refuse('The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder (the folder that holds the model folder) as the working folder and ask again.');

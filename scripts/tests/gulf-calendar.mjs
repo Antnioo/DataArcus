@@ -450,23 +450,20 @@ export default async function ({ browser, url }) {
       const line = omanPart.split('\n').find((l) => l.includes(`${WD[new Date(T(d)).getUTCDay()]} ${d}`));
       check(sources.includes('## Ramadan and Eid in Oman') && !!line && /\]\(https:\/\/[^)]+\)/.test(line), `Oman ${y} ${k} ${d}: no row with its page in DATES-SOURCES.md's Oman table`);
     }
-    // an Oman calendar with the announced dates on: these month starts, every month 29 or 30 days; Saudi Arabia's and
-    // the fixed weekends' calendars keep the UAE's dates
+    // (decided in GC: moving Oman's days would make Sha'ban 31 days and Dhu al-Hijjah 28, and the months around them are
+    // not sourced) every calendar keeps the UAE's dates, whatever its weekend, and every month is 29 or 30 days
     const Cal = require('../../assets/js/calendar-generator.js');
     const st = (o) => Object.assign({}, Cal.DEFAULTS, { start: '2018-01-01', end: '2030-12-31', observed: true }, o);
-    const om = monthStarts(Cal.build(st({ weekend: 'omn' })).dax), ua = monthStarts(Cal.build(st({ weekend: 'uae' })).dax);
-    const at = (starts, y, m) => { const r = starts.find((x) => x.y === y && x.m === m); return r ? iso(r.t) : null; };
-    const WANT = [[1440, 9, '2019-05-07'], [1440, 10, '2019-06-05'], [1440, 12, '2019-08-03'], [1441, 9, '2020-04-25'], [1442, 9, '2021-04-14'], [1443, 9, '2022-04-03'],
-      [1444, 10, '2023-04-22'], [1445, 9, '2024-03-12'], [1445, 12, '2024-06-08'], [1446, 10, '2025-03-31'], [1447, 9, '2026-02-19']];
-    const wrong = WANT.filter(([y, m, d]) => at(om, y, m) !== d).map(([y, m, d]) => `${y}/${m} ${at(om, y, m)} (want ${d})`);
-    check(!wrong.length, `Oman calendar month starts: ${wrong.join('; ')}`);
-    const moved = om.filter((x, i) => !ua[i] || x.t !== ua[i].t || x.y !== ua[i].y || x.m !== ua[i].m).map((x) => `${x.y}/${x.m}`);
-    check(om.length === ua.length && moved.length === WANT.length, `Oman calendar: ${moved.length} month starts differ from the UAE's (want ${WANT.length}): ${moved.join(', ')}`);
-    for (let i = 1; i < om.length; i++) { const len = (om[i].t - om[i - 1].t) / DAY; if (![29, 30].includes(len)) { check(false, `Oman calendar: ${om[i - 1].y}/${om[i - 1].m} lasts ${len} days`); break; } }
-    const omDax = Cal.build(st({ weekend: 'omn' })).dax;
-    check(/-- Hijri month starts: .*Oman/.test(omDax) && / · Ramadan and Eid as announced in Oman/.test(omDax), `Oman calendar: the DAX does not say its dates are Oman's: ${omDax.split('\n').slice(1, 3).join(' | ')}`);
-    for (const w of ['ksa', 'qat', 'kwt', 'bhr', 'shj', 'sat-sun', 'fri-sat']) check(JSON.stringify(monthStarts(Cal.build(st({ weekend: w })).dax)) === JSON.stringify(ua), `${w} calendar: its dates are not the UAE's`);
-    // the page writes the same Oman calendar, and says whose dates they are and what the weekend flags don't know
+    const ua = monthStarts(Cal.build(st({ weekend: 'uae' })).dax);
+    for (const w of ['omn', 'ksa', 'qat', 'kwt', 'bhr', 'shj', 'sat-sun', 'fri-sat']) check(JSON.stringify(monthStarts(Cal.build(st({ weekend: w })).dax)) === JSON.stringify(ua), `${w} calendar: its dates are not the UAE's`);
+    const GH9 = require('../../assets/js/gulf-health.js'), omDax = Cal.build(st({ weekend: 'omn' })).dax;
+    // gulf-health: Oman's own sourced days are no difference; the UAE's dates in an Oman calendar are only notes
+    const moved = omDax.replace(/\{ "2019-05-06", 1440, 9 \}/, '{ "2019-05-07", 1440, 9 }');
+    const notes = (dax) => { const r = GH9.analyze(wrap9(dax), { country: 'omn', asOf: '2026-10-25' }), f = r.findings.find((x) => x.id === 'GC_DATES_NOTE'); return f ? f.items.map((x) => x.event) : []; };
+    const wrap9 = (dax) => ({ model: { tables: [{ name: 'Calendar', columns: [], partitions: [{ name: 'Calendar', source: { type: 'calculated', expression: dax.replace(/^Calendar =\n/, '') } }] }] } });
+    check(moved !== omDax && !notes(moved).includes('Ramadan 1440') && !GH9.analyze(wrap9(omDax), { country: 'omn', asOf: '2026-10-25' }).findings.some((f) => f.level === 'high' || f.level === 'medium' && /DATES/.test(f.id)),
+      `gulf-health on an Oman calendar: Oman's sourced Ramadan 1440 is a difference (${notes(moved).join(', ')})`);
+    // the page's Oman calendar has the UAE's dates, and says whose dates they are and what the weekend flags don't know
     for (const lang of ['en', 'ar']) {
       const v = await open(CG, cgSaved({ weekend: 'omn', observed: true, start: '2019-01-01', end: '2019-12-31' }), lang);
       const r = await v.pg.evaluate(() => ({ dax: document.getElementById('dax').textContent, chips: document.getElementById('ramadan').textContent,
@@ -474,11 +471,11 @@ export default async function ({ browser, url }) {
       check(JSON.stringify(monthStarts(r.dax)) === JSON.stringify(monthStarts(Cal.build(Object.assign({}, Cal.DEFAULTS, { weekend: 'omn', observed: true, start: '2019-01-01', end: '2019-12-31', lang: r.dax.includes('"يناير"') && !r.dax.includes('"January"') ? 'ar' : 'en' })).dax)),
         `Oman page ${lang}: the page's month starts are not the shared generator's`);
       if (lang === 'en') {
-        check(/Ramadan 1440: 7 May 2019 to 4 Jun 2019/.test(r.chips), `Oman page: the Ramadan list shows ${r.chips.slice(0, 80)}`);
-        check(/UAE/.test(r.obs) && /Oman/.test(r.obs) && /Qatar, Kuwait and Bahrain/.test(r.obs) && /a day/.test(r.obs), `announced dates note: does not say whose dates they are: ${r.obs}`);
+        check(/Ramadan 1440: 6 May 2019 to 3 Jun 2019/.test(r.chips), `Oman page: the Ramadan list shows ${r.chips.slice(0, 80)}`);
+        check(/UAE/.test(r.obs) && /Oman announced 11 of them a day later/.test(r.obs) && /Qatar, Kuwait and Bahrain/.test(r.obs), `announced dates note: does not say whose dates they are: ${r.obs}`);
         check(/public holidays/.test(r.wk) && /half day|noon/.test(r.wk) && /employer/.test(r.wk), `working-day note: ${r.wk || 'missing'}`);
       } else {
-        check(/الإمارات/.test(r.obs) && /عُمان/.test(r.obs) && /قطر والكويت والبحرين/.test(r.obs), `announced dates note in Arabic: ${r.obs}`);
+        check(/الإمارات/.test(r.obs) && /أعلنت عُمان 11 منها بعد يوم/.test(r.obs) && /قطر والكويت والبحرين/.test(r.obs), `announced dates note in Arabic: ${r.obs}`);
         check(/العطل الرسمية/.test(r.wk) && /صاحب العمل/.test(r.wk), `working-day note in Arabic: ${r.wk || 'missing'}`);
       }
       await done(v, `Oman page ${lang}`);
