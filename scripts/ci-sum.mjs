@@ -28,8 +28,8 @@ if (area === 'mcp') {
     const res = results(s.text);
     res.filter((r) => r.status === 'FAIL').forEach((r) => { const d = detail(s.text, r.name); problems.push(`${s.f}: FAIL ${r.name} ${r.rest}${d ? ': ' + d : ''}`); });
     if (s.k === 0) {
-      // npm test's other scripts: one result line each, test.mjs's own line says SKIP
-      const scripts = (JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/package.json'), 'utf8')).scripts.test.match(/\bnode \S+\.mjs/g) || []).length;
+      // npm test's other scripts: one result line each, test.mjs's own line says SKIP; the suites are mcp/tests.json's (G1)
+      const scripts = (JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/tests.json'), 'utf8')).suites || []).length;
       if (res.length !== scripts) problems.push(`${s.f}: ${res.length} result lines, npm test runs ${scripts} scripts`);
       if (!res.some((r) => r.status === 'SKIP' && r.name === 'mcp')) problems.push(`${s.f}: test.mjs did not say SKIP (DA_SHARD=0/N)`);
       res.filter((r) => r.status !== 'SKIP').forEach((r) => rows.push([r.name, count(r.rest), 'shard 0']));

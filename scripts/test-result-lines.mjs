@@ -8,6 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { missingLines } from './check-result-lines.mjs';
+import { registryProblems } from '../mcp/run-tests.mjs';
 
 let n = 0;
 const D = fs.mkdtempSync(path.join(os.tmpdir(), 'result-lines-'));
@@ -26,6 +27,25 @@ try {
     try { execFileSync(process.execPath, [script, p], { stdio: 'pipe' }); } catch (e) { code = e.status; out = String(e.stderr); }
     assert.equal(code, 1); assert.match(out, /f\.mjs/);
     execFileSync(process.execPath, [script], { stdio: 'pipe' });
+  });
+  // G1 (0.3.1): npm test's suites are mcp/tests.json's; a test file is registered once or the check fails
+  const reg = (suites, more = {}) => { fs.writeFileSync(path.join(D, 'tests.json'), JSON.stringify({ areas: { a: 'A' }, suites, ignored: [], pending: [], ...more })); return path.join(D, 'tests.json'); };
+  t('a registry names its suites like a package.json line', () => {
+    fs.writeFileSync(path.join(D, 'test-h.mjs'), "console.log('done');\n");
+    assert.deepEqual(missingLines(reg([{ file: 'a.mjs', area: 'a', purpose: 'p' }, { file: 'test-h.mjs', area: 'a', purpose: 'p' }])).missing.map((m) => m.file), ['test-h.mjs']);
+  });
+  t('a test-*.mjs in neither suites nor ignored is named; ignored with a why passes', () => {
+    for (const f of fs.readdirSync(D).filter((f) => f.startsWith('test'))) fs.rmSync(path.join(D, f));
+    fs.writeFileSync(path.join(D, 'test-x.mjs'), ''); fs.writeFileSync(path.join(D, 'test-y.mjs'), '');
+    reg([{ file: 'test-x.mjs', area: 'a', purpose: 'p' }]);
+    assert.deepEqual(registryProblems(D), ['test-y.mjs: in neither suites nor ignored (tests.json): register it once']);
+    reg([{ file: 'test-x.mjs', area: 'a', purpose: 'p' }], { ignored: [{ file: 'test-y.mjs', why: 'a helper' }] });
+    assert.deepEqual(registryProblems(D), []);
+  });
+  t('a pending suite whose file landed, an unknown area and a file listed twice are named', () => {
+    reg([{ file: 'test-x.mjs', area: 'b', purpose: 'p' }, { file: 'test-x.mjs', area: 'a', purpose: 'p' }], { pending: [{ file: 'test-y.mjs', area: 'a', purpose: 'p' }] });
+    const p = registryProblems(D).join('\n');
+    assert.match(p, /test-y\.mjs: its file has landed/); assert.match(p, /unknown area "b"/); assert.match(p, /test-x\.mjs: listed twice/);
   });
 } finally { fs.rmSync(D, { recursive: true, force: true }); }
 console.log(`PASS  result-lines-test  ${n} checks`);
