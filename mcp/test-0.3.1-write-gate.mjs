@@ -66,8 +66,6 @@ const TMP = 'the temporary check copy: a folder of its own in the OS temp folder
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
   'server.mjs': {
-    'freeFile()': { n: 1, why: `generate_theme's theme file (its folders, one level at a time), inside withPlan after Plans.gate: ${PLAN}` },
-    'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` },
     'formatsAnswer()': { n: 2, why: `plan_layout's two calls pass write = false: they name the file, write nothing: ${PLAN}` },
     'writeScript()': { n: 2, why: `the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
     'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` },
@@ -140,6 +138,10 @@ const LIST = {
     'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
     'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` },
     'writeSample()': { n: 1, why: `create_report with sample (0.3.1 C), inside withPlan after Plans.gate with the sample plan's folder and inputs: ${PLAN}` }
+  },
+  'tools/generate_theme.mjs': {
+    'freeFile()': { n: 1, why: `generate_theme's theme file (its folders, one level at a time), inside withPlan after Plans.gate: ${PLAN}` },
+    'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` }
   }
 };
 
