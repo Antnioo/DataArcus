@@ -68,7 +68,7 @@ try {
     c = await copy.call('check_report', { path: 'box/Twin Sales.pbip' });
     m = await copy.call('check_report', { path: 'more/Twin Sales.pbip' });
   } finally { await real.close(); await copy.close(); }
-  chk(() => !r.err && r.j.validator.ran && box(r).length === 0 && (r.j.validator.known || 0) === 0 && !/known/i.test(r.j.impact.summary), () => `VG-2. the real tree: no finding for the box, no known note: ${short(r)}`);
+  chk(() => !r.err && r.j.validator.ran && box(r).length === 0 && (r.j.validator.known || 0) === 0 && !/known note/i.test(r.j.impact.summary), () => `VG-2. the real tree: no finding for the box, no known note: ${short(r)}`);
   chk(() => !c.err && c.j.validator.ran && box(c).length === 1 && box(c)[0].severity === 'note' && box(c)[0].impact === 'desktopOpens' && box(c)[0].origin === 'validator'
     && /2\.158/.test(box(c)[0].known.what) && /DESKTOP-TESTS\.md/.test(box(c)[0].known.evidence) && /^Nothing to fix/.test(box(c)[0].fix),
     () => `VG-3. a catalog without slicer.dropdown: the validator's finding for the proven box is a known note, "Desktop opens it", with its evidence: ${short(c)}`);

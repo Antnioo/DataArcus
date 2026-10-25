@@ -94,9 +94,30 @@ texts. Expected 152 with 59 mutants: W-size became equivalent (Decisions 1), so 
 **Other checks:** `check` 31, `test-0.3.1-checker` 23, `powerbi-2026-10` 26: PASS, unchanged. `node
 scripts/check-result-lines.mjs`: PASS 74 (73 -> 74).
 
+**5. check_report's summary (the reviewer's item 5, 25 Oct 14:36, from an outside architecture review).** check_report
+never opens Power BI Desktop, yet its summary said "The report opens in Power BI Desktop: it is not broken." and "Nothing
+found: the report opens in Power BI Desktop and passes the checks that ran." Grep of the repo for the claim: it is said
+as a check's result only in `lib/check-report.mjs` (`impactSummary`, and the answer's `tellUser`); `agent-text.mjs`,
+TOOLS.md, the READMEs, the MCP page EN/AR, the lens, the twin's and create_report's answers do not say it (TOOLS.md and
+the `desktopOpens` kind's own sentence state the measured Desktop fact, "Power BI Desktop opens the report with these
+(seen on a working hand-built report)": kept, as are "can break" and "only strict validation or Fabric would refuse").
+Red first: `0.3.0-claims` 232 checks, 6 failed (the new RB-5 block: 5 sources x 6 old sentences, 202 -> 232);
+`v029a4` 40, 1 failed (A4-3). The fix (`impactSummary` only): every "nothing found" line is now "Nothing found that
+Power BI Desktop is known to refuse (Microsoft's validator, the schemas and DataArcus's measured rules ran; Power BI
+Desktop itself was not opened)." with the list built from the groups that ran (`checks` passed in; e.g. "Microsoft's
+validator and DataArcus's measured rules ran" with `checks: ['validator', 'sizes']`); "; Desktop opens the report with
+them" became "; Power BI Desktop was seen to open reports with them"; "Not judged whether Power BI Desktop opens the
+report" became "Not judged against what Power BI Desktop is known to refuse"; `tellUser` says check_report never opens
+Desktop. **Deliberate moves (wording only):** A4-3's nothing-found check (test-0.2.9-a4), C6 (test-0.2.9-checks: the
+summary with only strict errors), P2c (test-0.2.9-checks: `!/known/` became `!/known note/`, since "known to refuse"
+now holds the word), VG-2 (this branch's validator-gap suite, the same). After: claims 232, v029a4 40, v029checks 37,
+check 31, checker 23, validator-gap 5, powerbi-2026-10 26, arabic-lens 31, smooth-lines 29, approval window 31: PASS.
+
 ## CHANGELOG line
 - A write that fails half-way now never removes a file that another program put in the same place, even one of the
   same size that the disk gave the same file number: DataArcus checks the file's content against what it wrote first.
+- check_report no longer says a report "opens in Power BI Desktop" or "is not broken": it never opens Desktop, so it
+  now says what it found, which checks ran, and that Power BI Desktop itself was not opened.
 
 ## Decisions I made
 1. **W-size is now an equivalent mutant** (listed in the suite with why, its text still checked). A file is removed only
@@ -121,6 +142,10 @@ scripts/check-result-lines.mjs`: PASS 74 (73 -> 74).
    very file that is then removed by name. The window between that check and the unlink is the one removeOurs always had.
 6. **`mcp/WORK.md` is not edited here:** it is A1's file in this wave (the brief); this job's memory is this file. The
    reviewer adds the wave line on merge.
+8. **Item 5 changes only `impactSummary` and `tellUser`.** The `desktopOpens` kind's sentence and TOOLS.md's description
+   of it are the measured Desktop fact (DESKTOP-TESTS.md, a working hand-built report), not a check's result: kept, as
+   the reviewer said. The claims ban covers check_report's sources, the lens, agent-text and TOOLS.md; "; Desktop opens
+   the report with" is banned with its semicolon (the summary's form), so the measured sentence is not caught.
 7. The golden baseline is V-rows' last guard, not the first: it takes about 35 s, and the first three kill V-rows in a
    few seconds; with `DA_MUTATION_ALL=1` it is shown to kill it on its own.
 

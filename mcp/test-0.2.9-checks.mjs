@@ -122,7 +122,7 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
       () => `P2a. (U1) the catalog lists the rounded box: the validator ${VALIDATOR_PIN} reports nothing for it on ${nSl} slicers, no known note: ${round.err ? round.t.slice(0, 200) : JSON.stringify([round.j.validator, unk(rdf)])}`);
     chk(() => slicersOf(Rd).every((f) => knownGap('PBIR_FORMATTING_OBJECT_UNKNOWN', 'dropdown', J(f)) === null),
       () => 'P2b. (U1) knownGap gives no note for the proven shape while the installed catalog lists the object');
-    chk(() => round.j.counts.errors === 0 && round.j.impact.kinds.canBreak.count === 0 && round.j.impact.kinds.desktopOpens.count === 0 && !/can break/i.test(round.j.impact.summary) && !/known/i.test(round.j.impact.summary),
+    chk(() => round.j.counts.errors === 0 && round.j.impact.kinds.canBreak.count === 0 && round.j.impact.kinds.desktopOpens.count === 0 && !/can break/i.test(round.j.impact.summary) && !/known note/i.test(round.j.impact.summary),   /* (RB item 5: "known note", since the summary now says "known to refuse") */
       () => `P2c. the report has no error and no known note: ${JSON.stringify([round.j.counts, round.j.validator, round.j.impact.summary])}`);
     // never hide a real error: another object, a made-up object on a chart, the box on another visual stay the
     // validator's errors. (U1, changed on purpose: one more property of the box, another slicer mode, a selector and a

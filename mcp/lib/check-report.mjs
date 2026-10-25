@@ -170,28 +170,34 @@ export const impactOf = (f) => {
   if (f.origin === 'schema') return 'canBreak';
   return 'dataarcusRule';
 };
-// (A4-3, audit 4: "opens in Power BI Desktop" is said only when Microsoft's validator ran offline and every file of the
-// report was read; otherwise the summary says what was not judged. The errors counted are the desktopOpens ones only.)
+// (A4-3, audit 4: "nothing found" is said only when Microsoft's validator ran offline and every file of the report was
+// read; otherwise the summary says what was not judged. The errors counted are the desktopOpens ones only.)
+// (0.3.1 RB, item 5, an outside architecture review: check_report never opens Power BI Desktop, so no summary says the
+// report opens there or is not broken: it says what was found, what ran, and that Desktop itself was not opened)
 // n: findings per kind; ctx: { validator: { ran, mode, why }, unread: files not read (too large, too deep, links,
-// not readable), desktopOpensErrors }. Pure: the same counts and context give the same sentence.
+// not readable), desktopOpensErrors, known, checks: the groups that ran (CHECKS when absent) }. Pure: the same counts
+// and context give the same sentence.
 export function impactSummary(n, ctx) {
   const c = ctx || {}, v = c.validator || {}, unread = +c.unread || 0, E = +c.desktopOpensErrors || 0, K = +c.known || 0;
   // (polish round P2) the validator's known gaps are notes of their own: counted apart from the strict errors
   n = Object.assign({}, n, { desktopOpens: Math.max(0, (+n.desktopOpens || 0) - K) });
   const s = (k, one, many) => (k === 1 ? one : many);
+  const ran = Array.isArray(c.checks) ? c.checks : CHECKS, did = ["Microsoft's validator"].concat(ran.includes('schemas') ? ['the schemas'] : [], ran.some((k) => k !== 'validator' && k !== 'schemas') ? ["DataArcus's measured rules"] : []);
+  const ranLine = ` (${did.length > 1 ? did.slice(0, -1).join(', ') + ' and ' + did[did.length - 1] : did[0]} ran; Power BI Desktop itself was not opened)`;
+  const nothing = `Nothing found that Power BI Desktop is known to refuse${ranLine}.`;
   const reasons = [].concat(v.ran && v.mode === 'offline' ? [] : [`Microsoft's validator did not run${v.why ? ` (${String(v.why).replace(/^not run: /, '')})` : ''}`],
     unread ? [`${unread} ${s(unread, 'file was', 'files were')} not read (see notChecked)`] : []);
-  const notJudged = reasons.length ? `Not judged whether Power BI Desktop opens the report: ${reasons.join('; ')}.` : '';
+  const notJudged = reasons.length ? `Not judged against what Power BI Desktop is known to refuse: ${reasons.join('; ')}.` : '';
   const rules = n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.` : '';
   const strict = n.desktopOpens ? ` ${n.desktopOpens} ${s(n.desktopOpens, 'finding is', 'findings are')} only what Microsoft's strict validation or Fabric would refuse.` : '';
-  if (n.canBreak) return `${n.canBreak} ${s(n.canBreak, 'finding', 'findings')} can break the report in Power BI Desktop: fix ${s(n.canBreak, 'it', 'these')} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${s(n.desktopOpens, 'is', 'are')} only what strict validation or Fabric would refuse${notJudged ? '' : `; Desktop opens the report with ${s(n.desktopOpens, 'it', 'them')}`}.` : '') + (notJudged ? ' ' + notJudged : '');
+  if (n.canBreak) return `${n.canBreak} ${s(n.canBreak, 'finding', 'findings')} can break the report in Power BI Desktop: fix ${s(n.canBreak, 'it', 'these')} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${s(n.desktopOpens, 'is', 'are')} only what strict validation or Fabric would refuse${notJudged ? '' : `; Power BI Desktop was seen to open reports with ${s(n.desktopOpens, 'it', 'them')}`}.` : '') + (notJudged ? ' ' + notJudged : '');
   if (notJudged) return notJudged + strict + rules;
   // (polish round P2) only the validator's known gaps (notes, no error): Desktop draws them
   const knownLine = K ? ` ${K} known ${s(K, 'note', 'notes')}: what Power BI Desktop 2.158 draws and Microsoft's validator ${VALIDATOR_VERSION} does not list yet (each finding's known); nothing to fix.` : '';
-  if (K && !n.desktopOpens) return 'The report opens in Power BI Desktop: it is not broken.' + knownLine + rules;
-  if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + knownLine + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
-  if (n.dataarcusRule) return `Nothing found that breaks the report in Power BI Desktop or that Fabric would refuse; ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.`;
-  return 'Nothing found: the report opens in Power BI Desktop and passes the checks that ran.';
+  if (K && !n.desktopOpens) return nothing + knownLine + rules;
+  if (n.desktopOpens) return `${nothing} Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + knownLine + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
+  if (n.dataarcusRule) return `Nothing found that Power BI Desktop is known to refuse or that Fabric would refuse${ranLine}; ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.`;
+  return nothing;
 }
 
 // ---- each page's language (0.3.1 S1: an EN-AR copy, the English pages and their hidden Arabic copies with language
@@ -480,8 +486,8 @@ export async function checkReport(p, opts) {
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: B.said },
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
-    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
-      tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
+    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length, checks }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
+      tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop; check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),
