@@ -135,19 +135,24 @@ jobs:
           echo "website-checks: ${{ needs.website-checks.result }}"; test "${{ needs.website-checks.result }}" = success
           echo "website-suites: ${{ needs.website-suites.result }}"; test "${{ needs.website-suites.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: website-suites-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
+        if: always()
         run: node scripts/ci-sum.mjs website ci-logs
 
   mcp-parts:
@@ -199,19 +204,24 @@ jobs:
         run: |
           echo "mcp-parts: ${{ needs.mcp-parts.result }}"; test "${{ needs.mcp-parts.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: mcp-parts-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
+        if: always()
         run: node scripts/ci-sum.mjs mcp ci-logs
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
@@ -267,19 +277,24 @@ jobs:
         run: |
           echo "mcp-windows-parts: ${{ needs.mcp-windows-parts.result }}"; test "${{ needs.mcp-windows-parts.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: mcp-windows-parts-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
+        if: always()
         run: node scripts/ci-sum.mjs mcp ci-logs
 
   # macOS (0.3.1 P1, the owner 25 Oct: "beyond Windows, without shipping it"): DataArcus writes Power BI projects on
@@ -336,17 +351,22 @@ jobs:
         run: |
           echo "mcp-macos-parts: ${{ needs.mcp-macos-parts.result }}"; test "${{ needs.mcp-macos-parts.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: mcp-macos-parts-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
+        if: always()
         run: node scripts/ci-sum.mjs mcp ci-logs
