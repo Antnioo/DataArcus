@@ -132,7 +132,7 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 - **0.3.1: the plugin folder (not published yet).** `mcp/skills-packaging/` holds a plugin for Claude Code and GitHub
   Copilot CLI: two skills and the address of the release's `.mcpb`. It installs the same `.mcpb` the release page gives
   (Claude Code downloads it from the release; Copilot CLI by hand), so everything on this page holds for it; the plugin
-  itself has no code of its own. Microsoft's plugin, which it installs beside it, has its own terms.
+  itself has no code of its own. Microsoft's plugin, installed beside it, has its own terms.
 - **Data values only when you ask.** The other tools DataArcus is used with can read data: Microsoft's Power BI
   Authoring MCP runs DAX queries that return values, and a screenshot of a report page shows its numbers. Those are
   other tools with their own terms; the DataArcus report-design skill uses them only after asking you, each time

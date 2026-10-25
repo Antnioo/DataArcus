@@ -57,8 +57,8 @@ package's manifest; this file says what is in it.
   ready to become its own public repo, with a skill that says which of the two does what (Arabic and right-to-left
   work, Gulf dates, the health check and approved writes stay with DataArcus; editing an existing report, screenshots,
   publishing and model changes go to Microsoft's). It installs the released DataArcus extension. Not published yet.
-- **The Health Check** (check_model_health and the website) also flags Arabic percentage measures (the ٪ sign and نسبة) that are
-  not formatted as a percent.
+- **The Health Check** (check_model_health and the website) also flags Arabic percentage measures (the ٪ sign and
+  نسبة) that are not formatted as a percent.
 - **Website:** the Power BI Model Health Check can download a score card to share (a picture with the score, the
   model's size and the top 5 findings, names optional, drawn in your browser), and the PL-300 and DP-600 practice exams
   link each exam area under 70% to its section of Microsoft's study guide.
