@@ -2,12 +2,13 @@
 
 ## Summary
 - **Approval:** the reviewer's brief, 25 Oct: an outside fact-check (25 Oct) found 4 sentences stronger than the truth;
-  the reviewer verified each. Public text only. Base `fix/0.3.1-public-wording` from `origin/integration/0.3.1` (64bce5b).
+  the reviewer verified each. Public text only.
 - **Scope:** licensing guide list2_2; homepage faq.items.7.a; MCP page beta.safe.data, beta.new.l1, beta.req (EN, AR,
   translations, ar/ copies); `mcp/test-0.3.0-claims.mjs` (DS1 block). Not mcp/lib, mcp/tools, PRIVACY.md, ARCHITECTURE.md.
-- **Checks:** expected claims 480 -> about 500, red then PASS. **Got:** 480 -> 576 (red 56b4932: 64 failed) -> 576 PASS;
-  test-arabic-terms 87 PASS; whats-new 167 PASS; ar-pages (38), csp, site config (78 pages), check:min (74, stamps
-  `20261025ds1`) PASS; run-all and sitemap-lastmod: see "Results". Resume: done; waits for the reviewer.
+- **Base:** `fix/0.3.1-public-wording` from `origin/integration/0.3.1` (64bce5b). Push only this branch.
+- **Expected checks:** claims 480 -> about 500, red then PASS. **Got:** 480 -> 576 (red 56b4932: 64 failed) -> 576 PASS;
+  every other check PASS (see "Results").
+- **Resume:** done; waits for the reviewer. Nothing needs Desktop.
 - 1 Licensing: "PPU or capacity removes both limits." -> "PPU or capacity raises both limits: PPU allows models up to
   100 GB and 48 scheduled refreshes a day; on a Fabric capacity the model size depends on its SKU, with 48 scheduled
   refreshes a day (Microsoft Learn: Premium Per User, Pro, PPU and Fabric capacity compared)." AR «ويزيد PPU أو السعة
@@ -27,9 +28,12 @@
   Linux; VS Code and Cursor not yet tried). The one-click .mcpb is for Windows." Source: mcp/README.md lines 102-150.
 
 ## Results
-Commits: 254d261 plan; 56b4932 red; then the sentences (pages, translations, .min.js, ar/ copies, stamps) and this note.
-run-all site, spacing, text-align, lang-switcher: RUNALL. sitemap-lastmod --write after the commit: SITEMAP.
-check-agent-memory: MEMORY.
+Commits: 254d261 plan; 56b4932 red; 17f78ff the sentences (pages, translations, .min.js, ar/ copies, stamps); then sitemap and this note.
+test-arabic-terms 87 PASS; whats-new 167 PASS; ar-pages 38 copies PASS; csp PASS; site config 78 pages PASS; check:min
+74 files PASS (stamps `20261025ds1` on the three changed translations, both copies of each page).
+run-all: site 483 PASS (after the homepage link fix, decision 6; 4 failed before it), spacing 1074, lang-switcher 1442,
+text-align 474 PASS (run before that one-attribute fix). sitemap-lastmod --write after 17f78ff: 6 URLs (the three pages, EN and AR) to 2026-10-26
+(Dubai date). check-agent-memory PASS.
 
 ## CHANGELOG line
 None: the website's text, not the MCP.

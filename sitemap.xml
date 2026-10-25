@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://dataarcus.com/</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/"/>
@@ -11,7 +11,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/"/>
@@ -398,7 +398,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/power-bi-mcp/</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/power-bi-mcp/"/>
@@ -407,7 +407,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/power-bi-mcp/</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/power-bi-mcp/"/>
@@ -650,7 +650,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/articles/article-power-bi-licensing-guide.html</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-licensing-guide.html"/>
@@ -659,7 +659,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/articles/article-power-bi-licensing-guide.html</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-licensing-guide.html"/>
