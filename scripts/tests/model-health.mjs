@@ -1047,7 +1047,7 @@ export default async function ({ browser, url }) {
         && a.lines[a.lines.length - 1] === 'dataarcus.com/tools/power-bi-model-health-check', `${tag}: score ${score}, the size line and the footer: ${JSON.stringify(a.lines)}`);
       const finds = a.lines.filter((l) => /^\d\. /.test(l));
       check(finds.length === Math.min(5, issues.length) && finds.every((l) => (lang === 'en' ? /[A-Za-z]/ : /[\u0600-\u06FF]/).test(l)), `${tag}: the top ${Math.min(5, issues.length)} findings by rule name in the page's language: ${JSON.stringify(finds)}`);
-      check(PLANT.every((p) => !a.text.includes(p) && !a.buf.includes(p)) && !/CALCULATE|SUM\(|FILTER\(|Csv\.Document/.test(a.text), `${tag}: no DAX, description or M on the card: ${JSON.stringify(a.lines)}`);
+      check(PLANT.every((p) => !a.text.includes(p) && !a.buf.includes(p)) && !/CALCULATE\(|SUM\(|FILTER\(|LEN\(|Csv\.Document/.test(a.text), `${tag}: no DAX, description or M on the card: ${JSON.stringify(a.lines)}`);
       check(/\u2068[^\u2069]+\u2069/.test(a.text) && a.dir === L('ltr', 'rtl'), `${tag}: object names isolated (FSI ... PDI), card direction ${a.dir}: ${JSON.stringify(finds)}`);
       const names = [...a.text.matchAll(/\u2068([^\u2069]+)\u2069/g)].map((m) => m[1]);
       await v.pg.click('#mhCardHide');
