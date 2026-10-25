@@ -5,6 +5,13 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]
+- **Arabic and English in one report:** the checker now judges each page in its own language, so the English pages of
+  an English/Arabic report are no longer flagged for right-to-left rules. Approved long Arabic texts are no longer
+  called suspicious because of their length.
+- **Fixes only through approval:** the assistant is told never to edit a report's or a model's files itself; for a
+  DataArcus report the checker names, for each finding, the DataArcus request that fixes it through a plan you approve.
+- **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
+- Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
   your working folder or ask for your data's values are now flagged as instructions and never followed, including
   ones written with look-alike letters.
