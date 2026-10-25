@@ -33,7 +33,7 @@ const Rules = require('../../assets/js/report-rules.js');
 // (0.3.0 D3) the writer's phone tab rule (one copy, the writer's own), for the twin's phone page tabs
 const Sizing = require('../../assets/js/pbip-sizing.js');
 // (0.3.1 R1) the contrast of the plain language button's text
-const Engine = require('../../assets/js/design-engine.js');
+const Engine = require('../../assets/js/design-engine.js'), A11y = require('../../assets/js/report-a11y.js');
 
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
@@ -697,6 +697,25 @@ function langButton(page, visuals, mobiles, lang, target, name, theme) {
   return { json: btn, mobile, phone: true, at };
 }
 
+// (0.3.1 R1: check_report found 8 and 7 Tab stop pairs against the reading order on a real user's two Arabic pages) the
+// mirror maps a page's reading order to the right-to-left one exactly (each place mirrored, the numbers kept); what broke
+// it was the language button, last in the tab order at the top of the page. It takes its place in its page's (or
+// group's) reading order instead (left to right on an English page, right to left on an Arabic one: check_report's own
+// count, report-a11y.js inversions): a free number between its neighbours, else the stops after it move up by one, in
+// their order. The other stops keep their order: the page's tab order is its author's
+function tabInOrder(visuals, btn, dir) {
+  const parent = (v) => (v.parentGroupName != null ? String(v.parentGroupName) : ''), box = (v) => ({ x: posOf(v).x, y: posOf(v).y, w: posOf(v).width, h: posOf(v).height });
+  const sibs = visuals.filter((v) => v !== btn && isObj(v) && posOf(v) && Number.isFinite(posOf(v).tabOrder) && parent(v) === parent(btn)).sort((a, b) => posOf(a).tabOrder - posOf(b).tabOrder);
+  if (!sibs.length) return;
+  let at = sibs.length, least = Infinity;
+  for (let k = 0; k <= sibs.length; k++) { const n = A11y.inversions(sibs.slice(0, k).concat([btn], sibs.slice(k)).map(box), dir); if (n < least) { least = n; at = k; } }
+  if (at === sibs.length) return;   // last already
+  const prev = at > 0 ? posOf(sibs[at - 1]).tabOrder : null, next = posOf(sibs[at]).tabOrder;
+  if (prev == null ? next >= 1 : next - prev >= 2) { btn.position.tabOrder = prev == null ? Math.floor(next / 2) : prev + Math.floor((next - prev) / 2); return; }
+  btn.position.tabOrder = next;
+  sibs.slice(at).forEach((v) => { v.position.tabOrder = posOf(v).tabOrder + 1; });
+}
+
 // P: the plan's own (R, keepLtr, tabsShown); built: buildTwin's; labels: by the mirror engine's ids. Returns the copy as
 // a list of files { rel, data } (data: the bytes to write, or from: the original's file copied as it is), and what the
 // plan says: pairs, buttons, syncGroups, bookmarks, tabs
@@ -757,10 +776,10 @@ function languageCopy(P, built, labels) {
     const say = (lang, r, pageName, target) => buttons.push(Object.assign({ page: safeName(pageName), on: LANG[lang].on, text: LANG[lang].text, goesTo: target, placed: !!r.json }, r.json ? { at: r.at, phone: r.phone } : {}, r.why ? { why: r.why } : {}));
     if (!tooltip && !drill) {
       const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
-      if (en.json) { enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
+      if (en.json) { tabInOrder(enV, en.json, 'ltr'); enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
       say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
       const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
-      if (ar.json) { arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
+      if (ar.json) { tabInOrder(arV, ar.json, P.keepLtr(pg) ? 'ltr' : 'rtl'); arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
       say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
     }
     // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
@@ -1014,7 +1033,7 @@ export function planTwin(a) {
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
-  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown }, built, rawLabels(texts, labels)) : null;
+  const copy = same ? languageCopy({ R, loc, tabsShown: a.tabsShown, keepLtr }, built, rawLabels(texts, labels)) : null;
   const languages = copy ? { copy: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.' },
     how: 'One report holding both languages: the original\'s English pages as they are, and after them each page\'s Arabic page, mirrored as the twin is (the same Arabic texts, phone layout, waterfalls and empty state). Every page has a small language button to its counterpart; the slicers of each page pair are kept in sync; the Arabic pages\' links (page tabs, tooltip pages, bookmarks) go to Arabic pages.',
     pairs: copy.pairs, buttons: copy.buttons, syncGroups: copy.syncGroups, tabs: copy.tabs, activePage: copy.activePage,
