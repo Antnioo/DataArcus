@@ -2408,9 +2408,10 @@ if (part('round10')) {
     // 3. the server's rule 3 covers a page filter
     const info = client.getInstructions ? client.getInstructions() : '';
     chk(() => /page filter/i.test(info) && /3\. /.test(info) && !/with no filter added: never label/.test(info), () => `the server's rule 3 must say a card follows the page filters: ${String(info).slice(0, 700)}`);
-    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version
+    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version (a stamp as
+    // the site writes them: 8 digits, then letters or digits, such as 20261025a or 20261025gc2; check:min holds the rest)
     const html = (f) => fs.readFileSync(path.join(REPO, 'tools', f), 'utf8');
-    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => new RegExp(`${s}\\.min\\.js\\?v=\\d{8}[a-z]?"`).test(html('svg-kpi-designer.html'))) && /calendar-generator\.min\.js\?v=\d{8}[a-z]?"/.test(html('dax-calendar-table-generator.html')),
+    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => new RegExp(`${s}\\.min\\.js\\?v=\\d{8}[a-z0-9]*"`).test(html('svg-kpi-designer.html'))) && /calendar-generator\.min\.js\?v=\d{8}[a-z0-9]*"/.test(html('dax-calendar-table-generator.html')),
       () => 'the SVG KPI Designer page and the Calendar Generator page must load their scripts with ?v=');
     // 5. a column bound to a size or a colour rule of an SVG design must be a number column
     const badCol = { w: 160, h: 24, values: [{ id: 'c', label: 'Region', kind: 'column', column: 'Sales[Region]' }], layers: [{ type: 'rect', x: 0, y: 6, w: 0, h: 12, fill: '#0f6cbd', bind: { w: { v: 'c', d0: 0, d1: 1, r0: 0, r1: 160 } } }] };
