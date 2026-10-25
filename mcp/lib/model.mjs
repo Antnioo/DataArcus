@@ -108,6 +108,15 @@ function realOf(full) {
   }
   return path.join(fs.realpathSync.native(cur), ...rest);
 }
+// A path given to a tool as the full path under root, or null when it is outside: inside by name, or by real path
+// (0.3.1 P1: a working folder given through a link, macOS's /var to /private/var or a Windows junction, takes an
+// absolute path in its real form, read as the same path under root). The real-path check of real() still follows.
+function underRoot(root, p) {
+  const full = path.resolve(root, String(p || '.'));
+  if (within(root, full)) return full;
+  let r, realRoot; try { r = realOf(full); realRoot = fs.realpathSync.native(root); } catch (e) { return null; }
+  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;
+}
 // A full path that is, by name, inside the working folder: refused when a link on the way leads outside it
 export function real(full, shown) {
   const r = realOf(full);
@@ -116,8 +125,8 @@ export function real(full, shown) {
 }
 export function inside(p) {
   const problem = rootProblem(); if (problem) throw new Error(problem);
-  const full = path.resolve(ROOT, String(p || '.'));
-  if (!within(ROOT, full)) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
+  const full = underRoot(ROOT, p);
+  if (full == null) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
   return real(full, p);
 }
 
@@ -341,8 +350,8 @@ export function loadModel(p, opts) {
   const root = opts && opts.root ? path.resolve(String(opts.root)) : ROOT;
   if (!(opts && opts.root)) { const problem = rootProblem(); if (problem) throw new Error(problem); }
   const realIn = (full, shown) => { const r = realOf(full); if (!r || !within(fs.realpathSync.native(root), r)) throw linkError(shown == null ? path.relative(root, full) || full : shown); return full; };
-  let full = path.resolve(root, String(p || '.'));
-  if (!within(root, full)) throw new ReadError('OUTSIDE', { path: p }, `"${p}" is outside the allowed folder ${root}`);
+  let full = underRoot(root, p);
+  if (full == null) throw new ReadError('OUTSIDE', { path: p }, `"${p}" is outside the allowed folder ${root}`);
   realIn(full, p);
   // not a path that exists, and written without a slash: a model's name
   // (A1-1, the audit of the reading block: every path picked here goes through real() before any stat or read, as the
