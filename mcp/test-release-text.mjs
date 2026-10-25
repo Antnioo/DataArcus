@@ -5,6 +5,7 @@
 // version it names is the release it leads to), and mcp/PRIVACY.md's header says "Checked against <version>". Change
 // both places together.
 import fs from 'node:fs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 const read = (f) => fs.readFileSync(new URL(f, import.meta.url), 'utf8');
 const problems = [];
 let checks = 0;
@@ -38,7 +39,7 @@ for (const f of CLAIM_FILES) {
   }
   check(!/only hashes|holds hashes and your answers/i.test(t), `R7: ${f} says the answers file holds only hashes: its answer, date and "user" are plain text`);
 }
-const priv = flatText('./PRIVACY.md'), srv = flatText('./server.mjs');
+const priv = flatText('./PRIVACY.md'), srv = serverSource().replace(/\s+/g, ' ');
 check(/in plain text your answer/.test(priv) && /not salted/.test(priv), 'R7: PRIVACY.md says which fields of the answers file are plain text, and that its hashes are not salted');
 check(/screened for instructions and length only/.test(priv) && /returned as it is/.test(priv), 'R7: PRIVACY.md says read_report\'s titles are screened for instructions and length only, and a short one is returned as it is');
 const rrDesc = (srv.match(/registerTool\('read_report', \{.*?description: '(.*?)' \+ REPORT_UNTRUSTED/) || [])[1] || '';

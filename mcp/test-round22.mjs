@@ -8,6 +8,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { checkReportClean } from './test-validator.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 export async function round22({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -249,14 +250,14 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const pn = mkReport('r22b-cc', { name: 'Page\u0007one​two' }), x = await ask('check_report', { path: pn, checks: ['schemas'] });
     const names = x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.report.pageNames);
     chk(() => !x.err && x.j.report.pageNames[0] === 'Page\\u0007one\\u200btwo', () => `9. a page name's control and format characters are written as code points: ${names}`);
-    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = serverSource();
     chk(() => !/const visible\s*=/.test(src) && !/const visible\s*=/.test(srv), () => '9. check-report.mjs and server.mjs share one visible() (no copy of their own)');
   }
   // 5. one tool's dependency cannot stop the server: Microsoft's report CLI (Node 20 or later, its schema package 20.10
   //    or later) is loaded by check_report when it runs, never when the server starts; and package.json's engines say
   //    the real minimum, the highest of the packages the MCP ships with
   {
-    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = serverSource();
     const statics = (s) => (s.match(/^import [^;]*;/gm) || []).join('\n');
     chk(() => !/powerbi-report-authoring-cli/.test(statics(src)) && !/powerbi-report-authoring-cli/.test(statics(srv)), () => `5. no static import of Microsoft's report CLI: ${statics(src).split('\n').filter((l) => /cli/.test(l)).join(' | ')}`);
     const pkg = JSON.parse(fs0.readFileSync(path.join(HERE, 'package.json'), 'utf8')), lock = JSON.parse(fs0.readFileSync(path.join(HERE, 'package-lock.json'), 'utf8'));

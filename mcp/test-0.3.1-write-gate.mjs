@@ -1,7 +1,7 @@
 // 0.3.1 S1 (the owner, 25 Oct: the user's agent fixed a report with its own script, outside DataArcus's plan): a gate
-// on every place the server can write a file. It finds each file-writing call in mcp/server.mjs and mcp/lib/*.mjs, counted
-// per file, and fails when the counts differ from the list below: a new write (or a new way to reach one) must be
-// added here, with why it is safe, before CI passes.
+// on every place the server can write a file. It finds each file-writing call in mcp/server.mjs, mcp/lib/*.mjs and
+// mcp/tools/*.mjs (0.3.1 S9), counted per file, and fails when the counts differ from the list below: a new write (or a
+// new way to reach one) must be added here, with why it is safe, before CI passes.
 //   What counts: an fs call that writes (through any name node:fs or node:fs/promises is imported or required as, and
 //   write-io.mjs's io and REAL), an fs function imported by name, a destructuring or a computed access of an fs name
 //   (a way round this list), node:child_process (a process can write), and the helpers that wrap the writes.
@@ -21,7 +21,7 @@ const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } ca
 const WRITES = ['writeFileSync', 'writeFile', 'appendFileSync', 'appendFile', 'mkdirSync', 'mkdir', 'mkdtempSync', 'mkdtemp', 'cpSync', 'cp', 'renameSync', 'rename',
   'copyFileSync', 'copyFile', 'rmSync', 'rm', 'rmdirSync', 'rmdir', 'unlinkSync', 'unlink', 'createWriteStream', 'linkSync', 'link', 'symlinkSync', 'symlink',
   'truncateSync', 'truncate', 'ftruncateSync', 'writeSync', 'write', 'writev', 'writevSync', 'openSync', 'open', 'chmodSync', 'chmod', 'utimesSync', 'utimes', 'lutimesSync', 'futimesSync'];
-// the helpers that wrap them (write-io.mjs, files.mjs, answers.mjs, model.mjs; the server's writeScript and formatsAnswer;
+// the helpers that wrap them (write-io.mjs, files.mjs, answers.mjs, model.mjs; fix-scripts.mjs's writeScript and formatsAnswer;
 // the tools' writers in lib/: the twin's, the native copy's, the redesign's, the Gulf calendar's; 0.3.1 C: the sample project's)
 const WRAPPERS = ['writeFileNew', 'writeNew', 'writeTree', 'createFile', 'makeDir', 'writeAnswers', 'freeFile', 'removeOurs', 'rollBack',
   'writeScript', 'formatsAnswer', 'addGulfCalendar', 'writeTwin', 'writeNative', 'writeRedesign', 'writeSample'];
@@ -65,20 +65,6 @@ const PLAN = 'behind approve_plan\'s gate: runs only inside a tool\'s write afte
 const TMP = 'the temporary check copy: a folder of its own in the OS temp folder (fs.mkdtempSync), removed when the check ends; never the working folder';
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
-  'server.mjs': {
-    'writeNew()': { n: 1, why: `writeScript's write of a fix script (a new file, never over anything): ${PLAN}` },
-    'writeScript()': { n: 5, why: `check_model_health's scripts (planWrites), create_report's format script (inside withPlan), the Arabic calendar (withPlan); scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
-    'formatsAnswer()': { n: 4, why: `writes only with write = true: inside create_report's withPlan and check_model_health's approved planWrites; plan_layout's two calls pass false (names the file, writes nothing): ${PLAN}` },
-    'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` },
-    'writeTree()': { n: 1, why: `create_report's report, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` },
-    'freeFile()': { n: 1, why: `generate_theme's theme file (its folders, one level at a time), inside withPlan after Plans.gate: ${PLAN}` },
-    'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeSample()': { n: 1, why: `create_report with sample (0.3.1 C), inside withPlan after Plans.gate with the sample plan's folder and inputs: ${PLAN}` }
-  },
   'lib/write-io.mjs': {
     'fs.writeFileSync': { n: 1, why: 'kept as REAL.writeFileSync (the real call behind io), not a call' },
     'fs.mkdirSync': { n: 1, why: 'kept as REAL.mkdirSync, not a call' },
@@ -123,15 +109,49 @@ const LIST = {
     'fs.writeFileSync': { n: 1, why: TMP },
     'fs.rmSync': { n: 1, why: TMP }
   },
-  'lib/arabic-twin.mjs': { 'writeTree()': { n: 1, why: `writeTwin: the twin or the EN-AR copy, new files next to the original: ${PLAN}` } },
+  'lib/fix-scripts.mjs': {
+    'writeNew()': { n: 1, why: `writeScript's write of a fix script (a new file, never over anything): ${PLAN}` },
+    'writeScript()': { n: 2, why: `formatsAnswer's format script, only with write = true: inside check_model_health's approved planWrites (pw.step) or create_report's withPlan: ${PLAN}` }
+  },
+  'lib/report-run.mjs': {
+    'writeTree()': { n: 1, why: `create_report's report, inside withPlan after Plans.gate: ${PLAN}` },
+    'formatsAnswer()': { n: 1, why: `create_report's format script with its report, inside the same withPlan: ${PLAN}` }
+  },
+  'lib/twin-write.mjs': { 'writeTree()': { n: 1, why: `writeTwin: the twin or the EN-AR copy, new files next to the original: ${PLAN}` } },
   'lib/native-copy.mjs': { 'writeTree()': { n: 1, why: `writeNative: the native copy, new files next to the original: ${PLAN}` } },
   'lib/redesign.mjs': { 'writeTree()': { n: 1, why: `writeRedesign: the copy "<name> redesigned", new files next to the original: ${PLAN}` } },
   'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
-  'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `the server's writeScript (or scriptNameNow, which writes nothing) passed in: ${PLAN}` } },
-  'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } }
+  'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `fix-scripts.mjs's writeScript (or add_gulf_calendar's scriptNameNow, which writes nothing) passed in: ${PLAN}` } },
+  'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } },
+  'tools/add_gulf_calendar.mjs': {
+    'writeScript()': { n: 2, why: `the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
+    'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` }
+  },
+  'tools/check_model_health.mjs': {
+    'writeScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.step): ${PLAN}` },
+    'formatsAnswer()': { n: 1, why: `writes only with write = true, inside check_model_health's approved planWrites: ${PLAN}` },
+    'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` }
+  },
+  'tools/create_arabic_twin.mjs': {
+    'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }
+  },
+  'tools/create_report.mjs': {
+    'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
+    'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` },
+    'writeSample()': { n: 1, why: `create_report with sample (0.3.1 C), inside withPlan after Plans.gate with the sample plan's folder and inputs: ${PLAN}` }
+  },
+  'tools/generate_theme.mjs': {
+    'freeFile()': { n: 1, why: `generate_theme's theme file (its folders, one level at a time), inside withPlan after Plans.gate: ${PLAN}` },
+    'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` }
+  },
+  'tools/plan_layout.mjs': {
+    'formatsAnswer()': { n: 2, why: `plan_layout's two calls pass write = false: they name the file, write nothing: ${PLAN}` }
+  }
 };
 
-const files = ['server.mjs'].concat(fs.readdirSync(path.join(HERE, 'lib')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'lib/' + f));
+// (0.3.1 S9) and each tool's module in tools/, which server.mjs imports
+const files = ['server.mjs'].concat(fs.readdirSync(path.join(HERE, 'lib')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'lib/' + f),
+  fs.existsSync(path.join(HERE, 'tools')) ? fs.readdirSync(path.join(HERE, 'tools')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'tools/' + f) : []);
 const found = Object.fromEntries(files.map((f) => [f, writesIn(fs.readFileSync(path.join(HERE, f), 'utf8'))]).filter(([, w]) => Object.keys(w).length));
 if (process.env.DA_WRITES) console.log(JSON.stringify(found, null, 1));
 

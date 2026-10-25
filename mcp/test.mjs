@@ -38,6 +38,7 @@ import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
 import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 // Round 23 (the owner's go, 8 Oct 2026; way 4, measured in Desktop 2.158.1304): an Arabic table with a total row has its
@@ -884,7 +885,7 @@ if (part('round3')) {
 
   // 6. the version is in one place: mcp/package.json
   {
-    const pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')), src = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')), src = serverSource();
     check((client.getServerVersion() || {}).version === pkg.version, `the server's version ${(client.getServerVersion() || {}).version} is not package.json's ${pkg.version}`);
     check(!/version:\s*['"]\d/.test(src) && /package\.json/.test(src), 'server.mjs still holds a version of its own (it must read mcp/package.json)');
   }
@@ -1210,7 +1211,7 @@ if (part('round5')) {
     chk(() => !cr.err && cr.j.report !== 'Linked Five.Report' && fs.lstatSync(cr.j.open).isFile() && fs.lstatSync(path.join(d, 'Linked Five.pbip')).isSymbolicLink() && fs.readdirSync(OUT).length === 0,
       () => `create_report at a name held by a dangling ${kind}: ${cr.err ? cr.t.slice(0, 200) : cr.j.report}; outside now holds ${fs.readdirSync(OUT)}`);
     // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server  (B-153: the one new-file writer is lib/write-io.mjs)
-    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+    const src = [serverSource()].concat(['lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8'))).join('\n');
     chk(() => !/fs\.writeFileSync\(/.test(src.replace(/fs\.writeFileSync\([^;]*flag: 'wx'[^;]*;/g, '')) && /flag: 'wx'/.test(src) && !/existsSync\(f\)\) return f/.test(src),
       () => 'a new file is still written without the wx flag, or a free name is still picked with existsSync');
     unlink(path.join(ROOT, 'dangling-theme.json')); unlink(path.join(d, first)); unlink(path.join(d, 'Linked Five.pbip'));

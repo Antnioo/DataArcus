@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { elicitClient } from './test-audit6.mjs';
 import { loadModel } from './lib/model.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const problems = []; let checks = 0;
@@ -155,7 +156,7 @@ Object.assign(fs, orig);
 
 // ---------- F3: the privacy texts say what is read and what is returned, exactly ----------
 {
-  const privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8'), readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8'), server = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+  const privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8'), readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8'), server = serverSource();
   const flat = (s) => s.replace(/\s+/g, ' ');
   const p = flat(privacy), rm = flat(readme);
   chk(() => !/which holds no data/.test(p), () => 'F3. PRIVACY.md no longer says a .pbit\'s schema "holds no data"');

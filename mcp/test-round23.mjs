@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { tableProblems, sortProblems, rowLabelProblems } from '../scripts/tests/report-check.mjs';
 import { checkReportClean } from './test-validator.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 export async function round23({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -342,7 +343,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // F7. One implementation of the room rule: the server's text slots use lib/slots.mjs's absorb (no copy of its own)
   {
-    const srv = fs0.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs'), 'utf8');
+    const srv = serverSource();
     chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use the one absorb (the design engine\'s since 0.2.9 A2-3) for text slots, not its own copy');
   }
 

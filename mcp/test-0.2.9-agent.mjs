@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const src = (f) => fs0.readFileSync(path.join(REPO, f), 'utf8').replace(/\r\n/g, '\n');
@@ -43,7 +44,7 @@ export async function v029agent({ call, check, meta }) {
 
   // ---------- A7-4: each agent rule in one source ----------
   {
-    const srv = src('mcp/server.mjs');
+    const srv = serverSource().replace(/\r\n/g, '\n');
     chk(() => typeof A.instructions === 'function' && !/const INSTRUCTIONS = \[/.test(srv), () => 'A7-4: the instructions are built in lib/agent-text.mjs, not written in server.mjs');
     chk(() => A.INSTRUCTIONS_MAX <= 2200 && ins.length <= A.INSTRUCTIONS_MAX, () => `A7-4: the instructions are ${ins.length} characters, ${A.INSTRUCTIONS_MAX} at most (one cap)`);
     const tests = ['mcp/test.mjs', 'mcp/test-0.2.9c.mjs'].map(src).join('\n');
