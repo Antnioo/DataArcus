@@ -45,13 +45,14 @@ check(cm.name === MARKET && gm.name === MARKET && cp.name === PLUGIN && gp.name 
   `marketplace "${MARKET}" and plugin "${PLUGIN}" are not named the same in all four manifests`);
 
 // 7: one version, Claude Code's plugin.json's: the bundle URL, both marketplace entries and Copilot's manifest say the
-// same, and it is the newest released version (mcp/CHANGELOG.md's newest "## [x.y.z]") or the next one being built
+// same (so does every release file name in the README), and it is the newest released version (mcp/CHANGELOG.md's newest "## [x.y.z]") or the next one being built
 const V = cp.version || '';
 const URL_OF = (v) => `https://github.com/Antnioo/dataarcus-releases/releases/download/v${v}/dataarcus-${v}.mcpb`;
 const released = ((readText(path.join(HERE, 'CHANGELOG.md')).match(/^## \[(\d+\.\d+\.\d+)\]/m) || [])[1]) || '';
+const readmeVersions = [...readText(path.join(SRC, 'README.md')).matchAll(/dataarcus-(\d+\.\d+\.\d+)/g)].map((x) => x[1]);
 const nextOf = (v) => { const [a, b, c] = v.split('.').map(Number); return [`${a}.${b}.${c + 1}`, `${a}.${b + 1}.0`, `${a + 1}.0.0`]; };
-check(/^\d+\.\d+\.\d+$/.test(V) && [gp.version, entryOf(cm).version, entryOf(gm).version].every((v) => v === V) && released && [released, ...nextOf(released)].includes(V),
-  `one version in the folder: plugin.json ${V}, Copilot ${gp.version}, marketplaces ${entryOf(cm).version}/${entryOf(gm).version}; the newest release is ${released}`);
+check(/^\d+\.\d+\.\d+$/.test(V) && [gp.version, entryOf(cm).version, entryOf(gm).version].every((v) => v === V) && readmeVersions.length > 0 && readmeVersions.every((v) => v === V) && released && [released, ...nextOf(released)].includes(V),
+  `one version in the folder: plugin.json ${V}, Copilot ${gp.version}, marketplaces ${entryOf(cm).version}/${entryOf(gm).version}, README ${[...new Set(readmeVersions)].join('/')}; the newest release is ${released}`);
 
 // 8: Claude Code starts the released .mcpb of that version, from its URL (the plugin carries no DataArcus code)
 check(cp.mcpServers === URL_OF(V), `Claude Code's plugin.json mcpServers must be the release's bundle ${URL_OF(V)}: ${JSON.stringify(cp.mcpServers)}`);

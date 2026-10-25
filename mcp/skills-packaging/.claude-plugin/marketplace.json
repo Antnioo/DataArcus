@@ -1,0 +1,21 @@
+{
+  "name": "dataarcus",
+  "owner": { "name": "DataArcus", "url": "https://dataarcus.com" },
+  "metadata": {
+    "description": "DataArcus for Power BI: Arabic right-to-left reports, Gulf dates and Ramadan, an approval before every write and metadata-only answers, next to Microsoft's powerbi-authoring plugin."
+  },
+  "allowCrossMarketplaceDependenciesOn": ["fabric-collection"],
+  "plugins": [
+    {
+      "name": "dataarcus",
+      "source": "./plugins/dataarcus",
+      "version": "0.3.1",
+      "description": "Arabic right-to-left reports and Arabic twins, one report in English and Arabic, Gulf calendars with Hijri and Ramadan, the model health check, and an approval click before any file is written. Works next to Microsoft's Power BI Report skill (the powerbi-authoring plugin). It installs Microsoft's plugin with it.",
+      "dependencies": [
+        { "name": "powerbi-authoring", "marketplace": "fabric-collection" }
+      ],
+      "homepage": "https://dataarcus.com/power-bi-mcp/",
+      "keywords": ["powerbi", "pbir", "pbip", "arabic", "rtl", "gulf", "hijri", "ramadan", "report-design"]
+    }
+  ]
+}
