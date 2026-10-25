@@ -4,6 +4,15 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 6: T1 the mutation suite (25 Oct, builder; branch `test/0.3.1-mutation` from integration/0.3.1 794737e)
+The owner, 25 Oct, after an outside review ("prioritise confidence in critical invariants over more checks"): "make it all
+in 0.3.1". `mcp/test-0.3.1-mutation.mjs` breaks each critical invariant on a copy of the code (the approval gate, path
+safety, writes and their clean-up, the privacy screen, check_report's "can break" split) and requires an existing test to
+fail; a mutant that survives gets its missing test in the suite that owns the block. Tests only. Plan, mutants, expected
+kills, results, decisions, "Seen, not in scope": `mcp/work/T1.md`.
+- Done: the plan (this commit).
+- Next: the suite, the survivors' tests, the full npm test; then the reviewer reviews and merges.
+
 ## 0.3.1, wave 4: L6 the DAX function library, ported onto today's code (25 Oct, builder; branch `feat/0.3.1-dax-functions-2` from integration/0.3.1 e8ccecc)
 Draft #82 (`origin/feat/0.3.1-dax-functions`, pre-0.3.0 history) ported, not merged: `daxFunctions` (off by default) on
 plan_layout and create_report writes DA.Sparkline, DA.BulletBar, DA.KpiCard, DA.StoryTitle and the measures that call them
