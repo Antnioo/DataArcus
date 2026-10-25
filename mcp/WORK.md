@@ -4,6 +4,14 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 2: M1 the matrix mirror lab and one engine (25 Oct, builder; branch `feat/0.3.1-matrix-mirror` from integration/0.3.1 ebf1d51)
+The owner: "add one very extensive lab for matrix mirror ...; when I opened the last one myself it was not mirrored; make
+sure the AR and twin are using the same engine". Plan, expected numbers, variants, results, "For the laptop":
+`mcp/work/M1.md`. Part A: `mcp/lab/matrix-mirror.mjs` (one project, 7 pages, every matrix property Microsoft's
+capabilities give that could make it read from the right). Part B: `mcp/test-0.3.1-mirror-parity.mjs` and every Arabic
+path through `assets/js/report-mirror.js`. No new matrix behaviour for users before the laptop picks a variant.
+- Status: plan pushed; next: red tests.
+
 ## 0.3.1, wave 1 (25 Oct, reviewer; the owner: "proceed with 0.3.1 ... 3 builders at a time ... fix the things I saw myself in the MCP")
 Branch model: `integration/0.3.1` from main d501c78. Each builder branches from it, pushes only its own branch, never
 merges; the reviewer reviews and merges into the integration branch; one PR integration -> main at the end, the owner
