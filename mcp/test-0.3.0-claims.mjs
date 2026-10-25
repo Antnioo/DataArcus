@@ -144,5 +144,45 @@ for (const [k, t] of Object.entries(W)) {
   check(heads.length >= 4 && !heads.some((h) => /\b(?:first|only|official|free)\b|الأول|الوحيد|رسمي|مجان/i.test(h)), `W-6. the ${k} article's headlines are missing or say first, only, official or free: ${JSON.stringify(heads)}`);
 }
 
+// D5 (0.3.1 wave 5, 25 Oct; mcp/work/D5.md): every public sentence the release-prep sweep added, one check each, and the
+// forbidden words over the texts it touched that the scan above does not read (PRODUCT_SPEC, llms.txt, the CHANGELOG's
+// [Unreleased])
+const mrow = (tool) => (mreadme.match(new RegExp(`\\| \`${tool}\` \\| (.*?) \\|(?: \\| \`| \\*\\*|$)`)) || [])[1] || '';
+// D5-R the MCP README: the 0.3.1 options in their tools' rows, the plugin folder said as not published
+check(/languages: "en\+ar"/.test(mrow('plan_layout')) && /bilingual/.test(mrow('plan_layout')), 'D5-R1. mcp/README.md\'s plan_layout row does not document languages: "en+ar" (and its bilingual answer)');
+check(/languages: "en\+ar"/.test(mrow('create_report')) && /after them, each page's Arabic page/.test(mrow('create_report')) && /off by default/.test(mrow('create_report')), 'D5-R2. mcp/README.md\'s create_report row does not say what languages: "en+ar" writes (off by default)');
+check(/draws each Arabic page/.test(mrow('create_arabic_twin')) && /button slicers \(pills\)/.test(mrow('create_arabic_twin')), 'D5-R3. mcp/README.md\'s create_arabic_twin row does not say the approval page draws the Arabic pages, nor that the copy keeps button slicers (pills) in sync');
+check(/`skills-packaging\/`/.test(mreadme) && /[Nn]ot published yet/.test(mreadme) && /same `\.mcpb`/.test(mreadme), 'D5-R4. mcp/README.md does not name the plugin folder as not published yet (it starts the same .mcpb)');
+// D5-P PRIVACY.md: what each 0.3.1 path reads and writes
+check(/`lens: "arabic"`/.test(row('check_report')) && /writes nothing/.test(row('check_report')), 'D5-P1. PRIVACY.md\'s check_report row does not say what the Arabic lens returns and that it writes nothing');
+check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.test(pl), 'D5-P2. PRIVACY.md\'s plan_layout row does not name languages "en+ar" (bilingual) and the sample');
+check(/`sample: true`/.test(cr) && /made-up/.test(cr) && /never a row/.test(cr) && /`languages: "en\+ar"`/.test(cr), 'D5-P3. PRIVACY.md\'s create_report row does not say the sample writes a made-up project (never a row in the answer) and what languages "en+ar" returns');
+check(/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
+check(/Checked against 0\.3\.1/.test(pv.slice(0, 600)), 'D5-P5. PRIVACY.md\'s header is not checked against 0.3.1');
+// D5-S PRODUCT_SPEC.md: 0.3.1's three options said, and the platforms as the release says them
+check(/0\.3\.1/.test(spec) && /`lens: "arabic"`/.test(spec) && /`languages: "en\+ar"`/.test(spec) && /`sample: true`/.test(spec), 'D5-S1. PRODUCT_SPEC.md says nothing of 0.3.1 (the Arabic lens, languages "en+ar", the sample)');
+check(/Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric/.test(spec), 'D5-S2. PRODUCT_SPEC.md does not say the platforms in the release\'s words');
+// D5-L llms.txt: the agent's line says both languages and the Arabic check
+const llms = flat('../llms.txt');
+check(/English, Arabic, or both in one report/.test(llms) && /ready for Arabic/.test(llms), 'D5-L1. llms.txt\'s DataArcus for Power BI line says nothing of one report in both languages or the Arabic check');
+// D5-B the beta page's tool lines: 0.3.1's options said as 0.3.1's (the download is still 0.3.0 until the release)
+const tl = (lang, key) => { const L = bp.slice(bp.indexOf(lang === 'en' ? '"en"' : '"ar"')), part = L.slice(L.indexOf('"tools": {')); const m = new RegExp(`"${key}": "((?:[^"\\\\]|\\\\.)*)"`).exec(part); return m ? m[1] : ''; };
+check(/From 0\.3\.1/.test(tl('en', 'check_report')) && /ready for Arabic/.test(tl('en', 'check_report')) && /0\.3\.1/.test(tl('ar', 'check_report')), 'D5-B1. beta-page check_report (EN, AR) does not say the Arabic lens comes with 0.3.1');
+check(/From 0\.3\.1/.test(tl('en', 'plan_layout')) && /English and Arabic/.test(tl('en', 'plan_layout')) && /0\.3\.1/.test(tl('ar', 'plan_layout')), 'D5-B2. beta-page plan_layout (EN, AR) does not say one report in English and Arabic comes with 0.3.1');
+check(EN.html.includes('From 0.3.1') && AR.html.includes('0.3.1'), 'D5-B3. the MCP page (EN, AR) does not carry the 0.3.1 tool lines (scripts/ar-pages.mjs --write and the page)');
+// D5-W the forbidden words, a Mac claim and a matrix promise, over the texts this sweep touched
+const unrel = (read('./CHANGELOG.md').match(/^## \[Unreleased\][^\n]*\n([\s\S]*?)(?=^## )/m) || [])[1] || '';
+const D5_TEXTS = { 'PRODUCT_SPEC.md': spec, 'llms.txt': llms, 'CHANGELOG [Unreleased]': unrel.replace(/\s+/g, ' ') };
+for (const [f, t] of Object.entries(D5_TEXTS)) {
+  for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `D5-W. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'empty'}`); }
+}
+const MAC = /runs? Power BI (?:Desktop )?on (?:a )?Mac|Power BI Desktop (?:on|for) macOS|يشغّل Power BI على Mac/i;
+for (const [f, t] of Object.entries(Object.assign({}, D5_TEXTS, { 'mcp/README.md': mreadme, 'PRIVACY.md': pv, 'beta-page.js': bp }))) {
+  const m = MAC.exec(t); check(!m, `D5-W. ${f} says DataArcus runs Power BI on a Mac: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`);
+}
+const promises = unrel.replace(/\s+/g, ' ').split(/(?<=[.:])\s+/).filter((s) => /\bmatri(?:x|ces)\b/i.test(s) && /\b(?:soon|coming|will (?:be|get|read|mirror)|planned|next (?:version|release))\b/i.test(s));
+check(!promises.length, `D5-W. the CHANGELOG's [Unreleased] promises something for the matrix: "${promises[0] || ''}"`);
+check(!/\bfree\b/i.test((unrel.match(/\*\*[^*]+\*\*/g) || []).join(' ')), 'D5-W. a bold lead in the CHANGELOG\'s [Unreleased] says "free"');
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);
