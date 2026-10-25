@@ -8,10 +8,10 @@
   const E = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
   const Q = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Z = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
-    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, byTitle, catKind, kpiLabel, lineStyle,
+    AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindStory, bindTitle, bool, catKind, kpiLabel, lineStyle,
     color, contrast, daxNames, fieldCol, gradientFill, hasControl, isTextField, isTime, isValue, json, label, lit,
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
-    rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
+    rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan
   } = Q;
   // (0.3, J4: the story titles' rules, story-titles.js, loaded before pbip-query.js on the website's pages)
   const ST = (typeof module !== 'undefined' && module.exports ? require('./story-titles.js') : root.DAStoryTitles);
@@ -329,7 +329,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet, waterfallRtl, slicerStyles, gridCharts
+      trend, u, valueEm, wrapLines, extMeasure, extField, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -1241,7 +1241,7 @@
     // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
     // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
     const PW = 323, GAP = 8, SIZE = { title: 56, nav: 44, logo: 56, kpi: 100, card: 100, slicer: 64, button: 40, text: 120, table: 270, gauge: 180, donut: 220, map: 220, treemap: 220 };
-    const pos = {}, bottom = {};
+    const pos = {};
     let y = 0, col = 0;
     const navBtns = mob.filter((m) => m.kind === 'navbtn');
     const place = (m) => {

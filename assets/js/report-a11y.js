@@ -40,7 +40,6 @@
   const entries = (l) => (Array.isArray(l) ? l : []);
   const plain = (l) => entries(l).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e && e.properties && typeof e.properties === 'object' ? e.properties : {}), {});
   const shown = (x) => String(x).replace(/(?![‌‍])\p{Cf}/gu, '').replace(/\s+/g, ' ').trim();
-  const AR = /[؀-ۿݐ-ݿﭐ-﻿]/;
   const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
   const hex6 = (c) => { const s = String(c || '').trim().replace(/^'|'$/g, ''); if (!HEX.test(s)) return null; return s.length === 4 ? '#' + s.slice(1).split('').map((ch) => ch + ch).join('') : s.toLowerCase(); };
 

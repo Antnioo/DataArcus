@@ -1326,7 +1326,7 @@
       // B-147 (0.3): a format that may not show what the measure means; the measure's own format string (m.format), a
       // dynamic format (fsExpr) never asked about
       if (m.formatString && !m.fsExpr) {
-        const f = m.formatString, pct = percentFormat(f), words = new Set(CF.words(m.name));
+        const f = m.formatString, pct = percentFormat(f);
         // a ratio or a multiple (Current Ratio, Asset Turnover, Debt to Equity) shown as a percentage: 1.5 shows as 150%
         if (pct && MULTIPLE.test(m.name) && !PERCENTISH.test(m.name))
           askFormat('ratioAsPercent', m, 'Should this ratio be shown as a multiple (1.5x) rather than a percentage?', 'هل يجب أن تُعرض هذه النسبة كمضاعف (1.5x) بدلًا من نسبة مئوية؟', []);

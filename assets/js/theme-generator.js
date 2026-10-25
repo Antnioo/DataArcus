@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
   // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
   let PW = 1280, PH = 720;   // the current page's size on the 720-tall design grid
-  const { M, PAGES, LIM, within, fitCustom, KINDS, LAYOUTS, hasMain, hasSplit } = E;
+  const { PAGES, LIM, within, fitCustom, KINDS, LAYOUTS, hasMain, hasSplit } = E;
   const page = (c) => E.page(c || lay());
   let pageMsg = '';   // shown once after a typed value was outside the limits
   const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
@@ -245,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sp = E.smallPage(c), small = sp ? L(`Under ${E.SMALL_PAGE.w} wide the executive layout becomes the single-focus layout (the KPI cards and one large chart), with no second page.`, `تحت عرض ${E.SMALL_PAGE.w} يصبح الملخص التنفيذي تخطيط الرسالة الواحدة (بطاقات المؤشرات ومخطط كبير واحد)، بدون صفحة ثانية.`) : '';
     return [w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`), small].filter(Boolean).join(' '); };
   const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
-  const toPage = (v, c) => E.toPage(v, c || lay());
   const boxOf = (s, c) => E.boxOf(s, c || lay());
   const lay = () => state.layout;
   const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
@@ -305,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // accent bars: side, thickness and color (Advanced options)
   const barW = (k, c) => E.barW(k, c || lay());
-  const barColor = (k, i) => E.barColor(state, k, i);
   const c0 = () => E.c0(lay()); // KPI text sits after a side bar
 
   // The background (design engine); the preview adds sample visuals, slot names and sizes over the panels
@@ -370,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const pngSize = (c) => E.pngSize(c || lay());
   function renderLayoutPreview() {
-    const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
+    const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c);
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
@@ -621,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
     // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
     const withProject = (then) => {
-      const c = lay(), p = page(c), m = mode(), sample = m === 'sample';
+      const c = lay(), m = mode(), sample = m === 'sample';
       // your own model: where it is, and the fields picked for each visual
       let model = null;
       if (m === 'local') {
