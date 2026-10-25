@@ -43,8 +43,8 @@ package's manifest; this file says what is in it.
   language's pages hidden in the tabs. The approval page shows each English page beside its Arabic page. In the
   English-Arabic copy too, button slicers (pills) are now kept in sync with their Arabic copy.
 - **One Arabic word for each idea:** reports, the approval page, the health checks and the website now use the same
-  Arabic term for each Power BI and DataArcus idea (filters, slicers, tooltips, visuals, the date table, Ramadan dates,
-  dashboards), and write the name DataArcus in Latin letters. A check keeps it so.
+  Arabic term for each Power BI and DataArcus idea («الفلاتر», «مقسم», «تلميح», «المرئيات», «لوحة معلومات», «تواريخ
+  رمضان», «جدول التاريخ»), and write the name DataArcus in Latin letters. A check keeps it so.
 - **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
   report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
   Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.

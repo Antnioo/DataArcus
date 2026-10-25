@@ -67,6 +67,7 @@ window.privacyTranslations = {
     },
     "meta": {
       "title": "سياسة الخصوصية - DataArcus",
+      "keywords": "داتا أركوس, DataArcus, Power BI",
       "description": "كيف يتعامل DataArcus مع بياناتك: الأدوات المجانية تعمل في متصفحك، والتحليلات عبر Google Analytics وMicrosoft Clarity، ونموذج التواصل."
     }
   }

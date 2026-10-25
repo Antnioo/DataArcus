@@ -185,7 +185,8 @@ window.calendarGeneratorTranslations = {
       }
     },
     "meta": {
-      "title": "مولّد جدول التاريخ في DAX بالتاريخ الهجري - DataArcus", "description": "أنشئ جدول تاريخ لـ Power BI بلغة DAX مع السنة المالية وعطلة نهاية الأسبوع الخليجية والتاريخ الهجري (أم القرى) وعلامات رمضان والعيد. انسخ والصق. مجانًا."
+      "title": "مولّد جدول التاريخ في DAX بالتاريخ الهجري - DataArcus", "description": "أنشئ جدول تاريخ لـ Power BI بلغة DAX مع السنة المالية وعطلة نهاية الأسبوع الخليجية والتاريخ الهجري (أم القرى) وعلامات رمضان والعيد. انسخ والصق. مجانًا.",
+      "keywords": "داتا أركوس, DAX calendar table, Power BI date table, DAX date table generator, Hijri calendar Power BI, Ramadan Power BI, fiscal calendar DAX",
     }
   }
 };

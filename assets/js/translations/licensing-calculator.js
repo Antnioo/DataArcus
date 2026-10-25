@@ -59,7 +59,7 @@ window.licensingCalculatorTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric",
+      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric", "keywords": "داتا أركوس, Power BI pricing calculator, Power BI licensing cost, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI free viewers",
       "description": "قارن تكلفة Power BI Pro وPremium Per User وسعة Fabric لفريقك، واعرف الخيار الأوفر ومتى يصبح F64 مجديًا، بالدولار أو الدرهم أو الريال."
     },
     "lc": {

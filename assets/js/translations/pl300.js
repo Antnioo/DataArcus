@@ -34,7 +34,7 @@ window.pl300Translations = {
   },
   "ar": {
     "meta": {
-      "title": "اختبار PL-300 تجريبي مجاني: Power BI Data Analyst", "description": "اختبار PL-300 تجريبي مجاني: 228 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أبريل 2026."
+      "title": "اختبار PL-300 تجريبي مجاني: Power BI Data Analyst", "keywords": "داتا أركوس, PL-300 practice exam, PL-300 practice test, PL-300 exam simulator, Power BI Data Analyst Associate, Power BI certification renewal, free PL-300 questions", "description": "اختبار PL-300 تجريبي مجاني: 228 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أبريل 2026."
     },
     "dp": {
       "badge": "مجاني · بدون تسجيل · 228 سؤالًا أصليًا",

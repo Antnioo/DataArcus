@@ -120,6 +120,10 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   Arabic from Learn's Arabic training units) checked by `mcp/test-0.3.1-arabic-terms.mjs` (84, npm test) and
   `scripts/test-arabic-terms.mjs` (65, website CI). 12 concepts unified; 5 terms "to choose" for the owner (filters,
   slicer, tooltip, visual, dashboard): `mcp/work/E.md` "For the owner". Website 20/20; full npm test green.
+- **E2 (the owner's five terms, 25 Oct: «الفلاتر، مقسم، تلميح، المرئيات، لوحة معلومات», and «داتا أركوس» in every Arabic
+  page's keywords). Done (cloud builder), branch `fix/0.3.1-arabic-terms-owner` from integration e8ccecc2, not merged:**
+  7a34ce16 plan, 3e08c668 red (10 of 85), f0a0e794 + 511c9a9e fixes, 4b5337ef pages. arabic-terms 85/85, website check
+  87/87, run-all 20/20, full npm test green (71 lines). Results, lines in D5's file, decisions: `mcp/work/E2.md`.
 - **Running (25 Oct):** X2 one report in English and Arabic from create_report, ported onto today's code
   (`feat/0.3.1-bilingual-report-2`: R1's buttons, M1's engine, V1's pairs).
 - Next: wave 3 (the sample project, Arabic terms, the website's "ready for Arabic?" page), wave 4 (K1, Finding #3,
