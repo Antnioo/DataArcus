@@ -104,3 +104,43 @@ The one moved check, said: `test-0.3.0-claims.mjs`'s row reader (`mrow`) also en
 starts; nothing else in a test changed.
 
 **Full run** (`cd mcp && npm test -- --keep-going`, once, on 6c3ea08): running when this was committed; its result follows in the next commit.
+
+## CHANGELOG line
+None: internal (the docs an agent reads and one CI check; nothing a user of the MCP sees changes).
+
+## For the reviewer
+1. `.github/workflows/tests.yml`: one step in website-checks, after the result-lines step; Q1 adds its lint step after
+   Install: different places, both kept whichever merges first.
+2. `BEFORE_A1` in `scripts/check-agent-memory.mjs` lists the notes written before the summary rule, with `Q1.md` and
+   my guesses `GC.md` and `RB.md` for the jobs running now: if their notes are named otherwise, add the names there or
+   give the notes a `## Summary`, or website-checks fails after their merge. From now on, a brief should say "the note
+   starts with `## Summary`" (Approval, Scope, Base, Expected checks, Resume).
+3. The one test edit: `test-0.3.0-claims.mjs`'s `mrow` also ends a row at the next heading (same rows, same 202).
+4. The root CLAUDE.md's rule line about data values ("never", the owner 25 Oct) is kept word for word.
+
+## Decisions I made
+1. This note is `A1-agent-memory.md`: `A1.md` is 0.3.0's integration audit, kept as it is.
+2. No separate `scripts/agent-map.mjs`: the routes' files and symbols are checked by `check-agent-memory.mjs` (one CI
+   step, one result line), with a fixture test `scripts/test-agent-memory.mjs` as test-result-lines.mjs has.
+3. Everything cut, the root CLAUDE.md's rules included, goes to `mcp/docs/` (already excluded from the site: no
+   `_config.yml` change). Three files more than the review named: `OWNER-RULES.md`, `LAPTOP.md`, `MODULES.md`.
+4. WORK.md's cut text went to the archive, not `mcp/docs/` (it is history of the current release, not a rule).
+5. The total cap is the four caps added (14,800); a summary is capped on its own (40 lines, 4,400): together the
+   review's "about 19,200". Characters are code points (Arabic counts one a letter).
+6. "From now on" is a frozen list of the older notes; an older note given a summary is held to the same rules.
+7. TOOLS.md keeps each row as a one-row table under its heading, so every test that reads rows reads the same text.
+8. The pilot summaries (T1, S9, G1, D5, E2: the five newest merged) are followed by a new heading "## The note as
+   written", so each summary ends there; nothing below changed.
+9. ARCHITECTURE.md's "Where to start reading" table moved to MODULES.md; the routes take its place at the front door.
+   The invariants stay word for word.
+
+## Seen, not in scope
+1. Product code comments still say "round 0, mcp/CLAUDE.md" / "mcp/CLAUDE.md, Round 1" (`assets/js/pbip-page.js`,
+   `design-engine.js`, `mcp/lib/twin-pages.mjs`, `twin-visuals.mjs`): those rounds are now in
+   `mcp/docs/RULES-POWERBI.md` (its header says so); not changed (no product code).
+2. `mcp/plans/*.md`, `PRODUCT_SPEC.md` (theme sizes row), `GOLDEN-TASKS.md`, `research/SEE-THE-RESULT.md` cite
+   `mcp/CLAUDE.md` for facts now in `mcp/docs/`; they still lead there through its links.
+3. `mcp/ROADMAP.md`'s private-repo list does not name `mcp/docs/`.
+4. ARCHITECTURE.md is at 5,131 of 5,200: the next addition there must move something to MODULES.md.
+5. TOOLS.md's rows are single lines of 400-2,900 characters (tables): paragraphs would read better, but four suites
+   parse the rows.
