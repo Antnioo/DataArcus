@@ -82,6 +82,14 @@ package's manifest; this file says what is in it.
   again would come out any different, nothing is written and the plan is made again. The plan and the approval page
   also say in one line what stays English or unmirrored in your report (texts from your model, a matrix's months,
   custom visuals and the like).
+- **Every write is exactly what you approved, names included:** a native copy of a report's custom visuals and a
+  redesign now keep every file they will write from the plan and write those same files after your go; a fix script,
+  a calendar script or a theme file is written under the name the plan showed, and if that name is taken by then,
+  nothing is written and you are asked to plan again; the health check and the Gulf calendar read your model once more
+  right before writing.
+- **Safer reading:** the report reader no longer takes a saved filter value for a Top N count, never reads a theme or
+  any report file through a linked folder, and checks report, table and measure names for hidden instructions in the
+  Arabic twin's plan, the DAX functions' plan and the Arabic check, like every other answer.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
