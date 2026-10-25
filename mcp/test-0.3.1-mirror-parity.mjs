@@ -278,6 +278,11 @@ const SRC = (f) => fs.readFileSync(path.join(HERE, '..', 'assets/js', f), 'utf8'
 // the writer's chart code holds no right-to-left axis setting of its own (each one is report-mirror.js's)
 chk(() => typeof Mirror.mirrorChart === 'function' && !/invertAxis: bool|switchAxisPosition: bool/.test(SRC('pbip-query.js')) && !/c\.mirror/.test(SRC('visual-gallery.js')) && /Mirror\(\)\.mirrorChart|Mirror\.mirrorChart/.test(SRC('pbip-page.js') + SRC('pbip-query.js')),
   () => 'E1 the writer\'s right-to-left charts come from report-mirror.js (mirrorChart): no axis setting of its own in pbip-query.js (mirrorChart), visual-gallery.js (objects\' mirror) or pbip-page.js');
+// the website shares the engine: the Theme Generator's Arabic download with the person's model asks for mirrored charts
+// (theme-generator.js chartAxes), so its writer's scripts load report-mirror.js (after the visual catalog it reads) before
+// pbip-query.js (found by the website's pbip suite: no download at all without it)
+chk(() => { const tg = SRC('theme-generator.js'), at = (f) => tg.indexOf('/assets/js/' + f); return at('visual-types.min.js') > 0 && at('visual-types.min.js') < at('report-mirror.min.js') && at('report-mirror.min.js') < at('pbip-query.min.js') && fs.existsSync(path.join(HERE, '..', 'assets/js/report-mirror.min.js')); },
+  () => 'E6 the website loads the shared engine (report-mirror.min.js, after visual-types.min.js) before the writer that calls it');
 // the matrix: the lab switch is the engine's, its default today's (the measures reversed), set by nothing but the lab
 const MX = { $schema: S_VIS, name: 'mx', position: { x: 20, y: 20, z: 1, width: 600, height: 300 }, visual: { visualType: 'pivotTable', query: { queryState: {
   Rows: { projections: [proj(ref(T, 'Technician'), T + '.Technician', 'Technician')] }, Columns: { projections: [proj(ref('Dim Date', 'Month'), 'Dim Date.Month', 'Month')] },
