@@ -7,6 +7,9 @@
 // and a path is removed only when it, and every folder this call made on the way to it, still has its identity, and its
 // real folder is inside the working folder. Anything else (a file another program put at one of these names, a link put
 // on the way) is left and named. Nothing is ever renamed over a name.
+// (0.3.1 RB, T1's "Seen, not in scope" 1) dev + ino + size can't tell a file from the one another program wrote after
+// deleting it: the file system may give the new file the freed inode number. So each file also has the sha256 of the
+// bytes this call wrote (from the data in memory), and a file is removed only while its content still has that hash.
 // The fs calls that write go through `io`, so a test can make one fail part-way (setIo in-process, or
 // DATAARCUS_TEST_WRITE_FAIL in a server it starts). writeTree (files.mjs) uses the same io and the same wording.
 import fs from 'node:fs';
@@ -84,22 +87,40 @@ const idOf = (st) => ({ dev: st.dev, ino: st.ino });
 const lstatOf = (p) => { try { return fs.lstatSync(p, { bigint: true }); } catch (e) { if (e && e.code === 'ENOENT') return null; throw e; } };
 const rootReal = () => { const r = String(process.env.DATAARCUS_ROOT || '').trim(); return r ? fs.realpathSync.native(path.resolve(r)) : null; };
 const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
+const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 /**
  * Creates the new file e.path ('wx': never over anything) and writes data through that handle. e = { path } is recorded
- * by the caller BEFORE this call; it gets the file's identity as soon as the file exists (e.id), and its size once the
- * data is all written (e.size).
+ * by the caller BEFORE this call; it gets the file's identity as soon as the file exists (e.id), and its size and the
+ * hash of its bytes once the data is written (e.size, e.hash). A write cut off part-way gets the size the handle has and
+ * the hash of the bytes that landed (the first e.size bytes of data: a new file is written from its start).
  */
 const NEW_FILE = { flag: 'wx' };   // (fails when anything is at the name: never over anything, never through a link)
 export function createFile(e, data) {
-  const fd = io.openSync(e.path, NEW_FILE.flag);
-  try { e.id = idOf(fs.fstatSync(fd, { bigint: true })); io.writeFileSync(fd, data); e.size = fs.fstatSync(fd, { bigint: true }).size; }
+  const fd = io.openSync(e.path, NEW_FILE.flag), bytes = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data.buffer || data, data.byteOffset || 0, data.byteLength);
+  try { e.id = idOf(fs.fstatSync(fd, { bigint: true })); io.writeFileSync(fd, bytes); e.size = fs.fstatSync(fd, { bigint: true }).size; e.hash = sha(bytes); }
+  catch (x) { try { const n = fs.fstatSync(fd, { bigint: true }).size; if (e.id && n <= BigInt(bytes.length)) { e.size = n; e.hash = sha(bytes.subarray(0, Number(n))); } } catch (y) { /* no size: removeOurs leaves it */ } throw x; }
   finally { io.closeSync(fd); }
+}
+// the file at e.path read through its own handle (never through a link: O_NOFOLLOW where the system has it), and only
+// while that handle is e's identity and size: true when its bytes still have e's hash
+const NOFOLLOW = fs.constants.O_NOFOLLOW || 0;
+function sameBytes(e) {
+  if (!e.hash) return false;
+  let fd; try { fd = fs.openSync(e.path, fs.constants.O_RDONLY | NOFOLLOW); } catch (x) { return false; }
+  try {
+    const st = fs.fstatSync(fd, { bigint: true });
+    if (st.dev !== e.id.dev || st.ino !== e.id.ino || st.size !== e.size) return false;
+    const h = crypto.createHash('sha256'), buf = Buffer.alloc(1 << 16);
+    for (let n; (n = fs.readSync(fd, buf, 0, buf.length, null)) > 0;) h.update(buf.subarray(0, n));
+    return h.digest('hex') === e.hash;
+  } catch (x) { return false; } finally { fs.closeSync(fd); }
 }
 /** Makes the one folder p (never a recursive mkdir; EEXIST: it is not ours) and returns its record { path, id, dir }. */
 export function makeDir(p) { io.mkdirSync(p); return { path: p, dir: true, id: idOf(fs.lstatSync(p, { bigint: true })) }; }
 /**
  * Removes e (a record of createFile or makeDir; e.via: the folders this call made on the way to it) only while it is what
- * this call created. Returns 'gone' (nothing there), 'removed', or 'changed' (left as it is: not ours any more); throws
+ * this call created (a file: its identity, size and content hash; a folder: its identity). Returns 'gone' (nothing
+ * there), 'removed', or 'changed' (left as it is: not ours any more); throws
  * the removal's own error (EBUSY, ENOTEMPTY).
  */
 export function removeOurs(e) {
@@ -108,6 +129,7 @@ export function removeOurs(e) {
   if (!e.id || st.dev !== e.id.dev || st.ino !== e.id.ino || st.isSymbolicLink() || st.isDirectory() !== !!e.dir || (e.size != null && st.size !== e.size)) return 'changed';
   for (const v of e.via || []) { const s = lstatOf(v.path); if (!s || !s.isDirectory() || s.dev !== v.id.dev || s.ino !== v.id.ino) return 'changed'; }
   const root = rootReal(); if (root && !within(root, fs.realpathSync.native(path.dirname(e.path)))) return 'changed';
+  if (!e.dir && !sameBytes(e)) return 'changed';   // (RB: the content too; a folder holds no bytes: rmdir refuses one not empty)
   (e.dir ? io.rmdirSync : io.unlinkSync)(e.path);
   return 'removed';
 }
@@ -148,7 +170,7 @@ export function writeFileNew(f, data, opts) {
     const t = create(tmp);
     let linked = false;
     try { io.linkSync(tmp, f); linked = true; } catch (x) { if (!NO_LINKS.has(x && x.code)) throw x; }
-    if (linked) { made.push({ path: f, id: t.id, size: t.size, via: dirs }); io.unlinkSync(tmp); }
+    if (linked) { made.push({ path: f, id: t.id, size: t.size, hash: t.hash, via: dirs }); io.unlinkSync(tmp); }
     else { if (removeOurs(t) !== 'changed') made.splice(made.indexOf(t), 1); create(f); }
     dirs.forEach((d) => DIRS.delete(d.path));
   } catch (e) {

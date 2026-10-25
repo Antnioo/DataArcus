@@ -100,6 +100,14 @@ const fresh = (n) => { const d = path.join(ROOT, n); fs.rmSync(d, { recursive: t
   chk(() => e && fs.existsSync(mine) && /^T+$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine) && JSON.stringify(tree(D)) === JSON.stringify(['R.Report/', 'R.Report/definition/', 'R.Report/definition/report.json']),
     () => `S2d. a tree file deleted and written again by another program, as many bytes (inode number ${reused ? 'reused' : 'not reused'} here), survives the rollback with its folders, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
 }
+// S2h. writeTree: a folder of the tree is moved away with all it holds and another program makes an empty folder at its
+// name: the folder's identity (dev + ino) is all that tells it is not ours (a folder holds no bytes to hash; since RB a
+// file's own identity is compared again through the handle its hash is read from, so this is the folders' check)
+{
+  const D = fresh('s2h'), top = path.join(D, 'R.Report'); let theirs = null;
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { fs.renameSync(top, path.join(D, 'moved')); fs.mkdirSync(top); theirs = ino(top); throw new Error('simulated failure'); } } }));
+  chk(() => e && theirs && fs.existsSync(top) && ino(top) === theirs && e.left.foreign.includes(top), () => `S2h. an empty folder another program made at the name of a folder of the tree survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
 // S2e. writeTree: a file of the tree rewritten in place by another program, as many bytes: the same dev, ino and size on
 // every file system (the identity inode reuse gives, without relying on the file system to reuse it)
 {
