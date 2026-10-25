@@ -47,7 +47,7 @@ const MUTANTS = [
     ['const plans = new Map();', "const plans = new Map(); const KEEP_F = new URL('./.mutant-plans.json', import.meta.url), KEEP_FS = await import('node:fs'); try { for (const [k, v] of JSON.parse(KEEP_FS.readFileSync(KEEP_F, 'utf8'))) plans.set(k, v); } catch (e) { /* none yet */ } const keepPlans = () => KEEP_FS.writeFileSync(KEEP_F, JSON.stringify([...plans]));"],
     ["p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by;", "p.status = 'approved'; p.approvedAt = now(); p.approvedBy = by; keepPlans();"]
   ], guards: ['test-z.mjs', 'test-approval-hardening.mjs', 'test-r.mjs'] },
-  { id: 'G-artifact', equivalent: "no tool reaches it: the artifact is kept in this process only and its id is random, so it can't differ from the approved one unless the server's own code changes it; the gate's binding (G-binding) is what a tool can reach", file: 'mcp/server.mjs', edits: [['if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw', 'if (false) throw']], guards: ['test-j14-exact.mjs'] },
+  { id: 'G-artifact', equivalent: "no tool reaches it: the artifact is kept in this process only and its id is random, so it can't differ from the approved one unless the server's own code changes it; the gate's binding (G-binding) is what a tool can reach", file: 'mcp/tools/create_report.mjs', edits: [['if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw', 'if (false) throw']], guards: ['test-j14-exact.mjs'] },
   { id: 'G-binding', file: PL, edits: [['const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;', 'const art = artifacts.get(p.id);']], guards: ['test-r.mjs', 'test-j14-exact.mjs', 'test-z.mjs'] },
 
   // 2. path safety
@@ -102,6 +102,14 @@ const MUTANTS = [
   { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
 ];
 
+// DA_MUTATION_DRY=1: only checks that every mutant's text is in its file exactly once (after code moves), runs nothing
+if (process.env.DA_MUTATION_DRY) {
+  const bad = MUTANTS.flatMap((m) => m.edits.map(([from]) => [m, from, fs.existsSync(path.join(REPO, m.file)) ? fs.readFileSync(path.join(REPO, m.file), 'utf8').split(from).length - 1 : -1]).filter(([, , n]) => n !== 1));
+  bad.forEach(([m, from, n]) => console.log(`  - ${m.id}: ${n < 0 ? 'no file ' + m.file : `found ${n} times in ${m.file}`}: ${JSON.stringify(from.slice(0, 90))}`));
+  console.log(`${bad.length ? 'FAIL' : 'PASS'}  mutation  ${MUTANTS.length} mutants checked, ${bad.length} not found once (dry run)`);
+  process.exit(bad.length ? 1 : 0);
+}
+
 // ---------- the copies ----------
 const problems = [], killed = [], lines = []; let checks = 0;
 const ok = (cond, msg) => { checks++; if (!cond) problems.push(msg); return cond; };
@@ -154,6 +162,8 @@ const mutants = MUTANTS.filter((m) => !m.equivalent && (!ONLY.size || ONLY.has(m
   .map((m) => (EXTRA.length ? Object.assign({}, m, { guards: [...new Set(m.guards.concat(EXTRA))] }) : m));
 const skipped = MUTANTS.filter((m) => m.only && !m.only.includes(process.platform)).map((m) => m.id);
 ok(new Set(MUTANTS.map((m) => m.id)).size === MUTANTS.length, 'two mutants share an id');
+// an equivalent mutant is not run, but its text must still be in real code, once (a stale one fails loudly)
+for (const m of equivalent) for (const [from] of m.edits) { const f = path.join(REPO, m.file); ok(fs.existsSync(f) && fs.readFileSync(f, 'utf8').split(from).length === 2, `${m.id} (equivalent): its text is not found once in ${m.file}: the code moved, retarget it`); }
 const guards = [...new Set(mutants.flatMap((m) => m.guards))];
 const copies = Array.from({ length: WORKERS }, (_, k) => makeCopy(k));
 const baseline = new Map();
