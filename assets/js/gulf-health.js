@@ -262,8 +262,8 @@
           const later = [];
           GD.events.forEach((e) => Object.keys(EVENT).forEach((k) => { if (e[k] && T(e[k]) > T(GD.checked) && inRange(T(e[k]))) later.push({ event: EVENT[k] + ' ' + e.hijriYear, date: e[k] }); }));
           if (later.length) add('GC_ESTIMATES', 'info',
-            ['Future Ramadan and Eid dates are not marked as estimates', 'Dates after ' + GD.checked + ' are not announced yet and can move by a day.', 'Add Is Estimated Date (fixes.calendarGenerator), and regenerate after each announcement.'],
-            ['تواريخ رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'التواريخ بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير يومًا واحدًا.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
+            ['Future Ramadan and Eid dates are not marked as estimates', 'Dates after ' + GD.checked + ' are not announced yet and can move, usually by a day.', 'Add Is Estimated Date (fixes.calendarGenerator), and generate it again once the Calendar Generator has the new announcement.'],
+            ['تواريخ رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'التواريخ بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير، يومًا واحدًا في العادة.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
         }
       }
     }

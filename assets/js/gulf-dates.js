@@ -3,11 +3,14 @@
  * Ramadan's first day, Eid al-Fitr (1 Shawwal) and Eid al-Adha (10 Dhu al-Hijjah) as announced in the UAE,
  * 2018 to 2030, and the official weekend of each GCC country with the date each change took effect.
  * Every date and its source: scripts/gulf-calendar/DATES-SOURCES.md. Dates listed under `estimate` are not
- * announced yet: they are the Umm al-Qura calendar's dates, and the moon sighting can move them by a day.
+ * announced yet: they are the Umm al-Qura calendar's dates. A sighting usually lands on the same day or one day apart
+ * (the audit of 25 Oct 2026: 11 of 13 estimates for 2027-2030 the same as a published forecast, 2 one day apart); that
+ * is the usual gap, not a limit.
  */
 (function (root) {
   var GULF_DATES = {
-    // the last date checked against an official announcement; update with DATES-SOURCES.md after each one
+    // the day of the last announced date in the table (Eid al-Adha 1447): every later date is an estimate. The one place
+    // this date is kept (DATES-SOURCES.md names it here); move it with DATES-SOURCES.md after each announcement
     checked: '2026-05-27',
     events: [
       { hijriYear: 1439, ramadan: '2018-05-17', fitr: '2018-06-15', adha: '2018-08-21' },
