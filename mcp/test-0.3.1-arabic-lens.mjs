@@ -109,6 +109,8 @@ try {
     return !props || Object.entries(x.options || {}).some(([k, v]) => !props[k] || !enumOk(props[k], v));
   }).map((f) => `${f.id} ${JSON.stringify(f.fix).slice(0, 160)}`);
   const lens = async (p) => { const before = files(), x = await w.call('check_report', { path: p, lens: 'arabic' }), after = files(); answers.push({ p, x, wrote: after.filter((f) => !before.includes(f)) }); return x; };
+  // (L1_DUMP=<file>: every lens answer written there, to read them; nothing else changes)
+  const dump = () => { if (process.env.L1_DUMP) fs.writeFileSync(process.env.L1_DUMP, JSON.stringify(answers.map((x) => ({ p: x.p, j: x.x.j })), null, 1)); };
   const F = (j, rule, page) => (j && Array.isArray(j.findings) ? j.findings : []).filter((f) => f.rule === rule && (!page || (f.page && f.page.id === page)));
   const pagesOf = (j) => (j && Array.isArray(j.pages) ? j.pages : []);
 
@@ -160,6 +162,7 @@ try {
   chk(() => F(Dj, 'TIME_AXIS', 'enOverview01').some((f) => f.fix.kind === 'twin' && f.fix.options.timeRightToLeft === true), () => `D2. the line chart over months reads left to right: the twin's timeRightToLeft: ${JSON.stringify(F(Dj, 'TIME_AXIS')).slice(0, 300)}`);
   chk(() => F(Dj, 'PAGE_NAVIGATOR', 'enOverview01').some((f) => f.fix.kind === 'none' && /no order setting/i.test(f.fix.how)), () => `D3. the page navigator: Power BI has no order setting: ${JSON.stringify(F(Dj, 'PAGE_NAVIGATOR')).slice(0, 300)}`);
 
+  dump();
   // ---------- X ----------
   chk(() => answers.length === 4 && answers.every((x) => !x.x.err && x.x.j && Array.isArray(x.x.j.findings) && x.x.j.findings.length && !badFixes(x.x.j).length),
     () => `X1. every fix that names a tool names a real one (tools/list) with real options: ${answers.map((x) => `${x.p}: ${x.x.j ? badFixes(x.x.j).join('; ') : short(x.x)}`).join(' | ').slice(0, 800)}`);
