@@ -12,7 +12,7 @@ import { createRequire } from 'node:module';
 import { ROOT, applyColumnTypes, inside, loadModel, modelOf, prepareRoot, rootProblem, visible } from './lib/model.mjs';
 import { kindLabel, themeDesign, planLayout, pageOf, contrastReport, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts, clampHex, lum, buildTheme, designRtl, fileBase } from './lib/design.mjs';
 import { freeFile, planWrites, withPlan } from './lib/files.mjs';
-import { AIM, fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
+import { AIM, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
@@ -55,6 +55,8 @@ import { relsOf, fieldsAndProblems, axesProblems, axesOf } from './lib/report-fi
 import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin } from './lib/report-inputs.mjs';
 import { topSaid, phoneAnswer, calendarSaid } from './lib/report-said.mjs';
 import { BLANK_PNG_BYTES, reportRun } from './lib/report-run.mjs';
+// (0.3.1 S9) one module a tool, registered below in the same order as before (tools/list keeps its order)
+import { register as registerReadModel } from './tools/read_model.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -63,6 +65,9 @@ const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta
 // and the tests' cap)
 const INSTRUCTIONS = instructions(LIMITS);
 const server = new McpServer({ name: 'dataarcus', version: VERSION }, { instructions: INSTRUCTIONS });
+// What every tool's register(server, ctx) gets from the server (0.3.1 S9): the tools' limits, the same object the
+// instructions above are built from.
+const ctx = { LIMITS };
 // (R6, the outside audit of 19 Oct, F07) a theme planned from a model pins the model and the report theme its colours
 // come from (existingTheme): the model's print alone hashes the definition files, not the report's theme
 const themeRef = (m, p, from) => ({ key: modelKey(m, p), print: crypto.createHash('sha256').update(String(m.print) + '\0' + JSON.stringify(from == null ? null : from)).digest('hex') });
@@ -88,16 +93,7 @@ const COLUMN_TYPES_QUERY = [
   '    )',
   'RETURN SELECTCOLUMNS ( NATURALLEFTOUTERJOIN ( _Columns, _Tables ), "Table", [Table], "Column", [Column], "Type", [Type] )'
 ].join('\n');
-
-server.registerTool('read_model', {
-  title: 'Read a Power BI model',
-  description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.' + UNTRUSTED + ' A large model (a full list over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables\' names; ask for the tables you need with tables.',
-  inputSchema: { path: modelPath, tables: z.array(z.string()).min(1).max(100).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary') }, annotations: READS
-}, safe(async ({ path: p, tables }) => {
-  const m = loadModel(p);
-  if (tables) return text(Object.assign(namedTables(m, tables, hiddenOf(m)), hiddenOf(m)));
-  return isLarge(m) ? compact(Object.assign(largeSummary(m), hiddenOf(m))) : text(Object.assign(fullAnswer(m), hiddenOf(m)));
-}));
+registerReadModel(server, ctx);
 
 server.registerTool('suggest_fields', {
   title: 'Suggest fields for a report design',
