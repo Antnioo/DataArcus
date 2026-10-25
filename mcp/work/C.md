@@ -24,7 +24,7 @@ an option of generate_theme (a theme file, not a project).
 
 ## What the sample holds (made up; no real company, mall, person or vehicle trade)
 Folder `Gulf Retail Sample` in the working folder (a second sample: `Gulf Retail Sample 2`, then 3...; DataArcus never
-writes over anything: a folder taken between the plan and the write refuses the write). Inside, 18 files:
+writes over anything: a folder taken between the plan and the write refuses the write). Inside, 16 files (9 model, 6 report, 1 project file; first counted 18 by mistake, corrected before any run):
 - `Gulf Retail.pbip` (opens the empty report);
 - `Gulf Retail.SemanticModel/`: `.platform`, `definition.pbism`, `definition/database.tmdl`, `model.tmdl`,
   `relationships.tmdl`, `tables/Sales.tmdl`, `Branches.tmdl`, `Products.tmdl`, `Calendar.tmdl` (TMDL, as Desktop saves);
@@ -47,13 +47,13 @@ values); the answers name tables, columns, measures and row counts.
 ## The flow
 1. `plan_layout { sample: true, lang }` (lang "ar" when the request is Arabic): writes nothing; answers `sample` (the
    folder, the tables with their row counts, the date table, what is made up) and a plan whose writes name the folder
-   and whose `outputs` list all 18 files. Any model input with it (path, planFields, design, pages, redesignFrom,
+   and whose `outputs` list all 16 files. Any model input with it (path, planFields, design, pages, redesignFrom,
    customVisualsFrom...) is a plan problem.
 2. approve_plan: the approval page "Sample project (made-up data)": what it holds, the files grouped (Model (TMDL),
    Empty report, Project file), the overwrite sentence; no preview (the report is empty: said), no "About the script"
    (the model's .tmdl files are the model itself, not a script the person applies: the page's script detection learns
    that a .tmdl inside a `.SemanticModel` folder is a model file, one fix in approval-window.mjs).
-3. `create_report { sample: true, path: "<folder>", lang, planId }`: writes the 18 files (one writeTree into the working
+3. `create_report { sample: true, path: "<folder>", lang, planId }`: writes the 16 files (one writeTree into the working
    folder, `lib/sample-project.mjs` `writeSample`), then answers `open` (the .pbip), "open it in Power BI Desktop 2.159
    or later and click Refresh", and `tour`.
 4. The tour (in the answer after the write; Arabic when lang "ar"): 4 steps, each `{ ask, call: { tool, args } }`:
@@ -83,12 +83,12 @@ Changed: `mcp/server.mjs` (the input, plan_layout's and create_report's sample b
 Checks (written before any run; on 11df69b every one red except where said):
 - C1 the plan: `plan_layout { sample: true }` answers a planId and `sample` (4 tables, 648/6/12/546 rows, 3
   relationships, the Calendar marked), writes nothing (the working folder's files the same).
-- C2 the plan lists the 18 files (`outputs`), its writes name the folder; no answer holds a branch, a product or a row.
+- C2 the plan lists the 16 files (`outputs`), its writes name the folder; no answer holds a branch, a product or a row.
 - C3 a model input with sample is a plan problem, no planId.
 - C4 create_report with the planId before approval: refused, nothing written (green before too: create_report refuses
   any unapproved call).
-- C5 the approval page: "Sample project", the 18 files grouped (model, report, project file), no "About the script".
-- C6 after approval: written; exactly the 18 files, all under `Gulf Retail Sample/`; nothing else in the working folder
+- C5 the approval page: "Sample project", the 16 files grouped (model, report, project file), no "About the script".
+- C6 after approval: written; exactly the 16 files, all under `Gulf Retail Sample/`; nothing else in the working folder
   changed; the same planId again refused (one click, one write).
 - C7 another folder than the approved one: refused, nothing written.
 - C8 read_model reads it: 4 tables, 4 measures, 3 relationships, Calendar `dateTable: true`, every column typed.
