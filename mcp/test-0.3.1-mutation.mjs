@@ -102,9 +102,15 @@ const MUTANTS = [
   { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
 ];
 
+// (0.3.1 T1, Windows) a mutant's text is written with "\n"; a Windows checkout has the files with CRLF, so each text is
+// matched and written in its file's own line ending (12 mutants span a line break; on Windows none of them applied)
+const eolOf = (text) => (/\r\n/.test(text) ? '\r\n' : '\n');
+const inEol = (s, eol) => (eol === '\n' ? s : s.replace(/\r?\n/g, eol));
+const countIn = (text, from) => text.split(inEol(from, eolOf(text))).length - 1;
+
 // DA_MUTATION_DRY=1: only checks that every mutant's text is in its file exactly once (after code moves), runs nothing
 if (process.env.DA_MUTATION_DRY) {
-  const bad = MUTANTS.flatMap((m) => m.edits.map(([from]) => [m, from, fs.existsSync(path.join(REPO, m.file)) ? fs.readFileSync(path.join(REPO, m.file), 'utf8').split(from).length - 1 : -1]).filter(([, , n]) => n !== 1));
+  const bad = MUTANTS.flatMap((m) => m.edits.map(([from]) => [m, from, fs.existsSync(path.join(REPO, m.file)) ? countIn(fs.readFileSync(path.join(REPO, m.file), 'utf8'), from) : -1]).filter(([, , n]) => n !== 1));
   bad.forEach(([m, from, n]) => console.log(`  - ${m.id}: ${n < 0 ? 'no file ' + m.file : `found ${n} times in ${m.file}`}: ${JSON.stringify(from.slice(0, 90))}`));
   console.log(`${bad.length ? 'FAIL' : 'PASS'}  mutation  ${MUTANTS.length} mutants checked, ${bad.length} not found once (dry run)`);
   process.exit(bad.length ? 1 : 0);
@@ -143,11 +149,11 @@ function runGuard(copy, guard) {
 }
 function apply(copy, m) {
   const f = path.join(copy, m.file), orig = fs.readFileSync(f, 'utf8');
-  let text = orig;
+  let text = orig; const eol = eolOf(orig);
   for (const [from, to] of m.edits) {
-    const n = text.split(from).length - 1;
+    const n = countIn(text, from);
     if (n !== 1) return { error: `the text to change is found ${n} times in ${m.file} (must be once): ${JSON.stringify(from.slice(0, 80))}` };
-    text = text.replace(from, () => to);
+    text = text.replace(inEol(from, eol), () => inEol(to, eol));
   }
   fs.writeFileSync(f, text);
   const parse = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
@@ -163,7 +169,10 @@ const mutants = MUTANTS.filter((m) => !m.equivalent && (!ONLY.size || ONLY.has(m
 const skipped = MUTANTS.filter((m) => m.only && !m.only.includes(process.platform)).map((m) => m.id);
 ok(new Set(MUTANTS.map((m) => m.id)).size === MUTANTS.length, 'two mutants share an id');
 // an equivalent mutant is not run, but its text must still be in real code, once (a stale one fails loudly)
-for (const m of equivalent) for (const [from] of m.edits) { const f = path.join(REPO, m.file); ok(fs.existsSync(f) && fs.readFileSync(f, 'utf8').split(from).length === 2, `${m.id} (equivalent): its text is not found once in ${m.file}: the code moved, retarget it`); }
+for (const m of equivalent) for (const [from] of m.edits) { const f = path.join(REPO, m.file); ok(fs.existsSync(f) && countIn(fs.readFileSync(f, 'utf8'), from) === 1, `${m.id} (equivalent): its text is not found once in ${m.file}: the code moved, retarget it`); }
+// every mutant applies once to its file with CRLF line ends too, as a Windows checkout has them (checked on every platform)
+{ const off = MUTANTS.flatMap((m) => m.edits.map(([from]) => [m.id, countIn(fs.readFileSync(path.join(REPO, m.file), 'utf8').replace(/\r?\n/g, '\r\n'), from)]).filter(([, n]) => n !== 1));
+  ok(!off.length, `with CRLF line ends these mutants do not apply once: ${JSON.stringify(off)}`); }
 const guards = [...new Set(mutants.flatMap((m) => m.guards))];
 const copies = Array.from({ length: WORKERS }, (_, k) => makeCopy(k));
 const baseline = new Map();
