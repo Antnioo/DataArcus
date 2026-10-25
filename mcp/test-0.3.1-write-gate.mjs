@@ -66,14 +66,13 @@ const TMP = 'the temporary check copy: a folder of its own in the OS temp folder
 const TESTS = 'tests only: set by a DATAARCUS_TEST_* variable the server reads at start (a test server), never by a tool\'s input';
 const LIST = {
   'server.mjs': {
-    'writeScript()': { n: 3, why: `check_model_health's scripts, inside its approved planWrites (pw.step); the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
-    'formatsAnswer()': { n: 3, why: `writes only with write = true, inside check_model_health's approved planWrites; plan_layout's two calls pass write = false: they name the file, write nothing: ${PLAN}` },
-    'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` },
     'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
     'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` },
     'writeSample()': { n: 1, why: `create_report with sample (0.3.1 C), inside withPlan after Plans.gate with the sample plan's folder and inputs: ${PLAN}` },
     'freeFile()': { n: 1, why: `generate_theme's theme file (its folders, one level at a time), inside withPlan after Plans.gate: ${PLAN}` },
     'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` },
+    'formatsAnswer()': { n: 2, why: `plan_layout's two calls pass write = false: they name the file, write nothing: ${PLAN}` },
+    'writeScript()': { n: 2, why: `the Arabic calendar columns' script, inside withPlan; scriptNameNow passes plan = true, which only names the file: ${PLAN}` },
     'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` },
     'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }
   },
@@ -134,7 +133,12 @@ const LIST = {
   'lib/redesign.mjs': { 'writeTree()': { n: 1, why: `writeRedesign: the copy "<name> redesigned", new files next to the original: ${PLAN}` } },
   'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
   'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `fix-scripts.mjs's writeScript (or add_gulf_calendar's scriptNameNow, which writes nothing) passed in: ${PLAN}` } },
-  'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } }
+  'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } },
+  'tools/check_model_health.mjs': {
+    'writeScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.step): ${PLAN}` },
+    'formatsAnswer()': { n: 1, why: `writes only with write = true, inside check_model_health's approved planWrites: ${PLAN}` },
+    'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` }
+  }
 };
 
 // (0.3.1 S9) and each tool's module in tools/, which server.mjs imports
