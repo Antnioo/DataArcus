@@ -54,13 +54,17 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   (`PREVIEW_PAGES_MAX`, now the report's cap too). New suite `test-0.3.1-twin-preview.mjs` (23) in `npm test`. Merges
   with R1 cleanly but the `npm test` line (keep both). Results, decisions, "For the laptop", "Seen, not in scope":
   `mcp/work/V1.md`.
-- **Merged into `integration/0.3.1` (25 Oct, reviewer):** S1 (ee95e76), R1 (3e03ab9), V1 (2a47e53), P1 (this merge).
-- **Running (25 Oct):** M1 the matrix mirror lab and one mirror engine for every Arabic path (`feat/0.3.1-matrix-mirror`;
-  the owner: "when I opened the last one myself it was not mirrored; make sure the AR and twin use the same engine");
-  L1 the Arabic audit lens on check_report (`feat/0.3.1-arabic-lens`).
-- Next: X2 (bilingual create_report, after M1: it shares the Arabic writers), then wave 3 (the sample project, Arabic
-  terms, the website's score card, exam study links and the "ready for Arabic?" page), wave 4 (K1, Finding #3, drafts
-  #82 and #84), wave 5 (release prep).
+- **L1 (wave 2, the Arabic lens): done (25 Oct, cloud builder), branch `feat/0.3.1-arabic-lens`, not merged:** 73a330b
+  plan, c53226d red tests, f3e87bc the lens. check_report `lens: "arabic"` (`mcp/lib/arabic-lens.mjs`): "Is this report
+  ready for Arabic?" page by page, a summary first, each fix a DataArcus call, a Desktop setting or "Power BI has no setting".
+  New suite `test-0.3.1-arabic-lens.mjs` (31) in `npm test`. Results, decisions, "For the laptop", "For the website",
+  "Seen, not in scope": `mcp/work/L1.md`.
+- **Merged into `integration/0.3.1` (25 Oct, reviewer):** S1 (ee95e76), R1 (3e03ab9), V1 (2a47e53), P1 (5728514), M1
+  (ed23620), L1 (this merge).
+- **Running (25 Oct):** X2 one report in English and Arabic from create_report, ported onto today's code
+  (`feat/0.3.1-bilingual-report-2`: R1's buttons, M1's engine, V1's pairs).
+- Next: wave 3 (the sample project, Arabic terms, the website's "ready for Arabic?" page), wave 4 (K1, Finding #3,
+  drafts #82 and #84), wave 5 (release prep).
 
 ## Night-audit fixes, October (22 Oct, reviewer; branch `fix/night-audit-oct` from main 361dcc0; one PR, the owner merges)
 The owner, 22 Oct: "fix all other findings" (the night audit's open list, the private engine repo

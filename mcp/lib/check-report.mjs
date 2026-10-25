@@ -260,7 +260,7 @@ const pageLanguagesOut = (P) => { const e = Object.entries(P.pages), counts = {}
 // named, and every route goes through a plan and the user's approval.
 const TWIN_TAG = ' AR';
 const relOut = (f) => path.relative(ROOT, f).split(path.sep).map(safeName).join('/');
-function builtByOf(loc, PL) {
+export function builtByOf(loc, PL) {
   const dir = loc.reportDir, base = path.basename(dir).replace(/\.Report$/i, ''), up = path.dirname(dir);
   const original = (b) => { const pb = path.join(up, b + '.pbip'), rd = path.join(up, b + '.Report'); return isFile(pb) ? relOut(pb) : isDir(rd) ? relOut(rd) : null; };
   let annotated = false; try { const rj = readJson(path.join(dir, 'definition', 'report.json')); annotated = arr(rj && rj.annotations).some((a) => plainObj(a) && a.name === 'generatedBy' && /^DataArcus\b/.test(String(a.value || ''))); } catch (e) { annotated = false; }
@@ -270,7 +270,7 @@ function builtByOf(loc, PL) {
   if (annotated) return { kind: 'report', said: 'DataArcus: create_report', annotated };
   return { kind: 'unknown', said: 'unknown' };
 }
-function fixRoutesOf(B, loc) {
+export function fixRoutesOf(B, loc) {
   const twin = (into) => Object.assign({ tool: 'create_arabic_twin', options: Object.assign({ path: B.original }, into ? { into } : {}),
     how: `The Arabic pages are made by create_arabic_twin from the original report: make the ${into ? 'copy' : 'twin'} again with these options and the labels the user approved, show the plan and wait for the approval. DataArcus never writes over a file: the user first renames or moves this ${into ? 'copy' : 'twin'}, and the new one is written next to the original.` },
     B.original ? {} : { options: Object.assign({ path: null }, into ? { into } : {}), note: 'The original report was not found next to this one: ask the user where it is.' });
