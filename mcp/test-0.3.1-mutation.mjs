@@ -49,6 +49,8 @@ const MUTANTS = [
   ], guards: ['test-z.mjs', 'test-approval-hardening.mjs', 'test-r.mjs'] },
   { id: 'G-artifact', equivalent: "no tool reaches it: the artifact is kept in this process only and its id is random, so it can't differ from the approved one unless the server's own code changes it; the gate's binding (G-binding) is what a tool can reach", file: 'mcp/tools/create_report.mjs', edits: [['if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw', 'if (false) throw']], guards: ['test-j14-exact.mjs'] },
   { id: 'G-binding', file: PL, edits: [['const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;', 'const art = artifacts.get(p.id);']], guards: ['test-r.mjs', 'test-j14-exact.mjs', 'test-z.mjs'] },
+  // (0.3.1 K2) the twin's write: the kept files' digest and the rebuild's, compared with the approved one
+  { id: 'K-twin-digest', file: 'mcp/lib/twin-write.mjs', edits: [['if (digestOf(art.files) !== art.digest || twinTree(P).digest !== art.digest) throw', 'if (false) throw']], guards: ['test-0.3.1-twin-artifact.mjs'] },
 
   // 2. path safety
   { id: 'D-within', file: MO, edits: [["const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };", 'const within = (root, p) => { const rel = path.relative(root, p); return !path.isAbsolute(rel); };']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },

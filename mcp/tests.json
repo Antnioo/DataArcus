@@ -76,6 +76,7 @@
     { "file": "test-0.3.1-write-gate.mjs", "area": "safety", "purpose": "a gate on every place the server can write a file" },
     { "file": "test-0.3.1-en-ar-copy.mjs", "area": "twin", "purpose": "the EN-AR copy on a real user's report shape" },
     { "file": "test-0.3.1-twin-preview.mjs", "area": "twin", "purpose": "the twin's approval page draws each Arabic page" },
+    { "file": "test-0.3.1-twin-artifact.mjs", "area": "twin", "purpose": "the twin and the EN-AR copy write exactly the files their plan kept (digest, .platform id, refusal of any other build)" },
     { "file": "test-platform-paths.mjs", "area": "platform", "purpose": "working folders as users name them, on Linux, Windows and macOS" },
     { "file": "test-0.3.1-mirror-parity.mjs", "area": "twin", "purpose": "every Arabic path gives the same visual (one mirror engine)" },
     { "file": "test-0.3.1-arabic-lens.mjs", "area": "checker", "purpose": "check_report lens \"arabic\": is this report ready for Arabic?" },

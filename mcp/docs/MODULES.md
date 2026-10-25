@@ -58,7 +58,9 @@ task routes.
    of its definition files). Ids expire after 2 hours and live in the server process only.
 4. **Write.** The writing tool, called with the `planId`, refuses if anything changed since the click (the model, an
    input file, an option) and writes exactly the approved files, as new files next to the model, through `files.mjs`;
-   a failed write removes only what that call created. `mcp/test-0.3.1-write-gate.mjs` lists every file-writing call.
+   a failed write removes only what that call created. create_report and the twin write the files their plan kept,
+   byte for byte: `tools/create_report.mjs: writeApproved` compares their digest and binding; `lib/twin-write.mjs:
+   writeTwin` (0.3.1 K2) the same, and builds the twin again for comparison only (a different build: nothing written). `mcp/test-0.3.1-write-gate.mjs` lists every file-writing call.
 5. **Check.** The report was validated before it was written; `check_report` (any report, read only) and Power BI
    Desktop confirm it after.
 

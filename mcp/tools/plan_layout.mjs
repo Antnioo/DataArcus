@@ -391,7 +391,7 @@ export function register(server, ctx) {
     }
     // (0.3.1 X2, V1's pictures) a bilingual plan draws each English page beside its Arabic page, from the plan's own build
     // (the copy's files, as create_report writes them); its check is the English build's, as a plan in English
-    const preview = exact && exact.bilingual ? (() => { const pv = previewOf(exact.bilingual.english), tw = twinPreview(exact.bilingual.P);
+    const preview = exact && exact.bilingual ? (() => { const pv = previewOf(exact.bilingual.english), tw = twinPreview(exact.bilingual.P, exact.files);
       return tw ? Object.assign({}, pv || {}, { lang: a.lang === 'ar' ? 'ar' : 'en', pages: tw.pages, pairs: tw.pairs }) : pv; })() : previewOf(exact ? exact.files : null);
     const exactCheck = !planPin ? {} : { exactCheck: exact ? Object.assign({}, exact.check, preview && preview.check && (preview.check.worthALookItems || []).length ? { worthALookItems: preview.check.worthALookItems } : {}, { digest: exact.digest,
       sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.`

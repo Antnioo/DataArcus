@@ -86,8 +86,9 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     // (the file can't be read from before the plan: since B-02 a change after the go is refused for that reason first)
     fs.writeFileSync(file, '{ not json');
     const pl = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', labels: { 'page:p1overview': 'نظرة عامة' } }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
-    await ask('approve_plan', { planId: pid });
-    const w = await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', planId: pid });
+    // (0.3.1 K2: the plan builds the exact files the write writes, so it refuses first and gives no plan id)
+    if (pid) await ask('approve_plan', { planId: pid });
+    const w = pid ? await ask('create_arabic_twin', { path: 'rtwin/Twin Sales.pbip', planId: pid }) : pl;
     chk(() => w.err && /could not be read/.test(w.t) && !fs.existsSync(path.join(T, 'Twin Sales AR.Report')) && !fs.existsSync(path.join(T, 'Twin Sales AR.pbip')),
       () => `R-02. the twin refuses an original whose ${what} can't be read, nothing written: ${short(w)}`);
     fs.writeFileSync(file, keep);

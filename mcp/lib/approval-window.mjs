@@ -490,6 +490,9 @@ export function summary(kind, data) {
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
+    // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
+    const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
+    if (NF && NF.en) sections.push({ heading: 'ليست عربية بالكامل · Not fully Arabic', rows: [['العربية', String(NF.ar || '')], ['English', String(NF.en)]] });
     // (0.3.0 X1) one report holding both languages: the copy, every page pair, the language buttons, the slicers in sync
     const LG = d.languages && typeof d.languages === 'object' ? d.languages : null;
     if (LG) languagesSections(LG, sections, 0);
