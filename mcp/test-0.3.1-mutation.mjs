@@ -25,7 +25,7 @@ const GUARD_TIMEOUT = 240000;   // (a guard that times out kills nothing: a hang
 // equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
 // guards: the existing suites (mcp/), the first expected to kill first. only: the platforms where the mutant means
 // something (NFC/NFD: macOS keeps one folder for both forms, so normalising changes nothing there).
-const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs';
+const PL = 'mcp/lib/plans.mjs', MO = 'mcp/lib/model.mjs', WI = 'mcp/lib/write-io.mjs', FI = 'mcp/lib/files.mjs', CR = 'mcp/lib/check-report.mjs', AW = 'mcp/lib/approval-window.mjs';
 const MUTANTS = [
   // 1. the approval gate
   { id: 'G-unapproved', file: PL, edits: [["if (p.status !== 'approved') throw new Error(`Nothing was written: plan", "if (false) throw new Error(`Nothing was written: plan"]], guards: ['test-0.2.9.mjs', 'test-z.mjs', 'test-approval-hardening.mjs', 'test-audit6.mjs'] },
@@ -108,6 +108,12 @@ const MUTANTS = [
   { id: 'C-dax', file: CR, edits: [["rule: 'DAX_MEASURE_PENDING', severity: 'note'", "rule: 'DAX_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.1-dax-functions.mjs'] },
   { id: 'C-instruction', file: CR, edits: [["rule: 'INSTRUCTION_TEXT', severity: 'note', file: `definition/pages/", "rule: 'INSTRUCTION_TEXT', severity: 'error', file: `definition/pages/"]], guards: ['test-0.3.1-checker.mjs', 'test-0.3.0-check.mjs', 'test-audit6.mjs'] },
   { id: 'C-validator-sev', file: CR, edits: [["severity: known ? 'note' : d.severity === 'error' ? 'error' :", "severity: known ? 'note' : d.severity === 'error' ? 'warning' :"]], guards: ['test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs', 'test-0.2.9-a4.mjs'] },
+  // 6. the approval page says what the click writes (SQ3): the writes in Arabic line for line and escaped, what was not
+  // checked in the app's prompt, a pair's English page drawn in English
+  { id: 'A-writesAr-match', file: AW, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-writesAr-esc', file: AW, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}<br>', '<li dir="auto">${named(WA[i])}<br>']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-prompt-notChecked', file: AW, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-pair-lang', file: AW, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }
 ];
 

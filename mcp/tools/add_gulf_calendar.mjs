@@ -9,7 +9,7 @@ import { modelPrintOf } from '../lib/artifact.mjs';
 import * as Plans from '../lib/plans.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { columnsByKind } from '../lib/gulf-calendar.mjs';
-import { scriptIs as scriptIsSaid, APPLY_STEPS, whereSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
+import { scriptIs as scriptIsSaid, APPLY_STEPS, whereSaid, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { monthOffer as calendarOffer } from '../lib/arabic-twin.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { planIdInput, ADDS, modelPath } from '../lib/tool-inputs.mjs';
@@ -65,7 +65,9 @@ export function register(server, ctx) {
     if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => { const r = addGulfCalendar(m, a, { Gulf, Fix, writeScript: plannedWriter(a, m), scriptDir, scriptBase }); return Object.assign({ columnsByKind: columnsByKind(r.columns) }, r, { scriptIs: scriptIsSaid('the calendar table'), howToApplyScript: APPLY_STEPS.slice() }); }));
     const { scriptFile, howToApply, columns, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: scriptNameNow, scriptDir, scriptBase });
     return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile), columnsByKind: columnsByKind(columns) }, rest, { howToApplyAfterGo: howToApply,
-      plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" ${whereSaid(scriptDir)}, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: inputsPin(a) }, outputs: [path.basename(scriptFile)] })) }));
+      plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" ${whereSaid(scriptDir)}, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: inputsPin(a) }, outputs: [path.basename(scriptFile)],
+        // (SQ3, T1-S6) the same line in Arabic, for the page of a plan with Arabic names
+        writesAr: [`سكربت TMDL «${path.basename(scriptFile)}» ${whereSaid(scriptDir, undefined, true)}، يضيف الجدول «${rest.table}» (من ${rest.range.from} إلى ${rest.range.to})${rest.relationships.length ? `، والعلاقات: ${rest.relationships.length}` : ''}؛ ${NEVER_APPLIED_AR}`] })) }));
   }));
 }
 
@@ -88,5 +90,6 @@ function arabicColumnsOnly(m, a) {
   }
   const name = path.basename(scriptNameNow(scriptDir, scriptBase + ' - Arabic calendar', co.script));
   return text(Object.assign({ written: false, scriptAfterGo: name }, said, {
-    plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${name}" ${whereSaid(scriptDir)}, adding ${co.columns.length} Arabic calendar column${co.columns.length === 1 ? '' : 's'} to your date table ${JSON.stringify(co.table)}; no report and no new table; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: pin }, outputs: [name] })) }));
+    plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${name}" ${whereSaid(scriptDir)}, adding ${co.columns.length} Arabic calendar column${co.columns.length === 1 ? '' : 's'} to your date table ${JSON.stringify(co.table)}; no report and no new table; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: pin }, outputs: [name],
+      writesAr: [`سكربت TMDL «${name}» ${whereSaid(scriptDir, undefined, true)}، يضيف أعمدة التقويم العربية (${co.columns.length}) إلى جدول التاريخ لديك «${co.table}»؛ دون تقرير ودون جدول جديد؛ ${NEVER_APPLIED_AR}`] })) }));
 }
