@@ -70,6 +70,9 @@ jobs:
       - name: The site's config files (robots, sitemap, icons, manifest, security.txt, llms.txt, every page's head)
         run: node scripts/test-site-config.mjs
 
+      - name: The site's Arabic uses one term per concept (the terminology sheet), the English once for slicer and tooltip
+        run: node scripts/test-arabic-terms.mjs
+
       - name: Analytics events follow GA4 rules (no parameter GA4 reads as the traffic source)
         run: node scripts/test-analytics-events.mjs
 

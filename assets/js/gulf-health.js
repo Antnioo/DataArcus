@@ -171,7 +171,7 @@
     if (!cal) {
       add('GC_NO_CALENDAR', 'medium',
         ['No calendar table', 'Without one there is nowhere for Hijri dates, Ramadan and Eid or the weekend, so every comparison falls back to Gregorian months.', 'Add one from the DataArcus Calendar Generator (Hijri dates, announced Ramadan and Eid, your country\'s weekend), then mark it as a date table (fixes.calendarGenerator).'],
-        ['لا يوجد جدول تقويم', 'بدونه لا مكان للتاريخ الهجري ولا لرمضان والعيد ولا لعطلة نهاية الأسبوع، فتعود كل مقارنة إلى الأشهر الميلادية.', 'أضف جدولًا من مولّد التقويم في داتا أركوس (التاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة دولتك)، ثم علّمه كجدول تاريخ (fixes.calendarGenerator).'], []);
+        ['لا يوجد جدول تاريخ', 'بدونه لا مكان للتاريخ الهجري ولا لرمضان والعيد ولا لعطلة نهاية الأسبوع، فتعود كل مقارنة إلى الأشهر الميلادية.', 'أضف جدولًا من مولّد التقويم في DataArcus (التاريخ الهجري، وتواريخ رمضان والعيد المعلنة، وعطلة دولتك)، ثم علّمه كجدول تاريخ (fixes.calendarGenerator).'], []);
       out.fixes = fixes(null, null);
       return out;
     }
@@ -242,11 +242,11 @@
           const x = differ[0], other = x.announced || x.ummAlQura;
           if (uaeDates) add('GC_DATES_DIFFER', 'medium',
             ['Ramadan or Eid dates differ from the announced ones', 'For example ' + x.event + ' starts on ' + longDate(T(x.model)) + ' in the model; ' + (code === 'ksa' ? 'the announced date is ' + longDate(T(other)) + ' (' + SAME + ')' : 'the UAE announced ' + longDate(T(other))) + '. Sources: scripts/gulf-calendar/DATES-SOURCES.md.', 'Use the announced dates (fixes.calendarGenerator).'],
-            ['مواعيد رمضان أو العيد تختلف عن المعلنة', 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + '، و' + (code === 'ksa' ? 'الموعد المعلن ' + other + ' (مواعيد الإمارات المعلنة، وهي تطابق مواعيد السعودية للأعوام 2018-2026)' : 'أعلنت الإمارات ' + other) + '. المصادر: DATES-SOURCES.md.', 'استخدم المواعيد المعلنة (fixes.calendarGenerator).'], differ);
+            ['تواريخ رمضان أو العيد تختلف عن المعلنة', 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + '، و' + (code === 'ksa' ? 'التاريخ المعلن ' + other + ' (تواريخ الإمارات المعلنة، وهي تطابق تواريخ السعودية للأعوام 2018-2026)' : 'أعلنت الإمارات ' + other) + '. المصادر: DATES-SOURCES.md.', 'استخدم التواريخ المعلنة (fixes.calendarGenerator).'], differ);
           // no sourced dates for this country: never "wrong", only a note to check the official announcement
           else add('GC_DATES_NOTE', 'low',
             ['Ramadan or Eid dates differ from Umm al-Qura: ' + CHECK, 'For example ' + x.event + ' starts on ' + longDate(T(x.model)) + ' in the model; Umm al-Qura gives ' + (other ? longDate(T(other)) : 'another date') + '. No announced dates are sourced for ' + C.name + ' yet, so this is not an error: the moon sighting can move a date by a day.', 'Compare with ' + C.name + '\'s official announcement; keep the model\'s date if it matches.'],
-            ['مواعيد رمضان أو العيد تختلف عن تقويم أم القرى: راجع الإعلان الرسمي في ' + C.nameAr, 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + (other ? '، وتقويم أم القرى يعطي ' + other : '') + '. لا توجد بعد مواعيد معلنة موثَّقة لـ' + C.nameAr + '، فهذا ليس خطأ: قد تغيّر رؤية الهلال الموعد يومًا واحدًا.', 'قارن بالإعلان الرسمي في ' + C.nameAr + '، وأبقِ موعد النموذج إن طابقه.'], differ);
+            ['تواريخ رمضان أو العيد تختلف عن تقويم أم القرى: راجع الإعلان الرسمي في ' + C.nameAr, 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + (other ? '، وتقويم أم القرى يعطي ' + other : '') + '. لا توجد بعد تواريخ معلنة موثَّقة لـ' + C.nameAr + '، فهذا ليس خطأ: قد تغيّر رؤية الهلال التاريخ يومًا واحدًا.', 'قارن بالإعلان الرسمي في ' + C.nameAr + '، وأبقِ تاريخ النموذج إن طابقه.'], differ);
         }
         // future dates not marked as estimates
         if (!cols.estimated) {
@@ -254,7 +254,7 @@
           GD.events.forEach((e) => Object.keys(EVENT).forEach((k) => { if (e[k] && T(e[k]) > T(GD.checked) && inRange(T(e[k]))) later.push({ event: EVENT[k] + ' ' + e.hijriYear, date: e[k] }); }));
           if (later.length) add('GC_ESTIMATES', 'info',
             ['Future Ramadan and Eid dates are not marked as estimates', 'Dates after ' + GD.checked + ' are not announced yet and can move by a day.', 'Add Is Estimated Date (fixes.calendarGenerator), and regenerate after each announcement.'],
-            ['مواعيد رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'المواعيد بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير يومًا واحدًا.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
+            ['تواريخ رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'التواريخ بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير يومًا واحدًا.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
         }
       }
     }
@@ -273,7 +273,7 @@
     if (hijri && !anyGulfMeasure) {
       add('GC_NO_MEASURES', 'info',
         ['No Ramadan or Eid measures', 'Last Ramadan, vs Last Ramadan % and the Eid windows compare like with like.', 'Add them (fixes.measureBuilder).'],
-        ['لا توجد مقاييس لرمضان أو العيد', 'مقاييس رمضان الماضي ونسبة التغير وفترات العيد تقارن المتماثل بالمتماثل.', 'أضفها (fixes.measureBuilder).'], lacks.map((m) => ({ missingMeasure: m })));
+        ['لا توجد مقاييس لرمضان أو العيد', 'مقاييس رمضان الماضي ونسبة التغير وفترات العيد تقارن كل موسم بنظيره.', 'أضفها (fixes.measureBuilder).'], lacks.map((m) => ({ missingMeasure: m })));
     }
 
     const ORDER = { high: 0, medium: 1, low: 2, info: 3 };

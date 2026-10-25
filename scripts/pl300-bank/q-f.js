@@ -91,7 +91,7 @@ Q('usability','single',1,'Sync slicers',
 [`Sync slicers: sync the slicer to all three pages but make it visible only on Overview`,`Filters on this page on each page`,`Three separate slicers`,`Edit interactions`],0,
 `The Sync slicers pane controls on which pages a slicer filters (sync) and where it's shown (visible), independently.`,
 [``,`Page filters aren't linked to the slicer.`,`Separate slicers don't stay in sync.`,`Edit interactions apply within one page.`],
-`Sync slicers يحدد أين يفلتر الـ slicer وأين يظهر.`,['slicers']),
+`Sync slicers يحدد أين يصفّي الـ slicer وأين يظهر.`,['slicers']),
 
 Q('usability','single',2,'Selection pane',
 `Two visuals overlap and the wrong one is on top, so users can't click the chart. What should you use?`,

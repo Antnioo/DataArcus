@@ -864,7 +864,7 @@
       row(L('Category (bar, donut)', 'الفئة (أعمدة أفقية، دائري)'), 'c', ch.catA, 'catA'),
       row(L('Second category (column, table)', 'فئة ثانية (أعمدة، جدول)'), 'c', ch.catB, 'catB'),
       `<div class="tg-bind-sec">${esc(L('Filters', 'الفلاتر'))}</div>`,
-      ...[0, 1, 2].map((i) => row(L('Slicer ', 'المقسم ') + (i + 1), 'c', ch.slicers[i], 'slicers.' + i))
+      ...[0, 1, 2].map((i) => row(L('Slicer ', 'مقسم طريقة العرض ') + (i + 1), 'c', ch.slicers[i], 'slicers.' + i))
     ].join('');
     const all = { m: measures, c: columns };
     let current = bind;

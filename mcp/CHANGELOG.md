@@ -42,6 +42,9 @@ package's manifest; this file says what is in it.
   English-Arabic copy of a report: mirrored, language buttons on every page, slicer pairs kept in sync, the other
   language's pages hidden in the tabs. The approval page shows each English page beside its Arabic page. In the
   English-Arabic copy too, button slicers (pills) are now kept in sync with their Arabic copy.
+- **One Arabic word for each idea:** reports, the approval page, the health checks and the website now use the same
+  Arabic term for each Power BI and DataArcus idea (filters, slicers, tooltips, visuals, the date table, Ramadan dates,
+  dashboards), and write the name DataArcus in Latin letters. A check keeps it so.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside

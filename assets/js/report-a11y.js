@@ -97,7 +97,7 @@
       matrix: (r, c, m) => [r && `Rows by ${r}`, c && `columns by ${c}`, m && `values: ${m}`].filter(Boolean).join('; ') + '.',
       slicer: (c) => `Filters the page by ${c}.`, shows: (x) => `Shows ${x}.` },
     ar: { by: (m, c) => `${m} حسب ${c}`, over: (m, c) => `${m} على مدى ${c}`, share: (m, c) => `حصة ${m} حسب ${c}`,
-      series: (s) => `لون لكل ${s}، كما في وسيلة الإيضاح.`, card: (m) => `${m} حسب عوامل التصفية في الصفحة.`,
+      series: (s) => `لون لكل ${s}، كما في وسيلة الإيضاح.`, card: (m) => `${m} حسب الفلاتر في الصفحة.`,
       rows: (c, m) => (m ? `صف لكل ${c}، مع ${m}.` : `صف لكل ${c}.`), totals: (m) => `إجماليات ${m}.`,
       matrix: (r, c, m) => [r && `الصفوف حسب ${r}`, c && `الأعمدة حسب ${c}`, m && `القيم: ${m}`].filter(Boolean).join('؛ ') + '.',
       slicer: (c) => `يصفّي الصفحة حسب ${c}.`, shows: (x) => `يعرض ${x}.` }

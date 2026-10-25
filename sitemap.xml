@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://dataarcus.com/</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/"/>
@@ -11,7 +11,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/"/>
@@ -20,7 +20,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/portfolio.html</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/portfolio.html"/>
@@ -29,7 +29,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/portfolio.html</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/portfolio.html"/>
@@ -38,7 +38,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/"/>
@@ -47,7 +47,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/"/>
@@ -56,7 +56,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/power-bi-theme-generator.html</loc>
-    <lastmod>2026-10-21</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/power-bi-theme-generator.html"/>
@@ -65,7 +65,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/power-bi-theme-generator.html</loc>
-    <lastmod>2026-10-21</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/power-bi-theme-generator.html"/>
@@ -74,7 +74,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/dax-calendar-table-generator.html</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
@@ -83,7 +83,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/dax-calendar-table-generator.html</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-calendar-table-generator.html"/>
@@ -92,7 +92,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/adventureworks-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/adventureworks-dashboard.html"/>
@@ -101,7 +101,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/adventureworks-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/adventureworks-dashboard.html"/>
@@ -110,7 +110,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/call-center-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/call-center-dashboard.html"/>
@@ -119,7 +119,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/call-center-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/call-center-dashboard.html"/>
@@ -128,7 +128,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/maven-market-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/maven-market-dashboard.html"/>
@@ -137,7 +137,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/maven-market-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/maven-market-dashboard.html"/>
@@ -146,7 +146,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/er-health-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/er-health-dashboard.html"/>
@@ -155,7 +155,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/er-health-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/er-health-dashboard.html"/>
@@ -164,7 +164,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/consumer-financial-complaints.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/consumer-financial-complaints.html"/>
@@ -173,7 +173,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/consumer-financial-complaints.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/consumer-financial-complaints.html"/>
@@ -182,7 +182,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/repeatiq-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/repeatiq-dashboard.html"/>
@@ -191,7 +191,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/repeatiq-dashboard.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/repeatiq-dashboard.html"/>
@@ -200,7 +200,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/dashboards/fintech-dashboard.html</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/fintech-dashboard.html"/>
@@ -209,7 +209,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/dashboards/fintech-dashboard.html</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/dashboards/fintech-dashboard.html"/>
@@ -218,7 +218,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/blog.html</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/blog.html"/>
@@ -227,7 +227,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/blog.html</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/blog.html"/>
@@ -344,7 +344,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/dax-measure-builder.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
@@ -353,7 +353,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/dax-measure-builder.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/dax-measure-builder.html"/>
@@ -398,7 +398,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/power-bi-mcp/</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/power-bi-mcp/"/>
@@ -407,7 +407,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/power-bi-mcp/</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/power-bi-mcp/"/>
@@ -416,7 +416,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/services/copilot-readiness-audit.html</loc>
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/services/copilot-readiness-audit.html"/>
@@ -425,7 +425,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/services/copilot-readiness-audit.html</loc>
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/services/copilot-readiness-audit.html"/>
@@ -578,7 +578,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/svg-kpi-designer.html</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
@@ -587,7 +587,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/svg-kpi-designer.html</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/svg-kpi-designer.html"/>
@@ -596,7 +596,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html"/>
@@ -605,7 +605,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/tools/power-bi-licensing-cost-calculator.html</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html"/>
@@ -650,7 +650,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/privacy.html</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/privacy.html"/>
@@ -659,7 +659,7 @@
   </url>
   <url>
     <loc>https://dataarcus.com/ar/privacy.html</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://dataarcus.com/privacy.html"/>
