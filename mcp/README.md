@@ -84,5 +84,55 @@ A path with spaces goes in double quotes, after `DATAARCUS_ROOT=` too:
 `claude mcp add dataarcus --env DATAARCUS_ROOT="C:\Users\me\Power BI" -- node "C:\My Repos\DataArcus\mcp\server.mjs"`.
 Then in Claude Code: `/mcp` should list `dataarcus` with 11 tools.
 
+## Other MCP clients and platforms (developers)
+Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to
+Fabric. Power BI Desktop itself runs only on Windows. The one-click extension (`.mcpb`) is for Windows for now; on macOS
+and Linux, clone this repository and run `npm install` in `mcp/` (Node.js 20.10 or later), then add the server to your
+client as below. CI runs the MCP's tests on Linux, Windows and macOS.
+
+In each snippet `<repo folder>` is where this repository is cloned and `<working folder>` the folder that holds your
+Power BI projects (DataArcus reads and writes only inside it). Example paths: Windows `C:\Users\me\Power BI`, macOS
+`/Users/me/Documents/Power BI`, Linux `/home/me/power-bi`. In a JSON file write a Windows path with forward slashes
+(`C:/Users/me/Power BI`) or doubled backslashes.
+
+**Claude Code** (tried on Linux in a cloud container on 25 Oct 2026: `claude mcp list` showed `dataarcus` Connected,
+with a working folder whose name has a space; not yet tried on macOS; on Windows, the command in "Install" above):
+```
+claude mcp add dataarcus --env DATAARCUS_ROOT="<working folder>" -- node "<repo folder>/mcp/server.mjs"
+```
+`claude mcp add` without `-s` adds it for the current folder only; `-s user` for every folder.
+
+**VS Code, agent mode** (not yet tried): Command Palette > **MCP: Add Server** > **Command (stdio)**, the command
+`node "<repo folder>/mcp/server.mjs"`, the name `dataarcus`; then add the working folder to the entry VS Code writes
+(`.vscode/mcp.json` for the workspace, or the user's `mcp.json`):
+```json
+{
+  "servers": {
+    "dataarcus": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["<repo folder>/mcp/server.mjs"],
+      "env": { "DATAARCUS_ROOT": "<working folder>" }
+    }
+  }
+}
+```
+
+**Cursor** (not yet tried): `~/.cursor/mcp.json` (every project; on Windows `%USERPROFILE%\.cursor\mcp.json`), or
+`.cursor/mcp.json` in one project:
+```json
+{
+  "mcpServers": {
+    "dataarcus": {
+      "command": "node",
+      "args": ["<repo folder>/mcp/server.mjs"],
+      "env": { "DATAARCUS_ROOT": "<working folder>" }
+    }
+  }
+}
+```
+In each client the tools list should then show `dataarcus` with 11 tools. Approving a plan opens DataArcus's approval
+window in your default browser on the same computer, whichever client you use.
+
 ## Test
 `npm test` starts the server like an agent would and calls every tool on copies of the fixtures.

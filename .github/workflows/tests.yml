@@ -47,6 +47,9 @@ jobs:
       - name: Every MCP test script prints the result line CI's summary counts (B-198)
         run: node scripts/test-result-lines.mjs && node scripts/check-result-lines.mjs
 
+      - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
+        run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
+
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
@@ -270,6 +273,75 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: mcp-windows-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      - name: Every part ran exactly once; the checks added up
+        run: node scripts/ci-sum.mjs mcp ci-logs
+
+  # macOS (0.3.1 P1, the owner 25 Oct: "beyond Windows, without shipping it"): DataArcus writes Power BI projects on
+  # macOS and Linux too (opened in Power BI Desktop on Windows, or deployed to Fabric). The same parts as mcp and
+  # mcp-windows, so a path or file-system difference (APFS's one folder for NFC and NFD names, /var a link to
+  # /private/var) shows here; test-platform-paths.mjs is the test written for those. Not a required check until the
+  # owner makes it one; the .mcpb keeps "win32" until one real Mac run by a person (the engine's PACKAGING.md).
+  mcp-macos-parts:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        shard: [0, 1, 2, 3, 4]
+    defaults:
+      run:
+        shell: bash
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: MCP checks on macOS, shard ${{ matrix.shard }} of 4
+        env:
+          DA_SHARD: ${{ matrix.shard }}/4
+        run: |
+          mkdir -p ../ci-logs
+          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mcp-macos-parts-${{ matrix.shard }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 7
+
+  mcp-macos:
+    needs: [mcp-macos-parts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every shard passed (a failed, cancelled or skipped one fails this check)
+        run: |
+          echo "mcp-macos-parts: ${{ needs.mcp-macos-parts.result }}"; test "${{ needs.mcp-macos-parts.result }}" = success
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mcp-macos-parts-*
           path: ci-logs
           merge-multiple: true
 

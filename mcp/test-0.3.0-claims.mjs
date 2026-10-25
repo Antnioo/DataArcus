@@ -104,7 +104,7 @@ const BANNED = [
   [/الأول من نوعه|الوحيد من نوعه|الأداة الوحيدة|شريك|معتمد من|مدعوم بالذكاء/, 'the same in Arabic'],
   [/Power BI Report skill|powerbi-report skill/i, 'Microsoft\'s Power BI Report skill (the comparison is not approved)', 'skip-skill'],
   [/(?:unlike|compared (?:to|with)|better than|instead of) Microsoft'?s? (?:Power BI )?Report skill/i, 'a comparison with Microsoft\'s Power BI Report skill (not approved)'],
-  [/render_report|VS Code|DAX function librar|Skills for Fabric|see the result/i, 'a 0.3.1 feature']
+  [/render_report|VS Code extension|VS Code marketplace|\.vsix|DAX function librar|Skills for Fabric|see the result/i, 'a 0.3.1 feature']
 ];
 // (SKILL.md names Microsoft's skill as the companion tool for edits, older text: a reference, not a comparison; the
 // comparison pattern below still runs on it)

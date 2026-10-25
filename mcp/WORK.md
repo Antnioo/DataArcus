@@ -25,6 +25,12 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
 - **P1 (releases and platforms):** release notes from `packaging/release-notes/<version>.md` with a test that they hold
   no internal code; CI on macOS for the mcp suite with fixtures whose folders have Arabic names, spaces, long paths,
   NFC/NFD and CRLF; setup notes for Claude Code, VS Code and Cursor. The .mcpb keeps `win32` until one real Mac run.
+  - Done in DataArcus (branch `feat/0.3.1-release-platforms`, 5ed4758 + the note; `mcp/work/P1.md`): the CHANGELOG
+    plain-words check (CI), `test-platform-paths.mjs` 27 (red 26/27 first: a link-reached working folder refused its
+    real path; fixed in model.mjs's path helpers, one `underRoot`), the macOS jobs (all green by hand on c3c2089, longest
+    shard 7.0 min), README setup for Claude Code (tried: Connected), VS Code and Cursor (not tried). The engine half
+    (release notes from `packaging/release-notes/`, its test, the 0.3.1 stub, the PACKAGING.md rule) was done by the reviewer
+    (engine 0154a7a). `test-0.3.0-claims` A2-W narrowed on the reviewer's go to the VS Code extension claim (P1.md, Decisions).
 - **V1 (wave 2, the twin's approval page preview; the owner, 25 Oct: "in the approval page I couldn't find the preview
   sketch"). Done (25 Oct, cloud builder), branch `feat/0.3.1-twin-preview`, not merged:** 1cca035 plan, d1a5688 red tests,
   a418ba4 build. The twin's and the EN-AR copy's approval page draws each Arabic page (the copy: beside its English
