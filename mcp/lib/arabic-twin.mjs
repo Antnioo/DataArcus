@@ -235,6 +235,7 @@ function textsOf(R) {
     if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
     add({ id, kind: 'measureText', text: b.template, what: 'Text a report measure shows (such as the empty state\'s message)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
   }));
+  const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
     const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
@@ -243,8 +244,31 @@ function textsOf(R) {
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
     const text = visible(raw);
-    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: draftText(raw) });
+    const row = t.kind === 'field' ? rowShown.get(String(t.id).slice('field:'.length)) : null;
+    if (row) out.what = row.only ? ROW_WHAT : ROW_AND_MORE;
+    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: row && row.only ? draftText(raw.replace(AVG, '$1')) : draftText(raw) });
   });
+}
+// (0.3.1 R1: a real user's per-row "Days open" column, a measure named "Avg days open", was drafted «متوسط أيام الفتح») A
+// measure (or a field's sum) in a table whose rows are items (the table lists a column of the model) shows, on each row,
+// that one item's value: its header names what one row shows, not the average or total over the rows (the Total row is
+// Power BI's own). Such a field says it (what), and, shown only in such tables, its draft leaves out "Avg" / "Average"
+// (the glossary's draft of the rest, else none). Shown elsewhere too (a card, a chart, a matrix), one name serves both:
+// its draft is kept and both are said. queryRef -> { only }
+const AVG = /^\s*(?:avg\.?|average)\s+(.+)$/i;
+const ROW_WHAT = 'Table column header: each row of the table is one item, so name what ONE row shows (a measure named "Avg ..." gives that item\'s own value on its row; the Total row is Power BI\'s own)';
+const ROW_AND_MORE = 'Shown as a table column (each row one item: that item\'s own value) and elsewhere (over many items): one Arabic name serves both';
+function rowFieldsOf(R) {
+  const seen = new Map();
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => {
+    const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : null, qs = vis && isObj(vis.query) && isObj(vis.query.queryState) ? vis.query.queryState : null;
+    if (!qs) return;
+    const ps = Object.values(qs).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections.filter((x) => isObj(x) && isObj(x.field) && typeof x.queryRef === 'string') : []));
+    const items = vis.visualType === 'tableEx' && ps.some((x) => isObj(x.field.Column));
+    ps.forEach((x) => { const agg = isObj(x.field.Measure) || isObj(x.field.Aggregation), e = seen.get(x.queryRef) || { inItems: false, other: false };
+      if (items && agg) e.inItems = true; else e.other = true; seen.set(x.queryRef, e); });
+  }));
+  return new Map([...seen].filter(([, e]) => e.inItems).map(([k, e]) => [k, { only: !e.other }]));
 }
 // the labels by the ids the answer gave, as the mirror engine's ids (the report's own names); (0.3.0 J18) each as it is
 // written: a Latin run inside Arabic text isolated (terminology.mjs)
