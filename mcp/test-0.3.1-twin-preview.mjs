@@ -74,8 +74,11 @@ try {
   // labels: every listed text in Arabic; one chart title planted far too long for its box (V1-5)
   const p0 = await s.call('create_arabic_twin', { path: 'large/Orders EN.pbip' }), T0 = (p0.j && p0.j.texts) || [];
   let k = 0; const L = {}; T0.filter((t) => t.text != null).forEach((t) => { L[t.id] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); });
-  const LONG = 'إجمالي المبيعات الشهرية لكل فرع من فروع الشركة في جميع المناطق والمدن خلال السنوات الماضية مقارنة بالأهداف المعتمدة لكل قسم وكل فريق';
-  const planted = T0.find((t) => t.kind === 'title' && t.text != null && !/\{\d\}/.test(t.text));
+  // (a title of 200 characters, the most a label holds, on the narrowest chart of the report: two lines of its title can't
+  // hold it, by the writer's own titleFit)
+  const LONG = 'إجمالي المبيعات الشهرية لكل فرع من فروع الشركة في جميع المناطق والمدن خلال السنوات الماضية مقارنة بالأهداف المعتمدة لكل قسم وكل فريق ومقارنة بالعام السابق لكل منطقة ومدينة وفرع في الربع الأول'.slice(0, 200);
+  const charts = REPORT.flatMap((p) => { const d = path.join(ORIG, 'definition/pages', p, 'visuals'); return fs.readdirSync(d).map((n) => rd(path.join(d, n, 'visual.json'))).filter((v) => v.visual && /Chart$/.test(v.visual.visualType)).map((v) => ({ id: `title:${p}/${v.name}`, w: v.position.width })); }).sort((a, b) => a.w - b.w);
+  const planted = charts.map((c) => T0.find((t) => t.id === c.id && t.text != null && !/\{\d\}/.test(t.text))).find(Boolean);
   const LP = Object.assign({}, L, planted ? { [planted.id]: LONG } : {});
 
   // ---------- V1-5: the planted title ----------
@@ -84,7 +87,8 @@ try {
     const pidp = pp.j && pp.j.plan && pp.j.plan.planId, A = pidp ? await pageOf(pidp) : { raw: '' }, F = figures(A.raw);
     const flagged = F.filter((f) => /مقطوع|cut off/.test(f.caption) && /للفحص|to check/.test(f.caption));
     chk(() => F.length && flagged.length >= 1, () => `V1-5a. the figure with the planted Arabic title says it is to check (cut): ${F.map((f) => f.caption).join(' | ') || short(pp)}`);
-    chk(() => F.some((f) => /data-note="cut"/.test(f.svg)), () => `V1-5b. Preview.check's cut flag is drawn on the planted title's visual: ${F.map((f) => (f.svg.match(/data-note="[a-z]+"/g) || []).join(',')).join(' | ')}`);
+    const pw = planted ? (charts.find((c) => c.id === planted.id) || {}).w : -1, cutAt = F.flatMap((f) => [...f.svg.matchAll(/<g class="flag" data-i="(\d+)" data-flag="cut">/g)].map((m) => (f.boxes.find((b) => b.i === +m[1]) || {}).w));
+    chk(() => cutAt.some((x) => Math.abs(x - pw) < 0.06), () => `V1-5b. Preview.check's cut flag is drawn on the planted title's chart (${pw} wide): cut flags on boxes ${JSON.stringify(cutAt)}`);
   }
 
   // ---------- the separate twin ----------
