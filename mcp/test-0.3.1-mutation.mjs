@@ -1,6 +1,6 @@
 // T1 (0.3.1, wave 6; the owner, 25 Oct, after an outside review: "prioritise confidence in critical invariants over
 // more checks"): a mutation suite. It proves the existing tests catch a broken invariant. For each mutant: a COPY of
-// mcp/ (its node_modules linked), assets/js, assets/data and scripts/tests in a temp folder, one small change to one source file of
+// mcp/ (its node_modules linked), assets/js, assets/data, scripts/tests and scripts/gulf-calendar in a temp folder, one small change to one source file of
 // the copy (it must match exactly once and still parse), then the existing suites that guard it, run in the copy; at
 // least one must fail ("killed"). The repo's own files are never edited. Plan, mutants and results: mcp/work/T1.md.
 // Why a copied tree: the suites find the server and lib/ from their own folder (import.meta.url), so a copy runs them
@@ -88,7 +88,7 @@ const MUTANTS = [
   { id: 'S-shown', file: MO, edits: [['export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD;', 'export const shownName = (s, cap = 60) => {']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-suspicious', file: MO, edits: [['readsLikeInstruction(t.name) ? { suspicious: true } : {}', '{}']], guards: ['test-0.2.9f.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-nameOut', file: 'mcp/lib/answer.mjs', edits: [['export const nameOut = (s) => (FORMAT.test(String(s)) ?', 'export const nameOut = (s) => (false ?']], guards: ['test-audit6.mjs', 'test-z.mjs', 'test-0.2.9d.mjs'] },
-  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs'] },
+  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs', 'test-models/golden-baseline.mjs'] },
   { id: 'V-title', file: 'mcp/lib/redesign.mjs', edits: [['const shown = { visual: safeName(v.id),', 'const shown = { title: JSON.stringify(((v.json.visual || {}).visualContainerObjects || {}).title || null), visual: safeName(v.id),']], guards: ['test-0.3.0-approval-disclosure.mjs', 'test-0.3-redesign.mjs'] },
 
   // 5. check_report: "can break" versus a note
@@ -121,7 +121,9 @@ function makeCopy(k) {
   fs.cpSync(path.join(REPO, 'mcp'), path.join(dst, 'mcp'), { recursive: true, filter: (src) => !SKIP_DIRS.has(path.basename(src)) });
   fs.symlinkSync(path.join(REPO, 'mcp', 'node_modules'), path.join(dst, 'mcp', 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   for (const a of ['js', 'data']) fs.cpSync(path.join(REPO, 'assets', a), path.join(dst, 'assets', a), { recursive: true });
-  fs.cpSync(path.join(REPO, 'scripts', 'tests'), path.join(dst, 'scripts', 'tests'), { recursive: true });   // (the website's fixtures and report-check.mjs, which some suites read)
+  // (the website's fixtures and report-check.mjs, which some suites read; RB: the Gulf calendar's test model, which the
+  // golden baseline's task 11 reads: without it, its 6 differences in a copy, taken for load in T1)
+  for (const s of ['tests', 'gulf-calendar']) fs.cpSync(path.join(REPO, 'scripts', s), path.join(dst, 'scripts', s), { recursive: true });
   return dst;
 }
 // the suites run as npm test runs them, with none of this run's own settings
