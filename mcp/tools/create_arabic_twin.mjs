@@ -59,7 +59,7 @@ export function register(server, ctx) {
     if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
     const LG = P.answer.languages;
     // (SQ3, T1-S8: "0 Arabic texts as approved" before any text was approved) the count, or that none is approved yet
-    const given = P.answer.labels.given, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';
+    const given = P.answer.labels.arabic, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';
     const textsAr = given ? `النصوص العربية كما وُوفق عليها: ${given}` : 'لم يُوافق بعد على أي نص عربي: يبقى كل نص كما هو';
     const where = path.dirname(inside(a.path)), cols = (P.month.columns || []).length || 1;
     const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${texts}), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`

@@ -82,6 +82,9 @@ export function planTwin(a) {
   // text of those words takes it, unless a label was given for its id
   const byText = isObj(a.textLabels) ? a.textLabels : {}, textsUsed = new Set();
   texts.forEach((t) => { if (t.text != null && labels[t.id] == null && Object.prototype.hasOwnProperty.call(byText, t.text)) { labels[t.id] = cleanLabel(byText[t.text], t.id); textsUsed.add(t.text); } });
+  // (SQ4) the labels this call gave that a text takes (by id or by its words): labels.given; the texts that take another's
+  // Arabic (a page button, an alt text under its title, a term) are counted in labels.arabic with them
+  const givenIds = new Set(Object.keys(labels));
   const textsUnknown = Object.keys(byText).filter((k) => !textsUsed.has(k) && !texts.some((t) => t.text === k)).map((k) => visible(k).slice(0, 160));
   const T = termsOf(R, texts, labels, a, model.m);
   // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
@@ -203,7 +206,7 @@ export function planTwin(a) {
     // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
     texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
     ...(textsFrom ? { textsFrom: Math.min(textsFrom, listed.length) } : {}),
-    labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
+    labels: Object.assign({ given: [...givenIds].filter((k) => labels[k] != null).length, arabic: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
     ...(languages ? { languages } : {}),
