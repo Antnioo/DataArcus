@@ -3248,9 +3248,9 @@ if (part('round13')) {
   }
 }
 
-// ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------
-// The design findings of round 11 (WORK.md "Round 11, design findings", by number) and the eight accepted
-// recommendations, each with its check written before the code. What Desktop must confirm is listed in WORK.md,
+// ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; mcp/work/archive/WORK-2026-10-05-09.md "Round 12") ----------
+// The design findings of round 11 (the same file, "Round 11, design findings", by number) and the eight accepted
+// recommendations, each with its check written before the code. What Desktop must confirm is listed there,
 // "Round 12, for the laptop to prove".
 if (part('round12')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -3831,7 +3831,7 @@ if (part('round14')) {
   }
 
   // 3. (Slicers with softer borders: removed after the laptop's proof of 6 Oct. Desktop drew the dropdown box as before
-  // with general.outlineColor written, and nothing the validator accepts reaches the box: mcp/WORK.md, round 14.)
+  // with general.outlineColor written, and nothing the validator accepts reaches the box: mcp/work/archive/WORK-2026-10-05-09.md, round 14.)
   const tplCount = (T) => T.TEMPLATES.length;
   // 4. The SVG ring's label (owner, 6 Oct: the card read 33.8%, its ring's label "0", dark grey on the dark card): a
   // text that shows a ratio (a ratio or % value, or a measure the shared format rule calls a percent) in a number format

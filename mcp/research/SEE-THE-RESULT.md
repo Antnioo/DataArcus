@@ -12,7 +12,7 @@ the report: a title that wraps, a table's last column behind a scrollbar, month 
 Arabic header cut.
 
 ## What we already know (evidence in this repo)
-- **The preview places boxes right, and misses what is inside them.** J12 (19 Oct, `mcp/WORK.md`): the laptop compared
+- **The preview places boxes right, and misses what is inside them.** J12 (19 Oct, `mcp/work/archive/WORK-2026-10-15-22.md`): the laptop compared
   the preview with Desktop's PDF export of the same written reports: every box within 4 units; titles, cut table columns,
   slanted labels and the side of a KPI's value were wrong until fixed one rule at a time. D5 (19 Oct): the preview called
   titles «مقطوع» (cut) that Desktop drew whole. Each fix was a new measurement in Desktop.

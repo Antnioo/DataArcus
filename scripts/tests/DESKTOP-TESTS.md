@@ -3,7 +3,8 @@
 Some fixes can only be proven in real Power BI. This file keeps what was tested there, how, and what we learned.
 Setup: Claude Code on the laptop with Microsoft's `powerbi-authoring` plugin (Power BI Authoring MCP), the Desktop
 bridge CLI (`powerbi-desktop`) and the DataArcus MCP (`mcp/`). Test models carry data with known answers, so every
-expected number is written down before the run.
+expected number is written down before the run. `mcp/WORK.md` below means the memory as it was on that day:
+since 0.3.1 (G1) its history is in `mcp/work/archive/` (`README.md` there lists every section by file).
 
 ## 2026-09-29: Power BI Desktop 2.157 (August 2026)
 
@@ -1659,7 +1660,7 @@ over stdio (`builder-scripts\r10-make.mjs`); captures of the canvas through the 
 `<tests folder>\desk-r11\` (1.1719 capture pixels per page unit on a 1920 x 1080 page, 1.7578 on 1280 x 720; the page
 starts 115 pixels down); one report per command, in the foreground (`shot11.ps1`). The phone layout: "Mobile layout"
 pressed by UI Automation, the phone canvas captured from the window (`r11-phone.ps1`; 1.25 screen pixels per phone
-unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/WORK.md`, "Round 11, order of
+unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 11, order of
 work", written before each run.
 
 ### Item 2, the phone layout: 4 and 8 tabs, English and Arabic
@@ -1677,7 +1678,7 @@ KPI cards and a bar chart on every page; the round 10 page names). The phone pos
 - **Cut on every one of these phone pages, and not a tab: the second card's title, "Total Sales Last Rama..."** (a
   157.5-wide phone card, its title at 10pt). Known since 2026-10-01 ("long card titles end in ..." on the phone);
   round 10's wrap-or-shorten rule is applied to the page's cards only, not to the phone's. Not fixed tonight
-  (`mcp/WORK.md`, "Round 11, for the owner").
+  (`mcp/work/archive/WORK-2026-10-05-09.md`, "Round 11, for the owner").
 - On the phone the titles of the cards and of the chart are drawn in a pale grey (the theme's label colour on a
   white canvas), much fainter than on the page: see the design findings.
 
@@ -1778,7 +1779,7 @@ client (`gc-check.ps1`), the query files in `<tests folder>\desk-r11\gc\`.
   as Desktop saves it ("is not a date column (its type is unknown)"): Sales is a DAX table, and TMDL carries no
   type for its columns. For the run the three test models' Sales columns were given `dataType` and
   `isDataTypeInferred` by hand (`r11-gc-types.cjs`); Desktop opened them without a message. A user whose fact
-  table is a DAX table cannot get the relationship from the tool today (`mcp/WORK.md`, "for the owner").
+  table is a DAX table cannot get the relationship from the tool today (`mcp/work/archive/WORK-2026-10-05-09.md`, "for the owner").
 - The Sales table's measures that name `Calendar` show "Field list item has error" in the Data pane until the
   calendar is applied and refreshed (three of them were listed right after Apply); none after the refresh.
 
@@ -1950,7 +1951,7 @@ Made-up models only (the Ramadan sample, copied to `<tests folder>\13-r13`; `13-
 sort-by column on Month Name and Day Name). Reports from the working copy's server over stdio
 (`builder-scripts\r13-make.mjs`); captures of the canvas through the bridge at double size in
 `<tests folder>\desk-r13\`, one report per command, in the foreground (`r13-shot.ps1`). Colours are read from the
-capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/WORK.md`, "Round 13,
+capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 13,
 order of work", written before each run.
 
 ### Item 1, gradient ("fading") colours in bar and column charts
@@ -2374,7 +2375,7 @@ Every report is on a made-up model whose rows are DAX tables; the laptop was unl
 (`builder-scripts\r23-poke.ps1`: UI Automation finds the visuals about a minute after "ready"). Captures (2x, nothing
 scaled down), crops and pixel comparisons: `<tests folder>\r23\shots\` (`crops\`, `cmp\`, `poke\`); the reports
 `<tests folder>\r23\lab\`, `golden-b\`, `showcase\`, `site\`; scripts `builder-scripts\r23-*`. The full table is in
-`mcp/WORK.md`, "Round 23, laptop proof, the stop report".
+`mcp/work/archive/WORK-2026-10-05-09.md`, "Round 23, laptop proof, the stop report".
 
 | Check | Result | Crop |
 |---|---|---|
@@ -2399,7 +2400,7 @@ Facts learned:
 ## 2026-10-08 afternoon, round 23's laptop re-proof (`fix/round-23-total` at `9ff1363`), Power BI Desktop 2.158.1304
 The three findings of the midday proof, fixed in parts 7 and 8, opened again on made-up models (the same labs, copied,
 and three variants). Captures (2x) and hover pictures: `<tests folder>\r23b\shots\` (`crops\`); reports `r23b\lab\`,
-`r23b\site\`; scripts `builder-scripts\r23b-*`. The full table is in `mcp/WORK.md`, "Round 23, laptop re-proof".
+`r23b\site\`; scripts `builder-scripts\r23b-*`. The full table is in `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 23, laptop re-proof".
 
 | Check | Result | Crop |
 |---|---|---|
@@ -2419,7 +2420,7 @@ Facts learned:
 
 ## 2026-10-08 evening, round 24's laptop proof (`fix/round-23-total` at `754d29c`), Power BI Desktop 2.158.1304
 The website's download only (the lab page served from the work tree), made-up models, English and Arabic, 1280 x 720.
-Captures `<tests folder>\r24\shots\`; the table is in `mcp/WORK.md`, "Round 24, laptop proof".
+Captures `<tests folder>\r24\shots\`; the table is in `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 24, laptop proof".
 
 | Check | Result | Crop |
 |---|---|---|
