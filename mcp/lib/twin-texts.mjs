@@ -143,6 +143,8 @@ export function textsOf(R) {
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
   R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
+  // (SQ4, X1-S2) a bookmark group's name (bookmarks.json), shown in the Bookmarks pane above its bookmarks
+  (R.bookmarkGroups || []).forEach((g) => add({ id: 'bookmarkGroup:' + g.name, kind: 'bookmarkGroup', text: g.displayName }, {}));
   // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)
   titleMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => x.pd.branches.forEach((b) => {
     const id = 'titleText:' + b.template, had = all.find((t) => t.id === id), m = safeName(x.entity + '[' + x.name + ']');
@@ -205,7 +207,7 @@ export const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice
 // same text on the same visual, an alt text, a card's blank text or a tooltip that of any listed text with exactly
 // its words (a chart's alt text is its title). A label given for it wins; a text with {n} is never shared
 const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text']);
-const KIND_SAID = { page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
+const KIND_SAID = { page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', bookmarkGroup: 'bookmark group', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
 export function sameTextLabels(texts, labels) {
   const key = (t) => (t.text != null && !/\{\d+\}/.test(t.raw) ? t.raw.trim() : null), byText = new Map();
   const learn = (t) => { const k = key(t); if (k && labels[t.id] != null && !byText.has(k)) byText.set(k, t); };

@@ -8,7 +8,7 @@ import { writeTree } from './files.mjs';
 import { testEditBeforeWrite } from './write-io.mjs';
 import { modelChanged } from './plans.mjs';
 import * as Terms from './terminology.mjs';
-import { pathOut, json, isObj, EXT } from './twin-read.mjs';
+import { pathOut, json, isObj, EXT, BOOKMARKS, jsonAt } from './twin-read.mjs';
 import { rawLabels, sortKeys, normTerms } from './twin-texts.mjs';
 import { modelOf } from './twin-model.mjs';
 import { digestOf } from './artifact.mjs';
@@ -48,6 +48,9 @@ export function twinTree(P) {
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
+  // (SQ4, X1-S2) the bookmark groups' approved names, in the twin's bookmarks.json
+  if (!P.copy && (R.bookmarkGroups || []).some((g) => labels['bookmarkGroup:' + g.name] != null)) { const j = jsonAt(loc, BOOKMARKS);
+    j.items = j.items.map((it) => { const l = isObj(it) && Array.isArray(it.children) ? labels['bookmarkGroup:' + it.name] : null; if (l == null) return it; applied++; return Object.assign({}, it, { displayName: l }); }); out.set(BOOKMARKS, json(j)); }
   if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: P.logicalId }); out.set('.platform', json(pl)); }
   // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does
   else out.set('.platform', newPlatform(loc.base + ' AR', P.logicalId));
@@ -112,5 +115,6 @@ export function writeTwin(a, plan, art) {
     labelsApplied: art.applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
     exact: { digest: art.digest, files: art.files.length, note: 'These are the files the plan built before the go, written byte for byte (the digest is the plan\'s).' },
-    nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
+    // (SQ4, AF1-S1) the .pbip's name screened, as the pbip field above (a folder's name is untrusted input)
+    nextSteps: `Open "${pathOut(twinPbip).split('/').pop()}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
 }

@@ -164,8 +164,11 @@ export function languageCopy(P, built, labels) {
     }
     arV.forEach((v, i) => { renameFilters(v, arId, String(pg.visuals[i] ? pg.visuals[i].json.name : i)); remap(v, nm); });
     if (isObj(arPage)) renameFilters(arPage, arId, '');
-    // each slicer pair in one sync group: a group the English slicer has already, else its own
-    pg.visuals.forEach((v, i) => {
+    // each slicer pair in one sync group: a group the English slicer has already, else its own. (SQ4, X2-S3: numbered in
+    // the slicers' file-name order, which Desktop draws at random, two copies of one report could number a pair apart)
+    // numbered by page order, then the slicer's place on its page (top to bottom, then left to right, then its name)
+    const at = (i) => absBox(enV, enV[i]) || { x: 0, y: 0 }, order = pg.visuals.map((v, i) => i).sort((a, b) => at(a).y - at(b).y || at(a).x - at(b).x || (String(pg.visuals[a].json.name) < String(pg.visuals[b].json.name) ? -1 : 1));
+    order.map((i) => [pg.visuals[i], i]).forEach(([v, i]) => {
       // (0.3.1 X2) every slicer kind Microsoft's catalog says Power BI keeps in sync (the slicer, the button slicer's pills,
       // the list and text slicers), of one field (Power BI syncs a slicer of one field only)
       if (!canSync(typeOf(enV[i])) || !isObj(arV[i]) || !isObj(arV[i].visual)) return;
@@ -224,7 +227,8 @@ export function languageCopy(P, built, labels) {
     added.push({ rel: b.rel.replace(/[^/]+$/, j.name + '.bookmark.json'), data: json(j) });
   });
   if (R.bookmarks.length && R.files.includes(BM)) { try { const j = jsonAt(loc, BM); if (isObj(j) && Array.isArray(j.items)) {
-    const item = (it) => (!isObj(it) ? it : Array.isArray(it.children) ? Object.assign(clone(it), { name: newId('bookmarkGroup\u0000' + it.name), children: it.children.map((c) => bmOf.get(String(c)) || c) }) : Object.assign(clone(it), { name: bmOf.get(String(it.name)) || it.name }));
+    // (SQ4, X1-S2) a group's Arabic copy takes the group's approved name
+    const item = (it) => (!isObj(it) ? it : Array.isArray(it.children) ? Object.assign(clone(it), { name: newId('bookmarkGroup\u0000' + it.name), children: it.children.map((c) => bmOf.get(String(c)) || c) }, labels['bookmarkGroup:' + it.name] != null ? { displayName: labels['bookmarkGroup:' + it.name] } : {}) : Object.assign(clone(it), { name: bmOf.get(String(it.name)) || it.name }));
     j.items = j.items.concat(j.items.map(item)); changed.set(BM, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   // pages.json: the English pages, then the Arabic ones in the same order; the first page opened in the language shown
   const PJ = 'definition/pages/pages.json';
@@ -244,7 +248,7 @@ export function languageCopy(P, built, labels) {
   const files = R.files.map((rel) => (changed.has(rel) ? { rel, data: changed.get(rel) } : { rel, from: rel })).concat(R.hasPlatform ? [] : [{ rel: '.platform', data: changed.get('.platform') }], built.ext && !R.files.includes(EXT) ? [{ rel: EXT, data: json(built.ext) }] : [], added);
   const anyNav = R.pages.some((pg) => pg.visuals.some((v) => Mirror.kindOf(v.json) === 'navigator')), anyBmNav = R.pages.some((pg) => pg.visuals.some((v) => typeOf(v.json) === 'bookmarkNavigator'));
   const notes = [].concat(anyNav ? ['A page navigator lists the pages shown in the tabs only: on an Arabic page it lists the English pages (use page buttons there)'] : [], anyBmNav ? ['A bookmark navigator lists every bookmark: the English and the Arabic ones'] : [],
-    R.bookmarks.length ? ['A bookmark group keeps its name in its Arabic copy (bookmarks.json)'] : []);
+    (R.bookmarkGroups || []).some((g) => labels['bookmarkGroup:' + g.name] == null) ? ['A bookmark group with no Arabic name approved keeps its name in its Arabic copy (bookmarks.json)'] : []);
   const EN = LANG.en.text;
   const tabs = tabsShown === 'en'
     ? { shown: 'the English pages, as in the original', hidden: `the Arabic pages (hidden in the tabs): each English page's «${EN}» button opens its Arabic page, whose "English" button goes back`, tooltipPages: 'stay hidden in both languages',

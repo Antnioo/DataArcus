@@ -178,6 +178,13 @@ export function planTwin(a) {
   const FK = ['buttons', 'buttonsCut', 'headers', 'headersCut', 'textboxes', 'textboxesCut'];
   const F = built.fitted, fitted = FK.some((k) => F[k].length) ? { fitted: Object.assign({}, ...FK.filter((k) => F[k].length).map((k) => ({ [k]: F[k].slice(0, 60) })), { sayInPlan: 'The Arabic texts are longer than the English: the twin widens each button to its text (the visuals beside it in its row move with it), each table column to its Arabic header, within the page and the table, and each text box to its Arabic lines (wider into the free room beside it, then taller into the free room under it; nothing beside it moves). Say each one in the plan, and every buttonsCut, headersCut and textboxesCut: their Arabic text needs a shorter version, or Power BI cuts it (a headersCut with cut "may be cut": Power BI may cut it, to be looked at in Desktop).' }) } : {};
   const notFullyArabic = notFullyArabicOf(cannot, R);
+  // (SQ4, Q1-S7: a two-page report listed 42 alt texts that repeat a title, and took 2-3 calls to list) an alt text with
+  // its visual's title's words, neither with an Arabic yet, is listed under that title (altTextToo), not alone: it takes
+  // the title's Arabic (sameTextLabels). Once one of them has its Arabic, it is listed as before (the plan shows it)
+  const titleAt = new Map(texts.filter((t) => t.kind === 'title' && !t.phone && t.text != null).map((t) => [t.rawId.slice('title:'.length), t])), altUnder = new Map();
+  texts.forEach((t) => { const m = t.kind === 'altText' && !t.phone && t.text != null ? /^text:(.+)\/c\.general\.\d+\.altText$/.exec(t.rawId) : null, ti = m ? titleAt.get(m[1]) : null;
+    if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
+  const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
   return { loc, R, logicalId, labels, texts, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
@@ -194,14 +201,14 @@ export function planTwin(a) {
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right
     waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `native: ${Gallery.WF_WHAT.native} (the user can choose "mirror": a stacked column chart read from the right, with no Total column and no legend)` : 'mirror: each waterfall is a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend (the user can choose "native": Power BI\'s own waterfall, left to right)',
     // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
-    texts: texts.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(texts.length > textsFrom + TEXTS_MAX ? { textsNotListed: texts.length - textsFrom - TEXTS_MAX } : {}),
-    ...(textsFrom ? { textsFrom: Math.min(textsFrom, texts.length) } : {}),
+    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
+    ...(textsFrom ? { textsFrom: Math.min(textsFrom, listed.length) } : {}),
     labels: Object.assign({ given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
     ...(languages ? { languages } : {}),
     terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW_TWIN }, T.unknown.length ? { unknownTerms: T.unknown } : {}, T.notUsing.length ? { labelsNotUsingTerm: T.notUsing.slice(0, 60) } : {}),
-    sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
+    sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. altTextToo: the visual\'s alt text says the title\'s words and takes the title\'s Arabic (one label for both; a label for its id gives it its own). notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),

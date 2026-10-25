@@ -235,8 +235,13 @@
   // page is bold there), + 10; the one copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (0.3.0 D3)
   const PHONE_TAB = { size: 10, gap: 8, w: 323 };
   const phoneTabWidth = (name, font) => Math.min(PHONE_TAB.w, Math.ceil(textWidth(String(name), PHONE_TAB.size, true, font) + 10));
+  // the phone layout's header title: 14pt, or the largest size down to 8 whose one line (0.55 em a character, as charW)
+  // fits the box w wide; top: another cap (SQ4: an Arabic twin's phone title never grows past the size it had). The one
+  // copy: the writer's phone layout (pbip-page.js) and the Arabic twin's (report-mirror.js labelMobile)
+  const PHONE_TITLE = 14;
+  const phoneTitleSize = (text, w, top) => Math.max(8, Math.min(top == null ? PHONE_TITLE : top, Math.floor(w / (0.55 * 4 / 3 * Math.max(1, String(text).length)))));
   const api = {
-    PHONE_TAB, phoneTabWidth, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    PHONE_TAB, phoneTabWidth, PHONE_TITLE, phoneTitleSize, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -72,9 +72,10 @@ try {
     const B2 = bj(path.join(D2, 'Twin Sales (EN-AR).Report/definition/bookmarks/bookmarks.json')), gs = (B2.items || []).filter((x) => Array.isArray(x.children));
     chk(() => !w2.err && gs.length === 2 && gs[0].displayName === 'Saved views' && gs[1].displayName === AR && gs[1].name !== 'grpViews', () => `X1-S2c. the copy: the English group kept, its Arabic group named as approved: ${w2.err ? w2.t.slice(0, 200) : JSON.stringify(gs)}`);
     const notes = (p2.j && p2.j.languages && p2.j.languages.notes) || [];
-    chk(() => !notes.some((n) => /bookmark group keeps its name/.test(n)), () => `X1-S2d. the copy's notes no longer say the group keeps its English name when it has its Arabic: ${JSON.stringify(notes)}`);
-    const p3 = await call({ path: 'x1b/Twin Sales.pbip', arabicMonth: false, into: 'same' }), n3 = (p3.j && p3.j.languages && p3.j.languages.notes) || [];
-    chk(() => n3.some((n) => /bookmark group keeps its name/.test(n)), () => `X1-S2e. a group with no Arabic name is still said: ${JSON.stringify(n3)}`);
+    chk(() => !notes.some((n) => /keeps its name in its Arabic copy/.test(n)), () => `X1-S2d. the copy's notes no longer say the group keeps its English name when it has its Arabic: ${JSON.stringify(notes)}`);
+    const D3 = fresh('x1c'); group(D3);
+    const p3 = await call({ path: 'x1c/Twin Sales.pbip', arabicMonth: false, into: 'same' }), n3 = (p3.j && p3.j.languages && p3.j.languages.notes) || [];
+    chk(() => n3.some((n) => /keeps its name in its Arabic copy/.test(n)), () => `X1-S2e. a group with no Arabic name is still said: ${JSON.stringify(n3)}`);
   }
 
   // ---------- X2-S3: the sync groups numbered by page order and place ----------
