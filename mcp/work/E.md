@@ -148,6 +148,9 @@ No Microsoft Arabic source found this session for: theme («السمة» is what
 - Website: build:min (27 .min.js rebuilt; check:min all 73 match, every changed one with the new stamp 20261025e on 39
   English pages + the worker and its two callers); csp: 137 pages current; ar-pages --write (37 copies; the articles'
   copies changed only in their script stamps); test-site-config PASS (76 pages); sitemap-lastmod --write (see "Seen").
+- Website suites (`run-all.mjs`, all 20): **20 of 20 pass** (1321 s).
+- Full `cd mcp && npm test` once, on 25d09e37: **exit 0, 68 result lines, every one PASS** (arabic-terms 84, a11y 121,
+  twin-complete 24, terminology-sheet 48).
 
 ## CHANGELOG line
 - DataArcus writes one Arabic word for each Power BI and DataArcus idea everywhere: in reports, the approval page, the

@@ -65,6 +65,12 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   "Seen, not in scope": `mcp/work/L1.md`.
 - **Merged into `integration/0.3.1` (25 Oct, reviewer):** S1 (ee95e76), R1 (3e03ab9), V1 (2a47e53), P1 (5728514), M1
   (ed23620), L1 (7379e42), I (this merge).
+- **E (wave 3, one Arabic term per concept; the Arabic review of 21 Oct). Done (25 Oct, cloud builder), branch
+  `feat/0.3.1-arabic-terms`, not merged:** a6d1bd8 plan, 917bbea red (18 of 84), 7893922 engines + MCP, da3d133 the site,
+  25d09e37 sitemap + note. The terminology sheet's `concepts` (assets/data/arabic-report-words.json, 30 concepts, Microsoft's
+  Arabic from Learn's Arabic training units) checked by `mcp/test-0.3.1-arabic-terms.mjs` (84, npm test) and
+  `scripts/test-arabic-terms.mjs` (65, website CI). 12 concepts unified; 5 terms "to choose" for the owner (filters,
+  slicer, tooltip, visual, dashboard): `mcp/work/E.md` "For the owner". Website 20/20; full npm test green.
 - **Running (25 Oct):** X2 one report in English and Arabic from create_report, ported onto today's code
   (`feat/0.3.1-bilingual-report-2`: R1's buttons, M1's engine, V1's pairs).
 - Next: wave 3 (the sample project, Arabic terms, the website's "ready for Arabic?" page), wave 4 (K1, Finding #3,
