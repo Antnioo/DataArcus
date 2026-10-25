@@ -172,6 +172,7 @@ read in particular:
   RTLREADY).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#w](SEEN-QUEUE.md#w)
 1. Merge with E: both branches stamp `lang-manager.min.js` on every page (mine 20261025a, E's 20261025e) and both rebuild
    `blog.min.js` / `homepage.min.js`: the reviewer's merge takes the later stamp and runs `npm run build:min`,
    `check:min`, `ar-pages.mjs --write`, `csp.mjs --write`.

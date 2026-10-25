@@ -108,6 +108,7 @@ server.mjs 17 commits (1,353 lines); plans 3, arabic-twin 3, gulf-calendar 4, ar
 - Theme sizes 10/28/12/18 copied (A6-10). Nothing else tuned to the portfolio reports in this layer.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-6-mcp-tools](SEEN-QUEUE.md#audit-6-mcp-tools)
 - A report plan lets generate_theme write into any folder in the root (1173).
 - `CARD_RULE` is used at 1013 and defined at 1103 (works only at run time).
 - add_gulf_calendar's plan path passes a fake `writeScript` (1315-1316): a hidden contract.

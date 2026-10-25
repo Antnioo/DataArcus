@@ -50,6 +50,7 @@ None: the website's text, not the MCP.
    on the HTML and the translations half, EN and AR).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#ds1](SEEN-QUEUE.md#ds1)
 1. MCP page hero, meta descriptions and beta.hero.facts still say "in Claude Desktop" / "Windows, with Power BI Desktop
    and Claude Desktop": true of the one-click path, but read as the only client.
 2. Homepage FAQ 7 also says "in Claude Desktop" (kept: the one-click path).

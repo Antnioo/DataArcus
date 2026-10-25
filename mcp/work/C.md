@@ -210,6 +210,7 @@ answer on it. read_model reads every column typed and the Calendar as the date t
    matched as whole words, and a vehicle-trade word list.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#c](SEEN-QUEUE.md#c)
 1. `approve_plan`'s description names plan sources from the kinds: the redesign's reads "create_report (from redesign)"
    (an older wording); the sample's now reads "(from plan_layout with sample)". Not changed for the redesign.
 2. The tour's first report and its EN-AR plan each ask the Gulf date and shared-axes questions on the sample (it has a

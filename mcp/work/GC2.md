@@ -85,6 +85,7 @@ None: the website's article text, not the MCP.
 5. The two CTA paragraphs became `data-i18n-html` (they now hold a link).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#gc2](SEEN-QUEUE.md#gc2)
 1. The article's `dateModified` is still 2026-10-03 (EN, AR) though GC and GC2 changed its text on 25 Oct; and
    `article:published_time` says 09:00Z, before the first commit (16:32Z the same day). Proposed: dateModified
    2026-10-25 with the release.

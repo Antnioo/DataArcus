@@ -91,6 +91,7 @@ Full run (`npm test -- --keep-going`): before (1fdf031) 75 suites passed (mutati
    measures (the empty state, since 0.3.0); said, with its claims check.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#af1](SEEN-QUEUE.md#af1)
 1. `mcp/lib/twin-write.mjs` (AF2's): the write's `nextSteps` says `Open "${path.basename(twinPbip)}"` unscreened (the
    rest of that answer uses `pathOut`).
 2. L6's plan (daxSaid) returns a KPI card's and a chart's static title as typed (`used.kpiCards.title`,

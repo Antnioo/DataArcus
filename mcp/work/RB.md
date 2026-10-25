@@ -159,6 +159,7 @@ In that run: `mcp 1585` (unchanged), `golden 12 tasks`, `0.3.0-claims 232`, `val
    the report with" is banned with its semicolon (the summary's form), so the measured sentence is not caught.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#rb](SEEN-QUEUE.md#rb)
 1. **T1 Seen 2** (defence in depth no tool reaches: G-artifact, W-free-real): not a weakness, kept; no change proposed.
    W-size joins them as equivalent (Decisions 1).
 2. **T1 Seen 3** (behaviour guarded only by test.mjs parts): T1 gave each of its four a fast check; nothing open.

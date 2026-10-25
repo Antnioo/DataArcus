@@ -77,6 +77,7 @@ Partly. `inventory(src)` is pure over a source, and `memorySource` is a real sea
 - Nothing is tuned to the portfolio reports. `textOf` joins paragraphs with " / " and has no direction assumption.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-5-reading](SEEN-QUEUE.md#audit-5-reading)
 
 - `test.mjs:332` has a fourth report reader of its own, for tests.
 - check_report's lint section (check-report.mjs:247) does not catch errors; it is the A5-2 path.

@@ -47,6 +47,7 @@ Everything before 4e1bec3 is squashed into it. The rounds come from the commit m
 - **Fonts:** Segoe UI and Tahoma only (A2-11).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-2-design-engine](SEEN-QUEUE.md#audit-2-design-engine)
 - Writer: separate RTL mirrors (pbip-export.js:847, 1549), and `rowH` adds 4 for any font that is not `/^segoe ui/` (:818), which was not measured.
 - `layoutFrom`'s `fix` is a no-op inside `planLayout` (design.mjs:103), so a bad `dir` given through `design` is reset without a word.
 - server.mjs:958 runs `E.page()` on the raw, unrepaired input design.

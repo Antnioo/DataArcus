@@ -56,4 +56,5 @@ Scope: check-report.mjs, report-rules.js, design-lint.mjs, plan-lint.mjs, script
 - Golden numbers: none moved in this block without a cause.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-4-checks](SEEN-QUEUE.md#audit-4-checks)
 - `R.textSize: 12` (check-report.mjs:56): text box default, no recorded measurement. `report.pageNames` (:252) has no count cap. `walk(SCHEMAS, [], 2000)` caps bundled schemas silently (111 today, all compile; checked). `VALIDATOR_VERSION` reads a file at import (:26).

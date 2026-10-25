@@ -48,6 +48,7 @@ History before 4e1bec3 is squashed. The rounds come from the commit messages and
 - Tuned or unmeasured: the percent word list (A1-11); English-only instruction screens (A1-13). `MONEY` (model-health-tmdl.js:343) knows Gulf codes plus USD/EUR/GBP only, so a `"CAD" #,0` or `"INR"` format is not money. The search depths `depth < 3` (model.mjs:180) and `depth > 4` (:156) have no recorded reason.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-1-model-reading](SEEN-QUEUE.md#audit-1-model-reading)
 - Website `fromFile`/`fromFolder` (pbip-bind.js:113, 135) call `JSON.parse` on a model.bim of any size, with no cap.
 - `byName`'s `fs.readdirSync(full)` (model.mjs:180) is not wrapped: one unreadable subfolder fails the whole name search.
 - `server.mjs:82` `DIVIDES_OR_AVERAGES` is a 4th DIVIDES regex (pbip-bind:153, model-health-tmdl:340).

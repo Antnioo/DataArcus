@@ -203,6 +203,7 @@ model-health-check 2, model-ai-ready 1), «جدول التقويم» 6 (gulf-cal
 - «المجموع» (Sum) and «معدل» (rate) are other concepts than «الإجمالي» and «المتوسط»: not flagged.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#e](SEEN-QUEUE.md#e)
 - `sitemap-lastmod --write` also moved dates that were stale before this branch (e.g. the licensing guide 14 -> 18 Oct,
   English and Arabic): the integration branch's earlier merges had not run it.
 - «1 عناصر مرئية» (and before «1 مرئيات»): the Health Check's size line uses one plural form for every count; Arabic needs

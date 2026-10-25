@@ -98,6 +98,7 @@ builders): mcp/CHANGELOG.md, mcp/WORK.md. No tool added, no default changed.
 8. The research doc names no Desktop or validator version as current: dated measurements keep theirs.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#r1-see-the-result](SEEN-QUEUE.md#r1-see-the-result)
 - `plannedReport`'s in-memory report has no `.platform` file (create_report adds it on write); the validator passed
   offline without it; a shadow of a planned report may need one for Desktop (step 1 for the laptop will tell).
 - The health fixture's `_Measures` table has a data column, so its shadow gets 120 made-up rows (harmless; a
