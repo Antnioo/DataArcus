@@ -207,6 +207,9 @@ export function memorySource(files) {
 // (loaded once, at the module's start; without it the roles are listed by their keys alone, as before)
 let VS = null;
 try { VS = await import('@microsoft/powerbi-core-visual-schema'); } catch (e) { VS = null; }
+// (0.3.1 X2) a visual kind that Power BI can keep in sync across pages (View > Sync slicers), as Microsoft's catalog
+// says it (supportsSynchronizingFilterState): the slicer, the button slicer, the list slicer, the text slicer
+export const canSync = (type) => { try { const c = VS && VS.getCapabilities(String(type)); return !!(c && c.supportsSynchronizingFilterState === true); } catch (e) { return false; } };
 const ROLE_CACHE = new Map();
 export const rolesOf = (type) => {
   if (!ROLE_CACHE.has(type)) { let roles = {}; try { roles = Object.fromEntries(((VS && VS.getCapabilities(String(type))) || { dataRoles: [] }).dataRoles.map((d) => [d.name, { name: String(d.displayName || d.name), kind: String(d.kind || '') }])); } catch (e) { roles = {}; } ROLE_CACHE.set(type, roles); }

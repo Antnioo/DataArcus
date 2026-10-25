@@ -324,8 +324,10 @@ const byName = (list, n) => (list.find((x) => x.v.name === n) || {}).v;
     bm.flatMap((it) => [it.name].concat(it.children || [])).forEach((n, k) => { if (!names.has(String(n))) names.set(String(n), `BM${k}`); });
     const known = (t) => t.replace(/[0-9a-f]{20,}/g, (x) => (names.has(x) ? names.get(x) : x));
     const order = files.map((f) => ({ f, c: known(f) })).sort((m, n) => (m.c < n.c ? -1 : m.c > n.c ? 1 : 0));
-    let n = 0; order.forEach(({ f }) => (known(f) + '\n' + text[f]).replace(/[0-9a-f]{20,}/g, (x) => { if (!names.has(x)) names.set(x, `ID${n++}`); return x; }));
-    const all = (t) => t.replace(/[0-9a-f]{20,}/g, (x) => names.get(x) || x);
+    // (a sync group's number, "(EN-AR n)", follows the order of the slicers' file names, which are random: named by place too)
+    let n = 0, g = 0; const groups = new Map();
+    order.forEach(({ f }) => (known(f) + '\n' + text[f]).replace(/[0-9a-f]{20,}|\(EN-AR \d+\)/g, (x) => { if (x[0] === '(') { if (!groups.has(x)) groups.set(x, `(EN-AR G${g++})`); } else if (!names.has(x)) names.set(x, `ID${n++}`); return x; }));
+    const all = (t) => t.replace(/[0-9a-f]{20,}/g, (x) => names.get(x) || x).replace(/\(EN-AR \d+\)/g, (x) => groups.get(x) || x);
     return { map: Object.fromEntries(order.map(({ f }) => [all(f), all(text[f])])), page: (i) => `definition/pages/PAGE${i}/` };
   };
   const CB = canonOf(RB), CC = canonOf(RC), KB = Object.keys(CB.map), KC = Object.keys(CC.map);
@@ -337,7 +339,7 @@ const byName = (list, n) => (list.find((x) => x.v.name === n) || {}).v;
     if (JSON.stringify(kb) !== JSON.stringify(kc)) return [`files: ${JSON.stringify(kb.filter((f) => !kc.includes(f)).concat(kc.filter((f) => !kb.includes(f)).map((f) => 'copy only: ' + f))).slice(0, 400)}`];
     return kb.filter((f) => CB.map[f] !== CC.map[f]).flatMap((f) => { let x, y; try { x = JSON.parse(CB.map[f]); y = JSON.parse(CC.map[f]); } catch (e) { return [f + ': differs (not JSON)']; }
       const d = diff(x, y); return (d.length ? d : ['(whitespace)']).slice(0, 3).map((t) => f + t); }); };
-  for (let i = half; i < ordC.length; i++) { const d = filesDiff((f) => f.startsWith(CB.page(i))); chk(() => same && d.length === 0, () => `B3 Arabic page ${i - half + 1}: the bilingual report's differs from the copy's (positions, alignment, order, projections, sort, formatting, phone layout): ${d.slice(0, 6).join(' ; ')}`); }
+  for (let i = half; i < ordC.length; i++) { const d = filesDiff((f) => f.startsWith(CB.page(i))), n = KB.filter((f) => f.startsWith(CB.page(i))).length; chk(() => same && n > 2 && d.length === 0, () => `B3 Arabic page ${i - half + 1}: the bilingual report's differs from the copy's (positions, alignment, order, projections, sort, formatting, phone layout; ${n} files): ${d.slice(0, 6).join(' ; ')}`); }
   // the order of Tab stops on each Arabic page (inside the files above; said apart so a failure names it)
   const tabs = (C, i) => JSON.stringify(Object.keys(C.map).filter((f) => f.startsWith(C.page(i)) && f.endsWith('/visual.json')).map((f) => ({ f, t: (JSON.parse(C.map[f]).position || {}).tabOrder })).filter((x) => x.t != null).sort((m, n) => m.t - n.t).map((x) => x.f));
   chk(() => same && Array.from({ length: half }, (x, k) => half + k).every((i) => tabs(CB, i) === tabs(CC, i)), () => 'B4 each Arabic page\'s Tab stops are in the copy\'s order (the visuals named by their layer)');
