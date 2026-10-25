@@ -29,8 +29,13 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
 - **After each step:** update "Where things stand" and "Next step" (what's done, commit hashes, what's left), commit
   and push, so a session stopped at any moment can be picked up by the next one.
 - **Findings you were told not to fix yet** go under "Open items".
+- **Keep it short** (G1, 0.3.1): `WORK.md` holds the current release only (where it stands, next step, open items,
+  decisions in force); a job's details live in its `mcp/work/<ID>.md`. When a release ships, move its entries unchanged
+  into `mcp/work/archive/WORK-<period>.md` and add their headings to `mcp/work/archive/README.md`.
 
 ## How it is built
+The parts, the flow of one write and the invariants on one page: `ARCHITECTURE.md` (repo root); every tool's
+options: `mcp/TOOLS.md`.
 - `mcp/server.mjs`: the MCP server (stdio). 11 tools: `read_model`, `suggest_fields`, `check_model_health`, `generate_theme`,
   `plan_layout`, `approve_plan` (the gate, `mcp/lib/plans.mjs`), `create_report`, `add_gulf_calendar`, `read_report`,
   `create_arabic_twin`, `check_report` (`mcp/lib/check-report.mjs`: Microsoft's validator offline with the schemas
@@ -49,7 +54,13 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   (`calendar-generator.js`) is shared too: `add_gulf_calendar` writes its table. Still browser-only: the Measure Builder.
 
 ## Tests
-- MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures). The MCP must stay self-contained: its code and tests use only its own `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
+- MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures).
+  The suites are listed once, by area, in `mcp/tests.json` (file, area, one-line purpose); `npm test` runs them through
+  `mcp/run-tests.mjs` in that order and stops at the first failure; `npm test -- <area>` runs one area,
+  `npm test -- --keep-going` runs all and fails at the end (CI's shard 0 does), `npm test -- --list` lists them. A new
+  suite gets one line in `tests.json`'s `suites` (a helper or a block of `test.mjs` goes in `ignored`, with why): a
+  `test-*.mjs` in neither stops the run and fails `scripts/check-result-lines.mjs`. The MCP must stay self-contained: its code and tests use only its own
+  `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
 - CI runs `test.mjs` in 4 shards (`DA_SHARD=k/4`, B-145) and `npm test`'s other scripts with `DA_SHARD=0/4`; the
   required checks `mcp` / `mcp-windows` add them up (`scripts/ci-sum.mjs`). A new block in `test.mjs` must be a part
   (`if (part('id')) {`) listed in exactly one of `SHARDS`; a part that reads what an earlier part wrote goes in

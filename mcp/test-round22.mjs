@@ -422,7 +422,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   //    started with the CLI's import failing, the server lists its 8 tools and check_report says the validator is not
   //    available, and why
   {
-    const docs = ['README.md', 'PRIVACY.md', 'PRODUCT_SPEC.md', '../README.md'].map((f) => path.join(HERE, f)).filter((f) => fs0.existsSync(f));
+    const docs = ['README.md', 'TOOLS.md', 'PRIVACY.md', 'PRODUCT_SPEC.md', '../README.md'].map((f) => path.join(HERE, f)).filter((f) => fs0.existsSync(f));
     const old = docs.filter((f) => /node(\.js)?\s*(v)?18\b|node\s*>=\s*18/i.test(fs0.readFileSync(f, 'utf8')));
     chk(() => !old.length, () => `X-03. no document says Node 18: ${old.join(', ')}`);
     const tmp = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-nocli-'));
