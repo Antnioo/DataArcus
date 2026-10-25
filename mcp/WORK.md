@@ -21,7 +21,7 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   **Done (25 Oct, cloud builder), branch `fix/0.3.1-checker-safety`, not merged:** 61602dd plan, be9894c red tests,
   162b8bc execute, e400d9d long texts, 24c8387 page by page, 667972f fix routes (results, decisions, "Seen, not in
   scope": `mcp/work/S1.md`). New suites `test-0.3.1-checker.mjs` (22) and `test-0.3.1-write-gate.mjs` (4) in `npm test`.
-  No new fix tool: every route is an existing planned write (S1.md, "Decisions I made"). Instructions at 2,198 of 2,200.
+  No new fix tool: every route is an existing planned write (S1.md, "Decisions I made"). Instructions at 2,196 of 2,200.
 - **P1 (releases and platforms):** release notes from `packaging/release-notes/<version>.md` with a test that they hold
   no internal code; CI on macOS for the mcp suite with fixtures whose folders have Arabic names, spaces, long paths,
   NFC/NFD and CRLF; setup notes for Claude Code, VS Code and Cursor. The .mcpb keeps `win32` until one real Mac run.
