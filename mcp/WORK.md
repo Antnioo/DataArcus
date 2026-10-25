@@ -25,6 +25,14 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
 - **P1 (releases and platforms):** release notes from `packaging/release-notes/<version>.md` with a test that they hold
   no internal code; CI on macOS for the mcp suite with fixtures whose folders have Arabic names, spaces, long paths,
   NFC/NFD and CRLF; setup notes for Claude Code, VS Code and Cursor. The .mcpb keeps `win32` until one real Mac run.
+- **V1 (wave 2, the twin's approval page preview; the owner, 25 Oct: "in the approval page I couldn't find the preview
+  sketch"). Done (25 Oct, cloud builder), branch `feat/0.3.1-twin-preview`, not merged:** 1cca035 plan, d1a5688 red tests,
+  a418ba4 build. The twin's and the EN-AR copy's approval page draws each Arabic page (the copy: beside its English
+  page) from the plan's own build (`twinPreview` in arabic-twin.mjs reads `P.built` / `P.copy.files`, what writeTwin
+  writes: no function moved, the gate unchanged); flags as on the report's page; at most 12 pages or pairs
+  (`PREVIEW_PAGES_MAX`, now the report's cap too). New suite `test-0.3.1-twin-preview.mjs` (23) in `npm test`. Merges
+  with R1 cleanly but the `npm test` line (keep both). Results, decisions, "For the laptop", "Seen, not in scope":
+  `mcp/work/V1.md`.
 - Next waves (after these): X2 (bilingual create_report, rebase on R1's button), the Arabic audit lens on check_report
   (after S1), the sample project, Arabic terms, Finding #3, K1.
 
