@@ -40,6 +40,10 @@
   };
   // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
   const LINKS_SRC = { format: true, section: 'a visualLink\'s navigationSection is the name of a page of the same report (visualConfiguration schema, bundled in mcp/schemas)' };
+  // (0.3.1 R1) the rows of a table, measured for the report writer (Desktop 2.158, 13 Oct: N21-LAB); not a section of
+  // DESKTOP-TESTS.md, so not in SRC. The one copy of the numbers is the writer's sizing module, loaded when the rule runs
+  const TABLE_ROWS_SRC = { file: 'assets/js/pbip-sizing.js (TABLE_ROWS)', date: '2026-10-13', desktop: '2.158', section: 'a table\'s title, header, rows and total, measured for the report writer (N21-LAB)' };
+  const Sizing = () => { try { return typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null; } catch (e) { return null; } };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
   const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
@@ -169,6 +173,29 @@
             if (c.state === 'cut') out(x, `${at} needs ${c.needW} wide on one line; the column is ${c.width}`, `Make the column at least ${c.needW} wide (the table's text columns can give width), or the header shorter: Power BI cuts it with "...".`, est);
             else if (c.state === 'may') out(x, `${at} may be cut: our measure says ${c.needW} wide and the column is ${c.width}; Desktop 2.159 drew Arabic headers whole in about 0.7 of our measure (from ${c.lowW} here), so look at it in Desktop`, `If Desktop cuts it, make the column at least ${c.needW} wide or the header shorter.`, Object.assign({ severity: 'note' }, est || {}));
           });
+        });
+      } },
+    // (0.3.1 R1: a real user's matrix showed about half its rows, the last cut by its Total row, and its table 12 rows of
+    // about 30, its names on two lines) a table or matrix whose text is larger than Power BI's label size for its page
+    // shows fewer rows in its box: counted by the report writer's measured rows (pbip-sizing.js TABLE_ROWS, the one copy;
+    // its title, header, rows and total), at its own size and at the label size. A note: the rows a person needs are theirs
+    { id: 'TABLE_ROWS_SHOWN', group: 'sizes', severity: 'note', source: TABLE_ROWS_SRC,
+      about: 'a table or matrix at a text size larger than Power BI\'s label size for its page (10pt at 720 high) shows fewer rows in its box than at that size (the rows measured for the report writer: title, header, rows and total); values set to wrap put a long name on two lines',
+      run(R, out) {
+        const Z = Sizing(); if (!Z) return;
+        const VS = ((R.theme || {}).json || {}).visualStyles || {}, TC = ((R.theme || {}).json || {}).textClasses || {};
+        const themed = (type, card, k) => { const one = (t) => ((((VS[t] || {})['*'] || {})[card] || [])[0] || {})[k]; const v = one(type); return +(v !== undefined ? v : one('*')) || NaN; };
+        R.visuals.filter((x) => x.type === 'tableEx' || x.type === 'pivotTable').forEach((x) => {
+          const o = (x.json.visual || {}).objects || {}, vco = (x.json.visual || {}).visualContainerObjects || {}, pg = (R.pages || []).find((p) => x.page && p.id === x.page.id);
+          const H = pg && pg.h > 0 ? pg.h : 720, c = Math.min(60, Math.max(8, Math.round(10 * H / 720 * 2) / 2));
+          const t = num(plain(o.values).fontSize) || themed(x.type, 'values', 'fontSize') || R.labelSize || 10, ht = num(plain(o.columnHeaders).fontSize) || themed(x.type, 'columnHeaders', 'fontSize') || t;
+          const tl = plain(vco.title), title = lit(tl.show) === 'false' ? 0 : num(tl.fontSize) || themed(x.type, 'title', 'fontSize') || +((TC.title || {}).fontSize) || 12;
+          const rows = (s, hs) => { let k = 0; while (k < 500 && Z.tableHeight(k + 1, s, title, 1, hs, R.font) <= x.h + 0.5) k++; return k; };
+          const n = rows(t, ht), m = rows(c, c), wrap = lit(plain(o.values).wordWrap) === 'true' || (x.type === 'pivotTable' && lit(plain(o.rowHeaders).wordWrap) === 'true');
+          if (!(t > c + 0.25 && m > n)) return;
+          const kind = x.type === 'pivotTable' ? 'matrix' : 'table';
+          out(x, `at ${t}pt the ${kind} shows about ${n} row${n === 1 ? '' : 's'} in its box (${x.h} high, under its title and header, over its total); at ${c}pt, Power BI's label size for this page, about ${m}${wrap ? '; its values are set to wrap, so a long name takes two lines and fewer show' : ''}`,
+            `Set its text to ${c}pt (Format > Values, Column headers${kind === 'matrix' ? ', Row headers' : ''}, Totals) and Word wrap off (Format > Values) so each name stays on one line, or make the box taller.`, measuredFont(R.font) ? null : { estimate: true });
         });
       } },
     { id: 'SLICER_FITS', group: 'sizes', severity: 'warning', source: SRC.heights,
