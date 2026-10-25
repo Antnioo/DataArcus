@@ -182,9 +182,29 @@ export function locate(p, tool) {
 // A source answers by paths relative to the report folder ('definition/pages/<id>/page.json'):
 // dirs(rel) the folder names inside, files(rel) the file names inside, json(rel) the parsed file (TooBig past the limit)
 export function diskSource(loc, sk) {
-  const at = (rel) => path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));
+  // (AF1, the release audit's F05: readJson refuses a link at the file only, so a theme was read through a linked
+  // StaticResources or RegisteredResources folder from outside the working folder) every file and folder this source
+  // opens sits, by its real path, inside the report folder: each folder on the way from the report folder is looked at
+  // (lstat: a link or a junction is refused as a linked file is, Linked), and the deepest one's real path must be inside
+  // the report folder's real path. A part that is not there is not read either way.
+  let top = null;
+  const at = (rel) => {
+    const parts = String(rel).split('/').filter(Boolean);
+    let cur = loc.reportDir;
+    for (const p of parts.slice(0, -1)) {
+      cur = path.join(cur, p);
+      let st; try { st = fs.lstatSync(cur); } catch (e) { return path.join(loc.reportDir, ...parts); }
+      if (st.isSymbolicLink()) throw new Linked();
+    }
+    top = top || fs.realpathSync.native(loc.reportDir);
+    const r = path.relative(top, fs.realpathSync.native(cur));
+    if (r.startsWith('..') || path.isAbsolute(r)) throw new Linked();
+    return path.join(loc.reportDir, ...parts);
+  };
+  const linked = (r) => { if (sk && !(sk.links = sk.links || []).includes(r)) sk.links.push(r); };
   // (A5-8, audit 5: a linked file or folder is left out and counted, never skipped silently)
-  const list = (rel, want) => { const d = at(rel); if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { const r = (rel ? rel + '/' : '') + e.name; if (sk && !(sk.links = sk.links || []).includes(r)) sk.links.push(r); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
+  // (a folder is checked as the folder of a name inside it: the folder itself and every folder on the way)
+  const list = (rel, want) => { let d; try { d = path.dirname(at((rel ? rel + '/' : '') + 'x')); } catch (e) { if (e instanceof Linked) { linked(rel); return []; } throw e; } if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { linked((rel ? rel + '/' : '') + e.name); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
   return { dirs: (rel) => list(rel, 'dir'), files: (rel) => list(rel, 'file'), has: (rel) => { try { fs.lstatSync(at(rel)); return true; } catch (e) { return false; } }, json: (rel) => readJson(at(rel)), sk };
 }
 // files: the report writer's [{ path: '<Name>.Report/definition/...', data }]; only the .Report folder's files are read
@@ -254,12 +274,26 @@ export const keyOf = (x) => (x && x.kind !== 'measure' ? `${x.table}[${x.name}]`
 // the filters of a visual, page or report: the field and the kind of filter, never its values
 // (A5-2: a filter list that cannot be read is no filters, never an error)
 const safeFilters = (cfg) => { try { return filtersOf(cfg); } catch (e) { return []; } };
+// (AF1, the release audit's F03: the first "Top":N or "Value":"NL" anywhere in the filter was taken, so a malformed TopN
+// returned a saved In value as its count) a TopN's count, read only from its own subquery's Top: the subquery as Desktop
+// writes it (From: [{ Type 2, Expression: { Subquery: { Query: { ..., Top: n } } } }]) or inside its In condition's
+// Table (0.2.9c's shape); exactly one subquery; its Top a whole number, or a literal "<n>L" there
+const topOf = (filter) => {
+  const f = filter && typeof filter === 'object' ? filter : {};
+  const subs = entries(f.From).filter((x) => x.Type === 2 && x.Expression && x.Expression.Subquery).map((x) => x.Expression.Subquery)
+    .concat(entries(f.Where).map((w) => { const t = w.Condition && w.Condition.In && w.Condition.In.Table; return t && t.Expression && t.Expression.Subquery; }).filter(Boolean));
+  if (subs.length !== 1) return null;
+  const q = subs[0].Query, t = q && typeof q === 'object' ? q.Top : null;
+  if (Number.isInteger(t) && t > 0) return t;
+  const v = t && t.Literal && t.Literal.Value, m = typeof v === 'string' ? /^(\d{1,9})L$/.exec(v) : null;
+  return m && +m[1] > 0 ? +m[1] : null;
+};
 function filtersOf(cfg) {
   return entries(cfg && cfg.filters).map((f) => {
     const field = fieldOf(f.field), s = JSON.stringify(f.filter || {});
     // "is not blank" (Advanced: Not over a comparison with null) or a basic filter leaving out (Blank): Not In null
     const notBlank = /^(Advanced|Categorical)$/.test(String(f.type)) && /"Not"/.test(s) && /"Value":"null"/.test(s);
-    const top = f.type === 'TopN' ? (/"Top":\s*(\d+)/.exec(s) || /"Value":"(\d+)L"/.exec(s) || [])[1] : null;
+    const top = f.type === 'TopN' ? topOf(f.filter) : null;
     return Object.assign({ field, type: String(f.type || 'unknown').replace(/[^A-Za-z]/g, '').slice(0, 30) || 'unknown', set: !!f.filter }, notBlank ? { notBlank: true } : {}, top ? { top: +top } : {});
   });
 }

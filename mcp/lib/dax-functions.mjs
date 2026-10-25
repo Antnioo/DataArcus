@@ -16,7 +16,7 @@
 // irreversible (learn.microsoft.com/analysis-services/tabular-models/compatibility-level-for-tabular-models-in-analysis-services).
 // An Arabic report says the compatibility step in Arabic first (the page, the script's header), then in English.
 import { createRequire } from 'node:module';
-import { modelOf } from './model.mjs';
+import { modelOf, shownName } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF } from './model-script.mjs';
 import { calendarFor, frontValue } from './flip-cards.mjs';
 import { targetOf } from './status-icons.mjs';
@@ -325,13 +325,19 @@ export function compatSaidAr(compat) {
 /** How the user applies the script, for the answer. */
 export const daxHow = (file, compat) => `${compatSaid(compat)} Then apply the script: it is in the file "${file}", next to the project. Open it in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (the DA.* functions and new measures only, in the folder "${FOLDER}"; nothing changed or replaced), then Apply${compat != null && compat >= COMPAT_UDF ? '' : ' and accept the compatibility upgrade Power BI asks for'}. The model is not changed by DataArcus. Until the script is applied the pictures are empty and the story titles blank.`;
 
+// (AF1, the release audit's F11) the model's and the report's names in what daxSaid returns (Table[Measure], the source
+// columns, the pages, a chart's own title): through the one screen, withheld when one reads like an instruction; the
+// keys DataArcus writes itself (use, why, picture sizes) as they are. The script keeps the real names.
+const NAMED = ['measure', 'of', 'by', 'column', 'picture', 'title', 'chart', 'target', 'page'];
+const screened = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, NAMED.includes(k) && typeof v === 'string' ? shownName(v, Infinity) : v]));
+
 /** What the plan, the approval page and the answer say (no value is ever read). */
 export function daxSaid(r) {
   return Object.assign({ compatibility: { level: r.compat, needs: COMPAT_UDF, raises: !(r.compat != null && r.compat >= COMPAT_UDF), sayFirst: compatSaid(r.compat), ...(r.lang === 'ar' ? { sayFirstAr: compatSaidAr(r.compat) } : {}) },
     status: 'DAX user-defined functions are generally available in Power BI Desktop and the Power BI service since the June 2026 release (Microsoft Learn); they need compatibility level 1702 or higher.',
     functions: LIBRARY.map((f) => ({ name: f.name, params: f.params, inScript: !r.present.includes(f.name) })),
-    measures: r.measures.map((x) => ({ use: x.use, measure: `${x.t}[${x.name}]`, of: x.of })), used: r.used,
+    measures: r.measures.map((x) => screened({ use: x.use, measure: `${x.t}[${x.name}]`, of: x.of })), used: Object.fromEntries(Object.entries(r.used).map(([k, l]) => [k, l.map(screened)])),
     modelChange: `${r.functions.length} DAX function${r.functions.length === 1 ? '' : 's'} and ${r.measures.length} new measure${r.measures.length === 1 ? '' : 's'} in the script "${r.scriptFile}" next to the project. The model is not changed by DataArcus: the user applies the script in TMDL view first; until then the pictures are empty and the story titles blank.`,
     colours: `the theme's: good ${r.colours.good}, bad ${r.colours.bad} (3:1 on the card ${r.colours.card}), the sparkline ${r.colours.line}, text ${r.colours.text}` },
-  r.present.length ? { alreadyInModel: r.present } : {}, r.notUsed.length ? { notUsed: r.notUsed } : {});
+  r.present.length ? { alreadyInModel: r.present } : {}, r.notUsed.length ? { notUsed: r.notUsed.map(screened) } : {});
 }
