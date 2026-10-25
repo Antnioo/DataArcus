@@ -66,7 +66,8 @@ Built as planned, with the changes listed under "Decisions I made".
   one EN row and one AR row turns 4 checks red (both claims and both PDF hashes). Suite `leads` (new, run-all shard 1):
   44/44 (not live EN/AR; stubbed Formspree 200, 500, no answer). `test-site-config`: one more exception (a page whose
   Formspree form is still FORM_ID_HERE), PASS. ?v= stamps: lang-manager.min.js 20261025a on all 76 pages,
-  privacy.min.js 20261025a (it had none).
+  privacy.min.js 20261025a (it had none). Suites: site 479, spacing 1060, lang-switcher 1423, text-align 469, leads 44:
+  all PASS; ar-pages (37 copies), csp, check:min, test-site-config, test-analytics-events, sitemap-lastmod, mcp/test-0.3.0-claims (117): PASS.
 
 ## Go live (a session does this when the owner says "LEAD1 go live", after 0.3.1 is on main)
 1. The owner's id replaces FORM_ID_HERE in the form's action (`resources/arabic-report-checklist.html`), if not done.
