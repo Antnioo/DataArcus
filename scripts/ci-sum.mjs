@@ -14,8 +14,8 @@ const problems = [], rows = [];
 const logs = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.log')).map((f) => ({ f, text: fs.readFileSync(path.join(dir, f), 'utf8').replace(/\r\n/g, '\n') })) : [];
 // a result line: "PASS  name  ...", as every test script prints at its end
 const results = (text) => text.split('\n').map((l) => /^(PASS|FAIL|SKIP)\s{2}(\S+)\s+(.*)$/.exec(l)).filter(Boolean).map(([, status, name, rest]) => ({ status, name, rest }));
-// the detail a failing script prints under its FAIL line ("      - ..."), its first 3 lines, for the annotation
-const detail = (text, name) => { const L = text.split('\n'), i = L.findIndex((l) => new RegExp('^FAIL\\s{2}' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s').test(l)); return i < 0 ? '' : L.slice(i + 1, i + 4).filter((l) => /^\s+- /.test(l)).map((l) => l.trim()).join(' | '); };
+// the detail a failing script prints under (or, for some scripts, just above) its FAIL line ("  - ..."), 3 lines, for the annotation
+const detail = (text, name) => { const L = text.split('\n'), i = L.findIndex((l) => new RegExp('^FAIL\\s{2}' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s').test(l)); if (i < 0) return ''; const after = L.slice(i + 1, i + 4).filter((l) => /^\s+- /.test(l)), before = []; for (let k = i - 1; k >= 0 && /^\s+- /.test(L[k]) && before.length < 3; k--) before.unshift(L[k]); return (after.length ? after : before).map((l) => l.trim().slice(0, 280)).join(' | '); };
 const count = (rest) => { const m = /(\d+) checks/.exec(rest) || /(\d+) tasks/.exec(rest); return m ? +m[1] : null; };
 
 if (area === 'mcp') {
