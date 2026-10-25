@@ -1,8 +1,28 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (22 Oct): "Night-audit fixes, October" just below; before it (21 Oct): "T1" (branch `fix/0.3.0-testers`); before it (19 Oct): "R7" (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current (25 Oct): "0.3.1, wave 1" just below; before it (22 Oct): "Night-audit fixes, October"; before it (21 Oct): "T1" (branch `fix/0.3.0-testers`); before it (19 Oct): "R7" (branch `fix/0.3.0-privacy-reread`, no PR yet); then "R6" (branch `fix/0.3.0-approval-disclosure`, PR into release/0.3.0); then "R4" and "R5" (branches `fix/0.3.0-write-safety` and `fix/0.3.0-answers-safety`, PRs into release/0.3.0; R5 merged); then "R3" (branch `fix/0.3.0-waterfall-rtl`, PR into release/0.3.0); then "0.3.0 release branch" (branch `release/0.3.0`, draft PR #74); then "B-146" (branch `feat/0.3-aggregation-guard`, draft PR); before it the sections main added (0.2.9 #67, 0.2.9.1 #70 #71, rc.24 #55, AUD-040 #66, merged); before it "B-155" (merged, PR #50); before it "rc.23" (merged, PR #49); before it "B-145" (branch `ci/parallel-tests`, PR to main); before it "rc.22" (branch `fix/0.2.9-rc22`, PR to main, not merged). 0.3.0 steps 1-2 wait as draft PRs #37 and #38 (their memory is in those branches' WORK.md).** Older: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.3.1, wave 1 (25 Oct, reviewer; the owner: "proceed with 0.3.1 ... 3 builders at a time ... fix the things I saw myself in the MCP")
+Branch model: `integration/0.3.1` from main d501c78. Each builder branches from it, pushes only its own branch, never
+merges; the reviewer reviews and merges into the integration branch; one PR integration -> main at the end, the owner
+merges. Desktop items wait for one batched laptop run. CHANGELOG: `mcp/CHANGELOG.md` [Unreleased] in plain words (codes
+only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in its own `mcp/work/<ID>.md` first.
+- **R1 (EN-AR copy, real use):** a real user's first report through `create_arabic_twin into:"same"` (23 Oct) showed:
+  the 4 language buttons drawn as empty white boxes (the report had no page-tab buttons, so `langButton`'s plain
+  branch ran: no font colour, the theme makes every visual white); the Arabic pages kept the English tab order and the
+  English title box size; title/subtitle text boxes drawn as bordered panels (a text box left to the theme is a panel:
+  Round 1 fact); table and matrix text too big (half the matrix rows, names wrapping); a per-row "Days open" column
+  translated as an average. Test model first (`mcp/test-models/aftersales-wip`, made up), then each fix red first.
+- **S1 (checker and safety):** check_report judges an EN-AR report page by page (not all Arabic); approved texts are not
+  flagged for length; an approved route for fixes and an instruction never to edit report files directly; a CI gate
+  that lists every file-writing call; the screen no longer hides plain names like "Execute Time".
+- **P1 (releases and platforms):** release notes from `packaging/release-notes/<version>.md` with a test that they hold
+  no internal code; CI on macOS for the mcp suite with fixtures whose folders have Arabic names, spaces, long paths,
+  NFC/NFD and CRLF; setup notes for Claude Code, VS Code and Cursor. The .mcpb keeps `win32` until one real Mac run.
+- Next waves (after these): X2 (bilingual create_report, rebase on R1's button), the Arabic audit lens on check_report
+  (after S1), the sample project, Arabic terms, Finding #3, K1.
 
 ## Night-audit fixes, October (22 Oct, reviewer; branch `fix/night-audit-oct` from main 361dcc0; one PR, the owner merges)
 The owner, 22 Oct: "fix all other findings" (the night audit's open list, the private engine repo
