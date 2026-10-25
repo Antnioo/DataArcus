@@ -72,6 +72,12 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   ready for Arabic?" page by page, a summary first, each fix a DataArcus call, a Desktop setting or "Power BI has no setting".
   New suite `test-0.3.1-arabic-lens.mjs` (31) in `npm test`. Results, decisions, "For the laptop", "For the website",
   "Seen, not in scope": `mcp/work/L1.md`.
+- **W (wave 3, the website page "Is your Power BI report ready for Arabic?"): done (25 Oct, cloud builder), branch
+  `feat/0.3.1-ready-for-arabic`, not merged:** an article (`articles/article-power-bi-report-ready-for-arabic.html` and its
+  Arabic copy): L1's 19 kinds in six groups with made-up SVG pictures, each fix as DataArcus through approval / a Desktop
+  setting / no setting, every Power BI fact from Learn or DESKTOP-TESTS.md, the lens from 0.3.1, E's Arabic terms. Claims in
+  `mcp/test-0.3.0-claims.mjs` 117 -> 150 (33 red first). Results, "For the owner" (the Arabic page), decisions, "Seen, not
+  in scope" (the merge with E's stamps): `mcp/work/W.md`.
 - **Merged into `integration/0.3.1` (25 Oct, reviewer):** S1 (ee95e76), R1 (3e03ab9), V1 (2a47e53), P1 (5728514), M1
   (ed23620), L1 (7379e42), I (this merge).
 - **E (wave 3, one Arabic term per concept; the Arabic review of 21 Oct). Done (25 Oct, cloud builder), branch

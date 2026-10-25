@@ -45,6 +45,9 @@ package's manifest; this file says what is in it.
 - **One Arabic word for each idea:** reports, the approval page, the health checks and the website now use the same
   Arabic term for each Power BI and DataArcus idea (filters, slicers, tooltips, visuals, the date table, Ramadan dates,
   dashboards), and write the name DataArcus in Latin letters. A check keeps it so.
+- **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
+  report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
+  Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside

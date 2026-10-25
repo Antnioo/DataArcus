@@ -113,5 +113,36 @@ for (const f of SPEAK) {
   for (const [re, what, skip] of BANNED) { if (skip && f.includes('SKILL')) continue; const m = re.exec(t); check(!m, `A2-W. ${f}: ${what}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`); }
 }
 
+// W (0.3.1 wave 3, 25 Oct; mcp/work/W.md): the article "Is your Power BI report ready for Arabic?" in English, its Arabic
+// copy and its translations: the forbidden words as above, then each public sentence the article must keep true (a
+// missing file fails its checks)
+const W_FILES = ['../articles/article-power-bi-report-ready-for-arabic.html', '../ar/articles/article-power-bi-report-ready-for-arabic.html', '../assets/js/translations/article-power-bi-report-ready-for-arabic.js'];
+const maybe = (f) => { try { return flat(f); } catch (e) { return ''; } };
+for (const f of W_FILES) {
+  const t = maybe(f);
+  for (const [re, what] of BANNED) { const m = re.exec(t); check(t && !m, `W-0. ${f}: ${t ? what + ': "' + (m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : '') + '"' : 'missing'}`); }
+}
+const W = { en: maybe(W_FILES[0]), ar: maybe(W_FILES[1]) };
+// W-1 the lens comes with DataArcus 0.3.1 (0.3.0 has none)
+check(/check_report/.test(W.en) && /DataArcus 0\.3\.1/.test(W.en) && /0\.3\.0 has no/.test(W.en), 'W-1. the English article does not say the Arabic lens comes with DataArcus 0.3.1 (and not with 0.3.0)');
+check(/check_report/.test(W.ar) && /0\.3\.1/.test(W.ar) && /0\.3\.0/.test(W.ar), 'W-1. the Arabic article does not say the lens comes with 0.3.1 (and not with 0.3.0)');
+// W-2 the numbers only as L1 measured them, said as on four made-up reports
+check(/four made-up reports/.test(W.en) && /\b18 findings\b/.test(W.en) && /\b14 of them\b/.test(W.en) && /\b13 findings\b/.test(W.en) && /\b4 findings\b/.test(W.en), 'W-2. the English article does not give L1\'s numbers (18, 14 of them, 13, 4) on four made-up reports');
+check(/أربعة تقارير مختلقة/.test(W.ar) && /18 ملاحظة/.test(W.ar) && /14 منها/.test(W.ar) && /13 ملاحظة/.test(W.ar) && /4 ملاحظات/.test(W.ar), 'W-2. the Arabic article does not give the same numbers on four made-up reports');
+// W-3 the privacy line
+check(/reads the report's files on your computer/.test(W.en) && /never your data/.test(W.en) && /changes nothing/.test(W.en), 'W-3. the English article lacks the privacy line (reads the files on your computer, never your data, changes nothing)');
+check(/يقرأ ملفات التقرير على جهازك/.test(W.ar) && /لا يقرأ بياناتك/.test(W.ar) && /لا يغيّر شيئًا/.test(W.ar), 'W-3. the Arabic article lacks the privacy line');
+// W-4 nothing promised for the matrix: today only the order of its measures; no sentence on the matrix says soon/coming/will/planned
+const matrixSaid = (t, re) => t.split(/(?<=[.؟!:])\s+/).filter((s) => re.test(s));
+check(/only the order of its measures/.test(W.en) && !matrixSaid(W.en, /\bmatri(?:x|ces)\b/i).some((s) => /\b(?:soon|coming|will|planned|next (?:version|release))\b/i.test(s)), 'W-4. the English article promises something for the matrix, or lacks "only the order of its measures"');
+check(/ترتيب مقاييسها فقط/.test(W.ar) && !matrixSaid(W.ar, /المصفوف/).some((s) => /قريبًا|سنضيف|سيصبح|ستصبح|مخطط له|الإصدار القادم/.test(s)), 'W-4. the Arabic article promises something for the matrix, or lacks "ترتيب مقاييسها فقط"');
+// W-5 "no right-to-left support" sourced on Microsoft Learn, in both languages
+for (const [k, t] of Object.entries(W)) check(/learn\.microsoft\.com\/power-bi\/fundamentals\/supported-languages-countries-regions/.test(t), `W-5. the ${k} article does not link Microsoft Learn's supported-languages page for Desktop's right-to-left support`);
+// W-6 no headline with first, only, official or free (title, h1, og:title, twitter:title)
+for (const [k, t] of Object.entries(W)) {
+  const heads = [...t.matchAll(/<title>([^<]*)<\/title>|<h1[^>]*>([^<]*)<\/h1>|property="og:title" content="([^"]*)"|name="twitter:title" content="([^"]*)"/g)].map((m) => m.slice(1).find(Boolean) || '');
+  check(heads.length >= 4 && !heads.some((h) => /\b(?:first|only|official|free)\b|الأول|الوحيد|رسمي|مجان/i.test(h)), `W-6. the ${k} article's headlines are missing or say first, only, official or free: ${JSON.stringify(heads)}`);
+}
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);

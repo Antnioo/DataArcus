@@ -59,6 +59,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      readyForArabic: {
+        badge: "ARABIC REPORTS",
+        title: "Is Your Power BI Report Ready for Arabic? 19 Things to Check",
+        date: "October 25, 2026",
+        excerpt: "What goes wrong when a report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus through your approval, a Desktop setting, or plainly no setting.",
+        button: "Read Playbook"
+      },
       customVisualChecks: {
         badge: "AI AGENTS",
         title: "Before an AI Builds Your Power BI Custom Visual: 4 Checks",
@@ -221,6 +228,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      readyForArabic: {
+        badge: "التقارير العربية",
+        title: "هل تقرير Power BI الخاص بك جاهز للعربية؟ 19 أمرًا تفحصها",
+        date: "25 أكتوبر 2026",
+        excerpt: "ما الذي يختل حين يُقرأ تقرير مبني بالإنجليزية بالعربية، نوعًا نوعًا، وعلاج كل نوع: DataArcus بموافقتك، أو إعداد في Desktop، أو لا إعداد له بوضوح.",
+        button: "اقرأ الدليل"
+      },
       customVisualChecks: {
         badge: "وكلاء الذكاء الاصطناعي",
         title: "قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص",

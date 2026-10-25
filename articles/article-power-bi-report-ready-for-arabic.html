@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-report-ready-for-arabic.html" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html" />
+
+  <title>Is Your Power BI Report Ready for Arabic?</title>
+  <meta name="description" content="What goes wrong when a Power BI report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus, a Desktop setting, or none." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI Arabic, Power BI right to left, Power BI RTL report, Arabic Power BI report, Power BI matrix right to left, bilingual Power BI report, Power BI Arabic month names" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Is Your Power BI Report Ready for Arabic?" />
+  <meta property="og:description" content="What goes wrong when a Power BI report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus, a Desktop setting, or none." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/report-ready-for-arabic.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="Is Your Power BI Report Ready for Arabic? 19 things to check" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-10-25T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Is Your Power BI Report Ready for Arabic?" />
+  <meta name="twitter:description" content="What goes wrong when a Power BI report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus, a Desktop setting, or none." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/report-ready-for-arabic.jpg" />
+  <meta name="twitter:image:alt" content="Is Your Power BI Report Ready for Arabic? 19 things to check" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Is Your Power BI Report Ready for Arabic? 19 Things to Check",
+      "description": "What goes wrong when a Power BI report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus, a Desktop setting, or none.",
+      "url": "https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html",
+      "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-report-ready-for-arabic.html",
+      "author": {
+        "@type": "Person",
+        "name": "Abdelrahman M."
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DataArcus",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dataarcus.com/assets/img/logo.svg"
+        }
+      },
+      "datePublished": "2026-10-25",
+      "dateModified": "2026-10-25",
+      "image": "https://dataarcus.com/assets/img/og/report-ready-for-arabic.jpg"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does Power BI support Arabic?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Partly. The Power BI service is available in Arabic; Power BI Desktop isn't, and Microsoft says Desktop doesn't support right-to-left languages. Inside a report, the layout of visuals doesn't change for a right-to-left language, so an Arabic report has to be laid out from the right by whoever builds it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can a Power BI matrix read from right to left?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not with a setting: the matrix has no right-to-left setting, so its row headers stay at the left and its columns run left to right. DataArcus's twin changes only the order of its measures today. To read the numbers from the right, show them as a table or a chart."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the Arabic check change my report?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. check_report only reads the report's files on your computer. It never reads your data and writes nothing. Each fix it names is a plan you approve in DataArcus, or a setting you change yourself."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">ARABIC REPORTS</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Is Your Power BI Report Ready for Arabic? 19 Things to Check</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 25, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Most Power BI reports in the Gulf are built in English first, or by someone who reads from the left. Then a manager asks for the Arabic version. Power BI Desktop won't do it for you: Microsoft's <a href='https://learn.microsoft.com/power-bi/fundamentals/supported-languages-countries-regions#languages-for-power-bi-desktop' target='_blank' rel='noopener noreferrer' class='text-accent'>supported languages page</a> says plainly that <em>"Desktop doesn't support right-to-left languages"</em>, and that <em>"inside reports, the layout of visuals doesn't change if you're using a right-to-left language."</em> Every place, order and alignment on the page stays as it was built: for a reader who starts at the left.</p>
+              <p data-i18n-html="content.p2">Below is what goes wrong, kind by kind: 19 kinds in six groups, each group with a small made-up picture (left: as built; right: what an Arabic reader expects). Each kind has one of three answers:</p>
+              <ul>
+                <li data-i18n-html="content.l1"><strong>DataArcus does it, through your approval.</strong> DataArcus's Arabic twin writes Arabic pages from your English ones, or a script adds Arabic calendar columns to your date table. Nothing is written before you approve the plan.</li>
+                <li data-i18n-html="content.l2"><strong>A Power BI Desktop setting.</strong> On an Arabic page you built yourself: the setting to change, by name. Desktop isn't available in Arabic, so the names are its English ones.</li>
+                <li data-i18n-html="content.l3"><strong>Power BI has no setting for it.</strong> Said plainly, with what you can do instead.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">1. Where the eye starts</h2>
+              <p data-i18n-html="content.p3">An Arabic reader starts at the top right. A page built in English puts its heading, its first card and its page buttons at the left. Keyboard and screen reader users meet the visuals in the Tab order, and that runs from the left too.</p>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-reading.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches of a report page: built from the left, and mirrored to read from the right" data-i18n-alt="attrs.fig1">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig1">Left: the heading, the page buttons and the Tab order (1 to 4) start at the left. Right: the same page mirrored, read from the right.</figcaption>
+              </figure>
+              <ul>
+                <li data-i18n-html="content.s1_1"><strong>The heading at the left.</strong> DataArcus: the twin mirrors every visual's place. In Desktop no setting mirrors a page: move the heading, the cards and the slicers by hand so the page starts at the right.</li>
+                <li data-i18n-html="content.s1_2"><strong>The Tab order.</strong> DataArcus: the twin keeps each stop's order on the mirrored places, so the stops run from the right. In Desktop: <strong>View &gt; Selection &gt; Tab order</strong> (<a href='https://learn.microsoft.com/power-bi/create-reports/desktop-accessibility-creating-reports' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>), right to left, top to bottom.</li>
+                <li data-i18n-html="content.s1_3"><strong>A row of page buttons.</strong> DataArcus: the twin mirrors their places, so the first page's button is at the right. In Desktop: move the buttons.</li>
+                <li data-i18n-html="content.s1_4"><strong>The page navigator.</strong> Power BI has no setting for it. Its buttons follow the order of the report's pages (<a href='https://learn.microsoft.com/power-bi/create-reports/button-navigators#create-a-page-navigator' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>), and we measured in Desktop that it has no order setting: the first page stays at the left. The twin moves it, nothing more. For a row that starts at the right, use single page buttons.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">2. Text</h2>
+              <p data-i18n-html="content.p4">Text is where an Arabic page looks unfinished first.</p>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-text.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches: titles and text aligned left, and aligned right" data-i18n-alt="attrs.fig2">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig2">Left: titles and text aligned left, Power BI's default. Right: aligned right, where an Arabic reader starts.</figcaption>
+              </figure>
+              <ul>
+                <li data-i18n-html="content.s2_1"><strong>Visual titles aligned left.</strong> Left is Power BI's default. DataArcus: the twin aligns every title right (centred ones stay centred). In Desktop: <strong>Format &gt; General &gt; Title &gt; Horizontal alignment: Right</strong> (<a href='https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-customize-title-background-and-legend#customize-visualization-titles-in-reports' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</li>
+                <li data-i18n-html="content.s2_2"><strong>Arabic text boxes aligned left.</strong> DataArcus: the twin aligns text boxes right. In Desktop: select the text box and align its paragraphs right.</li>
+                <li data-i18n-html="content.s2_3"><strong>Arabic and English in one text.</strong> A title like <bdi>«المبيعات حسب Region»</bdi> mixes two directions. We measured in Desktop that Power BI draws a title as a left-to-right paragraph: an ellipsis after Arabic words landed at the wrong end until a right-to-left mark followed it. So an English word at either end of an Arabic text, or one with signs inside it (Q1/2026), can read in the wrong place. DataArcus: the twin writes each English run inside a direction isolate (U+2068 and U+2069, from <a href='https://www.unicode.org/reports/tr9/' target='_blank' rel='noopener noreferrer' class='text-accent'>Unicode's bidirectional rules</a>). Power BI has no setting for it: retype the text with the isolate, or reword it so the English word sits between Arabic words.</li>
+                <li data-i18n-html="content.s2_4"><strong>English titles, text boxes, buttons and page names.</strong> DataArcus: the twin writes each in the Arabic you approve. It drafts them from a fixed glossary and lists every text in its plan; a text without an approved Arabic stays as it is. In Desktop: write each in Arabic.</li>
+                <li data-i18n-html="content.s2_5"><strong>English field names</strong> on axis titles, table headers, legends and slicer headers. DataArcus: the twin gives each field an Arabic name in that visual only; your model is not renamed. In Desktop: right-click the field in the visual's field well, <strong>Rename for this visual</strong>. We measured that Power BI then shows that name everywhere the visual shows the field.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">3. Charts</h2>
+              <p data-i18n-html="content.p5">A chart built in English starts at the left: the first category, the first month, the value axis. Power BI turns these round chart by chart, with settings that are not obvious.</p>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-charts.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches: a bar chart and a column chart reading from the left, and the same reading from the right" data-i18n-alt="attrs.fig3">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig3">Left: a bar chart with its names at the left, and a column chart whose first month (dark) is at the left. Right: names at the right, bars growing from the right, and the first month at the right with the value axis beside it.</figcaption>
+              </figure>
+              <ul>
+                <li data-i18n-html="content.s3_1"><strong>Bar charts.</strong> DataArcus: the twin puts the names at the right and the bars growing from the right. In Desktop: the value axis's <strong>Invert range</strong> (<a href='https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-customize-x-axis-and-y-axis#invert-the-y-axis' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>) makes the bars grow from the right, and moving the axis to the other side puts the names at the right. We measured both in Desktop.</li>
+                <li data-i18n-html="content.s3_2"><strong>Column, line and combo charts.</strong> DataArcus: the twin puts the value axis at the right and the categories from the right. In Desktop: <strong>More options (...) &gt; Sort axis</strong>, sort by the category, <strong>Sort descending</strong>, and move the value axis to the right. We measured that a category axis ignores Invert range: the sort is what turns it round.</li>
+                <li data-i18n-html="content.s3_3"><strong>Charts over time.</strong> The same, with the first period at the right. DataArcus: the twin runs time from the right by default, and you can ask it to keep time left to right.</li>
+                <li data-i18n-html="content.s3_4"><strong>Waterfalls.</strong> Power BI has no setting for it: its waterfall shows the categories in ascending or chronological order (<a href='https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-waterfall-charts#sort-the-waterfall-chart' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>) and adds them up from the left. Through your approval, DataArcus can draw a waterfall that reads from the right, as a stacked column chart, from your English original. It has no Total column and no total label; each step's tooltip gives the running total. Or keep Power BI's own waterfall, left to right.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">4. Tables and the matrix</h2>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-tables.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches: a table and a matrix; the table reversed on the right, the matrix unchanged" data-i18n-alt="attrs.fig4">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig4">Left: a table with its name column first at the left, and a matrix below it. Right: the table reversed, its name column at the right; the matrix (dashed) keeps its row headers at the left.</figcaption>
+              </figure>
+              <ul>
+                <li data-i18n-html="content.s4_1"><strong>Table column order.</strong> DataArcus: the twin reverses the columns (the first at the right) and aligns the text columns right. In Desktop: drag the columns in the visual's field well into the reverse order.</li>
+                <li data-i18n-html="content.s4_2"><strong>The matrix.</strong> Power BI has no setting for it: the matrix has no right-to-left setting, so its row headers stay at the left and its columns, such as months, run left to right. Today the twin moves it to its mirrored place and changes only the order of its measures; it fakes nothing. Its right-to-left options are being tried in Power BI Desktop. Until one is proven, show the same numbers as a table or a chart, which the twin mirrors, or keep the matrix as it is.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">5. Month and day names</h2>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-months.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches of a chart over months: English names from the left, Arabic names from the right" data-i18n-alt="attrs.fig5">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig5">Left: month names from the model in English, January at the left. Right: Arabic month names, January at the right.</figcaption>
+              </figure>
+              <p data-i18n-html="content.p6">Month, day and quarter names come from your date table. They are your model's data, so no report setting changes them, and Power BI doesn't translate your data (<a href='https://learn.microsoft.com/power-bi/fundamentals/supported-languages-countries-regions#languages-for-power-bi-desktop' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</p>
+              <ul>
+                <li data-i18n-html="content.s5_1">DataArcus: <code>add_gulf_calendar</code> with <code>arabicColumnsOnly</code> writes a script that adds Arabic calendar columns to your date table (such as "Month Name (Arabic)"), each sorted like its English column. You apply it yourself in Power BI Desktop's TMDL view: DataArcus never changes your model. Then show those columns in place of the English ones; the twin offers the same script.</li>
+                <li data-i18n-html="content.s5_2">In Desktop: add an Arabic month column to your date table and set its <strong>Sort by column</strong> to the month number (<a href='https://learn.microsoft.com/power-bi/create-reports/desktop-sort-by-column' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>), or the months sort in alphabetical order. Our <a href='article-gulf-calendar-power-bi.html' class='text-accent'>Gulf calendar article</a> has the Hijri months and the weekend too.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">6. Slicers</h2>
+              <figure class="my-4">
+                <img src="../assets/img/articles/ready-for-arabic-slicers.svg?v=20261025a" width="720" height="300" loading="lazy" class="img-fluid rounded-3" alt="Two sketches of slicers: pills from the left and from the right; a dropdown unchanged" data-i18n-alt="attrs.fig6">
+                <figcaption class="small text-white-50 mt-2" data-i18n-html="content.fig6">Left: pill buttons from 2024 at the left, their values to one side. Right: from the right, values centred. The dropdown (dashed) moves, but its items keep Power BI's own alignment.</figcaption>
+              </figure>
+              <ul>
+                <li data-i18n-html="content.s6_1"><strong>Dropdown and list items.</strong> Power BI has no setting for it: the items and the dropdown's text keep Power BI's own alignment and direction. The twin moves the slicer, nothing more.</li>
+                <li data-i18n-html="content.s6_2"><strong>Pill slicers' order.</strong> A row of buttons reads from the left. DataArcus: the twin sorts them descending, so the first value is at the right. In Desktop: sort the slicer by its value, descending, from its <strong>More options (...)</strong> menu (<a href='https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-button-slicer#considerations-and-limitations' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>); the buttons follow the sort.</li>
+                <li data-i18n-html="content.s6_3"><strong>Pill values not centred.</strong> A value set to one side of its button reads from the wrong side in the other language. In Desktop: centre the values in their buttons, as DataArcus's own pills are in both languages. The twin keeps the slicer's alignment.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">The 19 kinds at a glance</h2>
+              <p data-i18n-html="content.p7">From a report built in English, the twin does most of the work in one plan. On an Arabic page you built yourself, the answer is a Desktop setting, or none.</p>
+              <div class="table-responsive rs-table"><table class="table table-dark mb-0"><thead><tr><th scope="col" data-i18n="table.thKind">What reads wrong</th><th scope="col" data-i18n="table.thEn">From a report built in English</th><th scope="col" data-i18n="table.thAr">On an Arabic page you built</th></tr></thead><tbody><tr><th scope="row" data-i18n-html="table.r1k">The heading at the left</th><td data-i18n-html="table.r1e">DataArcus: the twin</td><td data-i18n-html="table.r1a">Move it by hand</td></tr><tr><th scope="row" data-i18n-html="table.r2k">The Tab order</th><td data-i18n-html="table.r2e">DataArcus: the twin</td><td data-i18n-html="table.r2a">View &gt; Selection &gt; Tab order</td></tr><tr><th scope="row" data-i18n-html="table.r3k">Page buttons in a row</th><td data-i18n-html="table.r3e">DataArcus: the twin</td><td data-i18n-html="table.r3a">Move the buttons</td></tr><tr><th scope="row" data-i18n-html="table.r4k">The page navigator</th><td data-i18n-html="table.r4e">No setting</td><td data-i18n-html="table.r4a">No setting</td></tr><tr><th scope="row" data-i18n-html="table.r5k">Titles aligned left</th><td data-i18n-html="table.r5e">DataArcus: the twin</td><td data-i18n-html="table.r5a">Title &gt; Horizontal alignment: Right</td></tr><tr><th scope="row" data-i18n-html="table.r6k">Arabic text boxes aligned left</th><td data-i18n-html="table.r6e">DataArcus: the twin</td><td data-i18n-html="table.r6a">Align the paragraphs right</td></tr><tr><th scope="row" data-i18n-html="table.r7k">Arabic and English in one text</th><td data-i18n-html="table.r7e">DataArcus: the twin</td><td data-i18n-html="table.r7a">No setting: retype or reword</td></tr><tr><th scope="row" data-i18n-html="table.r8k">English titles, text boxes, buttons, page names</th><td data-i18n-html="table.r8e">DataArcus: the twin, in the Arabic you approve</td><td data-i18n-html="table.r8a">Write each in Arabic</td></tr><tr><th scope="row" data-i18n-html="table.r9k">English field names</th><td data-i18n-html="table.r9e">DataArcus: the twin</td><td data-i18n-html="table.r9a">Rename for this visual</td></tr><tr><th scope="row" data-i18n-html="table.r10k">Bar charts</th><td data-i18n-html="table.r10e">DataArcus: the twin</td><td data-i18n-html="table.r10a">Invert range; the axis on the other side</td></tr><tr><th scope="row" data-i18n-html="table.r11k">Column, line and combo charts</th><td data-i18n-html="table.r11e">DataArcus: the twin</td><td data-i18n-html="table.r11a">Sort descending; the value axis at the right</td></tr><tr><th scope="row" data-i18n-html="table.r12k">Charts over time</th><td data-i18n-html="table.r12e">DataArcus: the twin (your choice)</td><td data-i18n-html="table.r12a">Sort descending by the time field</td></tr><tr><th scope="row" data-i18n-html="table.r13k">Waterfalls</th><td data-i18n-html="table.r13e">No setting; DataArcus's waterfall from the right (no Total)</td><td data-i18n-html="table.r13a">No setting</td></tr><tr><th scope="row" data-i18n-html="table.r14k">Table column order</th><td data-i18n-html="table.r14e">DataArcus: the twin</td><td data-i18n-html="table.r14a">Reverse the columns in the field well</td></tr><tr><th scope="row" data-i18n-html="table.r15k">Matrices</th><td data-i18n-html="table.r15e">No setting (the twin: the measures' order only)</td><td data-i18n-html="table.r15a">No setting</td></tr><tr><th scope="row" data-i18n-html="table.r16k">Month and day names</th><td data-i18n-html="table.r16e">DataArcus: the calendar script, applied by you</td><td data-i18n-html="table.r16a">An Arabic column, Sort by column</td></tr><tr><th scope="row" data-i18n-html="table.r17k">Slicer items</th><td data-i18n-html="table.r17e">No setting</td><td data-i18n-html="table.r17a">No setting</td></tr><tr><th scope="row" data-i18n-html="table.r18k">Pill slicers' order</th><td data-i18n-html="table.r18e">DataArcus: the twin</td><td data-i18n-html="table.r18a">Sort descending</td></tr><tr><th scope="row" data-i18n-html="table.r19k">Pill values not centred</th><td data-i18n-html="table.r19e">A Desktop setting</td><td data-i18n-html="table.r19a">Centre the values</td></tr></tbody></table></div>
+              <h2 class="mt-5 mb-3" data-i18n="content.h8">What the Arabic twin can and cannot do today</h2>
+              <p data-i18n-html="content.p8">The twin writes Arabic pages from English ones: as a separate report, or as a new copy that holds both languages in one report. Your original report is not changed. It can:</p>
+              <ul>
+                <li data-i18n-html="content.c1">mirror every visual's place, and keep the Tab order on the mirrored places;</li>
+                <li data-i18n-html="content.c2">align titles and text boxes right, and write every text in the Arabic you approve, with English runs isolated;</li>
+                <li data-i18n-html="content.c3">turn bar, column, line and combo charts round, with time from the right unless you ask for left to right;</li>
+                <li data-i18n-html="content.c4">reverse a table's columns, sort pill slicers from the right and mirror a row of page buttons.</li>
+              </ul>
+              <p data-i18n-html="content.p9">It cannot, because Power BI has no setting for it:</p>
+              <ul>
+                <li data-i18n-html="content.n1">the matrix: only the order of its measures today;</li>
+                <li data-i18n-html="content.n2">slicer items, and the page navigator's order (both moved, nothing more);</li>
+                <li data-i18n-html="content.n3">Power BI's own waterfall (it offers its waterfall that reads from the right, without the Total column);</li>
+                <li data-i18n-html="content.n4">your data: month and day names are a step in your model, the calendar script above;</li>
+                <li data-i18n-html="content.n5">inside a custom visual: moved, nothing more.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h9">Run the check on your report</h2>
+              <p data-i18n-html="content.p10">DataArcus's <code>check_report</code> has an Arabic lens from DataArcus 0.3.1 (0.3.0 has no lens). It reads any report saved as a Power BI project (PBIR), whoever built it, and answers "Is this report ready for Arabic?" page by page: a short summary first, then each finding with its fix, as one of the three answers above.</p>
+              <p data-i18n-html="content.p11">With DataArcus installed in Claude, ask: <em>"Is my report ready for Arabic? Use check_report with the Arabic lens."</em> See the <a href='/power-bi-mcp/' class='text-accent'>DataArcus page</a> and <a href='/power-bi-mcp/#join' class='text-accent'>how to install it</a>.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h10">What it found on four made-up reports</h2>
+              <p data-i18n-html="content.p12">We ran the lens on four made-up reports, built for its tests (no customer data):</p>
+              <ul>
+                <li data-i18n-html="content.f1">a report of two pages in English: 18 findings, 14 of them fixed by one call, the twin;</li>
+                <li data-i18n-html="content.f2">an Arabic page built by hand: 13 findings: 1 fixed by the calendar script, 9 Desktop settings and 3 that Power BI has no setting for;</li>
+                <li data-i18n-html="content.f3">the twin DataArcus wrote of the first report: 4 findings, all of them things Power BI or the model's data decide (the matrix, slicer items, and English month names until the calendar script is applied);</li>
+                <li data-i18n-html="content.f4">a report in English with no Arabic pages: 13 findings, 11 of them fixed by the twin.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h11">What it reads, and what it doesn't</h2>
+              <p data-i18n-html="content.p13">It reads the report's files on your computer, never your data, and changes nothing. It counts and sorts the report's texts and settings without returning the texts themselves. Every fix it names waits for you: a plan you approve in DataArcus, or a setting you change yourself.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h12">Questions</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">Does Power BI support Arabic?</h3>
+              <p data-i18n-html="content.a1">Partly. The Power BI service is available in Arabic; Power BI Desktop isn't, and Microsoft says Desktop doesn't support right-to-left languages. Inside a report, the layout of visuals doesn't change for a right-to-left language, so an Arabic report has to be laid out from the right by whoever builds it.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">Can a Power BI matrix read from right to left?</h3>
+              <p data-i18n-html="content.a2">Not with a setting: the matrix has no right-to-left setting, so its row headers stay at the left and its columns run left to right. DataArcus's twin changes only the order of its measures today. To read the numbers from the right, show them as a table or a chart.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">Does the Arabic check change my report?</h3>
+              <p data-i18n-html="content.a3">No. check_report only reads the report's files on your computer. It never reads your data and writes nothing. Each fix it names is a plan you approve in DataArcus, or a setting you change yourself.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Make the Arabic pages from your English ones</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">The DataArcus agent reads your report on your computer and writes its Arabic pages through your approval. It never sends your data values to the AI.</p>
+                <div class="cta-actions">
+                  <a href="/power-bi-mcp/" class="btn btn-accent"><i class="bi bi-robot me-2"></i><span data-i18n="exploreMore.button1">See the DataArcus agent</span></a>
+                  <a href="/power-bi-mcp/#join" class="btn btn-glass"><i class="bi bi-download me-2"></i><span data-i18n="exploreMore.button2">How to install it</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Want a second pair of eyes on your report?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We review Power BI reports and models before they reach your users, in English and Arabic.</p>
+                <div class="cta-actions">
+                  <a href="/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js?v=20261025e" defer></script>
+  <script src="../assets/js/translations/article-power-bi-report-ready-for-arabic.min.js?v=20261025a" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="../assets/js/main.min.js?v=20261022d" defer></script>
+</body>
+</html>
