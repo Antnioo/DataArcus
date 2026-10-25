@@ -307,5 +307,37 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
   check(/يحددان أيام العيد لا العطلات العامة في كل دولة/.test(t), `Eid al-Adha 10-13: ${k}: "the days of Eid, not a country's public holidays" is missing (AR)`);
 }
 
+// DS1 (0.3.1, 25 Oct; mcp/work/DS1.md): an outside fact-check found four public sentences stronger than the truth. The
+// old sentence is banned from the files that carried it (EN and AR); the new one, with its source link, is required
+const DS1 = { lic: flat('../articles/article-power-bi-licensing-guide.html'), licAr: flat('../ar/articles/article-power-bi-licensing-guide.html'), licTr: flat('../assets/js/translations/article-power-bi-licensing-guide.js'),
+  home: home.en, homeAr: home.ar, homeTr: home.tr, mcp: EN.html, mcpAr: AR.html, mcpTr: bp.replace(/\s+/g, ' ') };
+const DS1_BANNED = [
+  [/removes both limits|ويرفع PPU أو السعة كلا القيدين/, 'DS1-1. "PPU or capacity removes both limits" (PPU: 100 GB, 48 a day; a capacity: by SKU, 48 a day)'],
+  [/not the rows in it, and write a new report|لا صفوف البيانات، وتكتب تقريرًا/, 'DS1-2. the homepage FAQ says only "structure, not the rows" (report texts are sent too)'],
+  [/never returns data values from your model to Claude|ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا/, 'DS1-2. the MCP page says "never returns data values" as an absolute'],
+  [/Arabic reports with no English titles|تقارير عربية بلا عناوين إنجليزية/, 'DS1-3. "Arabic reports with no English titles"']
+];
+for (const [f, t] of Object.entries(DS1)) for (const [re, what] of DS1_BANNED) { const m = re.exec(t); check(!m, `${what}: ${f}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); }
+const LEARN_PPU = /learn\.microsoft\.com\/(?:ar-sa\/)?fabric\/enterprise\/powerbi\/service-premium-per-user-faq/;
+const LEARN_PLAN = /learn\.microsoft\.com\/(?:ar-sa\/)?power-bi\/guidance\/powerbi-implementation-planning-subscriptions-licenses-trials/;
+const PRIV3 = /github\.com\/Antnioo\/DataArcus\/blob\/main\/mcp\/PRIVACY\.md#3-metadata-only-no-data-values/;
+const CLIENTS = /github\.com\/Antnioo\/DataArcus\/blob\/main\/mcp\/README\.md#other-mcp-clients-and-platforms-developers/;
+const DS1_EN = { lic: [[/PPU or capacity raises both limits: PPU allows models up to 100 GB and 48 scheduled refreshes a day; on a Fabric capacity the model size depends on its SKU, with 48 scheduled refreshes a day/, 'DS1-1. the PPU and capacity limits'], [LEARN_PPU, 'DS1-1. the PPU FAQ link'], [LEARN_PLAN, 'DS1-1. the licenses comparison link']],
+  home: [[/the short texts typed on report pages \(titles, text boxes\), which can hold a figure or a name; never table rows, filter or slicer values, or bookmark states/, 'DS1-2. the exact metadata sentence'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link']],
+  mcp: [[/which can hold a figure or a name\. Never table rows, filter or slicer values, or bookmark states/, 'DS1-2. the exact metadata sentence'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link'],
+    [/Arabic titles in Arabic reports, even from an English-named model/, 'DS1-3. the Arabic titles heading'], [/Anything kept in English is listed, with why, before you approve/, 'DS1-3. what is kept in English'],
+    [/Claude Code, VS Code \(agent mode\) or Cursor, on Windows, macOS or Linux/, 'DS1-4. the other clients'], [CLIENTS, 'DS1-4. the README setup notes link'], [/VS Code and Cursor not yet tried/, 'DS1-4. tried as the README says'], [/one-click \.mcpb is for Windows/, 'DS1-4. the .mcpb stays Windows']] };
+const DS1_AR = { lic: [[/ويزيد PPU أو السعة كلا الحدّين: يسمح PPU بنماذج حتى 100 غيغابايت و48 تحديثًا مجدولًا يوميًا، وفي سعة Fabric يتوقف حجم النموذج على فئة السعة \(SKU\) مع 48 تحديثًا مجدولًا يوميًا/, 'DS1-1. the PPU and capacity limits (AR)'], [LEARN_PPU, 'DS1-1. the PPU FAQ link (AR)'], [LEARN_PLAN, 'DS1-1. the licenses comparison link (AR)']],
+  home: [[/والنصوص القصيرة المكتوبة في صفحات التقرير \(العناوين ومربعات النص\) وقد تحمل رقمًا أو اسمًا؛ ولا ترسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)']],
+  mcp: [[/وقد تحمل رقمًا أو اسمًا\. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية/, 'DS1-2. the exact metadata sentence (AR)'], [PRIV3, 'DS1-2. PRIVACY.md section 3 link (AR)'],
+    [/عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية/, 'DS1-3. the Arabic titles heading (AR)'], [/وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك/, 'DS1-3. what is kept in English (AR)'],
+    [/Claude Code أو VS Code \(وضع الوكيل\) أو Cursor، على Windows أو macOS أو Linux/, 'DS1-4. the other clients (AR)'], [CLIENTS, 'DS1-4. the README setup notes link (AR)'], [/ولم يُجرَّب VS Code وCursor بعد/, 'DS1-4. tried as the README says (AR)'], [/ملف \.mcpb للتثبيت بنقرة واحدة فهو لـ Windows/, 'DS1-4. the .mcpb stays Windows (AR)']] };
+const halves = (t, page) => page === 'home' ? [t.split(/\bar: \{/)[0], t.split(/\bar: \{/)[1] || ''] : [enHalf(t), arHalf(t)];
+for (const page of ['lic', 'home', 'mcp']) {
+  const [trEn, trAr] = halves(DS1[page + 'Tr'], page);
+  for (const [k, t] of [[page, DS1[page]], [page + 'Tr', trEn]]) for (const [re, what] of DS1_EN[page]) check(re.test(t), `${what}: ${k}: missing`);
+  for (const [k, t] of [[page + 'Ar', DS1[page + 'Ar']], [page + 'Tr', trAr]]) for (const [re, what] of DS1_AR[page]) check(re.test(t), `${what}: ${k}: missing`);
+}
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);
