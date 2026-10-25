@@ -48,6 +48,10 @@ package's manifest; this file says what is in it.
 - **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
   report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
   Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.
+- **DataArcus as a plugin next to Microsoft's Power BI plugin** (for Claude Code and GitHub Copilot CLI): a folder
+  ready to become its own public repo, with a skill that says which of the two does what (Arabic and right-to-left
+  work, Gulf dates, the health check and approved writes stay with DataArcus; editing an existing report, screenshots,
+  publishing and model changes go to Microsoft's). It installs the released DataArcus extension. Not published yet.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
