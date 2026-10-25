@@ -13,7 +13,9 @@
   the fixes; the two pins of what is already right pass); `0.3.0-claims` + 4 checks (red first); the mutation suite
   + 1 mutant (the ancestor check skipped), killed by `audit-readers`; `npm test -- --keep-going` 75 -> 76 suites, all
   PASS; `DA_SHARD=1/4 npm test` PASS; `node scripts/check-agent-memory.mjs` PASS.
-- **Resume:** see "Results" (filled in after the runs).
+- **Got:** audit-readers 24 (13 red before the fixes, then PASS); claims 488 -> 492 (4 red first); mutation 59 -> 60
+  mutants, all killed; full run 75 -> 76 suites PASS; shard 1/4 PASS; check-agent-memory PASS.
+- **Resume:** done; waits for the reviewer. Nothing needs Desktop. "Seen, not in scope" stays open for the owner.
 
 ## Plan (before any edit)
 1. This note, pushed first.
@@ -62,6 +64,9 @@ Touched suites (after the fixes): audit-readers 24, v029b 33, v029c 36, v029f 20
 arabic-lens 31, dax-functions 90, twin-complete 24, twin-artifact 21, twin-preview 23, en-ar-copy 27, language-toggle 27,
 checker 23, arabic-calendar 31, bilingual-report 32, large-model-caps 215, audit-oct 12, approval-hardening 22,
 script-names 9, mirror-parity 58: all PASS. check-agent-memory PASS (89).
+
+Full run (`npm test -- --keep-going`): before (1fdf031) 75 suites passed (mutation 59 mutants); after 76 suites passed
+(mcp 1591, 0.3.0-claims 492, audit-readers 24, mutation 158 checks: 60 mutants, all killed). `DA_SHARD=1/4 npm test`: PASS.
 
 ## CHANGELOG line
 - The report reader no longer takes a saved filter value for a Top N count, never reads a theme or any report file through a linked folder, and screens report, table and measure names in the Arabic twin's plan, the DAX functions' plan and the Arabic check like every other answer.
