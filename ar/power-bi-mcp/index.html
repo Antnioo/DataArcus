@@ -77,7 +77,7 @@
     .beta-tree { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 1rem 1.25rem; color: #cbd5e1; font-size: .9rem; overflow-x: auto; }
     .beta-steps li { margin-bottom: .75rem; }
   </style>
-</head>
+<meta name="keywords" content="داتا أركوس, DataArcus, Power BI"></head>
 <body class="rtl">
 
   <div class="interactive-bg" id="interactiveBg"></div>
@@ -128,14 +128,14 @@
                 <h2 class="mt-5 mb-3" data-i18n="beta.new.title">الجديد في الإصدار 0.3.0</h2>
                 <p data-i18n="beta.new.version">ما يضيفه الإصدار 0.3.0:</p>
                 <ul class="beta-steps">
-                  <li data-i18n-html="beta.new.l1"><strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول وتلميحات الأدوات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.</li>
-                  <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس مقسم طريقة العرض (Slicer) وتلميح الأدوات ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
+                  <li data-i18n-html="beta.new.l1"><strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.</li>
+                  <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس المقسم (Slicer) والتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
                   <li data-i18n-html="beta.new.l3"><strong>تقرير واحد باللغتين.</strong> تستطيع <code translate="no">create_arabic_twin</code> أن تكتب نسخة باسم "(EN-AR)" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.</li>
                   <li data-i18n-html="beta.new.l4"><strong>مخطط الشلال والمخطط المركّب والمخططات المتعددة الصغيرة.</strong> عناصر Power BI المرئية نفسها (waterfall وcombo وsmall multiples)، حين تطلبها وتناسبها الحقول. وفي التقرير العربي يُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI، وتبقى بقية الصفحة معكوسة.</li>
-                  <li data-i18n-html="beta.new.l5"><strong>صفحة موافقة تستطيع مراجعتها.</strong> تعرض المعاينة كل عنوان كما سيُكتب في التقرير، وتعلّم العنوان بأنه مقطوع حيث تقول القاعدة التي قيست في Power BI Desktop إن Desktop يقطعه، وترسم كل مقسم طريقة عرض مع رأسه. وتسرد الصفحة كل ملف ستكتبه الخطة، مجمّعًا ومعدودًا.</li>
-                  <li data-i18n-html="beta.new.l6"><strong>أشكال أكثر تختارها في الخطة.</strong> خطوط منحنية بنقطة عند كل قيمة، ومقسمات طريقة عرض بأزرار مستديرة (لحقل له من 2 إلى 6 قيم)، وخطوط شبكة منقّطة أو بلا خطوط، وبطاقات تنقلب، وأيقونات حالة تختلف في الشكل لا في اللون وحده، وصفحة تبدّل بين 2 إلى 5 مقاييس. البطاقات المنقلبة ومبدّل المقاييس وأيقونات الحالة المبنية على هدف تأتي مع نص برمجي للنموذج تطبّقه أنت في TMDL view: لا يغيّر DataArcus نموذجك.</li>
-                  <li data-i18n-html="beta.new.l7"><strong>التواريخ والوحدات تُسأل ولا تُخمَّن.</strong> يسألك أي تاريخ يعتمد عليه التقرير (تاريخ الطلب أو تاريخ الشحن أو غيرهما)، وبأي تقويم (ميلادي أو هجري)، وفي صفحة رمضان أو العيد: سنة هجرية واحدة أم كل المواسم. ولا يتشارك مقياسان بوحدتين مختلفتين محورًا واحدًا، كالريال السعودي والدرهم أو النسبة والعدد: لكل منهما عنصر مرئي خاص به.</li>
-                  <li data-i18n-html="beta.new.l8"><strong>تحديث Power BI لشهر أكتوبر 2026.</strong> تفحص <code translate="no">check_report</code> التقارير وفق مخططات تقارير Microsoft لشهر سبتمبر 2026 وكتالوج العناصر المرئية الصادر في 19 أكتوبر.</li>
+                  <li data-i18n-html="beta.new.l5"><strong>صفحة موافقة تستطيع مراجعتها.</strong> تعرض المعاينة كل عنوان كما سيُكتب في التقرير، وتعلّم العنوان بأنه مقطوع حيث تقول القاعدة التي قيست في Power BI Desktop إن Desktop يقطعه، وترسم كل مقسم مع رأسه. وتسرد الصفحة كل ملف ستكتبه الخطة، مجمّعًا ومعدودًا.</li>
+                  <li data-i18n-html="beta.new.l6"><strong>أشكال أكثر تختارها في الخطة.</strong> خطوط منحنية بنقطة عند كل قيمة، ومقسمات بأزرار مستديرة (لحقل له من 2 إلى 6 قيم)، وخطوط شبكة منقّطة أو بلا خطوط، وبطاقات تنقلب، وأيقونات حالة تختلف في الشكل لا في اللون وحده، وصفحة تبدّل بين 2 إلى 5 مقاييس. البطاقات المنقلبة ومبدّل المقاييس وأيقونات الحالة المبنية على هدف تأتي مع نص برمجي للنموذج تطبّقه أنت في TMDL view: لا يغيّر DataArcus نموذجك.</li>
+                  <li data-i18n-html="beta.new.l7"><strong>التواريخ والوحدات تُسأل ولا تُخمَّن.</strong> يسألك أي تاريخ يعتمد عليه التقرير (تاريخ الطلب أو تاريخ الشحن أو غيرهما)، وبأي تقويم (ميلادي أو هجري)، وفي صفحة رمضان أو العيد: سنة هجرية واحدة أم كل المواسم. ولا يتشارك مقياسان بوحدتين مختلفتين محورًا واحدًا، كالريال السعودي والدرهم أو النسبة والعدد: لكل منهما مرئي خاص به.</li>
+                  <li data-i18n-html="beta.new.l8"><strong>تحديث Power BI لشهر أكتوبر 2026.</strong> تفحص <code translate="no">check_report</code> التقارير وفق مخططات تقارير Microsoft لشهر سبتمبر 2026 وكتالوج المرئيات الصادر في 19 أكتوبر.</li>
                 </ul>
                 <h3 class="h5 mt-4 mb-3" data-i18n="beta.new.try">جرّب هذه أولًا</h3>
                 <ol class="beta-steps">
@@ -156,13 +156,13 @@
               <h2 class="mt-5 mb-3" data-i18n="beta.tools.title">الأدوات: 11 أداة</h2>
               <ul class="list-unstyled">
                 <li class="mb-2"><code translate="no">read_model</code>: <span data-i18n="beta.tools.read_model">تقرأ الجداول، والأعمدة بأنواعها، والمقاييس بتنسيقاتها، وجداول التاريخ. لا تغيّر شيئًا.</span></li>
-                <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسم طريقة عرض.</span></li>
+                <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسم.</span></li>
                 <li class="mb-2"><code translate="no">check_model_health</code>: <span data-i18n="beta.tools.check_model_health">فحص صحة النموذج: درجة وكل ملاحظة، مع نصوص إصلاح تراجعها أنت (لا تُطبَّق أبدًا).</span></li>
-                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">الموضع الدقيق لكل عنصر مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار (ويُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI). لا تكتب شيئًا.</span></li>
+                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">الموضع الدقيق لكل مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار (ويُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI). لا تكتب شيئًا.</span></li>
                 <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">تطلب موافقتك في نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه (وفي تطبيق له نافذة موافقة خاصة به تسألك تلك النافذة بدلًا منها): لا تكتب أي أداة إلا بعد موافقتك، ولا تكتب أي أداة ملفًا في مجلدك دون خطة موافَق عليها. (يمكن لبرنامج يعمل على جهازك ويتحكم في المتصفح أو الفأرة أن ينقر عليها: راجع ملاحظات الخصوصية.)</span></li>
-                <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">تقرير جديد بجانب نموذجك، كل عنصر مرئي في مكانه ومربوط بحقولك.</span></li>
+                <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">تقرير جديد بجانب نموذجك، كل مرئي في مكانه ومربوط بحقولك.</span></li>
                 <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا.</span></li>
-                <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">تقرأ تقريرًا موجودًا لديك، سطرًا لكل عنصر مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.</span></li>
+                <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">تقرأ تقريرًا موجودًا لديك، سطرًا لكل مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.</span></li>
                 <li class="mb-2"><code translate="no">create_arabic_twin</code>: <span data-i18n="beta.tools.create_arabic_twin">نسخة عربية من تقرير موجود، من اليمين إلى اليسار، بجانبه، بنصوص عربية توافق عليها أنت؛ أو نسخة واحدة فيها الصفحات الإنجليزية والعربية مع زر للتبديل بينهما. لا يتغيّر التقرير الأصلي أبدًا.</span></li>
                 <li class="mb-2"><code translate="no">generate_theme</code>: <span data-i18n="beta.tools.generate_theme">سمة لتقارير Power BI، تمامًا كما يصنعها مولّد السمات من DataArcus.</span></li>
                 <li class="mb-2"><code translate="no">add_gulf_calendar</code>: <span data-i18n="beta.tools.add_gulf_calendar">جدول تاريخ خليجي (الهجري ورمضان والعيد وعطلة نهاية الأسبوع في بلدك) كنص برمجي تراجعه وتطبّقه أنت.</span></li>
@@ -178,7 +178,7 @@
         ├── report.json
         └── pages/</pre>
               <ul>
-                <li data-i18n="beta.run.files">كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح أدوات، و45 عنصرًا مرئيًا.</li>
+                <li data-i18n="beta.run.files">كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح، و45 مرئيًا.</li>
                 <li data-i18n="beta.run.validator">مدقّق التقارير من Microsoft: 0 أخطاء، 0 تحذيرات. (يتحقق من أن الملفات تتبع تنسيق Microsoft، لا من أن التقرير يجيب عن السؤال الصحيح.)</li>
                 <li data-i18n="beta.run.model">ملفات النموذج مطابقة بايتًا ببايت قبل التشغيل وبعده.</li>
               </ul>
@@ -294,8 +294,8 @@
       </div>
   </footer>
 
-  <script src="/assets/js/translations/common.min.js?v=20261025e" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=20261025e" defer=""></script>
+  <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=20261025f" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
