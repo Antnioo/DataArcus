@@ -127,60 +127,17 @@
   const paragraphsOf = (v) => (entries(isObj(v) ? v.objects : null, 'general') || []).flatMap((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).map((para, i) => (isObj(para) ? Object.assign(para, {}) : null)).filter(Boolean));
   const runsOf = (para) => (Array.isArray(para.textRuns) ? para.textRuns : []);
 
-  // ---- one visual ----
-  // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
-  // opts: { timeRightToLeft (default true), dateTables: [names], waterfallRtl ('native' | 'mirror', D7), waterfall }. Returns { json (a new object), kind, changes }
-  function mirrorVisual(json0, W, opts) {
-    const o = opts || {};
-    if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
-    const json = clone(json0), changes = [];
-    let kind = kindOf(json), measures = null, why = null;
-    const p = isObj(json.position) ? json.position : {};
-    if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
-    const v = json.visual;
-    if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
-    // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
-    const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
-    const objects = () => bagOf('objects');
-    const vco = () => bagOf('visualContainerObjects');
-    // charts
-    // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
-    if (kind === 'bar' && !o.keepDirection) {
+  // ---- the charts' right-to-left rules: one place, for the twin (mirrorVisual) and create_report's writer (mirrorChart;
+  // 0.3.1 M1, the owner: "make sure the AR and twin are using the same engine"). v: the visual (visual.json's "visual"),
+  // kind: kindOf's ('bar', 'column', 'waterfallKept' or 'waterfallTime': a waterfall that stays one gets its value axis at
+  // the right). Changes v in place; what it changed is pushed to changes ----
+  function chartRtl(v, kind, o, changes) {
+    const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
+    if (kind === 'waterfallKept' || kind === 'waterfallTime') { plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true'); changes.push('value axis'); }
+    if (kind === 'bar') {
       plainEntry(objects(), 'categoryAxis').properties.switchAxisPosition = mk('true');
       plainEntry(objects(), 'valueAxis').properties.invertAxis = mk('true');
       changes.push('axes');
-    }
-    // (D7) opts.waterfallRtl "native" (visual-gallery.js WATERFALL_RTL_DEFAULT): Power BI's own waterfall kept as the
-    // original has it, left to right (only its place is mirrored); "mirror": the stacked column chart below
-    if (kind === 'waterfall' && (Gallery() ? Gallery().waterfallRtlOf(o.waterfallRtl) : 'native') === 'native') kind = 'waterfallNative';
-    // (D1) a waterfall: the stacked column chart that reads from the right, or kept left to right
-    // (time kept left to right on request, opts.timeRightToLeft false: a waterfall over time stays one, its order as it is)
-    if (kind === 'waterfall' && o.timeRightToLeft === false && isTime((first(projections(v.query, 'Category')) || {}).field, o.dateTables)) {
-      plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
-      changes.push('value axis'); kind = 'waterfallTime';
-    }
-    if (kind === 'waterfall') {
-      const wo = o.waterfall || {}, G = Gallery(), sc = (entries(v.objects, 'sentimentColors') || []).find((e) => !e.selector && isObj(e.properties)), th = isObj(wo.theme) ? wo.theme : {};
-      const fill = (k, hex) => (sc && isObj(sc.properties[k]) ? clone(sc.properties[k]) : G && G.fillOf(hex));
-      const y0 = first(projections(v.query, 'Y')), ym = y0 && isObj(y0.field) && isObj(y0.field.Measure) ? y0.field.Measure : null;
-      let wf;
-      try {
-        wf = G ? G.rtlWaterfall(v.query, { extMeasure: wo.extMeasure || ((t, want) => want), sortByOf: wo.sortByOf, lang: 'ar',
-          typeOf: (t, c) => (wo.typeOf && wo.typeOf(t, c)) || ((o.dateColumns || []).includes(t + '.' + c) ? 'dateTime' : null), colours: { rise: fill('increaseFill', G.sentimentOf(th, 'good')), fall: fill('decreaseFill', G.sentimentOf(th, 'bad')) },
-          formatString: ym && wo.formatOf && isObj(ym.Expression) && isObj(ym.Expression.SourceRef) ? wo.formatOf(ym.Expression.SourceRef.Entity, ym.Property) : null }) : { ok: false, why: 'the visual gallery is not loaded' };
-      } catch (e) { wf = { ok: false, why: 'its query has a shape not expected' }; }
-      if (wf.ok) {
-        // the original's own axes and plot area kept (their properties are the column chart's too); its legend, labels,
-        // sentiment colours and breakdown are the waterfall's own: replaced
-        const kept = {}; ['general', 'categoryAxis', 'valueAxis', 'plotArea', 'y1AxisReferenceLine'].forEach((k) => { if (isObj(v.objects) && Array.isArray(v.objects[k])) kept[k] = v.objects[k]; });
-        // (the original's axis entries keep their properties; the builder's go into their plain entry)
-        v.visualType = wf.visualType; v.query = wf.query; v.objects = Object.assign({}, kept, wf.objects);
-        ['valueAxis', 'categoryAxis'].forEach((k) => { if (kept[k] && wf.objects[k]) { v.objects[k] = kept[k]; Object.assign(plainEntry(v.objects, k).properties, wf.objects[k][0].properties); } });
-        measures = wf.measures; changes.push('waterfall', 'value axis', 'sort');
-      } else {
-        plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
-        changes.push('value axis'); kind = 'waterfallKept'; why = wf.why;
-      }
     }
     if (kind === 'column') {
       plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
@@ -219,6 +176,54 @@
         if (next !== cur) { e.properties.position = str(next); changes.push('legend'); }
       }
     }
+  }
+
+  // ---- one visual ----
+  // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
+  // opts: { timeRightToLeft (default true), dateTables: [names], waterfallRtl ('native' | 'mirror', D7), waterfall, matrixRtl
+  // (MATRIX_RTL: the lab's switch, M1) }. Returns { json (a new object), kind, changes }
+  function mirrorVisual(json0, W, opts) {
+    const o = opts || {};
+    if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
+    const json = clone(json0), changes = [];
+    let kind = kindOf(json), measures = null, why = null;
+    const p = isObj(json.position) ? json.position : {};
+    if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
+    const v = json.visual;
+    if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
+    // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
+    const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
+    const objects = () => bagOf('objects');
+    const vco = () => bagOf('visualContainerObjects');
+    // charts: the bar, column, line, area, combo charts' rules (chartRtl, shared with create_report's writer: mirrorChart)
+    // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
+    // (D7) opts.waterfallRtl "native" (visual-gallery.js WATERFALL_RTL_DEFAULT): Power BI's own waterfall kept as the
+    // original has it, left to right (only its place is mirrored); "mirror": the stacked column chart below
+    if (kind === 'waterfall' && (Gallery() ? Gallery().waterfallRtlOf(o.waterfallRtl) : 'native') === 'native') kind = 'waterfallNative';
+    // (D1) a waterfall: the stacked column chart that reads from the right, or kept left to right
+    // (time kept left to right on request, opts.timeRightToLeft false: a waterfall over time stays one, its order as it is)
+    if (kind === 'waterfall' && o.timeRightToLeft === false && isTime((first(projections(v.query, 'Category')) || {}).field, o.dateTables)) kind = 'waterfallTime';
+    if (kind === 'waterfall') {
+      const wo = o.waterfall || {}, G = Gallery(), sc = (entries(v.objects, 'sentimentColors') || []).find((e) => !e.selector && isObj(e.properties)), th = isObj(wo.theme) ? wo.theme : {};
+      const fill = (k, hex) => (sc && isObj(sc.properties[k]) ? clone(sc.properties[k]) : G && G.fillOf(hex));
+      const y0 = first(projections(v.query, 'Y')), ym = y0 && isObj(y0.field) && isObj(y0.field.Measure) ? y0.field.Measure : null;
+      let wf;
+      try {
+        wf = G ? G.rtlWaterfall(v.query, { extMeasure: wo.extMeasure || ((t, want) => want), sortByOf: wo.sortByOf, lang: 'ar',
+          typeOf: (t, c) => (wo.typeOf && wo.typeOf(t, c)) || ((o.dateColumns || []).includes(t + '.' + c) ? 'dateTime' : null), colours: { rise: fill('increaseFill', G.sentimentOf(th, 'good')), fall: fill('decreaseFill', G.sentimentOf(th, 'bad')) },
+          formatString: ym && wo.formatOf && isObj(ym.Expression) && isObj(ym.Expression.SourceRef) ? wo.formatOf(ym.Expression.SourceRef.Entity, ym.Property) : null }) : { ok: false, why: 'the visual gallery is not loaded' };
+      } catch (e) { wf = { ok: false, why: 'its query has a shape not expected' }; }
+      if (wf.ok) {
+        // the original's own axes and plot area kept (their properties are the column chart's too); its legend, labels,
+        // sentiment colours and breakdown are the waterfall's own: replaced
+        const kept = {}; ['general', 'categoryAxis', 'valueAxis', 'plotArea', 'y1AxisReferenceLine'].forEach((k) => { if (isObj(v.objects) && Array.isArray(v.objects[k])) kept[k] = v.objects[k]; });
+        // (the original's axis entries keep their properties; the builder's go into their plain entry)
+        v.visualType = wf.visualType; v.query = wf.query; v.objects = Object.assign({}, kept, wf.objects);
+        ['valueAxis', 'categoryAxis'].forEach((k) => { if (kept[k] && wf.objects[k]) { v.objects[k] = kept[k]; Object.assign(plainEntry(v.objects, k).properties, wf.objects[k][0].properties); } });
+        measures = wf.measures; changes.push('waterfall', 'value axis', 'sort');
+      } else { kind = 'waterfallKept'; why = wf.why; }
+    }
+    if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else chartRtl(v, kind, o, changes);
     // (0.3.0 L2) a button slicer on one row (the writer's pills): its buttons read from the right, by a descending sort on
     // its field (a sort it already has is turned round); one of several rows moves only
     if (kind === 'slicer' && v.visualType === 'advancedSlicerVisual') {
@@ -250,7 +255,7 @@
         }
       });
     }
-    if (kind === 'matrix') { const ps = projections(v.query, 'Values'); if (ps && ps.length > 1) { ps.reverse(); changes.push('values'); } }
+    if (kind === 'matrix') matrixRtl(v, o.matrixRtl, changes);
     if (kind === 'newCard') {
       const ps = projections(v.query, 'Data');
       if (ps && ps.length > 1) {
@@ -299,6 +304,63 @@
       if (a !== 'center' && a !== 'right') { e.properties.alignment = str('right'); changes.push('title'); }
     }
     return Object.assign({ json, kind, changes }, measures ? { measures } : {}, why ? { why } : {});
+  }
+
+  // ---- the matrix (0.3.1 M1: the owner opened an Arabic copy whose months-across matrix was not mirrored at all) ----
+  // Microsoft's capabilities give a matrix (pivotTable) no direction or right-to-left property; what could make it read
+  // from the right is measured in Power BI Desktop by the lab (mcp/lab/matrix-mirror.mjs, mcp/work/M1.md). Until the
+  // laptop proves one, every path keeps today's: 'values' (its measures reversed; its row headers stay left, its columns
+  // left to right). The other values are the lab's candidates, written by the engine so the lab shows exactly what a
+  // path would write; no path sets one (test-0.3.1-mirror-parity.mjs E5):
+  //   'none': moved only; 'columnsDescending': sorted Descending by each column field (the last month first, at the left;
+  //   read from the right it runs oldest to newest); 'alignRight': row headers, column headers and every measure's column
+  //   right-aligned (rowHeaders.alignment, columnHeaders.alignment and titleAlignment, columnFormatting.alignment per
+  //   measure with its header, values, subtotals and total); 'columnsDescendingAlignRight': both. Each but 'none' also
+  //   reverses the measures
+  const MATRIX_RTL = ['values', 'none', 'columnsDescending', 'alignRight', 'columnsDescendingAlignRight'], MATRIX_RTL_DEFAULT = 'values';
+  function matrixRtl(v, mode0, changes) {
+    const mode = MATRIX_RTL.includes(mode0) ? mode0 : MATRIX_RTL_DEFAULT;
+    if (mode === 'none') return;
+    const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
+    const ps = projections(v.query, 'Values');
+    if (ps && ps.length > 1) { ps.reverse(); changes.push('values'); }
+    if (/^columnsDescending/.test(mode)) {
+      const cs = (projections(v.query, 'Columns') || []).filter((x) => isObj(x) && isObj(x.field)), q = v.query;
+      if (cs.length && isObj(q)) {
+        if (q.sortDefinition === undefined) q.sortDefinition = { sort: [] };
+        const sd = q.sortDefinition, list = isObj(sd) && Array.isArray(sd.sort) ? sd.sort : null;
+        if (list) {
+          cs.forEach((c) => { const e = list.find((x) => isObj(x) && sameField(x.field, c.field)); if (e) e.direction = 'Descending'; else list.push({ field: clone(c.field), direction: 'Descending' }); });
+          if (isObj(sd)) sd.isDefaultSort = false;
+          changes.push('columns');
+        }
+      }
+    }
+    if (/AlignRight$|^alignRight$/.test(mode)) {
+      ['rowHeaders', 'columnHeaders'].forEach((k) => { const e = plainEntry(objects(), k); e.properties.alignment = str('Right'); if (k === 'columnHeaders') e.properties.titleAlignment = str('Right'); });
+      (ps || []).filter((x) => isObj(x) && typeof x.queryRef === 'string').forEach((x) => {
+        const cf = listIn(objects(), 'columnFormatting'); if (!cf) return;
+        let e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef);
+        if (!e) { e = { properties: {}, selector: { metadata: x.queryRef } }; cf.push(e); }
+        if (e.properties === undefined) e.properties = {};
+        if (!isObj(e.properties)) return;
+        e.properties.alignment = str('Right');
+        ['styleHeader', 'styleValues', 'styleSubtotals', 'styleTotal'].forEach((k) => { if (e.properties[k] === undefined) e.properties[k] = mk('true'); });
+      });
+      changes.push('alignment');
+    }
+  }
+
+  // ---- create_report's writer: a chart it writes for a right-to-left report, by the twin's rules (chartRtl) ----
+  // visual: the visual's "visual" object (visualType, query, objects), changed in place and returned; opts as
+  // mirrorVisual's (dateColumns: the model's date columns, "Table.Column", for a continuous time axis). A waterfall here is
+  // one kept a waterfall (its value axis at the right); a kind with no chart rule is returned as it is
+  function mirrorChart(visual, opts) {
+    if (!isObj(visual)) return visual;
+    let kind = kindOf({ visual });
+    if (kind === 'waterfall') kind = 'waterfallKept';
+    if (['bar', 'column', 'waterfallKept'].includes(kind)) chartRtl(visual, kind, opts || {}, []);
+    return visual;
   }
 
   // ---- one page: every visual mirrored, W from its parent group ----
@@ -468,6 +530,6 @@
   // twin of a report DataArcus wrote kept its pages left to right: their background is the transparent placeholder, not a
   // picture.) opts.blank(name): true for an image that is the placeholder (the twin checks its bytes); such a page has no picture
   const pageHasPicture = (page, opts) => { const names = pageImages(page), blank = opts && opts.blank; return names.length > 0 && names.some((n) => !(blank && n != null && blank(n))); };
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorChart, MATRIX_RTL, MATRIX_RTL_DEFAULT, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -124,7 +124,7 @@
   // fixes of 0.2.9 part 2), made once per report from its context c (see build)
   function kit(c) {
     const {
-      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
+      W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
       rtl, timeAxes, topN, topSet, u
     } = c;
 
@@ -275,7 +275,7 @@
         put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && (cf.wide || top) && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
       // O-13: the line chart's month label
       if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
-        byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
+        byMonthStart(visual.query, Bt.date, 'Ascending');   // (a mirrored report's: turned round by the engine, after this)
         const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
         timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf ? Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']' : 'the label read as a date', last: lf ? 12 : null });
       }
@@ -322,7 +322,7 @@
   // One report page: its page.json, and every visual in reading order (visual.json, and mobile.json for the phone)
   function write(c, pg, pageIndex) {
     const {
-      AUTO_EM, B, bound, CALLOUT, D, DEF, FULL, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES,
+      AUTO_EM, B, bound, CALLOUT, CONTINUOUS, D, DEF, FULL, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES,
       SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, kindChanges, base, blankKept, bookmarks,
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
@@ -810,7 +810,6 @@
         // P3 (RESCORE-6 N27: the same chart swapped colours between pages 1 and 2): a chart's colour is keyed to its category
         // field, report-wide (chartColors.keys): the first field met takes colour 1, the next colour 2, and so on in turn
         if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = colourOf(query) && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; chartColors.charts++; if (g2) chartColors.second = (chartColors.second || 0) + 1; }
-        if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
         // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
         // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
@@ -845,10 +844,13 @@
           typeOf: (t, cn) => { const f = G.fieldsOf('waterfall', Bt).cat, m = ((((o.model || {}).columns || {})[t] || {})[cn] || {}).type; return m || (f && f.t === t && f.c === cn ? (f.num ? 'double' : f.type || null) : null); }, colours: { rise: G.fillOf(G.sentimentOf(o.theme, 'good', u)), fall: G.fillOf(G.sentimentOf(o.theme, 'bad', u)) } }) : null;   // (D7: the written theme's, as the English waterfall's)
         if (wf && wf.ok) { visual.visualType = wf.visualType; visual.query = wf.query; visual.objects = Object.assign(visual.objects || {}, wf.objects); chartAxes.charts++;
           waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'columnChart', what: G.WF_WHAT.columnChart, measures: wf.measures.map((x) => x.m) }); }
-        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, mirror: MIRROR && !WF_NATIVE, smooth: SMOOTH, lang }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
+        else if (query && isGallery(s.kind)) { const go = G.objects(s.kind, Bt, { grid: GRID, smooth: SMOOTH, lang }); if (Object.keys(go).length) visual.objects = Object.assign(visual.objects || {}, go);
           if (WF_NATIVE) waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.native, native: true });
-          else if (MIRROR && s.kind === 'waterfall') { chartAxes.charts++; waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
-          else if (MIRROR) { G.mirrorSort(query); chartAxes.charts++; } }
+          else if (MIRROR && s.kind === 'waterfall') waterfallRtl.push({ page: pg.name || base, title: ttl || null, written: 'waterfallChart', what: G.WF_WHAT.waterfallChart, why: wf ? wf.why : null }); }
+        // (0.3.1 M1) the charts a mirrored report turns: by the twin's rules (report-mirror.js), once the chart's own sort and
+        // fixes are written (below, after fixVisual); a waterfall kept a waterfall gets its value axis at the right; Power
+        // BI's own waterfall (WF_NATIVE) and the drawn one (wf.ok) are as written
+        const toMirror = MIRROR && query && (['bar', 'column', 'line'].includes(s.kind) || (isGallery(s.kind) && !WF_NATIVE && !(wf && wf.ok)));
         // (0.3.0 J19) a panel split from a combo shows its unit as its value axis's title (AED, %; isolated in Arabic)
         if (query && s.unitLabel && s.kind === 'line') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]);
           Object.assign(va[0].properties, { showAxisTitle: bool(true), titleText: str(lang === 'ar' ? s.unitLabel.ar : s.unitLabel.en) }); }
@@ -1054,6 +1056,7 @@
           if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) tableH = h1; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
+        if (toMirror && visual && visual.query) { mirrorChart(visual, s.kind, { dateColumns: CONTINUOUS }); chartAxes.charts++; }
       }
       // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
       // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
@@ -1435,7 +1438,7 @@
   // its last 6 months
   function tooltips(c) {
     const {
-      B, D, FULL, MIRROR, TIP_TITLE, TIP_VALUE, W, add, align, byMonthStart, cardCode, cardFit, cardFrame,
+      B, CONTINUOUS, D, FULL, MIRROR, TIP_TITLE, TIP_VALUE, W, add, align, byMonthStart, cardCode, cardFit, cardFrame,
       cardObjects, frame, headed, lang, lastMonths, notBlank, sameField, textbox, tip, tipBinding, tipFor, tipName, tipPages, titleFit, topN, trend,
       u, topSet, extField
     } = c;
@@ -1487,7 +1490,7 @@
       tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
       tv.visual.visualContainerObjects.title[0].properties.text = name ? { expr: extField(cat.t, name) } : str(tipTitle((W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0)); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
-    const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
+    const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar', { dateColumns: CONTINUOUS }) : vis);
     // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
     // smaller): a bar chart without its value axis needs 22.2 a row, 45 above the first and 8 under the last. 184 for 6
     // bars and 310 for 12 months were short of that: a scrollbar beside the Top 6, the 12th month cut.

@@ -356,6 +356,14 @@
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0, keys: {} };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
+    // (0.3.1 M1: the twin's rules, report-mirror.js) the columns a chart's axis is continuous on, "Table.Column": a date or a
+    // number, from the model's types (o.model.columns, the MCP's) and the bound fields' own; such an axis ignores the sort
+    // and is reversed by categoryAxis.invertAxis
+    const CONTINUOUS = (() => { const out = new Set(), num = (t) => /^(dateTime|date|int64|double|decimal)$/i.test(String(t || ''));
+      Object.entries((o.model || {}).columns || {}).forEach(([t, cs]) => Object.entries(cs || {}).forEach(([cn, x]) => { if (x && num(x.type)) out.add(t + '.' + cn); }));
+      const walk = (x, depth) => { if (!x || typeof x !== 'object' || depth > 4) return; if (Array.isArray(x)) return x.forEach((y) => walk(y, depth + 1));
+        if (typeof x.t === 'string' && typeof x.c === 'string' && x.agg == null && (num(x.type) || x.num)) out.add(x.t + '.' + x.c); Object.values(x).forEach((y) => walk(y, depth + 1)); };
+      walk(B, 0); return [...out]; })();
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
     // axis's gridlines were near-white lines across the panel, louder than the data; with valueAxis.gridlineColor written
     // on the chart they are quiet): the text colour mixed 85% into the card, on the report's line, bar and column
@@ -455,7 +463,7 @@
     // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
     // report's settings, its files, and its notes; then the report's own measures and the visuals' look
     const c = Object.assign({
-      B, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
+      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
       chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
       tipFor, tipName, tipPages, trend, u, n
     }, n);

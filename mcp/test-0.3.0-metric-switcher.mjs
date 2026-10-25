@@ -171,7 +171,9 @@ try {
   // isDefaultSort, which a field-parameter visual may recompute), Descending by the month, the value axis at the right
   const lineA = mA && mA.visuals.find((v) => v.visual.visualType === 'lineChart'), sdA = lineA && lineA.visual.query.sortDefinition;
   const slA2 = slA && ((slA.visual.objects.general || []).find((e) => e.properties && e.properties.filter) || {}).properties;
-  chk(() => sdA && sdA.sort[0].direction === 'Descending' && !sdA.isDefaultSort && lit(lineA.visual.objects.valueAxis[0].properties.switchAxisPosition) === 'true' && lit(lineA.visual.objects.categoryAxis[0].properties.invertAxis) === 'true',
+  // (0.3.1 M1, changed on purpose: the twin's rules, report-mirror.js: no invertAxis on the month names' categorical axis,
+  // which Desktop ignores; the sort Descending does it)
+  chk(() => sdA && sdA.sort[0].direction === 'Descending' && !sdA.isDefaultSort && lit(lineA.visual.objects.valueAxis[0].properties.switchAxisPosition) === 'true' && !(lineA.visual.objects.categoryAxis || []).some((e) => e.properties && e.properties.invertAxis),
     () => `A4: the Arabic Metric line is mirrored with a sort of its own: ${JSON.stringify(sdA)} ${JSON.stringify(lineA && lineA.visual.objects).slice(0, 300)}`);
   chk(() => slA2 && slA2.filter.filter.Where[0].Annotations.filterExpressionMetadata.valueMap[0]['0'] === AR_NAMES['Web Orders[Web Orders Count]'], () => `A5: the Arabic switch opens on its first metric, under its Arabic label: ${JSON.stringify(slA2).slice(0, 400)}`);
   if (!okA.err) await validate('AR', dirA, 'large/L3 AR.pbip', 'ar');

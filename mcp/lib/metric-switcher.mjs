@@ -127,7 +127,9 @@ export function addSwitch(r, o) {
         general: obj({ altText: str(`${KIND_WORD[lang][kind]}: ${lang === 'ar' ? 'المؤشر المختار' : 'the chosen metric'} ${BY[lang](label(f))}`) }) } };
     // (F1, the proof: the Arabic line kept Jan at the left) the mirrored sort is the report's own, not a default sort a
     // field-parameter visual may work out again
-    if (o.rtl) { mirrorChart(v, kind); if (query.sortDefinition) delete query.sortDefinition.isDefaultSort; }
+    // (0.3.1 M1) by the twin's rules (report-mirror.js, through the writer's mirrorChart): a date or number column's axis is
+    // continuous and reversed by invertAxis; a text one by the sort
+    if (o.rtl) { mirrorChart(v, kind, { dateColumns: f && f.c != null && /^(dateTime|date|int64|double|decimal)$/i.test(String(f.type || '')) ? [f.t + '.' + f.c] : [] }); if (query.sortDefinition) delete query.sortDefinition.isDefaultSort; }
     if (grid) { const va = v.objects.valueAxis || (v.objects.valueAxis = [{ properties: {} }]); Object.assign(va[0].properties, JSON.parse(JSON.stringify(grid))); gridded++; }
     if (!Object.keys(v.objects).length) delete v.objects;
     vs.push(visual('metric' + kind + pageId.slice(0, 8), x, m, cw, H - 2 * m, z, v));

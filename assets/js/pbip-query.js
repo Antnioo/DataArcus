@@ -162,25 +162,16 @@
       nullColoringStrategy: { strategy: { Literal: { Value: "'asZero'" } } } } } } } } } } },
     selector: { data: [{ dataViewWildcard: { matchingOption: 1 } }] } }];
   // Round 13 (the owner's ask, 5 Oct 2026; measured in Desktop 2.158, DESKTOP-TESTS.md "round 13, item 3"): Desktop does
-  // not mirror a chart in a right-to-left report, so the writer does what Desktop honours.
-  // A column or line chart: the value axis at the right (valueAxis.switchAxisPosition), and the categories from the
-  // right. A categorical axis ignores categoryAxis.invertAxis (January stayed at the left) and follows the sort, so the
-  // chart is sorted by its category, Descending: by the Min-of-number field of "sorted" where the category has one, else
-  // by the category's own column (which follows the model's sort-by column). A continuous axis (a date, a number)
-  // ignores the sort and honours invertAxis: both are written, and Desktop reversed such an axis once.
-  // A bar chart: the bars grow from the right (valueAxis.invertAxis) and the category names sit at the right
-  // (categoryAxis.switchAxisPosition); its top-to-bottom order stays.
-  const mirrorChart = (visual, kind) => {
-    const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
-    if (kind === 'bar') { put('valueAxis', { invertAxis: bool(true) }); put('categoryAxis', { switchAxisPosition: bool(true) }); return visual; }
-    put('valueAxis', { switchAxisPosition: bool(true) }); put('categoryAxis', { invertAxis: bool(true) });
-    const query = visual.query, sd = query.sortDefinition;
-    // (round 23: a chart sorted by its measure, largest first, is mirrored by Ascending: the largest at the right)
-    const byY = sd && sd.sort && sd.sort[0] && query.queryState.Y && JSON.stringify(sd.sort[0].field) === JSON.stringify(query.queryState.Y.projections[0].field);
-    if (sd && sd.sort && sd.sort[0]) sd.sort[0].direction = byY ? 'Ascending' : 'Descending';
-    else query.sortDefinition = { sort: [{ field: query.queryState.Category.projections[0].field, direction: 'Descending' }], isDefaultSort: true };
-    return visual;
-  };
+  // not mirror a chart in a right-to-left report, so the writer does what Desktop honours. (0.3.1 M1, the owner: "make sure
+  // the AR and twin are using the same engine") The rules are the Arabic twin's, in one place: report-mirror.js chartRtl.
+  // A column or line chart: the value axis at the right, the categories from the right by the sort turned round (a
+  // categorical axis ignores categoryAxis.invertAxis, so it is no longer written there); a continuous axis (a date or a
+  // number column, opts.dateColumns) ignores the sort and honours invertAxis. A bar chart: the bars grow from the right and
+  // the names sit at the right; its top-to-bottom order stays. A legend goes to the other side (at the top right when it
+  // has none). Called on the English chart, after its sort is written; kind is kept for the callers (the engine reads the
+  // visual's type)
+  const Mirror = () => (typeof module !== 'undefined' && module.exports ? require('./report-mirror.js') : root.DAMirror);
+  const mirrorChart = (visual, kind, opts) => Mirror().mirrorChart(visual, opts);
   // Round 12, the owner's ask (#17; seen in Desktop 2.158, round 11: the chart ran Sunday to Saturday, the table beside
   // it Friday, Monday, Saturday): days and months in calendar order in tables too. A day or month name that the model
   // gives no sort-by column (f.sortBy, from the field picker: the number column that orders it) is followed by a helper
