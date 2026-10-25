@@ -10,6 +10,7 @@
 //   C  create_arabic_twin into "same", the EN-AR copy (its Arabic page).
 // Per kind, W against T and C against T: the place, alignment, order, projections, sort and every formatting card
 // (objects and container objects), after taking out the differences that are meant, each listed in INTENDED with why.
+//   L  the lab writes its project and Microsoft's validator gives 0 errors
 //   E  the engine: the chart rules live in report-mirror.js only (the writer calls them); the matrix's lab switch
 //      (opts.matrixRtl) is the engine's, set by the lab alone; the default is today's
 //   node test-0.3.1-mirror-parity.mjs
@@ -290,6 +291,14 @@ chk(() => { const a = Mirror.mirrorVisual(MX, PW, { matrixRtl: 'columnsDescendin
 {
   const users = ['mcp/server.mjs', 'mcp/lib/arabic-twin.mjs', 'assets/js/pbip-page.js', 'assets/js/pbip-export.js', 'assets/js/pbip-query.js'].filter((f) => /matrixRtl:\s*['"](?!none)/.test(fs.readFileSync(path.join(HERE, '..', f), 'utf8')));
   chk(() => users.length === 0, () => `E5 no path sets a matrix variant before the laptop proves one (only the lab does): ${users.join(', ')}`);
+}
+
+// ---------- L: the lab (mcp/lab/matrix-mirror.mjs) writes its project, and Microsoft's validator finds no error ----------
+{
+  const { writeLab, variantsTable } = await import('./lab/matrix-mirror.mjs');
+  const r = get(() => writeLab(path.join(ROOT, 'lab')));
+  chk(() => r.pages === 11 && r.visuals === 41 && r.validator.exit === 0 && /"errorCount":0/.test(r.validator.text), () => `L1 the lab: 11 pages, 41 matrices and tables, validator 0 errors: ${r.threw || JSON.stringify([r.pages, r.visuals, r.validator && r.validator.text.slice(0, 400)])}`);
+  chk(() => variantsTable().split('\n').length === 2 + 41, () => 'L2 the variants table names every variant (mcp/work/M1.md)');
 }
 
 fs.rmSync(ROOT, { recursive: true, force: true });
