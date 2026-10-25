@@ -51,6 +51,10 @@ const MUTANTS = [
   { id: 'G-binding', file: PL, edits: [['const art = artifacts.get(p.id); if (art) p.approvedBinding = art.binding;', 'const art = artifacts.get(p.id);']], guards: ['test-r.mjs', 'test-j14-exact.mjs', 'test-z.mjs'] },
   // (0.3.1 K2) the twin's write: the kept files' digest and the rebuild's, compared with the approved one
   { id: 'K-twin-digest', file: 'mcp/lib/twin-write.mjs', edits: [['if (digestOf(art.files) !== art.digest || twinTree(P).digest !== art.digest) throw', 'if (false) throw']], guards: ['test-0.3.1-twin-artifact.mjs'] },
+  // (0.3.1 AF2, the release audit) the native copy writes its plan's files or nothing; a plan's file name, never another; check_model_health's last model check
+  { id: 'AF-copy-digest', file: 'mcp/lib/native-copy.mjs', edits: [['if (digestOf(art.files) !== art.digest || T.digest !== art.digest) throw', 'if (false) throw']], guards: ['test-0.3.1-audit-writes.mjs'] },
+  { id: 'AF-taken-name', file: 'mcp/lib/fix-scripts.mjs', edits: [['  if (taken) throw taken;\n', '  if (taken) return f;\n']], guards: ['test-0.3.1-audit-writes.mjs'] },
+  { id: 'AF-health-model', file: 'mcp/tools/check_model_health.mjs', edits: [['    if (write) sameModelBeforeWrite(planId, () => loadModel(p).print, print0);\n', '']], guards: ['test-0.3.1-audit-writes.mjs'] },
 
   // 2. path safety
   { id: 'D-within', file: MO, edits: [["const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };", 'const within = (root, p) => { const rel = path.relative(root, p); return !path.isAbsolute(rel); };']], guards: ['test-0.2.9d.mjs', 'test-platform-paths.mjs', 'test-audit6.mjs', 'test-0.3.0-write-safety.mjs'] },

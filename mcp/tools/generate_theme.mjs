@@ -3,9 +3,9 @@
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { z } from 'zod';
-import { loadModel, visible } from '../lib/model.mjs';
+import { loadModel, visible, inside, nothingAt } from '../lib/model.mjs';
 import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme } from '../lib/design.mjs';
-import { withPlan, freeFile } from '../lib/files.mjs';
+import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
 import { writeFileNew, noteWritten } from '../lib/files.mjs';
@@ -60,17 +60,22 @@ export function register(server, ctx) {
       (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '');
     // the gate (0.2.9, P-1): the file only with an approved plan; without one, the theme for the plan and a proposed plan id
     if (a.planId == null || a.planId === '') {
-      const base = fileBase(design.name) + '.json';
+      // (0.3.1 AF2, the release audit's F09) the file's name chosen now (the first free one; nothing made) and kept with the
+      // plan: the write writes that name or nothing
+      const base = freeName(a.folder, fileBase(design.name), '.json');
       return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
         plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" ${a.folder ? `in the folder "${visible(String(a.folder).replace(/[\\/]+$/, ''))}"` : 'in the working folder itself'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
           // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
-          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], file: base, colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
     }
-    Plans.gate('generate_theme', a.planId, ref, inputsPin(a));
+    const P = Plans.gate('generate_theme', a.planId, ref, inputsPin(a)), name = P.data && P.data.file;
     // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)
     const file = withPlan(a.planId, 'generate_theme', () => {
       if (m) sameModelBeforeWrite(a.planId, () => { const m2 = loadModel(a.path); return themeRef(m2, a.path, existingTheme(m2, a.themeFrom)).print; }, ref.print, true);
-      const made = [], f = freeFile(a.folder, fileBase(design.name), '.json', made); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
+      // (AF2) the name the plan showed, or nothing: taken since, nothing is written (and no folder made)
+      if (!name) throw new Error(`Nothing was written: plan ${a.planId} names no theme file. Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
+      if (!nothingAt(path.join(inside(a.folder || '.'), name))) throw new Error(`Nothing was written: "${name}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
+      const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
     return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
   }));
 }

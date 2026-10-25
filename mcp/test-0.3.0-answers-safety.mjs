@@ -51,10 +51,11 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   const file = path.join(dir, 'M.dataarcus-answers.json');
   A.writeAnswers(dir, 'M', [rec('intended')], A.readAnswers(dir, 'M'));
   // (a) another file swapped in (a new inode) after the check, before the replace: refused, the swapped file untouched
+  // (0.3.1 AF2: the temp is created through a handle now, createFile's; the swap is made when it is opened, the same moment)
   const checked = A.readAnswers(dir, 'M');
   chk(() => checked.ours && checked.checked && checked.checked.ino && /^[0-9a-f]{64}$/.test(checked.checked.hash) && checked.checked.size > 0, () => `F04-0. the check takes the file's identity (dev+ino, size, hash): ${JSON.stringify(checked.checked)}`);
   const swapped = fs.readFileSync(file, 'utf8').replace('"intended"', '"mistake"');
-  W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'other.json'); fs.writeFileSync(x, swapped); fs.renameSync(x, file); } return fs.writeFileSync(f, data, opts); } });
+  W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'other.json'); fs.writeFileSync(x, swapped); fs.renameSync(x, file); } return fs.openSync(f, flags, mode); } });
   let e1 = null; try { A.writeAnswers(dir, 'M', [rec('intended'), rec('mistake')], checked); } catch (e) { e1 = e; }
   W.setIo();
   chk(() => e1 && /Nothing was written/.test(e1.message) && /changed after/.test(e1.message), () => `F04-1. a file swapped in after the check is refused, nothing written: ${e1 && e1.message}`);
@@ -63,7 +64,7 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   // differ) a byte-identical copy put in its place (a new inode only) is refused too
   {
     const checkedB = A.readAnswers(dir, 'M'), same = fs.readFileSync(file);
-    W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'copy.json'); fs.writeFileSync(x, same); fs.renameSync(x, file); } return fs.writeFileSync(f, data, opts); } });
+    W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) { const x = path.join(dir, 'copy.json'); fs.writeFileSync(x, same); fs.renameSync(x, file); } return fs.openSync(f, flags, mode); } });
     let eb = null; try { A.writeAnswers(dir, 'M', [rec('intended'), rec('mistake')], checkedB); } catch (e) { eb = e; }
     W.setIo();
     chk(() => eb && /changed after/.test(eb.message) && fs.readFileSync(file).equals(same), () => `F04-1b. a byte-identical copy swapped in after the check (a new inode) is refused: ${eb ? eb.message : 'replaced'}`);
@@ -72,7 +73,7 @@ const rec = (answer) => CM.record(q1, answer, r1.rawTables, '2026-10-19T10:00:00
   // (b) the same file edited in place (same inode, same size, other bytes) after the check: refused too
   const checked2 = A.readAnswers(dir, 'M');
   const edited = fs.readFileSync(file, 'utf8').replace('"mistake"', '"MISTAK"');
-  W.setIo({ writeFileSync(f, data, opts) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) fs.writeFileSync(file, edited); return fs.writeFileSync(f, data, opts); } });
+  W.setIo({ openSync(f, flags, mode) { if (path.basename(String(f)).startsWith('.dataarcus-tmp-')) fs.writeFileSync(file, edited); return fs.openSync(f, flags, mode); } });
   let e2 = null; try { A.writeAnswers(dir, 'M', [rec('intended')], checked2); } catch (e) { e2 = e; }
   W.setIo();
   chk(() => e2 && /Nothing was written/.test(e2.message) && fs.readFileSync(file, 'utf8') === edited && !tmpLeft(dir).length, () => `F04-4. an in-place edit of the same size after the check is refused, the file byte-identical: ${e2 && e2.message}`);

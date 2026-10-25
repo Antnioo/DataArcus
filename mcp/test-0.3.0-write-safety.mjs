@@ -269,7 +269,9 @@ const fx = (x) => (x.j && x.j.fixes) || {};
   chk(() => /is now used/.test(x.j.planUse) && /M - fix formats\.tmdl/.test(x.j.planUse), () => `H3. the plan is used (part of the write is on disk), and the answer names what was written: ${short(x)}`);
   await s.close();
 }
-// C1/C2. create_report: the format script is written in the plan's write, after the report; its leftovers named exactly
+// C1/C2. create_report: the format script is written in the plan's write; its leftovers named exactly. (0.3.1 AF2: the
+// script is one of the report's files now, inside the plan's digest and the one writeTree, before the .pbip: the stuck
+// failure is aimed at it, file N - 1 of N, so the report's files are removed and only the stuck script is left, named)
 {
   const ms = [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' }];
   model('c0', null, ms); model('c1', null, ms); model('c2', null, ms);
@@ -278,10 +280,10 @@ const fx = (x) => (x.j && x.j.fixes) || {};
   let s = await serverClient(ROOT); const n = (await make(s, 'c0', await plan(s, 'c0'))).j; await s.close();
   const N = n && n.written;
   chk(() => N > 3 && n.formats && n.formats.fixScriptFile, () => `C0. a report on this model writes ${N} files and a format script: ${JSON.stringify(n).slice(0, 300)}`);
-  s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: `ENOSPC:partial:${N + 1}+stuck` });
+  s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: `ENOSPC:partial:${N - 1}+stuck` });
   let p = await plan(s, 'c1'), before = tree(path.join(ROOT, 'c1'));
   const x = await make(s, 'c1', p), added = tree(path.join(ROOT, 'c1')).filter((f) => !before.includes(f) && !/^R4 Report\.(Report\/|pbip$)/.test(f));
-  chk(() => !x.err && x.j.formats && added.length === 1 && /^\.dataarcus-tmp-[0-9a-f]{10}$/.test(added[0]) && x.j.formats.scriptNotWritten.includes('"c1/' + added[0] + '"'), () => `C1. the format script's half file is named exactly: ${JSON.stringify(added)} ${short(x)}`);
+  chk(() => x.err && added.length === 1 && added[0] === 'M - fix formats.tmdl' && x.t.includes('"c1/' + added[0] + '"'), () => `C1. the format script's half file is named exactly: ${JSON.stringify(added)} ${short(x)}`);
   const y = await make(s, 'c1', p);
   chk(() => y.err && /already used for create_report/.test(y.t), () => `C1. the plan is used (the report is on disk): ${short(y)}`);
   await s.close();

@@ -49,7 +49,7 @@ const strayRead = () => strayFull.filter((f) => opened.has(keyOf(f))).map(rel);
 
 const { reportPrint, strictFiles } = await import('./lib/read-report.mjs');
 const { planTwin, writeTwin, twinTree } = await import('./lib/arabic-twin.mjs');
-const { planNative, writeNative } = await import('./lib/native-copy.mjs');
+const { planNative, writeNative, nativeArtifact } = await import('./lib/native-copy.mjs');
 const { loadModel } = await import('./lib/model.mjs');
 
 // B152-1: the fingerprint reads none of them, and a change to them does not change it; a change to a page does
@@ -93,8 +93,10 @@ const { loadModel } = await import('./lib/model.mjs');
   chk(() => P.entries.length >= 1 && strayRead().length === 0, () => `B152-9. the native copy's plan opens no stray file: ${JSON.stringify(strayRead())} (${P.entries.length} replacements)`);
   const nc = P.answer.notCopied || {};
   chk(() => nc.count === 5 && /not copied/i.test(nc.note || ''), () => `B152-10. the native copy's plan names the files it leaves out: ${JSON.stringify(P.answer.notCopied)}`);
+  // (0.3.1 AF2) the write writes the files its plan kept: the plan's own artifact, as plan_layout keeps it
+  const art = nativeArtifact(P);
   opened.clear();
-  const done = writeNative('twin/Twin Sales.Report', m, { data: { customVisuals: P.entries } });
+  const done = writeNative('twin/Twin Sales.Report', m, { data: { customVisuals: P.entries } }, undefined, art);
   const ND = path.join(ROOT, 'twin/Twin Sales native.Report'), written = tree(ND);
   chk(() => done.written && strayRead().length === 0, () => `B152-11. writing the native copy opens no stray file: ${JSON.stringify(strayRead())}`);
   chk(() => written.length > 20 && written.every((f) => !orig.readFileSync.call(fs, f).includes(SENT)), () => `B152-12. the native copy holds none of them: ${JSON.stringify(written.map(rel).filter((f) => /\.(csv|xlsx|txt)$|\/\.pbi\//.test(f)))}`);

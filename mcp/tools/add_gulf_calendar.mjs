@@ -14,14 +14,22 @@ import { monthOffer as calendarOffer } from '../lib/arabic-twin.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 import { planIdInput, ADDS, modelPath } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite, inputsPin } from '../lib/plan-keys.mjs';
-import { writeScript } from '../lib/fix-scripts.mjs';
+import { freeScriptName, writePlannedScript } from '../lib/fix-scripts.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gulf = require('../../assets/js/gulf-health.js');
 const Fix = require('../../assets/js/model-health-tmdl.js');
 
-// the file writeScript would write now, named and not written (a plan names the file its click writes: 0.3.0 A1)
-const scriptNameNow = (dir, base, script) => writeScript(dir, base, script, true);
+// the file the plan names, chosen now and not written (a plan names the file its click writes: 0.3.0 A1)
+const scriptNameNow = (dir, base, script) => freeScriptName(dir, base, script);
+// (0.3.1 AF2, the release audit's F09 and F10) the write: the model read again right before it (changed since the gate:
+// nothing is written), then the file the approved plan named (outputs), or nothing: never another name
+const plannedWriter = (a, m) => (dir, base, script) => {
+  sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m));
+  const name = ((((Plans.planOf(a.planId) || {}).data) || {}).outputs || [])[0];
+  if (!name) throw new Error(`Nothing was written: plan ${a.planId} names no script file. Make the plan again (call add_gulf_calendar without planId), show it to the user and wait for their go.`);
+  return writePlannedScript(dir, name, script);
+};
 
 export function register(server, ctx) {
   server.registerTool('add_gulf_calendar', {
@@ -54,7 +62,7 @@ export function register(server, ctx) {
     const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
     const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
     // (0.3.0 T1, T-4) the write answer says what the file is and the 3 steps, as the plan did; the columns lead grouped
-    if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => { const r = addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase }); return Object.assign({ columnsByKind: columnsByKind(r.columns) }, r, { scriptIs: scriptIsSaid('the calendar table'), howToApplyScript: APPLY_STEPS.slice() }); }));
+    if (write) return text(withPlan(a.planId, 'add_gulf_calendar', () => { const r = addGulfCalendar(m, a, { Gulf, Fix, writeScript: plannedWriter(a, m), scriptDir, scriptBase }); return Object.assign({ columnsByKind: columnsByKind(r.columns) }, r, { scriptIs: scriptIsSaid('the calendar table'), howToApplyScript: APPLY_STEPS.slice() }); }));
     const { scriptFile, howToApply, columns, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: scriptNameNow, scriptDir, scriptBase });
     return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile), columnsByKind: columnsByKind(columns) }, rest, { howToApplyAfterGo: howToApply,
       plan: Plans.proposal(Plans.propose('calendar', modelRef(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" ${whereSaid(scriptDir)}, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; ${NEVER_APPLIED}`], { pins: { add_gulf_calendar: inputsPin(a) }, outputs: [path.basename(scriptFile)] })) }));
@@ -75,7 +83,7 @@ function arabicColumnsOnly(m, a) {
   const pin = inputsPin(a);
   if (a.planId != null && a.planId !== '') {
     Plans.gate('add_gulf_calendar', a.planId, modelRef(m, a.path), pin);
-    const file = withPlan(a.planId, 'add_gulf_calendar', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(m)); return writeScript(scriptDir, scriptBase + ' - Arabic calendar', co.script); });
+    const file = withPlan(a.planId, 'add_gulf_calendar', () => plannedWriter(a, m)(scriptDir, scriptBase + ' - Arabic calendar', co.script));
     return text(Object.assign({ written: true, scriptFile: file }, said, { scriptIs: scriptIsSaid(`${co.columns.length} Arabic calendar columns`), howToApplyScript: APPLY_STEPS.slice(), howToApply: co.howToApply }));
   }
   const name = path.basename(scriptNameNow(scriptDir, scriptBase + ' - Arabic calendar', co.script));

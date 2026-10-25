@@ -5,14 +5,15 @@
 // The one file DataArcus replaces: its own, and only when what is there is still the DataArcus answers file it checked
 // (R5, the outside audit of 19 Oct, F04: its device and inode, size and content hash, taken when it is read and taken
 // again right before the replace; anything else there is never replaced). Written through write-io (F05): a temporary
-// file created inside the try and removed on any failure, and what could not be removed is named.
+// file created inside the try and removed on any failure (AF2: only while it is still the file this call made), and what
+// could not be removed is named.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { nothingAt, readCapped, real } from './model.mjs';
 import { noteWritten } from './files.mjs';
-import { io, writeFileNew, writeFailed, shownWritePath } from './write-io.mjs';
+import { io, writeFileNew, writeFailed, shownWritePath, createFile, rollBack } from './write-io.mjs';
 
 const require = createRequire(import.meta.url);
 export const Memory = require('../../assets/js/confirm-memory.js');
@@ -56,19 +57,20 @@ export function writeAnswers(dir, base, records, checked) {
   if (!was.exists) { writeFileNew(file, data); noteWritten(file); return file; }   // (EEXIST when a file appeared: never replaced)
   if (!was.checked) throw changed(file);
   const tmp = path.join(dir, `.dataarcus-tmp-${crypto.randomBytes(5).toString('hex')}`);
-  const made = [];   // what this call created, recorded before the call that creates it (write-io's way)
+  // what this call created, recorded before the call that creates it (write-io's way). (0.3.1 AF2, the release audit's
+  // F07) the temp is written through createFile, with its identity and the hash of its bytes, and removed by rollBack: only
+  // while it is still the file this call made; another file put at its name is left, and named
+  const made = [{ path: tmp }];
   try {
-    made.push(tmp);
-    try { io.writeFileSync(tmp, data, { flag: 'wx' }); } catch (e) { if (e && e.code === 'EEXIST') made.pop(); throw e; }
+    try { createFile(made[0], data); } catch (e) { if (e && e.code === 'EEXIST') made.pop(); throw e; }
     let now = null; try { now = identity(file); } catch (e) { now = null; }
     if (!same(now, was.checked)) throw changed(file);   // (taken right before the replace: the file checked, or nothing)
     io.renameSync(tmp, file);
     made.length = 0;
   } catch (e) {
-    const ours = [];
-    for (const x of made) { try { io.unlinkSync(x); } catch (y) { if (y.code !== 'ENOENT') ours.push(x); } }
-    if (e && e.code === 'ANSWERS_CHANGED') { if (ours.length) throw writeFailed(e, `the file "${shownWritePath(file)}"`, ours, []); throw e; }
-    throw writeFailed(e, `the file "${shownWritePath(file)}"`, ours, []);
+    const { ours, foreign } = rollBack(made);
+    if (e && e.code === 'ANSWERS_CHANGED' && !ours.length && !foreign.length) throw e;
+    throw writeFailed(e, `the file "${shownWritePath(file)}"`, ours, foreign);
   }
   noteWritten(file);
   return file;
