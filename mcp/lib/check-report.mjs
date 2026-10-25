@@ -253,6 +253,14 @@ export function pageLanguages(inv, R, fallback) {
   const by = {}; Object.values(how).forEach((k) => { by[k] = (by[k] || 0) + 1; });
   return { pages: lang, by };
 }
+/** (0.3.1 SQ2) Every page's language: pageLanguages, and a page none of its signs tell takes the language most told
+ *  pages have (right to left when more than half), else English. Returns { pages: { id: lang }, by } (the lens and
+ *  the native copy). */
+export function filledLanguages(inv, R) {
+  const PL = pageLanguages(inv, R, null), told = Object.values(PL.pages), most = told.filter((l) => l === 'ar' || l === 'he').length > told.length / 2 ? 'ar' : 'en';
+  const pages = Object.assign({}, PL.pages); R.pages.forEach((pg) => { if (!pages[pg.id]) pages[pg.id] = most; });
+  return { pages, by: PL.by };
+}
 // what the answer says of it: the counts, how they were told, and each page's (60 at most; the ids as safeName writes them)
 const pageLanguagesOut = (P) => { const e = Object.entries(P.pages), counts = {}; e.forEach(([, l]) => { counts[l] = (counts[l] || 0) + 1; });
   return Object.assign({ counts, by: P.by, pages: Object.fromEntries(e.slice(0, 60).map(([id, l]) => [safeName(id), l])) }, e.length > 60 ? { more: e.length - 60 } : {},

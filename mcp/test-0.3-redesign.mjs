@@ -225,6 +225,16 @@ async function rest(pl, R, pages) {
     const names = ['Twin Sales', 'Quarterly Sales Performance Overview', 'Abcdefghijklmnopqrstuvwxyz0123'].map(nameFor);
     chk(() => names.every((n) => Array.from(n).length <= 30 && / redesigned$/.test(n)) && names[1] === 'Quarterly Sales redesigned', () => `C10. a long name is cut at a whole word so " redesigned" stays within 30 characters: ${JSON.stringify(names)}`); }
 
+  // ---------- C11 (0.3.1 SQ2, A1-S4): a report without .platform: the copy writes its own, as the twin does ----------
+  { fixture(path.join(ROOT, 'np')); fs.rmSync(path.join(ROOT, 'np/Twin Sales.Report/.platform'), { force: true });
+    const pn = await call(s, 'plan_layout', { path: 'np/Twin Sales.SemanticModel', redesignFrom: 'np/Twin Sales.pbip' }), id = pn.j && pn.j.plan && pn.j.plan.planId;
+    if (id) await call(s, 'approve_plan', { planId: id });
+    const on = id ? await call(s, 'create_report', { path: 'np/Twin Sales.SemanticModel', redesignFrom: 'np/Twin Sales.pbip', planId: id }) : pn;
+    let pj = null; try { pj = rd(path.join(ROOT, 'np/Twin Sales redesigned.Report/.platform')); } catch (e) { pj = null; }
+    chk(() => !on.err && pj && pj.metadata.type === 'Report' && pj.metadata.displayName === 'Twin Sales redesigned' && /^[0-9a-f-]{36}$/.test(pj.config.logicalId) && pj.config.version === '2.0' && /platformProperties\/2\.0\.0/.test(pj.$schema)
+      && !fs.existsSync(path.join(ROOT, 'np/Twin Sales.Report/.platform')) && /\.platform/.test(JSON.stringify(pn.j.redesign || {})),
+    () => `C11. the redesign of a report without .platform writes its own (said in the plan; the original stays without): ${JSON.stringify(pj)} ${short(on)}`); }
+
   chk(() => answers.every((t) => SENT.every((x) => !t.includes(x))), () => 'C5. no value saved in a filter, slicer or bookmark is in any answer');
 }
 if (problems.length) { console.log(`FAIL  redesign  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }

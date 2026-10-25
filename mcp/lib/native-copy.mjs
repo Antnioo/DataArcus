@@ -12,6 +12,8 @@ import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
 import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
+import { rulesInput, filledLanguages } from './check-report.mjs';
+import { newPlatform } from './twin-copy.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 
@@ -46,7 +48,9 @@ export function planNative(reportPath, model, axes) {
   const loc = locate(reportPath);
   const left = []; strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.', left });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
-  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes });
+  // (0.3.1 SQ2, J19-S1) each page's language, as check_report tells it: an Arabic page's panels say their units in Arabic
+  const langs = filledLanguages(inv, rulesInput(inv).R).pages, langOf = (p) => (langs[p.id] === 'ar' ? 'ar' : 'en');
+  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes, langOf });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
   const free = nothingAt(loc.outDir) && nothingAt(loc.outPbip);
   const answer = {
@@ -54,6 +58,7 @@ export function planNative(reportPath, model, axes) {
     replacements: replace.map((e) => Object.assign({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, guess: e.guess, lost: e.lost, tell: e.tell }, e.axes ? { axes: e.axes } : {})),
     notReplaced: keep.map((e) => ({ line: replacementLine(e), why: e.htmlNeeded ? 'no native visual draws it: an HTML/SVG measure (a later step) or a table of its links; it stays the custom visual in the copy' : 'no native visual takes its fields: it stays the custom visual in the copy' })),
     ...notCopiedOf(left),
+    ...(isFile(path.join(loc.dir, '.platform')) ? {} : { platform: 'The original has no .platform (Power BI\'s validator calls that a "can break"): the copy gets its own, with its name and a new logical id.' }),
     sayInPlan: 'Show the user every replacement line and what it loses (lost), before their go: nothing is replaced silently. The original report is not changed; the native copy is a new report next to it. A replacement marked a guess was matched by its fields\' kinds only.'
   };
   if (!entries.length) answer.none = 'This report has no custom visual: nothing to replace.';
@@ -84,6 +89,9 @@ export function nativeTree(loc, approved, logicalId) {
   let dropped = [];
   if (files.includes('definition/report.json')) { const rj = mustJson(path.join(loc.dir, 'definition', 'report.json'), 'definition/report.json'); const d = Replace.dropUnusedCustomVisuals(rj, used); dropped = d.dropped; out.set('definition/report.json', json(d.json)); }
   if (files.includes('.platform')) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + SUFFIX }); pl.config = Object.assign({}, pl.config, { logicalId }); out.set('.platform', json(pl)); }
+  // (0.3.1 SQ2, A1-S4) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the copy gets
+  // its own, as the twin's (newPlatform), with the logical id chosen at the plan
+  else out.set('.platform', newPlatform(loc.base + SUFFIX, logicalId));
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(loc.outDir) } }], settings: { enableAutoRecovery: true } };
   if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(loc.outDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(loc.outDir) } }); pbip = o; }
   // a private custom visual's own package folder stays in the copy only while a visual still uses it

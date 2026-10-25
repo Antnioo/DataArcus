@@ -16,7 +16,7 @@ import { createRequire } from 'node:module';
 import { loadModel, ROOT, shownName } from './model.mjs';
 import { AIM } from './scope.mjs';
 import { safeName, readJson, locate, inventory, diskSource } from './read-report.mjs';
-import { rulesInput, pageLanguages, builtByOf, fixRoutesOf } from './check-report.mjs';
+import { rulesInput, filledLanguages, builtByOf, fixRoutesOf } from './check-report.mjs';
 import { isolateLatin } from './terminology.mjs';
 import { MATRIX_SAID } from './arabic-twin.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
@@ -92,8 +92,7 @@ export function arabicLens(p) {
   const reportPath = relOut(loc.pbipPath || loc.reportDir);
   // each page's language (S1): told by its buttons, the pages that reach it or its own texts; a page none of these tell
   // takes the language most pages have, else English
-  const PL = pageLanguages(inv, R, null), told = Object.values(PL.pages), most = told.filter((l) => l === 'ar' || l === 'he').length > told.length / 2 ? 'ar' : 'en';
-  R.pages.forEach((pg) => { if (!PL.pages[pg.id]) PL.pages[pg.id] = most; });
+  const PL = filledLanguages(inv, R);
   const isRtl = (pg) => PL.pages[pg.id] === 'ar' || PL.pages[pg.id] === 'he';
   const B = builtByOf(loc, PL), routes = fixRoutesOf(B, loc) || {}, routeKey = routes.arabicCopy ? 'arabicCopy' : null;
   const fix = fixer({ isRtl, reportPath, route: routeKey ? routes.arabicCopy : null, routeKey });

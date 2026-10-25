@@ -533,7 +533,8 @@ export function typeOfModel(tables) {
 }
 // a custom visual's type as the plan shows it: its id without the trailing code, plain letters and digits only
 export const shortType = (t) => { const s = String(t || '').replace(/[0-9A-Fa-f]{32}$/, ''); return /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(s) ? s : 'a custom visual'; };
-// inv: the reading block's inventory (read-report.mjs); opts: { typeOf } (typeOfModel of the report's model)
+// inv: the reading block's inventory (read-report.mjs); opts: { typeOf } (typeOfModel of the report's model), langOf
+// (an inventory page -> 'ar' or 'en', the panels' units; English without it)
 // One entry per custom visual: { page, pageName, visual (its id, for the writer), place, size, from, kind, native, label,
 // roles { NativeRole: [queryRef] }, why, tell, lost, guess, confidence, htmlNeeded, candidates [{ native, fits }] }
 // (0.3.0 J19, B-172) the native charts whose value roles put their measures on one axis
@@ -542,7 +543,10 @@ const AXIS_ROLES = { lineClusteredColumnComboChart: ['Y', 'Y2'], clusteredColumn
 // unit, scale and currency, and the person's confirmation, opts.axes { tables, confirmed }); when they may not, the panels:
 // one native chart per group in the custom visual's box (a line chart over time, else the chart's own kind, a combo's
 // columns), each with its group's values, the category and the tooltips. Never a combo with a second axis.
-function axesFor(r, o, type) {
+// (0.3.1 SQ2, J19-S1 and S5) lang: the page's ('ar' or 'en'): each panel's unit in it (axis-units' label, Latin runs
+// isolated in Arabic), and titleTag, what its title adds: the unit, with its place ("1/2") when the units are the same
+const FSI = '\u2068', PDI = '\u2069';
+function axesFor(r, o, type, lang) {
   const roles = AXIS_ROLES[r.native];
   if (!roles) return null;
   const vals = roles.flatMap((k) => r.roles[k] || []);
@@ -555,8 +559,10 @@ function axesFor(r, o, type) {
   // (a combo's panels: lines over time, else the custom visual's own bars where its id says bars, else columns)
   const bars = hintsOf(type).includes('bar'), one = r.native === 'lineClusteredColumnComboChart' ? (time ? 'lineChart' : bars ? 'clusteredBarChart' : 'clusteredColumnChart') : r.native;
   const refs = (l) => l.map((f) => f.queryRef).filter(Boolean);
-  const panels = d.groups.map((g) => ({ native: one, roles: Object.assign({ Category: refs(cat), Y: refs(g.map((i) => vals[i])) }, (r.roles.Tooltips || []).length ? { Tooltips: refs(r.roles.Tooltips) } : {}),
-    unit: d.labels[g[0]] && d.labels[g[0]].en }));
+  const ar = lang === 'ar', units = d.groups.map((g) => (d.labels[g[0]] && d.labels[g[0]][ar ? 'ar' : 'en']) || null);
+  const alike = units.some((u, i) => !u || units.indexOf(u) !== i), placeOf = (i) => (ar ? FSI : '') + `${i + 1}/${units.length}` + (ar ? PDI : '');
+  const panels = d.groups.map((g, i) => ({ native: one, roles: Object.assign({ Category: refs(cat), Y: refs(g.map((x) => vals[x])) }, (r.roles.Tooltips || []).length ? { Tooltips: refs(r.roles.Tooltips) } : {}),
+    unit: units[i], titleTag: alike ? [units[i], placeOf(i)].filter(Boolean).join(' · ') : units[i] }));
   return { share: false, why: d.why, ask: d.ask, panels, bars: one === 'clusteredBarChart' };
 }
 export function replacementsOf(inv, opts) {
@@ -564,7 +570,7 @@ export function replacementsOf(inv, opts) {
   ((inv && inv.pages) || []).forEach((p) => (p.visuals || []).forEach((x) => {
     if (!x.meaning) return; // the reading block gives a meaning to custom visuals only
     const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }, o.factsOf && x.json ? { facts: o.factsOf(x.json) } : {}));
-    const ax = r.native ? axesFor(r, o, x.type) : null, panels = ax && ax.panels ? ax.panels : null, kindOf = (t) => Object.keys(NATIVE).find((k) => NATIVE[k] === t) || r.kind;
+    const ax = r.native ? axesFor(r, o, x.type, o.langOf ? o.langOf(p) : 'en') : null, panels = ax && ax.panels ? ax.panels : null, kindOf = (t) => Object.keys(NATIVE).find((k) => NATIVE[k] === t) || r.kind;
     out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: panels ? kindOf(panels[0].native) : r.kind, native: panels ? panels[0].native : r.native,
       label: r.native ? LABEL[panels ? kindOf(panels[0].native) : r.kind] || r.native : null,
       ...(ax ? { axes: Object.assign({ share: ax.share, why: ax.why }, panels ? { panels: panels.length } : {}) } : {}), ...(panels ? { panels } : {}), ...(ax && ax.ask && ax.ask.length ? { ask: ax.ask } : {}),
