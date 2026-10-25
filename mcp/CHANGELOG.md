@@ -21,6 +21,10 @@ package's manifest; this file says what is in it.
 - **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws each Arabic page as
   it will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
   English page beside its Arabic page, with the language buttons. A title that won't fit its box is marked to check.
+- **Working folders as people name them:** folders with Arabic names, spaces or long paths, and a working folder
+  reached through a link, now work; the tests run on macOS too. Setup notes for Claude Code, VS Code and Cursor on
+  Windows, macOS and Linux (DataArcus writes the Power BI project on any of them; open it in Power BI Desktop on
+  Windows).
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
