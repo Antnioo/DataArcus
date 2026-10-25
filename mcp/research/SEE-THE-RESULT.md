@@ -1,7 +1,7 @@
 # Seeing the result: how the AI can look at what Power BI Desktop draws (R1, 20 Oct 2026)
 
 Research and prototypes, cloud builder; branch `research/see-the-result`. Nothing here is a tool, and no default changed.
-The plan and the results are in `mcp/work/R1.md`.
+The plan and the results are in `mcp/work/R1-see-the-result.md`.
 
 ## The gap
 The owner, 20 Oct, after an honest review of 0.3: "It can't see the result. Neither of us sees what Desktop actually
