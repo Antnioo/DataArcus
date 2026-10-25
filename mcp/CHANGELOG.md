@@ -37,6 +37,11 @@ package's manifest; this file says what is in it.
 - **Website:** the Power BI Model Health Check can download a score card to share (a picture with the score, the
   model's size and the top 5 findings, names optional, drawn in your browser), and the PL-300 and DP-600 practice exams
   link each exam area under 70% to its section of Microsoft's study guide.
+- **One report in English and Arabic, straight from the plan:** plan_layout and create_report take `languages: "en+ar"`
+  (off by default) and write one report with the English pages and each page's Arabic page, built the same way as the
+  English-Arabic copy of a report: mirrored, language buttons on every page, slicer pairs kept in sync, the other
+  language's pages hidden in the tabs. The approval page shows each English page beside its Arabic page. In the
+  English-Arabic copy too, button slicers (pills) are now kept in sync with their Arabic copy.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside

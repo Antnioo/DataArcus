@@ -8,6 +8,9 @@
 //      hand-placed pages alike) on the mirrored slots;
 //   T  create_arabic_twin, a separate twin (through the server, the approval clicked as a person does);
 //   C  create_arabic_twin into "same", the EN-AR copy (its Arabic page).
+//   B  (0.3.1 X2) create_report with languages "en+ar": one report in English and Arabic from the plan. Its Arabic half
+//      must be the EN-AR copy's of the same English report (C on create_report's own report, the same Arabic texts and
+//      terms): every file of every page the same, byte for byte, but what INTENDED.bilingual lists.
 // Per kind, W against T and C against T: the place, alignment, order, projections, sort and every formatting card
 // (objects and container objects), after taking out the differences that are meant, each listed in INTENDED with why.
 //   L  the lab writes its project and Microsoft's validator gives 0 errors
@@ -101,7 +104,8 @@ const INTENDED = {
   copyFit: 'the copy keeps the language button\'s box free (R1); its Arabic pages are otherwise the twin\'s',
   copyIds: 'the copy\'s own references: its bookmarks, each Arabic slicer synced with its English one (a sync group, R1/X1), and an Arabic copy of each text measure ("No data AR: ...") so the English pages keep theirs',
   noDataCard: 'the "No data" card over a table names the table\'s first measure: the writer\'s table order (INTENDED.table)',
-  zOrder: 'z: each path numbers the layers; compared as an order'
+  zOrder: 'z: each path numbers the layers; compared as an order',
+  bilingual: 'the bilingual report (B) against the copy (C) of the same English report: the report\'s own name (its .platform\'s displayName, and a new logicalId as every report gets; the folder and the .pbip named without " (EN-AR)": it is a new report, not a copy). Nothing else: the same engine builds both'
 };
 // a difference found, not meant: two decisions of the owner meet; taken out here, said in M1.md for the owner to decide
 const KNOWN = {
@@ -271,6 +275,80 @@ const byName = (list, n) => (list.find((x) => x.v.name === n) || {}).v;
   const de = get(() => one('en', 20)), da = get(() => one('ar', PW - 620)), dt = de && de.visual && Mirror.mirrorVisual(de, PW, { dateColumns: [T + '.Created'] }).json;
   const inv = (v) => v && v.visual && lit((((v.visual.objects || {}).categoryAxis || []).find((e) => !e.selector) || { properties: {} }).properties.invertAxis);
   chk(() => inv(da) === 'true' && inv(dt) === 'true' && JSON.stringify(shape(da, { sizes: true })) === JSON.stringify(shape(dt, { sizes: true })), () => `W date: a column chart over a date column is reversed by invertAxis by the writer and the twin alike: ${JSON.stringify([da && da.visual && da.visual.objects, dt && dt.visual.objects])}`.slice(0, 900));
+}
+
+// ---------- B: create_report with languages "en+ar" (X2) against the copy of the same English report ----------
+// the same plan made twice through the server, in two folders: (B) with languages "en+ar", every text and field given
+// Arabic; (Cb) the plain English report of the same plan, then create_arabic_twin into "same" with the same Arabic (each
+// text's id given the Arabic of its words, the same terms, no month script, as the bilingual plan has none)
+{
+  ['b', 'c'].forEach((d) => fs.cpSync(path.join(HERE, 'test-models/service-orders/Service Orders.SemanticModel'), path.join(ROOT, d, 'Service Orders.SemanticModel'), { recursive: true }));
+  const wb = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+  const ok = (r) => !r.err && r.j;
+  const approveB = async (pid) => { const n = links().length; await wb.call('approve_plan', { planId: pid }); const url = await linkAt(n); if (url) { await req(url, 'POST', 'decision=approve'); await wb.call('approve_plan', { planId: pid }); } };
+  const BASE = { lang: 'en', layout: 'exec', name: 'Parity B', title: 'Work orders', secondPage: true, gallery: true };
+  const at = {}, terms = {}; let k = 0, written = { b: false, c: false }, why = '';
+  try {
+    // (B) the plan: terms for every field, then an Arabic text for every text left (two rounds, as a person approves)
+    let a = Object.assign({ path: 'b/Service Orders.SemanticModel', languages: 'en+ar' }, BASE), pl = await wb.call('plan_layout', a);
+    for (let round = 0; round < 4 && ok(pl) && pl.j.bilingual; round++) {
+      const J = pl.j.bilingual; let more = false;
+      ((J.terminology || {}).sheet || []).forEach((r) => { if (r.field && terms[r.field] == null) { terms[r.field] = r.ar && r.status !== 'kept' ? r.ar : `حقل ${++k}`; more = true; } });
+      (J.texts || []).forEach((t) => { if (t.text != null && !t.field && t.arabic == null && at[t.text] == null) { at[t.text] = t.draftArabic || (/\{1\}/.test(t.text) ? `أعلى {1} من {2}: نص ${++k}` : `نص ${++k}`); more = true; } });
+      if (!more) break;
+      a = Object.assign({}, a, { arabicTerms: Object.assign({}, terms), arabicTexts: Object.assign({}, at) }); pl = await wb.call('plan_layout', a);
+    }
+    const idB = ok(pl) && pl.j.plan && pl.j.plan.planId;
+    if (idB) { await approveB(idB); const cr = await wb.call('create_report', Object.assign({}, a, { planId: idB, design: pl.j.design })); written.b = !cr.err; if (cr.err) why += ' B: ' + String(cr.t).slice(0, 300); } else why += ' B: no plan: ' + String(pl.t).slice(0, 300);
+    // (Cb) the English report of the same plan, then its copy into "same" with the same Arabic
+    const ac = Object.assign({ path: 'c/Service Orders.SemanticModel' }, BASE), pc = await wb.call('plan_layout', ac), idC = ok(pc) && pc.j.plan && pc.j.plan.planId;
+    if (idC) { await approveB(idC); await wb.call('create_report', Object.assign({}, ac, { planId: idC, design: pc.j.design })); }
+    const t0 = { path: 'c/Parity B.pbip', into: 'same', terms, arabicMonth: false }, labels = {};
+    let p0 = await wb.call('create_arabic_twin', t0);
+    for (let from = 0, n = 0; ok(p0) && n < 10; n++) { (p0.j.texts || []).forEach((t) => { if (t.text != null && at[t.text] != null) labels[t.id] = at[t.text]; }); if (!p0.j.moreTexts) break; from = p0.j.moreTexts.from; p0 = await wb.call('create_arabic_twin', Object.assign({ textsFrom: from }, t0)); }
+    const p1 = await wb.call('create_arabic_twin', Object.assign({ labels }, t0)), idT = ok(p1) && p1.j.plan && p1.j.plan.planId;
+    if (idT) { await approveB(idT); const tw = await wb.call('create_arabic_twin', Object.assign({ labels, planId: idT }, t0)); written.c = !tw.err; if (tw.err) why += ' C: ' + String(tw.t).slice(0, 300); } else why += ' C: no plan: ' + String(p1.t).slice(0, 300);
+  } catch (e) { why += ' threw: ' + String(e && e.stack || e).slice(0, 400); } finally { await wb.close(); }
+  const RB = path.join(ROOT, 'b/Parity B.Report'), RC = path.join(ROOT, 'c/Parity B (EN-AR).Report');
+  chk(() => written.b && written.c && fs.existsSync(RB) && fs.existsSync(RC) && !fs.existsSync(path.join(ROOT, 'b/Parity B (EN-AR).Report')), () => `B1 the bilingual report (its own name) and the copy of the same English report are written:${why}`);
+  // (create_report draws new random ids for its pages, visuals, bookmarks and filters, so two builds of one plan differ in
+  // them, and the copy's own ids are hashes of them) each report read with its ids named by their place: the n-th page
+  // in pages.json, its visuals by layer, the bookmarks in bookmarks.json's order, every other id in the order it is met
+  // (files in that order): then the two are compared byte for byte, path by path
+  const filesUnder = (dir) => { const out = []; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else out.push(path.relative(dir, f).split(path.sep).join('/')); }); if (fs.existsSync(dir)) rec(dir); return out.sort(); };
+  const canonOf = (dir) => {
+    const files = filesUnder(dir).filter((f) => f !== '.platform'), text = Object.fromEntries(files.map((f) => [f, fs.readFileSync(path.join(dir, f), 'utf8')])), names = new Map();
+    pagesOf(dir).forEach((pid, i) => { names.set(pid, `PAGE${i}`);
+      visualsOf(dir, pid).sort((m, n) => (m.position.z || 0) - (n.position.z || 0) || (m.position.y || 0) - (n.position.y || 0) || (m.position.x || 0) - (n.position.x || 0)).forEach((v, j) => names.set(String(v.name), `P${i}V${j}`)); });
+    const bm = text['definition/bookmarks/bookmarks.json'] ? JSON.parse(text['definition/bookmarks/bookmarks.json']).items || [] : [];
+    bm.flatMap((it) => [it.name].concat(it.children || [])).forEach((n, k) => { if (!names.has(String(n))) names.set(String(n), `BM${k}`); });
+    const known = (t) => t.replace(/[0-9a-f]{20,}/g, (x) => (names.has(x) ? names.get(x) : x));
+    const order = files.map((f) => ({ f, c: known(f) })).sort((m, n) => (m.c < n.c ? -1 : m.c > n.c ? 1 : 0));
+    // (a sync group's number, "(EN-AR n)", follows the order of the slicers' file names, which are random: named by place too)
+    let n = 0, g = 0; const groups = new Map();
+    order.forEach(({ f }) => (known(f) + '\n' + text[f]).replace(/[0-9a-f]{20,}|\(EN-AR \d+\)/g, (x) => { if (x[0] === '(') { if (!groups.has(x)) groups.set(x, `(EN-AR G${g++})`); } else if (!names.has(x)) names.set(x, `ID${n++}`); return x; }));
+    const all = (t) => t.replace(/[0-9a-f]{20,}/g, (x) => names.get(x) || x).replace(/\(EN-AR \d+\)/g, (x) => groups.get(x) || x);
+    return { map: Object.fromEntries(order.map(({ f }) => [all(f), all(text[f])])), page: (i) => `definition/pages/PAGE${i}/` };
+  };
+  const CB = canonOf(RB), CC = canonOf(RC), KB = Object.keys(CB.map), KC = Object.keys(CC.map);
+  const ordB = pagesOf(RB), ordC = pagesOf(RC), half = ordC.length / 2, same = ordB.length >= 4 && ordB.length === ordC.length;
+  chk(() => ordB.length >= 4 && ordB.length === ordC.length && ordB.every((p, i) => (rd(path.join(RB, 'definition/pages', p, 'page.json')).displayName === rd(path.join(RC, 'definition/pages', ordC[i], 'page.json')).displayName)),
+    () => `B2 the same pages in the same order (the English, then their Arabic pages): ${JSON.stringify([ordB.length, ordC.length])}`);
+  // a set of files compared; a difference said by its place in the JSON (shape() of the visual for a visual)
+  const filesDiff = (keep) => { const kb = KB.filter(keep), kc = KC.filter(keep);
+    if (JSON.stringify(kb) !== JSON.stringify(kc)) return [`files: ${JSON.stringify(kb.filter((f) => !kc.includes(f)).concat(kc.filter((f) => !kb.includes(f)).map((f) => 'copy only: ' + f))).slice(0, 400)}`];
+    return kb.filter((f) => CB.map[f] !== CC.map[f]).flatMap((f) => { let x, y; try { x = JSON.parse(CB.map[f]); y = JSON.parse(CC.map[f]); } catch (e) { return [f + ': differs (not JSON)']; }
+      const d = diff(x, y); return (d.length ? d : ['(whitespace)']).slice(0, 3).map((t) => f + t); }); };
+  for (let i = half; i < ordC.length; i++) { const d = filesDiff((f) => f.startsWith(CB.page(i))), n = KB.filter((f) => f.startsWith(CB.page(i))).length; chk(() => same && n > 2 && d.length === 0, () => `B3 Arabic page ${i - half + 1}: the bilingual report's differs from the copy's (positions, alignment, order, projections, sort, formatting, phone layout; ${n} files): ${d.slice(0, 6).join(' ; ')}`); }
+  // the order of Tab stops on each Arabic page (inside the files above; said apart so a failure names it)
+  const tabs = (C, i) => JSON.stringify(Object.keys(C.map).filter((f) => f.startsWith(C.page(i)) && f.endsWith('/visual.json')).map((f) => ({ f, t: (JSON.parse(C.map[f]).position || {}).tabOrder })).filter((x) => x.t != null).sort((m, n) => m.t - n.t).map((x) => x.f));
+  chk(() => same && Array.from({ length: half }, (x, k) => half + k).every((i) => tabs(CB, i) === tabs(CC, i)), () => 'B4 each Arabic page\'s Tab stops are in the copy\'s order (the visuals named by their layer)');
+  { const d = filesDiff((f) => Array.from({ length: half }, (x, i) => CB.page(i)).some((p) => f.startsWith(p))); chk(() => same && d.length === 0, () => `B5 the English half is the copy's English pages (each page's own files, the language buttons and the slicers' sync groups): ${d.slice(0, 6).join(' ; ')}`); }
+  // every other file of the report: the same, but the report's own name (INTENDED.bilingual)
+  { const d = filesDiff((f) => !/^definition\/pages\/PAGE\d+\//.test(f));
+    const plB = fs.existsSync(path.join(RB, '.platform')) ? rd(path.join(RB, '.platform')) : {}, plC = fs.existsSync(path.join(RC, '.platform')) ? rd(path.join(RC, '.platform')) : {};
+    chk(() => KB.length > 3 && d.length === 0 && plB.metadata && plB.metadata.displayName === 'Parity B' && plC.metadata.displayName === 'Parity B (EN-AR)' && JSON.stringify(Object.assign({}, plB, { metadata: null, config: null })) === JSON.stringify(Object.assign({}, plC, { metadata: null, config: null })),
+      () => `B6 the report's other files (pages.json, bookmarks, report measures, theme, report.json, definition.pbir) are the copy's, the name aside (INTENDED.bilingual): ${d.slice(0, 6).join(' ; ')} ${JSON.stringify([plB.metadata, plC.metadata])}`); }
 }
 
 // ---------- E: one engine ----------
