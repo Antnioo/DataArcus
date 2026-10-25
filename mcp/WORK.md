@@ -4,6 +4,17 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 4: K1 DataArcus as a plugin next to Microsoft's (25 Oct, builder; branch `feat/0.3.1-plugin-folder` from integration/0.3.1 11df69b)
+The owner, 22 Oct: "Yes, after 0.3.0 ships". Draft #85's research, routing skill and test ported (not merged):
+`mcp/skills-packaging/` is now a folder (8 files) the owner copies as-is into a new public repo (e.g.
+`Antnioo/dataarcus-skills`); Claude Code starts the release `.mcpb` from its URL and installs Microsoft's
+`powerbi-authoring@fabric-collection` with it; Copilot CLI gets the skills and the server by hand. Plan, results,
+CHANGELOG line, "For the owner", decisions, "Seen, not in scope": `mcp/work/K1.md`; research: `mcp/research/SKILL-PACKAGING.md`.
+- Done: 0a6443b plan, 4ade85c red (24 checks, 20 fail), 6ce6852 folder + research. `test-skill-packaging` 24/24 in
+  npm test; `claude plugin validate --strict` passes; installed here (0.3.0 bundle): both servers Connected.
+- Next: the reviewer reviews and merges; after `dataarcus-0.3.1.mcpb` is released the owner creates the repo and copies
+  the folder (K1.md "For the owner"); #85 can then be closed. When C merges: one routing row for `sample: true`.
+
 ## 0.3.1, wave 2: X2 one report in English and Arabic from create_report (25 Oct, builder; branch `feat/0.3.1-bilingual-report-2` from integration/0.3.1 ed23620)
 The old X2 (`origin/feat/0.3.1-bilingual-report`, pre-0.3.0 history) ported onto today's code, not merged: `languages:
 "en+ar"` on plan_layout and create_report builds the Arabic half through the EN-AR copy's own planTwin (R1's buttons and
