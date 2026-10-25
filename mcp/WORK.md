@@ -11,7 +11,8 @@ The owner, 22 Oct: "Yes, after 0.3.0 ships". Draft #85's research, routing skill
 `powerbi-authoring@fabric-collection` with it; Copilot CLI gets the skills and the server by hand. Plan, results,
 CHANGELOG line, "For the owner", decisions, "Seen, not in scope": `mcp/work/K1.md`; research: `mcp/research/SKILL-PACKAGING.md`.
 - Done: 0a6443b plan, 4ade85c red (24 checks, 20 fail), 6ce6852 folder + research. `test-skill-packaging` 24/24 in
-  npm test; `claude plugin validate --strict` passes; installed here (0.3.0 bundle): both servers Connected.
+  npm test (full run exit 0, 70 lines PASS); `claude plugin validate --strict` passes; installed here (0.3.0 bundle):
+  both servers Connected.
 - Next: the reviewer reviews and merges; after `dataarcus-0.3.1.mcpb` is released the owner creates the repo and copies
   the folder (K1.md "For the owner"); #85 can then be closed. When C merges: one routing row for `sample: true`.
 
