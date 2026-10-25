@@ -47,7 +47,10 @@ const SCREEN = [
   [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
   [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
   [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
-  [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
+  // (0.3.1 S1: "Execute Time", "Avg Execute Duration", "Query Execute Time (ms)" are plain names) "execute" is an ask only
+  // with an object or an imperative after it, or said as one ("please execute", "execute:"), or with code and "now"
+  [/\bexecute\s+(this|that|these|those|it|them|now|immediately|the\b|following|all|everything|every|any|my|your|a|an)\b|\b(please|then|now|must|should|always|just)\s+execute\b|\bexecute\s*:|\bexecute\b[^.]{0,30}\b(code|commands?|scripts?|query|queries|sql|dax|powershell|shell|cmd|steps?|instructions?|tools?)\b[^.]{0,20}\b(now|immediately|first|right\s+away)\b/i, 'asks to execute something'],
+  [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
   [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\s+((كل|جميع)\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],
   [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
@@ -72,9 +75,13 @@ const LOOKALIKE = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н':
 // screened with format and control characters removed and compatibility forms folded, NFKC; it is shown as visible() writes it)
 const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627')
   .replace(/[\u0370-\u03FF\u0400-\u04FF\u0500-\u052F]/g, (ch) => LOOKALIKE[ch] || ch).replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+// why a name or text reads like an instruction (empty when it doesn't). (0.3.1 S1: length alone is never a reason: a
+// user's approved 151-character Arabic subtitle was flagged "longer than 120 characters" and nothing else)
+export const screenWhy = (s) => { const t = plainArabic(s); return [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; };
+// a model's own name (a table, column, measure or display folder: a short identifier) is listed when it is very long too,
+// as the outside review's G-03 asked; a report's texts (titles, text boxes, subtitles) never are
 export const LONG_NAME = 120;
-// why a name or text reads like an instruction (empty when it doesn't); a long one is said too
-export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
+export const nameWhy = (s) => { const why = screenWhy(s); if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
 export const readsLikeInstruction = (s) => { const t = plainArabic(s); return SCREEN.some(([re]) => re.test(t)); };
 export const WITHHELD = '(withheld: reads like an instruction)';
 // a name from disk or from a file as a message may show it: withheld when it reads like an instruction, invisible
