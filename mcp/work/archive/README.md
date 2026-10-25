@@ -6,7 +6,7 @@ text unchanged, newest first as it was; `mcp/WORK.md` now holds only the current
 
 | File | Period | What |
 |---|---|---|
-| [WORK-2026-10-25.md](WORK-2026-10-25.md) | 25 Oct 2026 | 0.3.1 waves 1 to 5 (the integration branch `integration/0.3.1`) |
+| [WORK-2026-10-25.md](WORK-2026-10-25.md) | 25 Oct 2026 | 0.3.1 waves 1 to 6 (the integration branch `integration/0.3.1`) |
 | [WORK-2026-10-15-22.md](WORK-2026-10-15-22.md) | 15 to 22 Oct 2026 | 0.3.0 and its R&D, with 0.2.9 rc.22 to rc.24 and 0.2.9.1 that ran alongside |
 | [WORK-2026-10-11-14.md](WORK-2026-10-11-14.md) | 11 to 14 Oct 2026 | 0.2.9: the gate, the integration, picker and writer rounds |
 | [WORK-2026-10-05-09.md](WORK-2026-10-05-09.md) | 5 to 9 Oct 2026 | rounds 11 to 24, the laptop sittings, the beta page and the home page |
@@ -26,6 +26,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 ## Every section, by file
 
 ### [WORK-2026-10-25.md](WORK-2026-10-25.md)
+- mcp/WORK.md as it stood before A1 capped it (25 Oct, ddae546; its lines 7 to 51, moved unchanged by A1)
 - 0.3.1, wave 5: D5 release prep, the docs (25 Oct, builder; branch `docs/0.3.1-sweep` from integration/0.3.1 e8ccecc)
 - 0.3.1, wave 4: L6 the DAX function library, ported onto today's code (25 Oct, builder; branch `feat/0.3.1-dax-functions-2` from integration/0.3.1 e8ccecc)
 - 0.3.1, wave 4: K1 DataArcus as a plugin next to Microsoft's (25 Oct, builder; branch `feat/0.3.1-plugin-folder` from integration/0.3.1 11df69b)

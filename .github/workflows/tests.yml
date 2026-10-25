@@ -47,6 +47,10 @@ jobs:
       - name: Every MCP test script prints the result line CI's summary counts (B-198)
         run: node scripts/test-result-lines.mjs && node scripts/check-result-lines.mjs
 
+      # (A1, 0.3.1) what a new session reads first stays small: caps, job summaries, links and the task routes resolve
+      - name: The agent's startup pack within its caps; every link and task route resolves
+        run: node scripts/test-agent-memory.mjs && node scripts/check-agent-memory.mjs
+
       - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
         run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
 
