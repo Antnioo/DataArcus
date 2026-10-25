@@ -176,7 +176,7 @@ const scriptHtml = (s, writes, ar) => {
 // (T-5) a section's heading in Arabic, where the page knows it (the rest of the heading, a count, stays)
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
-  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
+  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'مقسمات طريقة العرض المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
   ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان']];
 // (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
 const headingOf = (h, ar) => { if (!ar) return h; const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); return x ? `${x[1]} · ${h}` : h; };

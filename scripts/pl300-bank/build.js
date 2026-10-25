@@ -157,7 +157,7 @@ const RENEWAL = {
       tags: ['Properties', 'Relationships', 'Cross-filter direction', 'Hierarchies', 'Quick measures', 'Field parameters', 'Many-to-many', 'Role-playing dimension', 'Date table', 'Star schema', 'Dimensions', 'Calculated tables', 'Calculated columns'] },
     { k: 'time', en: 'Use DAX time intelligence functions in semantic models', ar: 'دوال الذكاء الزمني في DAX', learn: M + 'dax-power-bi-time-intelligence/',
       tags: ['Time intelligence', 'Semi-additive'] },
-    { k: 'filter', en: 'Modify DAX filter context in semantic models', ar: 'تعديل سياق الفلترة في DAX', learn: M + 'dax-power-bi-modify-filter/',
+    { k: 'filter', en: 'Modify DAX filter context in semantic models', ar: 'تعديل سياق التصفية في DAX', learn: M + 'dax-power-bi-modify-filter/',
       tags: ['CALCULATE', 'Filter functions', 'Iterators', 'Calculated column vs measure', 'Measures', 'Calculation groups'] },
     { k: 'perf', en: 'Optimize a model for performance in Power BI', ar: 'تحسين أداء النموذج في Power BI', learn: M + 'optimize-model-power-bi/',
       tags: ['Reduce data', 'Performance Analyzer', 'Storage mode', 'Aggregation', 'DAX query view', 'Variables', 'Composite model'] },

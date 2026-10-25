@@ -105,7 +105,7 @@ try {
   // ---------- TC-2: drafts from the fixed list, the writer's own Arabic ----------
   {
     const ph = WORDS.phrases || {}, by = (k, text) => T0.find((t) => t.kind === k && t.text === text);
-    const want = [['page', 'Executive summary', 'ملخص تنفيذي'], ['page', 'Details', 'التفاصيل'], ['page', 'Tooltip', 'تلميح'], ['button', '\u00a0\u00a0Reset filters', '\u00a0\u00a0إعادة ضبط الفلاتر'],
+    const want = [['page', 'Executive summary', 'ملخص تنفيذي'], ['page', 'Details', 'التفاصيل'], ['page', 'Tooltip', 'تلميح الأدوات'], ['button', '\u00a0\u00a0Reset filters', '\u00a0\u00a0إعادة ضبط الفلاتر'],
       ['blankText', 'No data', 'لا توجد بيانات'], ['measureText', 'No data for this selection', 'لا توجد بيانات لهذا الاختيار'], ['buttonTooltip', 'Clear the filters on this page', 'إعادة ضبط الفلاتر'],
       ['bookmark', 'Reset filters · Details', 'إعادة ضبط الفلاتر · التفاصيل'], ['field', 'Year', 'السنة']];
     const bad = want.filter(([k, t, a]) => !by(k, t) || by(k, t).draftArabic !== a).map(([k, t, a]) => `${k} "${t}": ${by(k, t) ? JSON.stringify(by(k, t).draftArabic) : 'not listed'} (want ${a})`);

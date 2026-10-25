@@ -65,7 +65,7 @@ function walkVisual(o, change) {
 }
 const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
 // o.all (F1, the owner's decision of 20 Oct: the held-back line): EVERY mixed Arabic/Latin text isolated (isolateLatin),
-// a name kept in English inside an Arabic text too, page and tooltip tab names included (the proof: «تلميح · Month Short»
+// a name kept in English inside an Arabic text too, page and tooltip tab names included (the proof: the Arabic tooltip tab "Tooltip · Month Short"
 // read with the English first)
 export function isolateFiles(files, names, o) {
   // names: the approved Arabic names with a Latin run (the others need nothing), longest first
