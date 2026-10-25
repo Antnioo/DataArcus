@@ -18,6 +18,9 @@ package's manifest; this file says what is in it.
   called suspicious because of their length.
 - **Fixes only through approval:** the assistant is told never to edit a report's or a model's files itself; for a
   DataArcus report the checker names, for each finding, the DataArcus request that fixes it through a plan you approve.
+- **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws each Arabic page as
+  it will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
+  English page beside its Arabic page, with the language buttons. A title that won't fit its box is marked to check.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside

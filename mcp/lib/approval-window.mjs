@@ -64,7 +64,8 @@ ul{margin:0;padding-inline-start:20px}li{overflow-wrap:anywhere}.actions{display
 button{font:inherit;font-weight:600;padding:10px 22px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 button.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}.note{color:var(--soft);font-size:13px;margin-top:18px}.warn{color:var(--warn)}
 .done{font-size:18px;font-weight:600}.sw-i{display:inline-flex;align-items:center;gap:4px;margin:0 10px 4px 0;white-space:nowrap}.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
-.preview figure{margin:0 0 14px}.preview svg{display:block;width:100%;height:auto;border-radius:6px}.preview figcaption{color:var(--soft);font-size:13px;margin-top:6px}`;
+.preview figure{margin:0 0 14px}.preview svg{display:block;width:100%;height:auto;border-radius:6px}.preview figcaption{color:var(--soft);font-size:13px;margin-top:6px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:700px){.pair{grid-template-columns:1fr}}`;
 
 function page(title, body, ar) {
   return `<!doctype html><html lang="${ar ? 'ar" dir="rtl' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="same-origin"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
@@ -94,6 +95,9 @@ export function groupFiles(paths, own) {
 // says, in short, for the app's prompt (MCP elicitation): the files counted per group, and each colour the plan writes
 // other than the one approved. At most PROMPT_SUMMARY_CAP characters: groups past it are counted, never cut mid-word
 export const PROMPT_SUMMARY_CAP = 600;
+// (0.3.1 V1) the most pages a plan's preview draws on its approval page (for the EN-AR copy: page pairs); the rest are
+// counted under the pictures. Chosen, not measured: 12 pairs keep the page well under its 2 MB (C-3)
+export const PREVIEW_PAGES_MAX = 12;
 export function promptSummary(kind, data) {
   const d = data || {}, groups = summary(kind, d).files || [], lines = [];
   if (groups.length) {
@@ -115,13 +119,13 @@ export function promptSummary(kind, data) {
 const WORDS = {
   en: { ask: 'Approve: ', lead: 'DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.', approve: 'Approve', notNow: 'Not now',
     preview: 'What the report will look like', previewNote: 'A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads the files on your computer to check them, and never returns data values to Claude.',
-    page: 'Page', toCheck: 'to check', checked: 'Checked before writing', worth: 'Worth a look', checkNote: 'The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.',
+    page: 'Page', enPage: 'English page', arPage: 'Arabic page', toCheck: 'to check', notDrawn: (n, pairs) => `${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan above lists every page.`, checked: 'Checked before writing', worth: 'Worth a look', checkNote: 'The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.',
     files: 'Files that will be written', yours: 'The files you asked for:', all: (n) => `All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'About the script',
     roles: { report: 'the report: open it in Power BI Desktop', script: 'the script: see "About the script" below', theme: 'the theme file: in Power BI Desktop, View > Themes > Browse for themes' },
     plan: (id) => `Plan ${id}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.` },
   ar: { ask: 'موافقة: ', lead: 'يطلب DataArcus موافقتك قبل أن يكتب أي شيء. لم يُكتب أي شيء بعد. راجع الخطة، ثم وافق عليها أو لا.', approve: 'موافقة', notNow: 'ليس الآن',
     preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل عنصر مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
-    page: 'الصفحة', toCheck: 'للفحص', checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
+    page: 'الصفحة', enPage: 'الصفحة الإنجليزية', arPage: 'الصفحة العربية', toCheck: 'للفحص', notDrawn: (n, pairs) => `لم تُرسم هنا ${n} ${pairs ? 'من أزواج الصفحات' : 'من الصفحات'} أخرى (ترسم المعاينة ${PREVIEW_PAGES_MAX} على الأكثر) · ${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan lists every page.`, checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
     files: 'الملفات التي ستُكتب', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
     // (T2: the page's title stayed English on an Arabic page) the titles per plan kind
@@ -182,9 +186,15 @@ function askPage(w) {
   // (T-7: the raw inputs folded) a section with fold is shown closed
   const sections = s.sections.filter((x) => x.rows.length).map((x) => (x.fold ? `<details><summary>${esc(headingOf(x.heading, ar))}</summary>${rows(x.rows, ar)}</details>` : `<h2>${esc(headingOf(x.heading, ar))}</h2>${rows(x.rows, ar)}`)).join('');
   // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
-  const pv = s.previews && s.previews.pages && s.previews.pages.length ? `<h2>${esc(W.preview)}</h2><div class="card preview">${s.previews.pages.map((p, i) => {
+  // (0.3.1 V1) the twin's pages too, and the copy's as pairs (its English page beside its Arabic page, one above the other
+  // on a narrow window); at most PREVIEW_PAGES_MAX pages (pairs) drawn, the rest counted
+  const fig = (p, label) => {
     const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
-    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">${esc(W.page)} ${i + 1}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} ${esc(W.toCheck)}: ${esc([...new Set(fl.map((f) => (Preview.WORDS[ar && Preview.WORDS.ar ? 'ar' : 'en'] || Preview.WORDS.en)[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; }).join('')}<p class="note">${esc(W.previewNote)}</p></div>` : '';
+    return `<figure>${Preview.render(p, { lang: s.previews.lang, width: 800 })}<figcaption dir="auto">${esc(label)}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} ${esc(W.toCheck)}: ${esc([...new Set(fl.map((f) => (Preview.WORDS[ar && Preview.WORDS.ar ? 'ar' : 'en'] || Preview.WORDS.en)[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; };
+  const PP = s.previews && Array.isArray(s.previews.pages) ? s.previews.pages : [], PR = s.previews && Array.isArray(s.previews.pairs) ? s.previews.pairs.filter((x) => Array.isArray(x) && PP[x[0]] && PP[x[1]]) : null;
+  const drawn = PR ? PR.slice(0, PREVIEW_PAGES_MAX).map(([e, a], i) => `<div class="pair">${fig(PP[e], `${W.enPage} ${i + 1}`)}${fig(PP[a], `${W.arPage} ${i + 1}`)}</div>`).join('')
+    : PP.slice(0, PREVIEW_PAGES_MAX).map((p, i) => fig(p, `${W.page} ${i + 1}`)).join(''), left = (PR || PP).length - PREVIEW_PAGES_MAX;
+  const pv = PP.length ? `<h2>${esc(W.preview)}</h2><div class="card preview">${drawn}${left > 0 ? `<p class="note">${esc(W.notDrawn(left, !!PR))}</p>` : ''}<p class="note">${esc(W.previewNote)}</p></div>` : '';
   // (0.3.0 step 2: the check of the planned pages, before Approve: what Power BI Desktop would show; every text escaped)
   // (T1, T-3: "3 more worth a look" with no list) each item worth a look, one plain line
   const ck = s.previews && s.previews.check, wl = ck && Array.isArray(ck.worthALookItems) ? ck.worthALookItems : [];
@@ -453,7 +463,7 @@ export function summary(kind, data) {
         { heading: `Language buttons (${btns.length})`, rows: btns.map((b) => [`${String(b.on)} page "${String(b.page)}"`, b.placed ? `«${String(b.text)}» at ${String(b.at || '')}, goes to its ${b.on === 'English' ? 'Arabic' : 'English'} page; ${b.phone ? 'on the phone layout too' : `not on the phone layout${b.why ? ': ' + String(b.why) : ''}`}` : `not placed: ${String(b.why || '')}`]) },
         { heading: `Slicers kept in sync (${sg.length})`, rows: sg.map((x) => [`Page "${String(x.page)}": slicer ${String(x.slicer)}`, `with its Arabic copy ${String(x.arabicSlicer || '')}, sync group "${String(x.group)}"${x.kept ? ` (${String(x.kept)})` : ''}`]) });
     }
-    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null, kind, lang: 'ar', scriptWhat: 'the Arabic calendar columns', titleKey: LG ? 'same' : 'twin' };
+    return { title: LG ? 'English and Arabic in one report' : 'Arabic twin of a report', sections, previews: d.preview && Array.isArray(d.preview.pages) && d.preview.pages.length ? d.preview : null, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Arabic calendar script', /\.tmdl$/i]]) : null, kind, lang: 'ar', scriptWhat: 'the Arabic calendar columns', titleKey: LG ? 'same' : 'twin' };
   }
   // (D6, the laptop proof of rc.2: the theme's page showed name, lang and path) the colours it writes, as swatches with
   // their hex, and the report they come from
