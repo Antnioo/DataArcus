@@ -27,7 +27,11 @@ const WEEKEND_CASES = {
   omn: [['2013-04-25', 'Thu', true], ['2013-05-02', 'Thu', false], ['2013-05-04', 'Sat', true], ['2026-10-04', 'Sun', false]],
   kwt: [['2007-08-30', 'Thu', true], ['2007-09-01', 'Sat', true], ['2007-09-06', 'Thu', false], ['2026-10-03', 'Sat', true]],
   bhr: [['2006-08-31', 'Thu', true], ['2006-09-02', 'Sat', true], ['2006-09-07', 'Thu', false]],
-  qat: [['2003-07-31', 'Thu', true], ['2003-08-02', 'Sat', true], ['2003-08-07', 'Thu', false], ['2026-10-03', 'Sat', true]]
+  qat: [['2003-07-31', 'Thu', true], ['2003-08-02', 'Sat', true], ['2003-08-07', 'Thu', false], ['2026-10-03', 'Sat', true]],
+  // (0.3.1 GC, the outside audit of 25 Oct: Sharjah's government rests Friday, Saturday and Sunday from 1 January 2022,
+  // Sharjah Executive Council, 9 Dec 2021; before it the weekend that change replaced, Friday and Saturday)
+  shj: [['2021-12-26', 'Sun', false], ['2021-12-30', 'Thu', false], ['2021-12-31', 'Fri', true], ['2022-01-01', 'Sat', true], ['2022-01-02', 'Sun', true],
+    ['2022-01-06', 'Thu', false], ['2022-01-07', 'Fri', true], ['2026-10-04', 'Sun', true], ['2026-10-05', 'Mon', false]]
 };
 
 // Runs one generated column expression of the subset the weekend columns use (IF, >=, DATE, WEEKDAY ... IN { }, NOT,
@@ -206,10 +210,13 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(rows) === JSON.stringify(want), `uae preview weekends: ${JSON.stringify(rows)}`);
     // every country is in the list, with its name in both languages
     const opts = await v.pg.$$eval('#cgWeekend option', (os) => os.map((o) => o.value));
-    check(['uae', 'ksa', 'kwt', 'qat', 'bhr', 'omn'].every((c) => opts.includes(c)), `weekend list: ${opts.join(', ')}`);
-    // the quick setups are unchanged: UAE still picks the fixed Saturday-Sunday weekend
+    check(['uae', 'ksa', 'kwt', 'qat', 'bhr', 'omn', 'shj'].every((c) => opts.includes(c)), `weekend list: ${opts.join(', ')}`);
+    // (changed on purpose, 0.3.1 GC: the outside audit of 25 Oct found the quick setups' fixed weekends wrong before each
+    // change; the UAE's quick setup picks the UAE's dated weekend now, Saudi Arabia's its own, so 2021 keeps Friday)
     await v.pg.click('[data-quick="uae"]');
-    check(await v.pg.$eval('#cgWeekend', (e) => e.value) === 'sat-sun', 'quick setup UAE no longer picks Saturday + Sunday');
+    check(await v.pg.$eval('#cgWeekend', (e) => e.value) === 'uae', 'quick setup UAE does not pick the UAE\'s dated weekend');
+    await v.pg.click('[data-quick="ksa"]');
+    check(await v.pg.$eval('#cgWeekend', (e) => e.value) === 'ksa', 'quick setup Saudi Arabia does not pick Saudi Arabia\'s dated weekend');
     await done(v, 'uae preview');
     const a = await open(CG, cgSaved({ weekend: 'ksa' }), 'ar');
     const names = await a.pg.$$eval('#cgWeekend option', (os) => os.map((o) => o.textContent));
@@ -303,11 +310,14 @@ export default async function ({ browser, url }) {
     await v.pg.goto(`${url}${CG}?lang=en`, { waitUntil: 'networkidle' });
     const labels = await v.pg.evaluate(() => Object.fromEntries([...document.querySelectorAll('#cgWeekend option')].map((o) => [o.value, o.textContent.trim()])));
     await v.ctx.close();
-    for (const c of Object.keys(G.weekends)) {
+    // (0.3.1 GC: the weekend table holds Sharjah's government rule too, which is not a country: the check runs on the
+    // countries, and Sharjah's option is the one gulf-health names for it)
+    for (const c of Object.keys(G.weekends).filter((k) => !GH || GH.COUNTRIES[k])) {
       const cg = await read(browser, url, CG, 'dataarcus-calendar-generator', { weekend: c, start: '2000-01-01', end: '2030-12-31' });
       const n = GH ? days(cg.dax, c) : 'no gulf-health.js';
       if (n !== 0 || !GH || GH.COUNTRIES[c].weekendOption !== labels[c]) off.push(`${c}: ${n} days, option "${GH && GH.COUNTRIES[c].weekendOption}" / page "${labels[c]}"`);
     }
+    check(!!GH && !!GH.WEEKEND_RULES && !!GH.WEEKEND_RULES.shj && GH.WEEKEND_RULES.shj.weekendOption === labels.shj, `Sharjah's weekend option: gulf-health "${GH && GH.WEEKEND_RULES && GH.WEEKEND_RULES.shj && GH.WEEKEND_RULES.shj.weekendOption}" / page "${labels.shj}"`);
     check(!off.length, `gulf-health and the generator disagree: ${off.join('; ')}`);
     const other = model.replace(/"Is Weekend", .*,\n/, '"Is Weekend", WEEKDAY ( [Date], 2 ) > 5,\n');
     check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
@@ -422,6 +432,67 @@ export default async function ({ browser, url }) {
     const mo = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, MODEL_CG)) : null;
     // 36 -> 39 (owner 2026-10-06): the test model's options have the three Arabic name columns on
     check(!!mo && mo.dax + '\n' === model && mo.columns.length === 51, /* 39 -> 40: round 18, S3 (the owner's yes): Day Short; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins (quarters, short names, fiscal, flags) */ `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
+  }
+
+  // ---------- 9. The outside audit of 25 Oct (0.3.1 GC, mcp/work/GC.md) ----------
+  {
+    // Oman's own announcements where they differ from the UAE's: the audit's 11, written out by hand (each one day after
+    // the UAE's), each in DATES-SOURCES.md's Oman table with its page
+    const OMAN = [[1440, 'ramadan', '2019-05-07'], [1440, 'fitr', '2019-06-05'], [1440, 'adha', '2019-08-12'], [1441, 'ramadan', '2020-04-25'], [1442, 'ramadan', '2021-04-14'],
+      [1443, 'ramadan', '2022-04-03'], [1444, 'fitr', '2023-04-22'], [1445, 'ramadan', '2024-03-12'], [1445, 'adha', '2024-06-17'], [1446, 'fitr', '2025-03-31'], [1447, 'ramadan', '2026-02-19']];
+    const own = (G.own && G.own.omn) || [], sources = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/DATES-SOURCES.md'), 'utf8');
+    const listed = own.flatMap((e) => ['ramadan', 'fitr', 'adha'].filter((k) => e[k]).map((k) => [e.hijriYear, k, e[k]]));
+    check(JSON.stringify(listed) === JSON.stringify(OMAN), `Oman's own dates in gulf-dates.js: ${JSON.stringify(listed)}`);
+    const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], omanPart = sources.slice(sources.indexOf('## Ramadan and Eid in Oman'));
+    for (const [y, k, d] of OMAN) {
+      const uae = (G.events.find((e) => e.hijriYear === y) || {})[k];
+      check(uae && T(d) - T(uae) === DAY, `Oman ${y} ${k}: ${d} is not one day after the UAE's ${uae}`);
+      const line = omanPart.split('\n').find((l) => l.includes(`${WD[new Date(T(d)).getUTCDay()]} ${d}`));
+      check(sources.includes('## Ramadan and Eid in Oman') && !!line && /\]\(https:\/\/[^)]+\)/.test(line), `Oman ${y} ${k} ${d}: no row with its page in DATES-SOURCES.md's Oman table`);
+    }
+    // an Oman calendar with the announced dates on: these month starts, every month 29 or 30 days; Saudi Arabia's and
+    // the fixed weekends' calendars keep the UAE's dates
+    const Cal = require('../../assets/js/calendar-generator.js');
+    const st = (o) => Object.assign({}, Cal.DEFAULTS, { start: '2018-01-01', end: '2030-12-31', observed: true }, o);
+    const om = monthStarts(Cal.build(st({ weekend: 'omn' })).dax), ua = monthStarts(Cal.build(st({ weekend: 'uae' })).dax);
+    const at = (starts, y, m) => { const r = starts.find((x) => x.y === y && x.m === m); return r ? iso(r.t) : null; };
+    const WANT = [[1440, 9, '2019-05-07'], [1440, 10, '2019-06-05'], [1440, 12, '2019-08-03'], [1441, 9, '2020-04-25'], [1442, 9, '2021-04-14'], [1443, 9, '2022-04-03'],
+      [1444, 10, '2023-04-22'], [1445, 9, '2024-03-12'], [1445, 12, '2024-06-08'], [1446, 10, '2025-03-31'], [1447, 9, '2026-02-19']];
+    const wrong = WANT.filter(([y, m, d]) => at(om, y, m) !== d).map(([y, m, d]) => `${y}/${m} ${at(om, y, m)} (want ${d})`);
+    check(!wrong.length, `Oman calendar month starts: ${wrong.join('; ')}`);
+    const moved = om.filter((x, i) => !ua[i] || x.t !== ua[i].t || x.y !== ua[i].y || x.m !== ua[i].m).map((x) => `${x.y}/${x.m}`);
+    check(om.length === ua.length && moved.length === WANT.length, `Oman calendar: ${moved.length} month starts differ from the UAE's (want ${WANT.length}): ${moved.join(', ')}`);
+    for (let i = 1; i < om.length; i++) { const len = (om[i].t - om[i - 1].t) / DAY; if (![29, 30].includes(len)) { check(false, `Oman calendar: ${om[i - 1].y}/${om[i - 1].m} lasts ${len} days`); break; } }
+    const omDax = Cal.build(st({ weekend: 'omn' })).dax;
+    check(/-- Hijri month starts: .*Oman/.test(omDax) && / · Ramadan and Eid as announced in Oman/.test(omDax), `Oman calendar: the DAX does not say its dates are Oman's: ${omDax.split('\n').slice(1, 3).join(' | ')}`);
+    for (const w of ['ksa', 'qat', 'kwt', 'bhr', 'shj', 'sat-sun', 'fri-sat']) check(JSON.stringify(monthStarts(Cal.build(st({ weekend: w })).dax)) === JSON.stringify(ua), `${w} calendar: its dates are not the UAE's`);
+    // the page writes the same Oman calendar, and says whose dates they are and what the weekend flags don't know
+    for (const lang of ['en', 'ar']) {
+      const v = await open(CG, cgSaved({ weekend: 'omn', observed: true, start: '2019-01-01', end: '2019-12-31' }), lang);
+      const r = await v.pg.evaluate(() => ({ dax: document.getElementById('dax').textContent, chips: document.getElementById('ramadan').textContent,
+        obs: (document.querySelector('#cgObserved + span') || {}).textContent || '', wk: (document.getElementById('cgWeekendNote') || {}).textContent || '' }));
+      check(JSON.stringify(monthStarts(r.dax)) === JSON.stringify(monthStarts(Cal.build(Object.assign({}, Cal.DEFAULTS, { weekend: 'omn', observed: true, start: '2019-01-01', end: '2019-12-31', lang: r.dax.includes('"يناير"') && !r.dax.includes('"January"') ? 'ar' : 'en' })).dax)),
+        `Oman page ${lang}: the page's month starts are not the shared generator's`);
+      if (lang === 'en') {
+        check(/Ramadan 1440: 7 May 2019 to 4 Jun 2019/.test(r.chips), `Oman page: the Ramadan list shows ${r.chips.slice(0, 80)}`);
+        check(/UAE/.test(r.obs) && /Oman/.test(r.obs) && /Qatar, Kuwait and Bahrain/.test(r.obs) && /a day/.test(r.obs), `announced dates note: does not say whose dates they are: ${r.obs}`);
+        check(/public holidays/.test(r.wk) && /half day|noon/.test(r.wk) && /employer/.test(r.wk), `working-day note: ${r.wk || 'missing'}`);
+      } else {
+        check(/الإمارات/.test(r.obs) && /عُمان/.test(r.obs) && /قطر والكويت والبحرين/.test(r.obs), `announced dates note in Arabic: ${r.obs}`);
+        check(/العطل الرسمية/.test(r.wk) && /صاحب العمل/.test(r.wk), `working-day note in Arabic: ${r.wk || 'missing'}`);
+      }
+      await done(v, `Oman page ${lang}`);
+    }
+    // provenance: one date, in gulf-dates.js; the sources file names it there and has no date of its own
+    const gd = fs.readFileSync(path.join(ROOT, 'assets/js/gulf-dates.js'), 'utf8');
+    check(!/Checked on \d{4}-\d{2}-\d{2}/.test(sources) && /`checked`/.test(sources), 'DATES-SOURCES.md keeps its own "Checked on" date beside gulf-dates.js\'s `checked`');
+    check(!/the last date checked against an official announcement/.test(gd) && /last announced date/.test(gd), 'gulf-dates.js: `checked` is still described as the last date checked');
+    check(!/can move them by a day/.test(gd) && /not a limit|no limit|not a guarantee/.test(gd), 'gulf-dates.js: the estimates\' one-day gap is said as a guarantee');
+    // the three Eid al-Adha dates without a dated announcement are said so
+    for (const y of [1439, 1440, 1445]) {
+      const row = sources.split('\n').find((l) => l.startsWith(`| ${y} |`)) || '';
+      check(/Eid al-Adha:[^|]*celebrat/i.test(row), `DATES-SOURCES.md ${y}: the Eid al-Adha source is not said as the day's celebrations: ${row.slice(0, 120)}`);
+    }
   }
 
   return { checks, problems };

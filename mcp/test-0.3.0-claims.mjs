@@ -189,5 +189,43 @@ const promises = unrel.replace(/\s+/g, ' ').split(/(?<=[.:])\s+/).filter((s) => 
 check(!promises.length, `D5-W. the CHANGELOG's [Unreleased] promises something for the matrix: "${promises[0] || ''}"`);
 check(!/\bfree\b/i.test((unrel.match(/\*\*[^*]+\*\*/g) || []).join(' ')), 'D5-W. a bold lead in the CHANGELOG\'s [Unreleased] says "free"');
 
+// GC (0.3.1 wave 6, 25 Oct; mcp/work/GC.md): the outside audit of the Gulf calendar's public claims. Each false or
+// unsupported sentence it found is banned from the files that carried it (EN and AR), and each new sentence is required
+const GC = { article: flat('../articles/article-gulf-calendar-power-bi.html'), articleAr: flat('../ar/articles/article-gulf-calendar-power-bi.html'), articleTr: flat('../assets/js/translations/article-gulf-calendar-power-bi.js'),
+  page: flat('../tools/dax-calendar-table-generator.html'), pageAr: flat('../ar/tools/dax-calendar-table-generator.html'), pageTr: flat('../assets/js/translations/calendar-generator.js'),
+  mcp: flat('./lib/gulf-calendar.mjs'), health: flat('../assets/js/gulf-health.js'), questions: flat('./lib/gulf-date-questions.mjs') };
+const GC_BANNED = [
+  [/pick the fixed weekend that matches it|فاختر العطلة الثابتة المطابقة لها/, 'GC-1a. "pick the fixed weekend that matches it" (false for Sharjah, Friday to Sunday)'],
+  [/updates by itself every day|يتحدث تلقائيًا كل يوم|never need updating|لا تحتاج أي تحديث/, 'GC-1b. the relative offsets "update every day" / "never need updating" (TODAY moves only on a refresh)'],
+  [/it shows in check_model_health's gulfCalendar section/, 'GC-1c. "it shows in check_model_health\'s gulfCalendar section" (the check has no other country\'s dates)'],
+  [/refreshes instantly|ويتحدث فورًا/, 'GC-8. "refreshes instantly" (not measured)'],
+  [/We checked every UAE announcement|راجعنا كل إعلانات الإمارات/, 'GC-7. "we checked every UAE announcement" (3 Eid al-Adha dates have no dated announcement)'],
+  [/in (?:about )?a minute|في دقيقة/, 'GC-8. "in a minute" (not measured)'],
+  [/Friday before Monday|والجمعة قبل الاثنين/, 'GC-8. "Friday before Monday" (in Arabic الاثنين sorts first)'],
+  [/the right weekend|the Right Weekend|العطلة الصحيحة/, 'GC-8. "the right weekend" (the flag knows the weekend only)'],
+  [/gets all of it right|يضبط كل ذلك/, 'GC-8. "gets all of it right"'],
+  [/A complete Power BI date table|جدول تواريخ Power BI كامل/, 'GC-8. "a complete date table"'],
+  [/changes everything in your numbers|يغيّر كل شيء في أرقامك/, 'GC-8. "Ramadan changes everything in your numbers"'],
+  [/No announced dates are sourced for ' \+ C\.name/, 'GC-2. gulf-health says no dates are sourced for any country but the UAE and Saudi Arabia (Oman\'s are)']
+];
+for (const [f, t] of Object.entries(GC)) for (const [re, what] of GC_BANNED) { const m = re.exec(t); check(!m, `${what}: ${f}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); }
+for (const [f, t] of Object.entries(GC)) for (const [re, what] of BANNED.slice(0, 1).concat([BANNED[3]])) { const m = re.exec(t); check(!m, `GC-W. ${f}: ${what}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`); }
+// the new sentences, in both languages where the public reads them
+for (const [k, t] of [['article', GC.article], ['articleTr', GC.articleTr]]) {
+  check(/Sharjah government/.test(t) && /Is Weekend and Is Working Day columns' DAX/.test(t), `GC-1a. ${k}: Sharjah's own option and how to set another weekend are not said`);
+  check(/once DataArcus has added it/.test(t), `GC-6. ${k}: "generate again after an announcement" does not say it helps once DataArcus's table has the date`);
+  check(/24 come from a dated announcement/.test(t) && /confirmed by the official celebrations/.test(t), `GC-7. ${k}: the 24 dated announcements and the 3 Eid al-Adha dates are not said`);
+  check(/Oman's own/.test(t) && /Qatar, Kuwait and Bahrain/.test(t), `GC-2. ${k}: whose announced dates they are (the UAE's, Oman's own) is not said`);
+  check(/public holidays/.test(t), `GC-5. ${k}: the working-day flag's scope is not said`);
+}
+for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', GC.articleTr]]) {
+  check(/حكومة الشارقة/.test(t) && /Is Weekend وIs Working Day/.test(t), `GC-1a. ${k}: Sharjah's option and another weekend, in Arabic`);
+  check(/بعد أن تضيفه DataArcus/.test(t) && /24 منها من إعلان مؤرَّخ/.test(t) && /مواعيد عُمان نفسها/.test(t) && /قطر والكويت والبحرين/.test(t) && /العطل الرسمية/.test(t) && /والأربعاء قبل الثلاثاء/.test(t),
+    `GC-1..8. ${k}: a new Arabic sentence is missing (DataArcus adds the date, 24 dated, Oman's own, Qatar Kuwait Bahrain, public holidays, the sort example)`);
+}
+for (const [k, t] of [['page', GC.page], ['pageTr', GC.pageTr]]) check(/move on with each refresh/.test(t) && /Sharjah government/.test(t) && /public holidays/.test(t) && /Oman's own/.test(t), `GC-1b/3/5/2. ${k}: the refresh, Sharjah, the working-day scope or Oman's own dates are not said`);
+for (const [k, t] of [['pageAr', GC.pageAr], ['pageTr', GC.pageTr]]) check(/تتقدم مع كل تحديث/.test(t) && /حكومة الشارقة/.test(t) && /العطل الرسمية/.test(t) && /تواريخ عُمان نفسها/.test(t), `GC-1b/3/5/2. ${k}: the same in Arabic`);
+check(/only as a note/.test(GC.mcp) && /Oman's own/.test(GC.mcp), 'GC-1c. add_gulf_calendar\'s note does not say what the check does for another country (only as a note) and Oman\'s own dates');
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);
