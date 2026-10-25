@@ -477,7 +477,7 @@
   "_allow": "Where a variant may stay, each with why: a path pattern (whole files) or a path plus a text the line contains.",
   "allow": [
     {
-      "path": "^(articles/|ar/articles/|assets/js/translations/article-)(?!power-bi-report-ready-for-arabic\\.)",
+      "path": "^(articles/|ar/articles/|assets/js/translations/article-)(?!(?:article-)?power-bi-report-ready-for-arabic\\.)",
       "why": "Blog articles: published text, reported in mcp/work/E.md; only a clear error is changed. The Arabic-readiness article (W, 25 Oct) is new and checked like a page."
     },
     {
