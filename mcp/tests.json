@@ -84,6 +84,7 @@
     { "file": "test-0.3.1-sample-project.mjs", "area": "report", "purpose": "the sample project for a new user with no model" },
     { "file": "test-skill-packaging.mjs", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "area": "report", "purpose": "the DAX function library as one TMDL script" },
+    { "file": "test-0.3.1-validator-gap.mjs", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
     { "file": "test-0.3.1-mutation.mjs", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],

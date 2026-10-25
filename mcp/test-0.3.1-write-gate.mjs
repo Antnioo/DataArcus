@@ -74,7 +74,7 @@ const LIST = {
     'fs.renameSync': { n: 1, why: 'kept as REAL.renameSync, not a call' },
     'fs.unlinkSync': { n: 1, why: 'kept as REAL.unlinkSync, not a call' },
     'fs.rmdirSync': { n: 1, why: 'kept as REAL.rmdirSync, not a call' },
-    'fs.openSync': { n: 1, why: 'kept as REAL.openSync, not a call' },
+    'fs.openSync': { n: 2, why: 'kept as REAL.openSync, not a call; and sameBytes (0.3.1 RB): read only, O_RDONLY | O_NOFOLLOW, to hash a file before the clean-up removes it' },
     'io.openSync': { n: 1, why: `createFile: a new file with 'wx' (never over anything), for writeTree and writeFileNew: ${PLAN}` },
     'io.writeFileSync': { n: 1, why: `createFile: the data through the handle it just created: ${PLAN}` },
     'io.mkdirSync': { n: 1, why: `makeDir: one new folder (never recursive), for writeTree and freeFile: ${PLAN}` },

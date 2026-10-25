@@ -73,6 +73,10 @@ package's manifest; this file says what is in it.
   option on the Calendar Generator and in add_gulf_calendar; the UAE and Saudi Arabia quick setups keep each country's
   weekend before its change; the pages say the announced dates are the UAE's, that Oman announced 11 of them a day
   later, that the working-day flag knows no holidays, and that the relative offsets move on with each refresh.
+- **A write that fails half-way never removes another program's file:** DataArcus checks a file's content against what
+  it wrote before it cleans up, even when another program put a file of the same size in the same place.
+- **check_report says what it checked:** it no longer says a report "opens in Power BI Desktop" or "is not broken"; it
+  says what it found, which checks ran, and that Power BI Desktop itself was not opened.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

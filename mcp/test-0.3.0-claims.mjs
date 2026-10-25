@@ -118,6 +118,15 @@ for (const f of SPEAK) {
   for (const [re, what, skip] of BANNED) { if (skip && f.includes('SKILL')) continue; const m = re.exec(t); check(!m, `A2-W. ${f}: ${what}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`); }
 }
 
+// (0.3.1 RB, item 5: an outside architecture review) check_report never opens Power BI Desktop: it runs Microsoft's
+// validator offline, the schemas and DataArcus's measured rules. No answer it builds says the report opens in Desktop or
+// is not broken as the result of a check (a measured Desktop fact, like a kind's own sentence, is not such a claim).
+{
+  const CHECK_SAID = ['./lib/check-report.mjs', './lib/arabic-lens.mjs', './lib/agent-text.mjs', './tools/check_report.mjs', './TOOLS.md'];
+  const OLD = [/the report opens in Power BI Desktop/i, /it is not broken/i, /passes the checks that ran/i, /; Desktop opens the report with/i, /a report Desktop opens is not broken/i, /Nothing found that breaks the report/i];
+  for (const f of CHECK_SAID) { const t = flat(f); for (const re of OLD) { const m = re.exec(t); check(!m, `RB-5. ${f} says, as a check's result, what only Power BI Desktop can show: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); } }
+}
+
 // W (0.3.1 wave 3, 25 Oct; mcp/work/W.md): the article "Is your Power BI report ready for Arabic?" in English, its Arabic
 // copy and its translations: the forbidden words as above, then each public sentence the article must keep true (a
 // missing file fails its checks)

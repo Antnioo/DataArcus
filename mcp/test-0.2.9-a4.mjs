@@ -86,8 +86,10 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
       () => `A4-3: the validator not run: no "opens" sentence: ${said(n0, { validator: { ran: false, mode: 'not run' }, unread: 0, desktopOpensErrors: 0 })}`);
     chk(() => !/opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })) && /2 files?/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })),
       () => `A4-3: files not read: no "opens" sentence, the count said: ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })}`);
-    chk(() => /opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })),
-      () => `A4-3: validator ran, every file read, nothing found: "opens": ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })}`);
+    // (0.3.1 RB, item 5: moved on purpose: check_report never opens Desktop, so it says what ran and that Desktop was not
+    // opened, never "the report opens in Power BI Desktop")
+    chk(() => /^Nothing found that Power BI Desktop is known to refuse \(Microsoft's validator[^)]*ran; Power BI Desktop itself was not opened\)/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })) && !/opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })),
+      () => `A4-3: validator ran, every file read, nothing found: what ran, and Desktop not opened: ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })}`);
     chk(() => /Its 1 error\b/.test(said({ desktopOpens: 1, canBreak: 0, dataarcusRule: 1 }, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 1 })),
       () => `A4-3: only the desktopOpens errors are counted: ${said({ desktopOpens: 1, canBreak: 0, dataarcusRule: 1 }, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 1 })}`);
     // end to end: an unreadable page and only the size rules; then a missing $schema and a 70pt button text

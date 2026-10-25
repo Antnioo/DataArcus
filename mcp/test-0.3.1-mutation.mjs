@@ -1,6 +1,6 @@
 // T1 (0.3.1, wave 6; the owner, 25 Oct, after an outside review: "prioritise confidence in critical invariants over
 // more checks"): a mutation suite. It proves the existing tests catch a broken invariant. For each mutant: a COPY of
-// mcp/ (its node_modules linked), assets/js, assets/data and scripts/tests in a temp folder, one small change to one source file of
+// mcp/ (its node_modules linked), assets/js, assets/data, scripts/tests and scripts/gulf-calendar in a temp folder, one small change to one source file of
 // the copy (it must match exactly once and still parse), then the existing suites that guard it, run in the copy; at
 // least one must fail ("killed"). The repo's own files are never edited. Plan, mutants and results: mcp/work/T1.md.
 // Why a copied tree: the suites find the server and lib/ from their own folder (import.meta.url), so a copy runs them
@@ -67,7 +67,8 @@ const MUTANTS = [
   { id: 'W-new-norollback', file: WI, edits: [['    const { ours, foreign } = rollBack(made);\n    dirs.forEach', '    const { ours, foreign } = { ours: [], foreign: [] };\n    dirs.forEach']], guards: ['test-partial-writes.mjs', 'test-0.3.0-write-safety.mjs', 'test-0.3.0-answers-safety.mjs'] },
   { id: 'W-identity', file: WI, edits: [['if (!e.id || st.dev !== e.id.dev || st.ino !== e.id.ino || st.isSymbolicLink()', 'if (st.isSymbolicLink()']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-via', file: WI, edits: [['  for (const v of e.via || []) {', '  for (const v of []) {']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
-  { id: 'W-size', file: WI, edits: [[' || (e.size != null && st.size !== e.size)) return', ') return']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
+  { id: 'W-size', equivalent: "since RB (0.3.1) a file is removed only while its content has the sha256 of the bytes this call wrote, read through a handle whose size is compared too: a file of another size never passes, so dropping this size check changes nothing (S2c still pins the behaviour)", file: WI, edits: [[' || (e.size != null && st.size !== e.size)) return', ') return']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
+  { id: 'W-hash', file: WI, edits: [["  if (!e.dir && !sameBytes(e)) return 'changed';", "  if (false) return 'changed';"]], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-root', file: WI, edits: [['  const root = rootReal(); if (root && !within(', '  const root = null; if (root && !within(']], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-tree-real', file: FI, edits: [['  real(dir);\n  tops.forEach((t) => real(path.join(dir, t)));\n', '']], guards: ['test-0.3.0-write-safety.mjs', 'test-z.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
   { id: 'W-free-real', equivalent: "only a race reaches it: freeFile's folder was checked by inside() before its mkdirs and every folder made is this call's own; a link put there in between needs another program at that instant, which no test can time without a hook in product code", file: FI, edits: [['    real(dir);   // (still inside', '    // (still inside']], guards: ['test-0.3.0-write-safety.mjs', 'test-audit6.mjs', 'test-partial-writes.mjs'] },
@@ -87,13 +88,13 @@ const MUTANTS = [
   { id: 'S-shown', file: MO, edits: [['export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD;', 'export const shownName = (s, cap = 60) => {']], guards: ['test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-suspicious', file: MO, edits: [['readsLikeInstruction(t.name) ? { suspicious: true } : {}', '{}']], guards: ['test-0.2.9f.mjs', 'test-0.2.9d.mjs', 'test-audit6.mjs', 'test-audit-oct.mjs'] },
   { id: 'S-nameOut', file: 'mcp/lib/answer.mjs', edits: [['export const nameOut = (s) => (FORMAT.test(String(s)) ?', 'export const nameOut = (s) => (false ?']], guards: ['test-audit6.mjs', 'test-z.mjs', 'test-0.2.9d.mjs'] },
-  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs'] },
+  { id: 'V-rows', file: MO, edits: [['    hiddenColumns: t.columns.filter((c) => c.isHidden).length,', '    hiddenColumns: t.columns.filter((c) => c.isHidden).length, source: JSON.stringify((((modelOf(m.tmsl).tables || []).find((x) => x.name === t.name) || {}).partitions || []).map((x) => x.source || null)),']], guards: ['test-0.2.9d.mjs', 'test-0.3.0-large-model-caps.mjs', 'test-audit6.mjs', 'test-models/golden-baseline.mjs'] },
   { id: 'V-title', file: 'mcp/lib/redesign.mjs', edits: [['const shown = { visual: safeName(v.id),', 'const shown = { title: JSON.stringify(((v.json.visual || {}).visualContainerObjects || {}).title || null), visual: safeName(v.id),']], guards: ['test-0.3.0-approval-disclosure.mjs', 'test-0.3-redesign.mjs'] },
 
   // 5. check_report: "can break" versus a note
   { id: 'C-schema', file: CR, edits: [["  if (f.origin === 'schema') return 'canBreak';", "  if (f.origin === 'schema') return 'dataarcusRule';"]], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },
   { id: 'C-desktopOpens', file: CR, edits: [['  PBIR_THEME_FILE_NAME_MISMATCH: () => true,\n', '']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
-  { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
+  { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.3.1-validator-gap.mjs', 'test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
   { id: 'C-image', file: CR, edits: [["rule: 'IMAGE_MEASURE_PENDING', severity: 'note'", "rule: 'IMAGE_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-flip-cards.mjs', 'test-0.3.1-dax-functions.mjs'] },
   { id: 'C-icon', file: CR, edits: [["rule: 'ICON_MEASURE_PENDING', severity: 'note'", "rule: 'ICON_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-theme-icons.mjs', 'test-0.3.0-flip-cards.mjs'] },
   { id: 'C-dax', file: CR, edits: [["rule: 'DAX_MEASURE_PENDING', severity: 'note'", "rule: 'DAX_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.1-dax-functions.mjs'] },
@@ -126,7 +127,9 @@ function makeCopy(k) {
   fs.cpSync(path.join(REPO, 'mcp'), path.join(dst, 'mcp'), { recursive: true, filter: (src) => !SKIP_DIRS.has(path.basename(src)) });
   fs.symlinkSync(path.join(REPO, 'mcp', 'node_modules'), path.join(dst, 'mcp', 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
   for (const a of ['js', 'data']) fs.cpSync(path.join(REPO, 'assets', a), path.join(dst, 'assets', a), { recursive: true });
-  fs.cpSync(path.join(REPO, 'scripts', 'tests'), path.join(dst, 'scripts', 'tests'), { recursive: true });   // (the website's fixtures and report-check.mjs, which some suites read)
+  // (the website's fixtures and report-check.mjs, which some suites read; RB: the Gulf calendar's test model, which the
+  // golden baseline's task 11 reads: without it, its 6 differences in a copy, taken for load in T1)
+  for (const s of ['tests', 'gulf-calendar']) fs.cpSync(path.join(REPO, 'scripts', s), path.join(dst, 'scripts', s), { recursive: true });
   return dst;
 }
 // the suites run as npm test runs them, with none of this run's own settings
