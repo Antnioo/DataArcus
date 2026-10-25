@@ -294,5 +294,18 @@ for (const [k, t] of [['page', GC.page], ['pageAr', GC.pageAr], ['pageTr', GC.pa
   check(!/Measured in Power BI Desktop 2\.158|قسناه في Power BI Desktop 2\.158/.test(t) || /DESKTOP-TESTS\.md, "DAX FORMAT with Arabic locales"/.test(t), `GC2-10. ${k}: the FORMAT measurement does not name its DESKTOP-TESTS.md section`);
 }
 
+// (the owner, 25 Oct: "do what is more correct") the Is Eid al-Adha column keeps 10 to 13 Dhu al-Hijjah, the day of Eid
+// and the days of Tashreeq (haj.gov.sa: "days of Eid"); the article says the columns are the days of Eid, not a
+// country's public holidays (u.ae: the UAE's Eid al-Adha holiday is 10 to 12), so its two numbers do not contradict
+const HAJ = /haj\.gov\.sa\/(?:en|ar)\/Hajj\/Days-of-Al-Tashreeq/;
+for (const [k, t] of [['article', GC.article], ['articleTr', enHalf(GC.articleTr)]]) {
+  check(HAJ.test(t) && /the day of Eid and the three days of Tashreeq/.test(t), `Eid al-Adha 10-13: ${k}: the days of Tashreeq and their haj.gov.sa source are missing`);
+  check(/They mark the days of Eid, not a country's public holidays: the UAE's Eid al-Adha holiday, for example, is 10 to 12 Dhu al-Hijjah/.test(t), `Eid al-Adha 10-13: ${k}: "the days of Eid, not a country's public holidays" is missing`);
+}
+for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.articleTr)]]) {
+  check(HAJ.test(t) && /يوم العيد وأيام التشريق الثلاثة/.test(t), `Eid al-Adha 10-13: ${k}: the days of Tashreeq and their haj.gov.sa source are missing (AR)`);
+  check(/يحددان أيام العيد لا العطلات العامة في كل دولة/.test(t), `Eid al-Adha 10-13: ${k}: "the days of Eid, not a country's public holidays" is missing (AR)`);
+}
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);
