@@ -14,6 +14,8 @@ const problems = [], rows = [];
 const logs = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.log')).map((f) => ({ f, text: fs.readFileSync(path.join(dir, f), 'utf8').replace(/\r\n/g, '\n') })) : [];
 // a result line: "PASS  name  ...", as every test script prints at its end
 const results = (text) => text.split('\n').map((l) => /^(PASS|FAIL|SKIP)\s{2}(\S+)\s+(.*)$/.exec(l)).filter(Boolean).map(([, status, name, rest]) => ({ status, name, rest }));
+// the detail a failing script prints under its FAIL line ("      - ..."), its first 3 lines, for the annotation
+const detail = (text, name) => { const L = text.split('\n'), i = L.findIndex((l) => new RegExp('^FAIL\\s{2}' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s').test(l)); return i < 0 ? '' : L.slice(i + 1, i + 4).filter((l) => /^\s+- /.test(l)).map((l) => l.trim()).join(' | '); };
 const count = (rest) => { const m = /(\d+) checks/.exec(rest) || /(\d+) tasks/.exec(rest); return m ? +m[1] : null; };
 
 if (area === 'mcp') {
@@ -24,7 +26,7 @@ if (area === 'mcp') {
   let mcpChecks = 0, reports = 0, bad = 0;
   for (const s of shards.sort((a, b) => a.k - b.k)) {
     const res = results(s.text);
-    res.filter((r) => r.status === 'FAIL').forEach((r) => problems.push(`${s.f}: FAIL ${r.name} ${r.rest}`));
+    res.filter((r) => r.status === 'FAIL').forEach((r) => { const d = detail(s.text, r.name); problems.push(`${s.f}: FAIL ${r.name} ${r.rest}${d ? ': ' + d : ''}`); });
     if (s.k === 0) {
       // npm test's other scripts: one result line each, test.mjs's own line says SKIP
       const scripts = (JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/package.json'), 'utf8')).scripts.test.match(/\bnode \S+\.mjs/g) || []).length;
@@ -51,7 +53,7 @@ if (area === 'mcp') {
     if (!/^All \d+ passed/m.test(l.text)) problems.push(`${l.f}: no "All N passed" line`);
     for (const r of results(l.text)) {
       (seen[r.name] = seen[r.name] || []).push(l.f);
-      if (r.status !== 'PASS') problems.push(`${l.f}: ${r.status} ${r.name} ${r.rest}`);
+      if (r.status !== 'PASS') { const d = r.status === 'FAIL' ? detail(l.text, r.name) : ''; problems.push(`${l.f}: ${r.status} ${r.name} ${r.rest}${d ? ': ' + d : ''}`); }
       rows.push([r.name, count(r.rest), l.f]);
     }
   }
@@ -67,4 +69,6 @@ out.push(`${'total'.padEnd(30)} ${String(total).padStart(6)}`);
 console.log(out.join('\n'));
 if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### ${area}: checks per script\n\n\`\`\`\n${out.join('\n')}\n\`\`\`\n`);
 console.log(problems.length ? `\nFAIL  ${area}\n` + problems.map((p) => '      - ' + p).join('\n') : `\nPASS  ${area}  ${total} checks in all shards`);
+// (0.3.1) on GitHub, each problem is also an annotation: readable through the API when the logs are not
+if (process.env.GITHUB_ACTIONS) problems.slice(0, 10).forEach((p) => console.log(`::error title=${area}::${p.replace(/%/g, '%25').replace(/\r?\n/g, '%0A').slice(0, 900)}`));
 process.exit(problems.length ? 1 : 0);
