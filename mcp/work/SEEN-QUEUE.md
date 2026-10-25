@@ -399,7 +399,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A1-S1 | pills fall back to dropdown on large model | OBSOLETE | by design, said in plan `mcp/lib/approval-window.mjs:400` | informational, no action |
 | A1-S2 | Arabic twin without labels keeps English page names | OWNER | by design (D3, notTranslated) | laptop: twin without labels, check notTranslated lists every English page name |
 | A1-S3 | build made from 1e07ad5, rebuild after merge | OWNER | builds are not in the repo; release now 0.3.1 (`e165bdb`) | laptop: confirm the .mcpb in use is built from the current integration head |
-| A1-S4 | native copy and redesign keep a missing .platform missing | OPEN | `mcp/lib/native-copy.mjs:86`, `mcp/lib/redesign.mjs:297` only if present | write newPlatform (twin-copy.mjs:26) when absent, as twin-copy.mjs:243 · M · low · writer → **SQ2** |
+| A1-S4 | native copy and redesign keep a missing .platform missing | DONE ed7d53e | `mcp/lib/native-copy.mjs:86`, `mcp/lib/redesign.mjs:297` only if present | write newPlatform (twin-copy.mjs:26) when absent, as twin-copy.mjs:243 · M · low · writer → **SQ2** |
 
 ### A2
 
@@ -655,11 +655,11 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| J19-S1 | native copy panel axis unit English in Arabic report | OPEN | `mcp/lib/visual-meaning.mjs:559` always labels .en | use labels .ar when the report is Arabic (AR_DUR exists) · S · low · writer → **SQ2** |
+| J19-S1 | native copy panel axis unit English in Arabic report | DONE dc73503 | `mcp/lib/visual-meaning.mjs:559` always labels .en | use labels .ar when the report is Arabic (AR_DUR exists) · S · low · writer → **SQ2** |
 | J19-S2 | sharedAxes answers not kept in answers file | OWNER | `mcp/lib/report-fields.mjs:185` per plan only | decide with J18-S5: record confirmed pairs via answers file's approved write |
 | J19-S3 | packaging must carry axis-units, field-meaning, confirm-memory | OWNER | private packaging; literal requires checked `.github/workflows/tests.yml:48` | reviewer/owner: confirm the built .mcpb holds the three engines |
 | J19-S4 | twin and redesign copy user's visuals, secondary axis included | OBSOLETE | informational, no action |  |
-| J19-S5 | native copy panels each keep the visual's title | OPEN | `assets/js/visual-replace.js:137` title copied per panel | add the panel's unit to each panel title · S · low · writer → **SQ2** |
+| J19-S5 | native copy panels each keep the visual's title | DONE dc73503 | `assets/js/visual-replace.js:137` title copied per panel | add the panel's unit to each panel title · S · low · writer → **SQ2** |
 | J19-S6 | FSI/PDI around ISO code in axis title not seen in Desktop | OWNER | `assets/js/axis-units.js:108` isolate | laptop: Arabic report with AED axis title, check it reads right |
 
 ### K1
@@ -739,7 +739,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | L6-S1 | twin/bilingual Arabic half show DA pictures in English | OWNER | `mcp/WORK.md:28` open decision L6 Seen 1 | decide: a second, Arabic set of DA measures (a model script) |
-| L6-S2 | KPI card picture keeps Latin K/M/B in Arabic | OPEN | `mcp/lib/dax-functions.mjs:159,163` frontValue without units | pass Arabic units (flip-cards WORDS.ar.units) when lang ar, append .u · S · low · writer → **SQ2** |
+| L6-S2 | KPI card picture keeps Latin K/M/B in Arabic | DONE 486d97d | `mcp/lib/dax-functions.mjs:159,163` frontValue without units | pass Arabic units (flip-cards WORDS.ar.units) when lang ar, append .u · S · low · writer → **SQ2** |
 | L6-S3 | #82's Seen 2-8 still stand | DUPLICATE | restated as L6.md:319 items 2-8 | L6-S7..L6-S13 |
 | L6-S4 | daxFunctions with sample or redesignFrom ignored silently | OPEN | `mcp/tools/plan_layout.mjs:114` other list lacks daxFunctions; `:181` sample | add report options to the planProblems lists (redesign, sample) · S · low · writer → **SQ10** |
 | L6-S5 | Learn glossary calls UDFs a preview | OBSOLETE | external page; our texts guarded `mcp/test-0.3.1-dax-functions.mjs:263` |  |

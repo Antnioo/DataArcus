@@ -7,7 +7,7 @@
   Not SQ1's files (pbip-page, pbip-query, pbip-sizing). SEEN-QUEUE.md: my four Status cells only.
 - **Base:** `fix/0.3.1-sq2` from `origin/integration/0.3.1` (639c42b).
 - **Expected checks:** dax-functions 90 -> 92, shared-axes 33 -> 37, redesign 49 -> 50; every other suite unchanged.
-- **Resume:** see "Results" below (filled as each item lands).
+- **Resume:** done: all four DONE (486d97d, dc73503, ed7d53e); the reviewer reviews and merges. Laptop items below.
 
 ## Each item, confirmed on 639c42b (all four true)
 - **L6-S2** `cardDax` and `storyDax` take `frontValue(mo, mref).t` without units: the Arabic KPI card picture and the
@@ -44,3 +44,53 @@
 - dax-functions 92 checks, shared-axes 37, redesign 50; flip-cards 62, arabic-terms 85, every other suite as today.
 - Desktop: no new measurement; the texts written change (Arabic unit words, axis titles, panel titles): listed "For
   the laptop".
+
+## Results (each item before -> after)
+- **L6-S2 DONE 486d97d.** Before: the Arabic «إجمالي المبيعات» card and story title read `1.25M`. After: `1.25 مليون`
+  (`ألف`, `مليار`), the number in Western digits then E's word, from the flip cards' own helper: `frontValue(..., plain)`
+  and the one list `UNITS_AR` (flip-cards.mjs). English measures byte for byte as before. AR7 red -> green, EN8 guard.
+- **J19-S1 DONE dc73503.** Before: an Arabic page's panels titled their axes "AED", "%" (a duration "minutes"). After:
+  the page's language as check_report tells it (`filledLanguages`, one helper now shared with the Arabic lens): `⁨AED⁩`,
+  `⁨%⁩`, «دقائق». English pages unchanged. N4 red -> green, N5 guard.
+- **J19-S5 DONE dc73503.** Before: two panels, one title twice. After: "Sales and margin (AED)" / "(%)"; the same unit
+  twice: "Sales and cost (AED · 1/2)" / "(AED · 2/2)"; Arabic «المبيعات والهامش (⁨AED⁩)». A title from a measure, or no
+  title, is left as is. N6 red -> green.
+- **A1-S4 DONE ed7d53e.** Before: a report without `.platform` gave a native copy and a redesign without one (a
+  validator "can break"). After: both write the twin's `newPlatform` (Report, the copy's name, the plan's logical id,
+  inside the plan's digest), and the plan says it (`platform`). N7 and C11 red -> green.
+- Suites before -> after: report 24/24 green (dax-functions 90 -> 92, shared-axes 33 -> 37, redesign 49 -> 50, the rest
+  equal); arabic 9/9 green, equal counts; full run, test-arabic-terms, check-agent-memory: running at this push (the next push records them).
+- No `.min.js`, page, ?v= stamp or CSP change: `visual-replace.js` has no minified copy and no page loads it.
+
+## CHANGELOG line
+- Arabic reports: the DAX function library's KPI card and story title say thousands, millions and billions in Arabic;
+  a native copy's split charts title their axes in the page's language and each says its unit in its title; the native
+  copy and the redesign of a report without a .platform file get their own.
+
+## For the laptop (texts written changed; no size or place changed)
+1. An Arabic report with daxFunctions: the KPI card picture and story title show «1.25 مليون» right (the word is plain
+   Arabic inside the picture's data URI, as the Arabic title already is, which the L6 lab drew).
+2. An Arabic native copy with an amount and a % in one custom visual: the two axis titles (⁨AED⁩, ⁨%⁩) and the two
+   titles «... (⁨AED⁩)» read right (with J19-S6, FSI/PDI in an axis title not yet seen in Desktop).
+3. The native copy and the redesign of a report without `.platform` open in Desktop.
+
+## Decisions I made
+- One engine for the unit words: `frontValue` gains `plain` (the word as plain DAX text, since DA.KpiCard and
+  DA.StoryTitle escape their own text; the flip cards keep the picture-encoded word), and `UNITS_AR` is the flip cards'
+  own list, exported; no second copy.
+- The story title (`storyDax`, the queue's evidence `:163`) gets the same fix as the card: same cause, same line kind.
+- The native copy tells a page's language with check_report's own rule; "the language most pages have" moved from
+  arabic-lens.mjs into `filledLanguages` (check-report.mjs) so the lens and the copy share it (the lens's answer is
+  unchanged: arabic suites equal). A Hebrew page gets the English labels (no Hebrew words exist).
+- J19-S5's place "1/2" only when two panels' units are the same (the "ask" case) or unknown; ` · ` as the separator in
+  both languages; in Arabic the place is isolated like the unit.
+- A1-S4: the plan says the new `.platform` in one line (`platform`), both copies alike.
+
+## Seen, not in scope
+1. The native copy's plan lines (`line`, `tell`, `lost`) stay English on an Arabic page (as every plan line for
+   Claude); only the written report's texts follow the page's language.
+2. A title from a measure (an expression) is still copied into every panel unchanged: two panels can show one dynamic
+   title twice (writing a DAX suffix would change the user's measure text).
+3. The redesign's `checks.filesByteIdentical` / `filesChanged` count the original's files only; the new `.platform` is
+   in `exact.files` and in `platform`, not in those counts.
+4. `visual-replace.js` (an engine in `assets/js/`) has no `.min.js` and no page loads it; check-min does not list it.
