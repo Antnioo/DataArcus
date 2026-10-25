@@ -90,6 +90,9 @@ package's manifest; this file says what is in it.
 - **Safer reading:** the report reader no longer takes a saved filter value for a Top N count, never reads a theme or
   any report file through a linked folder, and checks report, table and measure names for hidden instructions in the
   Arabic twin's plan, the DAX functions' plan and the Arabic check, like every other answer.
+- **Arabic numbers and units in more places:** the DAX function library's KPI card and story title say thousands,
+  millions and billions in Arabic; a native copy's split charts title their axes in the page's language and each says
+  its unit in its title; the native copy and the redesign of a report without a .platform file get their own.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
