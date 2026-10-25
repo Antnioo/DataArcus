@@ -1843,6 +1843,14 @@ if (part('gulf-calendar')) {
   const rBefore = filesIn('dax-project');
   const ranges = await Promise.all([[1900, 1910], [9990, 10000], [2000, 2060], [2027, 2022]].map(([firstYear, lastYear]) => add({ path: 'dax-project', firstYear, lastYear, name: 'Range Calendar' })));
   check(ranges.every((x) => x.err) && ranges.filter((x) => /Nothing was written/.test(x.t)).length >= 3 && filesIn('dax-project') === rBefore, `add_gulf_calendar ranges: ${ranges.map(short).join(' | ')}`);
+  // (0.3.1 GC, the outside audit) Sharjah's government weekend, Friday to Sunday from 2022, and Oman's note: the dates are the
+  // UAE's, Oman announced some a day later, and the check lists a difference only as a note
+  const sh = await add({ path: 'dax-project', firstYear: 2021, lastYear: 2022, weekend: 'shj', announced: false, arabicNames: false, name: 'Sharjah Calendar' });
+  const shDax = sh.err ? '' : daxOf(fs.readFileSync(sh.j.scriptFile, 'utf8'));
+  check(!sh.err && sh.j.weekend === 'Sharjah govt: Fri-Sun since 2022' && /"Is Weekend", IF \( \[Date\] >= DATE \( 2022, 1, 1 \), WEEKDAY \( \[Date\], 1 \) IN \{ 6, 7, 1 \}, WEEKDAY \( \[Date\], 1 \) IN \{ 6, 7 \} \)/.test(shDax),
+    `add_gulf_calendar weekend "shj": ${short(sh)} ${(shDax.match(/"Is Weekend".*/) || [''])[0]}`);
+  const om = await add({ path: 'dax-project', firstYear: 2019, lastYear: 2020, country: 'omn', arabicNames: false, name: 'Oman Calendar' });
+  check(!om.err && (om.j.notes || []).some((n) => /announced 11 of them a day later/.test(n) && /only as a note/.test(n) && !/it shows in check_model_health/.test(n)), `add_gulf_calendar Oman note: ${JSON.stringify(om.j && om.j.notes)}`);
   // check_model_health reads the calendar the script makes as the DataArcus one (the model.bim with the table added)
   const bim = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8').replace(/^﻿/, ''));
   bim.model.tables.push({ name: 'Gulf Calendar', columns: (g.err ? [] : g.j.columns).map((name) => ({ name, sourceColumn: name, type: 'calculatedTableColumn', isNameInferred: true })),

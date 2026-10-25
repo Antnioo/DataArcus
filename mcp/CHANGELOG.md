@@ -69,6 +69,10 @@ package's manifest; this file says what is in it.
 - **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
   report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
   Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.
+- **The Gulf calendar says what it knows.** Sharjah's government weekend (Friday to Sunday since 2022) is a weekend
+  option on the Calendar Generator and in add_gulf_calendar; the UAE and Saudi Arabia quick setups keep each country's
+  weekend before its change; the pages say the announced dates are the UAE's, that Oman announced 11 of them a day
+  later, that the working-day flag knows no holidays, and that the relative offsets move on with each refresh.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

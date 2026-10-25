@@ -32,6 +32,8 @@
     bhr: { name: 'Bahrain', nameAr: 'البحرين', weekendOption: 'Bahrain: Fri + Sat since 2006' },
     omn: { name: 'Oman', nameAr: 'عُمان', weekendOption: 'Oman: Fri + Sat since 2013' }
   };
+  // weekend rules of gulf-dates.js that are not a country, with the Calendar Generator's option for each (0.3.1 GC)
+  const WEEKEND_RULES = { shj: { name: 'Sharjah\'s government', nameAr: 'حكومة الشارقة', weekendOption: 'Sharjah govt: Fri-Sun since 2022' } };
   const TOOLS = { calendar: 'https://dataarcus.com/tools/dax-calendar-table-generator.html', measures: 'https://dataarcus.com/tools/dax-measure-builder.html' };
   // the Measure Builder's Ramadan and Eid measures, by the end of their names
   const MEASURES = ['Last Ramadan', 'vs Last Ramadan %', 'Eid al-Fitr Window', 'Eid al-Fitr Window Last Year', 'Eid al-Fitr Window vs Last Year %', 'Eid al-Adha Window', 'Eid al-Adha Window Last Year', 'Eid al-Adha Window vs Last Year %'];
@@ -145,10 +147,16 @@
     const add = (id, level, en, ar, items, count) => findings.push({ id, level, title: en[0], why: en[1], fix: en[2], ar: { title: ar[0], why: ar[1], fix: ar[2] }, source: 'files', count: count == null ? items.length : count, items: items.slice(0, max) });
     // Which dates a country is compared with (owner 2026-10-03): the UAE and Saudi Arabia with the announced dates
     // (gulf-dates.js holds the UAE's; all of Saudi Arabia's 2018-2026 are sourced and match them: DATES-SOURCES.md).
-    // Qatar, Kuwait, Bahrain and Oman have no sourced dates yet: Umm al-Qura, and a difference is only a low note.
+    // Qatar, Kuwait, Bahrain and Oman: Umm al-Qura, and a difference is only a low note. (0.3.1 GC) Oman's own announcements
+    // that differ from the UAE's are sourced (gulf-dates.js own.omn): a date on one of them is not a difference.
     const uaeDates = code === 'uae' || code === 'ksa';
     const SAME = 'the UAE\'s announced dates, which match Saudi Arabia\'s for 2018-2026';
     const CHECK = 'check ' + C.name + '\'s official announcement';
+    const ownDates = ((GD.own || {})[code]) || [];
+    const ownStart = (y, k) => { const e = ownDates.find((x) => x.hijriYear === y); return e && e[k] ? T(e[k]) : null; };
+    const NONE = ownDates.length ? 'Only the ' + ownDates.reduce((n, e) => n + ['ramadan', 'fitr', 'adha'].filter((k) => e[k]).length, 0) + ' days ' + C.name + ' announced differently from the UAE (2019-2026) are sourced for ' + C.name
+      : 'None of ' + C.name + '\'s own announced dates are sourced yet';
+    const NONE_AR = ownDates.length ? 'الموثَّق لـ' + C.nameAr + ' هو الأيام التي أعلنتها بخلاف الإمارات فقط (2019-2026)' : 'لا توجد بعد تواريخ معلنة موثَّقة لـ' + C.nameAr;
     const out = {
       scored: false,
       note: 'Not part of the health score: these are checks of the calendar for a Gulf model, read from the model files only.',
@@ -156,7 +164,7 @@
       asOf: iso(asOf),
       datesComparedWith: uaeDates
         ? { with: 'uae-announced', checked: GD.checked, note: (code === 'ksa' ? 'Ramadan and Eid dates are compared with ' + SAME + ' (scripts/gulf-calendar/DATES-SOURCES.md)' : 'Ramadan and Eid dates are compared with the dates announced in the UAE') + ', checked to ' + GD.checked + '; later dates are Umm al-Qura estimates.' }
-        : { with: 'umm-al-qura', note: 'No announced Ramadan and Eid dates are sourced for ' + C.name + ' yet, so its dates are compared with the Umm al-Qura calendar. A date that differs is only a note, not an error: ' + CHECK + '.' },
+        : { with: 'umm-al-qura', note: NONE + ', so its dates are compared with the Umm al-Qura calendar' + (ownDates.length ? ' (a date on one of those days is not a difference)' : '') + '. A date that differs is only a note, not an error: ' + CHECK + '.' },
       calendar: null, findings, cantTell
     };
 
@@ -235,6 +243,7 @@
             let want = null;
             for (let t = r.start - 3 * DAY; t <= r.start + 3 * DAY; t += DAY) { const h = uaq(t); if (h.year === r.year && h.month === r.month && h.day === 1) want = t; }
             const off = r.month === 12 ? 9 * DAY : 0, k = r.month === 9 ? 'ramadan' : r.month === 10 ? 'fitr' : 'adha';
+            if (ownStart(r.year, k) === r.start + off) return;   // the country's own sourced announcement
             if (want !== r.start && (inRange(r.start + off) || (want != null && inRange(want + off)))) differ.push({ event: EVENT[k] + ' ' + r.year, model: iso(r.start + off), ummAlQura: want == null ? null : iso(want + off) });
           });
         } else cantTell.push({ check: 'dates', why: 'This machine can\'t work out the Umm al-Qura calendar, so the dates were not compared.' });
@@ -245,16 +254,16 @@
             ['تواريخ رمضان أو العيد تختلف عن المعلنة', 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + '، و' + (code === 'ksa' ? 'التاريخ المعلن ' + other + ' (تواريخ الإمارات المعلنة، وهي تطابق تواريخ السعودية للأعوام 2018-2026)' : 'أعلنت الإمارات ' + other) + '. المصادر: DATES-SOURCES.md.', 'استخدم التواريخ المعلنة (fixes.calendarGenerator).'], differ);
           // no sourced dates for this country: never "wrong", only a note to check the official announcement
           else add('GC_DATES_NOTE', 'low',
-            ['Ramadan or Eid dates differ from Umm al-Qura: ' + CHECK, 'For example ' + x.event + ' starts on ' + longDate(T(x.model)) + ' in the model; Umm al-Qura gives ' + (other ? longDate(T(other)) : 'another date') + '. No announced dates are sourced for ' + C.name + ' yet, so this is not an error: the moon sighting can move a date by a day.', 'Compare with ' + C.name + '\'s official announcement; keep the model\'s date if it matches.'],
-            ['تواريخ رمضان أو العيد تختلف عن تقويم أم القرى: راجع الإعلان الرسمي في ' + C.nameAr, 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + (other ? '، وتقويم أم القرى يعطي ' + other : '') + '. لا توجد بعد تواريخ معلنة موثَّقة لـ' + C.nameAr + '، فهذا ليس خطأ: قد تغيّر رؤية الهلال التاريخ يومًا واحدًا.', 'قارن بالإعلان الرسمي في ' + C.nameAr + '، وأبقِ تاريخ النموذج إن طابقه.'], differ);
+            ['Ramadan or Eid dates differ from Umm al-Qura: ' + CHECK, 'For example ' + x.event + ' starts on ' + longDate(T(x.model)) + ' in the model; Umm al-Qura gives ' + (other ? longDate(T(other)) : 'another date') + '. ' + NONE + ', so this is not an error: the moon sighting can move a date, usually by a day.', 'Compare with ' + C.name + '\'s official announcement; keep the model\'s date if it matches.'],
+            ['تواريخ رمضان أو العيد تختلف عن تقويم أم القرى: راجع الإعلان الرسمي في ' + C.nameAr, 'مثلًا يبدأ ' + eventAr(x.event) + ' في النموذج يوم ' + x.model + (other ? '، وتقويم أم القرى يعطي ' + other : '') + '. ' + NONE_AR + '، فهذا ليس خطأ: قد تغيّر رؤية الهلال التاريخ، يومًا واحدًا في العادة.', 'قارن بالإعلان الرسمي في ' + C.nameAr + '، وأبقِ تاريخ النموذج إن طابقه.'], differ);
         }
         // future dates not marked as estimates
         if (!cols.estimated) {
           const later = [];
           GD.events.forEach((e) => Object.keys(EVENT).forEach((k) => { if (e[k] && T(e[k]) > T(GD.checked) && inRange(T(e[k]))) later.push({ event: EVENT[k] + ' ' + e.hijriYear, date: e[k] }); }));
           if (later.length) add('GC_ESTIMATES', 'info',
-            ['Future Ramadan and Eid dates are not marked as estimates', 'Dates after ' + GD.checked + ' are not announced yet and can move by a day.', 'Add Is Estimated Date (fixes.calendarGenerator), and regenerate after each announcement.'],
-            ['تواريخ رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'التواريخ بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير يومًا واحدًا.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
+            ['Future Ramadan and Eid dates are not marked as estimates', 'Dates after ' + GD.checked + ' are not announced yet and can move, usually by a day.', 'Add Is Estimated Date (fixes.calendarGenerator), and generate it again once the Calendar Generator has the new announcement.'],
+            ['تواريخ رمضان والعيد المستقبلية غير مميَّزة كتقديرات', 'التواريخ بعد ' + GD.checked + ' لم تُعلن بعد وقد تتغير، يومًا واحدًا في العادة.', 'أضف Is Estimated Date (fixes.calendarGenerator)، وأعد إنشاء التقويم بعد كل إعلان.'], later);
         }
       }
     }
@@ -294,7 +303,7 @@
             weekend: C.weekendOption,
             hijriDates: 'on ("Hijri dates, Ramadan and Eid")',
             announcedDates: code === 'uae' ? 'on' : code === 'ksa' ? 'on: "Announced Ramadan and Eid dates (UAE)" gives ' + SAME
-              : 'your choice: "Announced Ramadan and Eid dates (UAE)" moves Ramadan and Eid to the UAE\'s announced dates. No announced dates are sourced for ' + C.name + ' yet: where a date differs from Umm al-Qura, ' + CHECK
+              : 'your choice: "Announced Ramadan and Eid dates (UAE)" moves Ramadan and Eid to the UAE\'s announced dates. ' + NONE + ': where a date differs from Umm al-Qura, ' + CHECK
           },
           then: 'Copy the table\'s DAX from the page. Save a copy of your file first. In Power BI Desktop add it as a new table (Modeling > New table)' + (c ? ', or replace your calendar table\'s DAX with it, then check its relationships, its sort-by columns and "Mark as date table"' : ', mark it as a date table and relate it to your dates') + '. DataArcus changes nothing in your model.'
         };
@@ -310,5 +319,5 @@
     }
   }
 
-  return { analyze, hasGulfColumns, findCalendar, readGenerated, weekendRule, countryWeekend, COUNTRIES, MEASURES };
+  return { analyze, hasGulfColumns, findCalendar, readGenerated, weekendRule, countryWeekend, COUNTRIES, WEEKEND_RULES, MEASURES };
 });

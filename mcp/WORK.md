@@ -13,11 +13,10 @@ together: `ARCHITECTURE.md` (repo root). Every finished round and wave, unchange
   wave 5 E2, D5; wave 6 S9 (263ab27: server.mjs by tool into `mcp/tools/`, the twin by step into `lib/twin-*.mjs`,
   byte for byte the same) and G1 (this merge: the registry, this file's archive, `ARCHITECTURE.md`, the README split).
   Each entry, unchanged: `mcp/work/archive/WORK-2026-10-25.md` and `mcp/work/<ID>.md`.
-- Wave 6, still running (25 Oct): T1 done, branch `test/0.3.1-mutation`, not merged: `mcp/test-0.3.1-mutation.mjs` in
-  `suites` (core), 58 mutants all killed in 2.5 min, 2 equivalent listed; 21 missing checks added in their owning suites;
-  no product code changed; full npm test 73 PASS; one product weakness for the owner (`mcp/work/T1.md` "Seen" 1: inode
-  reuse can fool the rollback's identity check). Next GC (the Gulf calendar facts from Codex's audit:
-  6 false public sentences, a Fri/Sat/Sun weekend for Sharjah) and Q1 (lint and a coverage report in CI).
+- Wave 6 (25 Oct): T1 merged (ddae546: 58 mutants killed on Linux and macOS; Windows CI kills 46 of 58: being fixed on
+  `fix/0.3.1-mutation-windows`); GC merged (this merge: Sharjah's weekend, dated quick setups, Oman's 11 sourced dates
+  said, not built in, the false and unsupported sentences fixed). Running: Q1 (lint, coverage), RB (rollback hash,
+  check_report's wording), A1 (agent memory caps). Next: K2 (the twin writes exactly the approved files), A2.
 
 ## Next step
 1. The reviewer reviews and merges T1, GC and Q1.

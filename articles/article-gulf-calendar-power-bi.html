@@ -27,7 +27,7 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/jpeg" />
-  <meta property="og:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend" />
+  <meta property="og:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends" />
   <meta property="og:locale" content="en_US" />
   <meta property="article:published_time" content="2026-10-03T09:00:00Z" />
   <meta property="article:author" content="Abdelrahman M." />
@@ -36,7 +36,7 @@
   <meta name="twitter:title" content="A Gulf Calendar in Power BI: Hijri, Ramadan, Eid, Weekends" />
   <meta name="twitter:description" content="A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change." />
   <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/gulf-calendar.jpg" />
-  <meta name="twitter:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend" />
+  <meta name="twitter:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends" />
 
   <link rel="icon" href="../assets/img/favicon.svg"/>
   <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
@@ -84,7 +84,7 @@
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend",
+    "headline": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends",
     "description": "A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change.",
     "url": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
     "mainEntityOfPage": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
@@ -133,30 +133,30 @@
 
             <header class="article-header">
               <span class="page-badge" data-i18n="header.badge">GULF CALENDAR</span>
-              <h1 class="display-5 fw-bold" data-i18n="header.title">A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend</h1>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends</h1>
               <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 3, 2026</p>
             </header>
 
             <article class="article-body">
               <p data-i18n-html="content.p1">A standard Power BI date table knows January to December and one weekend. A Gulf business runs on more than that: <strong>Ramadan and Eid move every year, the Hijri month decides the season, and the weekend depends on the country and the year.</strong> Miss one of these and the report shows trends that are really the calendar.</p>
-              <p data-i18n-html="content.p2">This guide builds one calendar table that gets all of it right, in DAX, in about a minute, and three measures that use it.</p>
+              <p data-i18n-html="content.p2">This guide builds one calendar table in DAX that handles each of these, and three measures that use it.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h1">Four things a standard calendar gets wrong in the Gulf</h2>
               <ul>
                 <li data-i18n-html="content.list1_1"><strong>Ramadan moves.</strong> It started on 1 March in 2025 and on 18 February in 2026, and is expected around 8 February in 2027: about 11 days earlier each year. March 2026 against March 2025 compares two different seasons.</li>
                 <li data-i18n-html="content.list1_2"><strong>Eid is a window, not a day.</strong> Shopping builds up in the days before Eid al-Fitr and Eid al-Adha, and those days fall in a different Gregorian month from one year to the next.</li>
                 <li data-i18n-html="content.list1_3"><strong>The weekend changed.</strong> The UAE moved its government weekend from Friday-Saturday to Saturday-Sunday on 1 January 2022 (<a href='https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector' class='text-accent' target='_blank' rel='noopener'>announced by WAM</a>). Saudi Arabia, Kuwait, Qatar, Bahrain and Oman keep Friday-Saturday. Whichever fixed weekend a UAE calendar uses, one side of 2022 is wrong: Saturday-Sunday makes Friday 31 December 2021 a working day, Friday-Saturday makes Friday 7 January 2022 a day off.</li>
-                <li data-i18n-html="content.list1_4"><strong>Names sort alphabetically.</strong> April comes before January, Friday before Monday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.</li>
+                <li data-i18n-html="content.list1_4"><strong>Names sort alphabetically.</strong> April comes before January, Wednesday before Tuesday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.</li>
               </ul>
               <h2 class="mt-5 mb-3" data-i18n="content.h2">Announced dates or the calculated calendar?</h2>
               <p data-i18n-html="content.p3">Power BI's date functions (YEAR, MONTH, DATE) work on the Gregorian calendar and have no Hijri month or Ramadan flag, so the calendar table has to carry the Hijri dates. The usual source is Umm al-Qura, Saudi Arabia's official calculated calendar. But Ramadan and the two Eids are set by moon sighting, and an announcement can differ from the calculation by a day.</p>
-              <p data-i18n-html="content.p4">We checked every UAE announcement from 2018 to 2026: 27 dates (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year). <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.</p>
-              <p data-i18n-html="content.p5">Dates from 2027 on are not announced yet. They are estimates, and a sighting can still move each one by a day, so the calendar flags them.</p>
-              <h2 class="mt-5 mb-3" data-i18n="content.h3">Build the calendar in a minute</h2>
+              <p data-i18n-html="content.p4">We compared the UAE's 27 dates from 2018 to 2026 (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year) with Umm al-Qura. 24 come from a dated announcement; three Eid al-Adha dates (2018, 2019 and 2024) are confirmed by the official celebrations held that day. <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.</p>
+              <p data-i18n-html="content.p5">Dates from 2027 on are not announced yet. They are estimates: a sighting usually lands on the same day or one day apart, with no guarantee, so the calendar flags them.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">Build the calendar</h2>
               <p data-i18n-html="content.p6">Open the free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> and set three things:</p>
               <ul>
                 <li data-i18n-html="content.list2_1"><strong>Hijri dates, Ramadan and Eid</strong>: on.</li>
-                <li data-i18n-html="content.list2_2"><strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the announced dates; every other month follows Umm al-Qura.</li>
-                <li data-i18n-html="content.list2_3"><strong>Weekend</strong>: your country. Each country's option knows the date its weekend changed.</li>
+                <li data-i18n-html="content.list2_2"><strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the UAE's announced dates, whichever weekend you pick; every other month follows Umm al-Qura.</li>
+                <li data-i18n-html="content.list2_3"><strong>Weekend</strong>: your country, or Sharjah's government. Each option knows the date its weekend changed.</li>
               </ul>
               <p data-i18n-html="content.p7">Copy the DAX, then in Power BI Desktop choose <strong>Modeling → New table</strong> and paste it. Next to the usual year, quarter, month and fiscal columns, the table has these Gulf columns:</p>
               <ul>
@@ -164,7 +164,7 @@
                 <li data-i18n-html="content.list3_2"><strong>Is Ramadan</strong> and <strong>Ramadan Day</strong> (1 to 30), to compare Ramadan day by day.</li>
                 <li data-i18n-html="content.list3_3"><strong class='text-nowrap'>Is Eid al-Fitr</strong> (1 to 3 Shawwal) and <strong class='text-nowrap'>Is Eid al-Adha</strong> (10 to 13 Dhu al-Hijjah).</li>
                 <li data-i18n-html="content.list3_4"><strong>Is Estimated Date</strong>: TRUE on Ramadan and Eid days that are not announced yet.</li>
-                <li data-i18n-html="content.list3_5"><strong>Is Weekend</strong> and <strong>Is Working Day</strong>: the right weekend for each date.</li>
+                <li data-i18n-html="content.list3_5"><strong>Is Weekend</strong> and <strong>Is Working Day</strong>: the weekend you picked, with its rule for each date. They don't know public holidays, half days or your employer's own rest days.</li>
                 <li data-i18n-html="content.list3_6"><strong>Is After UAE Weekend Change</strong> (UAE only): TRUE from 1 January 2022, to split working-day trends at the change.</li>
                 <li data-i18n-html="content.list3_7"><strong>Day Name (Arabic), Month Name (Arabic), Hijri Month Name (Arabic)</strong>: the same names in Arabic, for Arabic report pages (the option <strong>Add Arabic name columns</strong>).</li>
               </ul>
@@ -211,16 +211,16 @@ RETURN
               <p data-i18n-html="content.p14">We test these measures on a made-up model (two stores, amounts from a formula, no real data). Its 43 checks, each with the number worked out beforehand, are <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>on GitHub</a>, so you can run them in your own Power BI Desktop.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h6">Three things to watch</h2>
               <ul>
-                <li data-i18n-html="content.list4_1"><strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has had a Friday-to-Sunday weekend since 2022. If yours differs, pick the fixed weekend that matches it.</li>
-                <li data-i18n-html="content.list4_2"><strong>Update after each announcement.</strong> When Ramadan 2027 is announced, generate the table again: the announced dates replace the estimates.</li>
-                <li data-i18n-html="content.list4_3"><strong>Other countries' sightings.</strong> The announced dates are the UAE's. A country that relies on its own sighting can start a day apart, so check the official announcement where you report.</li>
+                <li data-i18n-html="content.list4_1"><strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has rested Friday to Sunday since 2022: pick <em>Sharjah government</em> for it. If your weekend is none of the options, pick the closest one and change the days in the Is Weekend and Is Working Day columns' DAX.</li>
+                <li data-i18n-html="content.list4_2"><strong>Update after each announcement, once DataArcus has added it.</strong> When Ramadan 2027 is announced, DataArcus adds the date to its table (the sources file shows when). Generate the table again after that, and the announced dates replace the estimates.</li>
+                <li data-i18n-html="content.list4_3"><strong>Other countries' sightings.</strong> The announced dates are the UAE's. Saudi Arabia's matched them from 2018 to 2026; Oman announced 11 of them a day later from 2019 to 2026 (each in the sources file), and Qatar, Kuwait and Bahrain can start a day apart. Check the official announcement where you report.</li>
               </ul>
-              <p data-i18n-html="content.p15">Ramadan 1448 is expected around 8 February 2027. Build the calendar now, and the first comparison is ready on day one.</p>
+              <p data-i18n-html="content.p15">Ramadan 1448 is expected around 8 February 2027. Build the calendar before then, and the day-by-day comparison can start on Ramadan's first day.</p>
             </article>
 
             <div class="text-center block">
               <div class="glass-card cta" data-aos="fade-up">
-                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Build your Gulf calendar in a minute</h3>
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Build your Gulf calendar</h3>
                 <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, in your browser: Hijri dates, announced Ramadan and Eid, and your country's weekend.</p>
                 <div class="cta-actions">
                   <a href="../tools/dax-calendar-table-generator.html" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="exploreMore.button1">Open the Calendar Generator</span></a>
@@ -301,7 +301,7 @@ RETURN
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
-  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261006a" defer></script>
+  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261025gc" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

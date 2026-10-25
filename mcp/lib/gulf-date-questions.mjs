@@ -242,16 +242,18 @@ function calendarOffer(g) {
   if (Number.isInteger(g.firstYear)) inputs.firstYear = g.firstYear; else ask.push('firstYear');
   if (Number.isInteger(g.lastYear)) inputs.lastYear = g.lastYear; else ask.push('lastYear');
   return { tool: 'add_gulf_calendar', inputs, askTheUser: ask, weekend: inputs.country ? Gulf.COUNTRIES[inputs.country].weekendOption : null,
-    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption),
-    notModelled: 'The weekend differs by country (the generator\'s own options above), and the generator has no option for an emirate\'s own government weekend (Sharjah\'s differs from the federal one) or the Friday half day: ask the person which weekend their business keeps.',
+    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption).concat(Object.values(Gulf.WEEKEND_RULES).map((r) => r.weekendOption)),
+    notModelled: 'The weekend differs by country (the generator\'s own options above, with Sharjah\'s government weekend as add_gulf_calendar\'s weekend "shj"), and the generator has no option for another emirate\'s own government weekend, the Friday half day, public holidays or an employer\'s own rest days: ask the person which weekend their business keeps.',
     what: 'add_gulf_calendar writes the calendar as a TMDL script in a new file next to the project, for the person to apply in TMDL view; nothing is written into the model. Ask the person for their country and the years their data covers: never take a default.' };
 }
 
 // whether the season's dates are announced or estimated, from the calendar's files and gulf-dates.js (never from rows)
 function statusOf({ gen, columns, cal, answers, country, season, seasonAr }) {
   const C = COUNTRY_CODES.includes(country) ? Gulf.COUNTRIES[country] : null, other = C && country !== 'uae' && country !== 'ksa';
-  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} may announce another day.` : '';
-  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، وقد تُعلن ${C.nameAr} يومًا آخر.` : '';
+  // (0.3.1 GC) a country whose own differing announcements are sourced (Oman: gulf-dates.js own) says so
+  const own = other && GD.own && GD.own[country];
+  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} ${own ? 'announced some of them a day later (sourced, 2019-2026) and ' : ''}may announce another day.` : '';
+  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، و${own ? `قد أعلنت ${C.nameAr} بعضها بعد يوم (موثَّق، 2019-2026)، وقد ` : 'قد '}تُعلن ${C.nameAr} يومًا آخر.` : '';
   if (!gen) return { dates: 'cantTell', en: `The ${season} dates in ${shown(cal || 'the calendar')} come from its data: DataArcus can't tell whether they are announced or estimated (the tools read no rows).${limit}`,
     ar: `تواريخ ${seasonAr} في ${shown(cal || 'التقويم')} تأتي من بياناته، ولا يمكن لـ DataArcus معرفة هل هي معلنة أم تقديرية (الأدوات لا تقرأ الصفوف).${limitAr}` };
   const observed = !!columns.estimated, est = shown(columns.estimated ? columns.estimated.field : `${cal}[Is Estimated Date]`);
