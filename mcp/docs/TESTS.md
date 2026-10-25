@@ -16,6 +16,20 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   seconds and reports (G-13 validates about 2 s a report). The website: `run-all.mjs --shard k/3`, `SHARDS` there.
 - Every script in `npm test` ends with exactly one result line, `PASS  <name>  <N> checks` (or `FAIL  <name>  ...` /
   `SKIP  <name>  ...`), as `scripts/ci-sum.mjs` counts them; `scripts/check-result-lines.mjs` (CI) names a script without one.
+- Failures (A2, 0.3.1): the runner shows each suite's result line; a failing suite then prints one line,
+  `FAIL script=<file> check="<first failing check>" cause=<cause> os=<os> shard=<k/N>`, and at most 4 KB of its detail
+  (16 KB a run, "N more lines not shown"); repo paths relative, no home or temp path. The causes: `checks-failed`,
+  `timeout` (`--timeout <s>`, `DA_SUITE_TIMEOUT`, default 2,700 s), `crash` (non-zero exit, no result line),
+  `no-result-line`, `duplicate-suite`, `unexpected-skip`, `zero-checks`, `exit-nonzero`, `wrong-name` (tests.json's
+  `name` is the name the result line prints). The full output: `mcp/.test-logs/<file>.log` (git-ignored; `--log-dir`),
+  CI's artifacts; `--verbose` streams it all as before. One adapter reads results everywhere: `mcp/test-results.mjs`.
+- CI's sum (`scripts/ci-sum.mjs`) checks identities, not counts: shard 0 prints exactly tests.json's suites by name,
+  once each (test.mjs's SKIP the one allowed, as `sharded`), shards 1-4 exactly test.mjs; the website exactly
+  run-all.mjs's `ALL`. Each problem and each `::error` annotation is the one-line form above.
+- `npm test -- --affected[=<ref>]` is for local runs only: it runs the suites the files changed since `<ref>` touch
+  (default tests.json `affected.base`; `git diff --name-only`, new files too), printing the reason for each pick
+  ("mcp/lib/twin-write.mjs -> area twin: ..."); a safety-infrastructure path, an unmapped engine or an unknown path picks
+  every suite (tests.json `affected`). CI and the final gate never use it: they run every suite (it refuses in CI).
 - CI (`.github/workflows/tests.yml`) runs on pushes to `main`, on every pull request and by hand: a branch without a
   PR gets no automatic CI: open a (draft) PR, or use Run workflow (Actions > Tests > Run workflow, pick the branch).
 - Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).

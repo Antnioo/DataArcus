@@ -62,6 +62,10 @@ jobs:
       - name: The PL-300 question file is what its source builds (no edit in the built file only)
         run: node scripts/pl300-bank/build.js --check
 
+      # (A2, 0.3.1) the one result adapter: a failure as one line, causes by name, suites checked by name, --affected
+      - name: Test results read one way (one-line failures, named causes, suite identities; made-up suites and logs)
+        run: node scripts/test-results-adapter.mjs
+
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
@@ -118,7 +122,7 @@ jobs:
       - name: Website suites, shard ${{ matrix.shard }} of 3
         run: |
           mkdir -p ci-logs
-          node scripts/tests/run-all.mjs --shard ${{ matrix.shard }}/3 2>&1 | tee ci-logs/suites-${{ matrix.shard }}.log
+          node scripts/tests/run-all.mjs --shard ${{ matrix.shard }}/3 --log-dir ci-logs/suites-${{ matrix.shard }}-full 2>&1 | tee ci-logs/suites-${{ matrix.shard }}.log
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -157,7 +161,7 @@ jobs:
 
       - name: Every part ran exactly once; the checks added up
         if: always()
-        run: node scripts/ci-sum.mjs website ci-logs
+        run: node scripts/ci-sum.mjs website ci-logs --os linux
 
   mcp-parts:
     runs-on: ubuntu-latest
@@ -165,7 +169,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -183,12 +187,17 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (A2, 0.3.1) every shard through npm test's runner: the console (this log) has the result lines and, for a failure,
+      # one line first and 4 KB of detail; each suite's full output is in mcp-shard-<k>-full/ (the artifact). Shard 0:
+      # mcp/tests.json's suites, test.mjs says SKIP; shards 1-4: test.mjs's part k only. A suite still running after
+      # DA_SUITE_TIMEOUT seconds fails as "timeout" before the job's own limit cancels it unnamed.
       - name: MCP checks, shard ${{ matrix.shard }} of 4
         env:
           DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 780
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -226,7 +235,7 @@ jobs:
 
       - name: Every part ran exactly once; the checks added up
         if: always()
-        run: node scripts/ci-sum.mjs mcp ci-logs
+        run: node scripts/ci-sum.mjs mcp ci-logs --os linux
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
   # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).
@@ -238,7 +247,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -259,9 +268,10 @@ jobs:
       - name: MCP checks on Windows, shard ${{ matrix.shard }} of 4
         env:
           DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 2100
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -299,7 +309,7 @@ jobs:
 
       - name: Every part ran exactly once; the checks added up
         if: always()
-        run: node scripts/ci-sum.mjs mcp ci-logs
+        run: node scripts/ci-sum.mjs mcp ci-logs --os windows
 
   # macOS (0.3.1 P1, the owner 25 Oct: "beyond Windows, without shipping it"): DataArcus writes Power BI projects on
   # macOS and Linux too (opened in Power BI Desktop on Windows, or deployed to Fabric). The same parts as mcp and
@@ -312,7 +322,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -333,9 +343,10 @@ jobs:
       - name: MCP checks on macOS, shard ${{ matrix.shard }} of 4
         env:
           DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 2100
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -373,4 +384,4 @@ jobs:
 
       - name: Every part ran exactly once; the checks added up
         if: always()
-        run: node scripts/ci-sum.mjs mcp ci-logs
+        run: node scripts/ci-sum.mjs mcp ci-logs --os macos

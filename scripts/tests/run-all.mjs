@@ -5,10 +5,16 @@
 //   npm test -- --full          also the long layout stress test on every page size
 //   npm test -- --slow 6        pages run 6 times slower, like a busy machine (to check the tests don't depend on speed)
 //   npm test -- --shard 2/3     only the suites of SHARDS[1] (CI runs the shards as parallel jobs; B-145)
+//   npm test -- --log-dir <dir> every problem of a failing test in <dir>/<test>.log (CI keeps them as an artifact)
+// (A2, 0.3.1) A failing test prints its result line, then one line, FAIL script=<file> check="<first problem>"
+// cause=<cause> os=<os> shard=<k/N>, then at most 4 KB of its problems (16 KB a run), through the MCP's result adapter
+// (mcp/test-results.mjs), which scripts/ci-sum.mjs reads too.
 // Exit code 1 when anything fails, so it can gate a deploy.
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs';
 import { ROOT, serve, launch } from './lib.mjs';
+import { oneLine, budget, osName, scrub } from '../../mcp/test-results.mjs';
 
 const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
@@ -29,9 +35,10 @@ const args = process.argv.slice(2), full = args.includes('--full');
 const ji = args.indexOf('--jobs'), jobs = Math.max(1, ji >= 0 ? +args[ji + 1] || 1 : 3);
 const si = args.indexOf('--slow');
 if (si >= 0) process.env.DATAARCUS_TEST_SLOW = String(Math.max(1, +args[si + 1] || 4));
+const li = args.indexOf('--log-dir'), logDir = li >= 0 ? path.resolve(args[li + 1] || '.') : null;
 const hi = args.indexOf('--shard'), shard = hi >= 0 ? /^(\d+)\/(\d+)$/.exec(args[hi + 1] || '') : null;
 if (hi >= 0 && (!shard || +shard[2] !== SHARDS.length || +shard[1] < 1 || +shard[1] > SHARDS.length)) { console.error(`--shard must be k/${SHARDS.length}, k from 1 to ${SHARDS.length}`); process.exit(2); }
-const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1) && !(si >= 0 && i === si + 1) && !(hi >= 0 && i === hi + 1));
+const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1) && !(si >= 0 && i === si + 1) && !(hi >= 0 && i === hi + 1) && !(li >= 0 && i === li + 1));
 if (shard && pick.length) { console.error('--shard runs its own suites: name no test with it'); process.exit(2); }
 if (shard) pick.push(...SHARDS[+shard[1] - 1]);
 // the slowest tests start first, so the whole run ends as early as possible
@@ -57,7 +64,7 @@ async function one(name) {
       res = await (await import(`./${LAB[name] || name}.mjs`)).default({ browser, url: server.url, full, ...(LAB[name] ? { page: '/tools/power-bi-theme-generator-lab.html' } : {}) });
     }
   } catch (e) {
-    res = { checks: 0, problems: ['crashed: ' + (e.stack || e.message).split('\n').slice(0, 3).join(' ')] };
+    res = { checks: 0, crashed: true, problems: ['crashed: ' + (e.stack || e.message).split('\n').slice(0, 3).join(' ')] };
   }
   res.secs = ((Date.now() - t0) / 1000).toFixed(0);
   return res;
@@ -67,12 +74,17 @@ async function one(name) {
 const results = {}, queue = run.slice();
 await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) { const n = queue.shift(); results[n] = await one(n); } }));
 let failed = 0;
+const spend = budget(), FILE = { 'svg-kpi': 'scripts/test-svg-kpi.mjs' };
+if (logDir) fs.mkdirSync(logDir, { recursive: true });
 for (const name of ALL.filter((n) => results[n])) {
   const res = results[name], ok = !res.problems.length;
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(16)} ${String(res.checks).padStart(5)} checks  ${res.secs}s`);
-  res.problems.slice(0, 12).forEach((p) => console.log('      - ' + p));
-  if (res.problems.length > 12) console.log(`      ... and ${res.problems.length - 12} more`);
+  if (ok) continue;
+  const log = logDir ? path.join(logDir, name + '.log') : '';
+  if (log) fs.writeFileSync(log, res.problems.map((p) => '- ' + p).join('\n') + '\n');
+  console.log(oneLine({ script: FILE[name] || `scripts/tests/${LAB[name] || name}.mjs`, check: res.problems[0], cause: res.crashed ? 'crash' : 'checks-failed', os: osName(), shard: shard ? `${shard[1]}/${shard[2]}` : '-' }));
+  spend.take(res.problems.map((p) => '      - ' + scrub(p)), { log }).forEach((l) => console.log(l));
 }
 await browser.close(); server.close();
 const total = ((Date.now() - t00) / 1000).toFixed(0);
