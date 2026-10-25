@@ -73,6 +73,9 @@ jobs:
       - name: The beta page's "What's new in 0.3.0" in English and Arabic, naming nothing outside 0.3.0
         run: node scripts/test-whats-new.mjs
 
+      - name: The Arabic checklist says only what its article says, and its sign-up page stays unlinked until its form is live (LEAD1)
+        run: node scripts/test-leads.mjs
+
   website-suites:
     runs-on: ubuntu-latest
     timeout-minutes: 40

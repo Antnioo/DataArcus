@@ -4,7 +4,7 @@ window.privacyTranslations = {
     "pv": {
       "kicker": "Privacy",
       "title": "Privacy policy",
-      "updated": "Last updated: 4 October 2026",
+      "updated": "Last updated: 25 October 2026",
       "intro": "DataArcus (dataarcus.com) is run by Abdelrahman Mohammed in Dubai, UAE. This page explains, in plain language, what information the website collects, why, and what you can do about it.",
       "shortTitle": "The short version",
       "short": "<li>The free tools run in your browser. What you type or open in them is <strong>not uploaded</strong> to us.</li><li>We use Google Analytics and Microsoft Clarity to understand how the site is used, so we can improve it.</li><li>If you use the contact form, we receive the details you send so we can reply.</li><li>We do not sell your data, and we do not show ads.</li>",
@@ -14,6 +14,7 @@ window.privacyTranslations = {
       "analytics": "<strong>Google Analytics</strong> tells us which pages are visited, roughly where visitors come from (country and city level), the device and browser, how people found the site, and which tool features are used (for example, downloading a theme or starting a practice exam). Search words typed into the blog search may be recorded to improve the articles.<br><br><strong>Microsoft Clarity</strong> shows how pages are used through heatmaps and session replays: clicks, scrolling and mouse movement. It helps us find confusing parts of the site. On the tools, Clarity masks the areas where you enter or open your own data, and it isn't loaded at all on the SVG KPI Designer, whose share links carry your design in the page address.<br><br>Both services use cookies and receive your IP address as part of normal web traffic. They process this data under their own privacy policies (Google and Microsoft).",
       "contactTitle": "Contact form and WhatsApp",
       "contact": "When you send the contact form, your name, email address, company, the options you pick and your message are delivered to our email through <strong>Web3Forms</strong>, a form delivery service. We use them only to reply to you and to follow up on your request. The WhatsApp buttons open WhatsApp, which is run by Meta under its own privacy policy. We only see what you choose to send there.",
+      "checklist": "If you ask for one of our checklists, the form sends your email address, and your role and company size if you give them, to <strong>Formspree</strong>, a form service (<a href='https://formspree.io/legal/privacy-policy' target='_blank' rel='noopener'>its privacy policy</a>). We use them only to email you the checklist and up to three follow-ups. To have them deleted, reply to any of those emails or write to <a href='mailto:hello@DataArcus.com'>hello@DataArcus.com</a>.",
       "hostTitle": "Hosting and content delivery",
       "host": "The website is hosted on <strong>GitHub Pages</strong>. Fonts come from <strong>Google Fonts</strong>, and some scripts and icons come from the <strong>jsDelivr</strong> network. Like any website server, these services receive your IP address and basic browser details when your browser loads files from them.",
       "cookiesTitle": "Cookies and browser storage",
@@ -39,7 +40,7 @@ window.privacyTranslations = {
     "pv": {
       "kicker": "الخصوصية",
       "title": "سياسة الخصوصية",
-      "updated": "آخر تحديث: 4 أكتوبر 2026",
+      "updated": "آخر تحديث: 25 أكتوبر 2026",
       "intro": "يدير موقع داتا أركوس (dataarcus.com) عبدالرحمن محمد من دبي، الإمارات العربية المتحدة. توضح هذه الصفحة بلغة بسيطة المعلومات التي يجمعها الموقع، ولماذا، وما الذي يمكنك فعله بشأنها.",
       "shortTitle": "باختصار",
       "short": "<li>الأدوات المجانية تعمل داخل متصفحك. ما تكتبه أو تفتحه فيها <strong>لا يُرفع</strong> إلينا.</li><li>نستخدم Google Analytics وMicrosoft Clarity لفهم طريقة استخدام الموقع حتى نحسّنه.</li><li>إذا استخدمت نموذج التواصل، نستلم البيانات التي ترسلها حتى نرد عليك.</li><li>لا نبيع بياناتك، ولا نعرض إعلانات.</li>",
@@ -49,6 +50,7 @@ window.privacyTranslations = {
       "analytics": "<strong>Google Analytics</strong> يوضح لنا الصفحات التي تُزار، والمكان التقريبي للزوار (على مستوى الدولة والمدينة)، والجهاز والمتصفح، وكيف وصل الناس إلى الموقع، وأي ميزات الأدوات تُستخدم (مثل تنزيل سمة أو بدء اختبار تجريبي). قد تُسجَّل كلمات البحث المكتوبة في بحث المدونة لتحسين المقالات.<br><br><strong>Microsoft Clarity</strong> يوضح طريقة استخدام الصفحات عبر الخرائط الحرارية وتسجيلات الجلسات: النقرات والتمرير وحركة الفأرة، ويساعدنا على اكتشاف الأجزاء المربكة في الموقع. وفي الأدوات يُخفي Clarity المناطق التي تُدخل فيها بياناتك أو تفتحها، ولا يُحمَّل إطلاقًا في مصمم بطاقات KPI بصيغة SVG، لأن روابط المشاركة فيه تحمل تصميمك داخل عنوان الصفحة.<br><br>تستخدم الخدمتان ملفات تعريف الارتباط وتستلمان عنوان IP الخاص بك كجزء من حركة الإنترنت المعتادة، وتعالجان هذه البيانات وفق سياسات الخصوصية الخاصة بهما (Google وMicrosoft).",
       "contactTitle": "نموذج التواصل وواتساب",
       "contact": "عند إرسال نموذج التواصل، يصل اسمك وبريدك الإلكتروني واسم شركتك والخيارات التي تحددها ورسالتك إلى بريدنا عبر <strong>Web3Forms</strong>، وهي خدمة لتوصيل النماذج. نستخدم هذه البيانات فقط للرد عليك ومتابعة طلبك. أزرار واتساب تفتح تطبيق واتساب الذي تديره Meta وفق سياسة الخصوصية الخاصة بها، ولا نرى إلا ما تختار إرساله هناك.",
+      "checklist": "إذا طلبت إحدى قوائم الفحص لدينا، يرسل النموذج بريدك الإلكتروني، ودورك وحجم شركتك إن ذكرتهما، إلى <strong>Formspree</strong>، وهي خدمة للنماذج (<a href='https://formspree.io/legal/privacy-policy' target='_blank' rel='noopener'>سياسة الخصوصية الخاصة بها</a>). نستخدمها فقط لنرسل إليك قائمة الفحص وثلاث رسائل متابعة على الأكثر. ولحذفها، ردّ على أي من تلك الرسائل أو راسلنا على <a href='mailto:hello@DataArcus.com'>hello@DataArcus.com</a>.",
       "hostTitle": "الاستضافة وتوصيل المحتوى",
       "host": "الموقع مستضاف على <strong>GitHub Pages</strong>. تأتي الخطوط من <strong>Google Fonts</strong>، وبعض الأكواد والأيقونات من شبكة <strong>jsDelivr</strong>. ومثل أي خادم ويب، تستلم هذه الخدمات عنوان IP الخاص بك وبيانات أساسية عن المتصفح عندما يحمّل متصفحك الملفات منها.",
       "cookiesTitle": "ملفات تعريف الارتباط وتخزين المتصفح",

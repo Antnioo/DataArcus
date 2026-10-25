@@ -76,6 +76,11 @@ announced dates and country weekends. Two weeks, Tuesday to Thursday; best befor
 Monday email shows an error symbol for an uncertified visual; (3) tip: one line for every report prompt ("core visuals
 only") and Microsoft's certification audit. Don't name the demo's author unless the author agrees.
 
+**Ready to queue (after 0.3.1 is on main and published, and the checklist page is live):** the Arabic-ready checklist
+post (EN and AR, "Comment ARABIC", the link in the first comment too), the replies and the three emails, in
+`content/leads/arabic-checklist.md` (LEAD1). The comment keyword is the owner's choice of 25 Oct, against "Never: no
+engagement bait" below: decide whether that line changes.
+
 ## Measure (once a month)
 Followers, profile views, impressions and website clicks per post (LinkedIn analytics, and the site's analytics for
 visits from LinkedIn). Write what worked and what didn't below, and change the next month's queue accordingly.

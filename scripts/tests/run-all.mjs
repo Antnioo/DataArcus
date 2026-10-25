@@ -10,14 +10,14 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'leads'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 // CI's parallel jobs (B-145, owner's go 18 Oct): every suite in exactly one shard, balanced by the seconds CI measured
 // on main 5c0ad21 (18 Oct, 3 at a time): site 379 with the short ones; design-engine 292 with tools 142, components 98,
 // spacing 79, gulf-calendar 62; anchors 259 with text-align 163 and the two theme generators (99, 93)
 const SHARDS = [
-  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model'],
+  ['site', 'consent', 'lang-switcher', 'model-health', 'dax', 'pbip', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'leads'],
   ['design-engine', 'tools', 'components', 'spacing', 'gulf-calendar'],
   ['anchors', 'text-align', 'theme-generator', 'theme-generator-lab', 'theme-logo'],
 ];
@@ -35,7 +35,7 @@ const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji 
 if (shard && pick.length) { console.error('--shard runs its own suites: name no test with it'); process.exit(2); }
 if (shard) pick.push(...SHARDS[+shard[1] - 1]);
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar', 'text-align', 'theme-logo'];
+const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar', 'text-align', 'theme-logo', 'leads'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }

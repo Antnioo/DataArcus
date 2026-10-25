@@ -43,3 +43,76 @@ resource). His choices: the free item is an **Arabic-ready checklist** for Power
 - `check:min`: lang-manager.min.js changes (one line: the page's translations), so its ?v= stamp moves on every page
   (76 pages), the Arabic copies re-rendered; ar-pages, csp, sitemap-lastmod, run-all site spacing text-align
   lang-switcher: PASS as before.
+
+## Results (25 Oct)
+Built as planned, with the changes listed under "Decisions I made".
+- **The checklist:** `scripts/leads/arabic-checklist.mjs` (the data and the printable page, print CSS, A4), made by
+  `scripts/leads/make-arabic-checklist.mjs` into `assets/downloads/arabic-report-checklist-en.pdf` and `-ar.pdf` (1 page
+  each, measured with pdfinfo and by the test), the pictures `assets/img/leads/arabic-report-checklist-{en,ar}.jpg`, the
+  link preview `assets/img/og/arabic-report-checklist.jpg` (1200x630, 103 KB), and `scripts/leads/arabic-checklist.built.json`
+  (the hash of each page the PDFs were made from). `--html <folder>` writes the printable pages to open or print.
+- **The page:** `resources/arabic-report-checklist.html`, translations `assets/js/translations/arabic-checklist.js`, form
+  script `assets/js/lead-form.js`; lang-manager maps the page to its translations (one line). Not live: noindex, outside
+  the sitemap and llms.txt, linked from no page; the notice shows and the form is off.
+- **CSP:** `scripts/csp.mjs` adds `https://formspree.io` to connect-src and form-action only on a page whose form posts
+  to it (today: this page only).
+- **Privacy:** one paragraph (`#checklist`) on privacy.html, EN and AR; the page's date 25 October 2026.
+- **Short links:** `go/arabic-checklist`, `go/arabic-checklist-page` (EN post) and `go/arabic-checklist-ar`,
+  `go/arabic-checklist-ar-page` (AR post), campaign `arabic-checklist(-ar)-2026-10-27` (the site's rule: one campaign per
+  post, a personal and a page link).
+- **Texts for the owner:** `content/leads/arabic-checklist.md` (post EN+AR, first comment, 2 replies EN+AR, 3 emails
+  EN+AR, the 6-step go-live list). LINKEDIN-PLAN: a "Ready to queue" line.
+- **Tests:** `scripts/test-leads.mjs` (new, in CI's website checks): 10 red before the build -> 262/262; a changed word in
+  one EN row and one AR row turns 4 checks red (both claims and both PDF hashes). Suite `leads` (new, run-all shard 1):
+  44/44 (not live EN/AR; stubbed Formspree 200, 500, no answer). `test-site-config`: one more exception (a page whose
+  Formspree form is still FORM_ID_HERE), PASS. ?v= stamps: lang-manager.min.js 20261025a on all 76 pages,
+  privacy.min.js 20261025a (it had none).
+
+## Go live (a session does this when the owner says "LEAD1 go live", after 0.3.1 is on main)
+1. The owner's id replaces FORM_ID_HERE in the form's action (`resources/arabic-report-checklist.html`), if not done.
+2. The page: robots `index, follow`; link the article in `lc.p2` (EN and AR translations and the page's English HTML:
+   `<a href='../articles/article-power-bi-report-ready-for-arabic.html' class='text-accent'>`).
+3. `sitemap.xml`: an entry for the page; `llms.txt`: one line under the resources/tools it fits.
+4. `git add -A`, `node scripts/csp.mjs --write`, `node scripts/ar-pages.mjs --write` (writes `ar/resources/...`),
+   `npm run build:min` (+ new ?v= on what changed), `node scripts/test-leads.mjs` (now wants: live, indexable, in the
+   sitemap, the article on disk), `node scripts/test-site-config.mjs`, `node scripts/test-arabic-terms.mjs`,
+   `node scripts/tests/run-all.mjs site spacing text-align lang-switcher leads`; commit, then
+   `node scripts/sitemap-lastmod.mjs --write`.
+
+## Decisions I made
+1. **The article is not on main** (only on `integration/0.3.1`): the checklist quotes it as it is there; `test-leads.mjs`
+   reads it from disk, else from `origin/integration/0.3.1` (CI checks out every branch). The page doesn't link the
+   article yet (it would be a broken link on main); the PDFs name its address, which exists once 0.3.1 merges. So the
+   page goes live only after 0.3.1 (go-live step 1; the test refuses "live" without the article on disk).
+2. **No Arabic /ar/ copy yet.** ar-pages.mjs makes a copy for every sitemap page, and the page must stay out of the
+   sitemap while not live; until then the Arabic is the page at `?lang=ar` (the same translations the copy will be
+   rendered from). The /ar/ copy is a go-live step. test-site-config allows exactly this one state.
+3. **The printable page is not committed as .html:** every committed .html is a site page to the suites (nav,
+   language switch, spacing). The module builds it, the PDFs are made from it, a hash proves they match it.
+4. **Every checklist line is the article's own words**, EN and AR (kind, a short line from its section, the two cells of
+   its at-a-glance table), so the test can find each one; the page's own claims too (listed in the test).
+5. **The answer columns follow the article's table** ("From a report built in English" / "On an Arabic page you
+   built") rather than one fix per row: that is how the article gives the fixes.
+6. **Four short links, not one:** test-analytics-events requires a dated campaign and a personal/page pair per post.
+   The date 2026-10-27 (the next Tuesday) is a placeholder; a later post day only mislabels the date.
+7. **No new analytics event** for the form (brief: no tracking beyond the site's); main.js's existing click events
+   still count the page's buttons. Nothing else is sent anywhere until the visitor submits.
+8. **Formspree's honeypot** (`_gotcha`, hidden by class) is in the form; reCAPTCHA is left to the owner's test (step 4
+   of his list): Formspree's documentation was not clear whether its default reCAPTCHA refuses fetch submissions.
+9. **The form sends `language` (en/ar)** so the owner writes the follow-ups in the reader's language; the emails exist in both.
+10. **The post's hook** ("Claude went from 0 Arabic findings to 18 on the same Power BI report") rests on the article's
+    numbers and "0.3.0 has no lens"; the earlier draft's "3 of them have no setting" was wrong for that report (the 3
+    is the hand-built page's) and became "some ... like the matrix".
+11. **Web3Forms is already used on the site** (the home contact form and the beta form, with its access key in the
+    page). The owner may prefer it to Formspree: switching is the form's action line (and the field names Web3Forms
+    wants, `access_key`), plus csp.mjs already allows it.
+
+## Seen, not in scope
+- `assets/js/translations/privacy.js` (old lines, main): «داتا أركوس» outside keywords (3 lines) and «بطاقات KPI» (the
+  sheet's «بطاقة مؤشر»), by the 0.3.1 terminology sheet; probably fixed on `integration/0.3.1` already. My new line is
+  next to them, so merging 0.3.1 and this branch may conflict there, and in `assets/js/lang-manager.js` (both add a
+  translations line): both trivial.
+- `scripts/test-arabic-terms.mjs` is not on main, so it was run here from a scratch copy of the 0.3.1 sheet and scanner
+  against the new Arabic texts: no hit in them.
+- The dark selects (role, company size) on the new page show no dropdown arrow (EN and AR, 1440 and 390): the style.css select rule was not changed here.
+- LINKEDIN-PLAN's "Never: no engagement bait ("comment YES")" against the owner's comment-keyword choice: his decision.
