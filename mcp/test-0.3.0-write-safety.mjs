@@ -61,6 +61,62 @@ const fresh = (n) => { const d = path.join(ROOT, n); fs.rmSync(d, { recursive: t
   chk(() => !linked || (e && e.left && e.left.foreign.concat(e.left.ours).includes(path.join(D, 'R.Report', 'definition')) && fs.lstatSync(path.join(D, 'R.Report', 'definition')).isSymbolicLink()), () => `S3. the link is left where it is and named: ${e && e.message}`);
   chk(() => linked, () => 'S3. (a folder link could be made here)');
 }
+// (0.3.1 T1, the mutation suite) S1b: writeFileNew: the file is in place, then its folder is moved outside the working
+// folder and a link to it put at its name: the file is the very one this call wrote (same identity, same size), but its
+// real folder is outside, so the rollback leaves it (removeOurs' "inside the working folder" check; no other check sees it)
+{
+  const D = fresh('s1b'), f = path.join(D, 'Theme.json'), moved = path.join(OUT, 's1b-moved'); let once = false, linked = false;
+  W.setIo({ unlinkSync(p) { if (!once && /\.dataarcus-tmp-/.test(String(p))) { once = true; fs.renameSync(D, moved); try { dirLink(moved, D); linked = true; } catch (x) { /* no links here */ } throw errOf('EIO'); } return fs.unlinkSync(p); } });
+  const e = threw(() => W.writeFileNew(f, data));
+  W.setIo();
+  chk(() => !linked || (e && fs.existsSync(path.join(moved, 'Theme.json')) && e.left.foreign.includes(f)), () => `S1b. a file whose folder now leads outside the working folder is left and named: ${JSON.stringify(fs.existsSync(moved) ? tree(moved) : [])} ${e && e.message}`);
+  chk(() => linked, () => 'S1b. (a folder link could be made here)');
+}
+// (0.3.1 T1, the mutation suite: S2 and S3 still passed with the identity check or the folders-on-the-way check taken
+// out of removeOurs, since the size or the link told the change first) S2b-S3c close that:
+// S2b. writeTree: a file of the tree is moved away by another program and a file of as many bytes put at its name: only
+// its identity (dev + ino) tells it is not ours, and it survives. (Moved, not deleted: a deleted file's inode number can be
+// given to the next new file at once, and then nothing tells the two apart: T1.md, "Seen, not in scope")
+{
+  const D = fresh('s2b'), mine = path.join(D, 'R.Report/definition/report.json');
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { const n = fs.statSync(mine).size; fs.renameSync(mine, path.join(D, 'kept.json')); fs.writeFileSync(mine, 'T'.repeat(n)); throw new Error('simulated failure'); } } }));
+  chk(() => e && fs.existsSync(mine) && /^T+$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine), () => `S2b. a tree file replaced by one of the same size survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
+// S2c. writeTree: another program appends to a file this call wrote (the same file, the same identity): its size tells it
+// changed, and it survives. (S2's replacement may reuse the inode number, so S2 alone can't pin the size check)
+{
+  const D = fresh('s2c'), mine = path.join(D, 'R.Report/definition/report.json');
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { fs.appendFileSync(mine, ' theirs'); throw new Error('simulated failure'); } } }));
+  chk(() => e && fs.existsSync(mine) && / theirs$/.test(fs.readFileSync(mine, 'utf8')) && e.left.foreign.includes(mine), () => `S2c. a file of the tree another program appended to survives the rollback, named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
+// S3b. writeTree: a folder of the tree is moved away and another folder put at its name, holding the very file this call
+// wrote (a hard link: same identity, same size): the folder on the way is not ours, so the file is left
+{
+  const D = fresh('s3b'), d = path.join(D, 'R.Report', 'definition'); let linked = false;
+  const e = threw(() => F.writeTree(D, files, { beforePlace: (t) => { if (t === 'R.pbip') { fs.renameSync(d, path.join(D, 'moved')); fs.mkdirSync(d); try { fs.linkSync(path.join(D, 'moved', 'report.json'), path.join(d, 'report.json')); linked = true; } catch (x) { /* no hard links here */ } throw new Error('simulated failure'); } } }));
+  chk(() => !linked || (e && fs.existsSync(path.join(d, 'report.json')) && e.left.foreign.includes(path.join(d, 'report.json'))), () => `S3b. a file reached through a folder that is not ours any more is left and named: ${JSON.stringify(tree(D))} ${e && e.message}`);
+  chk(() => linked, () => 'S3b. (a hard link could be made here)');
+}
+// S3c. freeFile: a name held by a link whose target is missing is taken (AUD-005: lstat, not stat), so the next name is given
+{
+  const D = fresh('s3c'); let linked = false;
+  try { fs.symlinkSync(path.join(OUT, 'missing-target.json'), path.join(D, 'Theme.json')); linked = true; } catch (x) { /* no file links here (Windows without the right) */ }
+  const f = linked ? F.freeFile('s3c', 'Theme', '.json') : null;
+  chk(() => !linked || path.basename(f) === 'Theme-2.json', () => `S3c. a dangling link's name is skipped: ${f}`);
+}
+// S3d. writeTree into a folder that is a link leading outside the working folder: refused, nothing written there
+{
+  const D = fresh('s3d'), theirs = path.join(OUT, 's3d'); fs.mkdirSync(theirs); let linked = false;
+  try { dirLink(theirs, path.join(D, 'out')); linked = true; } catch (x) { /* no links here */ }
+  const e = linked ? threw(() => F.writeTree(path.join(D, 'out'), files)) : null;
+  chk(() => !linked || (e && /through a link/.test(e.message) && !fs.readdirSync(theirs).length), () => `S3d. writeTree refuses a folder that leads outside through a link: ${JSON.stringify(tree(theirs))} ${e && e.message}`);
+}
+// S3e. writeTree where one of its names is already there: refused before anything is made, the name said
+{
+  const D = fresh('s3e'); fs.writeFileSync(path.join(D, 'R.pbip'), 'theirs');
+  const e = threw(() => F.writeTree(D, files));
+  chk(() => e && /already there/.test(e.message) && /R\.pbip/.test(e.message) && JSON.stringify(tree(D)) === '["R.pbip"]' && fs.readFileSync(path.join(D, 'R.pbip'), 'utf8') === 'theirs', () => `S3e. a taken name is refused before anything is written, and said: ${JSON.stringify(tree(D))} ${e && e.message}`);
+}
 // S4. freeFile: another program makes a missing folder between the look and the mkdir: that folder survives a failed write
 {
   const D = fresh('s4'), theirs = path.join(D, 'themes'), mk0 = fs.mkdirSync;
