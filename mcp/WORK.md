@@ -24,9 +24,9 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   - Done in DataArcus (branch `feat/0.3.1-release-platforms`, 5ed4758 + the note; `mcp/work/P1.md`): the CHANGELOG
     plain-words check (CI), `test-platform-paths.mjs` 27 (red 26/27 first: a link-reached working folder refused its
     real path; fixed in model.mjs's path helpers, one `underRoot`), the macOS jobs (all green by hand on c3c2089, longest
-    shard 7.0 min), README setup for Claude Code (tried: Connected), VS Code and Cursor (not tried). Open: the engine
-    half (attaching the engine repo was refused: release notes from `packaging/release-notes/`, its test, the 0.3.1
-    stub, the PACKAGING.md rule); `test-0.3.0-claims` A2-W fails on "VS Code" in the README (the reviewer's call).
+    shard 7.0 min), README setup for Claude Code (tried: Connected), VS Code and Cursor (not tried). The engine half
+    (release notes from `packaging/release-notes/`, its test, the 0.3.1 stub, the PACKAGING.md rule) is the reviewer's
+    now. `test-0.3.0-claims` A2-W narrowed on the reviewer's go to the VS Code extension claim (P1.md, Decisions).
 - Next waves (after these): X2 (bilingual create_report, rebase on R1's button), the Arabic audit lens on check_report
   (after S1), the sample project, Arabic terms, Finding #3, K1.
 
