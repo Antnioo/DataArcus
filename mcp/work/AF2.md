@@ -104,7 +104,7 @@ b148 28 -> 28, golden 12 tasks, twin-artifact 21 -> 21; audit-writes new, 30. `c
 one check of test.mjs (r12b-fmt: "plan_layout with the model must say the formats first, with the health check's own
 file"). It expected the plan to name check_model_health's file; the report's script holds its own fields only (0.3.0
 F7), so the old write wrote "Fmt - fix formats 2.tmdl" under a name the plan never showed: F09 itself. The check now
-expects the free name the plan gives (Decision 4), same check and count; then `node test.mjs` alone: see the line below.
+expects the free name the plan gives (Decision 4), same check and count; then `node test.mjs` alone: `PASS  mcp  1591 checks`. So 76 of 76, every name and count as before plus audit-writes 30.
 `DA_SHARD=1/4 npm test`: `PASS  mcp  33 checks (shard 1/4)`.
 
 ## CHANGELOG line
