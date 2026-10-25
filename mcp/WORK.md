@@ -14,8 +14,10 @@ together: `ARCHITECTURE.md` (repo root). Every finished round and wave, unchange
   byte for byte the same) and G1 (this merge: the registry, this file's archive, `ARCHITECTURE.md`, the README split).
   Each entry, unchanged: `mcp/work/archive/WORK-2026-10-25.md` and `mcp/work/<ID>.md`.
 - Wave 6, still running (25 Oct): T1 adds `mcp/test-0.3.1-mutation.mjs` (its line waits in `mcp/tests.json`
-  `pending`: move it into `suites` when the file lands); next GC (the Gulf calendar facts from Codex's audit:
-  6 false public sentences, a Fri/Sat/Sun weekend for Sharjah) and Q1 (lint and a coverage report in CI).
+  `pending`: move it into `suites` when the file lands); GC (the Gulf calendar facts from Codex's audit) built on
+  `fix/0.3.1-gulf-facts`, waiting for review: Sharjah's weekend, dated quick setups, Oman's 11 sourced dates said (not
+  built in: `mcp/work/GC.md` "Decisions I made" 1), the false and unsupported sentences fixed; Q1 (lint and a coverage
+  report in CI).
 
 ## Next step
 1. The reviewer reviews and merges T1, GC and Q1.
