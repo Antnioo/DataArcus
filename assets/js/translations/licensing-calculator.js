@@ -95,7 +95,7 @@ window.licensingCalculatorTranslations = {
       "disclaimer": "أسعار القائمة بالدولار لمناطق الولايات المتحدة، تم التحقق منها في <span data-p=\"checked\">23 سبتمبر 2026</span> وتُحدَّث أسبوعيًا من مصادر Microsoft: ‏Pro بسعر <span data-p=\"pro\">$14</span> و PPU بسعر <span data-p=\"ppu\">$24</span> لكل مستخدم شهريًا (دفع سنوي)، و Fabric بسعر <span data-p=\"cu\">$0.18</span> لكل وحدة سعة في الساعة عند الدفع حسب الاستخدام، وأقل بنحو <span data-p=\"save\">40.5%</span> مع الحجز لسنة. تختلف الأسعار حسب المنطقة والاتفاقية. هذا تقدير وليس عرض سعر. المصادر: <a href=\"https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">أسعار Power BI</a>، <a href=\"https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">أسعار Fabric</a>.",
       "cta": {
         "title": "التراخيص هي الجزء الأصغر من التكلفة",
-        "desc": "نموذج بطيء على سعة غير مناسبة يكلّف أكثر من أي ترخيص. تصمم داتا أركوس حلول Power BI تناسب مستخدميك وبياناتك وميزانيتك.",
+        "desc": "نموذج بطيء على سعة غير مناسبة يكلّف أكثر من أي ترخيص. تصمم DataArcus حلول Power BI تناسب مستخدميك وبياناتك وميزانيتك.",
         "more": "المزيد من الأدوات المجانية",
         "guide": "اقرأ الدليل: Pro أم PPU أم Fabric، أي ترخيص تحتاج؟ ←"
       },

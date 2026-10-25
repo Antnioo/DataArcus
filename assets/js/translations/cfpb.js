@@ -111,28 +111,28 @@ window.cfpbComplaintsTranslations = {
     },
     // Page Meta
     meta: {
-      title: "لوحة شكاوى الخدمات المالية في Power BI - داتا أركوس",
+      title: "لوحة شكاوى الخدمات المالية في Power BI - DataArcus",
       description:
         "استكشف لوحة تفاعلية من أربع صفحات لتحليل شكاوى المستهلكين بالولايات المتحدة بين عامي 2017 و2023: الاتجاهات، المشكلات، عدالة الشركات، والأداء الإقليمي.",
       keywords:
         "لوحة شكاوى المستهلكين, Power BI, بيانات الشكاوى, تحليل تجربة العملاء, زمن الاستجابة, السمعة, سجل الإنفاذ, DataArcus",
-      author: "داتا أركوس",
+      author: "DataArcus",
       "og:type": "website",
-      "og:title": "لوحة شكاوى الخدمات المالية في Power BI - داتا أركوس",
+      "og:title": "لوحة شكاوى الخدمات المالية في Power BI - DataArcus",
       "og:description":
         "تقرير Power BI تفاعلي: اتجاهات وطنية، أسباب الشكاوى، عدالة الشركات، والأداء الإقليمي.",
       "og:url": "https://dataarcus.com/dashboards/consumer-financial-complaints.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
-      "og:image:alt": "شعار داتا أركوس على خلفية زرقاء.",
+      "og:image:alt": "شعار DataArcus على خلفية زرقاء.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
       "twitter:title":
-        "لوحة شكاوى الخدمات المالية في Power BI - داتا أركوس",
+        "لوحة شكاوى الخدمات المالية في Power BI - DataArcus",
       "twitter:description":
         "حوّلنا بيانات 7 سنوات إلى رؤى واضحة حول جودة الخدمة والمسؤولية.",
       "twitter:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
-      "twitter:image:alt": "شعار داتا أركوس.",
+      "twitter:image:alt": "شعار DataArcus.",
       canonical:
         "https://dataarcus.com/dashboards/consumer-financial-complaints.html"
     },
@@ -159,7 +159,7 @@ window.cfpbComplaintsTranslations = {
           "<strong>نموذج بيانات قوي:</strong> جدول وقائع واحد + أبعاد موحّدة (الشركة، المنتج/المشكلة، الاستجابة، التاريخ، الجغرافيا).",
           "<strong>قياسات DAX:</strong> % الاستجابة في الوقت المناسب، % الحل المواتي، درجة السمعة، الشكاوى لكل 1% من الحصة السوقية، نمو سنوي، وغيرها.",
           "<strong>عدالة المقارنات:</strong> تطبيع المعدلات حسب الحصة السوقية وفئات حجم الشركة (صغير/متوسط/كبير).",
-          "<strong>تجربة استخدام ذكية:</strong> لوحات معلومات، فلاتر متزامنة، صف مؤشرات رئيسية، تفاعلات مضبوطة، وتولتيب يشرح المقاييس."
+          "<strong>تجربة استخدام ذكية:</strong> لوحات تحكم، فلاتر متزامنة، صف مؤشرات رئيسية، تفاعلات مضبوطة، وتولتيب يشرح المقاييس."
         ]
       }
     },

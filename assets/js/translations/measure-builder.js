@@ -101,10 +101,10 @@ window.measureBuilderTranslations = {
       "copyAll": "نسخ كل المقاييس",
       "allHow": "في Power BI Desktop افتح <strong>DAX query view</strong> (الشريط الأيسر)، الصق الكود، واضغط <strong>Update model with changes</strong>. ستُضاف كل المقاييس دفعة واحدة.",
       "oneHow": "عبر <strong>Modeling → New measure</strong>: انسخ كل مقياس والصقه. أنشئها بهذا الترتيب.",
-      "ramNote": "تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم داتا أركوس</a>.",
+      "ramNote": "تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم DataArcus</a>.",
       "cta": {
         "title": "المقاييس سهلة. الأرقام الصحيحة ليست كذلك.",
-        "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني داتا أركوس نماذج بيانات Power BI وتصلحها.",
+        "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني DataArcus نماذج بيانات Power BI وتصلحها.",
         "next": "مولّد تقويم DAX المجاني",
         "guide": "دليل: لماذا تنكسر المقارنة السنوية في رمضان، والمقياس الذي يصلحها ←"
       },
