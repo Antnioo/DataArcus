@@ -9,8 +9,8 @@
   SEEN-QUEUE.md: my eight Status cells only.
 - **Base:** `fix/0.3.1-sq3` from `origin/integration/0.3.1` (0095622).
 - **Expected checks:** new `sq3` about 23; mutation +4 mutants (+4 checks), all killed; every other suite unchanged.
-  **Measured:** sq3 28 (22 red on 0095622); mutation MUTLINE; safety and twin unchanged.
-- **Resume:** fixes pushed (a6130f7); the full run, DA_SHARD=1/4 and the mutation numbers go in "Tests" next.
+  **Measured:** sq3 28 (22 red on 0095622); mutation 174 checks, 67 mutants, all killed (35 guard suites); safety and twin unchanged.
+- **Resume:** done: 7 DONE, A3-S1 OBSOLETE (a6130f7); the reviewer reviews and merges. For the laptop below.
 
 ## Each item, confirmed on 0095622
 - **T1-S6** true: an Arabic page lists `plan.writes` as given, English (`approval-window.mjs` askPage; the twin's line
@@ -67,9 +67,10 @@ Commits: 08de75a the plan; a6130f7 the fixes, the suite and the mutants; then th
 - `npm test -- safety`: 13 suites PASS -> 14 (the 13 with the same counts, + sq3 28).
 - `npm test -- twin`: 7 suites PASS, counts unchanged (twin-complete 24, language-toggle 27, en-ar-copy 27,
   twin-preview 23, twin-artifact 21, mirror-parity 58, bilingual-report 32).
-- Mutation: 165 checks, 63 mutants -> MUTLINE. New: A-writesAr-match, A-writesAr-esc,
+- Mutation: 165 checks, 63 mutants -> 174 checks, 67 mutants, all killed (35 guard suites). New: A-writesAr-match, A-writesAr-esc,
   A-prompt-notChecked, A-pair-lang, each killed by sq3.
-- FULLLINE
+- `npm test -- --keep-going` (Linux): 78 suites PASS (test.mjs 1591, sq3 28, mutation 174); `DA_SHARD=1/4 npm test`: PASS
+  (mcp 33 checks, shard 1/4).
 - `node scripts/check-agent-memory.mjs`: PASS.
 
 ## CHANGELOG line
