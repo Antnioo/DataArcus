@@ -103,7 +103,9 @@ the 11 rows `test-0.3.0-claims.mjs` reads are the same text before and after.
 The one moved check, said: `test-0.3.0-claims.mjs`'s row reader (`mrow`) also ends a row where the next `#` heading
 starts; nothing else in a test changed.
 
-**Full run** (`cd mcp && npm test -- --keep-going`, once, on 6c3ea08): running when this was committed; its result follows in the next commit.
+**Full run** (`cd mcp && npm test -- --keep-going`, once, on 6c3ea08, this container): exit 0, `run-tests: 73 suites
+passed`, 73 result lines all PASS (expected: 73 PASS, as T1 recorded at ddae546), 29 min; `mcp  1585 checks`,
+`0.3.0-claims  202`, `release-text  38`, `mutation  148 (58 mutants, all killed)`. No product code changed.
 
 ## CHANGELOG line
 None: internal (the docs an agent reads and one CI check; nothing a user of the MCP sees changes).
