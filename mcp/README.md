@@ -10,7 +10,7 @@ built: [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Claude Desktop (beta)
 
-For testers on Windows, no command line needed.
+For testers on Windows: download the file, check it with one command, then install it with a double-click.
 
 1. **Power BI Desktop 2.159.883.0 (October 2026) or later**, the lowest version the 0.3.0 laptop proofs ran on
    (Help > About shows yours; the Microsoft Store version updates itself), and save your reports as Power BI projects
