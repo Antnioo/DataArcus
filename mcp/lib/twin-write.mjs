@@ -8,7 +8,6 @@ import { readBytes, reportPrint, mustJson } from './read-report.mjs';
 import { writeTree } from './files.mjs';
 import { testEditBeforeWrite } from './write-io.mjs';
 import { modelChanged } from './plans.mjs';
-import { out } from './answer.mjs';
 import * as Terms from './terminology.mjs';
 import { pathOut, json, isObj, EXT } from './twin-read.mjs';
 import { rawLabels, sortKeys, normTerms } from './twin-texts.mjs';

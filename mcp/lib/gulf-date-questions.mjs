@@ -17,7 +17,6 @@ const Memory = require('../../assets/js/confirm-memory.js'), Gulf = require('../
 const COUNTRY_CODES = ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'];
 export const GRAINS = ['gregorian', 'hijri', 'seasonDay'], SCOPES = ['all', 'year'];
 const keyOf = (s) => { const mk = /^'?(.+?)'?\[(.+)\]$/.exec(String(s == null ? '' : s).trim()); return mk ? { t: mk[1], c: mk[2], key: `${mk[1]}[${mk[2]}]` } : null; };
-const lc = (s) => String(s == null ? '' : s).toLowerCase();
 const shown = (k) => shownName(k, 160);
 const isDate = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
 const exprOf = (t) => { const p = (t.partitions || []).find((x) => x.source && x.source.type === 'calculated'); return p ? (Array.isArray(p.source.expression) ? p.source.expression.join('\n') : String(p.source.expression || '')) : null; };
@@ -46,7 +45,6 @@ const Q = {
   hijriYearColumn: (list) => ({ en: `Which column holds the Hijri year: ${list.join(', ')}? It was found by its name only.`,
     ar: `أي عمود يحفظ السنة الهجرية: ${list.join('، ')}؟ وُجد بالاسم فقط.` })
 };
-const OPTIONS = { grain: GRAINS, scope: SCOPES };
 export const HOW = 'Ask askNext, in the person\'s language, and wait for their answer; then call plan_layout again with it in gulfDates ({ dateRole: "Table[Column]", grain: "gregorian" | "hijri" | "seasonDay", scope: "all" | "year", year: <the Hijri year the person gives>, hijriYearColumn: "Table[Column]", and for a missing calendar country, firstYear, lastYear }). Never answer a question yourself, never take a year as "the current one", and never infer the date from which relationship is active.';
 const SAY = 'Say in the plan which date the report follows and whether the person confirmed it (using); for a seasonal page the grain, the scope (one Hijri year the person named, or every season together) and the dates\' status (announced or estimated, and the country\'s limits). Never claim how a season performed, or that seasons are complete or comparable: the tools read no data. DataArcus never activates a relationship, never edits one and never writes USERELATIONSHIP.';
 
@@ -111,7 +109,7 @@ export function gulfDateQuestions(m, a, opts) {
     if (memo.has(q)) { const v = fromMemo(memo.get(q)); if (v != null) { answers[q] = v; earlier.push(q); return 'earlier'; } }
     return null;
   };
-  const roleSt = take('dateRole', (v) => { const k = keyOf(v); const hit = k && candidates.find((x) => x.key === k.key); if (!hit) { problems.push(`gulfDates.dateRole ${shown(String(v))} is not one of the date candidates of the plan's tables (${candidates.map((x) => shown(x.key)).join(', ') || 'none'}): ask the person which of them they mean.`); return null; } return hit.key; },
+  take('dateRole', (v) => { const k = keyOf(v); const hit = k && candidates.find((x) => x.key === k.key); if (!hit) { problems.push(`gulfDates.dateRole ${shown(String(v))} is not one of the date candidates of the plan's tables (${candidates.map((x) => shown(x.key)).join(', ') || 'none'}): ask the person which of them they mean.`); return null; } return hit.key; },
     (v) => fieldAnswer(v, candidates.map((x) => x.key)));
   take('grain', (v) => (GRAINS.includes(v) ? v : null), (v) => (GRAINS.includes(v) ? v : null));
   take('scope', (v) => (SCOPES.includes(v) ? v : null), (v) => (SCOPES.includes(v) ? v : null));

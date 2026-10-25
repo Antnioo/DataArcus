@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { z } from 'zod';
 import { inside, loadModel, visible, modelOf } from '../lib/model.mjs';
-import { texts, designRtl, buildTheme, pageOf, planLayout, kindLabel } from '../lib/design.mjs';
+import { designRtl, buildTheme, pageOf, planLayout, kindLabel } from '../lib/design.mjs';
 import { AIM, scopeOf } from '../lib/scope.mjs';
 import { proposeArabic } from '../lib/arabic-names.mjs';
 import { writtenName, readableName } from '../lib/display-names.mjs';

@@ -295,7 +295,7 @@ export async function checkReport(p, opts) {
   // a file over the limit anywhere in the report: Microsoft's validator reads every file whole, so it is not run
   const scan = reportFiles.filter((f) => { try { return fs.lstatSync(f).size > REPORT_LIMITS.file; } catch (e) { return false; } });
   const inv = inventory(diskSource(loc, sk), path.basename(loc.reportDir));
-  const { R, versions, texts, customVisuals, unreadable, bookmarks, bookmarkNames } = rulesInput(inv);
+  const { R, versions, texts, customVisuals, unreadable, bookmarks } = rulesInput(inv);
   const all = [], notChecked = [];
   const add = (f) => all.push(f);
   // the reading direction: right to left when most letters of the titles, text boxes and page names are Arabic or Hebrew

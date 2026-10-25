@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { serverClient } from '../test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const Lv = (v) => ({ expr: { Literal: { Value: v } } }), Ls = (t) => Lv("'" + String(t).replace(/'/g, "''") + "'"), solid = (c) => ({ solid: { color: Ls(c) } });
+const Lv = (v) => ({ expr: { Literal: { Value: v } } }), Ls = (t) => Lv("'" + String(t).replace(/'/g, "''") + "'");
 const off = { background: [{ properties: { show: Lv('false') } }], border: [{ properties: { show: Lv('false') } }], dropShadow: [{ properties: { show: Lv('false') } }] };
 
 export async function writeButtons(out) {

@@ -227,7 +227,7 @@ export function applyDax(files, o) {
   visuals.filter((v) => v.j.visual.visualType === 'tableEx').forEach((v) => {
     const ms = measuresIn(v.j, 'Values');
     if (!ms.length) return;
-    const cols = [], said = [];
+    const cols = [];
     if (uses.includes('sparkline')) {
       const x = ms[0], mo = measureOf(x.t, x.m), cal = mo && calendarFor(model, x.t);
       if (!mo || !okName(x.t, x.m)) notUsed.push({ use: 'sparkline', page: v.page, why: 'the table\'s first measure is not a measure of the model DAX can name' });
