@@ -3770,9 +3770,12 @@ if (part('round12b')) {
     chk(() => !h.err && JSON.stringify(to(hf.fields)) === JSON.stringify(Object.fromEntries(Object.entries(want).sort())) && /formatString: 0\.0%/.test(sc) && /measure Orders = [\s\S]*?formatString: #,0\n/.test(sc) && !/Revenue/.test(sc),
       () => `check_model_health fixes.FORMATS: ${h.err ? h.t.slice(0, 300) : JSON.stringify(hf)}`);
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r12b-fmt', fields: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'] });
-    // (0.2.9, the gate: plan_layout names the health check's own file, which create_report writes after the user's go)
+    // (0.2.9, the gate: plan_layout names the file create_report writes after the user's go. 0.3.1 AF2, the release
+    // audit's F09: the report's script covers its own fields only, so it is not the health check's text; the plan now
+    // names the free name the write will write, the health check's file left as it is, where it named the health check's
+    // file and the write then wrote "... 2.tmdl")
     chk(() => !pl.err && Object.keys(pl.j)[0] === 'formats' && JSON.stringify(to(pl.j.formats.fields)) === JSON.stringify({ 'Sales[Orders]': '#,0', 'Sales[Return Rate]': '0.0%' })
-        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile) && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
+        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile).replace(/\.tmdl$/, ' 2.tmdl') && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
       () => `plan_layout with the model must say the formats first, with the health check's own file: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.formats)}`);
     const cr = await ask('create_report', { path: 'r12b-fmt', name: 'Fmt', design: (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design,
       fields: { kpis: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'], table: ['Sales[Order Date]', 'Sales[Orders]', 'Sales[Return Rate]', 'Sales[Qty]'] } });
