@@ -10,24 +10,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { real, nothingAt, visible, shownName, loadModel } from './model.mjs';
+import { real, nothingAt, visible, loadModel } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
-import { INSTRUCTION, safeName, mustJson, reportPrint, readBytes, notCopiedOf, canSync } from './read-report.mjs';
-import { draftText } from './arabic-names.mjs';
+import { safeName, mustJson, reportPrint, readBytes, notCopiedOf, canSync } from './read-report.mjs';
 import { writeTree } from './files.mjs';
 import { testEditBeforeWrite } from './write-io.mjs';
 import { modelChanged } from './plans.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
 import { capAnswer, fitLists, out } from './answer.mjs';
 import { AIM } from './scope.mjs';
-import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
 import { tagOf } from './model-script.mjs';
 import { fieldParametersOf } from './metric-switcher.mjs';
 import { DAX_MEASURE } from './dax-functions.mjs';
-import { TEXT_CAP, TEXTS_MAX, relRoot, pathOut, json, locate, memoryLoc, bytesAt, jsonAt, readOriginal, isObj, EXT, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
+import { TEXTS_MAX, relRoot, pathOut, json, locate, memoryLoc, bytesAt, jsonAt, readOriginal, isObj, EXT, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
 import { num, posOf, typeOf, clone, litStr, Lv, Ls, isPageBtn, overlaps, holdsBox, absBox, idMaker, textLook, hexOf, solid } from './twin-visuals.mjs';
+import { arabicDax, placeholderProblem, titleMeasuresOf, textMeasuresOf, textsOf, rawLabels, sortKeys, normTerms, cleanLabel, sameTextLabels, notTranslatedOf, termsOf } from './twin-texts.mjs';
 // (0.3.1 S9) the twin is split by step into lib/twin-*.mjs (reading, visuals, texts, model, pages, the EN-AR copy, plan,
 // preview, write); this module stays what the server, check_report and the lens import, with the same exports
 
@@ -42,188 +41,6 @@ const Engine = require('../../assets/js/design-engine.js'), A11y = require('../.
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
 const hasControl = require('../../assets/js/pbip-export.js').hasControl, ArabicCal = require('../../assets/js/arabic-calendar.js');
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
-
-// ---- title measures (rc.24, the laptop's proof of rc.23: 4 chart titles stayed English in the twin) ----
-// A chart's "fx" title is a measure; one of the report's own (reportExtensions.json, as DataArcus writes "Title: ..." for a
-// chart cut to its Top N) is read, never run: its DAX is translated only when its text is fixed texts and the numbers
-// it counts, of the shape  [VARs, no text in them] RETURN IF ( <a condition, no text>, A, B )  or  A, each of A and B
-// texts and variables joined by &. Each branch is offered as one text, its variables as {1}, {2}: "Top {1} of {2}: Web
-// Orders Total Score by Coupon Region". Any other shape (a value of the model, FORMAT, a text in a variable, a measure of
-// the model) is listed as not translated, with why: it is never guessed.
-// the DAX read token by token: its string literals, names ('Table', [Column]) and comments, so a sign inside them is not code
-function daxScan(expr) {
-  const lits = []; let i = 0, depth = 0; const top = [];   // top: [index, char] of the top-level , & ( ) outside literals and names
-  while (i < expr.length) {
-    const c = expr[i];
-    if (c === '"') { let j = i + 1, t = ''; for (;;) { if (j >= expr.length) return null; if (expr[j] === '"') { if (expr[j + 1] === '"') { t += '"'; j += 2; continue; } break; } t += expr[j++]; } lits.push({ start: i, end: j + 1, text: t }); i = j + 1; continue; }
-    if (c === "'") { const j = expr.indexOf("'", i + 1); if (j < 0) return null; i = j + 1; while (expr[i] === "'") { const k = expr.indexOf("'", i + 1); if (k < 0) return null; i = k + 1; } continue; }
-    if (c === '[') { let j = i + 1; for (;;) { j = expr.indexOf(']', j); if (j < 0) return null; if (expr[j + 1] === ']') { j += 2; continue; } break; } i = j + 1; continue; }
-    if ((c === '/' && (expr[i + 1] === '/' || expr[i + 1] === '*')) || (c === '-' && expr[i + 1] === '-')) return { comment: true };
-    if (c === '(') depth++;
-    if (c === ')') depth--;
-    top.push({ i, c, depth });
-    i++;
-  }
-  return { lits, top };
-}
-const NOT_READ = 'its DAX builds the text in a way DataArcus does not read (only fixed texts and the numbers the report counts are translated)';
-function parseTitleDax(expr0, o) {
-  const allowEmpty = !!(o && o.allowEmpty);
-  const expr = String(expr0 == null ? '' : expr0), sc = daxScan(expr);
-  if (!sc) return { why: 'its DAX could not be read (an unclosed text or name)' };
-  if (sc.comment) return { why: 'its DAX has comments: ' + NOT_READ };
-  const inLit = (i) => sc.lits.some((l) => i >= l.start && i < l.end);
-  // the last RETURN outside literals and names
-  let ret = -1; const re = /\bRETURN\b/gi; let m; while ((m = re.exec(expr))) { if (!inLit(m.index) && sc.top.some((t) => t.i === m.index)) ret = m.index; }
-  const bodyAt = ret >= 0 ? ret + 6 : 0, prefix = ret >= 0 ? expr.slice(0, ret) : '';
-  if (sc.lits.some((l) => l.start < bodyAt)) return { why: 'a text of it is kept in a variable: ' + NOT_READ };
-  const vars = new Set([...prefix.matchAll(/\bVAR\s+([A-Za-z_][A-Za-z0-9_]*)\s*=/gi)].map((x) => x[1]));
-  const body = expr.slice(bodyAt), lead = body.length - body.trimStart().length, b0 = bodyAt + lead, b1 = bodyAt + body.trimEnd().length;
-  // a branch: literals and variables joined by & (top level, depth of the branch)
-  const branch = (from, to) => {
-    const parts = [], cuts = sc.top.filter((t) => t.i >= from && t.i < to && t.c === '&' && t.depth === sc.top.filter((x) => x.i < from).reduce((d, x) => d + (x.c === '(' ? 1 : x.c === ')' ? -1 : 0), 0)).map((t) => t.i);
-    let at = from; [...cuts, to].forEach((c) => { parts.push([at, c]); at = c + 1; });
-    const out = { template: '', vars: [] };
-    for (const [a, z] of parts) {
-      const raw = expr.slice(a, z), t = raw.trim(), start = a + raw.indexOf(t);
-      const l = sc.lits.find((x) => x.start === start && x.end === start + t.length);
-      if (l) { if (/[{}]/.test(l.text)) return null; out.template += l.text; continue; }
-      if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(t) && vars.has(t)) { out.vars.push(t); out.template += '{' + out.vars.length + '}'; continue; }
-      return null;
-    }
-    return /\p{L}/u.test(out.template) || (allowEmpty && out.template === '' && !out.vars.length) ? out : null;
-  };
-  const some = (bs) => bs.some((b) => /\p{L}/u.test(b.template));
-  if (/^IF\s*\(/i.test(expr.slice(b0, b1)) && expr[b1 - 1] === ')') {
-    const open = expr.indexOf('(', b0), d = sc.top.find((t) => t.i === open).depth;
-    const commas = sc.top.filter((t) => t.i > open && t.i < b1 - 1 && t.c === ',' && t.depth === d).map((t) => t.i);
-    const close = sc.top.find((t) => t.i > open && t.c === ')' && t.depth === d - 1);
-    if (commas.length !== 2 || !close || close.i !== b1 - 1) return { why: NOT_READ };
-    if (sc.lits.some((l) => l.start > open && l.start < commas[0])) return { why: 'its condition compares texts: ' + NOT_READ };
-    const A = branch(commas[0] + 1, commas[1]), B = branch(commas[1] + 1, b1 - 1);
-    if (!A || !B || !some([A, B])) return { why: NOT_READ };
-    return { prefix, ret: ret >= 0, cond: expr.slice(open + 1, commas[0]).trim(), branches: [A, B] };
-  }
-  const A = branch(b0, b1);
-  return A && some([A]) ? { prefix, ret: ret >= 0, cond: null, branches: [A] } : { why: NOT_READ };
-}
-// the measure's DAX with the Arabic texts (one per branch, its {n} the branch's variables); a branch without a label keeps its own
-const daxText = (t) => '"' + String(t).replace(/"/g, '""') + '"';
-function arabicDax(pd, labels) {
-  const one = (b, label) => { if (label == null) label = b.template; const out = []; String(label).split(/(\{\d+\})/).forEach((x) => { const v = /^\{(\d+)\}$/.exec(x); if (v) out.push(b.vars[+v[1] - 1]); else if (x) out.push(daxText(x)); }); return out.length ? out.join(' & ') : '""'; };
-  const bs = pd.branches.map((b, i) => one(b, labels[i]));
-  return (pd.ret ? pd.prefix + 'RETURN ' : '') + (pd.cond != null ? `IF ( ${pd.cond}, ${bs[0]}, ${bs[1]} )` : bs[0]);
-}
-// a label of a branch must keep each {n} of the branch once, and add none
-function placeholderProblem(template, label) {
-  const want = (template.match(/\{\d+\}/g) || []).sort(), got = (String(label).match(/\{\d+\}/g) || []).sort();
-  return JSON.stringify(want) === JSON.stringify(got) ? null : `the Arabic text must keep ${want.length ? want.join(' and ') + ' once each (the numbers the report counts)' : 'no {n}'}, and add none: not taken`;
-}
-// every title of the report given by a measure: the report's own (parsed), or the model's
-const extMeasureOf = (R, entity, name) => { const e = R.ext ? R.ext.entities.find((x) => isObj(x) && x.name === entity) : null; return e && Array.isArray(e.measures) ? e.measures.find((x) => isObj(x) && x.name === name) || null : null; };
-function titleMeasuresOf(R) {
-  const seen = new Map();
-  R.pages.forEach((pg) => pg.visuals.forEach((v) => {
-    const vco = isObj(v.json) && isObj(v.json.visual) && isObj(v.json.visual.visualContainerObjects) ? v.json.visual.visualContainerObjects : {};
-    (Array.isArray(vco.title) ? vco.title : []).forEach((e) => {
-      const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null;
-      const src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-      if (!src || typeof ms.Property !== 'string' || typeof src.Entity !== 'string') return;
-      const key = (src.Schema === 'extension' ? 'ext' : 'model') + '\u0000' + src.Entity + '\u0000' + ms.Property;
-      if (seen.has(key)) return;
-      const own = src.Schema === 'extension', m = own ? extMeasureOf(R, src.Entity, ms.Property) : null;
-      const pd = !own ? { why: 'a measure of the model: the twin never changes the model, so this title stays as the model gives it' } : !m ? { why: 'the report\'s measure is not in its reportExtensions.json' } : typeof m.expression !== 'string' ? { why: 'its DAX is not a text in reportExtensions.json' } : parseTitleDax(m.expression);
-      seen.set(key, { entity: src.Entity, name: ms.Property, own, measure: m, pd });
-    });
-  }));
-  return [...seen.values()];
-}
-
-// (0.3.0 D3: the empty state's "No data for this selection" stayed English in the twin) a measure of the report that a
-// visual shows (in its fields, as the writer's "No data: ..." card does), its text read as a title measure's is (fixed
-// texts and the numbers the report counts; one branch may be the empty text ""), never run. The title measures are
-// above; a measure of the model is the model's (never changed)
-function textMeasuresOf(R) {
-  const seen = new Map(), titles = new Set(titleMeasuresOf(R).filter((x) => x.own).map((x) => x.entity + '\u0000' + x.name));
-  const walk = (o) => { if (Array.isArray(o)) { o.forEach(walk); return; } if (!isObj(o)) return;
-    const ms = isObj(o.Measure) ? o.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
-    if (src && src.Schema === 'extension' && typeof src.Entity === 'string' && typeof ms.Property === 'string') {
-      const key = src.Entity + '\u0000' + ms.Property, m = extMeasureOf(R, src.Entity, ms.Property);
-      if (!seen.has(key) && !titles.has(key) && m && typeof m.expression === 'string' && /"(?:[^"]|"")*\p{L}/u.test(m.expression)) seen.set(key, { entity: src.Entity, name: ms.Property, measure: m, pd: parseTitleDax(m.expression, { allowEmpty: true }) });
-    }
-    Object.values(o).forEach(walk); };
-  R.pages.forEach((pg) => pg.visuals.forEach((v) => walk(isObj(v.json) && isObj(v.json.visual) ? v.json.visual.query : null)));
-  return [...seen.values()];
-}
-
-// ---- the texts a reader sees, for the user's Arabic (cleaned, capped, instruction-like withheld) ----
-// An id holds report names (a page, a visual, a field's queryRef). An id that reads like an instruction, holds an
-// invisible character or is longer than 160 is replaced by an opaque one ("h:" and 16 hex digits of its hash), which
-// the server maps back: no such name reaches the answer (the cross-review's T5)
-const safeId = (raw) => (!INSTRUCTION.test(raw) && visible(raw) === raw && raw.length <= 160 ? raw : 'h:' + crypto.createHash('sha256').update(raw).digest('hex').slice(0, 16));
-function textsOf(R) {
-  const all = [], seen = new Set();
-  const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
-  R.pages.forEach((pg) => {
-    add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
-    // (rc.22, B-138: a page button kept its English text in the twin) a button that goes to a page knows that page
-    const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
-      return /PageNavigation/i.test(String(lit(p.type))) ? lit(p.navigationSection) : null; };
-    pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
-    // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
-    pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
-  });
-  R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
-  // (rc.24) each visible text of the report's title measures, one per text across the report (the measures listed)
-  titleMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => x.pd.branches.forEach((b) => {
-    const id = 'titleText:' + b.template, had = all.find((t) => t.id === id), m = safeName(x.entity + '[' + x.name + ']');
-    if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
-    add({ id, kind: 'titleMeasure', text: b.template, what: 'Chart title (from a title measure)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
-  }));
-  // (0.3.0 D3) each visible text of the report's other text measures a visual shows (the empty state), one per text
-  textMeasuresOf(R).filter((x) => x.pd.branches).forEach((x) => x.pd.branches.filter((b) => b.template).forEach((b) => {
-    const id = 'measureText:' + b.template, had = all.find((t) => t.id === id), m = safeName(x.entity + '[' + x.name + ']');
-    if (had) { if (!had.measures.includes(m)) had.measures.push(m); return; }
-    add({ id, kind: 'measureText', text: b.template, what: 'Text a report measure shows (such as the empty state\'s message)' + (b.vars.length ? `: keep ${b.vars.map((v, i) => '{' + (i + 1) + '}').join(' and ')}, the numbers the report counts` : ''), measures: [m] }, {});
-  }));
-  const rowShown = rowFieldsOf(R);
-  return all.map((t) => {
-    const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
-    // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
-    if (t.page && out.id !== t.id) out.page = safeName(t.page);
-    if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
-    if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
-    const text = visible(raw);
-    const row = t.kind === 'field' ? rowShown.get(String(t.id).slice('field:'.length)) : null;
-    if (row) out.what = row.only ? ROW_WHAT : ROW_AND_MORE;
-    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: row && row.only ? draftText(raw.replace(AVG, '$1')) : draftText(raw) });
-  });
-}
-// (0.3.1 R1: a real user's per-row "Days open" column, a measure named "Avg days open", was drafted «متوسط أيام الفتح») A
-// measure (or a field's sum) in a table whose rows are items (the table lists a column of the model) shows, on each row,
-// that one item's value: its header names what one row shows, not the average or total over the rows (the Total row is
-// Power BI's own). Such a field says it (what), and, shown only in such tables, its draft leaves out "Avg" / "Average"
-// (the glossary's draft of the rest, else none). Shown elsewhere too (a card, a chart, a matrix), one name serves both:
-// its draft is kept and both are said. queryRef -> { only }
-const AVG = /^\s*(?:avg\.?|average)\s+(.+)$/i;
-const ROW_WHAT = 'Table column header: each row of the table is one item, so name what ONE row shows (a measure named "Avg ..." gives that item\'s own value on its row; the Total row is Power BI\'s own)';
-const ROW_AND_MORE = 'Shown as a table column (each row one item: that item\'s own value) and elsewhere (over many items): one Arabic name serves both';
-function rowFieldsOf(R) {
-  const seen = new Map();
-  R.pages.forEach((pg) => pg.visuals.forEach((v) => {
-    const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : null, qs = vis && isObj(vis.query) && isObj(vis.query.queryState) ? vis.query.queryState : null;
-    if (!qs) return;
-    const ps = Object.values(qs).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections.filter((x) => isObj(x) && isObj(x.field) && typeof x.queryRef === 'string') : []));
-    const items = vis.visualType === 'tableEx' && ps.some((x) => isObj(x.field.Column));
-    ps.forEach((x) => { const agg = isObj(x.field.Measure) || isObj(x.field.Aggregation), e = seen.get(x.queryRef) || { inItems: false, other: false };
-      if (items && agg) e.inItems = true; else e.other = true; seen.set(x.queryRef, e); });
-  }));
-  return new Map([...seen].filter(([, e]) => e.inItems).map(([k, e]) => [k, { only: !e.other }]));
-}
-// the labels by the ids the answer gave, as the mirror engine's ids (the report's own names); (0.3.0 J18) each as it is
-// written: a Latin run inside Arabic text isolated (terminology.mjs)
-const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = Terms.isolateLatin(labels[k]); }); return out; };
 
 // ---- the model next to the report: its date tables (for time left to right, T2) and the month offer ----
 function modelOf(R, loc) {
@@ -866,96 +683,7 @@ function languageCopy(P, built, labels) {
       service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per Arabic page; the English pages are not in the page list and are reached by the "English" button, and «${EN}» brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` };
   return { files, pairs, buttons, syncGroups, bookmarks: R.bookmarks.length, activePage, tabs, notes, tabsShown };
 }
-
-// ---- the plan ----
-const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
-// (0.3.0 J18) terms as a plan pins them: keys as Table[Field], each name as written (writtenName)
-const normTerms = (t) => sortKeys(Object.fromEntries(Object.entries(t || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? [`${mk[1]}[${mk[2]}]`, cleanLabel(v, `terms: ${String(k)}`)] : null; }).filter(Boolean)));
-const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
-
-// (0.3.0 D3) a text of the new kinds with no label of its own takes the approved Arabic of the same text, shown in the
-// plan (labelFrom) and pinned with it, as a page button takes its page's (B-138): a phone copy the label of the page's
-// same text on the same visual, an alt text, a card's blank text or a tooltip that of any listed text with exactly
-// its words (a chart's alt text is its title). A label given for it wins; a text with {n} is never shared
-const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text']);
-const KIND_SAID = { page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
-function sameTextLabels(texts, labels) {
-  const key = (t) => (t.text != null && !/\{\d+\}/.test(t.raw) ? t.raw.trim() : null), byText = new Map();
-  const learn = (t) => { const k = key(t); if (k && labels[t.id] != null && !byText.has(k)) byText.set(k, t); };
-  texts.forEach(learn);
-  const take = (t, from, said) => { labels[t.id] = labels[from.id]; t.labelFrom = said; learn(t); };
-  texts.filter((t) => !t.phone && SHARED.has(t.kind) && labels[t.id] == null && key(t)).forEach((t) => { const f = byText.get(key(t)); if (f && f !== t) take(t, f, `the approved Arabic of the same text (${KIND_SAID[f.kind] || f.kind})`); });
-  texts.filter((t) => t.phone && labels[t.id] == null && key(t)).forEach((t) => {
-    const own = texts.find((x) => x.rawId === t.rawId.slice('phone:'.length));
-    if (own && labels[own.id] != null && own.raw === t.raw) return take(t, own, 'the approved Arabic of the same text on the page');
-    const f = byText.get(key(t)); if (f && f !== t) take(t, f, `the approved Arabic of the same text (${KIND_SAID[f.kind] || f.kind})`);
-  });
-}
-// every listed text with Latin letters that the twin writes as it is (no approved Arabic), with why: one row per text
-// (the same words on several visuals, a field and the alt text that repeats it, are one row: where says each kind and
-// count; ids name them in texts), the why of its strongest reason
-function notTranslatedOf(texts, labels, problems) {
-  const rows = new Map(), RANK = ['withheld', 'problem', 'field', 'other'];
-  texts.filter((t) => labels[t.id] == null && /[A-Za-z]/.test(t.raw)).forEach((t) => {
-    const p = problems.find((x) => x.id === t.id);
-    const [rank, why] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
-      : p ? ['problem', 'its Arabic was not taken: ' + p.why]
-      : t.kind === 'field' ? ['field', 'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)']
-      : ['other', 'no Arabic was approved for it: the twin shows it as it is'];
-    const k = t.text == null ? '\u0000' + t.id : t.text, what = (t.phone ? 'phone layout: ' : '') + (KIND_SAID[t.kind] || t.kind);
-    if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why });
-    const r = rows.get(k); r.where[what] = (r.where[what] || 0) + 1; r.ids.push(t.id);
-    if (RANK.indexOf(rank) < RANK.indexOf(r.rank)) Object.assign(r, { rank, why });
-  });
-  return [...rows.values()].map((r) => ({ text: r.text, where: Object.entries(r.where).map(([w, n]) => (n > 1 ? `${w} (${n})` : w)).join(', '), why: r.why, ids: r.ids }));
-}
-
-// (0.3.0 J18, B-171) the terminology sheet of the twin: each field text's field ("Table[Field]", from the projections that
-// show it), the terms the person gave (terms: { "Table[Field]": Arabic }, or the English name to keep it) or confirmed
-// earlier in this session for this field of this model, unchanged since (a.memory false: none, the write's own plan).
-// A term labels every header of its field (a label given for one that says it otherwise is not used: notUsing) and every
-// text made of its English name ("A by B", "Top {1} of {2}: A by B", "A (B)", "A: detail", "No data: A"), the same word
-// everywhere; an English name two fields share with two terms derives nothing. labels: changed in place.
-function termsOf(R, texts, labels, a, m) {
-  const keyOfRef = new Map();
-  const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && typeof p.queryRef === 'string' ? Terms.fieldKeyOf(p.field) : null; if (k && !keyOfRef.has(p.queryRef)) keyOfRef.set(p.queryRef, k); }); Object.values(o).forEach(walk); };
-  R.pages.forEach((pg) => pg.visuals.forEach((v) => walk(isObj(v.json) && isObj(v.json.visual) ? v.json.visual.query : null)));
-  texts.forEach((t) => { if (t.kind !== 'field') return; const k = keyOfRef.get(String(t.rawId).slice('field:'.length)); if (k) { t.fieldKey = k; t.field = shownName(k, 200); } });
-  const keys = [...new Set(texts.filter((t) => t.fieldKey).map((t) => t.fieldKey))];
-  const enOf = (k) => new Set([k.replace(/^.*?\[(.*)\]$/, '$1')].concat(texts.filter((t) => t.fieldKey === k).map((t) => t.raw.trim())));
-  const given = {}, unknown = [], term = new Map(), notUsing = [];
-  Object.entries(a.terms || {}).forEach(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), n = mk ? `${mk[1]}[${mk[2]}]` : null; const c = cleanLabel(v, `terms: ${String(k)}`);
-    if (n) given[n] = c; if (!n || !keys.includes(n)) unknown.push(visible(String(k)).slice(0, 160)); });
-  const conf = a.memory === false ? new Map() : Terms.confirmedOf(m, keys.filter((k) => given[k] == null));
-  keys.forEach((k) => {
-    if (given[k] != null) term.set(k, enOf(k).has(given[k].trim()) ? { ar: null, status: 'kept', declined: true } : { ar: given[k], status: 'approved' });
-    else if (conf.has(k)) { const c = conf.get(k); term.set(k, c.decision === 'kept' ? { ar: null, status: 'kept', declined: true, earlier: true } : { ar: c.alias, status: 'approved', earlier: true }); }
-  });
-  const said = () => 'the terminology sheet';
-  texts.filter((t) => t.fieldKey && term.has(t.fieldKey) && term.get(t.fieldKey).ar != null).forEach((t) => {
-    const ar = term.get(t.fieldKey).ar;
-    if (labels[t.id] != null && labels[t.id] !== ar) notUsing.push({ id: t.id, why: 'a field\'s header takes the field\'s term: the label given for it was not used' });
-    labels[t.id] = ar; t.labelFrom = said(t.fieldKey);
-  });
-  // the texts made of the fields' English names
-  const byName = new Map(), clash = new Set();
-  term.forEach((x, k) => { if (x.ar == null) return; enOf(k).forEach((n) => { const l = n.toLowerCase(); if (byName.has(l) && byName.get(l) !== x.ar) clash.add(l); else byName.set(l, x.ar); }); });
-  clash.forEach((l) => byName.delete(l));
-  if (byName.size) texts.forEach((t) => {
-    if (t.fieldKey || t.text == null) return;
-    const used = [], d = draftText(t.raw, { names: byName, used }); if (!d || !used.length) return;
-    if (labels[t.id] == null) { labels[t.id] = d; t.labelFrom = said(); }
-    else if (labels[t.id] !== d) notUsing.push({ id: t.id, why: `its label says the field otherwise than the sheet («${visible(d).slice(0, 120)}»): kept as the person gave it` });
-  });
-  // every other field's status: a label given for its header (approved), its fixed list draft (not written until it is
-  // approved), or none (kept in English)
-  const statuses = () => keys.forEach((k) => { if (term.has(k)) return; const ts = texts.filter((t) => t.fieldKey === k), lab = ts.map((t) => labels[t.id]).find((x) => x != null);
-    if (lab != null) return term.set(k, { ar: lab, status: 'approved' });
-    const dr = ts.map((t) => t.draftArabic).find(Boolean);
-    term.set(k, dr ? { ar: dr, status: 'draft', why: 'a draft from the fixed list of report words: not written until the person approves it (terms)' } : { ar: null, status: 'kept' }); });
-  return { keys, term, given: sortKeys(given), unknown, notUsing, statuses };
-}
 
 // (0.3.0 Q1) the twin's plan on a large report: 46,660 characters (52,412 into "same") for a two-page report with every
 // option on, and the backstop halved its texts with no way to get the rest. The texts are cut to fit, from textsFrom, with
