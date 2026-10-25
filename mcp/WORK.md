@@ -4,6 +4,12 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 3: C time to first value, the sample project (25 Oct, builder; branch `feat/0.3.1-sample-project` from integration/0.3.1 11df69b)
+A new user with no model: `plan_layout sample: true` -> approval -> `create_report sample: true` writes a made-up Gulf retail
+PBIP project (TMDL model, typed rows, an empty report) and answers a 4-step tour of real DataArcus calls on it. An option,
+not a 12th tool (C.md: why). Plan, expected numbers, results, "For the laptop", "For the reviewer", decisions: `mcp/work/C.md`.
+- Done: the plan (this entry). Next: red tests, the build, touched suites, the full npm test.
+
 ## 0.3.1, wave 2: X2 one report in English and Arabic from create_report (25 Oct, builder; branch `feat/0.3.1-bilingual-report-2` from integration/0.3.1 ed23620)
 The old X2 (`origin/feat/0.3.1-bilingual-report`, pre-0.3.0 history) ported onto today's code, not merged: `languages:
 "en+ar"` on plan_layout and create_report builds the Arabic half through the EN-AR copy's own planTwin (R1's buttons and
