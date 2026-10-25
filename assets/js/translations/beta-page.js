@@ -43,7 +43,7 @@ window.betaPageTranslations = {
       "new": {
         "title": "What's new in 0.3.0",
         "version": "Version 0.3.0 adds:",
-        "l1": "<strong>Arabic reports with no English titles.</strong> An Arabic report from an English-named model, and the Arabic twin of a report, show their titles, table headers, tooltips, alt texts and phone layout in Arabic. Before you approve, the plan lists any field kept in English, with why.",
+        "l1": "<strong>Arabic titles in Arabic reports, even from an English-named model.</strong> An Arabic report from an English-named model, and the Arabic twin of a report, show their titles, table headers, tooltips, alt texts and phone layout in Arabic. Anything kept in English is listed, with why, before you approve.",
         "l2": "<strong>An Arabic terminology sheet.</strong> One Arabic name per field, approved by you, written on every title, table header, slicer header, tooltip and alt text. The approval page shows it side by side, English and Arabic.",
         "l3": "<strong>One report in English and Arabic.</strong> <code translate='no'>create_arabic_twin</code> can write a copy named \"(EN-AR)\" holding the English pages and their Arabic pages, with a language button on each page where its header has room (and on its phone layout when that has room too); the plan names any page left without one. Your original report is not changed.",
         "l4": "<strong>Waterfall, combo and small multiples.</strong> Power BI's own visuals, when you ask for them and the fields fit. In an Arabic report the waterfall reads left to right, as Power BI draws it; the rest of the page is mirrored.",
@@ -89,13 +89,14 @@ window.betaPageTranslations = {
         "model": "It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.",
         "ask": "It writes only inside the one folder you choose (and a private check copy in your computer's temporary folder, deleted when the check ends).",
         "validator": "Its check_report tool checks any PBIR report offline with Microsoft's report validator.",
-        "data": "It reads files on your machine to check and fingerprint them, and never returns data values from your model to Claude: what it sends is your model's structure (tables, columns, measures, formats) and, from a report, the texts typed in it: page names and short text boxes, and for the Arabic twin its titles too (a figure or a name typed there is sent too). What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {
         "title": "Requirements and limits",
-        "windows": "Windows only.",
+        "windows": "Windows for the one-click install; Power BI Desktop, which opens the reports, runs only on Windows.",
         "desktop": "Power BI Desktop 2.159.883.0 (October 2026) or later: the reports use recent features that older versions lack.",
         "claude": "Claude Desktop.",
+        "clients": "Developers can also run it from a clone of the repository in Claude Code, VS Code (agent mode) or Cursor, on Windows, macOS or Linux: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md#other-mcp-clients-and-platforms-developers' class='text-accent' target='_blank' rel='noopener'>setup notes</a> (Claude Code tried on Linux; VS Code and Cursor not yet tried). The one-click .mcpb is for Windows.",
         "beta": "A public beta: the package is not code-signed yet, so check its SHA-256 (below and in the release notes) before you install it.",
         "large": "Models above about 50 tables are experimental."
       },
@@ -155,7 +156,7 @@ window.betaPageTranslations = {
       "new": {
         "title": "الجديد في الإصدار 0.3.0",
         "version": "ما يضيفه الإصدار 0.3.0:",
-        "l1": "<strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.",
+        "l1": "<strong>عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات (Tooltips) والنصوص البديلة وتخطيط الهاتف. وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك.",
         "l2": "<strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس المقسم والتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.",
         "l3": "<strong>تقرير واحد باللغتين.</strong> تستطيع <code translate='no'>create_arabic_twin</code> أن تكتب نسخة باسم \"(EN-AR)\" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.",
         "l4": "<strong>مخطط الشلال والمخطط المركّب والمخططات المتعددة الصغيرة.</strong> عناصر Power BI المرئية نفسها (waterfall وcombo وsmall multiples)، حين تطلبها وتناسبها الحقول. وفي التقرير العربي يُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI، وتبقى بقية الصفحة معكوسة.",
@@ -201,13 +202,14 @@ window.betaPageTranslations = {
         "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.",
         "ask": "يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).",
         "validator": "تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.",
-        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير النصوص المكتوبة فيه: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية (فإن كُتب فيها رقم أو اسم يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {
         "title": "المتطلبات والحدود",
-        "windows": "Windows فقط.",
+        "windows": "Windows للتثبيت بنقرة واحدة؛ وPower BI Desktop، الذي يفتح التقارير، لا يعمل إلا على Windows.",
         "desktop": "Power BI Desktop بالإصدار 2.159.883.0 (أكتوبر 2026) أو أحدث: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.",
         "claude": "Claude Desktop.",
+        "clients": "ويمكن للمطورين أيضًا تشغيله من نسخة من المستودع في Claude Code أو VS Code (وضع الوكيل) أو Cursor، على Windows أو macOS أو Linux: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md#other-mcp-clients-and-platforms-developers' class='text-accent' target='_blank' rel='noopener'>ملاحظات الإعداد</a> (جُرّب Claude Code على Linux، ولم يُجرَّب VS Code وCursor بعد). أما ملف .mcpb للتثبيت بنقرة واحدة فهو لـ Windows.",
         "beta": "نسخة تجريبية عامة: الحزمة غير موقّعة بعد، فتحقّق من بصمتها SHA-256 (أدناه وفي ملاحظات الإصدار) قبل تثبيتها.",
         "large": "النماذج التي تتجاوز نحو 50 جدولًا تجريبية."
       },

@@ -225,7 +225,7 @@ portfolio: {
         },
         {
           q: "Does the AI agent see my data?",
-          a: "<strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. It writes only inside the one folder you choose. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>Claude gets your model's structure, never the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop, and write a new report next to your model, only inside the one folder you choose. What they send to Claude: your model's and report's names and structure (tables, columns, measures, formats, pages, visuals), and the short texts typed on report pages (titles, text boxes), which can hold a figure or a name; never table rows, filter or slicer values, or bookmark states. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -518,7 +518,7 @@ portfolio: {
         },
         {
           q: "هل يرى وكيل الذكاء الاصطناعي بياناتي؟",
-          a: "<strong>يقرأ بنية نموذجك الدلالي، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات) لا صفوف البيانات، وتكتب تقريرًا جديدًا بجانب نموذجك. ولا يكتب إلا داخل المجلد الذي تختاره. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>يصل إلى Claude بنية نموذجك الدلالي، لا الصفوف التي فيه أبدًا.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop، وتكتب تقريرًا جديدًا بجانب نموذجك، داخل المجلد الذي تختاره فقط. وما ترسله إلى Claude: أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير (العناوين ومربعات النص) وقد تحمل رقمًا أو اسمًا؛ ولا ترسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات (Slicers) ولا حالات الإشارات المرجعية. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
