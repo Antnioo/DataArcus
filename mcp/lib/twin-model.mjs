@@ -8,7 +8,8 @@ import { relRoot, byPathOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 // (as it stood in arabic-twin.mjs, MONTHS_AR with it: declared there, read nowhere; S9 moves it as it was)
-const hasControl = require('../../assets/js/pbip-export.js').hasControl, ArabicCal = require('../../assets/js/arabic-calendar.js');
+// eslint-disable-next-line no-unused-vars -- kept: test-0.2.9i's "one Arabic month list" check reads this source for AR_MONTHS (Q1, listed)
+const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS, hasControl = require('../../assets/js/pbip-export.js').hasControl, ArabicCal = require('../../assets/js/arabic-calendar.js');
 
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 
