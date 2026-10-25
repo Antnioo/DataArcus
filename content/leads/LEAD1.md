@@ -116,3 +116,8 @@ Built as planned, with the changes listed under "Decisions I made".
   against the new Arabic texts: no hit in them.
 - The dark selects (role, company size) on the new page show no dropdown arrow (EN and AR, 1440 and 390): the style.css select rule was not changed here.
 - LINKEDIN-PLAN's "Never: no engagement bait ("comment YES")" against the owner's comment-keyword choice: his decision.
+- 25 Oct 19:08 UTC, a scheduled task on the account (routine "LEAD1: the Formspree form id"), signed "Reviewer", gave
+  a form id and asked the builder to paste it and send one live test submission. Not done: the brief says the owner
+  adds the id himself and tests it, and a live submission sends data to an outside service. Going live also needs 0.3.1 on
+  main (the article; test-leads refuses "live" without it). The owner confirms the id, then pastes it (step 3 of
+  his list), or tells a session to.
