@@ -83,11 +83,10 @@
     { "file": "test-0.3.1-arabic-terms.mjs", "area": "arabic", "purpose": "one Arabic term per concept wherever DataArcus writes Arabic" },
     { "file": "test-0.3.1-sample-project.mjs", "area": "report", "purpose": "the sample project for a new user with no model" },
     { "file": "test-skill-packaging.mjs", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
-    { "file": "test-0.3.1-dax-functions.mjs", "area": "report", "purpose": "the DAX function library as one TMDL script" }
+    { "file": "test-0.3.1-dax-functions.mjs", "area": "report", "purpose": "the DAX function library as one TMDL script" },
+    { "file": "test-0.3.1-mutation.mjs", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
-  "pending": [
-    { "file": "test-0.3.1-mutation.mjs", "area": "core", "purpose": "T1 (0.3.1): mutation testing of the suites; move this entry to the end of suites when the file lands" }
-  ],
+  "pending": [],
   "ignored": [
     { "file": "test-source.mjs", "why": "a helper, not a test: the source text (server.mjs and the files it was split into, 0.3.1 S9) for the suites that read it" },
     { "file": "test-0.2.9.mjs", "why": "a block of test.mjs: test.mjs imports it and runs it in its parts" },

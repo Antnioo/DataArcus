@@ -205,6 +205,9 @@ try {
     fs.writeFileSync(path.join(ROOT, MP, 'definition/tables/Metric.tmdl'), bad);
     const crb = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crb.err && (crb.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crb.j.impact.kinds.canBreak.count === 0, () => `V2: a title measure that reads the display column alone is a finding (the lab's composite-key error): ${short(crb)}`);
+    // (0.3.1 T1, the mutation suite: the finding could become an error and V2 still passed, since "can break" comes from
+    // the finding's origin) the finding is a warning
+    chk(() => !crb.err && (crb.j.findings || []).filter((f) => f.rule === 'FIELD_PARAMETER_TITLE').every((f) => f.severity === 'warning' && f.impact === 'dataarcusRule'), () => `V2b: the field parameter's title finding is a warning, a DataArcus rule: ${JSON.stringify((crb.j && crb.j.findings || []).filter((f) => f.rule === 'FIELD_PARAMETER_TITLE').map((f) => [f.severity, f.impact]))}`);
     fs.writeFileSync(path.join(ROOT, MP, 'definition/tables/Metric.tmdl'), R.body);
     const crg = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crg.err && !(crg.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crg.j.fieldParameters && /in the model/.test(crg.j.fieldParameters.note), () => `V3: with the script's own table no finding, and the note says the table is in the model: ${JSON.stringify(crg.j && crg.j.fieldParameters).slice(0, 400)}`);

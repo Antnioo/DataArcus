@@ -174,6 +174,11 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
       () => `A4-7: the lint's findings carry the same fields (origin lint, impact, level on the common scale, source): ${JSON.stringify(xl.j && xl.j.lint && xl.j.lint.findings.slice(0, 3))}`);
     chk(() => typeof CR.impactOf === 'function' && CR.impactOf({ origin: 'rule', rule: 'X', source: 'Microsoft validator 0.4.0: X' }) === 'dataarcusRule' && CR.impactOf({ origin: 'validator', rule: 'PBIR_THEME_FILE_NAME_MISMATCH', file: 'x' }) === 'desktopOpens',
       () => 'A4-7: impactOf reads the origin, never the source text');
+    // (0.3.1 T1, the mutation suite: a known gap of the validator could count as "can break" and no test failed: today's
+    // catalog lists the one proven gap, so no report gives one) a known validator finding is "Desktop opens it"
+    chk(() => CR.impactOf({ origin: 'validator', known: true, rule: 'PBIR_FORMATTING_OBJECT_UNKNOWN', file: 'definition/pages/p/visuals/v/visual.json' }) === 'desktopOpens'
+      && CR.impactOf({ origin: 'validator', rule: 'PBIR_FORMATTING_OBJECT_UNKNOWN', file: 'definition/pages/p/visuals/v/visual.json' }) === 'canBreak',
+      () => 'T1: a known validator gap is "Desktop opens it", the same code not known is "can break"');
     const doc = fs.readFileSync(path.join(HERE, 'plans', 'CHECK-REPORT.md'), 'utf8');
     chk(() => /origin/.test(doc) && /impact/.test(doc), () => 'A4-7: CHECK-REPORT.md writes the finding shape (origin, impact)');
   }
