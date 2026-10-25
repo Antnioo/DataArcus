@@ -4,6 +4,15 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 2: X2 one report in English and Arabic from create_report (25 Oct, builder; branch `feat/0.3.1-bilingual-report-2` from integration/0.3.1 ed23620)
+The old X2 (`origin/feat/0.3.1-bilingual-report`, pre-0.3.0 history) ported onto today's code, not merged: `languages:
+"en+ar"` on plan_layout and create_report builds the Arabic half through the EN-AR copy's own planTwin (R1's buttons and
+fits, M1's mirror, V1's pictures as pairs). Plan, results, "For the laptop", decisions, "Seen, not in scope": `mcp/work/X2.md`.
+- Done: 503c6e5 plan, ca24f28 red (bilingual 23 of 32, parity path B 8 of 9), 18bc3ac build, c0c27f6 demo. After:
+  bilingual-report 32/32, parity 58/58 (the Arabic half equals the copy's file for file), full npm test exit 0 (67 lines PASS).
+- Next: the reviewer reviews and merges (only `mcp/package.json`'s test line conflicts with L1: keep both); the laptop runs
+  X2.md "For the laptop" with R1's and M1's lists.
+
 ## 0.3.1, wave 2: M1 the matrix mirror lab and one engine (25 Oct, builder; branch `feat/0.3.1-matrix-mirror` from integration/0.3.1 ebf1d51)
 The owner: "add one very extensive lab for matrix mirror ...; when I opened the last one myself it was not mirrored; make
 sure the AR and twin are using the same engine". Plan, expected numbers, variants, results, "For the laptop":
