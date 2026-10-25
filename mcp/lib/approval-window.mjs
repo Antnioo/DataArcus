@@ -126,7 +126,7 @@ const WORDS = {
     roles: { report: 'the report: open it in Power BI Desktop', script: 'the script: see "About the script" below', theme: 'the theme file: in Power BI Desktop, View > Themes > Browse for themes' },
     plan: (id) => `Plan ${id}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.` },
   ar: { ask: 'موافقة: ', lead: 'يطلب DataArcus موافقتك قبل أن يكتب أي شيء. لم يُكتب أي شيء بعد. راجع الخطة، ثم وافق عليها أو لا.', approve: 'موافقة', notNow: 'ليس الآن',
-    preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل عنصر مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
+    preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
     page: 'الصفحة', enPage: 'الصفحة الإنجليزية', arPage: 'الصفحة العربية', toCheck: 'للفحص', notDrawn: (n, pairs) => `لم تُرسم هنا ${n} ${pairs ? 'من أزواج الصفحات' : 'من الصفحات'} أخرى (ترسم المعاينة ${PREVIEW_PAGES_MAX} على الأكثر) · ${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan lists every page.`, checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
     files: 'الملفات التي ستُكتب', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
@@ -135,7 +135,7 @@ const WORDS = {
     plan: (id) => `الخطة <bdi dir="ltr">${esc(id)}</bdi>. لا يوافق عليها إلا نقرة هنا: ما يُكتب في المحادثة لا يوافق عليها. لا توافق إلا على خطة طلبتها.` }
 };
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
-const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'العناصر المرئية', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم العناصر المرئية المخصصة',
+const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'المرئيات', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم المرئيات المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
   'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
@@ -149,7 +149,7 @@ export function kindsLine(paths, kind, ar) {
   const P = (paths || []).map(String), n = (re) => P.filter((f) => re.test(f)).length, en = (k, one, many) => `${k} ${k === 1 ? one : many}`, parts = [];
   const reports = n(/\.pbip$/i);
   if (reports) {
-    const inner = [[n(/\/page\.json$/), 'page', 'pages', 'الصفحات'], [n(/\/visual\.json$/), 'visual', 'visuals', 'العناصر المرئية'], [n(/\.bookmark\.json$/), 'bookmark', 'bookmarks', 'الإشارات المرجعية'], [n(/\/mobile\.json$/), 'phone layout', 'phone layouts', 'تخطيطات الهاتف']].filter((x) => x[0]);
+    const inner = [[n(/\/page\.json$/), 'page', 'pages', 'الصفحات'], [n(/\/visual\.json$/), 'visual', 'visuals', 'المرئيات'], [n(/\.bookmark\.json$/), 'bookmark', 'bookmarks', 'الإشارات المرجعية'], [n(/\/mobile\.json$/), 'phone layout', 'phone layouts', 'تخطيطات الهاتف']].filter((x) => x[0]);
     parts.push(ar ? `التقارير: ${reports}${inner.length ? ` (${inner.map((x) => `${x[3]}: ${x[0]}`).join('، ')})` : ''}` : `${en(reports, 'report', 'reports')}${inner.length ? ': ' + inner.map((x) => en(x[0], x[1], x[2])).join(', ') : ''}`);
   }
   const themes = kind === 'theme' ? n(/\.json$/i) : n(/RegisteredResources\/[^/]+\.json$/i), scripts = P.filter(isScript).length, models = n(/\.SemanticModel\/definition\/model\.tmdl$/i), tables = n(/\.SemanticModel\/definition\/tables\/[^/]+\.tmdl$/i);
@@ -181,7 +181,7 @@ const scriptHtml = (s, writes, ar) => {
 // (T-5) a section's heading in Arabic, where the page knows it (the rest of the heading, a count, stays)
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
-  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'مقسمات طريقة العرض المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
+  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
   ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX']];
 // (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
 const headingOf = (h, ar) => { if (!ar) return h; const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); return x ? `${x[1]} · ${h}` : h; };

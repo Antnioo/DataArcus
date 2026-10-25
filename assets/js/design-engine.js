@@ -303,7 +303,7 @@
   const T = (en, ar) => ({ en, ar });
   const baseLang = (lang) => String(lang || '').toLowerCase().split(/[-_]/)[0];
   const label = (x, lang) => (Array.isArray(x) ? (baseLang(lang) === 'ar' ? x[1] : x[0]) : x && typeof x === 'object' ? (x[baseLang(lang)] != null ? x[baseLang(lang)] : x.en) : x);
-  const KINDS = { kpi: T('Card', 'بطاقة'), line: T('Line chart', 'مخطط خطي'), bar: T('Bar chart', 'مخطط شريطي'), column: T('Column chart', 'مخطط أعمدة'), donut: T('Donut chart', 'مخطط دائري'), table: T('Table or matrix', 'جدول أو مصفوفة'), text: T('Text box or narrative', 'مربع نص أو سرد'), slicer: T('Slicers', 'مقسمات طريقة العرض (Slicers)'), title: T('Text box (page title)', 'مربع نص (عنوان الصفحة)'), logo: T('Image (logo)', 'صورة (الشعار)') };
+  const KINDS = { kpi: T('Card', 'بطاقة'), line: T('Line chart', 'مخطط خطي'), bar: T('Bar chart', 'مخطط شريطي'), column: T('Column chart', 'مخطط أعمدة'), donut: T('Donut chart', 'مخطط دائري'), table: T('Table or matrix', 'جدول أو مصفوفة'), text: T('Text box or narrative', 'مربع نص أو سرد'), slicer: T('Slicers', 'مقسمات (Slicers)'), title: T('Text box (page title)', 'مربع نص (عنوان الصفحة)'), logo: T('Image (logo)', 'صورة (الشعار)') };
   const LAYOUTS = {
     exec: { name: T('Executive summary', 'ملخص تنفيذي'), kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
       rows: [[[2, 'line', T('Main trend', 'الاتجاه الرئيسي')], [1, 'bar', T('Breakdown', 'التوزيع')]], [[1, 'column', T('Comparison', 'المقارنة')], [1, 'table', T('Detail', 'التفاصيل')]]],
@@ -417,7 +417,7 @@
   // tested; the operations monitor, analysis as the first page and a page under 1920 wide with filters on top ship as
   // preview, said in the plan in one plain line; nothing else changes)
   const LAYOUT_PREVIEW = T('Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones.',
-    'معاينة: ما زال هذا التخطيط قيد الضبط على لوحات تحكم حقيقية، وتخطيطا «ملخص تنفيذي» و«رسالة واحدة» هما المختبران.');
+    'معاينة: ما زال هذا التخطيط قيد الضبط على لوحات معلومات حقيقية، وتخطيطا «ملخص تنفيذي» و«رسالة واحدة» هما المختبران.');
   const isPreview = (c) => c.preset === 'ops' || c.preset === 'analysis' || (!!c.filters && c.fpos === 'top' && page(c).w < 1920);
   const layoutOf = (c) => { const L = c.detail ? Object.assign({}, LAYOUTS[c.preset], { rows: DETAIL_ROWS }) : LAYOUTS[c.preset]; return c.noTime ? noTimeOf(L) : L; };
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
@@ -753,9 +753,9 @@
       logo: 'Logo', logoHere: 'Your logo', textHere: 'Explain what the main chart shows and what to do about it.', by: 'by', newDesign: 'New design',
       tooltipPage: 'Tooltip', tooltipHere: 'Tooltip page: add a card or a small chart here.' },
     ar: { reset: 'إعادة ضبط الفلاتر', pages: 'الصفحات', close: 'إغلاق', filterPanel: 'لوحة الفلاتر', openFilters: 'افتح لوحة الفلاتر', closeFilters: 'أغلق لوحة الفلاتر',
-      filtersOpen: 'الفلاتر مفتوحة', filtersClosed: 'الفلاتر مغلقة', header: 'الشريط العلوي', kpis: 'بطاقات المؤشرات', filters: 'الفلاتر', slicer: 'مقسم طريقة العرض',
+      filtersOpen: 'الفلاتر مفتوحة', filtersClosed: 'الفلاتر مغلقة', header: 'الشريط العلوي', kpis: 'بطاقات المؤشرات', filters: 'الفلاتر', slicer: 'مقسم',
       logo: 'الشعار', logoHere: 'شعارك', textHere: 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.', by: 'حسب', newDesign: 'تصميم جديد',
-      tooltipPage: 'تلميح الأدوات', tooltipHere: 'صفحة تلميح الأدوات: أضف بطاقة أو مخططًا صغيرًا هنا.' }
+      tooltipPage: 'تلميح', tooltipHere: 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.' }
   };
   // The report's labels in a language, English when it has none of its own
   const texts = (lang) => REPORT_TEXTS[baseLang(lang)] || REPORT_TEXTS.en;

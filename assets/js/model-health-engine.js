@@ -422,7 +422,7 @@
       ar: ['مقاييس بدون مجلد عرض', 'مع كثرة المقاييس تصبح القائمة المسطحة صعبة التصفح لمن يبني التقارير.', 'نظّم المقاييس في مجلدات حسب الموضوع (مثل Sales وLeads وTime intelligence).'] },
     NO_DESC: { cat: 'maint', sev: 'info',
       en: ['Measures without a description', 'Descriptions show as tooltips in the field list and are the cheapest documentation you can write.', 'Add a one-line description to the key measures first.'],
-      ar: ['مقاييس بدون وصف', 'الوصف يظهر كتلميح أدوات في قائمة الحقول وهو أبسط توثيق ممكن.', 'أضف وصفًا من سطر واحد للمقاييس الأساسية أولًا.'] },
+      ar: ['مقاييس بدون وصف', 'الوصف يظهر كتلميح في قائمة الحقول وهو أبسط توثيق ممكن.', 'أضف وصفًا من سطر واحد للمقاييس الأساسية أولًا.'] },
     QUALIFIED_MEASURE: { cat: 'maint', sev: 'info',
       en: ['Measures referenced with a table name', 'Writing Table[Measure] makes a measure look like a column. The common convention is [Measure] for measures and Table[Column] for columns.', 'Remove the table prefix from measure references.'],
       ar: ['الإشارة إلى مقاييس مع اسم جدول', 'كتابة Table[Measure] تجعل المقياس يبدو كعمود. العرف المتبع هو [Measure] للمقاييس وTable[Column] للأعمدة.', 'احذف اسم الجدول من الإشارات إلى المقاييس.'] },

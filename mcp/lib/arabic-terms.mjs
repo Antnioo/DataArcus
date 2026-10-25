@@ -87,3 +87,12 @@ export function englishOnceProblem(html, id) {
   const again = body.split(new RegExp(`\\(${c.englishOnce}s?\\)`, 'gi')).length - 1;
   return again > 1 ? `(${c.englishOnce}) given ${again} times (once is enough)` : null;
 }
+
+/** An Arabic page of the site carries the product's Arabic spelling once, in its keywords (search; the owner, 25 Oct:
+ *  "add the arabic dataarcus"). Returns a problem or null. */
+export function keywordsProblem(html) {
+  const m = /<meta[^>]+name=["']keywords["'][^>]*>/i.exec(String(html));
+  if (!m) return 'no keywords meta';
+  const n = fold(m[0]).split(/داتا ?أركوس/).length - 1;
+  return n === 1 ? null : `«داتا أركوس» ${n} times in its keywords (once)`;
+}

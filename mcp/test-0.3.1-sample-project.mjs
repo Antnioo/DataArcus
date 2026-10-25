@@ -133,7 +133,9 @@ try {
   if (rid) await approve(rid);
   const send = Object.assign({}, args, { planId: rid, design: pl.j && pl.j.design, fields: args.planFields }); delete send.planFields;
   const rep = rid ? await call(w, 'create_report', send) : { err: true, t: 'no plan: ' + short(pl) };
-  const open = rep.j && rep.j.open, cr = open ? await call(s, 'check_report', { path: open }) : { err: true, t: 'nothing written' };
+  // (on Windows create_report's `open` is written with the OS separator; the tour's paths with /: both are the same path)
+  const slash = (x) => (typeof x === 'string' ? x.replace(/\\/g, '/') : x);
+  const open = rep.j && slash(rep.j.open), cr = open ? await call(s, 'check_report', { path: open }) : { err: true, t: 'nothing written' };
   chk(() => !rep.err && open === 'Gulf Retail Sample/Gulf Retail Sales.pbip' && !cr.err && cr.j.validator.errors === 0, () => `C11. tour step 1 writes a report; Microsoft's validator 0 errors: ${short(rep)} check: ${short(cr)}`);
   const t2 = tour.find((x) => x.call && x.call.tool === 'plan_layout' && x.call.args.languages === 'en+ar') || { call: { args: {} } };
   const p2 = (await planReport(t2.call.args)).pl;
@@ -143,7 +145,7 @@ try {
   const gc = await call(s, 'add_gulf_calendar', step('add_gulf_calendar').call.args);
   chk(() => !gc.err && gc.j.plan && gc.j.plan.planId, () => `C14. tour step 3, the Gulf calendar: a plan id: ${short(gc)}`);
   const ln = await call(s, 'check_report', step('check_report').call.args);
-  chk(() => !ln.err && ln.j && /arabic/i.test(JSON.stringify(ln.j).slice(0, 4000)) && step('check_report').call.args.path === open, () => `C15. tour step 4, check_report lens "arabic" on the tour's report: ${short(ln)}`);
+  chk(() => !ln.err && ln.j && /arabic/i.test(JSON.stringify(ln.j).slice(0, 4000)) && slash(step('check_report').call.args.path) === open, () => `C15. tour step 4, check_report lens "arabic" on the tour's report: ${short(ln)}`);
 
   // ---------- C16-C17: never over anything ----------
   const first = hashes(path.join(ROOT, 'Gulf Retail Sample'));

@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<button type="button" class="mh-share" id="mhShare"><i class="bi bi-linkedin"></i> ' + L('Share my score', 'شارك نتيجتي') + '</button></div></div>' +
       '<div class="col-lg-8"><div class="mh-panel"><div class="mh-pills">' +
       pill('bi-table', num(s.tables), L('tables', 'جداول')) + pill('bi-layout-three-columns', num(s.columns), L('columns', 'أعمدة')) + pill('bi-calculator', num(s.measures), L('measures', 'مقاييس')) +
-      pill('bi-diagram-3', num(s.relationships), L('relationships', 'علاقات')) + (rep ? pill('bi-file-earmark-richtext', num(s.pages), L('pages', 'صفحات')) + pill('bi-bar-chart', num(s.visuals), L('visuals', 'عناصر مرئية')) : '') +
+      pill('bi-diagram-3', num(s.relationships), L('relationships', 'علاقات')) + (rep ? pill('bi-file-earmark-richtext', num(s.pages), L('pages', 'صفحات')) + pill('bi-bar-chart', num(s.visuals), L('visuals', 'مرئيات')) : '') +
       '</div>' +
       (rep ? '<div class="mh-unusedsum"><div><b>' + num(s.unusedColumns) + '</b><span>' + L('columns nobody uses', 'عمود غير مستخدم') + '</span></div><div><b>' + num(s.unusedMeasures) + '</b><span>' + L('measures nobody uses', 'مقياس غير مستخدم') + '</span></div><div><b>' + num(s.calcColumns) + '</b><span>' + L('calculated columns', 'عمود محسوب') + '</span></div></div>'
         : '<div class="mh-warn"><i class="bi bi-info-circle"></i> ' + L('This file has no report pages, so unused columns and measures could not be checked. Use a .pbit to include them.', 'الملف لا يحتوي صفحات تقرير، لذلك لم يتم فحص الأعمدة والمقاييس غير المستخدمة. استخدم ملف .pbit لتضمينها.') + '</div>') +
@@ -710,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function cardContent() {
     const s = R.stats, sc = score().overall, cut = (x) => (x.length > 60 ? x.slice(0, 59) + '…' : x);
     const many = (n, one, more, ar) => num(n) + ' ' + L(n === 1 ? one : more, ar);
-    const size = [many(s.tables, 'table', 'tables', 'جداول'), many(s.measures, 'measure', 'measures', 'مقاييس')].concat(R.meta.hasReport ? [many(s.visuals, 'visual', 'visuals', 'عناصر مرئية')] : []).join('  ·  ');
+    const size = [many(s.tables, 'table', 'tables', 'جداول'), many(s.measures, 'measure', 'measures', 'مقاييس')].concat(R.meta.hasReport ? [many(s.visuals, 'visual', 'visuals', 'مرئيات')] : []).join('  ·  ');
     const top = R.findings.filter((f) => !ignored.has(f.id)).slice(0, 5).map((f, i) => {
       const obj = f.items[0] && f.items[0].obj, n = f.items.length;
       // the rule on one line, its first object below it (its count when names are hidden)

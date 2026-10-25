@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const src = (f) => fs0.readFileSync(path.join(REPO, f), 'utf8').replace(/\r\n/g, '\n');
@@ -21,7 +22,7 @@ export async function v029agent({ call, check, meta }) {
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   let A = {}; try { A = await import('./lib/agent-text.mjs'); } catch (e) { A = {}; }
   const ins = meta.instructions, tools = meta.tools, tl = Object.fromEntries(tools.map((t) => [t.name, t])), names = tools.map((t) => t.name).sort();
-  const skill = src('mcp/skills/report-design/SKILL.md'), readme = src('mcp/README.md'), privacy = src('mcp/PRIVACY.md'), claude = src('mcp/CLAUDE.md');
+  const skill = src('mcp/skills/report-design/SKILL.md'), readme = src('mcp/README.md'), toolsDoc = src('mcp/TOOLS.md'), privacy = src('mcp/PRIVACY.md'), claude = src('mcp/CLAUDE.md');
   const pl = await ask('plan_layout', { layout: 'exec' }), LIMITS = pl.j && pl.j.limits;
 
   // ---------- A7-1: the containment claim matches the code (the .pbip route, A1-1 of the reading block) ----------
@@ -43,7 +44,7 @@ export async function v029agent({ call, check, meta }) {
 
   // ---------- A7-4: each agent rule in one source ----------
   {
-    const srv = src('mcp/server.mjs');
+    const srv = serverSource().replace(/\r\n/g, '\n');
     chk(() => typeof A.instructions === 'function' && !/const INSTRUCTIONS = \[/.test(srv), () => 'A7-4: the instructions are built in lib/agent-text.mjs, not written in server.mjs');
     chk(() => A.INSTRUCTIONS_MAX <= 2200 && ins.length <= A.INSTRUCTIONS_MAX, () => `A7-4: the instructions are ${ins.length} characters, ${A.INSTRUCTIONS_MAX} at most (one cap)`);
     const tests = ['mcp/test.mjs', 'mcp/test-0.2.9c.mjs'].map(src).join('\n');
@@ -51,8 +52,8 @@ export async function v029agent({ call, check, meta }) {
     const words = LIMITS && A.visualWords ? A.visualWords(LIMITS) : null;
     chk(() => words && ins.includes(`supported: ${words}`) && skill.includes(`supported: ${words}`), () => `A7-4: rule 6 and the skill list the supported visuals as LIMITS.visuals: ${words}`);
     const nums = LIMITS && [`${LIMITS.slicers} slicers`, `${LIMITS.kpiCards} KPI cards`, `${LIMITS.tableFields} table fields`];
-    chk(() => nums.every((n) => skill.includes(n)) && [`slicers ${LIMITS.slicers}`, `KPI cards ${LIMITS.kpiCards}`, `table fields ${LIMITS.tableFields}`, `page filters ${LIMITS.pageFilters}`].every((n) => readme.includes(n)),
-      () => 'A7-4: the skill\'s and the README\'s limits are LIMITS\'s');
+    chk(() => nums.every((n) => skill.includes(n)) && [`slicers ${LIMITS.slicers}`, `KPI cards ${LIMITS.kpiCards}`, `table fields ${LIMITS.tableFields}`, `page filters ${LIMITS.pageFilters}`].every((n) => toolsDoc.includes(n)),
+      () => 'A7-4: the skill\'s and TOOLS.md\'s limits are LIMITS\'s (G1, 0.3.1: plan_layout\'s row moved there from the README)');
     chk(() => ins.includes(LIMITS.defaultPage.replace('x', ' x ')), () => 'A7-4: rule 1b\'s page is LIMITS.defaultPage');
   }
 
@@ -60,7 +61,7 @@ export async function v029agent({ call, check, meta }) {
   {
     const s = await ask('suggest_fields', { path: 'nowhere', kpis: LIMITS.kpiCards + 1 });
     chk(() => s.err && /kpis/.test(s.t) && !/No model named/.test(s.t), () => `A7-5: suggest_fields refuses more KPI cards than plan_layout takes (${LIMITS.kpiCards}): ${s.t.slice(0, 160)}`);
-    const all = tools.map((t) => JSON.stringify(t)).join('\n') + readme + skill;
+    const all = tools.map((t) => JSON.stringify(t)).join('\n') + readme + toolsDoc + skill;
     chk(() => !/`page\.chosenBy`|page\.chosenBy/.test(all.replace(/pageSize\.chosenBy/g, '')), () => 'A7-5: the answer key is pageSize.chosenBy, never page.chosenBy');
   }
 
@@ -96,9 +97,10 @@ export async function v029agent({ call, check, meta }) {
   // ---------- A7-13: the tool lists are the server's ----------
   {
     const rows = [...readme.matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]).sort(), sk = (skill.match(/^Tools: the DataArcus MCP \(([^)]*)\)/m) || [])[1] || '';
-    chk(() => JSON.stringify(rows) === JSON.stringify(names), () => `A7-13: the README's tool rows are the server's tools: ${rows.join(',')}`);
+    const docRows = [...toolsDoc.matchAll(/^\| `([a-z_]+)` \|/gm)].map((m) => m[1]).sort();   // (G1, 0.3.1) the reference's rows too
+    chk(() => JSON.stringify(rows) === JSON.stringify(names) && JSON.stringify(docRows) === JSON.stringify(names), () => `A7-13: the README's and TOOLS.md's tool rows are the server's tools: ${rows.join(',')} | ${docRows.join(',')}`);
     chk(() => names.every((n) => sk.includes('`' + n + '`')), () => `A7-13: the skill's tool list names every tool: missing ${names.filter((n) => !sk.includes('`' + n + '`'))}`);
-    const rm = (readme.match(/^\| `read_model` \|[^\n]*/m) || [''])[0];
+    const rm = (toolsDoc.match(/^\| `read_model` \|[^\n]*/m) || [''])[0];   // (G1, 0.3.1) the detailed row is in TOOLS.md
     chk(() => !/reports\.counted/.test(rm) && /existingReports/.test(rm), () => 'A7-13: the read_model row says what read_model returns (existingReports), not check_model_health\'s reports');
     chk(() => names.every((n) => claude.includes('`' + n + '`')) && !/Still browser-only: the Measure Builder, the calendar generator/.test(claude), () => 'A7-13: mcp/CLAUDE.md lists every tool and does not call the calendar generator browser-only');
   }

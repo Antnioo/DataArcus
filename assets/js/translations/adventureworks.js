@@ -92,21 +92,21 @@ window.adventureworksTranslations = {
     },
     // Page Meta
     meta: {
-      title: "مثال لوحة تحكم AdventureWorks في Power BI - DataArcus",
-      description: "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
-      keywords: "لوحة تحكم AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا أركوس",
+      title: "مثال لوحة معلومات AdventureWorks في Power BI - DataArcus",
+      description: "شاهد مثال لوحة معلومات AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
+      keywords: "لوحة معلومات AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا أركوس",
       author: "DataArcus",
       "og:type": "website",
-      "og:title": "مثال لوحة تحكم AdventureWorks في Power BI - DataArcus",
-      "og:description": "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
+      "og:title": "مثال لوحة معلومات AdventureWorks في Power BI - DataArcus",
+      "og:description": "شاهد مثال لوحة معلومات AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
       "og:url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/adventureworks.jpg",
       "og:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مثال لوحة تحكم AdventureWorks في Power BI - DataArcus",
-      "twitter:description": "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
+      "twitter:title": "مثال لوحة معلومات AdventureWorks في Power BI - DataArcus",
+      "twitter:description": "شاهد مثال لوحة معلومات AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
       "twitter:image": "https://dataarcus.com/assets/img/og/adventureworks.jpg",
       "twitter:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
@@ -141,7 +141,7 @@ window.adventureworksTranslations = {
     features: {
       title: "الميزات والتقنيات الرئيسية المستخدمة:",
       tags: [ "Power BI", "DAX متقدم", "معاملات ماذا لو", "التحليل الجغرافي", "شجرة التفكيك", "نمذجة البيانات" ],
-      note: "هذا تقرير تفاعلي بالكامل ومتعدد الصفحات. استخدم أيقونات التنقل على يسار لوحة التحكم لاستكشاف جميع الصفحات."
+      note: "هذا تقرير تفاعلي بالكامل ومتعدد الصفحات. استخدم أيقونات التنقل على يسار لوحة المعلومات لاستكشاف جميع الصفحات."
     },
 
     // Capabilities Section

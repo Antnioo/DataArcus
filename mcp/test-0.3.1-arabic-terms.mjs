@@ -8,12 +8,13 @@
 //   AT-4  the report's fixed texts (the writer's REPORT_TEXTS, the fixed list's phrases, the button's tooltip) use the
 //         chosen terms, and "Reset filters" and "Clear the filters on this page" are one Arabic text
 //   AT-5  an Arabic page of the site that names a slicer or a tooltip gives the English once, at its first use
+//   AT-6  every Arabic page of the site carries «داتا أركوس» once, in its keywords (search; the owner, 25 Oct)
 //   node test-0.3.1-arabic-terms.mjs        (DA_TERMS=1 prints every hit)
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { CONCEPTS, ALLOW, termHits, fileHits, repoHits, repoFiles, englishOnceProblem, fold } from './lib/arabic-terms.mjs';
+import { CONCEPTS, ALLOW, termHits, fileHits, repoHits, repoFiles, englishOnceProblem, keywordsProblem, fold } from './lib/arabic-terms.mjs';
 import { CONCEPTS as SHEET } from './lib/terminology.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.resolve(HERE, '..');
@@ -34,15 +35,15 @@ chk(() => ALLOW.length && ALLOW.every((a) => typeof a.why === 'string' && a.why.
 
 // ---- AT-2 the scanner, on planted texts (each variant after a clitic or with a diacritic) ----
 const PLANT = {
-  filters: 'افتح عوامل التصفية', filtering: 'للفلترة حسب المنطقة', reset: 'زر مسح الفلاتر', slicer: 'أضف مقسّمًا ثم بالمقسمات', tooltip: 'صفحة التلميح',
-  dates: 'مواعيد رمضان', product: 'من داتا أركوس', likeforlike: 'تقارن المتماثل بالمتماثل', visual: 'كل المرئيات', chart: 'رسم بياني',
-  kpicard: 'بطاقات KPI', datetable: 'أضف جدول تقويم', dashboard: 'لوحات المعلومات', measure: 'المقياسات', approve: 'بعد المصادقة', theme: 'الثيم',
+  filters: 'افتح عوامل التصفية', filtering: 'للفلترة حسب المنطقة', reset: 'زر مسح الفلاتر', slicer: 'أضف مقسّم طريقة العرض', tooltip: 'صفحة تلميح الأدوات',
+  dates: 'مواعيد رمضان', product: 'من داتا أركوس', likeforlike: 'تقارن المتماثل بالمتماثل', visual: 'كل العناصر المرئية', chart: 'رسم بياني',
+  kpicard: 'بطاقات KPI', datetable: 'أضف جدول تقويم', dashboard: 'لوحات التحكم', measure: 'المقياسات', approve: 'بعد المصادقة', theme: 'الثيم',
   bookmark: 'علامة مرجعية', fiscalyear: 'العام المالي', workday: 'يوم دوام', weekend: 'العطلة الأسبوعية', legend: 'مفتاح الرسم',
 };
 for (const c of CONCEPTS.filter((k) => k.variants.length)) {
   chk(() => PLANT[c.id] && termHits(PLANT[c.id]).some((h) => h.id === c.id), () => `AT-2. ${c.id}: the planted «${PLANT[c.id]}» is found`);
 }
-chk(() => CONCEPTS.every((c) => !termHits(`نص ${c.ar} نص`).some((h) => h.id === c.id)) && !termHits('مقسمات طريقة العرض وتلميحات الأدوات وقيمة مقسمة').length,
+chk(() => CONCEPTS.every((c) => !termHits(`نص ${c.ar} نص`).some((h) => h.id === c.id)) && !termHits('المقسمات والتلميحات ومرئي وقيمة مقسمة ولوحات المعلومات').length,
   () => 'AT-2. each chosen term, the plurals and an unrelated «مقسمة» pass');
 chk(() => !fileHits('<meta name="keywords" content="داتا أركوس, Power BI">').length && fileHits('<title>Power BI - داتا أركوس</title>').length === 1,
   () => 'AT-2. the product\'s Arabic spelling passes in a page\'s keywords only');
@@ -61,7 +62,7 @@ const LISTFILE = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/data/arabic-
 const AR = Engine.REPORT_TEXTS.ar, PH = LISTFILE.phrases;
 chk(() => !Object.values(AR).flatMap((t) => termHits(t)).length, () => `AT-4. the writer's Arabic texts use the sheet's terms: ${JSON.stringify(Object.values(AR).flatMap((t) => termHits(t)))}`);
 chk(() => !Object.values(PH).flatMap((t) => termHits(t)).length, () => `AT-4. the fixed list's phrases use the sheet's terms: ${JSON.stringify(Object.values(PH).flatMap((t) => termHits(t)))}`);
-chk(() => PH.Slicer === AR.slicer && PH.Tooltip === AR.tooltipPage && fold(AR.slicer) === 'مقسم طريقة العرض' && fold(AR.tooltipPage) === 'تلميح الأدوات',
+chk(() => PH.Slicer === AR.slicer && PH.Tooltip === AR.tooltipPage && fold(AR.slicer) === 'مقسم' && fold(AR.tooltipPage) === 'تلميح',
   () => `AT-4. Slicer and Tooltip are the sheet's terms in the writer and the list (${AR.slicer} / ${AR.tooltipPage}; list ${PH.Slicer} / ${PH.Tooltip})`);
 const reset = CONCEPTS.find((c) => c.id === 'reset'), page = fs.readFileSync(path.join(ROOT, 'assets/js/pbip-page.js'), 'utf8');
 const tip = (/o\.lang === 'ar' \? '([^']+)' : 'Clear the filters on this page'/.exec(page) || [])[1];
@@ -74,6 +75,12 @@ for (const c of CONCEPTS.filter((k) => k.englishOnce)) {
   const bad = pages.map((p) => [p, englishOnceProblem(fs.readFileSync(path.join(ROOT, p), 'utf8'), c.id)]).filter((x) => x[1]).map((x) => `${x[0]}: ${x[1]}`);
   const named = pages.filter((p) => new RegExp(c.form, 'u').test(fold(fs.readFileSync(path.join(ROOT, p), 'utf8')))).length;
   chk(() => !bad.length && named > 0, () => `AT-5. ${c.id}: each Arabic page gives (${c.englishOnce}) once, at its first use (${named} pages name it): ${LIST(bad)}`);
+}
+
+// ---- AT-6 the Arabic name once, in every Arabic page's keywords ----
+{
+  const bad = pages.map((p) => [p, keywordsProblem(fs.readFileSync(path.join(ROOT, p), 'utf8'))]).filter((x) => x[1]).map((x) => `${x[0]}: ${x[1]}`);
+  chk(() => pages.length >= 20 && !bad.length, () => `AT-6. every Arabic page (${pages.length}) carries «داتا أركوس» once in its keywords: ${bad.length} do not: ${LIST(bad, 20)}`);
 }
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  test-0.3.1-arabic-terms  ${problems.length} of ${checks} checks`); process.exit(1); }

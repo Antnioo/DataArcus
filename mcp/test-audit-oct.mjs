@@ -14,6 +14,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const problems = []; let checks = 0;
@@ -65,7 +66,7 @@ try {
     const { screenWhy, shownPath } = await import('./lib/model.mjs');
     // the screen's list of tool names is the server's tools, all of them
     const { TOOL_NAMES } = await import('./lib/tool-names.mjs');
-    const registered = [...fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8').matchAll(/registerTool\('([a-z_]+)'/g)].map((m) => m[1]).sort();
+    const registered = [...serverSource().matchAll(/registerTool\('([a-z_]+)'/g)].map((m) => m[1]).sort();
     chk(() => JSON.stringify([...TOOL_NAMES].sort()) === JSON.stringify(registered), () => `AUD-039. the screen knows every tool the server registers: ${registered.join(', ')} vs ${TOOL_NAMES.join(', ')}`);
     // written for this test (the private red team's families: approval, outside the folder, data, tool misuse, hidden
     // text, Arabic, file names), never a real model's text

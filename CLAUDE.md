@@ -8,6 +8,7 @@ Power BI Desktop) and a reviewer in the cloud (reviews, the full test run on Lin
 1. Read `mcp/WORK.md`: the current step, its approved plan and expected numbers, and what is open. It is the
    memory between sessions; a new session continues from it, not from scratch.
 2. Read `mcp/CLAUDE.md`: the owner's rules, how things are built, the tests, and what was learned in Power BI.
+   The parts, the flow of one write and the invariants on one page: `ARCHITECTURE.md`.
 
 **While working:** keep `mcp/WORK.md` current (see "Keeping the memory" in `mcp/CLAUDE.md`).
 

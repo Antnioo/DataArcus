@@ -161,7 +161,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -184,7 +184,7 @@ jobs:
           DA_SHARD: ${{ matrix.shard }}/4
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -234,7 +234,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -257,7 +257,7 @@ jobs:
           DA_SHARD: ${{ matrix.shard }}/4
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -308,7 +308,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -331,7 +331,7 @@ jobs:
           DA_SHARD: ${{ matrix.shard }}/4
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          if [ "$DA_SHARD" = 0/4 ]; then npm test -- --keep-going 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

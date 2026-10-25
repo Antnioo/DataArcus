@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, 'skills-packaging');
@@ -18,7 +19,7 @@ const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); }
 const readText = (f) => { try { return fs.readFileSync(f, 'utf8'); } catch (e) { return ''; } };
 const PLUGIN = 'dataarcus', MARKET = 'dataarcus';
 const PDIR = path.join(SRC, 'plugins', PLUGIN);
-const SERVER = readText(path.join(HERE, 'server.mjs'));
+const SERVER = serverSource();
 const TOOLS = [...SERVER.matchAll(/server\.registerTool\('([a-z_]+)'/g)].map((m) => m[1]).sort();
 
 // 1: exactly the files the public repo needs (no code, no stage script, no image, nothing else)

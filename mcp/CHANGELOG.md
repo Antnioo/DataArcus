@@ -4,70 +4,71 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
-## [Unreleased]
-- **English/Arabic copy (one report with a language button):** the language buttons now always show their text, in the
-  theme's text colour, even with a theme that draws every visual as a white card; the Arabic pages move through the
-  keyboard right to left; an Arabic title gets the room it needs on one line; the Arabic pages' title and subtitle are
-  no longer drawn as bordered cards.
-- The checker says when a table or matrix shows fewer rows than it could, and how to fix it (a smaller text, word wrap
-  off). A table column of a per-item measure is named in Arabic for what one row shows, not as an average.
-- A matrix keeps its row headers on the left: Power BI has no right-to-left setting for it, and the plan and the
-  approval page now say so plainly.
-- **One set of right-to-left rules for charts:** an Arabic report written from scratch and an Arabic copy of an English
-  report now turn their bar, column, line and combo charts round with the same shared rules, so both give the same
-  chart. A column or line chart over month names no longer carries an axis setting Power BI ignores; how it looks does
-  not change. The matrix is unchanged while its right-to-left options are tried in Power BI Desktop.
-- **Arabic and English in one report:** the checker now judges each page in its own language, so the English pages of
-  an English/Arabic report are no longer flagged for right-to-left rules. Approved long Arabic texts are no longer
-  called suspicious because of their length.
-- **Fixes only through approval:** the assistant is told never to edit a report's or a model's files itself; for a
-  DataArcus report the checker names, for each finding, the DataArcus request that fixes it through a plan you approve.
-- **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws each Arabic page as
-  it will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
-  English page beside its Arabic page, with the language buttons. A title that won't fit its box is marked to check.
-- **Working folders as people name them:** folders with Arabic names, spaces or long paths, and a working folder
-  reached through a link, now work; the tests run on macOS too. Setup notes for Claude Code, VS Code and Cursor on
-  Windows, macOS and Linux (DataArcus writes the Power BI project on any of them; open it in Power BI Desktop on
-  Windows).
-- **Is your report ready for Arabic?** check_report with `lens: "arabic"` reads any report, whoever built it, and says
-  page by page what goes wrong when it is read in Arabic (layout and Tab order from the left, left-aligned or mixed
-  Arabic text, English titles and month names, charts and tables that read left to right, slicers, page navigation).
-  A short summary comes first; each finding names its fix: the DataArcus request that does it through your approval,
-  the Power BI setting to change, or plainly that Power BI has no setting for it. It only reads; nothing is changed.
-- **Website:** the Power BI Model Health Check can download a score card to share (a picture with the score, the
-  model's size and the top 5 findings, names optional, drawn in your browser), and the PL-300 and DP-600 practice exams
-  link each exam area under 70% to its section of Microsoft's study guide.
-- **One report in English and Arabic, straight from the plan:** plan_layout and create_report take `languages: "en+ar"`
-  (off by default) and write one report with the English pages and each page's Arabic page, built the same way as the
-  English-Arabic copy of a report: mirrored, language buttons on every page, slicer pairs kept in sync, the other
-  language's pages hidden in the tabs. The approval page shows each English page beside its Arabic page. In the
-  English-Arabic copy too, button slicers (pills) are now kept in sync with their Arabic copy.
-- **One Arabic word for each idea:** reports, the approval page, the health checks and the website now use the same
-  Arabic term for each Power BI and DataArcus idea (filters, slicers, tooltips, visuals, the date table, Ramadan dates,
-  dashboards), and write the name DataArcus in Latin letters. A check keeps it so.
-- **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
-  report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
-  Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.
-- **DataArcus as a plugin next to Microsoft's Power BI plugin** (for Claude Code and GitHub Copilot CLI): a folder
-  ready to become its own public repo, with a skill that says which of the two does what (Arabic and right-to-left
-  work, Gulf dates, the health check and approved writes stay with DataArcus; editing an existing report, screenshots,
-  publishing and model changes go to Microsoft's). It installs the released DataArcus extension. Not published yet.
-- **A DAX function library, off unless you ask for it:** four DAX user-defined functions (a small trend line, a bar
-  against a target, a KPI card picture in your theme's colours, a chart title that names the leader) and the measures
-  that use them, in one script you apply yourself in TMDL view. The first thing the plan, the approval page and the
-  script say, in your language: applying it raises your model's compatibility level to 1702, and that cannot be undone.
-- **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
-- Ordinary names such as "Execute Time" are no longer hidden from the assistant.
-- **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
-  your working folder or ask for your data's values are now flagged as instructions and never followed, including
-  ones written with look-alike letters.
-- A page filter on a column whose type a hand-edited model gives as an internal name is refused with the right reason.
-- The Health Check also flags Arabic percentage measures (the ٪ sign and نسبة) that are not formatted as a percent.
+## [Unreleased]: 0.3.1
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
   Refresh. The answer then suggests four next steps on it: a first report, the same report in English and Arabic, the
   Gulf calendar, and "is it ready for Arabic?". Every name and number in it is made up.
+- **Is your report ready for Arabic?** check_report with `lens: "arabic"` reads any report, whoever built it, and says
+  page by page what goes wrong when it is read in Arabic (layout and Tab order from the left, left-aligned or mixed
+  Arabic text, English titles and month names, charts and tables that read left to right, slicers, page navigation).
+  A short summary comes first; each finding names its fix: the DataArcus request that does it through your approval,
+  the Power BI setting to change, or plainly that Power BI has no setting for it. It only reads; nothing is changed.
+- **One report in English and Arabic, straight from the plan:** plan_layout and create_report take `languages: "en+ar"`
+  (off by default) and write one report with the English pages and, after them, each page's Arabic page, built the same
+  way as the English-Arabic copy of a report: mirrored, language buttons on every page, slicer pairs kept in sync, the
+  other language's pages hidden in the tabs. You approve the Arabic texts and field names in the plan.
+- **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws each Arabic page as
+  it will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
+  English page beside its Arabic page, with the language buttons. A title that won't fit its box is marked to check.
+- **The English-Arabic copy (one report with a language button):** the language buttons now always show their text, in
+  the theme's text colour, even with a theme that draws every visual as a white card; the Arabic pages move through the
+  keyboard right to left; an Arabic title that needs more room is widened into free space, and what can't fit is said;
+  the Arabic pages' title and subtitle are no longer drawn as bordered cards; button slicers (pills) are now kept in
+  sync with their Arabic copy too. A table column of a per-item measure is named in Arabic for what one row shows, not
+  as an average.
+- **A matrix keeps its row headers on the left:** Power BI has no right-to-left setting for it, and the plan and the
+  approval page now say so plainly. The matrix is otherwise unchanged while its right-to-left options are tried in
+  Power BI Desktop.
+- **One set of right-to-left rules for charts:** an Arabic report written from scratch and an Arabic copy of an English
+  report now turn their bar, column, line and combo charts round with the same shared rules, so both give the same
+  chart. A column or line chart over month names no longer carries an axis setting Power BI ignores; how it looks does
+  not change.
+- **The checker, page by page:** check_report judges each page of an English and Arabic report in its own language, so
+  the English pages are no longer flagged for right-to-left rules. Approved long Arabic texts are no longer called
+  suspicious because of their length. It also says when a table or matrix shows fewer rows than it could, and how to
+  fix it (a smaller text, word wrap off).
+- **Fixes only through approval:** the assistant is told never to edit a report's or a model's files itself; for a
+  DataArcus report the checker names, for each finding, the DataArcus request that fixes it through a plan you approve.
+  A test lists every place DataArcus writes a file and fails if a new one appears.
+- **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
+  your working folder or ask for your data's values are now flagged as instructions and never followed, including
+  ones written with look-alike letters. Ordinary names such as "Execute Time" are no longer hidden from the assistant.
+- A page filter on a column whose type a hand-edited model gives as an internal name is refused with the right reason.
+- **Working folders as people name them:** folders with Arabic names, spaces or long paths, and a working folder
+  reached through a link, now work; the tests run on macOS too. Setup notes for Claude Code, VS Code and Cursor on
+  Windows, macOS and Linux (DataArcus writes Power BI projects on any of them; open them in Power BI Desktop on
+  Windows, or deploy the project to Fabric).
+- **One Arabic word for each idea:** reports, the approval page, the health checks and the website now use the same
+  Arabic term for each Power BI and DataArcus idea («الفلاتر», «مقسم», «تلميح», «المرئيات», «لوحة معلومات», «تواريخ
+  رمضان», «جدول التاريخ»), and write the name DataArcus in Latin letters. A check keeps it so.
+- **A DAX function library, off unless you ask for it:** four DAX user-defined functions (a small trend line, a bar
+  against a target, a KPI card picture in your theme's colours, a chart title that names the leader) and the measures
+  that use them, in one script you apply yourself in TMDL view. The first thing the plan, the approval page and the
+  script say, in your language: applying it raises your model's compatibility level to 1702, and that cannot be undone.
+- **DataArcus as a plugin next to Microsoft's Power BI plugin** (for Claude Code and GitHub Copilot CLI): a folder
+  ready to become its own public repo, with a skill that says which of the two does what (Arabic and right-to-left
+  work, Gulf dates, the health check and approved writes stay with DataArcus; editing an existing report, screenshots,
+  publishing and model changes go to Microsoft's). It installs the released DataArcus extension. Not published yet.
+- **The Health Check** (check_model_health and the website) also flags Arabic percentage measures (the ٪ sign and
+  نسبة) that are not formatted as a percent.
+- **Website:** the Power BI Model Health Check can download a score card to share (a picture with the score, the
+  model's size and the top 5 findings, names optional, drawn in your browser), and the PL-300 and DP-600 practice exams
+  link each exam area under 70% to its section of Microsoft's study guide.
+- **Website article: "Is your Power BI report ready for Arabic?"** in English and Arabic: what reads wrong when a
+  report built in English, or by hand, is read in Arabic, in 19 kinds, each with a small picture and its fix, what the
+  Arabic twin can and cannot do today, and how to run the check with check_report's Arabic lens.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

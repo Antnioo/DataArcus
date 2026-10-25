@@ -24,6 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const req = createRequire(import.meta.url);
@@ -210,7 +211,7 @@ chk(() => /stacked column chart/.test(Mirror.KIND_WHAT.waterfall) && /no Total c
   const sec = page && page.sections ? page.sections.find((x) => /^Waterfalls, right to left \(1\)$/.test(x.heading)) : null;
   chk(() => sec && /Overview: Sales bridge/.test(sec.rows[0][0]) && /stacked column chart/.test(sec.rows[0][1]) && /no Total column/.test(sec.rows[0][1]),
     () => `P1: the approval page lists each waterfall and what it is written as: ${JSON.stringify(page).slice(0, 600)}`);
-  const sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+  const sv = serverSource();
   chk(() => /waterfall \(gallery\) is written as a stacked column chart drawn as a waterfall, read from the right/.test(sv) && /no Total column in Arabic: the last step on the left ends at the total/.test(sv) && /reportNotes\.push\(`The waterfall/.test(sv),
     () => 'P2: create_report\'s chartAxes note, its report notes and plan_layout\'s waterfallRtl say what is written');
 }

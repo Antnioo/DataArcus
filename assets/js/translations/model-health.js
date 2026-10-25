@@ -22,7 +22,7 @@ window.modelHealthTranslations = {
     }
   },
   "ar": {
-    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء", "description": "أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل." },
+    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء", "keywords": "داتا أركوس, Power BI model health check, Power BI best practice analyzer, find unused columns Power BI, Power BI model documentation, pbit analyzer, VertiPaq, DAX best practices", "description": "أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل." },
     "mh": {
       "badge": "مجاني · يعمل داخل متصفحك · لا يتم رفع أي ملف",
       "title": "فحص صحة نموذج Power BI",
