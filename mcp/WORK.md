@@ -54,13 +54,17 @@ only in `mcp/work/*.md`). Each builder writes its plan and expected numbers in i
   (`PREVIEW_PAGES_MAX`, now the report's cap too). New suite `test-0.3.1-twin-preview.mjs` (23) in `npm test`. Merges
   with R1 cleanly but the `npm test` line (keep both). Results, decisions, "For the laptop", "Seen, not in scope":
   `mcp/work/V1.md`.
+- **I (wave 3, the website's score card and the exams' study links; the owner's "Yes", 22 Oct). Done (25 Oct, cloud
+  builder), branch `feat/0.3.1-site-card-study`, not merged:** 34a6c93 plan, 4f2aa69 red tests, 8629ea1 score card,
+  ccff6f8 study links. Website suites 11,130 -> 11,174, 20 of 20 pass (model-health +20, tools +24). Results,
+  decisions, CHANGELOG line, "Seen, not in scope": `mcp/work/I.md`.
 - **L1 (wave 2, the Arabic lens): done (25 Oct, cloud builder), branch `feat/0.3.1-arabic-lens`, not merged:** 73a330b
   plan, c53226d red tests, f3e87bc the lens. check_report `lens: "arabic"` (`mcp/lib/arabic-lens.mjs`): "Is this report
   ready for Arabic?" page by page, a summary first, each fix a DataArcus call, a Desktop setting or "Power BI has no setting".
   New suite `test-0.3.1-arabic-lens.mjs` (31) in `npm test`. Results, decisions, "For the laptop", "For the website",
   "Seen, not in scope": `mcp/work/L1.md`.
 - **Merged into `integration/0.3.1` (25 Oct, reviewer):** S1 (ee95e76), R1 (3e03ab9), V1 (2a47e53), P1 (5728514), M1
-  (ed23620), L1 (this merge).
+  (ed23620), L1 (7379e42), I (this merge).
 - **Running (25 Oct):** X2 one report in English and Arabic from create_report, ported onto today's code
   (`feat/0.3.1-bilingual-report-2`: R1's buttons, M1's engine, V1's pairs).
 - Next: wave 3 (the sample project, Arabic terms, the website's "ready for Arabic?" page), wave 4 (K1, Finding #3,
