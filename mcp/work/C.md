@@ -134,7 +134,9 @@ Tests before (11df69b + the new tests) -> after:
 - Touched suites, all PASS, counts unchanged: approval-complete 25, r6-disclosure 37, approval-hardening 22, claims 117,
   release-text 36, r5-answers 33, v029agent 23, checker 22, arabic-terms 84, audit-oct 11, large-model-caps 215,
   changelog-words 52.
-- The full `cd mcp && npm test` once, at the end: FULL_RUN.
+- The full `cd mcp && npm test` once, at the end (on 0f61c5d's code): exit 0, 70 result lines, every one PASS, none FAIL or
+  SKIP (`mcp` 1,581; write-gate 4; sample-project 23); check-result-lines passes on 70. Expected 68: E's merged suites
+  added lines I had not counted (the same miscount as X2's).
 - No `assets/js` or website file changed: no build:min, no ?v= stamp, no website suite needed.
 
 What it measured on the way (C10, C11): Microsoft's validator gives 0 errors on the sample's empty report

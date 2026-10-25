@@ -8,7 +8,11 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 A new user with no model: `plan_layout sample: true` -> approval -> `create_report sample: true` writes a made-up Gulf retail
 PBIP project (TMDL model, typed rows, an empty report) and answers a 4-step tour of real DataArcus calls on it. An option,
 not a 12th tool (C.md: why). Plan, expected numbers, results, "For the laptop", "For the reviewer", decisions: `mcp/work/C.md`.
-- Done: the plan (this entry). Next: red tests, the build, touched suites, the full npm test.
+- Done: fe8f8b5 plan, dcc7ad7 red (20 of 23), 0f61c5d build. After: sample-project 23/23, write-gate 4/4 (writeSample
+  listed), touched suites unchanged; full npm test exit 0 (70 lines PASS). Instructions unchanged (no room): plan_layout's
+  description and the empty folder's answer say it.
+- Next: the reviewer reviews and merges; the laptop runs C.md "For the laptop" (the empty report's `themeCollection: {}`
+  and the dates' `Short Date` are first opened there); the beta task list gets the line in C.md "For the reviewer".
 
 ## 0.3.1, wave 2: X2 one report in English and Arabic from create_report (25 Oct, builder; branch `feat/0.3.1-bilingual-report-2` from integration/0.3.1 ed23620)
 The old X2 (`origin/feat/0.3.1-bilingual-report`, pre-0.3.0 history) ported onto today's code, not merged: `languages:
