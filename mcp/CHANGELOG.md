@@ -77,6 +77,11 @@ package's manifest; this file says what is in it.
   it wrote before it cleans up, even when another program put a file of the same size in the same place.
 - **check_report says what it checked:** it no longer says a report "opens in Power BI Desktop" or "is not broken"; it
   says what it found, which checks ran, and that Power BI Desktop itself was not opened.
+- **The Arabic twin writes exactly what you approved:** the twin's plan (and the copy with both languages) now
+  builds every file before your go, and after it those same files are written byte for byte; if the twin built
+  again would come out any different, nothing is written and the plan is made again. The plan and the approval page
+  also say in one line what stays English or unmirrored in your report (texts from your model, a matrix's months,
+  custom visuals and the like).
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
