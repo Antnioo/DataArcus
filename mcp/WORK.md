@@ -4,6 +4,18 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.3.1, wave 4: L6 the DAX function library, ported onto today's code (25 Oct, builder; branch `feat/0.3.1-dax-functions-2` from integration/0.3.1 e8ccecc)
+Draft #82 (`origin/feat/0.3.1-dax-functions`, pre-0.3.0 history) ported, not merged: `daxFunctions` (off by default) on
+plan_layout and create_report writes DA.Sparkline, DA.BulletBar, DA.KpiCard, DA.StoryTitle and the measures that call them
+as ONE TMDL script next to the project (one of create_report's files: no new write); the compatibility step (1702, cannot
+be undone) first everywhere, in the person's language. Learn re-read 25 Oct: UDFs generally available since June 2026.
+Plan, results, CHANGELOG line, "For the laptop", decisions, "Seen, not in scope": `mcp/work/L6.md`.
+- Done: 47b7c12 plan, e16f45e red (90 checks, 64 fail), 51913a1 build. After: dax-functions 90/90, write gate 4/4 (no new
+  write), touched suites unchanged; test-0.3.0-claims A2-W: the DAX library's name taken off its 0.3.1 list (the reviewer's
+  call, L6.md Results); full npm test exit 0 (72 lines PASS). Instructions unchanged (no room).
+- Next: the reviewer reviews and merges; the laptop runs L6.md "For the laptop"; the owner decides L6.md "Seen" 1 (Arabic
+  DA measures for the twin and the bilingual report's Arabic half).
+
 ## 0.3.1, wave 4: K1 DataArcus as a plugin next to Microsoft's (25 Oct, builder; branch `feat/0.3.1-plugin-folder` from integration/0.3.1 11df69b)
 The owner, 22 Oct: "Yes, after 0.3.0 ships". Draft #85's research, routing skill and test ported (not merged):
 `mcp/skills-packaging/` is now a folder (8 files) the owner copies as-is into a new public repo (e.g.

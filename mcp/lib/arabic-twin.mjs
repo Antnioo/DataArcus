@@ -25,6 +25,7 @@ import { writtenName } from './display-names.mjs';
 import * as Terms from './terminology.mjs';
 import { tagOf } from './model-script.mjs';
 import { fieldParametersOf } from './metric-switcher.mjs';
+import { DAX_MEASURE } from './dax-functions.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js'), Gallery = require('../../assets/js/visual-gallery.js');
@@ -1140,6 +1141,11 @@ export function planTwin(a) {
   // the English report, names them): the twin's slicer still switches, and its choices read as that table names them
   const switchers = fieldParametersOf(R.pages.flatMap((pg) => pg.visuals.map((v) => ({ file: safeName(pg.id) + '/' + safeName(isObj(v.json) ? v.json.name : ''), json: v.json }))));
   if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (the metric switcher script made for the English report names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher`, where: [...new Set(switchers.map((x) => x.file))].slice(0, 30) });
+  // (0.3.1 L6) the DAX function library's pictures and titles are measures of the model (its DAX functions script, made
+  // for the English report): the twin shows them as those measures draw them
+  const daxShown = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const hit = []; const seek = (o) => { if (!isObj(o) && !Array.isArray(o)) return; if (isObj(o) && isObj(o.Measure) && typeof o.Measure.Property === 'string' && DAX_MEASURE.test(o.Measure.Property)) hit.push(1); Object.values(o).forEach(seek); };
+    seek(isObj(v.json) ? v.json.visual : null); return hit.length; }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+  if (daxShown.length) cannot.push({ what: 'the DAX function library\'s pictures and titles', why: 'the KPI card pictures, the table\'s trend and target columns and the story titles are drawn by measures of the model (the DAX functions script made for the English report, in English): the twin shows them as those measures draw them; for Arabic ones, make the report in Arabic with create_report and daxFunctions', where: daxShown.slice(0, 30) });
   if (flipFaces.length) cannot.push({ what: 'flip cards\' faces', why: 'their text is drawn by picture measures of the model (the flip cards script made for the English report): the twin\'s cards are mirrored as one box and still turn, but their faces read as those measures draw them; for Arabic faces, make the report in Arabic with create_report and flipCards', where: flipFaces.slice(0, 30) });
   const checkInTwin = [];
   const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };

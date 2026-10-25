@@ -52,6 +52,10 @@ package's manifest; this file says what is in it.
   ready to become its own public repo, with a skill that says which of the two does what (Arabic and right-to-left
   work, Gulf dates, the health check and approved writes stay with DataArcus; editing an existing report, screenshots,
   publishing and model changes go to Microsoft's). It installs the released DataArcus extension. Not published yet.
+- **A DAX function library, off unless you ask for it:** four DAX user-defined functions (a small trend line, a bar
+  against a target, a KPI card picture in your theme's colours, a chart title that names the leader) and the measures
+  that use them, in one script you apply yourself in TMDL view. The first thing the plan, the approval page and the
+  script say, in your language: applying it raises your model's compatibility level to 1702, and that cannot be undone.
 - **A guard on writing files:** a test lists every place DataArcus writes a file and fails if a new one appears.
 - Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
