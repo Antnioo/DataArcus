@@ -5,7 +5,7 @@ window.calendarGeneratorTranslations = {
       "a11yBox": "The DAX code",
       "badge": "Free tool · No sign-up",
       "title": "DAX Calendar Table Generator",
-      "subtitle": "A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.",
+      "subtitle": "A Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.",
       "quick": "Quick setup",
       "q": {
         "uae": "UAE",
@@ -73,8 +73,8 @@ window.calendarGeneratorTranslations = {
       "copy": "Copy DAX",
       "howto": "In Power BI Desktop: <strong>Modeling → New table</strong>, paste, press Enter. Then <strong>Mark as date table</strong> and choose Date. Sort Month Name by Month Number.",
       "cta": {
-        "title": "Ramadan changes everything in your numbers",
-        "desc": "Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.",
+        "title": "Ramadan moves every year, and your numbers with it",
+        "desc": "Compare this Ramadan with last Ramadan, not March with March. DataArcus builds Power BI reports that understand the Gulf calendar.",
         "next": "Next: build YoY and YTD measures",
         "guide": "Read the guide: compare this Ramadan with last Ramadan →"
       },
@@ -83,7 +83,7 @@ window.calendarGeneratorTranslations = {
         "q1": "How do I add this table in Power BI?",
         "a1": "In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.",
         "q2": "How does it get Hijri dates without Power Query?",
-        "a2": "Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with \"ar-SA\" or \"ar-AE\" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.",
+        "a2": "Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with \"ar-SA\" or \"ar-AE\" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table needs no data source and works offline.",
         "q3": "Are the Ramadan and Eid dates exact?",
         "a3": "By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed from Umm al-Qura). They are the UAE's dates: Oman announced 11 of them a day later from 2019 to 2026. Future dates are estimates until they are announced and added here.",
         "q4": "How do I compare this Ramadan with last Ramadan?",
@@ -101,7 +101,7 @@ window.calendarGeneratorTranslations = {
       "a11yBox": "كود DAX",
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "مولّد جدول التاريخ في DAX",
-      "subtitle": "جدول تواريخ Power BI كامل بلصقة واحدة: السنة المالية، وعطلات نهاية الأسبوع الخليجية، والتاريخ الهجري مع علامات رمضان والعيد التي لا توفرها أي دالة مدمجة.",
+      "subtitle": "جدول تواريخ Power BI بلصقة واحدة: السنة المالية، وعطلات نهاية الأسبوع الخليجية، والتاريخ الهجري مع علامات رمضان والعيد التي لا توفرها أي دالة مدمجة.",
       "quick": "إعداد سريع",
       "q": {
         "uae": "الإمارات",
@@ -169,8 +169,8 @@ window.calendarGeneratorTranslations = {
       "copy": "نسخ DAX",
       "howto": "في Power BI Desktop: <strong>Modeling → New table</strong>، الصق الكود واضغط Enter. ثم <strong>Mark as date table</strong> واختر عمود Date. رتّب Month Name حسب Month Number.",
       "cta": {
-        "title": "رمضان يغيّر كل شيء في أرقامك",
-        "desc": "المقارنة الحقيقية هي بين رمضان هذا العام ورمضان الماضي، لا بين مارس ومارس. تبني DataArcus تقارير Power BI تفهم التقويم الخليجي.",
+        "title": "رمضان يتحرك كل عام، وأرقامك معه",
+        "desc": "قارن رمضان هذا العام برمضان الماضي، لا مارس بمارس. تبني DataArcus تقارير Power BI تفهم التقويم الخليجي.",
         "next": "التالي: أنشئ مقاييس YoY و YTD",
         "guide": "اقرأ الدليل: قارن رمضان هذا العام برمضان الماضي ←"
       },
@@ -179,7 +179,7 @@ window.calendarGeneratorTranslations = {
         "q1": "كيف أضيف هذا الجدول في Power BI؟",
         "a1": "في Power BI Desktop اذهب إلى <strong>Modeling → New table</strong>، والصق كود DAX واضغط Enter. ثم انقر بزر الفأرة الأيمن على الجدول واختر <strong>Mark as date table</strong> وحدد عمود Date. اربط عمود Date بعمود التاريخ في جدول الحقائق.",
         "q2": "كيف يحصل على التاريخ الهجري دون Power Query؟",
-        "a2": "لا توجد في Power BI دالة مدمجة تعطي الشهر الهجري أو تحدد أيام رمضان. (قسناه في Power BI Desktop 2.158 في أكتوبر 2026: الدالة FORMAT في DAX مع \"ar-SA\" أو \"ar-AE\" تعطي التاريخ الميلادي.) يحسب المولّد بداية كل شهر هجري ضمن النطاق ويضمّنها في جدول DATATABLE صغير داخل كود DAX. ثم يبحث كل تاريخ عن شهره الهجري، فيعمل الجدول دون اتصال ويتحدث فورًا.",
+        "a2": "لا توجد في Power BI دالة مدمجة تعطي الشهر الهجري أو تحدد أيام رمضان. (قسناه في Power BI Desktop 2.158 في أكتوبر 2026: الدالة FORMAT في DAX مع \"ar-SA\" أو \"ar-AE\" تعطي التاريخ الميلادي.) يحسب المولّد بداية كل شهر هجري ضمن النطاق ويضمّنها في جدول DATATABLE صغير داخل كود DAX. ثم يبحث كل تاريخ عن شهره الهجري، فلا يحتاج الجدول مصدر بيانات ويعمل دون اتصال.",
         "q3": "هل تواريخ رمضان والعيد دقيقة؟",
         "a3": "تتبع افتراضيًا تقويم أم القرى السعودي، وقد تختلف عنه رؤية الهلال، بيوم واحد في العادة. فعّل خيار تواريخ رمضان والعيد المعلنة لاستخدام التواريخ التي أعلنتها الإمارات منذ 2018 (اختلف عن أم القرى رمضان 2018 فقط). وهي تواريخ الإمارات: أعلنت عُمان 11 منها بعد يوم من 2019 إلى 2026. التواريخ المستقبلية تقديرية حتى تُعلن وتُضاف هنا.",
         "q4": "كيف أقارن رمضان هذا العام برمضان الماضي؟",

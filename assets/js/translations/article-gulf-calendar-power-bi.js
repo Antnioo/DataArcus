@@ -21,22 +21,22 @@ window.gulfCalendarArticleTranslations = {
     },
     "header": {
       "badge": "GULF CALENDAR",
-      "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend",
+      "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends",
       "subtitle": "Posted on October 3, 2026"
     },
     "content": {
       "p1": "A standard Power BI date table knows January to December and one weekend. A Gulf business runs on more than that: <strong>Ramadan and Eid move every year, the Hijri month decides the season, and the weekend depends on the country and the year.</strong> Miss one of these and the report shows trends that are really the calendar.",
-      "p2": "This guide builds one calendar table that gets all of it right, in DAX, in about a minute, and three measures that use it.",
+      "p2": "This guide builds one calendar table in DAX that handles each of these, and three measures that use it.",
       "h1": "Four things a standard calendar gets wrong in the Gulf",
       "list1_1": "<strong>Ramadan moves.</strong> It started on 1 March in 2025 and on 18 February in 2026, and is expected around 8 February in 2027: about 11 days earlier each year. March 2026 against March 2025 compares two different seasons.",
       "list1_2": "<strong>Eid is a window, not a day.</strong> Shopping builds up in the days before Eid al-Fitr and Eid al-Adha, and those days fall in a different Gregorian month from one year to the next.",
       "list1_3": "<strong>The weekend changed.</strong> The UAE moved its government weekend from Friday-Saturday to Saturday-Sunday on 1 January 2022 (<a href='https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector' class='text-accent' target='_blank' rel='noopener'>announced by WAM</a>). Saudi Arabia, Kuwait, Qatar, Bahrain and Oman keep Friday-Saturday. Whichever fixed weekend a UAE calendar uses, one side of 2022 is wrong: Saturday-Sunday makes Friday 31 December 2021 a working day, Friday-Saturday makes Friday 7 January 2022 a day off.",
-      "list1_4": "<strong>Names sort alphabetically.</strong> April comes before January, Friday before Monday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.",
+      "list1_4": "<strong>Names sort alphabetically.</strong> April comes before January, Wednesday before Tuesday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.",
       "h2": "Announced dates or the calculated calendar?",
       "p3": "Power BI's date functions (YEAR, MONTH, DATE) work on the Gregorian calendar and have no Hijri month or Ramadan flag, so the calendar table has to carry the Hijri dates. The usual source is Umm al-Qura, Saudi Arabia's official calculated calendar. But Ramadan and the two Eids are set by moon sighting, and an announcement can differ from the calculation by a day.",
-      "p4": "We checked every UAE announcement from 2018 to 2026: 27 dates (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year). <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.",
-      "p5": "Dates from 2027 on are not announced yet. They are estimates, and a sighting can still move each one by a day, so the calendar flags them.",
-      "h3": "Build the calendar in a minute",
+      "p4": "We compared the UAE's 27 dates from 2018 to 2026 (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year) with Umm al-Qura. 24 come from a dated announcement; three Eid al-Adha dates (2018, 2019 and 2024) are confirmed by the official celebrations held that day. <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.",
+      "p5": "Dates from 2027 on are not announced yet. They are estimates: a sighting usually lands on the same day or one day apart, with no guarantee, so the calendar flags them.",
+      "h3": "Build the calendar",
       "p6": "Open the free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> and set three things:",
       "list2_1": "<strong>Hijri dates, Ramadan and Eid</strong>: on.",
       "list2_2": "<strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the UAE's announced dates, whichever weekend you pick; every other month follows Umm al-Qura.",
@@ -60,12 +60,12 @@ window.gulfCalendarArticleTranslations = {
       "p14": "We test these measures on a made-up model (two stores, amounts from a formula, no real data). Its 43 checks, each with the number worked out beforehand, are <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>on GitHub</a>, so you can run them in your own Power BI Desktop.",
       "h6": "Three things to watch",
       "list4_1": "<strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has rested Friday to Sunday since 2022: pick <em>Sharjah government</em> for it. If your weekend is none of the options, pick the closest one and change the days in the Is Weekend and Is Working Day columns' DAX.",
-      "list4_2": "<strong>Update after each announcement.</strong> When Ramadan 2027 is announced, generate the table again: the announced dates replace the estimates.",
+      "list4_2": "<strong>Update after each announcement, once DataArcus has added it.</strong> When Ramadan 2027 is announced, DataArcus adds the date to its table (the sources file shows when). Generate the table again after that, and the announced dates replace the estimates.",
       "list4_3": "<strong>Other countries' sightings.</strong> The announced dates are the UAE's. Saudi Arabia's matched them from 2018 to 2026; Oman announced 11 of them a day later from 2019 to 2026 (each in the sources file), and Qatar, Kuwait and Bahrain can start a day apart. Check the official announcement where you report.",
-      "p15": "Ramadan 1448 is expected around 8 February 2027. Build the calendar now, and the first comparison is ready on day one."
+      "p15": "Ramadan 1448 is expected around 8 February 2027. Build the calendar before then, and the day-by-day comparison can start on Ramadan's first day."
     },
     "exploreMore": {
-      "title": "Build your Gulf calendar in a minute",
+      "title": "Build your Gulf calendar",
       "subtitle": "Free, in your browser: Hijri dates, announced Ramadan and Eid, and your country's weekend.",
       "button1": "Open the Calendar Generator",
       "button2": "Build the Eid measures"
@@ -97,22 +97,22 @@ window.gulfCalendarArticleTranslations = {
     },
     "header": {
       "badge": "التقويم الخليجي",
-      "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة الصحيحة",
+      "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة",
       "subtitle": "نُشر في 3 أكتوبر 2026"
     },
     "content": {
       "p1": "جدول التواريخ المعتاد في Power BI يعرف الأشهر من يناير إلى ديسمبر وعطلة واحدة فقط. أما الأعمال في الخليج فتسير على أكثر من ذلك: <strong>رمضان والعيد يتحركان كل عام، والشهر الهجري يحدد الموسم، وعطلة نهاية الأسبوع تختلف حسب الدولة والسنة.</strong> إذا أغفلت أيًا منها، أظهر التقرير اتجاهات هي في الحقيقة مجرد تقويم.",
-      "p2": "يبني هذا الدليل جدول تقويم واحدًا يضبط كل ذلك بلغة DAX في دقيقة تقريبًا، ومعه ثلاثة مقاييس تستخدمه.",
+      "p2": "يبني هذا الدليل بلغة DAX جدول تقويم واحدًا يعالج كل ذلك، ومعه ثلاثة مقاييس تستخدمه.",
       "h1": "أربعة أمور يخطئ فيها التقويم المعتاد في الخليج",
       "list1_1": "<strong>رمضان يتحرك.</strong> بدأ في 1 مارس في 2025، وفي 18 فبراير في 2026، ويُتوقع أن يبدأ نحو 8 فبراير في 2027: أي قبل نحو 11 يومًا كل عام. مقارنة مارس 2026 بمارس 2025 تقارن موسمين مختلفين.",
       "list1_2": "<strong>العيد فترة وليس يومًا.</strong> يزداد الشراء في الأيام التي تسبق عيد الفطر وعيد الأضحى، وتقع هذه الأيام في شهر ميلادي مختلف من سنة إلى أخرى.",
       "list1_3": "<strong>العطلة تغيّرت.</strong> نقلت الإمارات عطلة القطاع الحكومي من الجمعة والسبت إلى السبت والأحد في 1 يناير 2022 (<a href='https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector' class='text-accent' target='_blank' rel='noopener'>بإعلان من وام</a>). وتبقى السعودية والكويت وقطر والبحرين وعُمان على الجمعة والسبت. وأيًا كانت العطلة الثابتة في تقويم إماراتي، فأحد جانبي 2022 خاطئ: السبت والأحد يجعلان الجمعة 31 ديسمبر 2021 يوم عمل، والجمعة والسبت يجعلان الجمعة 7 يناير 2022 يوم عطلة.",
-      "list1_4": "<strong>الأسماء تُرتَّب أبجديًا.</strong> فيأتي أبريل قبل يناير، والجمعة قبل الاثنين، والأشهر الهجرية بترتيب لا يستخدمه أحد، ما لم يُرتَّب كل اسم برقمه.",
+      "list1_4": "<strong>الأسماء تُرتَّب أبجديًا.</strong> فيأتي أبريل قبل يناير، والأربعاء قبل الثلاثاء، والأشهر الهجرية بترتيب لا يستخدمه أحد، ما لم يُرتَّب كل اسم برقمه.",
       "h2": "المواعيد المعلنة أم التقويم المحسوب؟",
       "p3": "دوال التاريخ في Power BI (مثل YEAR وMONTH وDATE) تعمل بالتقويم الميلادي، ولا تعطي شهراً هجرياً ولا علامة لرمضان، لذلك يحمل جدول التقويم التواريخ الهجرية. والمصدر المعتاد هو تقويم أم القرى، التقويم المحسوب الرسمي في السعودية. لكن رمضان والعيدين تحددهما رؤية الهلال، وقد يختلف الإعلان عن الحساب بيوم واحد.",
-      "p4": "راجعنا كل إعلانات الإمارات من 2018 إلى 2026: 27 تاريخًا (أول أيام رمضان وعيد الفطر وعيد الأضحى في كل عام). <strong>26 منها طابقت أم القرى، وواحد لم يطابقها:</strong> بدأ رمضان 2018 يوم الخميس 17 مايو، لا الأربعاء 16 مايو. كل تاريخ ومصدره موجود في <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>ملف المصادر</a>.",
-      "p5": "التواريخ من 2027 فصاعدًا لم تُعلن بعد. إنها تقديرات، وقد تنقل رؤية الهلال كلًا منها يومًا واحدًا، لذلك يميّزها التقويم.",
-      "h3": "ابنِ التقويم في دقيقة",
+      "p4": "قارنّا 27 تاريخًا للإمارات من 2018 إلى 2026 (أول أيام رمضان وعيد الفطر وعيد الأضحى في كل عام) بتقويم أم القرى. 24 منها من إعلان مؤرَّخ، وثلاثة تواريخ لعيد الأضحى (2018 و2019 و2024) تؤكدها الاحتفالات الرسمية التي أقيمت في ذلك اليوم. <strong>26 منها طابقت أم القرى، وواحد لم يطابقها:</strong> بدأ رمضان 2018 يوم الخميس 17 مايو، لا الأربعاء 16 مايو. كل تاريخ ومصدره موجود في <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>ملف المصادر</a>.",
+      "p5": "التواريخ من 2027 فصاعدًا لم تُعلن بعد. إنها تقديرات: تقع رؤية الهلال عادةً في اليوم نفسه أو بفارق يوم، دون ضمان، لذلك يميّزها التقويم.",
+      "h3": "ابنِ التقويم",
       "p6": "افتح <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>مولّد جدول التقويم بلغة DAX</a> المجاني واضبط ثلاثة أمور:",
       "list2_1": "<strong>التاريخ الهجري ورمضان والعيد</strong>: مفعّل.",
       "list2_2": "<strong>مواعيد رمضان والعيد المعلنة (الإمارات)</strong>: مفعّل. يبدأ رمضان وشوال وذو الحجة في مواعيد الإمارات المعلنة أيًّا كانت العطلة التي تختارها، وتتبع بقية الأشهر تقويم أم القرى.",
@@ -136,12 +136,12 @@ window.gulfCalendarArticleTranslations = {
       "p14": "نختبر هذه المقاييس على نموذج مختلَق (متجران، ومبالغ من معادلة، بلا بيانات حقيقية). فحوصه الثلاثة والأربعون، ولكل منها الرقم المحسوب مسبقًا، موجودة <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>على GitHub</a>، فتستطيع تشغيلها في Power BI Desktop لديك.",
       "h6": "ثلاثة أمور يجب الانتباه لها",
       "list4_1": "<strong>عطلة شركتك.</strong> تتبع خيارات الدول العطلة الحكومية الرسمية. كثير من شركات القطاع الخاص لها عطلة أخرى، وحكومة الشارقة تعطل من الجمعة إلى الأحد منذ 2022: اختر لها <em>حكومة الشارقة</em>. وإن لم تكن عطلتك بين الخيارات، فاختر أقربها وغيّر الأيام في كود DAX لعمودي Is Weekend وIs Working Day.",
-      "list4_2": "<strong>حدّث بعد كل إعلان.</strong> عندما يُعلن رمضان 2027، أنشئ الجدول من جديد لتحل المواعيد المعلنة محل التقديرات.",
+      "list4_2": "<strong>حدّث بعد كل إعلان، بعد أن تضيفه DataArcus.</strong> عندما يُعلن رمضان 2027 تضيف DataArcus التاريخ إلى جدولها (يظهر ذلك في ملف المصادر). أنشئ الجدول من جديد بعد ذلك لتحل المواعيد المعلنة محل التقديرات.",
       "list4_3": "<strong>رؤية الدول الأخرى.</strong> المواعيد المعلنة هي مواعيد الإمارات. وطابقتها مواعيد السعودية من 2018 إلى 2026، وأعلنت عُمان 11 منها بعد يوم من 2019 إلى 2026 (لكلٍّ منها مصدره في ملف المصادر)، وقد تبدأ قطر والكويت والبحرين بفارق يوم. فراجع الإعلان الرسمي في البلد الذي تُعدّ له التقرير.",
-      "p15": "من المتوقع أن يبدأ رمضان 1448 نحو 8 فبراير 2027. ابنِ التقويم الآن، وستكون أول مقارنة جاهزة من اليوم الأول."
+      "p15": "من المتوقع أن يبدأ رمضان 1448 نحو 8 فبراير 2027. ابنِ التقويم قبل ذلك، لتبدأ المقارنة يومًا بيوم من أول أيام رمضان."
     },
     "exploreMore": {
-      "title": "ابنِ تقويمك الخليجي في دقيقة",
+      "title": "ابنِ تقويمك الخليجي",
       "subtitle": "مجانًا وفي متصفحك: التاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة دولتك.",
       "button1": "افتح مولّد التقويم",
       "button2": "أنشئ مقاييس العيد"

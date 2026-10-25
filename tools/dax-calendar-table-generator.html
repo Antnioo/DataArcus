@@ -89,7 +89,7 @@
           { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
             "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with \"ar-SA\" or \"ar-AE\" still returns the Gregorian date.) This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
           { "@type": "Question", "name": "Are the Ramadan dates exact?",
-            "acceptedAnswer": { "@type": "Answer", "text": "By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. The Announced Ramadan and Eid dates option uses the dates the UAE announced since 2018; future dates are estimates until they are announced." } }
+            "acceptedAnswer": { "@type": "Answer", "text": "By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. The Announced Ramadan and Eid dates option uses the dates the UAE announced since 2018 (Oman announced 11 of them a day later from 2019 to 2026); future dates are estimates until they are announced and added here." } }
         ]
       }
     ]
@@ -184,7 +184,7 @@
       <header class="mb-4">
         <span class="page-badge" data-i18n="cg.badge">Free tool · No sign-up</span>
         <h1 class="display-5 fw-bold" data-i18n="cg.title">DAX Calendar Table Generator</h1>
-        <p class="lead text-white-50 mb-0" data-i18n="cg.subtitle">A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
+        <p class="lead text-white-50 mb-0" data-i18n="cg.subtitle">A Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
       </header>
 
       <div class="row g-4" data-clarity-mask="true">
@@ -248,8 +248,8 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2" data-i18n="cg.cta.title">Ramadan changes everything in your numbers</h2>
-            <p class="text-white-50 mb-3" data-i18n="cg.cta.desc">Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
+            <h2 class="h4 fw-bold mb-2" data-i18n="cg.cta.title">Ramadan moves every year, and your numbers with it</h2>
+            <p class="text-white-50 mb-3" data-i18n="cg.cta.desc">Compare this Ramadan with last Ramadan, not March with March. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
             <div class="d-flex flex-wrap justify-content-center gap-2">
               <a href="/#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
               <a href="dax-measure-builder.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="cg.cta.next">Next: build YoY and YTD measures</a>
@@ -261,7 +261,7 @@
             <h3 data-i18n="cg.faq.q1">How do I add this table in Power BI?</h3>
             <p data-i18n-html="cg.faq.a1">In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.</p>
             <h3 data-i18n="cg.faq.q2">How does it get Hijri dates without Power Query?</h3>
-            <p data-i18n="cg.faq.a2">Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with "ar-SA" or "ar-AE" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
+            <p data-i18n="cg.faq.a2">Power BI has no built-in function that returns a Hijri month or flags Ramadan. (Measured in Power BI Desktop 2.158, October 2026: DAX FORMAT with "ar-SA" or "ar-AE" still returns the Gregorian date.) The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table needs no data source and works offline.</p>
             <h3 data-i18n="cg.faq.q3">Are the Ramadan and Eid dates exact?</h3>
             <p data-i18n="cg.faq.a3">By default they follow Saudi Arabia's Umm al-Qura calendar; a moon sighting can differ from it, usually by a day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed from Umm al-Qura). They are the UAE's dates: Oman announced 11 of them a day later from 2019 to 2026. Future dates are estimates until they are announced and added here.</p>
             <h3 data-i18n="cg.faq.q4">How do I compare this Ramadan with last Ramadan?</h3>
