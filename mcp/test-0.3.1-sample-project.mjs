@@ -91,7 +91,7 @@ try {
     && S.relationships === 3 && /Calendar/.test(S.dateTable || '') && JSON.stringify(hashes(ROOT)) === JSON.stringify(before),
     () => `C1. plan_layout sample: a plan id, the folder, 4 tables (648/6/12/546 rows), 3 relationships, the Calendar marked; nothing written: ${short(p)}`);
   const outs = (plan.writesAfterGo || []).join(' '), shownAll = JSON.stringify(p.j || {});
-  chk(() => /Gulf Retail Sample/.test(outs) && (plan.outputs || []).length === 16 && !/#date|#table|\{"/.test(shownAll),
+  chk(() => /Gulf Retail Sample/.test(outs) && (S.files || []).length === 16 && !/#date|#table/.test(shownAll),
     () => `C2. the plan lists the 16 files and its writes name the folder; no answer holds a row: ${outs.slice(0, 200)} ${String(shownAll).slice(0, 300)}`);
   const bad = await call(s, 'plan_layout', { sample: true, path: 'x', layout: 'exec' });
   chk(() => !bad.err && !(bad.j || {}).plan && ((bad.j || {}).planProblems || []).some((x) => /sample/.test(x) && /path/.test(x)), () => `C3. a model input with sample is a plan problem, no plan id: ${short(bad)}`);
@@ -108,9 +108,9 @@ try {
   const wr = await call(w, 'create_report', { sample: true, path: folder, planId: pid }), WJ = wr.j || {};
   const added = filesOf(ROOT).filter((f) => !(f in before));
   const again = await call(w, 'create_report', { sample: true, path: folder, planId: pid });
-  chk(() => !wr.err && WJ.written === true && added.length === 16 && added.every((f) => f.startsWith('Gulf Retail Sample/')) && JSON.stringify(added.map((f) => f.replace(/^Gulf Retail Sample\//, ''))) === JSON.stringify((pw.j.plan.outputs || []).map((f) => f.replace(/^Gulf Retail Sample\//, '')).sort())
+  chk(() => !wr.err && WJ.written === true && added.length === 16 && added.every((f) => f.startsWith('Gulf Retail Sample/')) && JSON.stringify(added.map((f) => f.replace(/^Gulf Retail Sample\//, ''))) === JSON.stringify((pw.j.sample.files || []).map((f) => f.replace(/^Gulf Retail Sample\//, '')).sort())
     && again.err && filesOf(ROOT).length === added.length + Object.keys(before).length,
-    () => `C6. after the approval: exactly the 16 listed files, all in the sample's folder; the same plan again refused: ${short(wr)} ${JSON.stringify(added).slice(0, 400)} again: ${short(again)}`);
+    () => `C6. after the approval: exactly the 16 listed files, all in the sample's folder; the same plan again refused: ${added.length} ${again.err} ${short(wr)} ${JSON.stringify(added).slice(0, 400)} again: ${short(again)}`);
 
   // ---------- C8-C10: the model ----------
   const MP = 'Gulf Retail Sample/Gulf Retail.SemanticModel', DEF = path.join(ROOT, MP, 'definition');

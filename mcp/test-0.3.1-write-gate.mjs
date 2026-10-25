@@ -22,9 +22,9 @@ const WRITES = ['writeFileSync', 'writeFile', 'appendFileSync', 'appendFile', 'm
   'copyFileSync', 'copyFile', 'rmSync', 'rm', 'rmdirSync', 'rmdir', 'unlinkSync', 'unlink', 'createWriteStream', 'linkSync', 'link', 'symlinkSync', 'symlink',
   'truncateSync', 'truncate', 'ftruncateSync', 'writeSync', 'write', 'writev', 'writevSync', 'openSync', 'open', 'chmodSync', 'chmod', 'utimesSync', 'utimes', 'lutimesSync', 'futimesSync'];
 // the helpers that wrap them (write-io.mjs, files.mjs, answers.mjs, model.mjs; the server's writeScript and formatsAnswer;
-// the tools' writers in lib/: the twin's, the native copy's, the redesign's, the Gulf calendar's)
+// the tools' writers in lib/: the twin's, the native copy's, the redesign's, the Gulf calendar's; 0.3.1 C: the sample project's)
 const WRAPPERS = ['writeFileNew', 'writeNew', 'writeTree', 'createFile', 'makeDir', 'writeAnswers', 'freeFile', 'removeOurs', 'rollBack',
-  'writeScript', 'formatsAnswer', 'addGulfCalendar', 'writeTwin', 'writeNative', 'writeRedesign'];
+  'writeScript', 'formatsAnswer', 'addGulfCalendar', 'writeTwin', 'writeNative', 'writeRedesign', 'writeSample'];
 const FS = /^(node:)?fs(\/promises)?$/;
 
 /** The write calls in one file's source: { '<call>': count }. */
@@ -76,7 +76,8 @@ const LIST = {
     'writeFileNew()': { n: 1, why: `generate_theme's theme file, inside withPlan after Plans.gate: ${PLAN}` },
     'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` },
     'writeNative()': { n: 1, why: `create_report with customVisualsFrom, inside withPlan after Plans.gate: ${PLAN}` },
-    'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` }
+    'writeRedesign()': { n: 1, why: `create_report with redesignFrom, inside withPlan after Plans.gate: ${PLAN}` },
+    'writeSample()': { n: 1, why: `create_report with sample (0.3.1 C), inside withPlan after Plans.gate with the sample plan's folder and inputs: ${PLAN}` }
   },
   'lib/write-io.mjs': {
     'fs.writeFileSync': { n: 1, why: 'kept as REAL.writeFileSync (the real call behind io), not a call' },
@@ -125,6 +126,7 @@ const LIST = {
   'lib/arabic-twin.mjs': { 'writeTree()': { n: 1, why: `writeTwin: the twin or the EN-AR copy, new files next to the original: ${PLAN}` } },
   'lib/native-copy.mjs': { 'writeTree()': { n: 1, why: `writeNative: the native copy, new files next to the original: ${PLAN}` } },
   'lib/redesign.mjs': { 'writeTree()': { n: 1, why: `writeRedesign: the copy "<name> redesigned", new files next to the original: ${PLAN}` } },
+  'lib/sample-project.mjs': { 'writeTree()': { n: 1, why: `writeSample: the sample project, new files in a new folder of the working folder (writeTree refuses a name that is taken): ${PLAN}` } },
   'lib/gulf-calendar.mjs': { 'writeScript()': { n: 1, why: `the server's writeScript (or scriptNameNow, which writes nothing) passed in: ${PLAN}` } },
   'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } }
 };
