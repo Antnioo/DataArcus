@@ -70,7 +70,9 @@ export async function v029checks({ call, check, ROOT, fs = fs0 }) {
     chk(() => im && KINDS.every((k) => im.kinds[k] && typeof im.kinds[k].count === 'number' && /\S/.test(im.kinds[k].means)) && im.kinds.desktopOpens.count === 6 + KN && im.kinds.canBreak.count === 0,
       () => `C4. impact.kinds: each kind with its count and one sentence; 6 + ${KN} known desktopOpens, 0 canBreak: ${JSON.stringify(im)}`);
     chk(() => /Desktop opens/i.test(im.kinds.desktopOpens.means) && /Fabric/.test(im.kinds.desktopOpens.means) && /strict/i.test(im.kinds.desktopOpens.means), () => `C5. the desktopOpens sentence names Desktop, Fabric and strict validation: ${im.kinds.desktopOpens.means}`);
-    chk(() => /not broken|opens in (Power BI )?Desktop/i.test(im.summary) && !/broken\b(?! in)/i.test(im.summary.replace(/not broken/ig, '')), () => `C6. with only desktopOpens errors the summary says the report is not broken in Desktop: ${im && im.summary}`);
+    // (0.3.1 RB, item 5: moved on purpose: Desktop is never opened by check_report, so the summary says nothing known to
+    // break it was found, what ran, and that Desktop itself was not opened; never "opens in Desktop" or "not broken")
+    chk(() => /^Nothing found that Power BI Desktop is known to refuse \(.*Power BI Desktop itself was not opened\)/.test(im.summary) && /strict validation or Fabric would refuse/.test(im.summary) && !/not broken|opens in (Power BI )?Desktop/i.test(im.summary), () => `C6. with only desktopOpens errors the summary says nothing known to break it was found, what ran, and that Desktop was not opened: ${im && im.summary}`);
     chk(() => KINDS.every((k) => (strict.j.counts.byImpact || {})[k] === sf.filter((f) => f.impact === k).length || strict.j.truncated), () => `C7. counts.byImpact matches the findings: ${JSON.stringify(strict.j.counts.byImpact)}`);
 
     // b. what can break the report in Desktop: a visual that lost its fields (PBIR_QUERY_STATE_MISSING) and a page that
