@@ -8,8 +8,8 @@ import { relRoot, byPathOf } from './twin-read.mjs';
 import { num, typeOf } from './twin-visuals.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const hasControl = require('../../assets/js/pbip-export.js').hasControl;
-const ArabicCal = require('../../assets/js/arabic-calendar.js');
+// (as it stood in arabic-twin.mjs, MONTHS_AR with it: declared there, read nowhere; S9 moves it as it was)
+const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS, hasControl = require('../../assets/js/pbip-export.js').hasControl, ArabicCal = require('../../assets/js/arabic-calendar.js');
 
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 

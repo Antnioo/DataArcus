@@ -22,7 +22,7 @@ export const serverFiles = () => ['server.mjs'].concat(toolFiles(), SERVER_LIBS.
 export const serverSource = () => serverFiles().map(read).join('\n');
 
 // the twin's steps (lib/arabic-twin.mjs re-exports what they export)
-export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twin-texts.mjs', 'lib/twin-model.mjs', 'lib/twin-pages.mjs', 'lib/twin-copy.mjs',
+export const TWIN_STEPS = ['lib/twin-read.mjs', 'lib/twin-visuals.mjs', 'lib/twin-texts.mjs', 'lib/twin-model.mjs', 'lib/twin-copy.mjs', 'lib/twin-pages.mjs',
   'lib/twin-plan.mjs', 'lib/twin-preview.mjs', 'lib/twin-write.mjs'];
 export const twinFiles = () => ['lib/arabic-twin.mjs'].concat(TWIN_STEPS.filter(there));
 export const twinSource = () => twinFiles().map(read).join('\n');
