@@ -142,12 +142,12 @@ check 31, checker 23, validator-gap 5, powerbi-2026-10 26, arabic-lens 31, smoot
    very file that is then removed by name. The window between that check and the unlink is the one removeOurs always had.
 6. **`mcp/WORK.md` is not edited here:** it is A1's file in this wave (the brief); this job's memory is this file. The
    reviewer adds the wave line on merge.
+7. The golden baseline is V-rows' last guard, not the first: it takes about 35 s, and the first three kill V-rows in a
+   few seconds; with `DA_MUTATION_ALL=1` it is shown to kill it on its own.
 8. **Item 5 changes only `impactSummary` and `tellUser`.** The `desktopOpens` kind's sentence and TOOLS.md's description
    of it are the measured Desktop fact (DESKTOP-TESTS.md, a working hand-built report), not a check's result: kept, as
    the reviewer said. The claims ban covers check_report's sources, the lens, agent-text and TOOLS.md; "; Desktop opens
    the report with" is banned with its semicolon (the summary's form), so the measured sentence is not caught.
-7. The golden baseline is V-rows' last guard, not the first: it takes about 35 s, and the first three kill V-rows in a
-   few seconds; with `DA_MUTATION_ALL=1` it is shown to kill it on its own.
 
 ## Seen, not in scope
 1. **T1 Seen 2** (defence in depth no tool reaches: G-artifact, W-free-real): not a weakness, kept; no change proposed.
