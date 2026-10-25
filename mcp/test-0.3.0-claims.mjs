@@ -238,5 +238,61 @@ for (const [k, t] of [['page', GC.page], ['pageTr', GC.pageTr]]) check(/move on 
 for (const [k, t] of [['pageAr', GC.pageAr], ['pageTr', GC.pageTr]]) check(/تتقدم مع كل تحديث/.test(t) && /حكومة الشارقة/.test(t) && /العطل الرسمية/.test(t) && /أعلنت عُمان 11 منها بعد يوم/.test(t), `GC-1b/3/5/2. ${k}: the same in Arabic`);
 check(/only as a note/.test(GC.mcp) && /of them a day later/.test(GC.mcp), 'GC-1c. add_gulf_calendar\'s note does not say what the check does for another country (only as a note) and Oman\'s days a day later');
 
+// GC2 (0.3.1 wave 6, 25 Oct; mcp/work/GC2.md): the audit's sentences still unsupported after GC, each sourced or
+// softened. The old sentence is banned from every GC file; the new one (or its source link) is required where it stands
+const GC2_BANNED = [
+  [/knows January to December and one weekend|يعرف الأشهر من يناير إلى ديسمبر وعطلة واحدة/, 'GC2-1. "a standard date table knows January to December and one weekend"'],
+  [/the report shows trends that are really|أظهر التقرير اتجاهات/, 'GC2-2. "the report shows trends that are really the calendar" (a possibility, not a promise)'],
+  [/gets wrong in the Gulf|يخطئ فيها التقويم/, 'GC2-3. "four things a standard calendar gets wrong"'],
+  [/Shopping builds up in the days before|يزداد الشراء في الأيام التي تسبق/, 'GC2-5. "shopping builds up before Eid" (no source)'],
+  [/often matter more than Eid itself|كثيرًا ما تكون أهم من العيد/, 'GC2-5. "the days before Eid often matter more than Eid itself" (no source)'],
+  [/fall in a different Gregorian month from one year to the next|في شهر ميلادي مختلف من سنة إلى أخرى/, 'GC2-5. "a different Gregorian month every year" (Eid al-Fitr 2025 and 2026 are both in March)']
+];
+for (const [f, t] of Object.entries(GC)) for (const [re, what] of GC2_BANNED) { const m = re.exec(t); check(!m, `${what}: ${f}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 80) : ''}"`); }
+const LEARN_AUTO = /learn\.microsoft\.com\/(?:ar-sa\/)?power-bi\/transform-model\/desktop-auto-date-time/;
+const LEARN_SORT = /learn\.microsoft\.com\/(?:ar-sa\/)?power-bi\/create-reports\/desktop-tips-and-tricks-for-creating-reports#sort-by-another-column/;
+const UAE_HOLIDAYS = /u\.ae\/en\/information-and-services\/public-holidays-and-religious-affairs\/public-holidays/;
+const README = /scripts\/gulf-calendar\/test-model\/README\.md/;
+const MCP_LINK = /understand the Gulf calendar[^<]{0,40}<a href=['"]\/power-bi-mcp\/['"]/, MCP_LINK_AR = /تفهم التقويم الخليجي[^<]{0,40}<a href=['"]\/(?:ar\/)?power-bi-mcp\/['"]/;
+const GC2_EN = [
+  [/Power BI's own date table \(auto date\/time\) has Gregorian years, quarters, months and days, and nothing about the weekend, Hijri months or Ramadan/, 'GC2-1. the auto date/time sentence'],
+  [LEARN_AUTO, 'GC2-1. its Microsoft Learn link'],
+  [/the report can show trends that are really the calendar/, 'GC2-2. "can show"'],
+  [/Four things a standard calendar doesn't know in the Gulf/, 'GC2-3. the heading'],
+  [UAE_HOLIDAYS, 'GC2-4. the UAE public holidays link for "Eid is a window"'],
+  [/If your sales build up in the days before Eid/, 'GC2-5. the conditional Eid sentence (list)'],
+  [/If your sales build up before Eid/, 'GC2-5. the conditional Eid sentence (the measure)'],
+  [LEARN_SORT, 'GC2-9. the Microsoft Learn link for the alphabetical sort'],
+  [README, 'GC2-6. the test model README link'],
+  [MCP_LINK, 'GC2-8. the MCP page link at the end']
+];
+const GC2_AR = [
+  [/جدول التواريخ التلقائي في Power BI \(auto date\/time\) فيه السنوات والأرباع والأشهر والأيام الميلادية، ولا شيء عن عطلة نهاية الأسبوع أو الأشهر الهجرية أو رمضان/, 'GC2-1. the auto date/time sentence (AR)'],
+  [LEARN_AUTO, 'GC2-1. its Microsoft Learn link (AR)'],
+  [/قد يُظهر التقرير اتجاهات/, 'GC2-2. "can show" (AR)'],
+  [/أربعة أمور لا يعرفها التقويم المعتاد في الخليج/, 'GC2-3. the heading (AR)'],
+  [UAE_HOLIDAYS, 'GC2-4. the UAE public holidays link (AR)'],
+  [/إذا كانت مبيعاتك تزداد في الأيام التي تسبق العيد/, 'GC2-5. the conditional Eid sentence (list, AR)'],
+  [/إذا كانت مبيعاتك تزداد قبل العيد/, 'GC2-5. the conditional Eid sentence (the measure, AR)'],
+  [LEARN_SORT, 'GC2-9. the Microsoft Learn link for the alphabetical sort (AR)'],
+  [README, 'GC2-6. the test model README link (AR)'],
+  [MCP_LINK_AR, 'GC2-8. the MCP page link at the end (AR)']
+];
+const enHalf = (t) => t.split(/"ar": \{/)[0], arHalf = (t) => t.split(/"ar": \{/)[1] || '';
+for (const [k, t] of [['article', GC.article], ['articleTr', enHalf(GC.articleTr)]]) for (const [re, what] of GC2_EN) check(re.test(t), `${what}: ${k}: missing`);
+for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.articleTr)]]) for (const [re, what] of GC2_AR) check(re.test(t), `${what}: ${k}: missing`);
+for (const [k, t] of [['article', GC.article], ['articleAr', GC.articleAr]]) {
+  const pub = (/"datePublished": "(\d{4})-(\d{2})-(\d{2})"/.exec(t) || []).slice(1).map(Number);
+  const months = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 };
+  const en = /Posted on (\w+) (\d+), (\d{4})/.exec(t), ar = /نُشر في (\d+) (\S+) (\d{4})/.exec(t);
+  const said = k === 'article' ? (en ? [Number(en[3]), months[en[1]], Number(en[2])] : []) : (ar ? [Number(ar[3]), { 'أكتوبر': 10 }[ar[2]], Number(ar[1])] : []);
+  check(pub.length === 3 && said.join('-') === pub.join('-'), `GC2-7. ${k}: the "Posted on" date (${said.join('-')}) is not its datePublished (${pub.join('-')})`);
+}
+for (const [k, t] of [['page', GC.page], ['pageAr', GC.pageAr], ['pageTr', GC.pageTr]]) {
+  if (k !== 'pageAr') check(MCP_LINK.test(enHalf(t)), `GC2-8. ${k}: the CTA's "DataArcus builds Power BI reports ..." has no link to the MCP page`);
+  if (k !== 'page') check(MCP_LINK_AR.test(k === 'pageTr' ? arHalf(t) : t), `GC2-8. ${k}: the CTA's "DataArcus builds Power BI reports ..." has no link to the MCP page`);
+  check(!/Measured in Power BI Desktop 2\.158|قسناه في Power BI Desktop 2\.158/.test(t) || /DESKTOP-TESTS\.md, "DAX FORMAT with Arabic locales"/.test(t), `GC2-10. ${k}: the FORMAT measurement does not name its DESKTOP-TESTS.md section`);
+}
+
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);
