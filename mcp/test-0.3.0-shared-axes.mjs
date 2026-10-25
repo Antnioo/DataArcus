@@ -271,7 +271,8 @@ try {
     const twoB = B.vis.filter((v) => /^cvTwo/.test(v.id));
     chk(() => two.length === 2 && two.every((v) => v.j.visual.query.queryState.Y.projections.length === 1) && twoB.length === 1 && twoB[0].j.visual.query.queryState.Y.projections.length === 2,
       () => `N3: two AED amounts: two panels until the person confirms, then one chart: ${JSON.stringify(two.map((v) => v.id))} ${JSON.stringify(twoB.map((v) => [v.id, v.j.visual.visualType]))} ${short(B.made || B.pl)}`);
-    // (0.3.1 SQ2) J19-S1: the panels' axis titles in the page's language; J19-S5: each panel's title says its unit
+    // (0.3.1 SQ2) J19-S1: the panels' axis titles in the page's language; J19-S5: each panel's title says its unit;
+    // A1-S4: a report without .platform gets a native copy with its own
     const panelsOf = (X, re) => X.vis.filter((v) => re.test(v.id)).sort((a, b) => a.id.localeCompare(b.id));
     const titleOf = (v) => S(((((v.j.visual.visualContainerObjects || {}).title) || [])[0] || { properties: {} }).properties.text);
     chk(() => JSON.stringify(mixed.map((v) => axisTitle(v.j)).sort()) === JSON.stringify(['%', 'AED']), () => `N5: an English page's panels keep their axis titles "AED" and "%": ${JSON.stringify(mixed.map((v) => axisTitle(v.j)))}`);
@@ -294,6 +295,10 @@ try {
     const dm = panelsOf(T4, /^cvMix/), dt = dm.map((v) => axisTitle(v.j)).sort();
     chk(() => dm.length === 2 && JSON.stringify(dt) === JSON.stringify([FSI + '%' + PDI, FSI + 'AED' + PDI].sort()) && dm.every((v) => /^المبيعات والهامش \(⁨(AED|%)⁩\)$/.test(titleOf(v))),
       () => `N4: an Arabic page's panels: the axis titles in Arabic form (the ISO code and % isolated), the titles too: ${JSON.stringify(dm.map((v) => [v.id, axisTitle(v.j), titleOf(v)]))} ${short(T4.made || T4.pl)}`);
+    const T5 = await native('cv5', {}, (s) => fs.rmSync(path.join(s.RD, '.platform'), { force: true }));
+    let ep = null; try { ep = rd(path.join(T5.ND, '.platform')); } catch (e) { ep = null; }
+    chk(() => ep && ep.metadata.type === 'Report' && ep.metadata.displayName === 'Twin Sales native' && /^[0-9a-f-]{36}$/.test(ep.config.logicalId) && ep.config.version === '2.0' && /platformProperties\/2\.0\.0/.test(ep.$schema) && !fs.existsSync(path.join(T5.RD, '.platform')) && /\.platform/.test(JSON.stringify((T5.pl.j || {}).customVisuals || {})),
+      () => `N7: the native copy of a report without .platform writes its own (said in the plan; the original stays without): ${JSON.stringify(ep)} ${short(T5.made || T5.pl)}`);
   }
 
   // ---------- X: no secondary axis anywhere ----------
