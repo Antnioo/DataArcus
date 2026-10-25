@@ -59,7 +59,7 @@
   validator "can break"). After: both write the twin's `newPlatform` (Report, the copy's name, the plan's logical id,
   inside the plan's digest), and the plan says it (`platform`). N7 and C11 red -> green.
 - Suites before -> after: report 24/24 green (dax-functions 90 -> 92, shared-axes 33 -> 37, redesign 49 -> 50, the rest
-  equal); arabic 9/9 green, equal counts; full run, test-arabic-terms, check-agent-memory: running at this push (the next push records them).
+  equal); arabic 9/9 green, equal counts; full run `npm test -- --keep-going`: 77 suites passed, exit 0; test-arabic-terms 87/87; check-agent-memory 95/95.
 - No `.min.js`, page, ?v= stamp or CSP change: `visual-replace.js` has no minified copy and no page loads it.
 
 ## CHANGELOG line
