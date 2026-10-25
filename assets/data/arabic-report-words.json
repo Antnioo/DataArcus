@@ -94,8 +94,8 @@
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
         "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/3-visuals"
       ],
-      "status": "to choose",
-      "note": "What DataArcus writes in every report (buttons, the filter panel) and Gulf analysts say; Power BI's menus say «عوامل التصفية». The owner decides."
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). What every report writes; Power BI's menus say «عوامل التصفية»."
     },
     {
       "id": "filtering",
@@ -133,9 +133,10 @@
     {
       "id": "slicer",
       "en": "Slicer",
-      "ar": "مقسم طريقة العرض",
+      "ar": "مقسم",
       "variants": [
-        "(?:ال)?مقسم(?:ات)?(?! طر(?:يقة|ق) (?:ال)?عرض)"
+        "(?:ال)?مقسم(?:ات)? طر(?:يقة|ق) (?:ال)?عرض",
+        "(?:ال)?سلايسر"
       ],
       "microsoft": "مقسم طريقة العرض",
       "source": [
@@ -143,27 +144,28 @@
         "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects",
         "https://support.microsoft.com/ar-sa/office/249f966b-a9d5-4b0f-b31a-12651785d29d"
       ],
-      "status": "to choose",
-      "note": "Microsoft's term; «مقسم» alone is unclear. Plural «مقسمات طريقة العرض». On an Arabic page of the site the first use is followed by the English once.",
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «المقسمات». Microsoft's «مقسم طريقة العرض» is a variant. On an Arabic page of the site the first use is followed by the English once.",
       "englishOnce": "Slicer",
-      "form": "مقسم(?:ات)? طريقة العرض"
+      "form": "(?:ال)?مقسم(?:ات)?"
     },
     {
       "id": "tooltip",
       "en": "Tooltip",
-      "ar": "تلميح الأدوات",
+      "ar": "تلميح",
       "variants": [
-        "(?:ال)?تلميح(?:ات)?(?! (?:ال)?أدوات| أداة)"
+        "(?:ال)?تلميح(?:ات)? (?:ال)?أدوات",
+        "(?:ال)?تلميح أداة"
       ],
       "microsoft": "تلميحات الأدوات",
       "source": [
         "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-requirements/3-determine",
         "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-user-experience/4-bookmarks"
       ],
-      "status": "to choose",
-      "note": "Microsoft's term; «تلميح» alone reads as \"a hint\". Plural «تلميحات الأدوات». On an Arabic page of the site the first use is followed by the English once.",
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «التلميحات»; the tooltip page «صفحة التلميح». Microsoft's «تلميح الأدوات» is a variant. On an Arabic page of the site the first use is followed by the English once.",
       "englishOnce": "Tooltip",
-      "form": "تلميح(?:ات)? (?:ال)?أدوات"
+      "form": "(?:ال)?تلميح(?:ات)?"
     },
     {
       "id": "dates",
@@ -188,7 +190,7 @@
       "microsoft": null,
       "source": "none found",
       "status": "chosen",
-      "note": "Latin everywhere (Power BI texts isolate it, terminology.mjs isolateLatin). The Arabic spelling is kept in a page's keywords only, for search.",
+      "note": "Latin everywhere (Power BI texts isolate it, terminology.mjs isolateLatin). The Arabic spelling once in the keywords of every Arabic page, for search (the owner, 25 Oct: \"add the arabic dataarcus\").",
       "allowIn": "keywords"
     },
     {
@@ -206,16 +208,17 @@
     {
       "id": "visual",
       "en": "Visual",
-      "ar": "عنصر مرئي",
+      "ar": "المرئيات",
       "variants": [
-        "(?:ال)?مرئيات"
+        "(?:ال)?عناصر (?:ال)?مرئية",
+        "(?:ال)?عنصرا? (?:ال)?مرئيا?"
       ],
       "microsoft": "المرئيات",
       "source": [
         "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
       ],
-      "status": "to choose",
-      "note": "Plural «العناصر المرئية». Microsoft's «المرئيات» is in the blog's published text only."
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). The singular «مرئي» (a visual). «العناصر المرئية» is a variant."
     },
     {
       "id": "chart",
@@ -261,17 +264,16 @@
     {
       "id": "dashboard",
       "en": "Dashboard",
-      "ar": "لوحة تحكم",
+      "ar": "لوحة معلومات",
       "variants": [
-        "لوح(?:ة|ات) (?:ال)?معلومات"
+        "لوح(?:ة|ات) (?:ال)?تحكم"
       ],
       "microsoft": "لوحة معلومات",
       "source": [
         "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/9-quick-insights"
       ],
-      "status": "to choose",
-      "note": "What every portfolio page says; the Microsoft term stays in keywords for search.",
-      "allowIn": "keywords"
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «لوحات المعلومات»; Microsoft's term too."
     },
     {
       "id": "measure",
@@ -475,8 +477,8 @@
   "_allow": "Where a variant may stay, each with why: a path pattern (whole files) or a path plus a text the line contains.",
   "allow": [
     {
-      "path": "^(articles/|ar/articles/|assets/js/translations/article-)",
-      "why": "Blog articles: published text, reported in mcp/work/E.md; only a clear error is changed."
+      "path": "^(articles/|ar/articles/|assets/js/translations/article-)(?!power-bi-report-ready-for-arabic\\.)",
+      "why": "Blog articles: published text, reported in mcp/work/E.md; only a clear error is changed. The Arabic-readiness article (W, 25 Oct) is new and checked like a page."
     },
     {
       "path": "^content/",
