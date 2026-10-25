@@ -789,7 +789,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Q1-S4 | R5's planted titles never reach the report | DONE | 05f55b0 (T-4) `mcp/test-0.2.9i.mjs:145-150` checks the report's real titles |  |
 | Q1-S5 | calendar-generator.js 40% unrun; website suites lack coverage | OPEN | c8 job `tests.yml:244-279` covers the MCP npm test only | Chromium coverage (page.coverage) over website suites, report only · L · low · tests-ci → **SQ15** |
 | Q1-S6 | Tahoma header title 20pt in 46-high box trips validator floor | OWNER | `assets/js/pbip-page.js:691` size from header height; no Tahoma case | laptop: measure Tahoma header in Desktop, then pick 48-high box or 18pt title |
-| Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | DONE (SQ4 082860a) | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
+| Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | DONE (SQ4 082860a, f564362) | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
 | Q1-S8 | plan_layout flipCards.cards repeats each card per page | OPEN | `mcp/tools/plan_layout.mjs:493` flipPlan.cards passed whole, one per page | group cards by measure with a pages list · S · low · design → **SQ10** |
 | Q1-S9 | suggest_fields accepts 60 tables, read_model 100 | OPEN | `mcp/lib/tool-inputs.mjs:18` max(60); `mcp/tools/read_model.mjs:15` max(100) | one shared constant (or say why 60) in tool-limits · S · low · reader → **SQ9** |
 
