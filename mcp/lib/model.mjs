@@ -47,7 +47,10 @@ const SCREEN = [
   [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
   [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
   [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
-  [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
+  // (0.3.1 S1: "Execute Time", "Avg Execute Duration", "Query Execute Time (ms)" are plain names) "execute" is an ask only
+  // with an object or an imperative after it, or said as one ("please execute", "execute:"), or with code and "now"
+  [/\bexecute\s+(this|that|these|those|it|them|now|immediately|the\b|following|all|everything|every|any|my|your|a|an)\b|\b(please|then|now|must|should|always|just)\s+execute\b|\bexecute\s*:|\bexecute\b[^.]{0,30}\b(code|commands?|scripts?|query|queries|sql|dax|powershell|shell|cmd|steps?|instructions?|tools?)\b[^.]{0,20}\b(now|immediately|first|right\s+away)\b/i, 'asks to execute something'],
+  [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
   [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\s+((كل|جميع)\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],
   [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
