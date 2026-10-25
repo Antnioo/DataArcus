@@ -93,6 +93,12 @@ package's manifest; this file says what is in it.
 - **Arabic numbers and units in more places:** the DAX function library's KPI card and story title say thousands,
   millions and billions in Arabic; a native copy's split charts title their axes in the page's language and each says
   its unit in its title; the native copy and the redesign of a report without a .platform file get their own.
+- **Report numbers and slots:** a quarter chart's labels keep a whole-number measure's own format (no more
+  "8.0Kkg"); a slicer slot too narrow for its slicers leaves out the Reset button (and then slicers), said in the
+  answer, instead of writing slicers Power BI cannot draw.
+- **The approval page in Arabic says it all in Arabic:** what each plan writes (the English line under it), the Arabic
+  twin's options and counted headings, and a plan with no approved Arabic text says so; the app's own approval prompt
+  names any check not run before writing; Power BI's base theme is listed as a theme.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
