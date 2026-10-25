@@ -1,7 +1,7 @@
 // 0.3.1 S1 (the owner, 25 Oct: the user's agent fixed a report with its own script, outside DataArcus's plan): a gate
-// on every place the server can write a file. It finds each file-writing call in mcp/server.mjs and mcp/lib/*.mjs, counted
-// per file, and fails when the counts differ from the list below: a new write (or a new way to reach one) must be
-// added here, with why it is safe, before CI passes.
+// on every place the server can write a file. It finds each file-writing call in mcp/server.mjs, mcp/lib/*.mjs and
+// mcp/tools/*.mjs (0.3.1 S9), counted per file, and fails when the counts differ from the list below: a new write (or a
+// new way to reach one) must be added here, with why it is safe, before CI passes.
 //   What counts: an fs call that writes (through any name node:fs or node:fs/promises is imported or required as, and
 //   write-io.mjs's io and REAL), an fs function imported by name, a destructuring or a computed access of an fs name
 //   (a way round this list), node:child_process (a process can write), and the helpers that wrap the writes.
@@ -131,7 +131,9 @@ const LIST = {
   'lib/approval-window.mjs': { child_process: { n: 1, why: 'spawn opens the approval page in the person\'s browser (or the tests\' browser): it starts the browser with a local URL, never a command built from a tool\'s input or a report\'s text' } }
 };
 
-const files = ['server.mjs'].concat(fs.readdirSync(path.join(HERE, 'lib')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'lib/' + f));
+// (0.3.1 S9) and each tool's module in tools/, which server.mjs imports
+const files = ['server.mjs'].concat(fs.readdirSync(path.join(HERE, 'lib')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'lib/' + f),
+  fs.existsSync(path.join(HERE, 'tools')) ? fs.readdirSync(path.join(HERE, 'tools')).filter((f) => f.endsWith('.mjs')).sort().map((f) => 'tools/' + f) : []);
 const found = Object.fromEntries(files.map((f) => [f, writesIn(fs.readFileSync(path.join(HERE, f), 'utf8'))]).filter(([, w]) => Object.keys(w).length));
 if (process.env.DA_WRITES) console.log(JSON.stringify(found, null, 1));
 

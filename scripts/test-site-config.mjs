@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { serverSource } from '../mcp/test-source.mjs';   // (0.3.1 S9: the tools are registered in mcp/tools/, one module a tool)
 
 // (fileURLToPath, as check-min.mjs: a URL's pathname is "/C:/..." on Windows, which resolved to "C:\C:\...")
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,7 +88,7 @@ for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\
 // the AI agent's public pages say what the MCP server has (0.2.9, the audit's A7-10): the number of tools, in English
 // and Arabic, a line for each tool on the beta page, and check_report (not create_report) named as the offline check
 {
-  const tools = [...read('mcp/server.mjs').matchAll(/server\.registerTool\('([a-z_]+)'/g)].map((m) => m[1]), n = tools.length;
+  const tools = [...serverSource().matchAll(/server\.registerTool\('([a-z_]+)'/g)].map((m) => m[1]), n = tools.length;
   const beta = read('assets/js/translations/beta-page.js'), home = read('assets/js/translations/homepage.js'), page = read('power-bi-mcp/index.html');
   const [betaEn, betaAr] = [beta.slice(0, beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m)), beta.slice(beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m))];
   ok(new RegExp(`"title": "The ${n} tools"`).test(betaEn) && new RegExp(`"title": "[^"]*${n}[^"]*أداة`).test(betaAr), `the beta page's tools title must say ${n} tools in English and Arabic (the server has ${n})`);

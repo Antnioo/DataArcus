@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -73,7 +74,7 @@ export async function v029designEngine({ check }) {
 
   // ---------- A2-5: one wideTable default (the engine's); the table's share from its need ----------
   {
-    const srv = src('mcp/server.mjs'), dm = src('mcp/lib/design.mjs');
+    const srv = serverSource(), dm = src('mcp/lib/design.mjs');
     chk(() => !/wideTable\s*[:=]/.test(srv.replace(/\/\/[^\n]*/g, '')) && !/wideTable\s*[:=]/.test(dm.replace(/\/\/[^\n]*/g, '')), () => 'A2-5: wideTable is defaulted in the engine only (not in server.mjs or design.mjs)');
     const w = (o, opt) => get(() => E.computeSlots(design(Object.assign({ preset: 'exec', page: '960x720' }, o)).layout, 'en', opt).find((s) => s.kind === 'table').w);
     chk(() => w({}) === 550 && w({ filters: true, fpos: 'end' }) === 425 && w({}, { tableFields: 4 }) === 550, () => `A2-5: four fields (the measured case) keep today's widths: ${w({})}, ${w({ filters: true, fpos: 'end' })}, ${w({}, { tableFields: 4 })}`);
@@ -104,12 +105,12 @@ export async function v029designEngine({ check }) {
       () => `A2-7: kpiBarC, headLineC, fpos, wideTable and kpiBarW checked and reported: ${JSON.stringify(r.layout)} ${fixed}`);
     chk(() => Array.isArray(E.DESIGN_KEYS) && Array.isArray(E.LAYOUT_KEYS) && E.LAYOUT_KEYS.includes('kpiBarC') && !E.LAYOUT_KEYS.includes('kpiCards') && E.SCHEMA && E.LAYOUT_KEYS.every((k) => E.SCHEMA.layout[k] && E.SCHEMA.layout[k].about) && E.DESIGN_KEYS.every((k) => E.SCHEMA[k] && (E.SCHEMA[k].about || k === 'layout')),
       () => 'A2-7: the engine exports DESIGN_KEYS, LAYOUT_KEYS and a written SCHEMA with every key');
-    chk(() => !/const (DESIGN|LAYOUT)_KEYS = \[/.test(src('mcp/server.mjs')), () => 'A2-7: server.mjs uses the engine\'s key lists');
+    chk(() => !/const (DESIGN|LAYOUT)_KEYS = \[/.test(serverSource()), () => 'A2-7: server.mjs uses the engine\'s key lists');
   }
 
   // ---------- A2-8: no file I/O in the design adapter; the server reaches the engine only through design.mjs ----------
   {
-    const dm = src('mcp/lib/design.mjs'), srv = src('mcp/server.mjs');
+    const dm = src('mcp/lib/design.mjs'), srv = serverSource();
     chk(() => !/node:fs|from '\.\/model\.mjs'/.test(dm) && !('freeFile' in D), () => 'A2-8: design.mjs has no fs, no import from the reading block, no freeFile');
     chk(() => fs0.existsSync(path.join(HERE, 'lib/files.mjs')) && /export function freeFile/.test(src('mcp/lib/files.mjs')), () => 'A2-8: freeFile lives in the tools\' file helper (lib/files.mjs)');
     chk(() => !/\bE\.[A-Za-z]/.test(srv) && !/import \{[^}]*\bE\b[^}]*\} from '\.\/lib\/design\.mjs'/.test(srv), () => `A2-8: server.mjs calls no E.* directly: ${(srv.match(/\bE\.[A-Za-z]+/g) || []).slice(0, 8).join(' ')}`);
@@ -163,7 +164,7 @@ export async function v029designEngine({ check }) {
     const t = E.buildTheme(design({ preset: 'exec', page: '1920x1080' }), 'en'), half = get(() => E.scaleTheme(t, 0.5));
     chk(() => half.visualStyles.card['*'].labels[0].fontSize === 21 && half.textClasses.callout.fontSize === 21 && t.visualStyles.card['*'].labels[0].fontSize === 42 && get(() => E.scaleTheme(t, 10)).textClasses.callout.fontSize === 60,
       () => `A6-10: scaleTheme scales every text size within 8-60 and leaves the theme given as it was: ${JSON.stringify(half && half.textClasses)}`);
-    chk(() => !/fsz\(|for \(let h = 200; h <= 4400/.test(src('mcp/server.mjs')), () => 'A6-10: server.mjs no longer re-derives the theme\'s scale');
+    chk(() => !/fsz\(|for \(let h = 200; h <= 4400/.test(serverSource()), () => 'A6-10: server.mjs no longer re-derives the theme\'s scale');
   }
 
   // ---------- the audit's "Seen, not in scope" in this block ----------

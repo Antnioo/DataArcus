@@ -25,6 +25,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { serverFiles, twinFiles } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), require = createRequire(import.meta.url);
 const Px = require('../assets/js/pbip-export.js'), E = require('../assets/js/design-engine.js'), Mirror = require('../assets/js/report-mirror.js');
@@ -372,7 +373,7 @@ chk(() => { const a = Mirror.mirrorVisual(MX, PW, {}).json, b = Mirror.mirrorVis
 chk(() => { const a = Mirror.mirrorVisual(MX, PW, { matrixRtl: 'columnsDescending' }).json, s = a.visual.query.sortDefinition; return s && s.sort.length === 1 && JSON.stringify(s.sort[0].field) === JSON.stringify(ref('Dim Date', 'Month')) && s.sort[0].direction === 'Descending'; },
   () => 'E4 the lab\'s variant "columnsDescending": the matrix sorted Descending by its column field');
 {
-  const users = ['mcp/server.mjs', 'mcp/lib/arabic-twin.mjs', 'assets/js/pbip-page.js', 'assets/js/pbip-export.js', 'assets/js/pbip-query.js'].filter((f) => /matrixRtl:\s*['"](?!none)/.test(fs.readFileSync(path.join(HERE, '..', f), 'utf8')));
+  const users = [...serverFiles(), ...twinFiles()].map((f) => 'mcp/' + f).concat(['assets/js/pbip-page.js', 'assets/js/pbip-export.js', 'assets/js/pbip-query.js']).filter((f) => /matrixRtl:\s*['"](?!none)/.test(fs.readFileSync(path.join(HERE, '..', f), 'utf8')));
   chk(() => users.length === 0, () => `E5 no path sets a matrix variant before the laptop proves one (only the lab does): ${users.join(', ')}`);
 }
 

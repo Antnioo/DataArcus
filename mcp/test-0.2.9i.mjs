@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource, twinSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
@@ -73,7 +74,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
 
   // ---------- G9: one field builder, the picker's ----------
   {
-    const B = req('../assets/js/pbip-bind.js'), src = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const B = req('../assets/js/pbip-bind.js'), src = serverSource();
     chk(() => typeof B.fieldOf === 'function' && /Bind\.fieldOf\(/.test(src) && !/Bind\.dateColumnFor\(t\.columns/.test(src), () => 'G9: pbip-bind exports fieldOf and create_report\'s field check uses it');
   }
 
@@ -157,7 +158,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   {
     // (0.2.9, the writer's A3-12: the writer is five files since, pbip-export.js and its modules; AGG_DAX is in pbip-query.js)
     const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
-    const twin = fs.readFileSync(path.join(HERE, 'lib/arabic-twin.mjs'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
+    const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');
     chk(() => !/\^\[a-z\]\[A-Za-z\]\*\$/.test(cr) && /isCustom/.test(cr), () => 'one custom-visual test: check_report imports the reading block\'s isCustom');
@@ -244,7 +245,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     // the source: texts(lang) holds by and newDesign; the server passes it as it is on both paths. "detail" is the writer's
     // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
     // so the design-engine fixtures (which record those labels) stay as they are
-    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
+    const srv = serverSource(), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
     const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
     chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').newDesign === 'تصميم جديد' && E.texts('en').by === 'by' && !('detail' in E.texts('ar')) && !('detail' in E.texts('en')) && pgSrc.includes("'التفاصيل'") && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
       () => `P3-2: by and newDesign in texts(lang), used as they are on both paths; detail the writer's own: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);

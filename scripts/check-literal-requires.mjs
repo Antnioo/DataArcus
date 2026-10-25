@@ -2,7 +2,8 @@
 // build: require(file) with a variable passes every test, but the engine's packaging stages only the modules it can
 // name, and refused it; fixed in 043844e).
 //   node scripts/check-literal-requires.mjs                  the shipped code: assets/js/*.js (not .min.js),
-//                                                             mcp/server.mjs and mcp/lib/**/*.mjs (no tests, research)
+//                                                             mcp/server.mjs, mcp/lib/**/*.mjs and mcp/tools/*.mjs (no tests,
+//                                                             research)
 //   node scripts/check-literal-requires.mjs <file|folder>...  those files (.js, .mjs, .cjs; folders walked)
 // A call is require(...), import(...) or createRequire(...)(...); its argument must be one string literal ('x', "x",
 // or `x` without ${}). Comments are not code. Exit code 1 and each file:line when one is not.
@@ -14,7 +15,9 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.name === 'node_modules' ? [] : e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
 const isCode = (f) => /\.(m|c)?js$/.test(f) && !/\.min\.js$/.test(f);
 const shipped = () => fs.readdirSync(path.join(ROOT, 'assets/js')).filter((f) => isCode(f)).map((f) => path.join(ROOT, 'assets/js', f))
-  .concat([path.join(ROOT, 'mcp/server.mjs')], walk(path.join(ROOT, 'mcp/lib')).filter((f) => f.endsWith('.mjs')));
+  .concat([path.join(ROOT, 'mcp/server.mjs')], walk(path.join(ROOT, 'mcp/lib')).filter((f) => f.endsWith('.mjs')))
+  // (0.3.1 S9) each tool's module, which server.mjs imports
+  .concat(fs.existsSync(path.join(ROOT, 'mcp/tools')) ? walk(path.join(ROOT, 'mcp/tools')).filter((f) => f.endsWith('.mjs')) : []);
 
 // the code without its comments and the text of its strings, same length and lines (so a line number stays true):
 // a comment, a string's or a regular expression's inside becomes spaces; quotes stay, so a literal argument still reads

@@ -4,6 +4,7 @@
 // forbidden-words scan over every file that speaks for DataArcus (English and Arabic).
 import fs from 'node:fs';
 import { groupFiles, summary, promptSummary } from './lib/approval-window.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 const read = (f) => fs.readFileSync(new URL(f, import.meta.url), 'utf8');
 const flat = (f) => read(f).replace(/\s+/g, ' ');
 const problems = [];
@@ -111,7 +112,7 @@ const BANNED = [
 // (SKILL.md names Microsoft's skill as the companion tool for edits, older text: a reference, not a comparison; the
 // comparison pattern below still runs on it)
 for (const f of SPEAK) {
-  const t = flat(f);
+  const t = f === './server.mjs' ? serverSource().replace(/\s+/g, ' ') : flat(f);   // (0.3.1 S9: server.mjs is its tools/ and lib/ parts too)
   for (const [re, what, skip] of BANNED) { if (skip && f.includes('SKILL')) continue; const m = re.exec(t); check(!m, `A2-W. ${f}: ${what}: "${m ? t.slice(Math.max(0, m.index - 40), m.index + 60) : ''}"`); }
 }
 
