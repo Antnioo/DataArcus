@@ -139,10 +139,15 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const x = await ask('create_report', { path: 'i-ship', name: 'I overlap', fields: { kpis: ['Shipments[Shipments]'], measure: 'Shipments[Shipments]', category: 'Shipments[Carrier]', category2: 'Shipments[Carrier]' }, noDataMessage: false, subtitles: {},
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'bar', title: 'Planted Secret Title', x: 24, y: 80, w: 600, h: 400 }, { kind: 'column', title: 'Another Planted Title', x: 200, y: 150, w: 600, h: 400 }] }] });
     const c = x.err ? x : await ask('check_report', { path: path.join(path.dirname(x.j.open), x.j.report), checks: ['lint'] });
-    // eslint-disable-next-line no-unused-vars -- Q1 test gap T-4 (mcp/work/Q1.md): the whole answer (txt) is never screened; the reviewer decides
     const lint = c.j && c.j.lint, txt = JSON.stringify(c.j || {});
     chk(() => lint && (lint.findings || []).length && !/Shipments by Carrier|Planted|"[^"]*\bby\b[^"]*" at/.test(JSON.stringify(lint.findings)) && /at \d+,\d+ \d+x\d+/.test(JSON.stringify(lint.findings)),
       () => `R5: the lint must name visuals by type and position only: ${JSON.stringify(lint && lint.findings).slice(0, 400)} ${short(c)}`);
+    // (Q1 T-4, 0.3.1: txt was computed and never read) no part of check_report's answer names a visual by its title: the
+    // titles the report holds (the writer titles from the fields, so the planted ones above never reach it), those of more
+    // than one word (a one-word title can be a field's own name, which the answer may give)
+    const titlesIn = (dir) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') { const t = ((JSON.parse(fs.readFileSync(p, 'utf8')).visual || {}).visualContainerObjects || {}).title; (t || []).forEach((x) => { const v = x && x.properties && x.properties.text && x.properties.text.expr && x.properties.text.expr.Literal && x.properties.text.expr.Literal.Value; if (typeof v === 'string') out.push(v.replace(/^'|'$/g, '')); }); } }); walk(dir); return out; };
+    const held = x.err ? [] : titlesIn(path.join(ROOT, 'i-ship', x.j.report)).filter((t) => /\s/.test(t.trim()));
+    chk(() => !c.err && held.length >= 1 && held.every((t) => !txt.includes(t)), () => `R5: no part of check_report's answer names a visual by its title: ${held.filter((t) => txt.includes(t)).join(' | ') || `(${held.length} titles of more than one word)`}`);
   }
 
   // ---------- G7: one calm brand palette, in the design engine ----------
@@ -161,6 +166,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');
+    // (Q1 T-5, 0.3.1: the check above passes on the name alone; the twin declares AR_MONTHS and writes its month column
+    // from arabic-calendar.js's MONTHS) the months the twin writes are the writer's, word for word
+    chk(() => { const C = req('../assets/js/arabic-calendar.js'); return C.MONTHS.length === 12 && C.MONTHS.join() === Px.AR_MONTHS.join() && /ArabicCal\.columnsFor/.test(twin); }, () => `one Arabic month list: the twin's month column (arabic-calendar.js MONTHS) names the months as the writer's AR_MONTHS: ${req('../assets/js/arabic-calendar.js').MONTHS.join()} / ${Px.AR_MONTHS.join()}`);
     chk(() => !/\^\[a-z\]\[A-Za-z\]\*\$/.test(cr) && /isCustom/.test(cr), () => 'one custom-visual test: check_report imports the reading block\'s isCustom');
     chk(() => !/export function approvedFor/.test(plans), () => 'G12: no unused approvedFor');
   }

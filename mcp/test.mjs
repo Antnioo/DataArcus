@@ -2211,8 +2211,6 @@ if (part('round10')) {
       () => `the navigator must be tabs without boxes, the current page bold in the accent colour with a line under it: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => [textOf(v), L(lookOf(v, 'text').bold), L(lookOf(v, 'fill').show), L(lookOf(v, 'outline').show)]))).slice(0, 500)} ${short(two)}`);
     // 2. no name is cut: every button is at least its (bold) text's width + 10; the buttons don't overlap each other, the title's text or the logo, and stay on the page; 2, 4 and 8 pages, both languages
     const widthBad = (x, tag) => read(x).flatMap((pg) => { const b = navOf(pg).sort((p, q) => p.at.x - q.at.x), bad = [];
-      // eslint-disable-next-line no-unused-vars -- Q1 test gap T-2 (mcp/work/Q1.md): the overlap with the title and the logo is never checked; the reviewer decides
-      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"')), logo = pg.visuals.filter((v) => type(v) === 'textbox' || type(v) === 'image').sort((p, q) => p.at.x - q.at.x);
       if (b.length !== read(x).length) bad.push(`${tag} ${pg.name}: ${b.length} buttons`);
       b.forEach((v, i) => { const t = lookOf(v, 'text'), need = tw(textOf(v), N(t.fontSize), true, String(L(t.fontFamily)).slice(1, -1)) + 10;
         if (v.at.w < need) bad.push(`${tag} ${pg.name}: "${textOf(v)}" ${v.at.w} wide, needs ${need.toFixed(0)}`);
@@ -2222,6 +2220,23 @@ if (part('round10')) {
       return bad; });
     const allBad = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : widthBad(x, t)));
     chk(() => allBad.length === 0 && read(many['EN 8']).length === 8 && read(many['AR 8']).length === 8, () => `no page name may be cut and no button may overlap (2, 4, 8 pages, English and Arabic): ${allBad.slice(0, 6).join(' | ')}`);
+    // (Q1 T-2, 0.3.1: the comment above promised it; the title box is wider than its text by design, so a button may sit
+    // in the box but not on the title's own text (its measured width at its size, from the side it is aligned to, plus 16),
+    // nor on an image (the logo))
+    const coverBad = (x, tag) => read(x).flatMap((pg) => {
+      const b = navOf(pg), bad = [], hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"'));
+      const para = title && (((title.visual.objects.general || [])[0] || {}).properties || {}).paragraphs, run = para && para[0] && para[0].textRuns && para[0].textRuns[0];
+      if (!run) bad.push(`${tag} ${pg.name}: no title text found`);
+      else {
+        const st = run.textStyle || {}, tl = tw(String(run.value), parseFloat(st.fontSize) || 20, st.fontWeight === 'bold', st.fontFamily || 'Segoe UI') + 16;
+        const right = para[0].horizontalTextAlignment === 'right', text = { x: right ? title.at.x + title.at.w - tl : title.at.x, y: title.at.y, w: tl, h: title.at.h };
+        b.forEach((v) => { if (hit(v.at, text)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the title's text (${Math.round(text.x)}-${Math.round(text.x + text.w)})`); });
+      }
+      pg.visuals.filter((v) => type(v) === 'image').forEach((im) => b.forEach((v) => { if (hit(v.at, im.at)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the logo`); }));
+      return bad; });
+    const covered = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : coverBad(x, t)));
+    chk(() => covered.length === 0, () => `no page button may sit on the title's text or the logo (2, 4, 8 pages, English and Arabic): ${covered.slice(0, 6).join(' | ')}`);
     // 3. mirrored: English first page leftmost, Arabic first page rightmost (rows of a wrapped navigator each in that order)
     const order = (x) => read(x).map((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.slice().sort((p, q) => (Math.abs(p.at.y - q.at.y) > 2 ? p.at.y - q.at.y : p.at.x - q.at.x)).map((v) => names.indexOf(textOf(v))); });
     const rowsOk = (x, rtl) => read(x).every((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.every((p) => b.every((q) => Math.abs(p.at.y - q.at.y) > 2 || p === q || ((names.indexOf(textOf(p)) < names.indexOf(textOf(q))) === (rtl ? p.at.x > q.at.x : p.at.x < q.at.x)))); });
@@ -3304,9 +3319,17 @@ if (part('round12')) {
       // end and not at its start: seen in Desktop 2.158 on 6 Oct, DESKTOP-TESTS.md round 13; the words before it are unchanged)
       if (!full.startsWith(t.text.replace(/…\u200f?$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
     });
-    // eslint-disable-next-line no-unused-vars -- Q1 test gap T-1 (mcp/work/Q1.md): size and room are never checked; the reviewer decides
-    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, size = 10, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      seen.push(`slicer "${shown}"`); });
+    // (Q1 T-1, 0.3.1: the size and room were computed and never checked) each slicer's header, as the writer sizes it
+    // (pbip-page slicerHeader: bold, its own font, 10pt down to 8, one line in the slicer's width less 8 a side, scaled): it
+    // fits on one line, and a shortened one (header.text) is the start of the field's name and ends in "…"
+    const headBad = [];
+    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
+      const lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value) : null), h = (((v.visual.objects || {}).header || [])[0] || {}).properties || {};
+      const size = parseFloat(lit(h.textSize)) || 10, hf = (lit(h.fontFamily) || "'Segoe UI'").replace(/^'|'$/g, ''), cut = lit(h.text), text = cut != null ? cut.replace(/^'|'$/g, '') : shown;
+      seen.push(`slicer "${shown}"${cut != null ? ` as "${text}"` : ''} ${size}pt`);
+      if (size < 8 || tw(text, size, true, hf) > room + 0.5) headBad.push(`slicer "${text}" ${Math.round(tw(text, size, true, hf))} wide at ${size}pt, room ${room}`);
+      if (cut != null && !(/…\u200f?$/.test(text) && shown.startsWith(text.replace(/…\u200f?$/, '').trim()))) headBad.push(`slicer "${text}" is not the start of "${shown}" ending in "…"`); });
+    chk(() => !ar.err && vs.some((v) => type(v) === 'slicer') && headBad.length === 0, () => `#24: each slicer's header fits its slicer on one line (smaller or shortened at its end): ${headBad.join(' | ')} [${seen.join('; ')}]`);
     chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…‏?$/.test(titleOf(v).text))),
       () => `#24: long titles must wrap or end in "…", never be cut at their start: ${bad.slice(0, 5).join(' | ')} [${seen.join('; ')}] ${short(ar)}`);
   }
