@@ -23,7 +23,7 @@ window.dp600Translations = {
     }
   },
   "ar": {
-    "meta": { "title": "اختبار DP-600 تجريبي مجاني: Fabric Analytics Engineer", "description": "اختبار DP-600 تجريبي مجاني: 220 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أكتوبر 2026." },
+    "meta": { "title": "اختبار DP-600 تجريبي مجاني: Fabric Analytics Engineer", "keywords": "داتا أركوس, DP-600 practice exam, DP-600 practice test, DP-600 exam simulator, Fabric Analytics Engineer Associate, Microsoft Fabric exam questions, free DP-600 questions", "description": "اختبار DP-600 تجريبي مجاني: 220 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أكتوبر 2026." },
     "dp": {
       "badge": "مجاني · بدون تسجيل · 220 سؤالًا أصليًا",
       "title": "محاكي اختبار DP-600",

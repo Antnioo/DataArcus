@@ -56,7 +56,7 @@
     "Single focus": "رسالة واحدة",
     "Overview": "نظرة عامة",
     "Details": "التفاصيل",
-    "Tooltip": "تلميح الأدوات",
+    "Tooltip": "تلميح",
     "Reset filters": "إعادة ضبط الفلاتر",
     "Clear the filters on this page": "إعادة ضبط الفلاتر",
     "No data": "لا توجد بيانات",
@@ -72,12 +72,12 @@
     "Header": "الشريط العلوي",
     "KPI cards": "بطاقات المؤشرات",
     "Filters": "الفلاتر",
-    "Slicer": "مقسم طريقة العرض",
+    "Slicer": "مقسم",
     "Logo": "الشعار",
     "Your logo": "شعارك",
     "Explain what the main chart shows and what to do about it.": "اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.",
     "New design": "تصميم جديد",
-    "Tooltip page: add a card or a small chart here.": "صفحة تلميح الأدوات: أضف بطاقة أو مخططًا صغيرًا هنا."
+    "Tooltip page: add a card or a small chart here.": "صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا."
   },
   "_concepts": "DataArcus's own Arabic vocabulary (0.3.1 E, the Arabic review of 21 Oct): one Arabic term per concept, for every engine, the MCP's answers and the site. variants are patterns of the other forms (a clitic و ف ب ك ل and ال may come before; diacritics are folded); source is Microsoft's own Arabic wording (Learn's Arabic training units, Microsoft Support), or 'none found'; 'to choose' = the owner decides. Read by mcp/lib/arabic-terms.mjs; mcp/test-0.3.1-arabic-terms.mjs and scripts/test-arabic-terms.mjs fail on a variant anywhere outside allow.",
   "concepts": [

@@ -61,7 +61,7 @@ window.svgKpiTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "مصمم بطاقات المؤشرات (KPI) بصيغة SVG لـ Power BI - DataArcus", "description": "صمّم بطاقات المؤشرات وحلقات التقدم والخطوط المصغرة وأسهم الاتجاه لـ Power BI، واربطها بمقاييسك وانسخ DAX فورًا. مجانًا وبدون تسجيل وبالعربية والإنجليزية."
+      "title": "مصمم بطاقات المؤشرات (KPI) بصيغة SVG لـ Power BI - DataArcus", "keywords": "داتا أركوس, Power BI SVG, SVG KPI card Power BI, DAX SVG measure, Power BI progress ring, Power BI sparkline, Image URL measure", "description": "صمّم بطاقات المؤشرات وحلقات التقدم والخطوط المصغرة وأسهم الاتجاه لـ Power BI، واربطها بمقاييسك وانسخ DAX فورًا. مجانًا وبدون تسجيل وبالعربية والإنجليزية."
     },
     "kd": {
       "a11yBox": "مقياس DAX",
