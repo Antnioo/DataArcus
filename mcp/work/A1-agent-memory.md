@@ -137,6 +137,7 @@ None: internal (the docs an agent reads and one CI check; nothing a user of the 
    The invariants stay word for word.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#a1-agent-memory](SEEN-QUEUE.md#a1-agent-memory)
 1. Product code comments still say "round 0, mcp/CLAUDE.md" / "mcp/CLAUDE.md, Round 1" (`assets/js/pbip-page.js`,
    `design-engine.js`, `mcp/lib/twin-pages.mjs`, `twin-visuals.mjs`): those rounds are now in
    `mcp/docs/RULES-POWERBI.md` (its header says so); not changed (no product code).

@@ -22,6 +22,7 @@ section of `WORK-2026-10-25.md`).
    variant or none.
 3. The release: `mcp/work/D5.md` "For the reviewer" 1-4; the PR integration -> main (the owner merges); then K1's
    public repo (`mcp/work/K1.md` "For the owner").
+4. Every "Seen, not in scope" item's status and the night's batches SQ1-SQ15: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).
 
 ## Open decisions (the owner's; no work before his go)
 - M1 "Seen" 1-2 (text-box panels; the twin's tables lose "Total"); the matrix variant, then `MATRIX_RTL_DEFAULT`.

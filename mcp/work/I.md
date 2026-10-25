@@ -123,6 +123,7 @@ link each exam area under 70% to its section of Microsoft's study guide.
     calls (`CALCULATE(`, `SUM(`, `FILTER(`, `LEN(`) plus the planted strings (said in the I-1 commit).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#i](SEEN-QUEUE.md#i)
 - `sitemap-lastmod.mjs --write` on a shallow clone (this cloud container's) moved 38 dates to 2026-10-16, the oldest
   commit it could see; after `git fetch --unshallow` nothing moved. A builder in a shallow checkout gets wrong dates
   without a warning.

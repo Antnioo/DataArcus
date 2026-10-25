@@ -131,6 +131,7 @@ expects the free name the plan gives (Decision 4), same check and count; then `n
 7. generate_theme refuses a taken name before making any folder (the check by name, then `writeFileNew`'s 'wx' link).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#af2](SEEN-QUEUE.md#af2)
 1. `mcp/TOOLS.md` create_report: "picks a free name"; the write refuses a taken report name (writeTree), it picks none.
 2. F06: no cheap narrowing found; every new write here goes through 'wx' or a link (a name taken in between fails), so
    what remains is the folder-path race AF1 documents.

@@ -84,6 +84,7 @@ Partly. The instructions are host-neutral ("the assistant") but inline in server
 - Nothing portfolio-tuned in the agent texts.
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-7-instructions](SEEN-QUEUE.md#audit-7-instructions)
 - check_model_health and add_gulf_calendar declare `idempotentHint: false`, but a repeated call names the same file (server.mjs:81-89).
 - Per server.mjs:26 a desktop extension carries no skill, so Desktop users miss the skill's screenshot/DAX consent rules (SKILL:55-64).
 - SKILL:131 says the gulfCalendar section comes "with a country"; it also appears without one when the model has Hijri columns.

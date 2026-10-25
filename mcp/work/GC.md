@@ -177,6 +177,7 @@ a working day.
   turn those three rows into dated announcements (item 7).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#gc](SEEN-QUEUE.md#gc)
 1. The share image `assets/img/og/gulf-calendar.jpg` still says "the right weekend for each country and year"
    (`scripts/make-share-images.mjs:207`): regenerate it with a new line (proposed: "Hijri dates, announced Ramadan and
    Eid, and each country's dated weekend").
