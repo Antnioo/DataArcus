@@ -68,6 +68,8 @@ options: `mcp/TOOLS.md`.
   seconds and reports (G-13 validates about 2 s a report). The website: `run-all.mjs --shard k/3`, `SHARDS` there.
 - Every script in `npm test` ends with exactly one result line, `PASS  <name>  <N> checks` (or `FAIL  <name>  ...` /
   `SKIP  <name>  ...`), as `scripts/ci-sum.mjs` counts them; `scripts/check-result-lines.mjs` (CI) names a script without one.
+- Lint and coverage (Q1, 0.3.1; root `package.json`): `npm run lint` (ESLint, bug rules only, `eslint.config.mjs`;
+  CI's website-checks) and `npm run coverage:mcp` (c8 over `npm test`, `.c8rc.json`; CI's `coverage` job, not a gate).
 - CI (`.github/workflows/tests.yml`) runs on pushes to `main`, on every pull request and by hand: a branch without a
   PR gets no automatic CI: open a (draft) PR, or use Run workflow (Actions > Tests > Run workflow, pick the branch).
 - Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
