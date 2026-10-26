@@ -13,7 +13,7 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { ROOT, serve, launch } from './lib.mjs';
+import { ROOT, serve, launch, flushCoverage } from './lib.mjs';
 import { oneLine, budget, osName, scrub } from '../../mcp/test-results.mjs';
 
 const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'components', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar', 'text-align', 'theme-logo', 'github-links'];
@@ -89,6 +89,7 @@ for (const name of ALL.filter((n) => results[n])) {
   console.log(oneLine({ script: FILE[name] || `scripts/tests/${LAB[name] || name}.mjs`, check: res.problems[0], cause: res.crashed ? 'crash' : res.zero ? 'zero-checks' : 'checks-failed', os: osName(), shard: shard ? `${shard[1]}/${shard[2]}` : '-' }));
   spend.take(res.problems.map((p) => '      - ' + scrub(p)), { log }).forEach((l) => console.log(l));
 }
+await flushCoverage();   // (SQ15c) DA_WEB_COVERAGE only: the pages a test left open
 await browser.close(); server.close();
 const total = ((Date.now() - t00) / 1000).toFixed(0);
 const of = shard ? `, shard ${shard[1]}/${shard[2]}` : '';

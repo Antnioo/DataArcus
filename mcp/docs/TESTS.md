@@ -37,3 +37,8 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
 - Lint and coverage (Q1, 0.3.1; root `package.json`): `npm run lint` (ESLint, bug rules only, `eslint.config.mjs`; the site pages' inline scripts too, SQ11;
   CI's website-checks) and `npm run coverage:mcp` (c8 over `npm test`, `.c8rc.json`; CI's `coverage` job, not a gate).
+- The website suites' coverage (SQ15c, 0.3.1): `npm run coverage:web` (`scripts/coverage-web.mjs`: run-all with
+  `DA_WEB_COVERAGE`, Chromium's `page.coverage` on every page, the engines served as their source; c8 reports
+  `assets/js/*.js`) prints one line and writes `coverage/web/`; CI's `coverage-web` job, not a gate (continue-on-error).
+  Measured 26 Oct (Linux, 3 at a time, 1,462 s against 1,398 s without): lines 82.9 % (13,214 / 15,943), branches
+  73.0 % (7,240 / 9,924) in 34 engine files; calendar-generator.js lines 98.9 % (59.6 % under `npm test` alone).
