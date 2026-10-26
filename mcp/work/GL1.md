@@ -21,7 +21,7 @@
   suites PASS plus `glass`; full run: 91 -> 92 suites.
 - **Got:** glass 33 of 50 red -> 50 PASS; theme-generator 898 -> 910; design-engine 598 = 598, pbip 109 = 109 (every
   existing theme byte for byte); report 29 -> 30 suites PASS; core 6 = 6 (mcp 1591, golden 12, mutation 72 killed);
-  the lab: 4 reports, validator 0 errors, 0 "can break". Full run: see Results.
+  the lab: 4 reports, validator 0 errors, 0 "can break". Full run: 93 suites passed.
 - **Resume:** done; waits for the reviewer, then the laptop run of `mcp/lab/GLASS-LAB.md` picks the shipped values.
 
 ## The plan
@@ -99,7 +99,9 @@ Suites (baseline on 0cbb017 in a separate worktree -> after):
 - `npm test -- report`: 29 -> 30 suites passed (glass 50; red first: 33 of 50 failed on 3094fbe).
 - `npm test -- core`: 6 = 6 (mcp 1591, golden 12 tasks match, mutation 72 killed).
 - lint clean; check-min PASS; changelog-words PASS; check-result-lines PASS (93); check-agent-memory PASS (157).
-- Full run `npm test -- --keep-going`: FULL_RUN_LINE
+- Full run `npm test -- --keep-going` on 2c88cab: "run-tests: 93 suites passed" (the base registers 92, not the 91 my
+  plan said: one suite landed since LR2; + glass). The first full run on a5b2b93 failed one suite, arabic-terms AT-3: the
+  preview's Arabic note said «العنصر المرئي», fixed to the owner's «المرئيات» in 2c88cab.
 
 ## CHANGELOG line
 - **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
