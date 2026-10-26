@@ -1332,9 +1332,10 @@
       // (round 12, #4; seen in Desktop 2.158, round 11: pale grey titles on the phone) the title in the text colour
       if (shown) vco.title = obj({ fontSize: num(PHONE.heading), fontColor: color(u.text) });
       if (t === 'textbox' && kindOf[v.name] === 'title') {
-        // the header title: 14pt, or the largest size down to 8 whose one line fits the phone's width
+        // the header title: 14pt, or the largest size down to 8 whose one line fits the phone's width (pbip-sizing.js
+        // phoneTitleSize, the Arabic twin's rule too)
         const para = vis.objects.general[0].properties.paragraphs[0], run = para.textRuns[0];
-        const size = Math.max(8, Math.min(PHONE.title, Math.floor(p.w / (charW(1) * Math.max(1, String(run.value).length)))));
+        const size = Z.phoneTitleSize(run.value, p.w, PHONE.title);
         objects.general = obj({ paragraphs: [Object.assign({}, para, { textRuns: [Object.assign({}, run, { textStyle: Object.assign({}, run.textStyle, { fontSize: size + 'pt' }) })] })] });
       } else if (t === 'pageNavigator') objects.text = ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(PHONE.nav) }, selector: { id } }));
       else if (t === 'slicer') { objects.header = obj({ textSize: num(PHONE.slicer) }); objects.items = obj({ textSize: num(PHONE.slicer) }); }

@@ -3,7 +3,7 @@
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
-import { num, posOf, typeOf, litStr, Lv, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
+import { num, posOf, typeOf, litStr, Lv, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
 import { arabicDax, titleMeasuresOf, textMeasuresOf } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
@@ -45,6 +45,16 @@ function fitButtons(page, visuals, ctx, at) {
     lines.forEach((s) => { const q = posOf(s); q.x = Mirror.round(q.x - dl); q.width = Mirror.round(q.width + dl + dr); });
     const what = { page: safeName(at), visual: safeName(String(v.name)), kind: b.page ? 'page button' : 'button', needs: b.needW, width: p.width };
     const moved = (dl ? left.length : 0) + (dr ? right.length : 0);
+    // (SQ4, X2-S1: the bilingual demo's Arabic Reset button, 201 wide in its 201-wide rail, was cut) still too narrow with
+    // its icon, but wide enough for its text alone: its icon is switched off, as the writer does where the icon and the
+    // text don't fit side by side (pbip-sizing.js resetFit: shapeType blank, no icon size)
+    const icons = isObj(v.visual.objects) && Array.isArray(v.visual.objects.icon) ? v.visual.objects.icon.filter((e) => isObj(e) && isObj(e.properties) && 'shapeType' in e.properties) : [];
+    if (!b.page && b.icon && icons.length && p.width + 0.5 < b.needW && p.width + 0.5 >= Math.ceil(Rules.MEASURED.BTN_TW(b.t, b.n))) {
+      icons.forEach((e) => { e.properties.shapeType = Ls('blank'); delete e.properties.iconSize; });
+      const b2 = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text);
+      out.buttons.push(Object.assign({}, what, { needs: b2 ? b2.needW : what.needs, iconOff: 'its icon and its Arabic text do not fit side by side here: the icon is switched off (as the writer does in a narrow place), the text on one line' }, moved ? { moved } : {}));
+      return;
+    }
     if (dl + dr > 0) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
     if (p.width + 0.5 < b.needW) out.buttonsCut.push(Object.assign({}, what, { room: p.width, why: `its Arabic text needs ${b.needW} wide; its ${v.parentGroupName != null ? 'group' : 'page'} and the visuals beside it leave ${p.width}: give a shorter Arabic text, or Power BI cuts it` }));
   });

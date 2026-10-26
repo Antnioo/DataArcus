@@ -505,10 +505,23 @@
     return textsOfVisual(pageId, phoneView(json, mobile)).filter((t) => t.kind !== 'field').map((t) => Object.assign(t, { id: 'phone:' + t.id }));
   }
   // labels: { id: text } with the 'phone:' ids. Returns how many were applied (mobile is changed in place)
+  // (SQ4, D3-S1: the phone header kept the English title's 14pt, and a longer Arabic title was cut) a text box's
+  // paragraph of one run, relabelled, takes the writer's phone title size for its new text in its phone box
+  // (pbip-sizing.js phoneTitleSize), never larger than it was; a paragraph of several runs keeps its sizes
+  const Sizing = () => (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null);
+  const MARKS = /[\u200e\u200f\u2066-\u2069]/g;
   function labelMobile(pageId, json, mobile, labels) {
     if (!isObj(json) || !isObj(json.visual) || !isObj(mobile) || !labels) return 0;
     const sub = {}; Object.keys(labels).forEach((k) => { if (k.startsWith('phone:')) sub[k.slice(6)] = labels[k]; });
-    return labelVisual(pageId, phoneView(json, mobile), sub);
+    const view = phoneView(json, mobile), was = new Map();
+    if (kindOf(json) === 'textbox') eachRun(view.visual, (run, i, j) => { if (Object.prototype.hasOwnProperty.call(sub, `textbox:${pageId}/${json.name}/${i}.${j}`)) was.set(run, run.value); });
+    const n = labelVisual(pageId, view, sub), Z = Sizing(), p = mobile.position, w = isObj(p) && Number.isFinite(p.width) ? p.width : NaN;
+    if (Z && Z.phoneTitleSize && Number.isFinite(w)) (entries(mobile.objects, 'general') || []).forEach((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).forEach((para) => {
+      const rs = isObj(para) ? runsOf(para) : []; if (rs.length !== 1 || !isObj(rs[0]) || !was.has(rs[0]) || rs[0].value === was.get(rs[0])) return;
+      const st = rs[0].textStyle, m = isObj(st) && /^(\d+(?:\.\d+)?)pt$/.exec(String(st.fontSize || '')); if (!m) return;
+      const size = Z.phoneTitleSize(String(rs[0].value).replace(MARKS, ''), w, +m[1]); if (size < +m[1]) st.fontSize = size + 'pt';
+    }));
+    return n;
   }
   // the phone box mirrored on the 323-wide canvas, a text box's paragraphs to the right (centred kept), as on the page.
   // Returns a new object; a mobile.json of an unexpected shape is returned as it is

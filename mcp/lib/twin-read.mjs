@@ -53,7 +53,9 @@ export function readOriginal(loc) {
   // (rc.24) the report's own measures (definition/reportExtensions.json), for the title measures; and the theme's text
   // sizes, for what the Arabic texts need
   let ext = null; if (files.includes(EXT)) { try { const j = jsonAt(loc, EXT); ext = isObj(j) && Array.isArray(j.entities) ? j : null; } catch (e) { ext = null; } }
-  return { files, left, pages, bookmarks, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
+  // (SQ4, X1-S2: a bookmark group kept its English name) the groups of bookmarks.json that have a name to show
+  let bookmarkGroups = []; if (files.includes(BOOKMARKS)) { try { const j = jsonAt(loc, BOOKMARKS); bookmarkGroups = (isObj(j) && Array.isArray(j.items) ? j.items : []).filter((it) => isObj(it) && Array.isArray(it.children) && (typeof it.name === 'string' || typeof it.name === 'number') && typeof it.displayName === 'string').map((it) => ({ name: String(it.name), displayName: it.displayName })); } catch (e) { bookmarkGroups = []; } }
+  return { files, left, pages, bookmarks, bookmarkGroups, pbir, unreadable, ext, theme: isObj(inv.themeJson) ? inv.themeJson : null, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
 export const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -63,7 +65,7 @@ function mobileOf(loc, files, rel) {
   const m = rel.replace(/visual\.json$/, 'mobile.json'); if (m === rel || !files.includes(m)) return null;
   try { const j = jsonAt(loc, m); return isObj(j) ? { rel: m, json: j } : null; } catch (e) { return null; }
 }
-export const EXT = 'definition/reportExtensions.json';
+export const EXT = 'definition/reportExtensions.json', BOOKMARKS = 'definition/bookmarks/bookmarks.json';
 // definition.pbir's model folder, when it names one: { path } or null
 export const byPathOf = (pbir) => { const d = isObj(pbir) && isObj(pbir.datasetReference) ? pbir.datasetReference : null, b = d && isObj(d.byPath) ? d.byPath : null; return b && typeof b.path === 'string' && b.path ? b : null; };
 export const pageOf = (pg) => (isObj(pg.page) ? pg.page : {});

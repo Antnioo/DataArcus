@@ -25,7 +25,7 @@ const TWIN_CAP = { last: ['texts'] };
 
 // rc.22, B-139 (the twin's approval page listed internal ids): each approved text named by what it is and its own text,
 // as the plan shows it (texts that read like an instruction stay withheld)
-const TWIN_KIND = { page: 'Page name', button: 'Button', title: 'Title', textbox: 'Text box', field: 'Field name', bookmark: 'Bookmark', titleMeasure: 'Chart title (from a title measure)', measureText: 'Text of a report measure', altText: 'Alt text', blankText: 'Text when there is no data', buttonTooltip: 'Button tooltip', text: 'Text' };
+const TWIN_KIND = { page: 'Page name', button: 'Button', title: 'Title', textbox: 'Text box', field: 'Field name', bookmark: 'Bookmark', bookmarkGroup: 'Bookmark group', titleMeasure: 'Chart title (from a title measure)', measureText: 'Text of a report measure', altText: 'Alt text', blankText: 'Text when there is no data', buttonTooltip: 'Button tooltip', text: 'Text' };
 const twinNames = (P) => Object.fromEntries(P.texts.filter((t) => P.labels[t.id] != null).map((t) => [t.id, `${t.phone ? 'Phone layout: ' : ''}${t.kind === 'button' && t.goesTo ? 'Page button' : TWIN_KIND[t.kind] || 'Text'}${t.text != null ? ` "${t.text}"` : ' (withheld: reads like an instruction)'}${t.labelFrom ? ` (${t.labelFrom})` : ''}`]));
 // (0.3.1 K2) a proposed plan keeps its exact files (lib/plans.mjs, this process only); the plan id, for the proposal
 const attached = (id, art) => { Plans.attach(id, art); return id; };
@@ -59,7 +59,7 @@ export function register(server, ctx) {
     if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
     const LG = P.answer.languages;
     // (SQ3, T1-S8: "0 Arabic texts as approved" before any text was approved) the count, or that none is approved yet
-    const given = P.answer.labels.given, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';
+    const given = P.answer.labels.arabic, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';
     const textsAr = given ? `النصوص العربية كما وُوفق عليها: ${given}` : 'لم يُوافق بعد على أي نص عربي: يبقى كل نص كما هو';
     const where = path.dirname(inside(a.path)), cols = (P.month.columns || []).length || 1;
     const writes = [LG ? `the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original: its ${LG.pairs.length} English pages as they are and their ${LG.pairs.length} Arabic pages (${texts}), ${LG.buttons.filter((b) => b.placed).length} language buttons, ${LG.syncGroups.length} slicer pairs kept in sync, the ${P.copy.tabsShown === 'ar' ? 'English' : 'Arabic'} pages hidden in the tabs; the original is not changed`
