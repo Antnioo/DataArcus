@@ -17,7 +17,7 @@
   visual's own font family, size, bold and italic for those roles is removed so the theme governs, and the theme's
   textClasses get the chosen font and size. `keepPositions: true` leaves every position as it is (default: the grid,
   as today). Decisions below.
-- **Expected checks (written before the work):** cs1 about 35 checks, red first on 0cbb017 (no inventory, no option,
+- **Expected checks:** (written before the work) cs1 about 35 checks, red first on 0cbb017 (no inventory, no option,
   no FORMAT_MIXED); `npm test -- report`, `-- checker`, `-- core` the base counts plus cs1 (one more report suite);
   redesign and redesign-overlay unchanged (no consistentText: the same patches, byte for byte); mutation 72 -> 73
   killed; full run: the base's 91 suites + 1 = 92 passed.
