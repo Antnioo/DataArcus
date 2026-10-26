@@ -97,7 +97,7 @@ try {
     chk(() => yes.length === 1 && yes[0].severity === 'note' && !JSON.stringify(yes[0]).includes('Total Sales'), () => `D2. the script declares it: one note, the name not quoted: ${JSON.stringify(yes).slice(0, 300)}`);
     const other = await pending(setup('d-other', tmdl('Profit (KPI card)')));
     chk(() => !other.length, () => `D3. the script declares another measure: no note: ${JSON.stringify(other).slice(0, 300)}`);
-    const tw = await pending((() => { const p = setup('d-twin', tmdl(NAME)); fs.renameSync(path.join(ROOT, 'd-twin/Twin Sales.pbip'), path.join(ROOT, 'd-twin/Twin Sales (Arabic).pbip')); return 'd-twin/Twin Sales (Arabic).pbip'; })());
+    const tw = await pending((() => { setup('d-twin', tmdl(NAME)); fs.renameSync(path.join(ROOT, 'd-twin/Twin Sales.pbip'), path.join(ROOT, 'd-twin/Twin Sales (Arabic).pbip')); return 'd-twin/Twin Sales (Arabic).pbip'; })());
     chk(() => tw.length === 1, () => `D4. a copy next to the original (the twin) reads the original's script: ${JSON.stringify(tw).slice(0, 300)}`);
   }
 } finally { fs.rmSync(ROOT, { recursive: true, force: true }); }
