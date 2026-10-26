@@ -86,7 +86,7 @@ const ids = (r) => ((r && r.findings) || []).map((f) => f.id);
 {
   const s = src('lib/gulf-calendar.mjs');
   chk(() => /import \{[^}]*\bmodelOf\b[^}]*\} from '\.\/model\.mjs'/.test(s) && !/m\.tmsl\.model \|\|/.test(s) && !/tmsl && \(m\.tmsl\.model/.test(s), () => 'R-S14. gulf-calendar.mjs reads the model through model.mjs\'s modelOf, never unwraps m.tmsl itself');
-  chk(() => /writeScript\(dir, base, script\) returns the script's file path/.test(s) && /names the file only, writing nothing/.test(s) && /writes the script to the file that plan named/.test(s),
+  chk(() => /writeScript, given the folder, the base name and the script, returns the script's file path/.test(s) && /names the file only, writing nothing/.test(s) && /writes the script to the file that plan named/.test(s),
     () => 'A6-S3a. the env key writeScript is documented on both paths (the plan names the file only; the approved plan writes it)');
   const t = src('tools/add_gulf_calendar.mjs');
   chk(() => /writeScript: plannedWriter\(a, m\)/.test(t) && /writeScript: scriptNameNow/.test(t), () => 'A6-S3b. add_gulf_calendar passes the two the JSDoc names (pin)');

@@ -15,11 +15,14 @@
 - **Expected checks:** the new suite about 25 checks, about 18 red before the fixes; model-health's card check red
   (its «1 مرئيات») then PASS; `npm test -- model`, `scripts/tests/run-all.mjs` (gulf-calendar's baseline unchanged:
   its saved settings have no `arabicNames`), site config, arabic terms, check-agent-memory PASS;
-  `npm test -- --keep-going` 81 -> 82 suites, all PASS.
+  `npm test -- --keep-going` 82 -> 83 suites, all PASS.
 - **Invariants:** nothing written without a plan (no new write); metadata only (the new answers are names and
   options); every Gulf fact sourced (Sharjah's 1 January 2022 change: `DATES-SOURCES.md`, Sharjah Executive Council).
-- **Got:** (after the run)
-- **Resume:** (after the run)
+- **Got:** sq7 28 checks (17 red before the fixes, f4a2e2f); model-health 252 PASS (its card check red first);
+  `npm test -- model` all PASS; run-all 20 of 20 PASS (gulf-calendar 905, baseline unchanged); site config, arabic terms
+  87, check-agent-memory PASS. `npm test -- --keep-going`: "run-tests: 1 of 83 suites failed: test-0.3.1-write-gate.mjs"
+  (my JSDoc's "writeScript(dir, ...)" counted as a call; reworded, then write-gate 4 and sq7 28 PASS): 83 suites PASS.
+- **Resume:** done; waits for the reviewer. Nothing needs Desktop (no laptop list).
 
 ## The items, confirmed (26f7fbe)
 1. **C1-S1** `arabicOn` (calendar-generator.js:73) is false when `lang` is "ar": an Arabic table keeps "Q1",

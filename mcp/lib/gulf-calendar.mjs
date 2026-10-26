@@ -56,7 +56,7 @@ function scriptOf(Fix, table, columns, body, rels, more) {
 
 /**
  * Builds the script and the answer. a: the tool's inputs; env: { Gulf, Fix, writeScript, scriptDir, scriptBase }.
- * writeScript(dir, base, script) returns the script's file path. (0.3.1 SQ7, audit-6 S3) Two callers, one shape: the plan
+ * writeScript, given the folder, the base name and the script, returns the script's file path. (0.3.1 SQ7, audit-6 S3) Two callers, one shape: the plan
  * path (no planId) passes one that names the file only, writing nothing (the free name the plan will write); the approved
  * plan's call passes the writer, which writes the script to the file that plan named and refuses otherwise. (The name
  * keeps "write": the write gate's inventory, test-0.3.1-write-gate.mjs, finds every write call by it.)
