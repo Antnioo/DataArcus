@@ -102,7 +102,7 @@
         }
       },
       "datePublished": "2026-10-25",
-      "dateModified": "2026-10-25",
+      "dateModified": "2026-10-26",
       "image": "https://dataarcus.com/assets/img/og/report-ready-for-arabic.jpg"
     },
     {
@@ -205,7 +205,7 @@
               <ul>
                 <li data-i18n-html="content.s2_1"><strong>عناوين المرئيات محاذاة لليسار.</strong> اليسار هو الافتراضي في <bdi>Power BI</bdi>. <bdi>DataArcus</bdi>: تحاذي النسخة العربية كل عنوان لليمين (ويبقى الموسّط موسّطًا). وفي <bdi>Desktop</bdi>: <strong><bdi>Format &gt; General &gt; Title &gt; Horizontal alignment: Right</bdi></strong> (<a href="https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-customize-title-background-and-legend#customize-visualization-titles-in-reports" target="_blank" rel="noopener noreferrer" class="text-accent"><bdi>Microsoft Learn</bdi></a>).</li>
                 <li data-i18n-html="content.s2_2"><strong>مربعات نص عربية محاذاة لليسار.</strong> <bdi>DataArcus</bdi>: تحاذي النسخة العربية مربعات النص لليمين. وفي <bdi>Desktop</bdi>: حدد مربع النص وحاذِ فقراته لليمين.</li>
-                <li data-i18n-html="content.s2_3"><strong>العربية والإنجليزية في نص واحد.</strong> عنوان مثل «المبيعات حسب <bdi>Region</bdi>» يجمع اتجاهين. وقسنا في <bdi>Desktop</bdi> أن <bdi>Power BI</bdi> يرسم العنوان فقرةً من اليسار إلى اليمين: نقاط الحذف بعد كلمات عربية ظهرت في الطرف الخطأ حتى تلتها علامة اتجاه من اليمين إلى اليسار. لذلك قد تظهر كلمة إنجليزية في أحد طرفي نص عربي، أو كلمة فيها رموز (<bdi>Q1/2026</bdi>)، في غير مكانها. <bdi>DataArcus</bdi>: تكتب النسخة العربية كل مقطع إنجليزي داخل عزل للاتجاه (<bdi>U+2068</bdi> و<bdi>U+2069</bdi>، من <a href="https://www.unicode.org/reports/tr9/" target="_blank" rel="noopener noreferrer" class="text-accent">قواعد <bdi>Unicode</bdi> للنص ثنائي الاتجاه</a>). ولا إعداد له في <bdi>Power BI</bdi>: أعد كتابة النص مع العزل، أو أعد صياغته لتقع الكلمة الإنجليزية بين كلمات عربية.</li>
+                <li data-i18n-html="content.s2_3"><strong>العربية والإنجليزية في نص واحد.</strong> عنوان مثل «المبيعات حسب <bdi>Region</bdi>» يجمع اتجاهين. وقسنا في <bdi>Desktop</bdi> أن <bdi>Power BI</bdi> يرسم العنوان فقرةً من اليسار إلى اليمين: نقاط الحذف بعد كلمات عربية ظهرت في الطرف الخطأ حتى تلتها علامة اتجاه من اليمين إلى اليسار. وقسنا مرة أخرى في 26 أكتوبر 2026 (<bdi>Desktop 2.159</bdi>): كلمة إنجليزية في أي موضع من نص عربي، في أحد طرفيه أو بين كلماته العربية، قد تقلب ترتيب الكلمات العربية حولها. <bdi>DataArcus</bdi>: تكتب النسخة العربية كل مقطع إنجليزي داخل عزل للاتجاه (<bdi>U+2068</bdi> و<bdi>U+2069</bdi>، من <a href="https://www.unicode.org/reports/tr9/" target="_blank" rel="noopener noreferrer" class="text-accent">قواعد <bdi>Unicode</bdi> للنص ثنائي الاتجاه</a>). ولا إعداد له في <bdi>Power BI</bdi>: أعد كتابة النص مع العزل وعلامة اتجاه من اليمين إلى اليسار (<bdi>U+200F</bdi>) في أوله.</li>
                 <li data-i18n-html="content.s2_4"><strong>عناوين ومربعات نص وأزرار وأسماء صفحات بالإنجليزية.</strong> <bdi>DataArcus</bdi>: تكتب النسخة العربية كلًّا منها بالعربية التي توافق عليها. فهي تقترح المسودات من مسرد ثابت وتسرد كل نص في خطتها، وما لم توافق على عربيته يبقى كما هو. وفي <bdi>Desktop</bdi>: اكتب كلًّا منها بالعربية.</li>
                 <li data-i18n-html="content.s2_5"><strong>أسماء حقول بالإنجليزية</strong> في عناوين المحاور ورؤوس الجداول ووسائل الإيضاح ورؤوس المقسمات. <bdi>DataArcus</bdi>: تعطي النسخة العربية كل حقل اسمًا عربيًا في ذلك المرئي وحده، ولا يُعاد تسمية شيء في نموذجك. وفي <bdi>Desktop</bdi>: انقر بزر الفأرة الأيمن على الحقل في حقول المرئي، ثم <strong><bdi>Rename for this visual</bdi></strong>. وقسنا أن <bdi>Power BI</bdi> يعرض ذلك الاسم بعدها في كل موضع يعرض فيه المرئي الحقل.</li>
               </ul>
@@ -374,7 +374,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/article-power-bi-report-ready-for-arabic.min.js?v=20261025f" defer=""></script>
+  <script src="/assets/js/translations/article-power-bi-report-ready-for-arabic.min.js?v=20261026bd1" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
