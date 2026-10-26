@@ -39,11 +39,11 @@ export function register(server, ctx) {
     a = withLookDefaults(a);
     // (0.3, J13 redesign step 2) a redesign is a copy of the original with the approved patches only (lib/redesign.mjs)
     if (a.redesignFrom != null || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'redesign')) {
-      if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles and restyle if it has them.');
-      if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles and restyle if it has them.');
+      if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles, restyle, consistentText and keepPositions if it has them.');
+      if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles, restyle, consistentText and keepPositions if it has them.');
       const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
       const art = keptCopy(a.planId);
-      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }, art); }));
+      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle, consistentText: a.consistentText, keepPositions: a.keepPositions }, art); }));
     }
     // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
     if (a.customVisualsFrom != null) {
