@@ -16,7 +16,13 @@
   calendar heatmap -> pivotTable (was lineChart), the other 9 unchanged; validator 0 errors on the native copy;
   `npm test -- report` 30 suites, `-- core` golden byte for byte, the full run 93 suites; check-result-lines,
   changelog-words, check-agent-memory PASS.
-- **Resume:** the plan below, then the work.
+- **Got:** custom-visuals-lab 38 -> 56 checks PASS (18 red on 646947f first, then NC2-3g added); 11 replaced, 0 high,
+  7 medium, 4 low, 11 of 11 guesses; the bullet a combo, the heatmap a matrix, the rest unchanged; validator 0 errors on
+  the native copy; `npm test -- report` "run-tests: 30 suites passed (report)"; `-- core` "6 suites passed", golden 12
+  tasks match; v029visuals, shared-axes, r6-disclosure, write-gate, approval-hardening, audit-writes, sq15a PASS; full run
+  "run-tests: 95 suites passed" (the registry is 95 at this base); check-result-lines 95, changelog-words 150,
+  check-agent-memory, test-site-config PASS.
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The plan (before the work)
 1. **Confidence from evidence** (Seen 5). In `nativeFor` (the meaning's own `confidence` stays: test-0.2.9v reads it):
@@ -101,3 +107,13 @@ the earlier replacement offered second (`customVisualsSecond`).
    approval page shows them (full-size crop of that section).
 4. Optional, for a later item: save a bar chart with error bars (by field, upper and lower bound the target) in Desktop
    and keep its visual.json: it would measure `error.errorRange`, the closer target on a bar.
+
+## Seen, not in scope
+1. NC1 Seen 6 (the redesign's name cap collision) and 7 (the grid's touching rows): CS1's file, the reviewer sends them.
+2. NC1 Seen 8: title sizes and fonts stay mixed without CS1's consistent option.
+3. The heat shading's ends are fixed light blues, not the report's theme: on a dark theme with light text the cells may
+   read poorly (for the laptop; a theme-aware end would need the report's theme read by the native copy).
+4. The matrix's year rows may open collapsed (no measured `expansionStates` for a matrix): the plan says how to expand.
+5. Error bars (`error.errorRange`) would give a bar its own target marker; their JSON needs one Desktop-saved example.
+6. The plan line's `why` still begins with the meaning's words ("the id's words hint at a gauge, set aside") before the
+   closer native's: correct, but long for the bullet.
