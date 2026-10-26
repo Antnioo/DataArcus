@@ -17,7 +17,10 @@
 - **Invariants:** metadata only: a KPI target is answered as a measure reference or "an expression", its text never;
   an image is named by its file name (screened as every name), never its content; the drill level is a field name,
   never a drilled-into value. Every guard kept (AF1's ancestors, SQ6's .pbit reads, AU47's unreadable files).
-- **Resume:** see "Results" (filled as each step lands).
+- **Got:** sq15a 23 checks (18 red first); reader-seen 19 -> 21 (S4-1, S4-2 red first); mutation 69 -> 72 mutants, all
+  killed; v029g 21 -> 21; full run "run-tests: 88 suites passed" (87 before: the 86 above was my miscount of `--list`);
+  shard 1/4 PASS; model 13, safety 14, report 27 suites PASS; platform paths 30 PASS; lint clean; agent-memory PASS.
+- **Resume:** done; waits for the reviewer. Nothing needs Desktop. The CHANGELOG line below is the reviewer's to add.
 
 ## The items, confirmed on fe3682f
 1. **0.2.9-reader-S4** (the lab's list): drill level: absent (a projection's `active` is never read); image names:
@@ -45,3 +48,40 @@
    words under "Decisions I made").
 4. Mutants: R-model-tie (back), R-kpi-quoted (the expression returned), R-image-screen (an image name unscreened).
 5. Suites, results below; SEEN-QUEUE.md Status cells in the same push.
+
+## Results
+Commits: plan 99d336d, red first b9cf1bf, MANY_MODELS 41bd0da, KPI and report details 7f8275e, Status cells b47ccd0.
+
+| Item | Before | After | Test (red -> green) |
+|---|---|---|---|
+| 0.2.9-checks-S4 | `loadModel`: two model folders at the top depth: the first the folder lists, silently | `ReadError('MANY_MODELS', { models })`, both named, worded "Give read_model the path of the one you mean" (SQ6's taken-back code, re-applied) | reader-seen S4-1, S4-2 red -> green; S4-3 (nearest model, one of two by path) passes |
+| L5-S1 | a measure's `kpi.targetExpression` parsed (TMDL) or carried (TMSL) but never read; `targetOf` by names only | `kpiTarget` (model.mjs): one other measure (`[M]`, `T[M]`, `'T'[M]`, any case) is the target; any other expression `{ expression: true }`; `targetOf` takes the KPI's measure first; statusIcons says "its KPI ... is an expression"; read_model lists `kpis` [{ measure, target: "T[M]" / "an expression" / "none" }], at most 50 | sq15a L5-1..L5-4, L5-6, L5-7 red -> green (model.bim and TMDL); L5-5 (the marker in no answer) and L5-8 (pins) pass |
+| 0.2.9-reader-S4 | drill level, image names, decoration folding, custom names absent; z in the JSON | `drillLevel` (a hierarchy role's `active` levels, a field only); `images` on a visual and a page (`background`, `wallpaper`), each through `safeName` and flagged when it reads like an instruction; two or more decorations (a shape or image with no field, text, title, action) of one group as one text line, the JSON keeps each; a custom visual's `name` from its id ("Chiclet Slicer"; an id with nothing to take off: none); z unchanged | sq15a RS4-1..RS4-6, RS4-8 red -> green; RS4-7, RS4-9, RS4-10 (pins) pass |
+
+Mutants: before `PASS  mutation  179 checks (69 mutants, all killed, ...)`; after `PASS  mutation  186 checks (72 mutants, all killed, 37 guard suites, 174s; ...)`: R-model-tie (back, reader-seen), R-kpi-quoted (the expression returned, sq15a), R-image-screen (an image name unscreened, sq15a).
+
+## CHANGELOG line
+- Two Power BI projects side by side in one folder are no longer read as whichever comes first: DataArcus names both and asks which; a measure's own KPI target is used as its target for status icons and bullet bars (named, never quoted); read_report says the drill level a chart shows, the image files a report uses, a custom visual's name, and folds a group's shapes and images into one line.
+
+## Decisions I made
+1. **v029g changed on purpose** (the item's own change): every project there holds `M.SemanticModel` beside
+   `Other.SemanticModel`, and each call read the folder, relying on the file system's listing order. Its calls now name
+   `<dir>/M.SemanticModel` (one helper, `model`), as a user would after the refusal; same 21 checks, none removed.
+   This also closes SQ6 "Seen" 3 (that order was a latent flake).
+2. **A KPI target that is an expression is not used**: inlining the model's DAX into a script would be a second copy of
+   an expression and an untested DAX shape; the user gives thresholds instead, as before. Only a reference to one other
+   existing measure counts (a column, the measure itself or a missing measure: "an expression").
+3. **read_model's `kpis` key** appears only when the model has a visible measure with a KPI: no other answer changes.
+4. **A custom visual's name from its id only** (a trailing timestamp, a 32-digit GUID or `_OrgStore` taken off, the
+   words split at capitals); never from a vendor list, and a private visual's package is still not read (SQ6's note).
+5. **Decorations fold only in the text answer** and only at two or more in one group; size counting keeps each line
+   (an over-count, so the 40,000 cap still holds).
+6. Image file names count as names: screened, cut at 60, and an instruction-like one adds a `suspicious` entry.
+
+## Seen, not in scope
+1. `mcp/TOOLS.md` (SQ12's docs) does not yet say read_model's `kpis` or read_report's `drillLevel`, `images` and the
+   decoration line.
+2. bulletBar's "not used" line (dax-functions.mjs) does not say when a measure's KPI target is an expression, as
+   statusIcons now does.
+3. A KPI's status expression and status graphic are read by the TMDL reader but used nowhere (metadata a design could
+   follow: the model's own traffic light).
