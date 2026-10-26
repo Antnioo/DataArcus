@@ -34,7 +34,9 @@ function build(a, o) {
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
   if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
-  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel });
+  // (SQ13, 0.2.9-design-S2) the table's share of a narrow row by the plan's table fields, as create_report's (report-run.mjs)
+  const tableFields = F && F.table ? F.table.length : undefined;
+  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields });
   // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
   // A3-2: the picker keeps them, so nothing is rebuilt here)
   const n = Math.max(1, ...specs.map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
@@ -48,7 +50,7 @@ function build(a, o) {
   // (0.3, J4, B-130: the planned page showed cards titled "KPI 2", "KPI 3", "KPI 4" on a model with one measure) the cards
   // the binding can fill, as create_report caps them (maxKpis): a card is never planned without its measure
   const filled = (bind.kpis || []).filter(Boolean).length;
-  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel }); }
+  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields }); }
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   // (0.3.0 D2) the gallery kinds the plan asks for (a.gallery), on the first page, as create_report puts them; small
   // multiples take the bar chart's category for their panels, as there
@@ -116,15 +118,15 @@ export function planLint(a) {
 // second page, as create_report writes it), panel (the slide-in filter panel), title (the report's title), displayNames
 // (the plan's: the names the report shows); files (0.3.0 D5): the exact artifact's files (create_report's own build,
 // "<name>.Report/..." paths): drawn as they are, nothing is built again.
-// Returns { pages: [page] } (page: the renderer's, with flags), from the design engine's slots when the writer can't
-// build the report (a model with no measure: create_report counts its columns then).
+// Returns { pages: [page] } (page: the renderer's, with flags); { pages: [], from: 'none', why } when the writer can't
+// build the report here (SQ13: the design engine's slots are never drawn as the plan).
 const FLAG_OF = { OVERLAP: 'overlap', OFF_PAGE: 'cut', BAR_LABELS_MAY_BE_CUT: 'cut', TABLE_GROW_TO_FIT: 'cut', TABLE_WIDTHS_TOO_WIDE: 'cut' };
 export function planPreview(a) {
   const lang = a.lang === 'ar' ? 'ar' : 'en', b = a.files ? { r: { files: a.files }, design: a.design } : build(a, { second: a.second !== false, panel: !!a.panel, title: a.title, names: a.displayNames }), design = b.design, rtl = E.rtl(design.layout, lang);
   const ui = design.ui || {}, colors = { background: ui.background, card: ui.card, ink: ui.text, accent: ui.accent };
-  if (b.skipped) return { pages: (a.second !== false ? b.specs : b.specs.slice(0, 1)).map((p) => {
-    let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
-    return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
+  // (SQ13, R1-see-the-result-S3: the design engine's slots scored 0.15-0.50 against the written pages) no picture of a
+  // layout create_report never writes: no pages, and why
+  if (b.skipped) return { pages: [], from: 'none', why: `no preview: the report could not be built in memory (${b.skipped})` };
   const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors });
   const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
   pages.forEach((p, k) => {

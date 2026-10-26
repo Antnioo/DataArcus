@@ -326,12 +326,15 @@
   // the Gulf calendar's Arabic name columns ("Day Name (Arabic)") are the same kind of name as their English ones
   const ARABIC_SUFFIX = /\s*\((arabic|عربي)\)\s*$/i;
   const nameLike = (name) => NAME_LIKE.test(String(name).replace(ARABIC_SUFFIX, '').replace(FAMILY, '').trim());
+  // a column's type as the readers give it, lower case; a column given with none (a DAX table's, a caller's own) is
+  // unknown, never text (RULES-POWERBI.md: a missing type defaulted to text gives wrong findings; SQ13, 0.2.9-reader-S13)
+  const colType = (c) => String((c && c.dataType) || 'unknown').toLowerCase();
   function sortColumnFor(columns, name) {
     if (!nameLike(name)) return null;
     const kind = sortKind(name), fam = family(name);
     // a column the files give no type for (a DAX table's) counts only when its name says it is a number ("Month
     // Number", "Year Month Sort", "Day of Week"): "Year Month" or "Month" alone may be text
-    const type = (c) => String(c.dataType || 'string').toLowerCase(), plain = (c) => c.name.replace(FAMILY, '').trim();
+    const type = colType, plain = (c) => c.name.replace(FAMILY, '').trim();
     const numberName = /(no|num|number|index|key|sort|order|id)$|day\s*of\s*week|month\s*of\s*year|^رقم/i;
     const ok = (c) => c.name !== name && family(c.name) === fam && SORT_BY[kind].test(plain(c)) && (/^(int64|double|decimal|number)$/.test(type(c)) || (type(c) === 'unknown' && numberName.test(plain(c))));
     return columns.find(ok) || null;
@@ -397,7 +400,7 @@
     return tables;
   }
   function dateColumnFor(columns, name, type, table) {
-    if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'string').toLowerCase())) return null;
+    if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'unknown').toLowerCase())) return null;
     const dates = (columns || []).filter((c) => /^date(time)?$/i.test(String(c.dataType || '')) && c.name !== name);
     const self = (columns || []).find((c) => c.name === name), expr = String((self && self.expression) || '');
     const made = dates.find((d) => expr && expr.toLowerCase().includes('[' + String(d.name).toLowerCase() + ']'));
@@ -409,7 +412,7 @@
   // G9: create_report's field check used to rebuild it): table as the readers give it, name the column's
   function fieldOf(table, name) {
     const cols = table.columns || [], c = cols.find((x) => x.name === name); if (!c) return null;
-    const type = String(c.dataType || 'string').toLowerCase(), sortBy = c.sortBy || c.sortByColumn || null;
+    const type = colType(c), sortBy = c.sortBy || c.sortByColumn || null;
     const by = sortBy ? null : sortColumnFor(cols, c.name), dt = dateColumnFor(cols, c.name, type, table);
     // (A3-3: tableFormat, the one format rule's for a table's column, where it would change the model's)
     const r = FM.reportFormatOf(c, 'column', []), marks = timeMarks(table, c.name, type, !!(sortBy || by)), sh = shortOf(table, c.name, marks.cal);
@@ -427,7 +430,7 @@
     if (!cal || cal.kind !== 'day' || SHORT_WORD.test(name)) return null;
     const cols = table.columns || [];
     const s = cols.find((x) => x.name !== name && SHORT_WORD.test(x.name.replace(ARABIC_SUFFIX, '')) && nameLike(x.name) && sortKind(x.name) === 'day'
-      && (timeMarks(table, x.name, String(x.dataType || 'string').toLowerCase(), true).cal || {}).family === cal.family);
+      && (timeMarks(table, x.name, colType(x), true).cal || {}).family === cal.family);
     if (!s) return null;
     const sortBy = s.sortBy || s.sortByColumn || null, by = sortBy ? null : sortColumnFor(cols, s.name);
     return Object.assign({ t: table.name, c: s.name, type: 'string' }, sortBy ? { ordered: true } : by ? { sortBy: { t: table.name, c: by.name } } : {});
@@ -463,18 +466,37 @@
   // D9 + D10: a date with a time of day (by its format or its name's whole words) is a time stamp: one point per moment
   const isStamp = (c, type) => /^date/.test(type) && (/(^|[^a-z])(time|timestamp|stamp|hour)([^a-z]|$)/i.test(splitName(c.name)) || /general date|am\/pm|[hHs]/.test(FM.unquoted(c.formatString || '')));
   // D11: a column that can hold two values only: true/false, or a calculated column whose DAX returns one of two words
-  const twoValued = (c, type) => { if (type === 'boolean') return true; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : ''); if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return false;
+  // (SQ13, L2-S1: every quoted text was counted, so SWITCH ( [Code], "A", "Alpha", "B", "Beta" ) held 4) the texts an IF
+  // or SWITCH column can return, by its formula alone (never its data): IF's two branches, SWITCH's results and its
+  // else (never the values compared, nor a condition's texts), nested IF and SWITCH followed; BLANK () adds nothing.
+  // null when a result is anything else (a column, a number, a joined text): its values are not known then
+  const formulaOf = (c) => metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : '');
+  // the arguments of a formula that is one IF or SWITCH call and nothing after it (argsOf above), or null
+  const callArgs = (e, open) => { let d = 0, q = false;
+    for (let i = open; i < e.length; i++) { const ch = e[i]; if (ch === '"') q = !q; if (q) continue; if (ch === '(') d++; if (ch === ')' && --d === 0) return e.slice(i + 1).trim() ? null : argsOf(e.slice(open + 1, i)); }
+    return null; };
+  const resultTexts = (e, depth) => {
+    const m = /^\s*(IF|SWITCH)\s*\(/i.exec(String(e || '')); if (!m || (depth || 0) > 8) return null;
+    const args = callArgs(String(e), m[0].length - 1); if (!args || (/^IF$/i.test(m[1]) ? args.length < 2 : args.length < 3)) return null;
+    const results = /^IF$/i.test(m[1]) ? args.slice(1, 3) : args.slice(1).filter((x, i, l) => i % 2 === 1 || i === l.length - 1);
+    const out = [];
+    for (const r of results) {
+      if (/^"(?:[^"]|"")*"$/.test(r)) out.push(r.slice(1, -1).replace(/""/g, '"'));
+      else if (/^BLANK\s*\(\s*\)$/i.test(r)) continue;
+      else { const nest = resultTexts(r, (depth || 0) + 1); if (!nest) return null; out.push(...nest); }
+    }
+    return out;
+  };
+  const distinctResults = (c) => { const r = resultTexts(formulaOf(c)), seen = new Map(); if (!r) return null; r.forEach((v) => { if (!seen.has(v.toLowerCase())) seen.set(v.toLowerCase(), v); }); return [...seen.values()]; };
+  const twoValued = (c, type) => { if (type === 'boolean') return true;
     // (round 8, D11: a SWITCH or nested IFs whose results are two texts hold two values too)
-    const words = new Set((e.match(/"(?:[^"]|"")*"/g) || []).map((x) => x.toLowerCase())); return words.size === 2; };
+    const r = distinctResults(c); return !!r && r.length === 2; };
   // (0.3.0 L2: the pills slicer) a calculated column whose DAX is IF or SWITCH with 3-6 distinct texts holds that many
   // values at most (by its formula, never its data): few, for the writer's button slicer; 0 otherwise
-  const fewValued = (c, type) => { if (type === 'boolean') return 0; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : ''); if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return 0;
-    const n = new Set((e.match(/"(?:[^"]|"")*"/g) || []).map((x) => x.toLowerCase())).size; return n >= 3 && n <= 6 ? n : 0; };
+  const fewValued = (c, type) => { if (type === 'boolean') return 0; const r = distinctResults(c), n = r ? r.length : 0; return n >= 3 && n <= 6 ? n : 0; };
   // (0.3.0 C1 add-on: the pills' width) the values a two- or few-valued column can hold, known from its metadata alone:
-  // true/false, or the texts of its IF/SWITCH formula (never its data); null when they are not known
-  const knownTexts = (c, type) => { if (type === 'boolean') return ['False', 'True']; const e = metaOf(c).expr || (Array.isArray(c.expression) ? c.expression.join('\n') : typeof c.expression === 'string' ? c.expression : '');
-    if (!/^\s*(IF|SWITCH)\s*\(/i.test(e)) return null; const seen = new Map(); (e.match(/"(?:[^"]|"")*"/g) || []).forEach((x) => { const v = x.slice(1, -1).replace(/""/g, '"'); if (!seen.has(v.toLowerCase())) seen.set(v.toLowerCase(), v); });
-    return seen.size >= 2 && seen.size <= 6 ? [...seen.values()] : null; };
+  // true/false, or the texts its IF/SWITCH formula returns (never its data); null when they are not known
+  const knownTexts = (c, type) => { if (type === 'boolean') return ['False', 'True']; const r = distinctResults(c); return r && r.length >= 2 && r.length <= 6 ? r : null; };
   // S5: a column with many values: a lookup table's own name column (Product Name in Products), or a detail place
   // (a city, an address, a postcode: by the model's data category, or its whole words)
   const DETAIL_PLACE = /^(city|address|place|postalcode|postcode|zip|latitude|longitude|weburl)$/i;
@@ -502,7 +524,7 @@
     shown.forEach((t) => {
       t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = measureField(t, m, all);
         measures.push(x); });
-      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const type = String(c.dataType || 'string').toLowerCase();
+      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const type = colType(c);
         // (round 12, #17: a month or day name the model itself sorts is ordered: a table sorts it by itself)
         // (round 23: lang and i, the column's place, for the language rule: text columns only; non-enumerable, so the
         // fields given out keep their shape)

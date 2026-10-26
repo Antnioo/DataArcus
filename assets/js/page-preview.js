@@ -146,9 +146,11 @@
     return out;
   }
 
+  // (SQ13, V1-S2: "label length unknown" read as an error to a person who did not ask) the labels note says plainly
+  // that the axis labels come from the data, which the preview does not have
   const WORDS = {
-    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'label length unknown', slant: 'labels may slant' },
-    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'طول التسميات غير معروف', slant: 'قد تميل التسميات' }
+    en: { preview: 'preview', cut: 'cut off', overlap: 'overlap', small: 'too small', page: 'Preview of the page', visuals: 'visuals', flags: 'to check', labels: 'labels from your data', slant: 'labels may slant' },
+    ar: { preview: 'معاينة', cut: 'مقطوع', overlap: 'تداخل', small: 'صغير جدًا', page: 'معاينة الصفحة', visuals: 'عناصر', flags: 'للمراجعة', labels: 'التسميات من بياناتك', slant: 'قد تميل التسميات' }
   };
   const GREY = '#A3ACBB', WARN = '#B7791F';
 
@@ -200,6 +202,13 @@
       case 'panel': return '';
       default: return R(0.3, 0.3, 0.4, 0.4, GREY, '.5');
     }
+  }
+
+  // (SQ13, V1-S4) a chart over time (v.timeDir, from fromFiles): an arrow along the bottom of its plot toward later time
+  function timeArrow(k, ib, v, u) {
+    if (!v || !v.timeDir || !/^(line|column)$/.test(k) || ib.w < 24 * u || ib.h < 12 * u) return '';
+    const later = v.timeDir === 'rtl' ? -1 : 1, x0 = ib.x + ib.w * (later > 0 ? 0.04 : 0.96), x1 = ib.x + ib.w * (later > 0 ? 0.96 : 0.04), y = ib.y + ib.h, a = Math.max(3 * u, Math.min(ib.h * 0.04, 10 * u));
+    return `<path class="td" data-time="${v.timeDir}" d="M${n(x0)},${n(y)} L${n(x1)},${n(y)} M${n(x1 - later * a)},${n(y - a)} L${n(x1)},${n(y)} L${n(x1 - later * a)},${n(y + a)}" fill="none" stroke="${GREY}" stroke-width="${n(Math.max(u, ib.h * 0.006))}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
 
   /** The SVG picture of a page. opts: { lang: 'en' | 'ar', width (display width, px; default 800), flags (more flags,
@@ -283,7 +292,7 @@
       } else inner = (v.grid === 'dotted' && /^(bar|column|line)$/.test(k) ? [0.25, 0.5, 0.75].map((g) => (k === 'bar'
         ? `<line class="grid" x1="${n(ib.x + ib.w * g)}" y1="${n(ib.y)}" x2="${n(ib.x + ib.w * g)}" y2="${n(ib.y + ib.h)}"`
         : `<line class="grid" x1="${n(ib.x)}" y1="${n(ib.y + ib.h * g)}" x2="${n(ib.x + ib.w)}" y2="${n(ib.y + ib.h * g)}"`) + ` stroke="${GREY}" stroke-width="${n(u)}" stroke-dasharray="${n(u)} ${n(3 * u)}" opacity=".7"/>`).join('') : '')
-        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, v));
+        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, v)) + timeArrow(k, ib, v, u);
       return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
@@ -339,6 +348,23 @@
   const th1 = (theme, type, card, key) => { const vs = (theme && theme.visualStyles) || {}, f = (t) => (((vs[t] || {})['*'] || {})[card] || [])[0]; const e = f(type) || f('*'); return e && e[key] != null ? e[key] : null; };
   const nameOfProj = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef != null ? x.nativeQueryRef : (((x.field || {}).Column || (x.field || {}).Measure || {}).Property) || '');
   const altOf = (j) => strOf(props(((j.visual || {}).visualContainerObjects || {}).general).altText);
+  // (SQ13, V1-S4: the placeholder line looked the same whichever way time ran) which way a chart over time runs, from its
+  // settings as Desktop reads them (report-mirror.js chartRtl writes them): 'rtl' when its continuous axis is inverted
+  // (invertAxis; a categorical axis ignores it) or it is sorted descending by its category (or the order key it carries
+  // in its tooltips), 'ltr' sorted ascending or not sorted; null when its category is not time (by its name) or it is
+  // sorted by something else. Settings only, never a value; the preview's cue, never written
+  const TIME_NAME = /\b(date|dates|day|days|week|weeks|month|months|quarter|quarters|qtr|year|years|yr|fy|period|periods)\b|تاريخ|يوم|أسبوع|شهر|ربع|سنة|عام|فترة/i;
+  function timeDirOf(vis, c) {
+    const f = c.field || {}, e = f.Column || f.Measure || ((f.Aggregation || {}).Expression || {}).Column || {};
+    if (!TIME_NAME.test(String(e.Property || '') + ' ' + nameOfProj(c))) return null;
+    const ax = props((vis.objects || {}).categoryAxis);
+    if (boolOf(ax.invertAxis) === true && strOf(ax.axisType) !== 'Categorical') return 'rtl';
+    const q = vis.query || {}, s = ((q.sortDefinition || {}).sort || [])[0];
+    if (!s) return 'ltr';
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b), tips = ((((q.queryState || {}).Tooltips || {}).projections) || []).filter((x) => x && x.field);
+    if (!(same(s.field, c.field) || tips.some((x) => same(x.field, s.field)))) return null;
+    return s.direction === 'Descending' ? 'rtl' : 'ltr';
+  }
   function settingsOf(j, type, theme, pageId) {
     const vis = j.visual || {}, vco = vis.visualContainerObjects || {}, ob = vis.objects || {}, tc = (theme && theme.textClasses) || {}, out = {};
     const tp = props(vco.title), pad = props(vco.padding);
@@ -396,6 +422,7 @@
     if (/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
       const c = (((qs.Category || {}).projections) || []).find((x) => x && x.field);
       if (c) { out.category = nameOfProj(c); out.labelSize = numOf(props(ob.categoryAxis).fontSize) || +th1(theme, type, 'categoryAxis', 'fontSize') || +(tc.label || {}).fontSize || 9; }
+      const td = c ? timeDirOf(vis, c) : null; if (td) out.timeDir = td;
     }
     return out;
   }

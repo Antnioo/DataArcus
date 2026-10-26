@@ -124,9 +124,9 @@ try {
   chk(() => a1[0] === 'ltr' && +a1[3] > +a1[1] && a2[0] === 'rtl' && +a2[3] < +a2[1], () => `V1-S4b. an arrow on the axis points toward later time (left to right in English, right to left on the Arabic page): ${JSON.stringify([a1, a2])}`);
   chk(() => !/class="td"/.test(svgOf(byRegion)) && !/class="td"/.test(P.render(P.fromSlots([{ kind: 'line', x: 0, y: 0, w: 400, h: 300 }], { w: 1280, h: 720 }))), () => 'V1-S4c. no arrow on a chart by a category that is not time, nor on a page drawn from slots (nothing says how its time runs)');
   // the report's own pages: create_report's build in English and Arabic (its charts over time as the writer turns them)
-  const m = loadModel('cal/M.SemanticModel', { root: ROOT });
+  const { reportRun } = await import('./lib/report-run.mjs'), { withLookDefaults } = await import('./lib/report-inputs.mjs');
   for (const [lang, want] of [['en', 'ltr'], ['ar', 'rtl']]) {
-    const design = planLayout({ layout: 'exec', lang }).design, built = PL.plannedReport({ m, tables: m.tables, design, lang }, { second: false, title: 'Time' });
+    const design = planLayout({ layout: 'exec', lang }).design, built = get(() => reportRun(withLookDefaults({ path: 'cal/M.SemanticModel', name: 'Time', lang, design, secondPage: false }), 'build'));
     const files0 = built.files ? built.files.filter((f) => /^[^/]+\.Report\//.test(f.path)).map((f) => ({ path: f.path.replace(/^[^/]+\.Report\//, ''), data: f.data })) : [];
     const pg = P.fromFiles(files0, { rtl: lang === 'ar' })[0], line = pg ? pg.visuals.find((v) => v.type === 'lineChart') : null;
     chk(() => line && line.timeDir === want, () => `V1-S4d ${lang}. the written line chart over time reads ${want}: ${JSON.stringify(line && { cat: line.category, t: line.timeDir })}`);
@@ -155,11 +155,11 @@ try {
 
 // ---------- 0.2.9-reader-S13: no type is unknown, never text ----------
 {
-  const T = { name: 'T', columns: [{ name: 'Month' }, { name: 'Month Number' }, { name: 'Code' }] };
+  const T = { name: 'T', columns: [{ name: 'Month Name' }, { name: 'Month Number' }, { name: 'Code' }] };
   const fo = Bind.fieldOf(T, 'Code') || {};
   chk(() => fo.type === 'unknown', () => `R-S13a. a column given with no type is unknown in fieldOf: ${JSON.stringify(fo)}`);
-  const sb = Bind.sortColumnFor(T.columns, 'Month');
-  chk(() => sb && sb.name === 'Month Number', () => `R-S13b. "Month Number" with no type is read by its name (a number), so it sorts "Month", as a DAX table's: ${JSON.stringify(sb)}`);
+  const sb = Bind.sortColumnFor(T.columns, 'Month Name');
+  chk(() => sb && sb.name === 'Month Number', () => `R-S13b. "Month Number" with no type is read by its name (a number), so it sorts "Month Name", as a DAX table's: ${JSON.stringify(sb)}`);
   const src = fs.readFileSync(path.join(HERE, '../assets/js/pbip-bind.js'), 'utf8');
   chk(() => !/dataType \|\| 'string'|type \|\| 'string'/.test(src), () => 'R-S13c. pbip-bind.js has no "|| \'string\'" type fallback left');
 }
