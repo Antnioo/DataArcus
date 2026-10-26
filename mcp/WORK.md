@@ -14,6 +14,7 @@ section of `WORK-2026-10-25.md`).
   [SQ8](work/SQ8.md), [SQ9](work/SQ9.md), [SQ10](work/SQ10.md), [SQ11](work/SQ11.md), [SQ13](work/SQ13.md).
   Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
 - Running: [SQ12](work/SQ12.md) (docs and memory), SQ14, SQ15 (one item per builder; SQ15a the reader).
+- [GL1](work/GL1.md) (the glass look): pushed on `feat/0.3.1-gl1`; its lab joins the laptop run.
 - [LR1](work/LR1.md) (the laptop run of 26 Oct, five items): pushed on `fix/0.3.1-lr1`, waits for the reviewer.
 
 ## Next step

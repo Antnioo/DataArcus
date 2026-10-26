@@ -15,7 +15,7 @@
   CHANGELOG, WORK.md, TOOLS.md. Not BD1's (dax-functions.mjs, arabic-lens.mjs, bidi-lab.mjs) nor CS1's (redesign.mjs,
   read-report/check-report formatting inventory, the redesign's text classes).
 - **Base:** `feat/0.3.1-gl1` from `origin/integration/0.3.1` (0cbb017). Push only this branch; the reviewer merges.
-- **Expected checks (written before the work):** the new suite `glass` about 45 checks, red first (no look, no
+- **Expected checks:** (written before the work) the new suite `glass` about 45 checks, red first (no look, no
   picture); `run-all theme-generator design-engine pbip`: the baseline's counts plus the new checks, every existing
   design's theme byte for byte (the look is off by default: "auto"); `npm test -- report` and `-- core`: the baseline's
   suites PASS plus `glass`; full run: 91 -> 92 suites.
