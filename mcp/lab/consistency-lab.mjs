@@ -14,7 +14,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const LAB_NAME = 'Store Ops';
 const Lv = (v) => ({ expr: { Literal: { Value: v } } }), Ls = (t) => Lv("'" + String(t).replace(/'/g, "''") + "'");
 const font = (f) => Ls(f), size = (n) => Lv(n + 'D'), on = Lv('true');

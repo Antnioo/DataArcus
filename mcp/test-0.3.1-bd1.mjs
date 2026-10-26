@@ -36,7 +36,7 @@ function evalDax(f, args) {
   }).join('\n');
   const lib = { IF: (c, a, b) => (c ? a : b), ISBLANK: (x) => x == null, BLANK: () => null, UNICHAR: (n) => String.fromCodePoint(n), ABS: Math.abs,
     FORMAT: (x, fmt) => { if (fmt !== '0') throw new Error('FORMAT ' + fmt); return String(Math.round(x)); }, TRUE: () => true, FALSE: () => false };
-  return new Function(...Object.keys(lib), ...params, js)(...Object.values(lib), ...args);   // eslint-disable-line no-new-func
+  return new Function(...Object.keys(lib), ...params, js)(...Object.values(lib), ...args);
 }
 
 // ---------- D: DA.StoryTitle's Arabic starts with U+200F (the measured pattern), and ends with it after an isolate ----------

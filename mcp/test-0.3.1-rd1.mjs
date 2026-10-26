@@ -15,6 +15,7 @@ import './test-env.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
@@ -22,7 +23,7 @@ const TMP = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataar
 const W = path.join(TMP, 'work'), LAB = path.join(W, 'lab');
 // the modules read DATAARCUS_ROOT when they load: set before they are imported
 process.env.DATAARCUS_ROOT = W;
-const HERE = path.dirname(new URL(import.meta.url).pathname);
+const HERE = path.dirname(fileURLToPath(import.meta.url));   // (not URL.pathname: "/D:/..." on Windows)
 const rdj = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const copyDir = (a, b) => fs.cpSync(a, b, { recursive: true });
 
