@@ -64,3 +64,40 @@
 4. **The approval page** (customVisualsShown, `shownOf`): "In short" with the lead line and the three levels, then per
    replacement "confidence: low (no package in the report: ...)", every "loses ...", and "second option: ..." with its
    key and its losses. Test: NC2-4.
+
+## CHANGELOG line
+"Custom visuals replaced, said honestly" in `mcp/CHANGELOG.md` [Unreleased]: the lead line and the levels (high only with
+the package and a naming id), each loss in words and the settings kept, the bullet's markers and the heatmap's matrix,
+the earlier replacement offered second (`customVisualsSecond`).
+
+## Decisions I made
+1. The meaning's own `confidence` (meaningOf, read by test-0.2.9v) is unchanged; the evidence-based one is nativeFor's,
+   which the plan, read_report (`meaningInReport`) and the approval page show. "A known id" = the id's words (FAMILY_HINTS)
+   named the kind written and the fields could show it; a hint from the format objects does not count. Without a
+   package a network keeps the meaning's level, capped at medium.
+2. The bullet's target: error bars are the closest on a bar (Microsoft's capabilities: `error`, markers shortDash and
+   longDash; Learn "Add error bars": by field, absolute), but `error.errorRange` is `{"errorRange":{}}` in the schema, its
+   JSON not described or measured: not written (measure, don't estimate). A constant line (`y1AxisReferenceLine.value`,
+   numeric) is one value per chart; a card's or KPI's target one value. So the combo with markers only: every property
+   is a plain literal of `lineStyles` in the capabilities (strokeShow, showMarker, markerShape longDash, markerSize 12).
+3. The heatmap's matrix: Rows the year (a whole-number "Year") then the month (a sorted name, or its number), Columns the
+   weekday (a sorted name, or its number), all from the date column's own table, matched by their names' words only
+   (never shown, never followed). The shading is the round-13 FillRule (linearGradient2, nullColoringStrategy asZero)
+   on `values.backColor`, selector all data points plus the value's queryRef; ends #f3f8fe to #8cc2f5, light enough
+   for dark text (a dark theme's light text would read poorly on them: for the laptop).
+4. The second option is a create_report input (`customVisualsSecond`, keys "page:x,y", no names), in REPORT_LOOK so it
+   is pinned and create_report takes the plan's when left out; an unknown key refuses the plan.
+5. `visual-replace.js` has no `.min.js` and no website page loads it (MCP-only): `build:min` reports all 74 match; no
+   `?v=`, CSP, ar-pages or sitemap change; `test-site-config` PASS.
+6. The panels split (unanswered shared axes) of the bullet's combo uses clustered bar charts (the custom visual's own
+   bars); the target markers are written only on the combo, never on a panel.
+
+## For the laptop (the lab's native copy in Desktop, with `mcp/lab/CUSTOM-VISUALS-LAB.md`)
+1. Page 2, the bullet: columns of Total Sales per branch with a long dash at each branch's Sales Target, no line between
+   the dashes, one value axis. If the line still draws or the dashes are missing: screenshot and the visual.json.
+2. Page 4, the calendar heatmap: a matrix, rows 2025 and 2026 (then their months: does it open at years? "Expand all
+   down one level"), columns Sun to Sat in order, cells shaded pale to mid blue by Total Sales, the text readable.
+3. The plan's words: the lead line, each confidence with its evidence, the losses and the two second options as the
+   approval page shows them (full-size crop of that section).
+4. Optional, for a later item: save a bar chart with error bars (by field, upper and lower bound the target) in Desktop
+   and keep its visual.json: it would measure `error.errorRange`, the closer target on a bar.
