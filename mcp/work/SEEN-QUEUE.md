@@ -188,7 +188,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S5 | page names keep format characters | OBSOLETE | informational, no action (caller's names, by design) | — |
 | 0.2.9-writer-S6 | iconH never called; comment says 320 x 240 | DONE f026240 | `pbip-sizing.js:103` no iconH( call; `pbip-page.js:169` "320 x 240" | drop iconH, fix comment to 320 x 284 · S · none · writer → **SQ1** |
 | 0.2.9-writer-S7 | B-06/B-23 text not in repo; readings may be partial | OWNER | B-list absent from repo (grep) | confirm B-06 = text column room 12 letters, B-23 = table grid entry |
-| 0.2.9-writer-S8 | golden pins no table text size | OPEN | `mcp/test-models/golden-expected.json` no table size key | pin the table text size per task in golden-expected · S · low · tests-ci → **SQ11** |
+| 0.2.9-writer-S8 | golden pins no table text size | DONE (SQ11 478d565) | `mcp/test-models/golden-expected.json` no table size key | pin the table text size per task in golden-expected · S · low · tests-ci → **SQ11** |
 | 0.2.9-writer-S9 | column top N uses 12-letter label guess | OWNER | `scripts/tests/DESKTOP-TESTS.md:2493` S5 still to measure | laptop: run DESKTOP-TESTS S5 (columns per width), set categoryFit from it |
 | 0.2.9-writer-S10 | row beside short rail keeps width; ~200 gap | OPEN | `assets/js/design-engine.js:811-812` only slots wholly below take column | verify first; widen rows beside a shortened rail · M · low · design → **SQ13** |
 | 0.2.9-writer-S11 | S3, S6, D9-D12 not the writer's | OBSOLETE | informational, no action (routing) | — |
@@ -405,7 +405,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| A2-S1 | website run-all/ci-sum does not fail "PASS 0 checks" | OPEN | `scripts/ci-sum.mjs:70-75` website path has no zero-checks | add zero-checks problem when count(r.rest)===0 in website branch · S · low · tests-ci → **SQ11** |
+| A2-S1 | website run-all/ci-sum does not fail "PASS 0 checks" | DONE (SQ11 478d565) | `scripts/ci-sum.mjs:70-75` website path has no zero-checks | add zero-checks problem when count(r.rest)===0 in website branch · S · low · tests-ci → **SQ11** |
 | A2-S2 | test.mjs alone prints every problem, capped via npm test | OBSOLETE | informational, works as designed | informational, no action |
 | A2-S3 | fuzz check count differs Windows vs Linux | OBSOLETE | ci-sum checks identities not counts (`mcp/docs/TESTS.md:26`) | informational, no action |
 | A2-S4 | TESTS.md says website has 13 suites | DONE | `mcp/docs/TESTS.md:35` "20 suites: ALL there" | - |
@@ -414,7 +414,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A2-S7 | mcp/package.json description lists 4 tools | OPEN | `mcp/package.json:4` four tools only | describe all tools generically (no list) · S · none · packaging → **SQ9** |
 | A2-S8 | beta page "A real run" is 0.2.8 | DUPLICATE | `power-bi-mcp/index.html:188` "DataArcus 0.2.8" | of 0.2.9-design-S11 |
 | A2-S9 | app prompt (elicitation) lacks "Not checked before writing" | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:101` promptSummary ignores exact.notChecked | add a notChecked line in promptSummary within the cap · S · low · approval → **SQ3** |
-| A2-S10 | page's "never returns data values" pinned only as text | OPEN | `mcp/test-0.3.0-approval-disclosure.mjs:175` text; T1 pin covers reads only | verify first: assert a fixture data value never appears on the page · S · low · approval → **SQ11** |
+| A2-S10 | page's "never returns data values" pinned only as text | DONE (SQ11 16c4389) | `mcp/test-0.3.0-approval-disclosure.mjs:175` text; T1 pin covers reads only | verify first: assert a fixture data value never appears on the page · S · low · approval → **SQ11** |
 | A2-S11 | SKILL.md omits metric switcher, terms, gulfDates | OPEN | no match in `mcp/skills/report-design/SKILL.md` | add one line each to SKILL.md (both copies) · S · none · tools-docs → **SQ9** |
 | A2-S12 | SKILL.md gallery limits vaguer than code | OPEN | `mcp/skills/report-design/SKILL.md:164-168` "few members" | state waterfall <=12, small multiples <=9, combo time or ordered · S · none · tools-docs → **SQ9** |
 
@@ -427,7 +427,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A3-S3 | twin/EN-AR keep English flip-card faces and switcher choices | OWNER | listed under cannot (by design) | decide whether a second Arabic script per report is worth building |
 | A3-S4 | twin plan answer near 40,000 cap; textsFrom proposed | DONE | Q1: `mcp/lib/twin-plan.mjs:44-58`, `create_arabic_twin.mjs:46` textsFrom | - |
 | A3-S5 | switcher chart projections carry no displayName | OWNER | `mcp/lib/metric-switcher.mjs:121` proj(first), no name | laptop: check the switcher's charts show the field parameter's labels |
-| A3-S6 | health-project's own report not twinned in sweep | OPEN | `mcp/test-0.3.0-arabic-sweep.mjs:51` F3 has no `own` | add own: health pbip to F3 · S · low · tests-ci → **SQ11** |
+| A3-S6 | health-project's own report not twinned in sweep | DONE (SQ11 67a17b8) | `mcp/test-0.3.0-arabic-sweep.mjs:51` F3 has no `own` | add own: health pbip to F3 · S · low · tests-ci → **SQ11** |
 
 ### AF1
 
@@ -533,7 +533,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | DS1-S1 | MCP page hero, meta, facts say only "Claude Desktop" | OWNER | `power-bi-mcp/index.html:17,116,121`; AR `ar/power-bi-mcp/index.html:16` | owner: name other MCP clients in hero/meta, or keep one-click wording |
 | DS1-S2 | homepage FAQ 7 says "in Claude Desktop" | DUPLICATE | `index.html:679` kept: the one-click path | DS1-S1 |
 | DS1-S3 | licensing guide: rest not re-checked against Learn | DONE 0c69f686 (SQ8) | `articles/article-power-bi-licensing-guide.html:196` only Pro limits checked | verify first: re-check every figure against Learn, EN and AR · M · low · website → **SQ8** |
-| DS1-S4 | GitHub main links need public repo; anchor checked by eye | OPEN | repo public today; anchors match `mcp/README.md:102`, `mcp/PRIVACY.md:62` | site test: each blob link's anchor matches a local heading · S · low · tests-ci → **SQ11** |
+| DS1-S4 | GitHub main links need public repo; anchor checked by eye | DONE (SQ11 de403a2) | repo public today; anchors match `mcp/README.md:102`, `mcp/PRIVACY.md:62` | site test: each blob link's anchor matches a local heading · S · low · tests-ci → **SQ11** |
 
 ### E
 
@@ -595,7 +595,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| G1-S1 | sweep-s1 H1 message says "every script of package.json's test" | OPEN | `mcp/test-0.3.0-sweep-s1.mjs:173` old wording | reword H1 to "every script in mcp/tests.json" · S · none · tests-ci → **SQ11** |
+| G1-S1 | sweep-s1 H1 message says "every script of package.json's test" | DONE (SQ11 478d565) | `mcp/test-0.3.0-sweep-s1.mjs:173` old wording | reword H1 to "every script in mcp/tests.json" · S · none · tests-ci → **SQ11** |
 | G1-S2 | 1-3 Oct archive open items never closed one by one | OWNER | `mcp/work/archive/WORK-2026-10-01-04.md:2091` Open items list | owner: one pass, close or carry each item |
 | G1-S3 | archive README index long (154 lines) | OBSOLETE | informational: `mcp/work/archive/README.md` 155 lines, fine with search |  |
 | G1-S4 | SOURCE.md bundle af7b264 vs json-schemas head be65eaa | OBSOLETE | informational, no update needed (`mcp/schemas/SOURCE.md:4`) |  |
@@ -760,7 +760,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | M1-S2 | twin's mirrored table loses "Total" | OWNER | `mcp/WORK.md:27` open decision M1 Seen 2 | decide the writer's table design for the twin, after a laptop check |
 | M1-S3 | twin keeps number continuous axes left to right | OWNER | `mcp/lib/twin-model.mjs:25` isDateCol dates only | measure a reversed number axis on the laptop, then pass number columns |
 | M1-S4 | narrow Arabic slicer slot gives negative widths | DONE f026240 | `assets/js/pbip-page.js:657-658` sw has no minimum | drop Reset (or a slicer) when sw < minimum, say it in the plan · M · low · writer → **SQ1** |
-| M1-S5 | parity suite skips mobile.json and Reset formatting | OPEN | `mcp/test-0.3.1-mirror-parity.mjs:104` slicerBar known; no mobile check | compare mobile.json and Reset objects in the parity suite · M · none · tests-ci → **SQ11** |
+| M1-S5 | parity suite skips mobile.json and Reset formatting | DONE (SQ11 b8ee323) | `mcp/test-0.3.1-mirror-parity.mjs:104` slicerBar known; no mobile check | compare mobile.json and Reset objects in the parity suite · M · none · tests-ci → **SQ11** |
 | M1-S6 | matrix columns cut at top 100 | OBSOLETE | informational: Power BI's own limit, nothing to change |  |
 | M1-S7 | R1's matrix sentence stays | OBSOLETE | informational, no action: MATRIX_SAID `mcp/lib/twin-plan.mjs:25` |  |
 
@@ -784,7 +784,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | Q1-S1 | T1's mutation test is linted, 0 findings | OBSOLETE | informational, no action (`package.json:11` lints mcp) |  |
-| Q1-S2 | HTML pages' inline scripts are not linted | OPEN | `package.json:11` "eslint mcp assets/js"; `eslint.config.mjs` no html files | add eslint-plugin-html (or extract scripts) for tools/*.html, articles · M · low · tests-ci → **SQ11** |
+| Q1-S2 | HTML pages' inline scripts are not linted | DONE (SQ11 de403a2) | `package.json:11` "eslint mcp assets/js"; `eslint.config.mjs` no html files | add eslint-plugin-html (or extract scripts) for tools/*.html, articles · M · low · tests-ci → **SQ11** |
 | Q1-S3 | Two Arabic month lists (arabic-calendar MONTHS, pbip-query AR_MONTHS) | OPEN | `assets/js/arabic-calendar.js:13`, `pbip-query.js:217`; third in `mcp/lib/shadow-model.mjs:22` | pbip-query reads arabic-calendar's MONTHS (T-5 keeps them equal meanwhile) · M · low · calendar → **SQ14** |
 | Q1-S4 | R5's planted titles never reach the report | DONE | 05f55b0 (T-4) `mcp/test-0.2.9i.mjs:145-150` checks the report's real titles |  |
 | Q1-S5 | calendar-generator.js 40% unrun; website suites lack coverage | OPEN | c8 job `tests.yml:244-279` covers the MCP npm test only | Chromium coverage (page.coverage) over website suites, report only · L · low · tests-ci → **SQ15** |
