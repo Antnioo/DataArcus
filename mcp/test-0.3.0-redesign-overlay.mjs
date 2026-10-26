@@ -94,7 +94,9 @@ try {
   const P = {}; (R.patches || []).filter((x) => x.page === 'p1overview').forEach((x) => { (P[x.visual] = P[x.visual] || {})[x.pointer.split('/').pop()] = x.to; });
   const at = (v, o) => Object.assign({}, o, P[v] || {}), O = { colRegion: [40, 250, 600, 430], ndCol: [40, 250, 600, 430], lineMonth: [660, 250, 580, 430], ndLine: [660, 250, 580, 430], ttlLine: [676, 258, 240, 36] };
   const B = (v) => { const o = O[v], b = at(v, { x: o[0], y: o[1], width: o[2], height: o[3] }); return [b.x, b.y, b.width, b.height]; };
-  const want = { colRegion: [40, 248, 602, 432], ndCol: [40, 248, 602, 432], lineMonth: [658, 248, 582, 432], ndLine: [658, 248, 582, 432], ttlLine: [674, 256, 240, 36] };
+  // (0.3.1 RD1, changed on purpose: the row sits 16 below what stays above it, the group grpKpi ending at 230, so y 246
+  // (was 248: 18 from it), and keeps its own height 430 (was rounded up to 432); the title box follows, 254)
+  const want = { colRegion: [40, 246, 602, 430], ndCol: [40, 246, 602, 430], lineMonth: [658, 246, 582, 430], ndLine: [658, 246, 582, 430], ttlLine: [674, 254, 240, 36] };
   Object.entries(want).forEach(([v, b]) => chk(() => JSON.stringify(B(v)) === JSON.stringify(b), () => `O2. ${v} is planned at ${b.join(', ')}: ${B(v).join(', ')}`));
   // ---------- O3: no chart narrower without a why ----------
   const narrow = p1.changes.filter((c) => c.from && c.to && c.to.w < c.from.w && !c.narrower);

@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A redesign that cleans up evenly:** the rows of a redesigned page now sit exactly 16 apart and 16 from the
+  page's edges, so two rows never touch. Text boxes, shapes, images and custom visuals still stay where they are: the
+  rows keep 16 from them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy
+  keeps the copy's own name: "Gulf Retail Review native" becomes "Gulf Retail native redesigned", never the name the
+  original's redesign gets; a long name that is already another report's gets a number.
 - **One text set for a report you built by hand:** check_report now says where visuals mix fonts or sizes ("visual
   titles: 7 at 14pt, 2 at 11pt"), page by page. A redesign with `consistentText` makes them one: each visual's own font,
   size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
