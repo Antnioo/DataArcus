@@ -137,5 +137,5 @@ slicers and buttons on the picture, Arabic mirrored. Fill the table in GLASS-LAB
 3. generate_theme writes the theme file only; a user of the theme alone needs the site's background download.
 4. The writer has no matrix (pivotTable) of its own; the lab builds one from the table to see the look on it.
 5. The picture adds about 1-2 s to a glass create_report (the plan and the write each draw it, two pages).
-6. `scripts/check-min.mjs` could not compare ?v= stamps here (a shallow clone: no merge base with origin/main); the
-   three changed files were stamped 20261026gl1 by hand on both EN pages, the AR page regenerated.
+6. (none further: check-min compared the ?v= stamps against main after a full fetch: every changed .min.js has a new
+   stamp; sitemap-lastmod: every date matches.)
