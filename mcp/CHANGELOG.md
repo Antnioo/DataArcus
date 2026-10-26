@@ -142,6 +142,9 @@ package's manifest; this file says what is in it.
   the report will have, in English and Arabic, and says when one was added to fill the design's slicer places. An
   Arabic name drafted for a field such as "Year Month" now reads «الشهر والسنة», never word for word. The Arabic approval
   page of the sample project shows its details in Arabic, the English under each.
+- **Arabic chart titles with «حسب»:** an Arabic report on a model with English names titles its charts «Total Sales حسب
+  Region» and «ترتيب Region حسب Total Sales», in the website's download and the MCP alike, instead of the English name
+  with its column in brackets. The English words keep their reading order (U+200F and isolates).
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
