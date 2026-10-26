@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261026sq15b', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261025sq4', '/assets/js/pbip-query.min.js?v=20261026sq14', '/assets/js/pbip-sizing.min.js?v=20261025sq4', '/assets/js/pbip-notes.min.js?v=20261019l2',
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261026sq15b', '/assets/js/story-titles.min.js?v=20261026lr2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261025sq4', '/assets/js/pbip-query.min.js?v=20261026sq14', '/assets/js/pbip-sizing.min.js?v=20261025sq4', '/assets/js/pbip-notes.min.js?v=20261019l2',
       '/assets/js/label-limits.min.js?v=20261026sq14', '/assets/js/pbip-page.min.js?v=20261025sq4', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261026sq15b'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);

@@ -87,12 +87,16 @@
   // (0.3.0 R2, the owner's must-fix: an Arabic report from an English-named model said "Web Orders Total Score by Plan
   // Group") the report's word decides the title's language, not the measure's script: two English names in an Arabic
   // report are not joined with an English word; the measure's name alone, a field name the plan lists as kept in English
+  // (0.3.1 LR2, the owner, 26 Oct: "Use «حسب»" for the Arabic download's chart titles; the laptop saw "Total Sales
+  // (Region)", the measure alone and a bracket) in an Arabic report two names are always joined with «حسب», whatever
+  // their script: «Total Sales حسب Region»; the writer isolates the Latin runs (pbip-export.js isolateFiles). An English
+  // report is as before
   function join(m, c, by) {
     if (!m || !c) return m || null;
+    if (arabic(by)) return m + ' ' + by + ' ' + c;
     const ar = arabic(m);
     if (ar !== arabic(c)) return m;
-    if (arabic(by) && !ar) return m;
-    return m + ' ' + (ar ? (arabic(by) ? by : 'حسب') : (arabic(by) || !by ? 'by' : by)) + ' ' + c;
+    return m + ' ' + (ar ? 'حسب' : (!by ? 'by' : by)) + ' ' + c;
   }
 
   // Every title a visual can take, the full one first, then one per shortening rule that changes it. Each: { text, m, c }.
@@ -126,8 +130,8 @@
   // when the forms run out (the caller keeps its own rule).
   function alternate(m, c, nth, ranked, by) {
     if (!m) return null;
-    const ar = arabic(m), withC = !!c && ar === arabic(c);
-    if (arabic(by) && !ar) return null;   // (R2: no English sentence in an Arabic report; the caller names the column)
+    // (LR2: an Arabic report's sentences are Arabic, whatever the names' script: «ترتيب Region حسب Total Sales»)
+    const inAr = arabic(by), ar = inAr || arabic(m), withC = !!c && (inAr || ar === arabic(c));
     const forms = ar
       ? (withC ? [ranked && `ترتيب ${c} حسب ${m}`, `${m} لكل ${c}`, `توزيع ${m} حسب ${c}`, `${m} عبر ${c}`] : [ranked && `الترتيب حسب ${m}`, `توزيع ${m}`, `نظرة على ${m}`])
       : (withC ? [ranked && `${c} ranked by ${m}`, `${m} per ${c}`, `${m} breakdown by ${c}`, `${m} across ${c}`] : [ranked && `Ranked by ${m}`, `${m} breakdown`, `${m} overview`]);
