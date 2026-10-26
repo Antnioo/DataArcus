@@ -111,6 +111,9 @@ package's manifest; this file says what is in it.
 - **Plans explain themselves more exactly:** a format script already in the folder is shown as already there
   instead of as a new file, the Ramadan note names the Hijri-year column you confirmed, an English right-to-left
   table's total row is called "Total", and the English-and-Arabic plan says what stays English.
+- **Arabic and Sharjah calendars, finished:** an Arabic calendar from the Calendar Generator or add_gulf_calendar
+  gets Arabic labels for its quarters, fiscal year and flags; a Sharjah calendar is checked against Sharjah's weekend
+  and has its own change column; the Health Check card counts in correct Arabic.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
