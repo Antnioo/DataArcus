@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function (GD, AC) {
   const MONTHS = {
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-    ar: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+    ar: AC.MONTHS   // (0.3.1 SQ14) arabic-calendar.js's, the one Arabic month list
   };
   const DAYS = { // index 1 = Sunday (WEEKDAY type 1)
     en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],

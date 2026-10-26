@@ -216,7 +216,8 @@
   };
   // The names a day or month category shows, by its family, to measure them (asBar, Day Short): English, Arabic or Hijri
   // (the calendar generator's names, calendar-generator.js). Arabic: the name has Arabic letters or says so ("(Arabic)").
-  const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  // (0.3.1 SQ14, Q1-S3) the Arabic month names are arabic-calendar.js's MONTHS, the one list (a page loads it first)
+  const AR_MONTHS = (typeof module !== 'undefined' && module.exports ? require('./arabic-calendar.js') : root.DataArcusArabicCalendar).MONTHS;
   const NAMES = {
     day: { en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ar: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] },
     month: { en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ar: AR_MONTHS },
