@@ -78,7 +78,9 @@ const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, 
 // cell takes its direction from its own first letter (dir="auto"), and each quoted name ("..." or «...») is isolated, so
 // it keeps its order and the words around it decide the cell's direction
 const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(/&quot;[^&<]+?&quot;|«[^»<]+»/g, (q) => `<bdi>${q}</bdi>`));
-const rows = (list, ar) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k" dir="auto">${isoText(k, ar)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${isoText(x, ar)}</li>`).join('')}</ul>` : isoText(v, ar)}</td></tr>`).join('')}</table></div>`;
+// (0.3.1 LR1) a cell { en, ar }: on an Arabic page its Arabic, the English line under it (as the writes are); else the English
+const cell = (x, ar) => (x && typeof x === 'object' && typeof x.en === 'string' ? (ar && typeof x.ar === 'string' ? `${isoText(x.ar, true)}<br><span class="note" dir="ltr">${esc(x.en)}</span>` : isoText(x.en, ar)) : isoText(x, ar));
+const rows = (list, ar) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k" dir="auto">${cell(k, ar)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${cell(x, ar)}</li>`).join('')}</ul>` : cell(v, ar)}</td></tr>`).join('')}</table></div>`;
 
 // (R6, the outside audit of 19 Oct, F09 c: the page named the report, not every file) every file a plan writes, by kind,
 // counted, each path folded under its group (no script: <details> opens without one)
@@ -196,6 +198,8 @@ const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['F
   // (SQ3, T1-S9) the report's other headings an Arabic page shows
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة']];
+// (0.3.1 LR1) the sample section's row names in Arabic
+const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات مختلَقة', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
 // with words takes its Arabic words in the Arabic half; a bare count, or words not listed here, stays in the English half
 const COUNT_AR = [[/^(\d+), no Arabic text$/, (n) => `${n}، دون نص عربي`], [/^(\d+), no Arabic name$/, (n) => `${n}، دون اسم عربي`],
@@ -396,7 +400,9 @@ function summaryOf(kind, data) {
       .concat(kinds.length ? [['Written as another kind', kinds.map((k) => `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`)]] : []) });
     // category is the bar chart's field, category2 the column chart's
     const F = p.fields || {}, FL = { kpis: 'KPI cards', measure: 'Charts\' measure', timeAxis: 'Trend axis', category: 'Bar chart by', category2: 'Column chart by', table: 'Table', slicers: 'Slicers' }, PLANNED = { category: 'bar', category2: 'column' };
-    const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => { const v = Array.isArray(F[k]) ? F[k].map(String) : String(F[k]), c = PLANNED[k] && changeOf(PLANNED[k]);
+    // (0.3.1 LR1) the slicers the plan adds to fill the design's slots, named after the ones asked
+    const added = (k0) => (k0 === 'slicers' && Array.isArray(d.slicersAdded) ? d.slicersAdded.map((f) => ({ en: `${String(f)} (added by DataArcus to fill the design's slicer slots)`, ar: `${String(f)} (أضافه DataArcus لملء خانات المقسمات في التصميم)` })) : []);
+    const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => { const v = Array.isArray(F[k]) ? F[k].map(String).concat(added(k)) : String(F[k]), c = PLANNED[k] && changeOf(PLANNED[k]);
       return c ? [`${KIND_NAME[c.to] || 'Chart'} by`, `${v} (${why(c)})`] : [FL[k], v]; });
     sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
@@ -516,9 +522,15 @@ function summaryOf(kind, data) {
   // report is empty) and no script (its .tmdl files are the model itself)
   if (kind === 'sample') {
     const S = d.sample || {}, T = Array.isArray(S.tables) ? S.tables : [], own = pins.create_report || {};
-    sections.push({ heading: 'Sample project (made-up data)', rows: [['What it is', S.what], ['Made up', S.madeUp], ['Folder', S.folder ? `"${String(S.folder)}": a new folder in the working folder` : null],
-      ['To open', S.project], ['Date table', S.dateTable], ['Report', S.report], ['Relationships', S.relationships != null ? String(S.relationships) : null], ['The rows', S.rows]].filter((r) => r[1] != null).map(([k, v]) => [k, val(v)]) });
-    sections.push({ heading: `Tables (${T.length})`, rows: T.map((t) => [String(t.table), `${Number(t.rows)} made-up rows, ${Number(t.columns)} columns${t.measures ? `, ${Number(t.measures)} measures` : ''}`]) });
+    // (0.3.1 LR1) on the Arabic page each row's name and value in Arabic (SAMPLE_AR; the plan's sampleAr, made by
+    // sample-project.mjs from the same facts), the English line under each; a value without its Arabic stays English
+    const SA = own.lang === 'ar' && d.sampleAr && typeof d.sampleAr === 'object' ? d.sampleAr : null, TA = SA && Array.isArray(SA.tables) && SA.tables.length === T.length ? SA.tables : null;
+    const two = (en, ar) => (SA && typeof ar === 'string' ? { en, ar } : en);
+    sections.push({ heading: 'Sample project (made-up data)', rows: [['What it is', S.what, SA && SA.what], ['Made up', S.madeUp, SA && SA.madeUp],
+      ['Folder', S.folder ? `"${String(S.folder)}": a new folder in the working folder` : null, S.folder ? `«${String(S.folder)}»: مجلد جديد في مجلد العمل` : null],
+      ['To open', S.project, SA && SA.project], ['Date table', S.dateTable, SA && SA.dateTable], ['Report', S.report, SA && SA.report], ['Relationships', S.relationships != null ? String(S.relationships) : null, SA && SA.relationships], ['The rows', S.rows, SA && SA.rows]]
+      .filter((r) => r[1] != null).map(([k, v, ar]) => [two(k, SAMPLE_AR[k]), two(val(v), ar == null ? ar : String(ar))]) });
+    sections.push({ heading: `Tables (${T.length})`, rows: T.map((t, i) => [String(t.table), two(`${Number(t.rows)} made-up rows, ${Number(t.columns)} columns${t.measures ? `, ${Number(t.measures)} measures` : ''}`, TA ? String(TA[i]) : null)]) });
     return { title: 'Sample project (made-up data)', sections, files: Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Model (TMDL)', /\.SemanticModel\//i], ['Empty report', /\.Report\//i]]) : null, kind, lang: own.lang === 'ar' ? 'ar' : 'en', titleKey: 'sample' };
   }
   if (kind === 'twin') {

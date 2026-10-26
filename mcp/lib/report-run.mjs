@@ -20,7 +20,7 @@ import { withPlan, readUserFile, writeTree } from './files.mjs';
 import { modelRef, sameModelBeforeWrite } from './plan-keys.mjs';
 import { formatsAnswer, formatsScriptOf } from './fix-scripts.mjs';
 import { hiddenOf } from './hidden-names.mjs';
-import { relsOf, resolveFields, resolvePageFilters, SVG_STATUS, resolveSvgColumns, boundOf, axesProblems, axesOf } from './report-fields.mjs';
+import { relsOf, resolveFields, resolvePageFilters, SVG_STATUS, resolveSvgColumns, boundOf, slicersOf, axesProblems, axesOf } from './report-fields.mjs';
 import { unknownKeys, THEME_MAX, LOGO_MAX, BACKGROUND_MAX, reportPin } from './report-inputs.mjs';
 import { flipAnswer, topSaid, CARD_RULE, modelNotes, phoneAnswer, calendarSaid, tableSmallerSaid, rowLabelSaid, rowLabelSkippedSaid, extRenamedSaid, uniqueFields } from './report-said.mjs';
 import { createRequire } from 'node:module';
@@ -601,7 +601,7 @@ export function reportRun(a, mode) {
     galleryList ? { gallery: { slots: galleryList } } : {}, SW ? { metricSwitcher: switchSaid(SW) } : {}, CO && CO.offered ? { calendarArabic: calendarSaid(CO, shown, { scriptFile: CO.scriptAfterGo, howToApply: CO.howToApply }) } : CO && CO.leftOut ? { calendarArabic: { offered: false, why: CO.why, leftOut: CO.leftOut } } : {});
   };
   // (0.3.0 F7) the fields the report binds, the keys of its formats script (the plan lists exactly these)
-  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
+  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, slicers: slicersOf(r.bound), a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
     icons: icons ? Object.assign(iconsSaid(icons), { pending: icons.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: icons.scriptFile }) : null,
     dax: daxR ? Object.assign(daxSaid(daxR), { pending: daxR.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: daxR.scriptFile }) : null };
 }

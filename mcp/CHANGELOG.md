@@ -137,6 +137,11 @@ package's manifest; this file says what is in it.
   own computers and use what it writes for any purpose, client work included. SUPPORT.md and three GitHub issue forms
   say where to ask (during the beta we answer within 2 working days). The MCP page's "How it works" shows the approval
   step, and PRIVACY.md starts with a one-page summary.
+- **Fixes from a Power BI Desktop run:** a line chart's "last 12 months" on a date table showed 13 months when the
+  data ended mid-month; it now shows exactly 12, the last month with data counted as one. The plan names every slicer
+  the report will have, in English and Arabic, and says when one was added to fill the design's slicer places. An
+  Arabic name drafted for a field such as "Year Month" now reads «الشهر والسنة», never word for word. The Arabic approval
+  page of the sample project shows its details in Arabic, the English under each.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

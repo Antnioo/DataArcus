@@ -110,7 +110,8 @@ try {
   }).map((f) => `${f.id} ${JSON.stringify(f.fix).slice(0, 160)}`);
   const lens = async (p) => { const before = files(), x = await w.call('check_report', { path: p, lens: 'arabic' }), after = files(); answers.push({ p, x, wrote: after.filter((f) => !before.includes(f)) }); return x; };
   // (L1_DUMP=<file>: every lens answer written there, to read them; nothing else changes)
-  const dump = () => { if (process.env.L1_DUMP) fs.writeFileSync(process.env.L1_DUMP, JSON.stringify(answers.map((x) => ({ p: x.p, j: x.x.j })), null, 1)); };
+  // (0.3.1 LR1: its folder made first; a missing one stopped the run with ENOENT)
+  const dump = () => { if (process.env.L1_DUMP) { fs.mkdirSync(path.dirname(process.env.L1_DUMP), { recursive: true }); fs.writeFileSync(process.env.L1_DUMP, JSON.stringify(answers.map((x) => ({ p: x.p, j: x.x.j })), null, 1)); } };
   const F = (j, rule, page) => (j && Array.isArray(j.findings) ? j.findings : []).filter((f) => f.rule === rule && (!page || (f.page && f.page.id === page)));
   const pagesOf = (j) => (j && Array.isArray(j.pages) ? j.pages : []);
 

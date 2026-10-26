@@ -12,6 +12,7 @@ import { ROOT, nothingAt } from './model.mjs';
 import { writeTree } from './files.mjs';
 
 const { SCHEMA } = createRequire(import.meta.url)('../../assets/js/pbip-query.js');
+const { MONTHS: MONTHS_AR } = createRequire(import.meta.url)('../../assets/js/arabic-calendar.js');
 export const SAMPLE_FOLDER = 'Gulf Retail Sample', SAMPLE_NAME = 'Gulf Retail', SAMPLE_REPORT = 'Gulf Retail Sales';
 const FIRST = [2025, 1], MONTHS = 18;   // January 2025 to June 2026
 
@@ -117,6 +118,19 @@ export function sampleSaid(folder) {
     report: `${SAMPLE_NAME}.Report: an empty report (one blank page) on the model, to open the project in Power BI Desktop`,
     madeUp: 'Every name and number in it is made up: no real company, mall, place of business or person.',
     rows: 'The rows are written into the model\'s files only: no answer holds them. Power BI Desktop loads them when the user clicks Refresh.' };
+}
+// (0.3.1 LR1, the laptop's Arabic sample page kept these rows English) the same facts in Arabic, for the Arabic approval
+// page (the English line stays under each); the counts are this file's own
+export function sampleSaidAr(folder) {
+  const S = sampleSaid(folder), [yl, ml] = months()[MONTHS - 1], cities = new Set(BRANCHES.map((b) => b[1])).size, cats = new Set(PRODUCTS.map((p) => p[1])).size;
+  return { project: `ملف المشروع «${S.project}»`,
+    what: `سلسلة متاجر تجزئة خليجية مختلَقة: الفروع ${BRANCHES.length} في ${cities} مدن خليجية، والمنتجات ${PRODUCTS.length} في ${cats} فئات، ومبيعات ${MONTHS} شهرًا بالدرهم الإماراتي (من ${MONTHS_AR[FIRST[1] - 1]} ${FIRST[0]} إلى ${MONTHS_AR[ml - 1]} ${yl}).`,
+    dateTable: `Calendar (معلَّم جدولًا للتاريخ: كل يوم من ${FIRST[0]}-01-01 إلى ${yl}-${String(ml).padStart(2, '0')}-${new Date(Date.UTC(yl, ml, 0)).getUTCDate()})`,
+    report: `${SAMPLE_NAME}.Report: تقرير فارغ (صفحة واحدة فارغة) على النموذج، لفتح المشروع في Power BI Desktop`,
+    madeUp: 'كل اسم ورقم فيه مختلَق: لا شركة ولا مركز تسوق ولا مكان عمل ولا شخص حقيقي.',
+    relationships: `العلاقات: ${S.relationships}`,
+    rows: 'تُكتب الصفوف في ملفات النموذج فقط: لا تحملها أي إجابة. يحمّلها Power BI Desktop عندما ينقر المستخدم Refresh.',
+    tables: S.tables.map((t) => `صفوف مختلَقة: ${t.rows}، الأعمدة: ${t.columns}${t.measures ? `، المقاييس: ${t.measures}` : ''}`) };
 }
 export const sampleWrites = (folder, n) => [`the new folder "${folder}" in the working folder: a made-up Gulf retail project, the model "${SAMPLE_NAME}" (4 tables of made-up rows, 4 measures, 3 relationships, a date table) and an empty report, ${n} new files; nothing else is touched`];
 // (SQ3, T1-S6) the same line in Arabic, for the sample's Arabic approval page

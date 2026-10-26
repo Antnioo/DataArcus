@@ -62,7 +62,8 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
       () => `O-13 ${tag}: the line chart by Month-Year must carry a report-level "month start" measure (MIN of Calendar[Date]) in Tooltips: ${JSON.stringify(tip)} ${JSON.stringify(ms)}`);
     const sd = get(() => line.visual.query.sortDefinition.sort[0]);
     chk(() => JSON.stringify(sd.field) === JSON.stringify(tip.field) && sd.direction === dirn, () => `O-13 ${tag}: the line chart must be sorted by the month start, ${dirn}: ${JSON.stringify(line && line.visual.query.sortDefinition)}`);
-    const last = filtersOf(line).map((f) => ({ f, m: extByField(r, f.field) })).find((x) => x.m && /EDATE \( [^,]+, -12 \)/.test(x.m.expression));
+    // (0.3.1 LR1: the date column's helper compares with EOMONTH, the month's end; EDATE kept a 13th month: the rule changed)
+    const last = filtersOf(line).map((f) => ({ f, m: extByField(r, f.field) })).find((x) => x.m && /EOMONTH \( [^,]+, -12 \)/.test(x.m.expression));
     chk(() => last && last.f.type === 'Advanced' && /NOT ISBLANK \( 'Sales'\[Total Sales\] \)/.test(last.m.expression) && /"Value":"1L"/.test(JSON.stringify(last.f.filter)) && last.m.dataType === 'Integer',
       () => `O-13 ${tag}: the line chart must keep the last 12 months (a report-level measure = 1, counted back from the last month with data): ${JSON.stringify(filtersOf(line || {})).slice(0, 400)}`);
   }
@@ -135,7 +136,8 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const top = get(() => filtersOf(byCat.v).find((f) => f.type === 'TopN'));
     // (design round 10, N15: the title is the report measure that counts the bars kept, "Top S of M" only when it cuts)
     chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && ((tag === 'ar' ? /أعلى 6/ : /Top 6/).test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)) || /"Schema":"extension"[^}]*\}\},"Property":"Title: /.test(JSON.stringify(byCat.v.visual.visualContainerObjects.title))), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
-    const m6 = get(() => filtersOf(byMonth.v).map((f) => extByField(r, f.field)).find((m) => m && /EDATE \( [^,]+, -6 \)/.test(m.expression)));
+    // (0.3.1 LR1: EOMONTH, as above)
+    const m6 = get(() => filtersOf(byMonth.v).map((f) => extByField(r, f.field)).find((m) => m && /EOMONTH \( [^,]+, -6 \)/.test(m.expression)));
     const sd = get(() => byMonth.v.visual.query.sortDefinition.sort[0]);
     chk(() => m6 && sd.direction === 'Descending' && /MIN \( 'Calendar'\[Date\] \)/.test((extByField(r, sd.field) || {}).expression) && byMonth.v.position.height >= 40 + 27 * 6 && byMonth.v.position.height + byMonth.v.position.y <= byMonth.p.page.height,
       () => `tooltip ${tag}: the month bars must be the last 6 months, newest first, at a height for 6 bars: ${JSON.stringify(byMonth && { f: filtersOf(byMonth.v), s: byMonth.v.visual.query.sortDefinition, h: byMonth.v.position.height }).slice(0, 400)}`);

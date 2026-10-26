@@ -9,7 +9,24 @@ const WORDS = LIST.words;
 // (0.3.0 D3) the report's own fixed texts, whole, with the writer's Arabic for them
 const PHRASES = new Map(Object.entries(LIST.phrases || {}).map(([en, ar]) => [en.toLowerCase(), ar]));
 const W = (w) => WORDS[String(w).toLowerCase()];
-const phrase = (s) => { const ws = String(s).trim().split(/\s+/).filter(Boolean); if (!ws.length) return null; const out = ws.map(W); return out.every(Boolean) ? out.join(' ') : null; };
+// (0.3.1 LR1, the laptop's «السنة الشهر» for "Year Month") date words are never joined word for word: two of them are a
+// fixed compound (the smaller unit first, joined by «و»; «الهجري» after its noun, agreeing with it), and any other run of
+// date words gets no draft (the assistant proposes one, as for any name the list doesn't hold)
+const DATE_WORDS = new Set(['year', 'month', 'quarter', 'week', 'day', 'date', 'hijri']);
+const DATE_PAIRS = { 'year month': 'الشهر والسنة', 'month year': 'الشهر والسنة', 'year quarter': 'الربع والسنة', 'quarter year': 'الربع والسنة',
+  'year week': 'الأسبوع والسنة', 'week year': 'الأسبوع والسنة', 'month day': 'اليوم والشهر', 'day month': 'اليوم والشهر',
+  'hijri year': 'السنة الهجرية', 'hijri month': 'الشهر الهجري', 'hijri quarter': 'الربع الهجري', 'hijri week': 'الأسبوع الهجري', 'hijri day': 'اليوم الهجري', 'hijri date': 'التاريخ الهجري' };
+const phrase = (s) => {
+  const ws = String(s).trim().split(/\s+/).filter(Boolean); if (!ws.length) return null;
+  const out = [];
+  for (let i = 0; i < ws.length; i++) {
+    const a = ws[i].toLowerCase(), b = (ws[i + 1] || '').toLowerCase();
+    if (!DATE_WORDS.has(a) || !DATE_WORDS.has(b)) { out.push(W(ws[i])); continue; }
+    if (DATE_WORDS.has((ws[i + 2] || '').toLowerCase()) || !DATE_PAIRS[a + ' ' + b]) return null;
+    out.push(DATE_PAIRS[a + ' ' + b]); i++;
+  }
+  return out.every(Boolean) ? out.join(' ') : null;
+};
 // the patterns, tried in order: each part must be a glossary phrase
 const PLURAL = { order: 'orders', customer: 'customers', product: 'products', invoice: 'invoices', employee: 'employees', store: 'stores', unit: 'units' };
 const plural = (s) => String(s).replace(/(\w+)$/, (w) => PLURAL[w.toLowerCase()] || w);
