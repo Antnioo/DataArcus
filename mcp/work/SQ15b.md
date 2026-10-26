@@ -19,7 +19,8 @@
 - **Got:** sq15b 19 checks (13 red first on c2a67d6); report 27 -> 28 suites PASS; core 6 PASS (test.mjs 1591 = 1591,
   golden 12 tasks match: no golden report changed; mutation 72 mutants all killed); arabic 9 PASS, the same counts;
   website run-all 21 PASS, the same counts (below); plan-lint's planned reports: 24 plans (8 shapes x 2 models,
-  EN and AR, I planned 8 and hashed 24) the same bytes after the refactor; full run and check-agent-memory below.
+  EN and AR, I planned 8 and hashed 24) the same bytes after the refactor; full run `npm test -- --keep-going`:
+  "run-tests: 89 suites passed" (88 before, plus sq15b); check-agent-memory PASS (147 checks); changelog-words PASS.
 - **Resume:** done; waits for the reviewer. Nothing needs Desktop but "For the laptop" 1-3 (the batched run).
 
 ## The items, confirmed on c2a67d6
@@ -56,7 +57,7 @@
 - `scripts/tests/run-all.mjs`: All 21 passed -> All 21 passed (every line the same count: site 483, theme-generator 898, theme-generator-lab 898, pbip 100, layout 512, design-engine 598...).
 
 ## Results
-Commits: plan 103fb9d, red first d78047b, the three fixes 850593d, A3-11 4b5cb72, this note and the Status cells NOTE_COMMIT.
+Commits: plan 103fb9d, red first d78047b, the three fixes 850593d, A3-11 4b5cb72, this note and the Status cells cf2d8b9d, the full run's line (this commit).
 
 | Item | Before | After | Test (red -> green) |
 |---|---|---|---|
