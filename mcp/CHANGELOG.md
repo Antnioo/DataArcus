@@ -99,6 +99,10 @@ package's manifest; this file says what is in it.
 - **The approval page in Arabic says it all in Arabic:** what each plan writes (the English line under it), the Arabic
   twin's options and counted headings, and a plan with no approved Arabic text says so; the app's own approval prompt
   names any check not run before writing; Power BI's base theme is listed as a theme.
+- **The Arabic twin, finer:** a bookmark group's name gets its Arabic; a long Arabic title in the phone header gets
+  a size that fits on one line; a button with no room for its icon and its Arabic text drops the icon instead of being
+  cut; the slicers kept in sync are numbered by their place on the page; an alt text that repeats its title is listed
+  once, under the title.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
