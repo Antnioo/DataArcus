@@ -138,7 +138,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-checks-S1 | THEME_NAME fix says Desktop "may not load" the theme | OWNER | `assets/js/report-rules.js:337` still "Desktop may not load it" | decide the rewording "validator and Fabric reject it; Desktop opens it" (shared website rule) |
 | 0.2.9-checks-S2 | THEME_NAME "no .platform file" half never measured | OWNER | `assets/js/report-rules.js:336` unmeasured; not in DESKTOP_OPENS | laptop: open a project without .platform in Desktop, record result |
 | 0.2.9-checks-S3 | FORMATTING_OBJECT_UNKNOWN in a visual is canBreak | OWNER | `mcp/lib/check-report.mjs:115` Desktop-opens only for RegisteredResources files | laptop: open a visual with an unknown object; if it opens, widen DESKTOP_OPENS |
-| 0.2.9-checks-S4 | loadModel picks first of two models at same depth silently | OPEN | `mcp/lib/model.mjs:399` sort then dirs[0], no tie check | refuse with MANY_MODELS listing both when two share the top depth · S · low · reader → **SQ6** |
+| 0.2.9-checks-S4 | loadModel picks first of two models at same depth silently | OPEN (SQ6: the refusal breaks v029g's fixture, the owner's call: SQ6.md Decisions 1) | `mcp/lib/model.mjs:399` sort then dirs[0], no tie check | refuse with MANY_MODELS listing both when two share the top depth · S · low · reader → **SQ6** |
 | 0.2.9-checks-S5 | engine repo attach needed owner's go | OBSOLETE | informational, no action (session permission event) | — |
 | 0.2.9-checks-S6 | test-0.2.9b.mjs not run by test.mjs | DONE | `mcp/test.mjs:16` imports v029b; `mcp/tests.json:112` | fixed before fab795c (history starts there) |
 | 0.2.9-checks-S7 | last-6-months tooltip trend still gets TOOLTIP_SCROLL | DONE | `assets/js/report-rules.js:313-318` "Last N months" filter counted (rc.22 B-142) | fixed before fab795c; TIP_ROWS_6 27/40 at :70 |
@@ -154,7 +154,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-custom-visuals-S1 | catalog lists ganttChart/heatMap/table/matrix as native | OWNER | `assets/js/visual-types.js:18-23` keeps all four (catalog 0.1.3) | decide: keep Microsoft's catalog as is, or subtract those four |
 | 0.2.9-custom-visuals-S2 | text-filter custom visual becomes classic slicer, not textSlicer | OWNER | `mcp/lib/visual-meaning.mjs:97` slicer -> 'slicer' | decide on textSlicer; laptop: prove a written textSlicer opens and filters |
 | 0.2.9-custom-visuals-S3 | donut hole total and bubble map place names told lost | OBSOLETE | informational, no action: by design, `visual-meaning.mjs:235-236` tells it | — |
-| 0.2.9-custom-visuals-S4 | fieldOf loses date column under auto date hierarchy | OPEN | `mcp/lib/read-report.mjs:263` no PropertyVariationSource branch | take Entity/Property from PropertyVariationSource when no SourceRef · S · low · reader → **SQ6** |
+| 0.2.9-custom-visuals-S4 | fieldOf loses date column under auto date hierarchy | DONE 08493ad (SQ6) | `mcp/lib/read-report.mjs:263` no PropertyVariationSource branch | take Entity/Property from PropertyVariationSource when no SourceRef · S · low · reader → **SQ6** |
 | 0.2.9-custom-visuals-S5 | custom visual named by whole id; plan wants shorter | DONE | `mcp/lib/visual-meaning.mjs:535,568` shortType strips 32-char code | fixed before fab795c (answerOf text still full id, by design) |
 
 ### 0.2.9-design
@@ -218,10 +218,10 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S9 | lint is a second rule engine beside report-rules.js | OBSOLETE | lint moved to shared `assets/js/layout-check.js`; `design-lint.mjs:22` wraps it | engine now shared with the website |
 | 0.2.9-reader-S10 | R5 done by builder 5 (lint names visual by type and place) | OBSOLETE | layout-check.js names by type/place; e8bf832 squashed away | informational, no action |
 | 0.2.9-reader-S11 | audit A1-4/5/6/8/9/10/11/14, website bim cap, byName readdirSync | DONE | fab795c: `pbip-bind.js:57` unknown, `:103` cap, `model.mjs:295` readdirSafe, field-meaning.js | - |
-| 0.2.9-reader-S12 | .pbit route reads the zip whole up to 300 MB | OPEN | `mcp/lib/model.mjs:378` readCapped(full, 300 MB) before unzipNeeded | read only the needed entries by fd from the central directory · M · low · reader → **SQ6** |
+| 0.2.9-reader-S12 | .pbit route reads the zip whole up to 300 MB | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:378` readCapped(full, 300 MB) before unzipNeeded | read only the needed entries by fd from the central directory · M · low · reader → **SQ6** |
 | 0.2.9-reader-S13 | pbip-bind picker keeps its own 'string' type fallbacks | OPEN | `assets/js/pbip-bind.js:334,412,430,505` `c.dataType or 'string'` | drop the fallbacks (reader gives a type) with min rebuild · S · low · reader → **SQ13** |
 | 0.2.9-reader-S14 | gulf-calendar.mjs unwraps m.tmsl itself twice | OPEN | `mcp/lib/gulf-calendar.mjs:62,85` | use model.mjs's one unwrap helper (`model.mjs:92`) · S · low · calendar → **SQ7** |
-| 0.2.9-reader-S15 | JSON-part errors (not valid JSON, too deep) lack codes | OPEN | `mcp/lib/model.mjs:208` plain Error; ReadError codes list has none | throw ReadError('BAD_JSON') / ('TOO_DEEP') · S · low · reader → **SQ6** |
+| 0.2.9-reader-S15 | JSON-part errors (not valid JSON, too deep) lack codes | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:208` plain Error; ReadError codes list has none | throw ReadError('BAD_JSON') / ('TOO_DEEP') · S · low · reader → **SQ6** |
 | 0.2.9-reader-S16 | .pbit route reads the file whole before unpacking | DUPLICATE | same as S12 | 0.2.9-reader-S12 |
 | 0.2.9-reader-S17 | A1-11 percent rule not touched | DONE | fab795c: shared `assets/js/field-meaning.js`, used `pbip-bind.js:10` | - |
 | 0.2.9-reader-S18 | check_report measured rules throw on null projection/paragraphs | DONE | fab795c: entries() guards `assets/js/report-rules.js:115,141`; per-rule try `:386` | - |
@@ -230,7 +230,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S21 | test.mjs keeps its own report reader | OPEN | `mcp/test.mjs:412` readReport walks visual.json itself | use lib/read-report.mjs inventory in its checks · M · low · tests-ci → **SQ15** |
 | 0.2.9-reader-S22 | shared catalog to replace reader's hand list BUILTIN | DONE | fab795c: `read-report.mjs:304-306` uses visual-types.js (58 native) | - |
 | 0.2.9-reader-S23 | fuzz KNOWN lists still hold other blocks' findings | DONE | fab795c: `mcp/test-fuzz.mjs:139,143,146` all empty | - |
-| 0.2.9-reader-S24 | largeSummary keys area map by cut name, not raw | OPEN | `mcp/lib/scope.mjs:55-56` set by t.name, read by t.table | key both by the raw table name · S · low · reader → **SQ6** |
+| 0.2.9-reader-S24 | largeSummary keys area map by cut name, not raw | DONE 08493ad (SQ6) | `mcp/lib/scope.mjs:55-56` set by t.name, read by t.table | key both by the raw table name · S · low · reader → **SQ6** |
 | 0.2.9-reader-S25 | page background pictures never read; dark-by-picture reads light | OWNER | no picture read in `read-report.mjs:439-453` theme identity | decide whether to read a page picture (metadata only) or keep "ask for dark" |
 | 0.2.9-reader-S26 | report saved without base theme file counts leftovers as own | OWNER | `read-report.mjs:477` base null when file missing | on the laptop: check whether Desktop ever saves PBIR without BaseThemes file |
 | 0.2.9-reader-S27 | theme colour reference colour not counted | OBSOLETE | by design `read-report.mjs:459-460` (literal hex only) | informational, no action |
@@ -294,7 +294,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | audit-5-reading-S1 | test.mjs has a fourth report reader of its own | DUPLICATE | `mcp/test.mjs:412` own readReport, used at :454-1097 | of 0.2.9-reader-S21 |
 | audit-5-reading-S2 | check_report lint section does not catch errors | DONE | `mcp/lib/check-report.mjs:478-480` try around lint (A4-2) |  |
-| audit-5-reading-S3 | base theme never read; no custom theme gives no colours | OPEN | `mcp/lib/read-report.mjs:336-340` custom only; base read only in reportIdentity :477 | read BaseThemes json in inventory as reportIdentity does · S · low · reader → **SQ6** |
+| audit-5-reading-S3 | base theme never read; no custom theme gives no colours | DONE 08493ad (SQ6) | `mcp/lib/read-report.mjs:336-340` custom only; base read only in reportIdentity :477 | read BaseThemes json in inventory as reportIdentity does · S · low · reader → **SQ6** |
 
 ### audit-6-mcp-tools
 

@@ -16,7 +16,7 @@
 - **Invariants:** metadata only (no new field returns a value; the base theme gives hex colours only, as the custom
   theme does); paths: every new read goes through the same guards (diskSource for the base theme; the .pbit opened
   once, without following links); no check loosened.
-- **Got:** GOT_LINE
+- **Got:** reader-seen 19 checks (12 of 21 red before the fixes; S4-1/S4-2 removed with S4, 10 red -> green); mutation 67 -> 69 mutants run, all killed (73 planned less R-model-tie and R-pbit-cap: the cap is the stat check before opening, already guarded); `npm test -- --keep-going` 80 -> 81 suites, all PASS; shard 1/4 PASS; platform paths PASS; check-agent-memory PASS.
 - **Resume:** done; waits for the reviewer. Nothing needs Desktop. 0.2.9-checks-S4 waits for the owner's decision.
 
 ## The items, confirmed (d2328ae)
@@ -79,9 +79,9 @@ Commits: plan a216659, red suite 5e4614e, fixes 08493ad, S4 taken back + results
 | 0.2.9-reader-S24 | `largeSummary`: areaOf and relatedOf keyed by the raw name, read by the cut row name: a 235-character table name had 0 related tables and "(no display folder)" | each row's raw name by its place in `m.tables` (`rawOf`), used by the area count, the ranking and `largeBody`'s related tables | S24-1, S24-2 red -> green |
 | 0.2.9-checks-S4 | `loadModel`: two model folders at one depth: the first the folder lists | unchanged (taken back, OPEN): see "Decisions I made" 1 | S4-3 pins what holds (the nearest model; one of two named by path) |
 
-Suites: SUITES_LINE
+Suites: `npm test -- --keep-going`: `run-tests: 81 suites passed`; `DA_SHARD=1/4 npm test`: `PASS  mcp  33 checks  (shard 1/4: 1 parts)`, `run-tests: 1 suite passed`; `node test-platform-paths.mjs`: `PASS  test-platform-paths  30 checks`; `npm test -- model` and `npm test -- safety`: AREA_LINES; `node scripts/check-agent-memory.mjs`: PASS.
 
-Mutants: before `PASS  mutation  174 checks (67 mutants, all killed, ...)`; after MUT_LINE (+ R-pbit-link, linux and
+Mutants: before `PASS  mutation  174 checks (67 mutants, all killed, ...)`; after `PASS  mutation  179 checks (69 mutants, all killed, 36 guard suites, 139s; equivalent, not run: G-artifact, W-size, W-free-real)` (+ R-pbit-link, linux and
 macOS only: a file link on Windows needs a privilege; + R-pbit-changed; both killed by reader-seen).
 
 ## CHANGELOG line
