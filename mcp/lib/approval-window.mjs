@@ -478,7 +478,13 @@ function summaryOf(kind, data) {
     // (0.3.1 SQ10, AF2-S4) a script the plan names that is already there with exactly its content: not among the files written
     if (Array.isArray(d.alreadyThere) && d.alreadyThere.length) sections.push({ heading: `Already there, not written again (${d.alreadyThere.length})`, rows: d.alreadyThere.map((f) => [String(f), 'next to the project, holding exactly this script: named again, not written again']) });
     // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
-    if (Array.isArray(d.customVisualsShown)) sections.push({ heading: `Custom visuals replaced (${d.customVisualsShown.length})`, rows: d.customVisualsShown.map((x) => [String(x.line), (x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows']]) });
+    // (0.3.1 NC2) the lead line first (how many at each confidence, how many are guesses), then each replacement's
+    // confidence with its evidence, its losses and its second option
+    if (Array.isArray(d.customVisualsShown)) { const lead = d.customVisualsShown.find((x) => x && x.lead), reps = d.customVisualsShown.filter((x) => x && !x.lead);
+      sections.push({ heading: `Custom visuals replaced (${reps.length})`, rows: (lead ? [['In short', [String(lead.lead)].concat(lead.levels ? ['high', 'medium', 'low'].map((k) => `${k}: ${String(lead.levels[k] || '')}`) : [])]] : [])
+        .concat(reps.map((x) => [String(x.line), (x.confidence ? [`confidence: ${String(x.confidence)}${x.evidence ? ` (${String(x.evidence)})` : ''}`] : [])
+          .concat((x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows'])
+          .concat(x.second ? [`second option${x.second.chosen ? ' (chosen; the first is the closer one)' : ''}: ${String(x.second.label || x.second.native)} (${String(x.second.native)}), key "${String(x.second.pick)}": it loses ${(x.second.lost || []).map((l) => String(l).split(/: /)[0]).join('; ')}`] : [])])) }); }
     else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
     // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click
     const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];

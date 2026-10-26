@@ -50,7 +50,7 @@ export function register(server, ctx) {
       if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
       const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
       const art = keptCopy(a.planId);
-      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes), art); }));
+      return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes), art, { second: a.customVisualsSecond }); }));
     }
     // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
     // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at

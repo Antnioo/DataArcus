@@ -59,19 +59,21 @@ expected. The checks are on the native copy and on the redesign.
   page's other rows' gaps; titles (sizes and fonts unchanged without CS1); the text box and shape kept where they are.
 
 ## The result table (to fill)
+(NC2: the plan's confidence and losses as NC2 changed them; the bullet's target markers and the heatmap's shaded matrix
+are new in Desktop: judge them first.)
 | Page | Custom visual | Became (plan) | Confidence | Lost (plan, short) | Desktop: draws the same fields sensibly? | Notes |
 |---|---|---|---|---|---|---|
-| 1 | KPI tile | kpi | high, a guess | its format settings, its interactions | | |
-| 1 | dial gauge | gauge | high, a guess | its format settings, its interactions | | |
-| 1 | drill-down bar | clusteredBarChart | high, a guess | its own drill-down (Power BI's drill buttons, 2 levels) | | |
-| 2 | chip slicer | slicer | high, a guess | its look (chips), its interactions | | |
-| 2 | bullet chart | clusteredBarChart | low, a guess | its format settings (the target marker: value and target become two bars) | | |
-| 2 | data grid | tableEx | high, a guess | its format settings | | |
-| 3 | word cloud | clusteredBarChart | medium, a guess | its look (the cloud) | | |
-| 3 | tornado chart | clusteredBarChart | medium, a guess | its format settings (the two sides: two bars per category) | | |
-| 3 | multi-value card | cardVisual | high, a guess | its format settings | | |
-| 4 | calendar heatmap | lineChart | medium, a guess | its format settings (the calendar grid: a daily line) | | |
-| 4 | smooth line chart | lineChart | high, a guess | its format settings (smoothing) | | |
+| 1 | KPI tile | kpi | medium, a guess | its format settings, its interactions | | |
+| 1 | dial gauge | gauge | medium, a guess | its format settings, its interactions | | |
+| 1 | drill-down bar | clusteredBarChart | medium, a guess | its own drill-down (Power BI's drill buttons, 2 levels) | | |
+| 2 | chip slicer | slicer | medium, a guess | its look (chips), its interactions | | |
+| 2 | bullet chart | lineClusteredColumnComboChart (second: clusteredBarChart) | low, a guess | its horizontal bars (columns), its bands; the target as a long-dash marker on each column | | |
+| 2 | data grid | tableEx | medium, a guess | its format settings | | |
+| 3 | word cloud | clusteredBarChart | low, a guess | its cloud (words sized by value): the bars rank them by value | | |
+| 3 | tornado chart | clusteredBarChart | low, a guess | its two-sided layout: two bars side by side per category | | |
+| 3 | multi-value card | cardVisual | medium, a guess | its format settings | | |
+| 4 | calendar heatmap | pivotTable (second: lineChart) | low, a guess | its one square per day: one shaded cell per weekday in each month | | |
+| 4 | smooth line chart | lineChart | medium, a guess | its format settings (smoothing) | | |
 | 5 | sankey diagram | not replaced | - | no native visual draws a network | | |
 | 5 | force graph | not replaced | - | no native visual draws a network | | |
 

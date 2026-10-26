@@ -160,6 +160,12 @@ package's manifest; this file says what is in it.
   right-to-left mark, so an English name at the start keeps the sentence in order. check_report's Arabic lens says an
   English word anywhere in Arabic text can swap the words around it, with the fix. The DAX functions option says Desktop
   shows an error in those visuals until the script is applied, and asks for the compatibility upgrade at Preview and Apply.
+- **Custom visuals replaced, said honestly:** the native copy's plan now starts with one line counting its replacements
+  at each confidence and how many are guesses; "high" only when the custom visual's own package is in the report and its
+  id names the kind written, and each replacement says why. Each one names in words what the reader no longer sees (a
+  tornado's two sides, a bullet's bands, a word cloud's sizes, a calendar's day squares) and which of its own settings
+  were kept. A bullet chart now becomes columns with its target as a marker on each, and a calendar heatmap a matrix of
+  months by weekday shaded by the value; the earlier replacement is offered second (`customVisualsSecond`).
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
