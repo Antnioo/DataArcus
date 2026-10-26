@@ -173,7 +173,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-design-S10 | A4-7, A5-1/A5-5, A6-4, A6-6 open | DONE | `mcp/PRIVACY.md:260-264` listed fixed; `check-report.mjs:483` lint impact | fixed before fab795c |
 | 0.2.9-design-S11 | beta page "A real run" is the 0.2.8 run | OWNER | `power-bi-mcp/index.html:188` 8 Oct, 0.2.8, page ships 0.3.0 | decide whether to replace with a 0.3.x run (true as dated) |
 | 0.2.9-design-S12 | ARABIC-VOICE.md unreadable from engine repo | OBSOLETE | informational, no action (session access note) | — |
-| 0.2.9-design-S13 | table smaller and short of field: two "left out" notes | OPEN | `mcp/lib/report-run.mjs:508` always ends "a field is left out only..." | drop that clause when the same table has a field-left-out note · S · low · writer → **SQ10** |
+| 0.2.9-design-S13 | table smaller and short of field: two "left out" notes | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:508` always ends "a field is left out only..." | drop that clause when the same table has a field-left-out note · S · low · writer → **SQ10** |
 | 0.2.9-design-S14 | picker's chart category choice is builder 5's | OBSOLETE | informational, no action (routing note) | — |
 | 0.2.9-design-S15 | v029c L2 failed unreliably; run whole chain before "pass" | OBSOLETE | informational, no action; fixed by bfd2904 per note | — |
 
@@ -199,7 +199,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S16 | multi-line header 26.9, title-off/subtitle/960x720 unmeasured, 8pt header | OWNER | prose at `mcp/work/0.2.9-writer.md:225` | laptop: measure title-off, subtitle, 960 x 720; find page 1 header's 8pt source |
 | 0.2.9-writer-S17 | table shadow/grey border inside panel | OWNER | prose at `mcp/work/0.2.9-writer.md:238` | laptop: look at solid and light themes' table edges |
 | 0.2.9-writer-S18 | check_report passes duplicate measure names across tables | OWNER (SQ5: no Desktop measurement yet; laptop first, `mcp/work/SQ5.md`) | no such rule in `report-rules.js` / `check-report.mjs` (grep) | add a rule: report measure names unique across model, no case · M · low · checker → **SQ5** |
-| 0.2.9-writer-S19 | extRenamed note says the table has the name | OPEN | `mcp/lib/report-run.mjs:534` "T already has X" for any cause | say "the model or another report measure has" when other table · S · low · writer → **SQ10** |
+| 0.2.9-writer-S19 | extRenamed note says the table has the name | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:534` "T already has X" for any cause | say "the model or another report measure has" when other table · S · low · writer → **SQ10** |
 | 0.2.9-writer-S20 | SVG measure names named by server, not gate | OBSOLETE | informational, no action | — |
 | 0.2.9-writer-S21 | picker: two charts by same-name columns of two tables | DONE | `assets/js/pbip-bind.js:688-692` otherName excludes same name | D7, before fab795c |
 
@@ -278,7 +278,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | audit-3-picker-writer-S1 | connection() workspace name not URL-encoded (safe) | OBSOLETE | informational: `pbip-bind.js:886` doubles quotes; Microsoft's form takes the raw name |  |
-| audit-3-picker-writer-S2 | T[c] keys ambiguous for names containing ] | OPEN | picker fixed (`pbip-bind.js:897` fieldKey doubles ]); `mcp/lib/report-run.mjs:201` keyOf unescaped | use Bind.fieldKey in report-run keyOf · S · low · writer → **SQ10** |
+| audit-3-picker-writer-S2 | T[c] keys ambiguous for names containing ] | DONE (SQ10 4d3a1a6) | picker fixed (`pbip-bind.js:897` fieldKey doubles ]); `mcp/lib/report-run.mjs:201` keyOf unescaped | use Bind.fieldKey in report-run keyOf · S · low · writer → **SQ10** |
 | audit-3-picker-writer-S3 | named mutates shared field objects | DONE | `mcp/lib/report-run.mjs:202-206` copies via Bind.mapFields, Object.assign({}, f) |  |
 | audit-3-picker-writer-S4 | pointer list: B-03..B-23, A1-11, A2-3 known elsewhere | DUPLICATE | pointer only; B-14/T1 invertAxis gone (`report-mirror.js:11`) | B-03, B-04, B-05, B-06, B-14, B-20, B-22, B-23, A1-11, A2-3 |
 
@@ -335,7 +335,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | WORK-2026-10-05-09-S1 | hand-placed Arabic page right to left only with rtl true | DONE | round 23: `mcp/lib/report-run.mjs:93-94` rtl defaults to lang ar |  |
-| WORK-2026-10-05-09-S2 | English RTL report writes "Total"; note still says «الإجمالي» | OPEN | `report-run.mjs:510` always says «الإجمالي»; `pbip-page.js:953` writes Total in English | say the word by lang (and "table", not "Arabic table") at report-run.mjs:510 · S · low · writer → **SQ10** |
+| WORK-2026-10-05-09-S2 | English RTL report writes "Total"; note still says «الإجمالي» | DONE (SQ10 4d3a1a6) | `report-run.mjs:510` always says «الإجمالي»; `pbip-page.js:953` writes Total in English | say the word by lang (and "table", not "Arabic table") at report-run.mjs:510 · S · low · writer → **SQ10** |
 | WORK-2026-10-05-09-S3 | model name "Row label: <Column>" collides with report measure | DONE | `assets/js/pbip-page.js:954` freeExt checks model names (`pbip-notes.js:34`) |  |
 | WORK-2026-10-05-09-S4 | matrices unchanged; row header not reversed in Arabic | OWNER | `assets/js/report-mirror.js:309-320` values only; lab candidates await laptop | laptop: run the M1 matrix lab in Desktop, pick a MATRIX_RTL mode |
 | WORK-2026-10-05-09-S5 | All in slicers, English names, task 10 totals, Your logo | DONE | "All" said `report-run.mjs:209`; table reach PASS (note :403); `pbip-page.js:700` |  |
@@ -443,8 +443,8 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | AF2-S1 | TOOLS.md says create_report "picks a free name" | OPEN | `mcp/TOOLS.md:62`; write refuses taken names `report-run.mjs:381` | say it refuses a taken report name · S · none · tools-docs → **SQ9** |
 | AF2-S2 | F06: folder-path race remains | OBSOLETE | documented race, no cheap narrowing (AF1) | informational, no action |
-| AF2-S3 | "(the same file check_model_health writes)" not always true | OPEN | `mcp/tools/plan_layout.mjs:183`, `:195` | drop or qualify the parenthesis ("the same script") · S · low · tools-docs → **SQ10** |
-| AF2-S4 | identical existing script still listed as written in plan outputs | OPEN | `mcp/lib/report-run.mjs:389` named again, not written | verify first; list it as "already there" in the plan outputs · S · low · writer → **SQ10** |
+| AF2-S3 | "(the same file check_model_health writes)" not always true | DONE (SQ10 4d3a1a6) | `mcp/tools/plan_layout.mjs:183`, `:195` | drop or qualify the parenthesis ("the same script") · S · low · tools-docs → **SQ10** |
+| AF2-S4 | identical existing script still listed as written in plan outputs | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:389` named again, not written | verify first; list it as "already there" in the plan outputs · S · low · writer → **SQ10** |
 
 ### C
 
@@ -636,7 +636,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | J17-S1 | generator has no Sharjah weekend, no Friday half-day | DONE | bd59d9a: `tools/dax-calendar-table-generator.html:209` shj option | half day stays out, said at html:210 |
-| J17-S2 | create_report Ramadan note finds Hijri-year column by name | OPEN | `mcp/lib/report-run.mjs:84-87` regex by name | use gulfDates.hijriYearColumn when the plan has it · S · low · writer → **SQ10** |
+| J17-S2 | create_report Ramadan note finds Hijri-year column by name | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:84-87` regex by name | use gulfDates.hijriYearColumn when the plan has it · S · low · writer → **SQ10** |
 | J17-S3 | Hijri month visual needs model sort-by column | OBSOLETE | informational: said in gulfDates.grain.order |  |
 | J17-S4 | Gulf date answers forgotten when session ends | DUPLICATE | `mcp/lib/gulf-date-questions.mjs:32` in-memory CONFIRMED | J18-S5 |
 | J17-S5 | full npm test took over 30 minutes in one process | OBSOLETE | informational, no action (run-time note) |  |
@@ -680,7 +680,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| K2-S1 | bilingual plan lacks "Not fully Arabic" line | OPEN | `mcp/tools/plan_layout.mjs:83` bilingualSaid has no notFullyArabic key | add notFullyArabic to bilingualSaid and the bilingual propose data; page section exists (`approval-window.mjs:495`) · S · low · approval → **SQ10** |
+| K2-S1 | bilingual plan lacks "Not fully Arabic" line | DONE (SQ10 4d3a1a6) | `mcp/tools/plan_layout.mjs:83` bilingualSaid has no notFullyArabic key | add notFullyArabic to bilingualSaid and the bilingual propose data; page section exists (`approval-window.mjs:495`) · S · low · approval → **SQ10** |
 | K2-S2 | twin-write.mjs imports unused `out` | DONE | 75bfd6e (Q1); `mcp/lib/twin-write.mjs:3-11` no answer.mjs import |  |
 
 ### L1
@@ -741,7 +741,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | L6-S1 | twin/bilingual Arabic half show DA pictures in English | OWNER | `mcp/WORK.md:28` open decision L6 Seen 1 | decide: a second, Arabic set of DA measures (a model script) |
 | L6-S2 | KPI card picture keeps Latin K/M/B in Arabic | DONE 486d97d | `mcp/lib/dax-functions.mjs:159,163` frontValue without units | pass Arabic units (flip-cards WORDS.ar.units) when lang ar, append .u · S · low · writer → **SQ2** |
 | L6-S3 | #82's Seen 2-8 still stand | DUPLICATE | restated as L6.md:319 items 2-8 | L6-S7..L6-S13 |
-| L6-S4 | daxFunctions with sample or redesignFrom ignored silently | OPEN | `mcp/tools/plan_layout.mjs:114` other list lacks daxFunctions; `:181` sample | add report options to the planProblems lists (redesign, sample) · S · low · writer → **SQ10** |
+| L6-S4 | daxFunctions with sample or redesignFrom ignored silently | DONE (SQ10 4d3a1a6; the sample half was already true) | `mcp/tools/plan_layout.mjs:114` other list lacks daxFunctions; `:181` sample | add report options to the planProblems lists (redesign, sample) · S · low · writer → **SQ10** |
 | L6-S5 | Learn glossary calls UDFs a preview | OBSOLETE | external page; our texts guarded `mcp/test-0.3.1-dax-functions.mjs:263` |  |
 | L6-S6 | Arabic twin keeps DA measures English | DUPLICATE | same decision | L6-S1 |
 | L6-S7 | story title replaces "Top N of M:" title | OBSOLETE | informational, no action: static title kept as alt text |  |
@@ -790,7 +790,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Q1-S5 | calendar-generator.js 40% unrun; website suites lack coverage | OPEN | c8 job `tests.yml:244-279` covers the MCP npm test only | Chromium coverage (page.coverage) over website suites, report only · L · low · tests-ci → **SQ15** |
 | Q1-S6 | Tahoma header title 20pt in 46-high box trips validator floor | OWNER | `assets/js/pbip-page.js:691` size from header height; no Tahoma case | laptop: measure Tahoma header in Desktop, then pick 48-high box or 18pt title |
 | Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | DONE (SQ4 082860a, f564362) | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
-| Q1-S8 | plan_layout flipCards.cards repeats each card per page | OPEN | `mcp/tools/plan_layout.mjs:493` flipPlan.cards passed whole, one per page | group cards by measure with a pages list · S · low · design → **SQ10** |
+| Q1-S8 | plan_layout flipCards.cards repeats each card per page | DONE (SQ10 4d3a1a6) | `mcp/tools/plan_layout.mjs:493` flipPlan.cards passed whole, one per page | group cards by measure with a pages list · S · low · design → **SQ10** |
 | Q1-S9 | suggest_fields accepts 60 tables, read_model 100 | OPEN | `mcp/lib/tool-inputs.mjs:18` max(60); `mcp/tools/read_model.mjs:15` max(100) | one shared constant (or say why 60) in tool-limits · S · low · reader → **SQ9** |
 
 ### R1-see-the-result
@@ -847,7 +847,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | S9-S1 | MONTHS_AR unused; month test passes on that line | DONE | 05f55b0 (Q1 T-5) `mcp/test-0.2.9i.mjs:171`; line kept `twin-model.mjs:14-15` |  |
 | S9-S2 | unused imports in original files | DONE | dropped by S9's move (e.g. 654d409); none in server.mjs, lib/twin-*.mjs |  |
 | S9-S3 | approval-window.mjs, check-report.mjs over/near 60 KB | OWNER | now 68,918 and 57,356 bytes; line at `mcp/work/S9.md:157` | decide whether to split approval-window.mjs (owner's "don't rewrite working engines") |
-| S9-S4 | same module imported in two statements | OPEN | `mcp/lib/report-run.mjs:7,20` files.mjs; plan_layout.mjs arabic-twin.mjs twice | merge each pair into one import · S · none · writer → **SQ10** |
+| S9-S4 | same module imported in two statements | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:7,20` files.mjs; plan_layout.mjs arabic-twin.mjs twice | merge each pair into one import · S · none · writer → **SQ10** |
 
 ### T1
 
