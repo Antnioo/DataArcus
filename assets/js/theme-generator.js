@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
     const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261025m1', '/assets/js/pbip-query.min.js?v=20261025sq1', '/assets/js/pbip-sizing.min.js?v=20261025sq1', '/assets/js/pbip-notes.min.js?v=20261019l2',
-      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261025sq1', '/assets/js/report-a11y.min.js?v=20261025e', '/assets/js/pbip-export.min.js?v=20261025m1'];
+      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261025sq1', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261025m1'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
     // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
     // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
-    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261025s1', '../assets/js/layout-check.min.js?v=20261020w8'];
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261025sq5', '../assets/js/layout-check.min.js?v=20261025sq5'];
     const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
     const ckBox = $('pbipCheck');
     const showCheck = (C, files, m) => {

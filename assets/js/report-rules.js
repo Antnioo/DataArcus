@@ -36,7 +36,10 @@
     tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)'),
     round10: M('2026-10-04', '2.158.1177', 'round 10 (overnight): measurements before the code'),
     textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font'),
-    headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")')
+    headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")'),
+    // (0.3.1 SQ5, 0.2.9-writer-S12) the bar chart's rows the report writer and the design engine use (its Lessons line:
+    // "Night of 6-7 Oct"; RULES-POWERBI.md, "Night of 6-7 October")
+    barRows: M('2026-10-06', '2.158.1177', 'the laptop sitting: a bar chart at the theme\'s 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more for its value axis')
   };
   // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
   const LINKS_SRC = { format: true, section: 'a visualLink\'s navigationSection is the name of a page of the same report (visualConfiguration schema, bundled in mcp/schemas)' };
@@ -66,7 +69,10 @@
   const PAGE_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   // a text box's text middle below its top, by the font (SRC.textMid: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt)
   const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
-  const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
+  // (0.3.1 SQ5, 0.2.9-writer-S12: was round 0's 22 a row + 46, which was a tooltip chart without its value axis) a bar
+  // chart at the theme's 10pt: 22.2 a row, 45 above the first row and 8 under the last, 38 more with its value axis
+  // (SRC.barRows; the writer's tooltip charts and the design engine's categoryFit count the same)
+  const TIP_ROWS = (h, axis) => Math.floor((h - 45 - 8 - (axis ? 38 : 0)) / 22.2);
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
   const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const ps1 = (x, c) => entries(((((x.json.visual || {}).query || {}).queryState || {}).Values || {}).projections).indexOf(c.p) + 1;
@@ -302,11 +308,11 @@
           if (missing) out(x, `${missing} of its ${sorts.length} sort field${sorts.length === 1 ? ' is' : 's are'} not in the visual, so Desktop ignores ${missing === 1 ? 'it' : 'them'}`, 'Put the sort field in the visual (for a month or day name: Min of its number column in the Tooltips role), or sort by a field the chart shows.');
         });
       } },
-    { id: 'TOOLTIP_SCROLL', group: 'tooltips', severity: 'note', source: SRC.round0,
-      about: 'a bar chart on a tooltip page needs about 22 a row plus 46 (title and padding) without its value axis; rows past its height go behind a scrollbar no one can use in a tooltip',
+    { id: 'TOOLTIP_SCROLL', group: 'tooltips', severity: 'note', source: SRC.barRows,
+      about: 'a bar chart on a tooltip page needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more with its value axis (measured at the theme\'s 10pt labels); rows past its height go behind a scrollbar no one can use in a tooltip',
       run(R, out) {
         R.pages.filter((p) => p.tooltip).forEach((pg) => pg.visuals.filter((x) => x.type === 'clusteredBarChart').forEach((x) => {
-          const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h));
+          const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h, axis));
           // (A4-12, audit 4: a Top N filter on the visual that keeps no more rows than fit leaves no scrollbar: nothing to say)
           const top = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'TopN').map((g) => n((((((g.filter || {}).From || [])[0] || {}).Expression || {}).Subquery || { Query: {} }).Query.Top)).filter(Number.isFinite);
           // (rc.22, B-142: flagged on DataArcus's own month tooltip page, whose trend is kept to its last 6 months) a time axis
@@ -316,9 +322,9 @@
             .map((g) => { const c = ((((g.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison || {}, p = ((c.Left || {}).Measure || {}).Property, mm = /^Last (\d+) months?:/.exec(String(p || '')); return mm && ((c.Right || {}).Literal || {}).Value === '1L' ? +mm[1] : NaN; }).filter(Number.isFinite);
           top.push(...last);
           if (top.length && Math.min(...top) <= rows) return;
-          // the 22 a row was measured with 8pt category labels; another size makes the row count an estimate
-          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 8;
-          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}${other ? `; its labels are ${pt}pt, and the 22 a row was measured at 8pt` : ''}.`, axis || other ? { estimate: true } : null);
+          // the rows were measured at the theme's 10pt labels; another size makes the row count an estimate
+          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 10;
+          out(x, `about ${rows} rows fit in its ${x.h} height${axis ? ' with its value axis on' : ''}; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22.2 a row, 45 above the first row and 8 under the last${axis ? ', 38 more for the value axis, or switch it off' : ''})${other ? `; its labels are ${pt}pt, and the rows were measured at 10pt` : ''}.`, other ? { estimate: true } : null);
         }));
       } },
     { id: 'RTL_MIRROR', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.round2,
