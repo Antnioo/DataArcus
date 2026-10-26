@@ -68,6 +68,9 @@ const MUTANTS = [
   { id: 'D-nfd', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFD'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
   // (AF1) the report reader opens a file through a linked folder: diskSource's check of every folder on the way skipped
   { id: 'R-ancestors', file: 'mcp/lib/read-report.mjs', edits: [['  const at = (rel) => {\n    const parts', "  const at = (rel) => { return path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));\n    const parts"]], guards: ['test-0.3.1-audit-readers.mjs'] },
+  // (SQ6) the reader: a .pbit link followed; a .pbit that changed while read used
+  { id: 'R-pbit-link', file: MO, edits: [["  if (isLink(f)) throw linkRefused('file');\n  let fd;\n  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }", "  let fd = fs.openSync(f, 'r');"]], guards: ['test-0.3.1-reader-seen.mjs'], only: ['linux', 'darwin'] },
+  { id: 'R-pbit-changed', file: MO, edits: [['if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();', 'if (false) throw changedWhileRead();']], guards: ['test-0.3.1-reader-seen.mjs'] },
 
   // 3. writes and their clean-up
   { id: 'W-wx', file: WI, edits: [["const NEW_FILE = { flag: 'wx' };", "const NEW_FILE = { flag: 'w' };"]], guards: ['test-0.3.0-write-safety.mjs', 'test-partial-writes.mjs', 'test-z.mjs'] },

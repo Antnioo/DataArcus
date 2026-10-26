@@ -161,20 +161,27 @@ const mb = (n) => (n >= MB / 10 ? (n / MB >= 10 ? Math.round(n / MB) : Math.roun
 const refuse = (what) => new ReadError('TOO_BIG', { what }, `This file was not read: ${what}. A Power BI template without data is usually under 20 MB; nothing in this file was used.`);
 const isModelPart = (n) => n === 'DataModelSchema' || /(^|\/)model\.bim$/i.test(n);
 const isReportPart = (n) => n === 'Report/Layout' || (/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
-// buf: the zip; lim: the limits (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
+// buf: the zip (a Buffer, or a reader { size, at(start, n) }: the .pbit's descriptor, SQ6); lim: the limits
+// (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
+// (SQ6, 0.2.9-reader-S12: the .pbit route read the whole file, up to 300 MB, into memory before picking its parts. Now
+// only the directory's end, the directory and each needed part are read, at their offsets.)
+const bufReader = (b) => ({ size: b.length, at: (start, n) => b.subarray(Math.max(0, start), Math.max(0, Math.min(b.length, start + n))) });
 export function unzipNeeded(buf, lim) {
-  const L = lim || PBIT_LIMITS;
-  if (buf.length > L.file) throw refuse(`it is ${mb(buf.length)}, above the ${mb(L.file)} DataArcus reads`);
+  const L = lim || PBIT_LIMITS, R = Buffer.isBuffer(buf) ? bufReader(buf) : buf, size = R.size;
+  if (size > L.file) throw refuse(`it is ${mb(size)}, above the ${mb(L.file)} DataArcus reads`);
+  const tailAt = Math.max(0, size - 65557), tail = R.at(tailAt, size - tailAt);
   let eocd = -1;
-  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
   if (eocd < 0) throw new Error('Not a zip file');
-  const count = buf.readUInt16LE(eocd + 10);
+  const count = tail.readUInt16LE(eocd + 10);
   if (count > L.entries) throw refuse(`it lists ${count} parts, above the ${L.entries} DataArcus reads`);
-  // the directory: names, methods and sizes, nothing unpacked yet
-  const want = []; let p = buf.readUInt32LE(eocd + 16);
-  for (let n = count; n > 0 && p + 46 <= buf.length && buf.readUInt32LE(p) === 0x02014b50; n--) {
-    const method = buf.readUInt16LE(p + 10), csize = buf.readUInt32LE(p + 20), usize = buf.readUInt32LE(p + 24), nlen = buf.readUInt16LE(p + 28), xlen = buf.readUInt16LE(p + 30), clen = buf.readUInt16LE(p + 32);
-    const name = buf.toString('utf8', p + 46, p + 46 + nlen), lho = buf.readUInt32LE(p + 42);
+  // the directory: names, methods and sizes, nothing unpacked yet (read from its start to the end record: what the
+  // whole-file read walked, at most the file)
+  const dirAt = tail.readUInt32LE(eocd + 16), dir = dirAt < size ? R.at(dirAt, tailAt + eocd - dirAt) : Buffer.alloc(0);
+  const want = []; let p = 0;
+  for (let n = count; n > 0 && p + 46 <= dir.length && dir.readUInt32LE(p) === 0x02014b50; n--) {
+    const method = dir.readUInt16LE(p + 10), csize = dir.readUInt32LE(p + 20), usize = dir.readUInt32LE(p + 24), nlen = dir.readUInt16LE(p + 28), xlen = dir.readUInt16LE(p + 30), clen = dir.readUInt16LE(p + 32);
+    const name = dir.toString('utf8', p + 46, p + 46 + nlen), lho = dir.readUInt32LE(p + 42);
     if (isModelPart(name) || isReportPart(name)) want.push({ name, method, csize, usize, lho, model: isModelPart(name) });
     p += 46 + nlen + xlen + clen;
   }
@@ -183,13 +190,18 @@ export function unzipNeeded(buf, lim) {
   for (const e of want) {
     const cap = e.model ? L.model : L.entry;
     if (e.usize > cap) throw refuse(`its ${e.model ? 'model' : 'report'} part would unpack to ${mb(e.usize)}, above the ${mb(cap)} DataArcus reads`);
+    // (SQ6) and its packed size: deflate never grows a part by more than a few bytes per 16 KB, so a part packed above
+    // its cap and 1 MB is a directory that lies (read part by part, it would be read whole)
+    if (e.csize > cap + MB) throw refuse(`its ${e.model ? 'model' : 'report'} part is ${mb(e.csize)} packed, above the ${mb(cap)} DataArcus reads`);
     total += e.usize;
   }
   if (total > L.total) throw refuse(`the parts it needs would unpack to ${mb(total)} in total, above the ${mb(L.total)} DataArcus reads`);
   const out = {};
   for (const e of want) {
-    if (e.lho + 30 > buf.length || buf.readUInt32LE(e.lho) !== 0x04034b50) throw refuse('its directory points outside the file');
-    const start = e.lho + 30 + buf.readUInt16LE(e.lho + 26) + buf.readUInt16LE(e.lho + 28), raw = buf.subarray(start, start + e.csize);
+    const h = R.at(e.lho, 30);
+    if (e.lho + 30 > size || h.length < 30 || h.readUInt32LE(0) !== 0x04034b50) throw refuse('its directory points outside the file');
+    // (what is read of a part: its packed size, checked against its cap above, and never past the file)
+    const start = e.lho + 30 + h.readUInt16LE(26) + h.readUInt16LE(28), raw = R.at(start, Math.min(e.csize, size));
     if (e.method === 0) { out[e.name] = raw.subarray(0, e.usize); continue; }
     if (e.method !== 8) continue;
     // the declared size is the most a part may unpack to: a directory that lies is caught here
@@ -205,8 +217,9 @@ export function unzipNeeded(buf, lim) {
 const MAX_DEPTH = 256;
 const tooDeep = (o) => { const st = [[o, 1]]; while (st.length) { const [v, d] = st.pop(); if (d > MAX_DEPTH) return true; if (v && typeof v === 'object') for (const k in v) st.push([v[k], d + 1]); } return false; };
 const partJson = (buf, what) => {
-  let j; try { j = json(buf); } catch (e) { throw new Error(`The ${what} in this file is not valid JSON, so it was not read.`); }
-  if (tooDeep(j)) throw new Error(`The ${what} is nested more than ${MAX_DEPTH} levels deep (a real model is about 10), so it was not read.`);
+  // (SQ6, 0.2.9-reader-S15: coded, as the reader's other errors, so a caller reads the code, never the words)
+  let j; try { j = json(buf); } catch (e) { throw new ReadError('BAD_JSON', { what }, `The ${what} in this file is not valid JSON, so it was not read.`); }
+  if (tooDeep(j)) throw new ReadError('TOO_DEEP', { what, max: MAX_DEPTH }, `The ${what} is nested more than ${MAX_DEPTH} levels deep (a real model is about 10), so it was not read.`);
   return j;
 };
 // A file of the model read from disk (model.bim, a TMDL file, a report's JSON): measured before it is read (B-02), the
@@ -249,6 +262,27 @@ function notAModelFile(full) {
 // Throws when the directory lists a DataModel and no DataModelSchema (a .pbix by another name). A zip it can't make
 // sense of is left to unzipNeeded, which says why in its own words.
 function readAt(fd, size, start, n) { const b = Buffer.alloc(Math.max(0, Math.min(n, size - start))); let got = 0, r; while (got < b.length && (r = fs.readSync(fd, b, got, b.length - got, start + got)) > 0) got += r; return b.subarray(0, got); }
+// (SQ6, 0.2.9-reader-S12) a .pbit read by its parts: one descriptor (a link refused, never followed; a regular file
+// within the cap, as readCapped), the print hashed in 1 MB chunks (the same SHA-256 of the whole file, never held whole),
+// then the directory and the needed parts at their offsets. A file whose size is not the one measured before it was
+// opened, or that changed while it was read, is refused: the print and the parts are of one file.
+const changedWhileRead = () => new ReadError('CHANGED', {}, 'This file was not read: it changed while it was read (it is being saved or copied?). Wait until it is saved, then ask again; nothing in it was used.');
+function zipParts(f, cap, size0) {
+  if (isLink(f)) throw linkRefused('file');
+  let fd;
+  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile()) throw new Error('This file was not read: its file is not a regular file.');
+    if (st.size > cap) throw refuse(`its file is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads`);
+    const h = crypto.createHash('sha256'), chunk = Buffer.alloc(MB);
+    let n = 0, r;
+    while ((r = fs.readSync(fd, chunk, 0, chunk.length, n)) > 0) { h.update(chunk.subarray(0, r)); n += r; if (n > cap) throw refuse(`its file is above the ${mb(cap)} DataArcus reads`); }
+    const z = unzipNeeded({ size: n, at: (start, len) => readAt(fd, n, start, len) }), after = fs.fstatSync(fd);
+    if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();
+    return { print: h.digest('hex'), z };
+  } finally { fs.closeSync(fd); }
+}
 function zipDirectoryCheck(full, size) {
   let fd;
   try { fd = fs.openSync(full, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { return; }
@@ -348,7 +382,7 @@ const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({
 // model again and refuses one that changed since the go (plans.mjs)
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 // a report file that could not be read: said, never dropped silently (A1-4)
-const skippedOf = (e) => (/not valid JSON/.test(String(e && e.message)) ? 'not valid JSON' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
+const skippedOf = (e) => (e && e.code === 'BAD_JSON' ? 'not valid JSON' : e && e.code === 'TOO_DEEP' ? 'nested too deep' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
 const PARTIAL = 'Some report files could not be read (skipped): the findings about fields "not used anywhere" are partial, since those files may use them.';
 
 // opts.root: the working folder to read in (default: DATAARCUS_ROOT). Returns a ModelRead; throws a ReadError (or a
@@ -378,9 +412,9 @@ export function loadModel(p, opts) {
     // (rc.23, F1) a zip accepted by its name (.pbit, no extension): its directory first, and a .pbix by another name (a
     // DataModel, Power BI's data cache, and no DataModelSchema) is refused before the rest of the file is read
     if (isZip) zipDirectoryCheck(full, st.size);
-    const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80), print = sha(buf);
-    if (buf[0] === 0x50 && buf[1] === 0x4b) {
-      const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
+    const source = shownName(path.basename(full), 80);
+    if (isZip) {
+      const { z, print } = zipParts(full, cap, st.size), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
       if (!dms) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
       // the report: the legacy Report/Layout file, or PBIR files (same choice as the website's worker)
       const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'], skipped = [];
@@ -389,7 +423,8 @@ export function loadModel(p, opts) {
         : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
       return modelRead({ source, tmsl, report, print, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
     }
-    return modelRead({ source, tmsl: partJson(buf, 'model file'), print });
+    const buf = readCapped(full, cap, 'model file');
+    return modelRead({ source, tmsl: partJson(buf, 'model file'), print: sha(buf) });
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];

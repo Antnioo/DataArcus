@@ -260,7 +260,13 @@ function fieldOf(f) {
   if (f.Column) { const s = src(f.Column); return { kind: 'column', table: String(s.Entity || s.Source || ''), name: String(f.Column.Property || '') }; }
   if (f.Measure) { const s = src(f.Measure); return Object.assign({ kind: 'measure', table: String(s.Entity || s.Source || ''), name: String(f.Measure.Property || '') }, s.Schema === 'extension' ? { report: true } : {}); }
   if (f.Aggregation) { const inner = fieldOf(f.Aggregation.Expression || {}); return inner ? Object.assign({}, inner, { kind: 'aggregation', agg: AGG[f.Aggregation.Function] || 'Agg' }) : null; }
-  if (f.HierarchyLevel) { const h = ((f.HierarchyLevel.Expression || {}).Hierarchy) || {}, s = src(h); return { kind: 'column', table: String(s.Entity || ''), name: String(h.Hierarchy || ''), level: String(f.HierarchyLevel.Level || '') }; }
+  // (SQ6, 0.2.9-custom-visuals-S4) Power BI's auto date hierarchy has no SourceRef on the hierarchy: its date column is
+  // the PropertyVariationSource's Entity and Property ("Date Hierarchy" is Power BI's name, not the report's)
+  if (f.HierarchyLevel) {
+    const h = ((f.HierarchyLevel.Expression || {}).Hierarchy) || {}, s = src(h), v = ((h.Expression || {}).PropertyVariationSource) || null, level = String(f.HierarchyLevel.Level || '');
+    if (!s.Entity && !s.Source && v && v.Property) { const vs = src(v); return { kind: 'column', table: String(vs.Entity || vs.Source || ''), name: String(v.Property), level }; }
+    return { kind: 'column', table: String(s.Entity || ''), name: String(h.Hierarchy || ''), level };
+  }
   return null;
 }
 // a field as the answer writes it: Table[Column], [Measure], Sum(Table[Column]); names cleaned (they are untrusted)
@@ -335,9 +341,14 @@ export function inventory(src, reportName, opts) {
   // the theme: report.json names its file in RegisteredResources; its name, colours (hex only) and label size
   const tc = report.themeCollection || {}, ref = tc.customTheme && tc.customTheme.name ? path.basename(String(tc.customTheme.name)) : null;
   const th = ref ? json('StaticResources/RegisteredResources/' + ref) : null;
+  // (SQ6, audit-5-reading-S3) the base theme Power BI keeps beside it (SharedResources/BaseThemes, through this source's
+  // checks), read once: its data colours are the report's when the custom theme gives none, as Power BI draws them
+  const bt = tc.baseTheme && tc.baseTheme.name ? path.basename(String(tc.baseTheme.name)) : null;
+  const baseJson = bt ? json(`StaticResources/SharedResources/BaseThemes/${bt}.json`) : null;
   const labelSize = +((((th || {}).textClasses || {}).label || {}).fontSize) || 10;
+  const colours = th && Array.isArray(th.dataColors) ? th.dataColors : baseJson && Array.isArray(baseJson.dataColors) ? baseJson.dataColors : null;
   const theme = { name: safeName((th && th.name) || ref || (tc.baseTheme && tc.baseTheme.name) || 'default'), labelSize,
-    ...(th && Array.isArray(th.dataColors) ? { dataColors: th.dataColors.map(hex).filter(Boolean).slice(0, 8) } : {}) };
+    ...(colours ? { dataColors: colours.map(hex).filter(Boolean).slice(0, 8) } : {}) };
   const suspicious = [];
   // (0.3.1 S1: length alone never makes a text suspicious; a long one is counted, as read_report shows it only by its length)
   let longTexts = 0;
@@ -412,7 +423,7 @@ export function inventory(src, reportName, opts) {
     priv = entries(report.resourcePackages).filter((p) => /customvisual/i.test(String(p.type || ''))).flatMap((p) => [String(p.name || '')].concat(names(p.items)));
   const sourceOf = (t) => (pub.includes(t) ? 'appsource' : orgs.includes(t) ? 'organization' : priv.includes(t) ? 'private' : 'unknown');
   const installedNotUsed = [...new Set(pub.concat(orgs))].filter((t) => !custom.includes(t)).length;
-  return { name: safeName(reportName || 'report'), pages, theme, themeFile: ref ? 'StaticResources/RegisteredResources/' + ref : null, themeJson: th, themeRef: ref, report,
+  return { name: safeName(reportName || 'report'), pages, theme, themeFile: ref ? 'StaticResources/RegisteredResources/' + ref : null, themeJson: th, themeRef: ref, baseJson, report,
     hasPlatform: src.has('.platform'), versions: Object.fromEntries(Object.entries(versions).map(([k, v]) => [k, [...v].sort()])),
     bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map((t) => ({ type: safeName(t), source: sourceOf(t) })), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, longTexts, sk };
 }
@@ -474,7 +485,7 @@ export function paintedColours(inv) {
 // neither the base's nor the theme's), text, ...reportTheme's other colours and styles } | null when it has none
 export function reportIdentity(src, reportName) {
   const inv = inventory(src, reportName);
-  const bt = (((inv.report || {}).themeCollection || {}).baseTheme || {}).name, base = bt ? (() => { try { return src.json(`StaticResources/SharedResources/BaseThemes/${path.basename(String(bt))}.json`); } catch (e) { return null; } })() : null;
+  const base = inv.baseJson || null;
   const th = reportTheme(inv, base) || {}, inBase = new Set(((base && Array.isArray(base.dataColors)) ? base.dataColors : []).map(hex6).filter(Boolean));
   const own = th.dataColors || [], counted = paintedColours(inv);
   const painted = counted.map(([h]) => h).filter((h) => isDataColour(h) && !inBase.has(h) && !own.includes(h)).slice(0, 8);
