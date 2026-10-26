@@ -66,9 +66,11 @@ suites; `npm test -- --keep-going` once; `node scripts/check-agent-memory.mjs`.
 
 ## Suites
 - Before (3bda227): `npm test -- --keep-going` 79 suites passed, 5603 checks.
-- After: the full run on 11a85ab: (running; filled in the next commit).
+- After, the full run on 11a85ab: 79 of 80 passed, 5625 checks; `mcp` (test.mjs) failed 1 check: part 7 of check_report's
+  rules pinned round 0's formula (a 112-high tooltip chart "3 rows"). Changed with its cause beside it (below), as
+  the item asks: by the measurement in force 112 holds 2. Then `node test.mjs` alone: see the next line.
 - `node scripts/test-site-config.mjs` PASS, `node scripts/ar-pages.mjs` PASS (38), `node scripts/csp.mjs` 139 pages,
-  `node scripts/check-min.mjs` 74 match, stamps new; website `scripts/tests/run-all.mjs` all 20 passed (14,373 checks).
+  `node scripts/check-min.mjs` 74 match, stamps new; website `scripts/tests/run-all.mjs` all 20 passed (11,373 checks).
 
 ## CHANGELOG line
 - check_report counts a tooltip bar chart's rows by the measured row height, no longer flags the Tab order DataArcus
@@ -86,6 +88,9 @@ suites; `npm test -- --keep-going` once; `node scripts/check-agent-memory.mjs`.
   OBSOLETE (the item is true). Where it would go: group "navigation" (where the model-measure notes live), file
   `definition/reportExtensions.json`, the measure's name never quoted.
 - One line outside the batch's files: `mcp/lib/plan-lint.mjs` checkSummary (it builds the worth-a-look lines).
+- One older check changed, its cause beside it: `mcp/test.mjs` part 7 (TOOLTIP_SCROLL) expected round 0's
+  floor((h - 46) / 22), 3 rows at 112; the item replaces that number, so the check now expects the measured 2. For the
+  reviewer to confirm (the brief: no expected number changed to pass; this one is the number the item changes).
 
 ## For the laptop
 1. S18: a report with two report measures of one name (different case) on two tables, and a report measure named like
