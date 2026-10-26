@@ -16,7 +16,11 @@
   the same bytes before and after; `npm test -- --keep-going` 88 -> 89 suites, all PASS; check-agent-memory PASS.
 - **Invariants:** metadata only (the switcher reads relationships and DAX names, never a value); the isolates come
   from the writer only; one engine shared with the website (extend `assets/js/`, never copy into `mcp/`).
-- **Resume:** see Results.
+- **Got:** sq15b 19 checks (13 red first on c2a67d6); report 27 -> 28 suites PASS; core 6 PASS (test.mjs 1591 = 1591,
+  golden 12 tasks match: no golden report changed; mutation 72 mutants all killed); arabic 9 PASS, the same counts;
+  website run-all 21 PASS, the same counts (below); plan-lint's planned reports: 24 plans (8 shapes x 2 models,
+  EN and AR, I planned 8 and hashed 24) the same bytes after the refactor; full run and check-agent-memory below.
+- **Resume:** done; waits for the reviewer. Nothing needs Desktop but "For the laptop" 1-3 (the batched run).
 
 ## The items, confirmed on c2a67d6
 1. **J18-S2**: `isolateLatin` / `isolateFiles` live in `mcp/lib/terminology.mjs` only; `report-run.mjs:381` isolates an
@@ -44,5 +48,60 @@
    BUILDER, both copies served from one .js), csp --write, ar-pages --write, sitemap-lastmod --write.
 4. Suites, results below; SEEN-QUEUE.md Status cells in the same push.
 
-## Baseline (c2a67d6)
-(filled after the run)
+## Baseline (c2a67d6) -> after
+- `npm test -- report`: 27 suites passed -> 28 (sq15b 19 checks added; metric-switcher 60 -> 60, every other line the same).
+- `npm test -- core`: 6 passed -> 6 (mcp 1591 -> 1591 checks, golden 12 tasks match -> the same, mutation 186 checks,
+  72 mutants -> the same). test.mjs's A3-11 (ar) failed once on the fix, by design: see Decisions 3.
+- `npm test -- arabic`: 9 passed -> 9 (terminology-sheet 48, arabic-sweep 255, arabic-titles 27: the same).
+- `scripts/tests/run-all.mjs`: All 21 passed -> All 21 passed (every line the same count: site 483, theme-generator 898, theme-generator-lab 898, pbip 100, layout 512, design-engine 598...).
+
+## Results
+Commits: plan 103fb9d, red first d78047b, the three fixes 850593d, A3-11 4b5cb72, this note and the Status cells NOTE_COMMIT.
+
+| Item | Before | After | Test (red -> green) |
+|---|---|---|---|
+| J18-S2 | `isolateLatin`, `isolateNames`, `isolateFiles` in `mcp/lib/terminology.mjs` only; report-run isolated the MCP's Arabic report; the website's Arabic download (pbip-export.js) wrote «Total Sales: التفاصيل» raw | the rule in `assets/js/text-measure.js` (`isolateLatin`, `isolateNames`, `ARABIC`, `ISOLATED`), `isolateFiles` in `assets/js/pbip-export.js`, which runs it on every Arabic build after the alt texts (F1's `all`); terminology.mjs re-exports them; report-run's pass after its own additions kept (a no-op on what the writer isolated) | sq15b J1-J5 red -> green; J6 (English: no isolate), J7 (the page loads text-measure first), J8 (the MCP's Arabic report) pins pass |
+| L3-S2 | `resolveSwitch` by names only; a measure of an unrelated fact table switched in, one value on every bar | `switchReach` (metric-switcher.mjs): each measure must reach the bar chart's category and the line chart's month (the picker's `reachTable`); else `leftOut` [{ field, why }] in the plan, the approval page ("Measures left out") and the answer; fewer than 2 left: refused, nothing written; no relationships in the model, or a measure that reads no table (a constant): kept | sq15b L1-L4, L7 red -> green; L5, L6, L8 pins pass; metric-switcher 60 -> 60 |
+| 0.2.9-reader-S8 | plan-lint's `build` copied the pinned map, `relsOf`, the pick options, `Bind.suggest`, the card cap and table share | `report-run.mjs` exports `planBinding` (pinned fields, pick options, `bindFor`) and `fieldsDesign` (card count, table share); reportRun and plan-lint both call them | sq15b S1-S3 red -> green; 24 plans the same bytes (files and lint answers) before J18-S2; after it the 12 English plans the same, the 12 Arabic ones isolated (as create_report's exact build was) |
+
+## CHANGELOG line
+- The website's Arabic project download keeps English words and codes inside Arabic titles in their reading order, as the MCP's Arabic reports do; the metric switcher leaves out a measure its charts can't break down by their category or month, and the plan says which and why.
+
+## Decisions I made
+1. **Where the rule lives:** the string rule in `text-measure.js` (already the text engine both sides load, and the one
+   that counts the isolates 0 wide), the files walk in `pbip-export.js` (the writer that makes the files): no new
+   engine, no new script on the page. `plain` and the sheet stay in terminology.mjs (the MCP's only).
+2. **The writer isolates an Arabic build with F1's `all`** (every mixed text, the owner's decision of 20 Oct for the
+   MCP), at the end of `build`, after the alt texts. The MCP's report-run pass stays for what it adds after the build
+   (the metric switcher, flip cards, icons, DAX library): on the writer's texts it changes nothing.
+3. **test.mjs's A3-11 (ar) changed on purpose** (test-0.2.9w.mjs, commit 4b5cb72): it refused every direction mark in
+   an Arabic build; it now takes the writer's own FSI, PDI and RLM off first, still refuses a name's RLO and LRI, and
+   requires each text to be exactly `isolateLatin`'s output. Same 75 checks; it now also fails if the writer stops
+   isolating.
+4. **A constant measure stays in the switch** (its DAX reads no table: `= 1000`): the same value on every bar is what it
+   means. This kept the metric-switcher suite's hostile fixture (constant measures in an unrelated table) as it was. To
+   tell it, pbip-bind.js gains `readTables` (the picker's own DAX reader, no relationship followed).
+5. **Both chart axes count:** one field parameter drives both charts, so a measure the month can't break down is left
+   out even when the category can (and the other way).
+6. **reader-S8's shape:** two exported functions (`fieldsDesign`, `planBinding`), not one, because report-run binds
+   before its design is final (the noTime layout) and plan-lint after; create_report's own extras (kpiValues "full",
+   page filters) go in as `full` and `more`, so plan-lint's options are exactly what they were.
+7. `?v=` stamps: `20261026sq15b` on text-measure, pbip-export, pbip-bind (theme-generator.js) and theme-generator.min.js
+   on its three pages; check-min confirms every changed .min.js has a new stamp.
+
+## For the laptop (Power BI Desktop, the batched run)
+1. The website's Theme Generator, Arabic, "Download project" on a made-up model with English names (Total Sales,
+   Region, Month): open it; titles such as «Total Sales: التفاصيل» and «... حسب Region» read with the English words
+   at the right place, "KPI 2024"-style runs in their own order; no boxes or gaps where the isolates are (J18's item 5).
+2. The same download in English: unchanged.
+3. The metric switcher on a model with an unrelated fact table: the plan lists the measure left out; the Metric page
+   switches the others.
+
+## Seen, not in scope
+- On a model.bim whose Calendar[Month] is sorted by Month Number, the Metric page leaves its line chart out with "a
+  month name without a sort column" (the bound month carries no sortBy), while the report's own line chart orders the
+  same column by its "Month start (sort)" measure. The note's words are wrong and the page could switch a line too.
+- check_report and read_report still show the isolates as code points (J18-S3, unchanged).
+- plan-lint's Arabic lint answers now hold the isolates in their titles (the plan's view of its first page), as the
+  exact build already did.
+- J18's laptop item 5 (do the isolates draw as boxes anywhere) is still open and now covers the website download too.

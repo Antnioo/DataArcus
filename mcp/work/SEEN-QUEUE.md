@@ -214,7 +214,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S5 | server instructions near their character cap | OWNER | 2,195 of INSTRUCTIONS_MAX 2,200 `mcp/lib/agent-text.mjs:9` | decide: raise the 2,200 cap (`mcp/lib/agent-text.mjs:9`) or move a rule into tool descriptions; unblocks 0.2.9-design-S9 |
 | 0.2.9-reader-S6 | merge conflicts with builder 5; npm test should run 0.2.9b | OBSOLETE | merged; 0.2.9b runs inside test.mjs `mcp/tests.json:112` | merge past; suite registered |
 | 0.2.9-reader-S7 | browser suites not run locally | OBSOLETE | CI runs them | informational, no action |
-| 0.2.9-reader-S8 | plan-lint binding is a hand copy of create_report's bindFor | OPEN | `plan-lint.mjs:38` Bind.suggest vs `report-run.mjs:158` bindFor+countBind | one page-and-binding function in report-run.mjs shared by plan-lint · L · low · writer → **SQ15** |
+| 0.2.9-reader-S8 | plan-lint binding is a hand copy of create_report's bindFor | DONE (SQ15b 850593d) | `plan-lint.mjs:38` Bind.suggest vs `report-run.mjs:158` bindFor+countBind | one page-and-binding function in report-run.mjs shared by plan-lint · L · low · writer → **SQ15** |
 | 0.2.9-reader-S9 | lint is a second rule engine beside report-rules.js | OBSOLETE | lint moved to shared `assets/js/layout-check.js`; `design-lint.mjs:22` wraps it | engine now shared with the website |
 | 0.2.9-reader-S10 | R5 done by builder 5 (lint names visual by type and place) | OBSOLETE | layout-check.js names by type/place; e8bf832 squashed away | informational, no action |
 | 0.2.9-reader-S11 | audit A1-4/5/6/8/9/10/11/14, website bim cap, byName readdirSync | DONE | fab795c: `pbip-bind.js:57` unknown, `:103` cap, `model.mjs:295` readdirSafe, field-meaning.js | - |
@@ -646,7 +646,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | J18-S1 | twin plan answer 37,018 chars near 40,000 cap | OBSOLETE | informational: cap works as designed |  |
-| J18-S2 | website Arabic download does not isolate Latin runs | OPEN | `assets/js/pbip-export.js` no isolate; only `mcp/lib/twin-texts.mjs:195` | move isolateLatin to a shared engine, call in pbip-export · M · low · website → **SQ15** |
+| J18-S2 | website Arabic download does not isolate Latin runs | DONE (SQ15b 850593d) | `assets/js/pbip-export.js` no isolate; only `mcp/lib/twin-texts.mjs:195` | move isolateLatin to a shared engine, call in pbip-export · M · low · website → **SQ15** |
 | J18-S3 | check_report/read_report show isolates as code points | OBSOLETE | informational: screening rule by design |  |
 | J18-S4 | Arabic month column swap lists it, not English term's column | OBSOLETE (SQ4: the twin never swaps a column; its sheet names what its pages bind, sq4 J18-S4a; create_report's swap: SQ4.md Seen 1) | `mcp/lib/twin-plan.mjs:174` sheetOf by T.keys | verify first: which column the sheet should name · S · low · twin → **SQ4** |
 | J18-S5 | terms forgotten when session ends | OWNER | `mcp/lib/terminology.mjs:159` in-memory CONFIRMED | decide: persist terms/date answers in the answers file via approved write |
@@ -708,7 +708,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | L3-S1 | Metric bar chart may cut names; no Top N | OWNER | `mcp/lib/metric-switcher.mjs:121` bar has no TopN filter | decide on a Top N for a field-parameter chart; prove it on the laptop first |
-| L3-S2 | switch measures may be unrelated to category/month | OPEN | `mcp/lib/metric-switcher.mjs` reads no relationships; plan says nothing | check model relationships (metadata) per measure and say it in the plan · M · low · writer → **SQ15** |
+| L3-S2 | switch measures may be unrelated to category/month | DONE (SQ15b 850593d) | `mcp/lib/metric-switcher.mjs` reads no relationships; plan says nothing | check model relationships (metadata) per measure and say it in the plan · M · low · writer → **SQ15** |
 | L3-S3 | no nav button to Metric page; no phone layout | OWNER | `mcp/lib/metric-switcher.mjs` no button or mobile.json | decide whether the Metric page gets navigation and a phone layout |
 | L3-S4 | L2 grid and slicerStyle not on Metric page | OWNER | grid done (fab795c, `metric-switcher.mjs:133`); slicer still list `:116-117` | laptop: prove pill slicerStyle on the Metric page in Desktop, then the writer change |
 | L3-S5 | create_report description long; agent-text, SKILL.md unchanged | OBSOLETE | informational, no action |  |
