@@ -965,8 +965,8 @@ export default async function ({ browser, url }) {
         const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
           said: (document.querySelector('.mh-unreadable') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), share: !!document.querySelector('#mhShare, #mhCard'),
           partial: !!document.querySelector('.mh-partial li'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
-        const want = lang === 'en' ? /1 model file\(s\) could not be read: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(cut short: line \d+, the last, ends without a line break\)\. The check below is missing what they hold; fix the file in Power BI Desktop or your editor and check it again\./
-          : /تعذّرت قراءة 1 من ملفات النموذج: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(الملف مقطوع: السطر \d+، وهو الأخير، لا ينتهي بفاصل أسطر\)\. الفحص أدناه ينقصه ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop/;
+        const want = lang === 'en' ? /1 model file\(s\) could not be read: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(cut short: line \d+, the last, stops in the middle of an item\)\. The check below is missing what they hold; fix the file in Power BI Desktop or your editor and check it again\./
+          : /تعذّرت قراءة 1 من ملفات النموذج: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(الملف مقطوع: السطر \d+، وهو الأخير، يتوقف في منتصف عنصر\)\. الفحص أدناه ينقصه ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop/;
         check(want.test(got.said) && !got.ring && !got.share && got.partial && !got.hist, `unreadable TMDL file (${lang}): the message names the file and why, no score ring, card or share, findings partial, no history: ${JSON.stringify(got).slice(0, 400)}`);
         if (v.errs.length) problems.push(`unreadable TMDL file (${lang}): ${v.errs.join(' | ')}`);
         await v.ctx.close();

@@ -22,6 +22,13 @@
     const m = s.match(/^(.*?)(\s*=.*)?$/);
     return [m[1].trim(), m[2] || ''];
   }
+  // a 'quoted name' that never closes (the text ends inside it)
+  function openQuote(s) {
+    s = String(s).replace(/^\s+/, '');
+    if (s[0] !== "'") return false;
+    for (let i = 1; i < s.length; i++) if (s[i] === "'") { if (s[i + 1] === "'") i++; else return false; }
+    return true;
+  }
   // Table.Column, 'Table'.'Column' or a mix: [table, column]
   function readRef(s) {
     s = String(s).trim();
@@ -49,7 +56,8 @@
     });
     // (AU47, the night audit's AUD-047: a file Power BI Desktop could not open was read in part, silently) what this
     // parse could not place, with its line: read() names the file, never its text
-    const top = { type: 'file', props: [], children: [], problems: [] }, owners = [top];
+    // top.last: the file's last item as the parse read it, the evidence a file with no final line break is cut short
+    const top = { type: 'file', props: [], children: [], problems: [], last: null }, owners = [top];
     const problem = (code, i) => { if (!top.problems.length) top.problems.push({ code, line: i + 1 }); };
     let desc = [];
     // the expression after "=": inline text, ``` fenced lines, or the lines deeper than `deeper`
@@ -73,29 +81,32 @@
     for (let i = 0; i < lines.length;) {
       const { d, t } = lines[i];
       if (!t) { i++; continue; }
-      if (t.startsWith('///')) { desc.push(t.replace(/^\/\/\/ ?/, '')); i++; continue; }
+      if (t.startsWith('///')) { desc.push(t.replace(/^\/\/\/ ?/, '')); top.last = { kind: 'description' }; i++; continue; }
       // (F-M1, the fuzz test: a truncated or mis-indented file left holes in this stack and the reader threw. A line
       // deeper than its parent belongs to the deepest object there is, and the stack never has a hole.)
       // (AU47) indentation that is neither tabs nor four spaces, or a line more than one level deeper than its parent
       if (/^\s/.test(lines[i].raw.replace(/^( {4})+/, (x) => '\t'.repeat(x.length / 4)).slice(d)) || d > owners.length - 1) problem('indent', i);
       const at = Math.min(d, owners.length - 1), owner = owners[at];
       let m;
-      if ((m = t.match(/^(\w+)\s*:\s*(.*)$/))) { owner.props.push([m[1], m[2].trim()]); i++; continue; }
+      if ((m = t.match(/^(\w+)\s*:\s*(.*)$/))) { owner.props.push([m[1], m[2].trim()]); top.last = { kind: 'prop', key: m[1], value: m[2].trim() }; i++; continue; }
       let node;
       if ((m = t.match(/^(\w+)\s*=\s*(.*)$/))) {
         const e = expr(m[2].trim(), i, d + 1);
         node = { type: m[1], name: null, expr: e.value }; i = e.next;
+        top.last = { kind: 'expression', expr: e.value };
       } else if ((m = t.match(/^(\w+)$/))) {
         let j = i + 1; while (j < lines.length && (!lines[j].t || lines[j].t.startsWith('///'))) j++;
-        if (!(j < lines.length && lines[j].d > d)) { owner.props.push([m[1], true]); i++; continue; }
+        if (!(j < lines.length && lines[j].d > d)) { owner.props.push([m[1], true]); top.last = { kind: 'flag', key: m[1] }; i++; continue; }
         node = { type: m[1], name: null }; i++;
       } else if ((m = t.match(/^ref\s+(\w+)\s+(.+)$/))) {
         node = { type: 'ref', name: readName(m[2])[0], of: m[1] }; i++;
+        top.last = { kind: 'declaration', name: node.name, open: openQuote(m[2]) };
       } else if ((m = t.match(/^(\w+)\s+(.+)$/))) {
         const [name, rest] = readName(m[2]);
         node = { type: m[1], name };
         const eq = rest.match(/^\s*=\s*(.*)$/);
         if (eq) { const e = expr(eq[1].trim(), i, d + 1); node.expr = e.value; i = e.next; } else i++;
+        top.last = eq ? { kind: 'expression', expr: node.expr, name, open: openQuote(m[2]) } : { kind: 'declaration', name, open: openQuote(m[2]) };
       } else { problem('stopped', i); i++; continue; }
       node.props = []; node.children = [];
       if (desc.length) { node.description = desc.join('\n'); desc = []; }
@@ -178,8 +189,8 @@
     return { model: build(files0, opts || {}, parsed), skipped };
   }
   // why one file can't be read fully, or null: the first of empty, not text, git merge-conflict markers, a line the
-  // parse could not place (indentation, a line it stopped at), cut short (Power BI Desktop ends every line, the last too,
-  // with a line break), a tables/ file with no table in it
+  // parse could not place (indentation, a line it stopped at), cut short (no final line break, and the last item is
+  // visibly incomplete: cutAtEnd), a tables/ file with no table in it
   function problemIn(f, tree) {
     const text = String(f.text == null ? '' : f.text).replace(/^\uFEFF/, ''), at = (re) => { const k = text.split(/\r?\n/).findIndex((l) => re.test(l)); return k + 1; };
     const out = (code, line) => Object.assign({ path: f.path, code }, line ? { line } : {});
@@ -187,9 +198,37 @@
     if (/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]/.test(text)) return out('notText');
     if (/^(<{7}|>{7})( |$)/m.test(text)) return out('conflict', at(/^(<{7}|={7}|>{7})( |$)/));
     if (tree.problems.length) return out(tree.problems[0].code, tree.problems[0].line);
-    if (!/\n$/.test(text)) return out('cut', text.split(/\r?\n/).length);
+    if (!/\n$/.test(text) && cutAtEnd(tree.last)) return out('cut', text.split(/\r?\n/).length);
     if (/(^|\/)tables\/[^/]+$/i.test(f.path.replace(/\\/g, '/')) && !tree.children.some((n) => n.type === 'table')) return out('noTable');
     return null;
+  }
+  // (the reviewer, 26 Oct: a missing final line break alone is no evidence; VS Code, Notepad and git tools often leave
+  // none on a whole file) a file whose last line has no line break is cut short only when that last item is
+  // visibly incomplete: an unknown bare word (a property cut mid-word), a property with no value, a data type that is
+  // none, a [column] or "text" that never closes, a declaration with no name or an open 'quoted name', an expression
+  // whose brackets or strings never close, or a description with no object after it. A file cut exactly at a line
+  // break, or between two whole items, reads as a whole, shorter file: nothing in it says otherwise
+  const FLAGS = new Set(['isHidden', 'isPrivate', 'isNameInferred', 'isDataTypeInferred', 'isKey', 'isUnique', 'isNullable', 'isDefaultLabel', 'isDefaultImage',
+    'showAsVariationsOnly', 'isAvailableInMdx', 'legacyRedirects', 'returnErrorValuesAsNull', 'fastCombine', 'excludeFromModelRefresh', 'isRemoved']);
+  const TYPES = new Set(['string', 'int64', 'double', 'dateTime', 'decimal', 'boolean', 'binary', 'variant', 'unknown', 'automatic']);
+  // brackets and "strings" that never close ("" inside a string is a quote)
+  function unclosed(x) {
+    let depth = 0, inStr = false;
+    for (let i = 0; i < x.length; i++) {
+      const c = x[i];
+      if (inStr) { if (c === '"') { if (x[i + 1] === '"') i++; else inStr = false; } continue; }
+      if (c === '"') inStr = true; else if ('([{'.includes(c)) depth++; else if (')]}'.includes(c)) depth--;
+    }
+    return inStr || depth > 0;
+  }
+  function cutAtEnd(last) {
+    if (!last) return false;
+    if (last.kind === 'description') return true;
+    if (last.kind === 'flag') return !FLAGS.has(last.key);
+    if (last.kind === 'prop') return !last.value || (last.key === 'dataType' && !TYPES.has(last.value)) || unclosed(last.value);
+    if (last.kind === 'declaration') return !last.name || last.open;
+    if (last.kind === 'expression') return !String(last.expr || '').trim() || last.open || unclosed(String(last.expr));
+    return false;
   }
   const WHY = {
     empty: ['empty file', 'ملف فارغ'],
@@ -197,7 +236,7 @@
     conflict: ['git merge-conflict markers (<<<<<<<) at line #', 'علامات تعارض دمج من git (<<<<<<<) في السطر #'],
     indent: ['unexpected indentation at line #', 'مسافة بادئة غير متوقعة في السطر #'],
     stopped: ['parse stopped at line #', 'توقفت القراءة عند السطر #'],
-    cut: ['cut short: line #, the last, ends without a line break', 'الملف مقطوع: السطر #، وهو الأخير، لا ينتهي بفاصل أسطر'],
+    cut: ['cut short: line #, the last, stops in the middle of an item', 'الملف مقطوع: السطر #، وهو الأخير، يتوقف في منتصف عنصر'],
     noTable: ['no table definition in it', 'لا يحتوي على تعريف جدول']
   };
   const whyOf = (s, lang) => (WHY[s.code] || WHY.stopped)[lang === 'ar' ? 1 : 0].replace('#', String(s.line || 1));
