@@ -12,5 +12,8 @@ export const VISUAL_KINDS = ['title', 'logo', 'kpi', 'card', 'line', 'bar', 'col
 // The tools' limits, given to the plan step so a plan is checked before it is shown (0.2.9, O-12: a plan with 4 slicers
 // was approved, then create_report refused it). create_report's own inputs use the same numbers.
 export const LIMITS = { kpiCards: 6, slicers: 3, tableFields: 8, pageFilters: 8, svgColumns: 4, svgCards: 6, displayNameLength: 80, textLength: 400,
+  // (SQ9, Q1-S9) the most tables a call names (read_model's tables in full, the picker's tables): one number, measured on
+  // the 300-table model (suggest_fields 10,546 and plan_layout 14,177 characters at 100; the cap is 40,000)
+  tables: 100,
   pageSizes: ['1920x1080', '1280x720', '960x720', 'custom { w, h }: 640-3840 x 360-2160, shaped 4:3 to 2.4:1'], defaultPage: '1920x1080',
   visuals: VISUAL_KINDS };

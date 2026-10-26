@@ -395,6 +395,52 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
   for (const [k, t] of [['calc', calc.calc], ['calcTr', calc.calcTr]]) check(/Creators always need Pro or PPU\./.test(t) && t.includes(`$${UAE.cu} against $${P.cuPayg}`) && t.includes(`AED ${two(P.pro * AED)} or SAR ${two(P.pro * SAR)}`), `SQ8 DS1-S3. ${k}: the creators' licence or the UAE and peg figures`);
   for (const [k, t] of [['calcAr', calc.calcAr], ['calcTr', calc.calcTr]]) check(/المنشئون يحتاجون Pro أو PPU دائمًا\./.test(t), `SQ8 DS1-S3. ${k}: the creators' licence (AR)`);
 }
+// SQ9 (0.3.1, the Seen batch "tool texts and public claims"; mcp/work/SQ9.md): the package's own words checked against
+// the code: the plan kinds (Plans.ALLOWS), the gallery's limits, rule 7, the tools' limits and the privacy sentences
+{
+  const { planSources, NO_DIRECT_EDITS, writingTools } = await import('./lib/agent-text.mjs');
+  const { ALLOWS } = await import('./lib/plans.mjs');
+  const { LIMITS } = await import('./lib/tool-limits.mjs');
+  const { createRequire } = await import('node:module');
+  const Gallery = createRequire(import.meta.url)('../assets/js/visual-gallery.js');
+  const ps = planSources();
+  // C-S1 every plan kind is named by the tool and option that give it, never by the kind's own key
+  check(Object.keys(ALLOWS).every((k) => !ps.includes(`(from ${k})`)), `SQ9 C-S1. approve_plan names a plan source by its kind's key: ${ps}`);
+  check(ps.includes('create_report (from plan_layout with redesignFrom)'), `SQ9 C-S1. approve_plan does not name the redesign's plan (plan_layout with redesignFrom): ${ps}`);
+  const skills = { 'mcp/skills': flat('./skills/report-design/SKILL.md'), 'mcp/skills-packaging': flat('./skills-packaging/plugins/dataarcus/skills/report-design/SKILL.md') };
+  for (const [where, s] of Object.entries(skills)) {
+    // A2-S11 the options the skill did not name
+    check(/`metricSwitcher`/.test(s) && /2 to 5 of the model's measures/.test(s), `SQ9 A2-S11. ${where} SKILL.md: no metricSwitcher line (2 to 5 measures, the field parameter's script)`);
+    check(/`arabicTerms`/.test(s) && /terminology sheet/.test(s) && /`terms`/.test(s), `SQ9 A2-S11. ${where} SKILL.md: no terminology sheet line (arabicTerms, the twin's terms)`);
+    check(/`gulfDates`/.test(s) && /askNext/.test(s) && /never answer a question yourself/i.test(s), `SQ9 A2-S11. ${where} SKILL.md: no gulfDates line (askNext, the person's own answers)`);
+    // A2-S12 the gallery's limits, from the code
+    check(!/of few members/.test(s) && !/with few members/.test(s), `SQ9 A2-S12. ${where} SKILL.md: the gallery's limits are still "few members"`);
+    check(s.includes(`at most ${Gallery.MAX_STEPS} members`) && s.includes(`at most ${Gallery.MAX_PANELS} panels`) && /a time or ordered axis/.test(s), `SQ9 A2-S12. ${where} SKILL.md: the waterfall (${Gallery.MAX_STEPS} members), small multiples (${Gallery.MAX_PANELS} panels) and combo (time or ordered axis) limits are not said`);
+    // S1-S2 rule 7 in the skill's Rules
+    const rules = s.slice(s.indexOf('## Rules'));
+    check(s.indexOf('## Rules') >= 0 && rules.includes(NO_DIRECT_EDITS.slice(0, 60)), `SQ9 S1-S2. ${where} SKILL.md: the Rules do not carry rule 7 ("${NO_DIRECT_EDITS.slice(0, 60)}...")`);
+    // D5-S1 (the skill's own privacy line): read_report returns no static title since 0.3.0 S1
+    check(!/short, screened titles and texts/.test(s) && /never a static title/.test(s), `SQ9 D5-S1. ${where} SKILL.md: the privacy line says read_report returns titles`);
+  }
+  const readme = flat('./README.md');
+  check(readme.includes(NO_DIRECT_EDITS.slice(0, 60)), 'SQ9 S1-S2. mcp/README.md does not carry rule 7');
+  // 0.2.9-design-S8 the README's annotations line says the two idempotent tools
+  check(/`check_model_health` and `add_gulf_calendar` are also `idempotentHint: true`/.test(readme), 'SQ9 0.2.9-design-S8. mcp/README.md does not say which tools are idempotentHint true');
+  // W2-S4 PRODUCT_SPEC's tool rows and rule 4
+  const spec = read('./PRODUCT_SPEC.md'), row = (t) => (spec.split('\n').find((l) => l.startsWith(`| \`${t}\` |`)) || '').split(' | ');
+  for (const t of writingTools()) check(/approve/.test(row(t)[3] || ''), `SQ9 W2-S4. PRODUCT_SPEC.md: ${t}'s Writes cell names no approved plan: "${(row(t)[3] || '').slice(0, 120)}"`);
+  check(!/^nothing/.test(row('check_model_health')[3] || ''), 'SQ9 W2-S4. PRODUCT_SPEC.md: check_model_health "Writes: nothing" (it writes its fix scripts after approval)');
+  check((row('suggest_fields')[1] || '').includes(`1-${LIMITS.kpiCards}`), `SQ9 W2-S4. PRODUCT_SPEC.md: suggest_fields' KPI cards are not 1-${LIMITS.kpiCards}: "${row('suggest_fields')[1]}"`);
+  check(/planId/.test(row('plan_layout')[2] || ''), 'SQ9 W2-S4. PRODUCT_SPEC.md: plan_layout returns no planId in its row');
+  const r4 = flat('./PRODUCT_SPEC.md').split('4. **Metadata only.**')[1] || '';
+  check(!/short titles and texts as typed/.test(r4.slice(0, 600)) && /never a static title/.test(r4.slice(0, 600)), 'SQ9 W2-S4. PRODUCT_SPEC.md rule 4 still says "short titles and texts as typed" (read_report: text boxes, never a static title)');
+  // D5-S1 the plugin's README
+  const pk = flat('./skills-packaging/README.md'), priv = pk.slice(pk.indexOf('## Privacy'), pk.indexOf('## Licence'));
+  check(!/short titles, screened/.test(priv) && /never a static title/.test(priv) && /text boxes/.test(priv), `SQ9 D5-S1. skills-packaging/README.md Privacy: ${priv.slice(0, 300)}`);
+  // A2-S7 the package's description names no list of tools (it had four of eleven)
+  const desc = JSON.parse(read('./package.json')).description;
+  check(!/suggest fields|create a report project/.test(desc) && !/:/.test(desc) && !/\b(first|only|official|free)\b/i.test(desc), `SQ9 A2-S7. mcp/package.json's description lists tools (or says first/only/official/free): "${desc}"`);
+}
 
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
 console.log(`PASS  0.3.0-claims  ${checks} checks`);

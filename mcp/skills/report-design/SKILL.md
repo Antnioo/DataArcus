@@ -162,11 +162,12 @@ them from the same model open in Power BI Desktop:
   waterfall chart and small multiples) is used only when the user asks for one, never proposed or chosen unasked: a
   hand-placed slot of that kind, or `gallery` in `plan_layout` and `create_report` (`true`, or a list of kinds) on a
   design. Each is written only where its fields fit: a waterfall is one measure that adds up over an ordered category
-  of few members (months, quarters, stages); a combo is two measures over one time axis in ONE unit, scale and ISO
+  whose number of members the model makes known, at most 12 members (months, quarters, stages); a combo is two measures
+  over a time or ordered axis in ONE unit, scale and ISO
   currency that the user confirmed compare (`sharedAxes`), and any other pair (an amount and a percent, SAR and AED,
   minutes and hours, or the same unit not yet confirmed) is two panels, a line chart each with its unit on its axis,
-  never a second axis; small multiples are one measure by a category, a panel per member of a second category with few
-  members. Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
+  never a second axis; small multiples are one measure by a category, a panel per member of a second category, at most 9 panels
+  (a category that reads as an id, a code or a name is never the split). Show the plan's `gallery`: each kind, what is written and why (the slot's own kind when the fields don't
   fit), and say the preview draws them as placeholders.
 - **Shared axes** (`sharedAxes`): two measures share one chart axis only in the same unit, scale and ISO currency AND
   when the user says they compare; never a secondary axis, never a currency converted. Show the plan's `sharedAxes`:
@@ -203,13 +204,29 @@ them from the same model open in Power BI Desktop:
   there). Then list the functions, each measure and where it shows, and what was not used and why. Not with `flipCards`
   on the KPI cards. In a twin or the Arabic half of a bilingual report they stay as the English measures draw them
   (`cannot`). Never apply the script yourself: the user applies it in TMDL view (`howToApply`).
+- **Metric switcher** (`metricSwitcher`, off by default; pinned by the plan): only when the user asks, 2 to 5 of the model's measures
+  (`Table[Measure]` exactly as `read_model` lists them) that one slicer switches between, on a page of its own ("Metric",
+  «المؤشر») with a bar chart by the main category (and a line chart by month when the month has an order). The model is
+  never changed: the field parameter comes as a TMDL script next to the project; tell the user to apply it in TMDL view
+  (`howToApply`) and that until then only that page shows Power BI's error. A name that is not a measure refuses the plan.
+- **The terminology sheet** (`terminology` in an Arabic plan and in the twin's plan, `bilingual.terminology` with
+  `languages: "en+ar"`): every field the report shows, where, its English name and its Arabic. Ask its `askNext` only,
+  one term at a time, and pass back the user's answer (`displayNames` in an Arabic plan, the twin's `terms`, a bilingual
+  report's `arabicTerms`; the field's English name keeps it in English). The approved Arabic is written on every title,
+  header, slicer header, tooltip and alt text that shows the field, the same word everywhere.
+- **Gulf dates** (`gulfDates` in `plan_layout`'s answer): when it asks which date the report follows, the grain
+  (Gregorian, Hijri, season day) or the seasonal scope, ask its `askNext` in the user's language, one at a time, and
+  pass back only the user's own answers in `gulfDates`. Never answer a question yourself, never take a year as "the
+  current one", and never infer the date from which relationship is active.
 - **Fix scripts** from `check_model_health` are files next to the project (`fixScriptFile`), never text in an answer:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.
+- Never edit a report's or model's files yourself (no script or file tool): ask DataArcus for a plan (check_report's fixWith names it), show it, wait for approval.
 - Work only inside the DataArcus folder; never connect to another model open in Desktop.
-- The DataArcus tools return the model's structure (names, types, formats) and a report's short, screened titles and
-  texts (`read_report`, `create_arabic_twin`), never data values from the model; a title is screened for instructions
-  and length only, so one a person typed with a figure or a name in it comes back as it is. Anything that shows data
+- The DataArcus tools return the model's structure (names, types, formats) and the texts a person typed into a report,
+  screened for instructions and returned as typed (`read_report`: page names and short text boxes, never a static
+  title; `create_arabic_twin`: the texts a reader sees, titles included, for their Arabic), never data values from the
+  model; the screen cannot tell a figure or a name typed into a text, so such a text comes back as it is. Anything that shows data
   (a page screenshot, a DAX query, a table preview) needs the user's yes first, with the words that it goes to the
   AI app. A "go" on the design is not a yes to these. The column-types query below returns types, not data: it needs
   no extra yes.

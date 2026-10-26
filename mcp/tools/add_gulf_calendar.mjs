@@ -12,7 +12,7 @@ import { columnsByKind } from '../lib/gulf-calendar.mjs';
 import { scriptIs as scriptIsSaid, APPLY_STEPS, whereSaid, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { monthOffer as calendarOffer } from '../lib/arabic-twin.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
-import { planIdInput, ADDS, modelPath } from '../lib/tool-inputs.mjs';
+import { planIdInput, ADDS_SAME, modelPath } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite, inputsPin } from '../lib/plan-keys.mjs';
 import { freeScriptName, writePlannedScript } from '../lib/fix-scripts.mjs';
 import { createRequire } from 'node:module';
@@ -51,7 +51,7 @@ export function register(server, ctx) {
       relateTo: z.array(z.string()).max(5).optional().describe('Date columns of the user\'s fact tables to relate to the new table\'s Date, as "Table[Column]" (many to one, single direction). Only columns the user names'),
       asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the self-check counts as today (YYYY-MM-DD; default: today). For tests'),
       planId: planIdInput
-    }, annotations: ADDS
+    }, annotations: ADDS_SAME
   }, safe(async (a) => {
     const m = refuseUnreadable(loadModel(a.path));   // (AU47) nothing is planned on part of a model
     if (a.arabicColumnsOnly) return arabicColumnsOnly(m, a);

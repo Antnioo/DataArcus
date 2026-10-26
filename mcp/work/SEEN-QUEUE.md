@@ -143,7 +143,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-checks-S6 | test-0.2.9b.mjs not run by test.mjs | DONE | `mcp/test.mjs:16` imports v029b; `mcp/tests.json:112` | fixed before fab795c (history starts there) |
 | 0.2.9-checks-S7 | last-6-months tooltip trend still gets TOOLTIP_SCROLL | DONE | `assets/js/report-rules.js:313-318` "Last N months" filter counted (rc.22 B-142) | fixed before fab795c; TIP_ROWS_6 27/40 at :70 |
 | 0.2.9-checks-S8 | packaging hand list must carry text-measure.js, field-meaning.js | OWNER | packaging lives in engine repo; `mcp/docs/MODULES.md:45` | in dataarcus-engine (not in this repo): check the build list carries text-measure.js and field-meaning.js |
-| 0.2.9-checks-S9 | check_report lang lacks Hebrew; only auto detects it | OPEN | `mcp/tools/check_report.mjs:17` enum auto/en/ar | add 'he' to enum and description (check-report.mjs:210 already detects) · S · low · tools-docs → **SQ9** |
+| 0.2.9-checks-S9 | check_report lang lacks Hebrew; only auto detects it | DONE 7653789 | `mcp/tools/check_report.mjs:17` enum auto/en/ar | add 'he' to enum and description (check-report.mjs:210 already detects) · S · low · tools-docs → **SQ9** |
 | 0.2.9-checks-S10 | FILTER_NAME_DUPLICATE_GLOBAL still canBreak | OWNER | `mcp/lib/check-report.mjs:111-117` not in DESKTOP_OPENS | laptop: confirm Desktop opens a report with it; then add to DESKTOP_OPENS |
 | 0.2.9-checks-S11 | lint's 0.57 em and thresholds unsourced | DONE | `assets/js/layout-check.js:60` CHAR_EM with measured source | builder 6's R7, 045b056 (before fab795c) |
 
@@ -168,7 +168,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-design-S5 | packaging needs new mcp/lib/files.mjs | DUPLICATE | same check as packaging list | of 0.2.9-checks-S8 |
 | 0.2.9-design-S6 | A2-3 one pure fitSlots | DONE | `assets/js/design-engine.js:803-813` one pure fitSlots | fixed before fab795c (builder 11) |
 | 0.2.9-design-S7 | approve_plan text claims refusal and 2 hours falsely | DONE | `mcp/lib/plans.mjs:14,49` TTL enforced; `mcp/PRIVACY.md:258` A7-3 fixed | fixed before fab795c (gate rc.17) |
-| 0.2.9-design-S8 | idempotentHint false though repeat names same file | OPEN | `mcp/lib/tool-inputs.mjs:15` ADDS idempotentHint false | verify first a repeat writes the same file; then give those two idempotentHint true · S · low · tools-docs → **SQ9** |
+| 0.2.9-design-S8 | idempotentHint false though repeat names same file | DONE 7653789 | `mcp/lib/tool-inputs.mjs:15` ADDS idempotentHint false | verify first a repeat writes the same file; then give those two idempotentHint true · S · low · tools-docs → **SQ9** |
 | 0.2.9-design-S9 | desktop extension lacks skill's screenshot/DAX consent rules | OWNER | `mcp/lib/agent-text.mjs:9` cap 2200; instructions 2195, no "screenshot" | decide what to drop or raise the cap for the screenshot/DAX consent rule |
 | 0.2.9-design-S10 | A4-7, A5-1/A5-5, A6-4, A6-6 open | DONE | `mcp/PRIVACY.md:260-264` listed fixed; `check-report.mjs:483` lint impact | fixed before fab795c |
 | 0.2.9-design-S11 | beta page "A real run" is the 0.2.8 run | OWNER | `power-bi-mcp/index.html:188` 8 Oct, 0.2.8, page ships 0.3.0 | decide whether to replace with a 0.3.x run (true as dated) |
@@ -411,12 +411,12 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A2-S4 | TESTS.md says website has 13 suites | DONE | `mcp/docs/TESTS.md:35` "20 suites: ALL there" | - |
 | A2-S5 | CHANGELOG R3 "twin mirrors a waterfall" reads current | OPEN | `mcp/CHANGELOG.md:131` unmarked; D7 made native default | add "(superseded by D7: native is the default)" · S · none · docs-memory → **SQ12** |
 | A2-S6 | README "19 website test suites" vs 20 | DONE | `README.md:24` now names `ALL` in run-all.mjs, no count | - |
-| A2-S7 | mcp/package.json description lists 4 tools | OPEN | `mcp/package.json:4` four tools only | describe all tools generically (no list) · S · none · packaging → **SQ9** |
+| A2-S7 | mcp/package.json description lists 4 tools | DONE 7653789 | `mcp/package.json:4` four tools only | describe all tools generically (no list) · S · none · packaging → **SQ9** |
 | A2-S8 | beta page "A real run" is 0.2.8 | DUPLICATE | `power-bi-mcp/index.html:188` "DataArcus 0.2.8" | of 0.2.9-design-S11 |
 | A2-S9 | app prompt (elicitation) lacks "Not checked before writing" | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:101` promptSummary ignores exact.notChecked | add a notChecked line in promptSummary within the cap · S · low · approval → **SQ3** |
 | A2-S10 | page's "never returns data values" pinned only as text | DONE (SQ11 16c4389) | `mcp/test-0.3.0-approval-disclosure.mjs:175` text; T1 pin covers reads only | verify first: assert a fixture data value never appears on the page · S · low · approval → **SQ11** |
-| A2-S11 | SKILL.md omits metric switcher, terms, gulfDates | OPEN | no match in `mcp/skills/report-design/SKILL.md` | add one line each to SKILL.md (both copies) · S · none · tools-docs → **SQ9** |
-| A2-S12 | SKILL.md gallery limits vaguer than code | OPEN | `mcp/skills/report-design/SKILL.md:164-168` "few members" | state waterfall <=12, small multiples <=9, combo time or ordered · S · none · tools-docs → **SQ9** |
+| A2-S11 | SKILL.md omits metric switcher, terms, gulfDates | DONE 7653789 | no match in `mcp/skills/report-design/SKILL.md` | add one line each to SKILL.md (both copies) · S · none · tools-docs → **SQ9** |
+| A2-S12 | SKILL.md gallery limits vaguer than code | DONE 7653789 | `mcp/skills/report-design/SKILL.md:164-168` "few members" | state waterfall <=12, small multiples <=9, combo time or ordered · S · none · tools-docs → **SQ9** |
 
 ### A3
 
@@ -441,7 +441,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| AF2-S1 | TOOLS.md says create_report "picks a free name" | OPEN | `mcp/TOOLS.md:62`; write refuses taken names `report-run.mjs:381` | say it refuses a taken report name · S · none · tools-docs → **SQ9** |
+| AF2-S1 | TOOLS.md says create_report "picks a free name" | OBSOLETE (SQ9: create_report picks a free name, "<name> - New design", `pbip-export.js:319`; only a name taken after the go is refused) | `mcp/TOOLS.md:62`; write refuses taken names `report-run.mjs:381` | say it refuses a taken report name · S · none · tools-docs → **SQ9** |
 | AF2-S2 | F06: folder-path race remains | OBSOLETE | documented race, no cheap narrowing (AF1) | informational, no action |
 | AF2-S3 | "(the same file check_model_health writes)" not always true | DONE (SQ10 4d3a1a6) | `mcp/tools/plan_layout.mjs:183`, `:195` | drop or qualify the parenthesis ("the same script") · S · low · tools-docs → **SQ10** |
 | AF2-S4 | identical existing script still listed as written in plan outputs | DONE (SQ10 4d3a1a6) | `mcp/lib/report-run.mjs:389` named again, not written | verify first; list it as "already there" in the plan outputs · S · low · writer → **SQ10** |
@@ -450,7 +450,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| C-S1 | approve_plan says "create_report (from redesign)" | OPEN | `mcp/lib/agent-text.mjs:33` SOURCE_OF has no redesign | add redesign: 'plan_layout with redesignFrom' · S · low · tools-docs → **SQ9** |
+| C-S1 | approve_plan says "create_report (from redesign)" | DONE 7653789 | `mcp/lib/agent-text.mjs:33` SOURCE_OF has no redesign | add redesign: 'plan_layout with redesignFrom' · S · low · tools-docs → **SQ9** |
 | C-S2 | tour asks Gulf date and shared-axes questions on sample | OBSOLETE | informational, works as designed | informational, no action |
 | C-S3 | read_model lists no relationships on the sample | OBSOLETE | by design (health counts them) | informational, no action |
 
@@ -500,7 +500,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| D5-S1 | packaging README Privacy: "short titles, screened" stale since S1 | OPEN | `mcp/skills-packaging/README.md:61` still says short titles | say text boxes as typed, no static titles, as PRIVACY.md · S · low · packaging → **SQ9** |
+| D5-S1 | packaging README Privacy: "short titles, screened" stale since S1 | DONE 7653789 | `mcp/skills-packaging/README.md:61` still says short titles | say text boxes as typed, no static titles, as PRIVACY.md · S · low · packaging → **SQ9** |
 | D5-S2 | plugin.json description names Microsoft's Power BI Report skill | OWNER | `mcp/skills-packaging/plugins/dataarcus/.claude-plugin/plugin.json:5` | owner: keep Microsoft's skill name in public plugin text, or reword |
 | D5-S3 | beta page Requirements: Windows only, Claude Desktop; no other clients | DONE | DS1 17f78ff: `power-bi-mcp/index.html:212,215` one-click wording, clients linked | - |
 | D5-S4 | home stat "11 tools" and FAQ silent on 0.3.1 | OBSOLETE | informational, true as they are: `index.html:515` | - |
@@ -791,7 +791,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Q1-S6 | Tahoma header title 20pt in 46-high box trips validator floor | OWNER | `assets/js/pbip-page.js:691` size from header height; no Tahoma case | laptop: measure Tahoma header in Desktop, then pick 48-high box or 18pt title |
 | Q1-S7 | twin plan needs 2-3 calls; 42 alt texts repeat titles | DONE (SQ4 082860a, f564362) | `mcp/lib/twin-plan.mjs:197` texts listed singly, no alt/title grouping | list an alt text that equals its title under that title · M · low · twin → **SQ4** |
 | Q1-S8 | plan_layout flipCards.cards repeats each card per page | DONE (SQ10 4d3a1a6) | `mcp/tools/plan_layout.mjs:493` flipPlan.cards passed whole, one per page | group cards by measure with a pages list · S · low · design → **SQ10** |
-| Q1-S9 | suggest_fields accepts 60 tables, read_model 100 | OPEN | `mcp/lib/tool-inputs.mjs:18` max(60); `mcp/tools/read_model.mjs:15` max(100) | one shared constant (or say why 60) in tool-limits · S · low · reader → **SQ9** |
+| Q1-S9 | suggest_fields accepts 60 tables, read_model 100 | DONE 7653789 | `mcp/lib/tool-inputs.mjs:18` max(60); `mcp/tools/read_model.mjs:15` max(100) | one shared constant (or say why 60) in tool-limits · S · low · reader → **SQ9** |
 
 ### R1-see-the-result
 
@@ -830,7 +830,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | S1-S1 | server instructions near 2,200 cap | DUPLICATE | measured 2,195 of 2,200 (`mcp/lib/agent-text.mjs:9`) | of 0.2.9-reader-S5 |
-| S1-S2 | report-design skill and README lack rule 7 | OPEN | rule at `mcp/lib/agent-text.mjs:17`; absent in `mcp/skills/report-design/SKILL.md`, README | one line in skill Rules (both copies) and README · S · none · tools-docs → **SQ9** |
+| S1-S2 | report-design skill and README lack rule 7 | DONE 7653789 | rule at `mcp/lib/agent-text.mjs:17`; absent in `mcp/skills/report-design/SKILL.md`, README | one line in skill Rules (both copies) and README · S · none · tools-docs → **SQ9** |
 | S1-S3 | Microsoft validator's own writes not read by write gate | OPEN | `mcp/test-0.3.1-write-gate.mjs:2-3` scans mcp code only | verify first: read validator's fs writes, record in gate notes · M · low · checker → **SQ14** |
 | S1-S4 | golden EN-AR tooltip pages get TOOLTIP_SCROLL note | OBSOLETE | informational, no action: there before S1 |  |
 | S1-S5 | arabicCopy remakes whole copy, hand edits lost | OBSOLETE | informational: said in its how; in-place fix not proposed |  |
@@ -915,7 +915,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | W2-S1 | homepage "validated against the source system" consulting claim | OWNER | `assets/js/translations/homepage.js:79` | decide whether the consulting sentence stays as written |
 | W2-S2 | ROADMAP "AI report generation now free and official" | DONE | removed in efe8669; no hit in `mcp/ROADMAP.md` |  |
 | W2-S3 | DESKTOP-TESTS should record 2.159.883.0 | DUPLICATE | `scripts/tests/DESKTOP-TESTS.md:2468` still "2.159" | U1-S4 |
-| W2-S4 | PRODUCT_SPEC rows predate plan gate; rule 4 titles as typed | OPEN | `mcp/PRODUCT_SPEC.md:79` no approval/planId; `:120` "short titles and texts as typed" | add approved-plan step to write rows; rule 4 as PRIVACY.md section 3 · M · low · tools-docs → **SQ9** |
+| W2-S4 | PRODUCT_SPEC rows predate plan gate; rule 4 titles as typed | DONE 7653789 | `mcp/PRODUCT_SPEC.md:79` no approval/planId; `:120` "short titles and texts as typed" | add approved-plan step to write rows; rule 4 as PRIVACY.md section 3 · M · low · tools-docs → **SQ9** |
 | W2-S5 | mcp/CLAUDE.md says website has 13 suites | DONE | A1 93f9219; no "13 suites" in `mcp/CLAUDE.md` |  |
 
 ### X1
