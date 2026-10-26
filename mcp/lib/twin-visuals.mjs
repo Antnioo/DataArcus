@@ -26,7 +26,7 @@ export const textLook = (v) => { const es = isObj(v) && isObj(v.visual) && isObj
 // The language button of a page: its look is the page's own page tab's (one not bold, the tabs' other pages), else a plain
 // button; its text on one line by the measured rules (the larger of 0.45 em a character and the page button's letter by
 // letter measure: report-rules.js, as check_report measures it), as high as the tab; the show switch of each card in its
-// own entry with no selector, the look with selector default (mcp/CLAUDE.md). It goes where it covers no visual (a visual
+// own entry with no selector, the look with selector default (mcp/docs/RULES-POWERBI.md). It goes where it covers no visual (a visual
 // holding it whole, the header's band, is its panel): the tabs' group (else the top of the page), from its end, the right on
 // an English page, the left on an Arabic page. On the phone (when the page has a phone layout): the tabs' row, as wide as
 // the writer's phone tab rule (phoneTabWidth), from the same end. Returns { json, mobile, phone, why } or { json: null, why }

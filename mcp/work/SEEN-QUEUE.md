@@ -386,10 +386,10 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| A1-agent-memory-S1 | code comments cite mcp/CLAUDE.md for rounds now in RULES-POWERBI | OPEN | `assets/js/pbip-page.js:513`, `mcp/lib/twin-pages.mjs:190`, `twin-visuals.mjs:29`, `design-engine.js:390` | point the four comments at mcp/docs/RULES-POWERBI.md (and .min.js rebuild if needed) · S · none · docs-memory → **SQ12** |
-| A1-agent-memory-S2 | plans, PRODUCT_SPEC, GOLDEN-TASKS, SEE-THE-RESULT cite mcp/CLAUDE.md | OPEN | `mcp/PRODUCT_SPEC.md:105`, `mcp/GOLDEN-TASKS.md:23`, `mcp/plans/CHECK-REPORT.md:168` | repoint each cite to its mcp/docs/ file · S · none · docs-memory → **SQ12** |
-| A1-agent-memory-S3 | ROADMAP private-repo list omits mcp/docs/ | OPEN | `mcp/ROADMAP.md:216` lists WORK, ROADMAP, CLAUDE, no mcp/docs/ | add `mcp/docs/` (and `mcp/work/`) to the moves list · S · none · docs-memory → **SQ12** |
-| A1-agent-memory-S4 | ARCHITECTURE.md near its 5,200 cap | OPEN | 5,196 of 5,200 chars; cap `scripts/check-agent-memory.mjs:24` | move one section to MODULES.md before the next addition · S · none · docs-memory → **SQ12** |
+| A1-agent-memory-S1 | code comments cite mcp/CLAUDE.md for rounds now in RULES-POWERBI | DONE 0be6d43 | `assets/js/pbip-page.js:513`, `mcp/lib/twin-pages.mjs:190`, `twin-visuals.mjs:29`, `design-engine.js:390` | point the four comments at mcp/docs/RULES-POWERBI.md (and .min.js rebuild if needed) · S · none · docs-memory → **SQ12** |
+| A1-agent-memory-S2 | plans, PRODUCT_SPEC, GOLDEN-TASKS, SEE-THE-RESULT cite mcp/CLAUDE.md | DONE 0be6d43 | `mcp/PRODUCT_SPEC.md:105`, `mcp/GOLDEN-TASKS.md:23`, `mcp/plans/CHECK-REPORT.md:168` | repoint each cite to its mcp/docs/ file · S · none · docs-memory → **SQ12** |
+| A1-agent-memory-S3 | ROADMAP private-repo list omits mcp/docs/ | DONE 0664c3e | `mcp/ROADMAP.md:216` lists WORK, ROADMAP, CLAUDE, no mcp/docs/ | add `mcp/docs/` (and `mcp/work/`) to the moves list · S · none · docs-memory → **SQ12** |
+| A1-agent-memory-S4 | ARCHITECTURE.md near its 5,200 cap | DONE 0664c3e | 5,196 of 5,200 chars; cap `scripts/check-agent-memory.mjs:24` | move one section to MODULES.md before the next addition · S · none · docs-memory → **SQ12** |
 | A1-agent-memory-S5 | TOOLS.md rows are 400-2,900 char single lines | OWNER | longest line 3,186 chars `mcp/TOOLS.md`; suites parse rows | decide: keep table rows, or paragraphs plus updating the four parsing suites |
 
 ### A1
@@ -409,7 +409,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | A2-S2 | test.mjs alone prints every problem, capped via npm test | OBSOLETE | informational, works as designed | informational, no action |
 | A2-S3 | fuzz check count differs Windows vs Linux | OBSOLETE | ci-sum checks identities not counts (`mcp/docs/TESTS.md:26`) | informational, no action |
 | A2-S4 | TESTS.md says website has 13 suites | DONE | `mcp/docs/TESTS.md:35` "20 suites: ALL there" | - |
-| A2-S5 | CHANGELOG R3 "twin mirrors a waterfall" reads current | OPEN | `mcp/CHANGELOG.md:131` unmarked; D7 made native default | add "(superseded by D7: native is the default)" · S · none · docs-memory → **SQ12** |
+| A2-S5 | CHANGELOG R3 "twin mirrors a waterfall" reads current | DONE 0664c3e | `mcp/CHANGELOG.md:131` unmarked; D7 made native default | add "(superseded by D7: native is the default)" · S · none · docs-memory → **SQ12** |
 | A2-S6 | README "19 website test suites" vs 20 | DONE | `README.md:24` now names `ALL` in run-all.mjs, no count | - |
 | A2-S7 | mcp/package.json description lists 4 tools | DONE 7653789 | `mcp/package.json:4` four tools only | describe all tools generically (no list) · S · none · packaging → **SQ9** |
 | A2-S8 | beta page "A real run" is 0.2.8 | DUPLICATE | `power-bi-mcp/index.html:188` "DataArcus 0.2.8" | of 0.2.9-design-S11 |
@@ -599,7 +599,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | G1-S2 | 1-3 Oct archive open items never closed one by one | OWNER | `mcp/work/archive/WORK-2026-10-01-04.md:2091` Open items list | owner: one pass, close or carry each item |
 | G1-S3 | archive README index long (154 lines) | OBSOLETE | informational: `mcp/work/archive/README.md` 155 lines, fine with search |  |
 | G1-S4 | SOURCE.md bundle af7b264 vs json-schemas head be65eaa | OBSOLETE | informational, no update needed (`mcp/schemas/SOURCE.md:4`) |  |
-| G1-S5 | localSettings/1.0.0 neither bundled nor named in SOURCE.md | OPEN | `mcp/schemas/SOURCE.md:14-17` no localSettings | add localSettings to SOURCE.md's "Not bundled" list · S · none · docs-memory → **SQ12** |
+| G1-S5 | localSettings/1.0.0 neither bundled nor named in SOURCE.md | DONE 0664c3e | `mcp/schemas/SOURCE.md:14-17` no localSettings | add localSettings to SOURCE.md's "Not bundled" list · S · none · docs-memory → **SQ12** |
 
 ### GC
 
@@ -822,8 +822,8 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | RB-S2 | T1 Seen 3: four parts got fast checks | OBSOLETE | informational: nothing open (T1 gave each a fast check) |  |
 | RB-S3 | older T1 0.3.0 Seen lines are wording items | OWNER | `mcp/work/RB.md:163` "for the owner" | decide whether any older T1 (21 Oct) wording item gets a job |
 | RB-S4 | rollback window between last check and unlink | OWNER | Node has no unlink by handle; hash narrows it (RB.md:164) | accept the residual microsecond window as known risk, or not |
-| RB-S5 | T1.md mutant table still says W-size killed by S2c | OPEN | `mcp/work/T1.md:174`, `:226-228` unchanged | add one line in T1.md pointing to RB.md · S · none · docs-memory → **SQ12** |
-| RB-S6 | ARCHITECTURE write path could say content-checked removal | OPEN | `ARCHITECTURE.md:25` "removes only what it created" | append "while its content is what this call wrote" · S · none · docs-memory → **SQ12** |
+| RB-S5 | T1.md mutant table still says W-size killed by S2c | DONE 0664c3e | `mcp/work/T1.md:174`, `:226-228` unchanged | add one line in T1.md pointing to RB.md · S · none · docs-memory → **SQ12** |
+| RB-S6 | ARCHITECTURE write path could say content-checked removal | DONE 0664c3e | `ARCHITECTURE.md:25` "removes only what it created" | append "while its content is what this call wrote" · S · none · docs-memory → **SQ12** |
 
 ### S1
 
@@ -896,7 +896,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | W-S2 | lens fix texts unread off Desktop's Format pane | OWNER | `mcp/lib/arabic-lens.mjs:143` names the Format pane options | on the laptop read the exact option names in the Format pane |
 | W-S3 | Arabic captions say left/right over unmirrored pictures | OWNER | content choice in the Arabic article | decide: keep captions, or mirror pictures for the Arabic page |
 | W-S4 | article says lens from 0.3.1, beta download still 0.3.0 | OWNER | `power-bi-mcp/index.html:223` dataarcus-0.3.0.mcpb; article p10 says 0.3.1 | merge integration/0.3.1 to main only with the 0.3.1 release and download |
-| W-S5 | BLOG-PLAN says 16 website suites, run-all has 20 | OPEN | `content/BLOG-PLAN.md:98` "All 16 website suites" | say "every website suite" (no count) · S · none · docs-memory → **SQ12** |
+| W-S5 | BLOG-PLAN says 16 website suites, run-all has 20 | DONE 0664c3e | `content/BLOG-PLAN.md:98` "All 16 website suites" | say "every website suite" (no count) · S · none · docs-memory → **SQ12** |
 | W-S6 | English quote ends inside quotation marks as Learn does | OBSOLETE | informational, no action |  |
 
 ### W1

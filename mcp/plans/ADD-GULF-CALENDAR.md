@@ -65,7 +65,7 @@ so the AI can tell the user the calendar matches the country before it is applie
   		toColumn: 'Gulf Calendar'.Date
   ```
   The file is written with LF line ends and UTF-8 (Arabic month names), as the suite compares bytes (a Windows
-  checkout's CRLF already fails 3 `gulf-calendar` checks, `mcp/CLAUDE.md`).
+  checkout's CRLF already fails 3 `gulf-calendar` checks, `mcp/docs/RULES-POWERBI.md`).
   The column blocks follow what Desktop wrote for the generator's calendar in `tmdl-ramadan`'s `Calendar.tmdl`
   (`isNameInferred`, `sourceColumn`, no type). Names are quoted by the TMDL rule round 2's scripts use.
 - `howToApply`: save a copy of the file; open TMDL view; open the script file (or paste it); **Preview: it must show
