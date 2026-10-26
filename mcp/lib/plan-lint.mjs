@@ -34,7 +34,9 @@ function build(a, o) {
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
   if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
-  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel });
+  // (SQ13, 0.2.9-design-S2) the table's share of a narrow row by the plan's table fields, as create_report's (report-run.mjs)
+  const tableFields = F && F.table ? F.table.length : undefined;
+  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields });
   // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
   // A3-2: the picker keeps them, so nothing is rebuilt here)
   const n = Math.max(1, ...specs.map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
@@ -48,7 +50,7 @@ function build(a, o) {
   // (0.3, J4, B-130: the planned page showed cards titled "KPI 2", "KPI 3", "KPI 4" on a model with one measure) the cards
   // the binding can fill, as create_report caps them (maxKpis): a card is never planned without its measure
   const filled = (bind.kpis || []).filter(Boolean).length;
-  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel }); }
+  if (filled < design.layout.kpis) { design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: filled }) }); specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields }); }
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   // (0.3.0 D2) the gallery kinds the plan asks for (a.gallery), on the first page, as create_report puts them; small
   // multiples take the bar chart's category for their panels, as there

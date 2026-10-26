@@ -162,7 +162,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | 0.2.9-design-S1 | unused tooltip page; two RTL mirrors; rowH +4 unmeasured | OWNER | mirrors one engine f1216d6; tips on demand `pbip-export.js:455`; `pbip-page.js:48` +4 | laptop: measure a tab row in a non-Segoe font; set the +4 from it |
-| 0.2.9-design-S2 | plan-lint builds pages without tableFields (5-field table) | OPEN | `mcp/lib/plan-lint.mjs:37` projectPages without tableFields | pass tableFields (plan's table field count) to projectPages · S · low · checker → **SQ13** |
+| 0.2.9-design-S2 | plan-lint builds pages without tableFields (5-field table) | DONE 1ebff20 | `mcp/lib/plan-lint.mjs:37` projectPages without tableFields | pass tableFields (plan's table field count) to projectPages · S · low · checker → **SQ13** |
 | 0.2.9-design-S3 | LIMITS.kpiCards is a limit name, not layout key | OBSOLETE | informational, no action (`mcp/lib/tool-limits.mjs:14`) | — |
 | 0.2.9-design-S4 | website layout label names chosen layout, preview shows single focus | DONE 0c69f686 (SQ8) | `assets/js/theme-generator.js:820` uses LAYOUTS[c.preset].name | name single focus when E.smallPage(c), EN and AR · S · low · website → **SQ8** |
 | 0.2.9-design-S5 | packaging needs new mcp/lib/files.mjs | DUPLICATE | same check as packaging list | of 0.2.9-checks-S8 |
@@ -181,7 +181,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| 0.2.9-writer-S1 | plan's slots miss header growth for two tab rows | OPEN | `mcp/lib/design.mjs:268` computeSlots without headerRows | verify first; pass headerRows to the plan's slots when pages and names need two rows · M · low · design → **SQ13** |
+| 0.2.9-writer-S1 | plan's slots miss header growth for two tab rows | DONE 1ebff20, fced479 | `mcp/lib/design.mjs:268` computeSlots without headerRows | verify first; pass headerRows to the plan's slots when pages and names need two rows · M · low · design → **SQ13** |
 | 0.2.9-writer-S2 | theme-generator stamp merge conflicts | OBSOLETE | merges done; informational | — |
 | 0.2.9-writer-S3 | mirrorChart writes invertAxis | DONE | `assets/js/pbip-export.js:359-361` uses report-mirror rules | f1216d6 (M1: one mirror engine) |
 | 0.2.9-writer-S4 | control character (tab) in model name reaches a title | DONE f026240 | `assets/js/pbip-query.js:76` drops \p{Cf} only | also replace \p{Cc} with a space in shown() · S · low · writer → **SQ1** |
@@ -190,7 +190,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S7 | B-06/B-23 text not in repo; readings may be partial | OWNER | B-list absent from repo (grep) | confirm B-06 = text column room 12 letters, B-23 = table grid entry |
 | 0.2.9-writer-S8 | golden pins no table text size | DONE (SQ11 478d565) | `mcp/test-models/golden-expected.json` no table size key | pin the table text size per task in golden-expected · S · low · tests-ci → **SQ11** |
 | 0.2.9-writer-S9 | column top N uses 12-letter label guess | OWNER | `scripts/tests/DESKTOP-TESTS.md:2493` S5 still to measure | laptop: run DESKTOP-TESTS S5 (columns per width), set categoryFit from it |
-| 0.2.9-writer-S10 | row beside short rail keeps width; ~200 gap | OPEN | `assets/js/design-engine.js:811-812` only slots wholly below take column | verify first; widen rows beside a shortened rail · M · low · design → **SQ13** |
+| 0.2.9-writer-S10 | row beside short rail keeps width; ~200 gap | OPEN (SQ13: confirmed, gaps 197-392 measured; every fix moves the written layout with no measured rule: the owner's call, SQ13.md Decisions 1) | `assets/js/design-engine.js:811-812` only slots wholly below take column | verify first; widen rows beside a shortened rail · M · low · design → **SQ13** |
 | 0.2.9-writer-S11 | S3, S6, D9-D12 not the writer's | OBSOLETE | informational, no action (routing) | — |
 | 0.2.9-writer-S12 | TIP_ROWS still 22 a row + 46; measured 22.2 + 53 | DONE (SQ5 11a85ab) | `assets/js/report-rules.js:69,306` 22/46 | set TIP_ROWS to 22.2 + 53 with its source; update texts · S · low · checker → **SQ5** |
 | 0.2.9-writer-S13 | table panel one row shorter on solid theme | OWNER | note's S3 change; edge alignment is visual | laptop: look whether the table's bottom edge misaligns on a solid theme |
@@ -219,7 +219,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S10 | R5 done by builder 5 (lint names visual by type and place) | OBSOLETE | layout-check.js names by type/place; e8bf832 squashed away | informational, no action |
 | 0.2.9-reader-S11 | audit A1-4/5/6/8/9/10/11/14, website bim cap, byName readdirSync | DONE | fab795c: `pbip-bind.js:57` unknown, `:103` cap, `model.mjs:295` readdirSafe, field-meaning.js | - |
 | 0.2.9-reader-S12 | .pbit route reads the zip whole up to 300 MB | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:378` readCapped(full, 300 MB) before unzipNeeded | read only the needed entries by fd from the central directory · M · low · reader → **SQ6** |
-| 0.2.9-reader-S13 | pbip-bind picker keeps its own 'string' type fallbacks | OPEN | `assets/js/pbip-bind.js:334,412,430,505` `c.dataType or 'string'` | drop the fallbacks (reader gives a type) with min rebuild · S · low · reader → **SQ13** |
+| 0.2.9-reader-S13 | pbip-bind picker keeps its own 'string' type fallbacks | DONE 1ebff20 | `assets/js/pbip-bind.js:334,412,430,505` `c.dataType or 'string'` | drop the fallbacks (reader gives a type) with min rebuild · S · low · reader → **SQ13** |
 | 0.2.9-reader-S14 | gulf-calendar.mjs unwraps m.tmsl itself twice | DONE f888207 | `mcp/lib/gulf-calendar.mjs:62,85` | use model.mjs's one unwrap helper (`model.mjs:92`) · S · low · calendar → **SQ7** |
 | 0.2.9-reader-S15 | JSON-part errors (not valid JSON, too deep) lack codes | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:208` plain Error; ReadError codes list has none | throw ReadError('BAD_JSON') / ('TOO_DEEP') · S · low · reader → **SQ6** |
 | 0.2.9-reader-S16 | .pbit route reads the file whole before unpacking | DUPLICATE | same as S12 | 0.2.9-reader-S12 |
@@ -699,7 +699,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| L2-S1 | `few` count over-counts SWITCH compared texts | OPEN | `assets/js/pbip-bind.js:472` counts every quoted text | count only SWITCH result arguments (and IF branches), rebuild .min · M · low · design → **SQ13** |
+| L2-S1 | `few` count over-counts SWITCH compared texts | DONE 1ebff20 | `assets/js/pbip-bind.js:472` counts every quoted text | count only SWITCH result arguments (and IF branches), rebuild .min · M · low · design → **SQ13** |
 | L2-S2 | axis-label grey option not built | OWNER | no axis grey option in `assets/js/` or `mcp/lib/` | decide whether to add an axis-label grey option (lab 4.7-6.0:1) |
 | L2-S3 | Desktop's button-slicer title size not measured | OWNER | pills title cut at slicer text size; no Desktop measure | on the laptop, measure Desktop's button-slicer title size |
 
@@ -799,7 +799,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | R1-see-the-result-S1 | planned report shadow has no .platform file | OWNER | `mcp/research/shadow-try.mjs:35` plannedReport; no .platform in plan-lint.mjs | laptop: open a planned-report shadow in Desktop; add .platform only if it fails |
 | R1-see-the-result-S2 | health fixture _Measures gets 120 made-up rows | OBSOLETE | informational, no action (harmless, research prototype only) |  |
-| R1-see-the-result-S3 | plan slots score 0.15-0.50 vs written pages | OPEN | `assets/js/theme-generator.js:258,331` website preview draws computeSlots | verify first: which website previews still draw slots, not the writer · M · low · design → **SQ13** |
+| R1-see-the-result-S3 | plan slots score 0.15-0.50 vs written pages | OBSOLETE (SQ13: the approval page draws the exact artifact's files, a no-measure model's counts report too; the website's Preview draws the download's files; only the designer's canvas, PNG and slot table are slots, as their downloads are) | `assets/js/theme-generator.js:258,331` website preview draws computeSlots | verify first: which website previews still draw slots, not the writer · M · low · design → **SQ13** |
 | R1-see-the-result-S4 | Power Query shadow needs refresh; bridge has no refresh | OWNER | research only: `mcp/research/SEE-THE-RESULT.md:29,80`; no tool uses shadow-model | decide shadow form for S2 (DAX form opens with data) or refresh route |
 
 ### R1
@@ -884,9 +884,9 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | V1-S1 | Arabic "Details" tab drawn cut in preview | OWNER | only Desktop shows whether the twin's tab is really cut | on the laptop open the twin's Details page, check the tab text fits |
-| V1-S2 | line placeholder shows "label length unknown" note | OPEN | `assets/js/page-preview.js:151` labels: 'طول التسميات غير معروف' | hide the labels note on approval previews or reword plainly · S · low · design → **SQ13** |
+| V1-S2 | line placeholder shows "label length unknown" note | DONE 1ebff20 | `assets/js/page-preview.js:151` labels: 'طول التسميات غير معروف' | hide the labels note on approval previews or reword plainly · S · low · design → **SQ13** |
 | V1-S3 | preview tag Arabic on the copy's English pages | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:198` lang from previews.lang ('ar') for all pages | pass lang per page (p.rtl ? 'ar' : 'en') · S · low · design → **SQ3** |
-| V1-S4 | time-chart placeholder gives no time direction cue | OPEN | `assets/js/page-preview.js:166` mirrors glyph by page.rtl only, no direction cue | verify first: draw an axis arrow showing time direction (timeRightToLeft) · S · low · design → **SQ13** |
+| V1-S4 | time-chart placeholder gives no time direction cue | DONE 1ebff20 | `assets/js/page-preview.js:166` mirrors glyph by page.rtl only, no direction cue | verify first: draw an axis arrow showing time direction (timeRightToLeft) · S · low · design → **SQ13** |
 
 ### W
 

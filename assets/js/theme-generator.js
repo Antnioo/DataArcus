@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261025f')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261026sq13')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -714,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261025q1').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261026sq13').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
       const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
         const files = P.build(input).files;
