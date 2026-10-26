@@ -130,6 +130,9 @@ package's manifest; this file says what is in it.
 - **check_report, fewer wrong notes:** it no longer tells you to apply the DAX functions script for a measure that script
   does not hold, and its schema findings no longer show page or visual ids. The website's tools and the MCP now share
   one list of Arabic month names.
+- **English words in Arabic downloads, in order:** the website's Arabic project download keeps English words and
+  codes inside Arabic titles in their reading order, as the MCP's Arabic reports do. The metric switcher leaves out a
+  measure its charts can't break down by their category or month, and the plan says which and why.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
