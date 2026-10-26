@@ -16,8 +16,10 @@
   the full run one more suite than the base.
 - **Invariants:** no new write; metadata only (the plan names fields, never a value); the DAX keeps no comparison
   sign beyond the one it has.
-- **Got:** (filled in at the end)
-- **Resume:** (filled in at the end)
+- **Got:** lr1 18 checks (13 red on 0f7f6e8: A 3, B 6, C 4); sq3 28 -> 31 (LR1-4a, 4b red before); 0.2.9b 33 PASS;
+  arabic-lens with L1_DUMP in a missing folder ENOENT -> PASS 31; report 28 -> 29 suites, arabic 10, core 6 PASS; run-all
+  pbip + theme-generator 2 -> 2 PASS; full run "run-tests: 92 suites passed" (base registry 91 + lr1).
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop" below).
 
 ## The items, confirmed on 0f7f6e8
 1. `pbip-query.js:422` (date branch): `IF ( MAX ( d ) > EDATE ( _last, -n ), 1 )`. A month's MAX date is its last day;
@@ -106,3 +108,16 @@ and `-6`) now read `EOMONTH`. No golden report holds the DAX (grep: EDATE only i
 - Item 4: the Arabic sample approval page (`plan_layout` with `sample: true, lang: "ar"`, then approve_plan): each row
   of «مشروع المثال» and «الجداول» in Arabic with the English line under it, read right to left.
 - Item 2: the tour's plan names three slicers and says Branches[Country] was added (English and Arabic plan).
+
+## Suites (before on 0f7f6e8 -> after)
+`npm test -- report` 28 -> 29 passed (lr1); `arabic` 10 -> 10; `core` 6 -> 6; `scripts/tests/run-all.mjs pbip
+theme-generator` 2 -> 2 (898 and 100 checks); `npm test -- --keep-going`: "run-tests: 92 suites passed";
+check-result-lines 92 PASS, changelog-words 137 PASS, check-agent-memory 153 PASS, test-site-config PASS, eslint clean.
+
+## Seen, not in scope
+1. The date branch of lastMonths still has no `ISBLANK ( _last )` guard (the label branch keeps every month when no month
+   has a value; the date branch then compares with EOMONTH of a blank): unchanged, as before this job.
+2. The Fields rows of the approval page (KPI cards, Trend axis, ...) stay English on an Arabic page; only the Slicers
+   row's added field has Arabic (item 2). The sample page's "To open" English line is the bare path.
+3. Draft compounds beyond the 14 (e.g. "Fiscal Year", "Week Day", "Year Month Number") give no draft: the assistant
+   proposes; a fixed list entry for them would need the owner's terms.
