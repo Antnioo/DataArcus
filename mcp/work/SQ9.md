@@ -17,7 +17,7 @@
   scripts/check-agent-memory.mjs` PASS; no other test's numbers change.
 - **Got:** claims 643 -> 672 (red a6a16f6: 29 failed) -> 672 PASS; `sq9` 22 checks (red: 11 failed; H3, I2-I6 held
   on the base) -> 22 PASS; release 3 -> 4 suites pass; core 6 suites pass before and after (mcp 1591); agent-memory PASS;
-  lint clean; full run: pending (written in the next push).
+  lint clean; full run `npm test -- --keep-going`: "run-tests: 86 suites passed".
 - **Resume:** done (c3d8428 plan, a6a16f6 red, 7653789 fixes, 3670659 queue, then this note); the reviewer merges.
 
 ## The items, confirmed on e1f895d (a scratch probe in process: the tools' handlers and the gate, made-up fixtures)
