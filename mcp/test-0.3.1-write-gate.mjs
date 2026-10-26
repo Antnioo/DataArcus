@@ -13,6 +13,7 @@
 //   node test-0.3.1-write-gate.mjs        (DA_WRITES=1 prints what it finds)
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -200,7 +201,7 @@ const subpaths = files.filter((f) => new RegExp(`['"]${VALIDATOR.replace(/[/]/g,
 chk(() => !subpaths.length, () => `W6. the validator is loaded only by its entry (its cli and preview write files): ${subpaths.join(', ')}`);
 // the follow finds a write two imports away
 {
-  const d = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR || '/tmp'), 'dataarcus-gate-'));
+  const d = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'dataarcus-gate-'));
   try {
     fs.writeFileSync(path.join(d, 'index.js'), "import { a } from './a.js';\nexport const x = a;\n");
     fs.writeFileSync(path.join(d, 'a.js'), "export { b as a } from './b.js';\n");
