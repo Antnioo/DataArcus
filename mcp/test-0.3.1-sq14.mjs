@@ -102,5 +102,5 @@ try {
   }
 } finally { fs.rmSync(ROOT, { recursive: true, force: true }); }
 
-if (problems.length) { console.log(`FAIL script=test-0.3.1-sq14.mjs cause=${problems[0].slice(0, 160)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  test-0.3.1-sq14  ${problems.length} of ${checks} checks`); process.exit(1); }
-console.log(`PASS  test-0.3.1-sq14  ${checks} checks`);
+if (problems.length) { console.log(`FAIL script=test-0.3.1-sq14.mjs cause=${problems[0].slice(0, 160)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sq14  ${problems.length} of ${checks} checks`); process.exit(1); }
+console.log(`PASS  sq14  ${checks} checks`);
