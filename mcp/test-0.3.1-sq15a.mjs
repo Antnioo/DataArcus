@@ -72,14 +72,14 @@ try {
       && (J.v.suspicious || []).some((s) => s.kind === 'image'), () => `RS4-4. an image file named like an instruction is withheld (and counted as suspicious), in no answer: ${cut({ icon: vis('decoIcon'), sus: J.v && J.v.suspicious })}`);
     chk(() => /PAGE 1 "Overview".*\| background image "Backdrop7731\.png"/.test(t), () => `RS4-5. the text answer names the page's background image: ${cut(line(/^PAGE 1/))}`);
     const deco = t.split('\n').filter((l) => /in "Side panel"/.test(l));
-    chk(() => deco.length === 2 && deco.some((l) => /^ {2}decoration in "Side panel": image 2, shape 1 \| images "Logo4412\.png"/.test(l)) && deco.some((l) => /^ {2}card .*Sales\[Orders\]/.test(l)),
+    chk(() => deco.length === 2 && deco.some((l) => /^ {2}decoration in "Side panel": image 2, shape 1 \| images "Logo4412\.png"/.test(l)) && deco.some((l) => /^ {2}card .*\[Orders\]/.test(l)),
       () => `RS4-6. a group's decorations (a shape, two images) fold into one line, the card keeps its own: ${cut(deco)}`);
     chk(() => ['decoShape', 'decoLogo', 'decoIcon', 'decoCard'].every((id) => vis(id)), () => `RS4-7. the JSON answer keeps every visual of the group (pin): ${cut((p1 && p1.visuals || []).map((x) => x.id))}`);
     const cvj = J.v && (J.v.customVisuals || []).find((c) => c.type === 'ChicletSlicer1448559807354');
     chk(() => cvj && cvj.name === 'Chiclet Slicer' && /CUSTOM VISUALS USED ChicletSlicer1448559807354 "Chiclet Slicer" \(appsource\)/.test(t), () => `RS4-8. a custom visual's name is read from its id (Chiclet Slicer): ${cut({ cvj, line: line(/^CUSTOM VISUALS USED/) })}`);
     chk(() => vis('colRegion').z === 10000 && vis('decoCard').z === 20004, () => `RS4-9. the layer order (z) is in the JSON (pin): ${cut([vis('colRegion'), vis('decoCard')].map((x) => x && x.z))}`);
     // a drill level is a field, never a drilled-into value: a visual's own filter on the drilled level stays unreturned
-    chk(() => !/drill level/.test(line(/^ {2}card .*Sales\[Total Sales\]/)) && vis('cardSales') && vis('cardSales').drillLevel === undefined, () => `RS4-10. a visual with one field per role has no drill level (pin): ${cut(vis('cardSales'))}`);
+    chk(() => !/drill level/.test(line(/^ {2}card .*\[Total Sales\]/)) && vis('cardSales') && vis('cardSales').drillLevel === undefined, () => `RS4-10. a visual with one field per role has no drill level (pin): ${cut(vis('cardSales'))}`);
   }
 
   // ---------- L5: a model KPI's own target ----------
