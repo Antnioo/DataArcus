@@ -8,7 +8,9 @@
 - **Base:** `fix/0.3.1-sq5` from `origin/integration/0.3.1` (3bda227).
 - **Expected checks:** new `sq5` about 12, about 7 red on 3bda227; checker suites unchanged (check 31,
   test-0.3.1-checker 23, arabic-lens 31, validator-gap 5); every other suite unchanged.
-- **Resume:** plan pushed; next the tests, then the fixes.
+  **Measured:** sq5 22 (15 red on 3bda227: 16a2df1); checker 31 / 23 / 31 / 5, a11y 121, twin
+  area 7 suites, testers 74, v029a4 40: unchanged. Full run: see "Suites".
+- **Resume:** done: S12, R1-S2, T1-S7 DONE (11a85ab); S18 OWNER (no measurement: "For the laptop"). The reviewer reviews.
 
 ## Each item, confirmed on 3bda227
 - **0.2.9-writer-S12** true: `report-rules.js:69` TIP_ROWS = floor((h - 46) / 22), TOOLTIP_SCROLL's texts say "22 a row
@@ -39,3 +41,64 @@
 4. **S18** not added; "For the laptop" below; the queue cell says so.
 Then `npm run build:min`, the ?v= stamps of the pages that load a changed .min.js, `node scripts/csp.mjs --write`; the
 suites; `npm test -- --keep-going` once; `node scripts/check-agent-memory.mjs`.
+
+## Commits
+- `6a72981` the plan; `16a2df1` the tests first (sq5 15 of 22 red on 3bda227); `11a85ab` the fixes; this note and the
+  queue's four Status cells after it.
+
+## Each item, before -> after
+- **0.2.9-writer-S12** before: TOOLTIP_SCROLL counted floor((h - 46) / 22) and called the value axis and any label size
+  but 8pt an estimate; 230 high held "8 rows". After: floor((h - 45 - 8 - (axis ? 38 : 0)) / 22.2), source
+  `SRC.barRows` (DESKTOP-TESTS.md "2026-10-06 night, the laptop sitting", its Lessons line; RULES-POWERBI.md "Night of
+  6-7 October"); 230 high holds 7; the axis measured (38), a label size other than the measured 10pt an estimate.
+  `scripts/tests/report-check.mjs`'s trend: TIP_ROWS(320) 12 before and after. Test S12-1..8.
+- **R1-S2** before: A, T (tall, right), B (below A) in the writer's order counted 1 pair (A11Y_TAB_ORDER warning on a
+  page DataArcus wrote). After: a pair counts only when readingOrder also puts it the other way: 0; A, B, T 0; a stop
+  wholly below met first still counts (B, A, T 1); right to left the same. Never counts more than before. The twin's
+  language button placement (twin-copy.mjs, the least inversions) uses it: every twin suite unchanged. Test R2-1..6.
+- **T1-S7** before: "Page 2: clusteredBarChart at 0,5 320x230: about 8 rows fit..." (and a title in quotes on the lint's
+  lines). After: "Page 2: the bar chart, in the middle of the page: ...": the kind in words (custom or unknown: "a
+  visual") and the third of the page, never a title or text (R5). `visual` (type and box) kept: plan-lint's preview flags
+  match it. check_report's own lint answer unchanged (places only on the check before a write). Test T7-1..7.
+- **0.2.9-writer-S18** not added: Microsoft documents it (DAX syntax, "Naming requirements": "Each measure name must be
+  unique within a model", names case-insensitive), but no Desktop measurement in DESKTOP-TESTS.md or RULES-POWERBI.md
+  says what Desktop shows, so check_report could not say what it checked against Desktop. Status OWNER (laptop).
+
+## Suites
+- Before (3bda227): `npm test -- --keep-going` 79 suites passed, 5603 checks.
+- After: the full run on 11a85ab: (running; filled in the next commit).
+- `node scripts/test-site-config.mjs` PASS, `node scripts/ar-pages.mjs` PASS (38), `node scripts/csp.mjs` 139 pages,
+  `node scripts/check-min.mjs` 74 match, stamps new; website `scripts/tests/run-all.mjs` all 20 passed (14,373 checks).
+
+## CHANGELOG line
+- check_report counts a tooltip bar chart's rows by the measured row height, no longer flags the Tab order DataArcus
+  writes beside a tall visual, and the check before a write names each item worth a look by its place on the page.
+
+## Decisions I made
+- S12: the item's number (22.2 a row + 45 + 8) and the same night's 38 for the value axis, so an axis on is measured, not
+  an estimate; "measured at 10pt" replaces "8pt" (the 22.2 was the theme's 10pt). The tooltip lab's 27 a bar + 40 at 8pt
+  (TIP_ROWS_6) left to its own use: which one a tooltip at 8pt follows is a laptop question (below).
+- R1-S2: the checker follows the writer, not the other way: changing readingOrder would change the tab order every
+  report and twin writes; counting only pairs against both orders accepts both readings of that layout and adds none.
+- T1-S7: thirds of the page in English words (the item lines are English, as their what and fix); the place goes only
+  into the check before a write (its lines are for a person); `visual` kept for plan-lint and Claude.
+- S18: by the brief's rule (no measurement, no rule) not added, though Microsoft documents uniqueness; status OWNER, not
+  OBSOLETE (the item is true). Where it would go: group "navigation" (where the model-measure notes live), file
+  `definition/reportExtensions.json`, the measure's name never quoted.
+- One line outside the batch's files: `mcp/lib/plan-lint.mjs` checkSummary (it builds the worth-a-look lines).
+
+## For the laptop
+1. S18: a report with two report measures of one name (different case) on two tables, and a report measure named like
+   a model measure of another table: what Desktop shows (P3 saw "Something's wrong with one or more filters"; record
+   it in DESKTOP-TESTS.md). Then the rule: DUPLICATE_MEASURE_NAME, warning or error by what Desktop shows.
+2. A tooltip bar chart at 8pt labels: the tooltip lab (10 Oct) says 27 a bar + 40 (310 high holds about 10), the
+   writer's 12-month trend chart is 320 high by 22.2 + 53: look whether all 12 months show with no scrollbar.
+
+## Seen, not in scope
+- The approval page's "problems" list (approval-window.mjs, `checkSummary`'s `problems`) still names a visual by type
+  and box; only the worth-a-look lines take the place.
+- The worth-a-look lines are English on an Arabic page (their what and fix too; as T1-S6 for the rows).
+- `layout-check.js` lint without `titles: false` (the check before a write, plan-lint's checkFiles) still quotes a
+  visual's title in `visual`; the worth-a-look lines no longer show it, but the problems list (approval page and
+  plan_layout's answer) still does (R5 decided type and place for check_report only).
+- Two visuals in the same third of a page get the same place words.
