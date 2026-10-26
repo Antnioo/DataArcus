@@ -113,6 +113,7 @@
     { "file": "test-0.3.1-sq1.mjs", "name": "sq1", "area": "report", "purpose": "the written report's numbers and text: five seen items of the night run (SQ1, 0.3.1)" },
     { "file": "test-0.3.1-aud047.mjs", "name": "aud047", "area": "model", "purpose": "a TMDL file that can't be read is named first, never skipped silently: read_model and check_model_health say it (no score), the planning tools refuse (AU47, AUD-047)" },
     { "file": "test-0.3.1-sq13.mjs", "name": "sq13", "area": "report", "purpose": "the design engine and previews Seen items (SQ13): the plan's header growth, no slots drawn as a plan, the labels note's words, the time direction on chart previews, SWITCH results counted, no type is unknown, the lint's table share" },
+    { "file": "test-0.3.1-sq15b.mjs", "name": "sq15b", "area": "report", "purpose": "the Seen items of SQ15b: the isolate rule in the shared text engine and an Arabic build isolated by the writer (the website's download too), the metric switcher leaves out measures its axes are not related to (said in the plan), plan-lint's binding is report-run's planBinding" },
     { "file": "test-0.3.1-mutation.mjs", "name": "mutation", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],
