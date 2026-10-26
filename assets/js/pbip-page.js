@@ -510,7 +510,7 @@
       const query = q({ Values: [proj(f)] }), acc = u.accent || u.text, calm = mixHex(acc, u.card, 0.9), onAcc = contrast(u.text, acc) >= contrast(u.card, acc) ? u.text : u.card, SEL = { id: 'selected' };
       if (rtl) query.sortDefinition = { sort: [{ field: query.queryState.Values.projections[0].field, direction: 'Descending' }] };
       // (0.3.0 F1, the laptop proof on Desktop 2.159: every pill drawn with no text) the button slicer's item text is its
-      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/CLAUDE.md): everything
+      // "Values" card (value); written as the new card's value is measured to need (round 0, mcp/docs/RULES-POWERBI.md): everything
       // under the default selector, show included, never an entry without one; the outline likewise. The fill's show
       // stays without a selector (the card's fillCustom.show: measured). Other shapes for the laptop: mcp/lab/pills-variants.mjs
       const states = (show, look, picked) => [{ properties: show }, { properties: look, selector: DEF }, { properties: picked, selector: SEL }];

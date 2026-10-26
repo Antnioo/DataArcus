@@ -2,7 +2,7 @@
 
 Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Power BI facts learned the hard way"). What was
 measured in Desktop, how, and the quirks: [scripts/tests/DESKTOP-TESTS.md](../../scripts/tests/DESKTOP-TESTS.md).
-Code comments that say "round 0, mcp/CLAUDE.md" or "mcp/CLAUDE.md, Round 1" mean the rounds below.
+"Round 0" and "Round 1" in code comments (and "mcp/CLAUDE.md" in older notes) mean the rounds below.
 
 - PBIR: positions of visuals inside a group are relative to the group. Schemas used: report 2.1.0, page 2.0.0, visualContainer 2.1.0, definitionProperties 2.0.0 (version "4.0").
 - Theme font sizes must stay within 8-60. The menu import refuses the whole theme otherwise; a theme inside a project loads silently with broken text.

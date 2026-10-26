@@ -20,7 +20,7 @@ Arabic header cut.
   report the writer writes from them score 0.15 to 0.50 (frame IoU, missing and extra counted 0) on the fixtures'
   planned pages: the writer adds page buttons, header bars and panels and moves boxes. Only a drawing of the WRITTEN
   report can be judged; the approval page already draws the written pages (0.3.0 D5, PM-5).
-- **Desktop is drivable on the laptop, with quirks** (`mcp/CLAUDE.md`, `scripts/tests/DESKTOP-TESTS.md`): the bridge CLI
+- **Desktop is drivable on the laptop, with quirks** (`mcp/docs/LAPTOP.md`, `scripts/tests/DESKTOP-TESTS.md`): the bridge CLI
   (`status`, `open`, `reload`, `screenshot <page-id>`); `screenshot-all` fails on generated projects (one page at a
   time); a capture right after opening caught empty cards ("about 20 seconds more than the script's wait"); 2.159 says
   "not loaded after 45 s" while it is still loading (record the pid, wait on the window); capture the Desktop window by

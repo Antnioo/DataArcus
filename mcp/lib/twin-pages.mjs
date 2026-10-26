@@ -197,7 +197,7 @@ function rewireMeasures(vj, rename) {
 
 // (0.3.1 R1: a real user's title and subtitle text boxes drew as bordered white panels) A text box left to a theme whose
 // visuals have a background (visualStyles "*" or "textbox", "*") is drawn as the theme's panel: its colour, border,
-// corners and shadow (mcp/CLAUDE.md, Round 1). A text box WITH text is a heading or a note, and every such text box
+// corners and shadow (mcp/docs/RULES-POWERBI.md, Round 1). A text box WITH text is a heading or a note, and every such text box
 // DataArcus writes has the three off (create_report's header title: pbip-page.js frame); so on the Arabic pages the twin
 // switches off the background, border and shadow of a text box with text that leaves all three to such a theme. One that
 // sets any of them itself keeps its own (its author chose); an empty text box keeps its panel (that is what it is for).

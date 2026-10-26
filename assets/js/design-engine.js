@@ -387,7 +387,7 @@
   // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
   // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
   // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
-  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/CLAUDE.md): 22.2 a row at the theme's 10pt,
+  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/docs/RULES-POWERBI.md): 22.2 a row at the theme's 10pt,
   //    45 above the first row, 8 under the last and 38 for the value axis;
   //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
   //    of about 8 characters at 10pt) after 60 for the value axis, at most 12 (12 month names fit, round 1, measured)

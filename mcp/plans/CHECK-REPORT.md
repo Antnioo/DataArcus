@@ -165,7 +165,7 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
 | Size | 774,484 bytes unpacked, 13 files (its own code: `cli.js` 393,897 bytes, `index.js` 151,330 bytes) |
 | Node | `>=20` |
 | Dependencies | `ajv`, `ajv-formats`, `commander`, `@microsoft/powerbi-core-visual-schema` (MIT, 978,089 bytes), `powerbi-client` (MIT, 1,566,812 bytes), `@microsoft/powerbi-desktop-bridge-cli` (MIT, 139,516 bytes), and **`playwright`** (Apache-2.0, 5,094,512 bytes, which pulls `playwright-core`, 13,453,369 bytes) |
-| Today in DataArcus | a dev dependency of `mcp/` pinned to 0.4.0, run by `mcp/test.mjs` on two exports; **not shipped** in the package (`mcp/CLAUDE.md`) |
+| Today in DataArcus | a dev dependency of `mcp/` pinned to 0.4.0, run by `mcp/test.mjs` on two exports; **not shipped** in the package (`mcp/CLAUDE.md` then; today the pin is in `mcp/package.json`) |
 
 **It goes online by default.** The CLI's `validate` command fetches the JSON schemas over HTTPS: `fetchUrl` uses
 `https.get`, limited to allowed hosts (`developer.microsoft.com`, and `raw.githubusercontent.com` for theme schemas).
@@ -237,7 +237,7 @@ we didn't make. They describe our layouts, not Power BI. The tool says so in `no
 
 **Where the rules move:** from `scripts/tests/report-check.mjs` into a shared engine,
 `assets/js/report-rules.js`, used by the tests, the MCP and later the website (the engines are shared on purpose,
-`mcp/CLAUDE.md`). Each rule carries its id, its numbers and its evidence line. The tests keep calling the same rules,
+`mcp/docs/HOW-BUILT.md`). Each rule carries its id, its numbers and its evidence line. The tests keep calling the same rules,
 so nothing that passes today changes.
 
 ## 4. Safety: untrusted text, and data values never returned

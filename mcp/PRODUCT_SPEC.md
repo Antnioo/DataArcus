@@ -102,7 +102,7 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 | Page sizes | 1920 x 1080 (default), 1280 x 720, 960 x 720, or any 640-3840 x 360-2160, shaped 4:3 to 2.4:1 (others fitted) | `assets/js/design-engine.js` |
 | Languages | English and Arabic (right to left) | |
 | Fonts | Segoe UI, Segoe UI Semibold, DIN, Arial, Calibri, Tahoma, Verdana, Georgia; for Arabic: Segoe UI, Segoe UI Semibold, Arial, Tahoma | `design-engine.js` |
-| Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/CLAUDE.md` |
+| Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/docs/RULES-POWERBI.md` |
 | Runtime | Node.js 20.10 or later (Microsoft's report CLI behind `check_report` needs 20, its schema package 20.10; round 22b); the MCP SDK `@modelcontextprotocol/sdk` 1.31 or later | `mcp/package.json` |
 | Platforms | Writes Power BI projects on Windows, macOS and Linux; open them in Power BI Desktop on Windows, or deploy the project to Fabric. The `.mcpb` extension is for Windows; on macOS and Linux the server runs from the repository | `mcp/README.md`; CI runs the MCP's tests on Linux, Windows and macOS |
 | AI apps | any MCP client over stdio; built and tested with Claude Code; Claude Desktop through the `.mcpb` extension (`mcp/README.md`) | |
