@@ -181,7 +181,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| 0.2.9-writer-S1 | plan's slots miss header growth for two tab rows | DONE 1ebff20 | `mcp/lib/design.mjs:268` computeSlots without headerRows | verify first; pass headerRows to the plan's slots when pages and names need two rows · M · low · design → **SQ13** |
+| 0.2.9-writer-S1 | plan's slots miss header growth for two tab rows | DONE 1ebff20, fced479 | `mcp/lib/design.mjs:268` computeSlots without headerRows | verify first; pass headerRows to the plan's slots when pages and names need two rows · M · low · design → **SQ13** |
 | 0.2.9-writer-S2 | theme-generator stamp merge conflicts | OBSOLETE | merges done; informational | — |
 | 0.2.9-writer-S3 | mirrorChart writes invertAxis | DONE | `assets/js/pbip-export.js:359-361` uses report-mirror rules | f1216d6 (M1: one mirror engine) |
 | 0.2.9-writer-S4 | control character (tab) in model name reaches a title | DONE f026240 | `assets/js/pbip-query.js:76` drops \p{Cf} only | also replace \p{Cc} with a space in shown() · S · low · writer → **SQ1** |
