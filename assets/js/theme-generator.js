@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- builders ----------
   const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="9" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
-  const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table' };
+  const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table', csLook: 'look' };
   const renderInputs = () => {
     $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, L('Color ', 'اللون ') + (i + 1))).join('');
     $('uiColors').innerHTML = Object.keys(UI_LABELS).map((k) => colorInput('u_' + k, state.ui[k], uiLabel(k))).join('');
@@ -45,9 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const chart = () => E.chart(state);
   const buildTheme = () => E.buildTheme(state, isAr() ? 'ar' : 'en');
 
+  // (0.3.1 GL1) the glass look's picture as a data URL, made by the engine (glassPng) at a small size: the same soft
+  // picture the report gets at the page's size. Made again only when the colours change
+  let glassPic = { key: null, url: '' };
+  const glassUrl = () => {
+    const key = JSON.stringify([state.ui, state.data]);
+    if (glassPic.key !== key) { const b = E.glassPng(state, 640, 360); let bin = ''; for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); glassPic = { key, url: 'data:image/png;base64,' + btoa(bin) }; }
+    return glassPic.url;
+  };
+  const rgba = (h, a) => `rgba(${E.hexToRgb(h).join(',')},${a})`;
   const renderPreview = () => {
-    const u = state.ui, d = state.data, ro = E.roles(u), sec = ro.secondary, grid = ro.grid, cs = chart();   // (A2-10: the engine's derived colours)
-    const card = (k, v, delta, good) => `<div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
+    // (GL1) glass: what Power BI draws, no more: the card colour at the look's transparency over the soft picture, the
+    // 1-pixel rim and the shadow; no blur (Power BI has none)
+    const u = state.ui, d = state.data, ro = E.roles(u), cs = chart(), gl = E.isGlass(state) ? E.glassLook(state) : null, sec = gl ? gl.labels : ro.secondary, grid = ro.grid;   // (A2-10: the engine's derived colours)
+    const cardBg = gl ? `background:${rgba(u.card, (100 - gl.t) / 100)};border:1px solid ${gl.rim}${lay().shadow ? `;box-shadow:0 ${gl.shadow.distance}px ${gl.shadow.blur}px rgba(0,0,0,${(100 - gl.shadow.transparency) / 100})` : ''}` : `background:${u.card}`;
+    const card = (k, v, delta, good) => `<div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
     const months = isAr() ? window.DataArcusArabicCalendar.MONTHS.slice(0, 6) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const s1 = [42, 55, 48, 63, 70, 78], s2 = [30, 34, 41, 38, 49, 52], s3 = [18, 22, 20, 27, 25, 31];
     const bars = months.map((m, i) => [s1[i], s2[i], s3[i]].map((v, j) => { const x = 34 + i * 58 + j * 15, h = v * 1.6; return `<rect x="${x}" y="${150 - h}" width="13" height="${h}" rx="2" fill="${d[j]}"/>`
@@ -65,30 +77,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const pts = (arr, k) => arr.map((v, i) => `${40 + i * 62},${150 - v * k}`).join(' ');
     const donutVals = [40, 25, 20, 15]; let acc = 0; const R = 46, C = 2 * Math.PI * R;
     const donut = donutVals.map((v, i) => { const seg = `<circle r="${R}" cx="70" cy="70" fill="none" stroke="${d[i]}" stroke-width="20" stroke-dasharray="${C * v / 100} ${C}" stroke-dashoffset="${-C * acc / 100}" transform="rotate(-90 70 70)"/>`; acc += v; return seg; }).join('');
-    $('preview').style.background = u.background;
+    $('preview').style.background = gl ? `${u.background} url(${glassUrl()}) center / cover no-repeat` : u.background;
     $('preview').style.fontFamily = `'${state.font}', 'Segoe UI', sans-serif`;
     $('preview').innerHTML = `
       <div class="tg-kpis">${card(L('Revenue', 'الإيرادات'), 'AED 1.24M', L('▲ 12.4% vs LM', '▲ 12.4% عن الشهر الماضي'), true)}${card(L('Orders', 'الطلبات'), '8,432', L('▲ 5.1% vs LM', '▲ 5.1% عن الشهر الماضي'), true)}${card(L('Return rate', 'نسبة المرتجعات'), '4.8%', L('▼ 0.6 pts', '▼ 0.6 نقطة'), false)}</div>
       <div class="tg-grid2">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Sales by channel', 'المبيعات حسب القناة')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Sales by channel', 'المبيعات حسب القناة')}</div>
           ${barChart(gridLines, bars)}</div>
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Share by brand', 'الحصة حسب العلامة')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Share by brand', 'الحصة حسب العلامة')}</div>
           <svg viewBox="0 0 140 140" style="max-width:170px;margin:6px auto 0" role="img" aria-label="Donut chart preview">${donut}<text x="70" y="75" font-size="16" font-weight="800" text-anchor="middle" fill="${u.text}">40%</text></svg></div>
       </div>
       <div class="tg-grid2" style="margin-top:10px">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Trend', 'الاتجاه')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Trend', 'الاتجاه')}</div>
           <svg viewBox="0 0 390 160" role="img" aria-label="Line chart preview">${gridLines}<polyline points="${pts(s1, 1.6)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/><polyline points="${pts(s2, 1.6)}" fill="none" stroke="${d[1]}" stroke-width="3" stroke-linejoin="round"/></svg></div>
-        <div class="tg-card" style="background:${u.card};color:${u.text};overflow-x:auto"><table class="tg-table">
+        <div class="tg-card" style="${cardBg};color:${u.text};overflow-x:auto"><table class="tg-table">
           <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
-          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
+          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${gl ? 'transparent' : i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
-      </div>`;
+      </div>${gl ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${L(`Glass: see-through cards (${gl.t}% transparency) over a soft page picture made from your colours. Power BI has no blur behind a visual: this preview draws what Power BI draws, and the report gets the same picture.`, `زجاجي: بطاقات شفافة (شفافية ${gl.t}%) فوق صورة صفحة ناعمة مصنوعة من ألوانك. لا يرسم Power BI ضبابية خلف العنصر المرئي: هذه المعاينة ترسم ما يرسمه Power BI، والتقرير يأخذ الصورة نفسها.`)}</p>` : ''}`;
   };
 
   const renderContrast = () => {
     // the numbers come from the engine (the MCP reports the same); the page gives each check its words
     const NAMES = { textOnVisuals: L('Text on visuals', 'النص على المرئيات'), labelsOnVisuals: L('Labels on visuals', 'التسميات على المرئيات'),
-      textOnPage: L('Text on page', 'النص على الصفحة'), color1OnVisuals: L('Color 1 on visuals', 'اللون 1 على المرئيات') };
+      textOnPage: L('Text on page', 'النص على الصفحة'), color1OnVisuals: L('Color 1 on visuals', 'اللون 1 على المرئيات'),
+      // (GL1) the glass look's worst cases: a see-through card over the darkest and the lightest pixel of the picture
+      textOnGlass: L('Text on the see-through cards', 'النص على البطاقات الشفافة'), labelsOnGlass: L('Labels on the see-through cards', 'التسميات على البطاقات الشفافة'),
+      color1OnGlass: L('Color 1 on the see-through cards', 'اللون 1 على البطاقات الشفافة'), textOnPicture: L('Text on the page picture', 'النص على صورة الصفحة') };
     const r0 = E.contrastChecks(state), checks = r0.checks.map((x) => [NAMES[x.id], x.ratio, x.min]), weak = r0.weak;
     // a failing ratio is rounded down, so 4.48 shows as 4.4:1 and never as the 4.5:1 it misses
     const shown = (r, min) => (r >= min ? r : Math.floor(r * 10) / 10).toFixed(1);
@@ -369,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pngSize = (c) => E.pngSize(c || lay());
   function renderLayoutPreview() {
     const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c);
-    $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
+    $('layCanvas').innerHTML = bgSvg(slots, Object.assign({ preview: true }, E.isGlass(state) ? { glass: Object.assign({ url: glassUrl() }, E.glassLook(state)) } : {}));
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
     updateStatus();
@@ -482,7 +497,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // the background as a PNG blob (with the credit metadata); used by the PNG download and the Power BI project
   // (round 24, B1: fit, when given, turns the planned slots into those the report writer lays out, so the panels the
   // picture draws are the visuals' own: a left-out line chart's room given to the chart beside it, one panel under it)
-  const pngBlob = (c, fit) => new Promise((resolve, reject) => {
+  // (GL1) with the glass look the background is the engine's soft picture at the page's size (glassPng), the same bytes
+  // as the MCP's create_report writes; no panels (the cards are see-through visuals)
+  const pngBlob = (c, fit) => (E.isGlass(state) ? Promise.resolve(((p) => new Blob([E.glassPng(Object.assign({}, state, { layout: c || lay() }), p.w, p.h)], { type: 'image/png' }))(page(c || lay()))) : new Promise((resolve, reject) => {
     const was = state.layout; if (c) state.layout = c;
     const sl = computeSlots(lay()), [pw, ph] = pngSize(), svg = bgSvg(fit ? fit(sl) : sl, { w: pngSize()[0], h: pngSize()[1] });
     state.layout = was; if (c) applyPage(was);
@@ -494,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     img.onerror = () => reject(new Error('png'));
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  });
+  }));
   const downloadPng = () => {
     const key = pngKey();
     pngBlob().then((png) => {
@@ -740,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- step 3: visual backgrounds, and a reminder when a downloaded file is out of date ----------
   // each file keeps a fingerprint of what was downloaded; a different fingerprint now means it is out of date
   let lastJson = null, lastPng = null, lastCsv = null;
-  function pngKey() { return bgSvg(computeSlots(lay()), {}); }
+  function pngKey() { return E.isGlass(state) ? 'glass' + JSON.stringify([state.ui, state.data, page()]) : bgSvg(computeSlots(lay()), {}); }
   function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, boxOf(s)])); }
   // Visual backgrounds follow what the visitor uses (owner 2026-10-04): Solid for a colour-only visitor, Transparent
   // from the first change in the Layout step (they are making a background), unless they picked one themselves
@@ -751,6 +768,8 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(L('Visual backgrounds set to Transparent, to sit on the background image', 'أصبحت خلفيات العناصر شفافة، لتجلس على صورة الخلفية'));
   }
   function renderVis() {
+    // (GL1) with the glass look the cards are see-through visuals over the soft picture: no choice to make here
+    if (E.isGlass(state)) { $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span><small class="d-block mt-1 text-white-50">${L('Glass (step 1, Card look): see-through cards. The background download is the soft picture they sit on; set it in Format page › Canvas background, Image fit Fit (Stretch in older versions), transparency 0%.', 'زجاجي (الخطوة 1، شكل البطاقات): بطاقات شفافة. تنزيل الخلفية هو الصورة الناعمة التي تجلس عليها؛ ضعها من Format page › Canvas background مع Image fit: Fit وشفافية 0%.')}</small>`; return; }
     const t = !!lay().transparent;
     $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}
       ${t && autoSwitched ? `<small class="d-block mt-1 tg-warn" data-auto>${L('Switched to Transparent because you changed the layout. Choose Solid if you only use the theme.', 'تحوّلت إلى شفافة لأنك غيّرت التخطيط. اختر مصمتة إن كنت تستخدم السمة فقط.')}</small>` : ''}
@@ -767,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ['json', L('Theme', 'السمة'), lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2)],
       ['png', L('Background', 'الخلفية'), lastPng !== null && lastPng !== pngKey()],
       ['csv', L('Layout table', 'جدول التخطيط'), lastCsv !== null && lastCsv !== csvKey()]];
-    const old = files.filter((f) => f[2]), solid = lastPng !== null && !lay().transparent;
+    const old = files.filter((f) => f[2]), solid = lastPng !== null && !lay().transparent && !E.isGlass(state);   // (GL1: glass cards are meant to be seen through)
     const note = (text, act, btn) => `<div class="tg-note"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>${text}</span><button type="button" data-dl="${act}">${btn}</button></div>`;
     let h = '';
     if (old.length) h += note(L(`Changed since you downloaded: <b>${old.map((f) => f[1]).join(', ')}</b>.`, `تغيّر منذ التنزيل: <b>${old.map((f) => f[1]).join('، ')}</b>.`), 'stale', old.length > 1 ? L('Download these again', 'نزّلها من جديد') : L('Download again', 'نزّل من جديد'));

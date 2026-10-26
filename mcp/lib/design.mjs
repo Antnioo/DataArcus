@@ -10,6 +10,8 @@ export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
 export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+// (0.3.1 GL1) the glass look: its cards and contrast (glassLook) and the page picture (glassPng), the engine's
+export const { isGlass, glassLook, glassPng } = E;
 // (0.2.9, audit 2's A2-3: the slot rules are the engine's: absorb for a text slot without its sentence, fitSlots for the rest)
 export const { absorb, fitSlots } = E;
 export const designRtl = E.rtl;
@@ -19,7 +21,9 @@ const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // design engine's; the brand is the accent)
 const LIGHT_UI = E.PRESETS.Corporate.ui;
 const UI_KEYS = ['background', 'card', 'text', 'accent', 'good', 'neutral', 'bad'];
-const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Labels on visuals', textOnPage: 'Text on page', color1OnVisuals: 'Color 1 on visuals' };
+const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Labels on visuals', textOnPage: 'Text on page', color1OnVisuals: 'Color 1 on visuals',
+  // (GL1) the glass look's worst cases: a see-through card over the darkest and the lightest pixel of its picture
+  textOnGlass: 'Text on the see-through cards', labelsOnGlass: 'Labels on the see-through cards', color1OnGlass: 'Color 1 on the see-through cards', textOnPicture: 'Text on the page picture' };
 
 // a colour as the website takes it (#abc, abc, #aabbcc; any case), or null
 const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);

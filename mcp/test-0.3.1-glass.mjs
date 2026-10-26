@@ -85,7 +85,7 @@ chk(() => { let worst = 0; for (let y = 0; y < 1080; y += 7) for (let x = 1; x <
 // ---------- C: the contrast, worst case ----------
 const blend = (card, p, t) => E.mix(p, card, 1 - t / 100);
 const extremes = (pixels) => { let lo = null, hi = null, l0 = 2, l1 = -1; for (let i = 0; i < pixels.length; i += 3) { const h = E.rgbToHex([pixels[i], pixels[i + 1], pixels[i + 2]]), l = E.lum(h); if (l < l0) { l0 = l; lo = h; } if (l > l1) { l1 = l; hi = h; } } return [lo, hi]; };
-const passAt = (d, t, ends) => { const u = d.ui, R = E.roles(u); return ends.every((p) => E.contrast(u.text, blend(u.card, p, t)) >= 4.5 && E.contrast(R.secondary, blend(u.card, p, t)) >= 4.5 && E.contrast(d.data[0], blend(u.card, p, t)) >= 3 && E.contrast(u.text, p) >= 4.5); };
+const passAt = (d, t, ends) => { const u = d.ui, lb = E.glassLook(d).labels; return ends.every((p) => E.contrast(u.text, blend(u.card, p, t)) >= 4.5 && E.contrast(lb, blend(u.card, p, t)) >= 4.5 && E.contrast(d.data[0], blend(u.card, p, t)) >= 3 && E.contrast(u.text, p) >= 4.5); };
 for (const preset of Object.keys(E.PRESETS)) {
   const d = design(preset, 'glass'), g = get(() => E.glassLook(d)), full = get(() => extremes(E.glassPixels(d, 1280, 720)));
   const solidOk = E.contrastChecks(design(preset)).checks.every((c) => c.pass);
@@ -95,7 +95,11 @@ for (const preset of Object.keys(E.PRESETS)) {
 }
 chk(() => { const g = E.glassLook(LIGHT, { t: 50 }), g2 = E.glassLook(LIGHT, { t: 20 }); return g.asked === 50 && g.t <= 50 && g2.t === 20; }, () => 'C3. a lab variant asks for its own transparency (20/50), kept when it passes');
 // a pale card (a design that only just passes) gets less transparency than the default
-chk(() => { const d = design('Corporate', 'glass'); d.ui.text = '#6b6b6b'; const g = E.glassLook(d); return g.t < g.asked && g.checks.every((c) => c.pass || c.id === 'labelsOnGlass'); }, () => `C4. a grey text that only just passes makes the cards less see-through: ${cut(E.glassLook(Object.assign(design('Corporate', 'glass'), {})).t)}`);
+// a grey text that only just passes on the white card (4.6:1) makes the cards less see-through, and the picture plain
+// where even the page colour leaves the page's text under 4.5:1 (the design's own check fails: said, never hidden)
+const C4 = (() => { const d = design('Corporate', 'glass'); d.ui.text = '#757575'; return get(() => E.glassLook(d)); })();
+chk(() => C4.t < C4.asked && C4.strength === 0 && C4.checks.filter((c) => c.id !== 'textOnPicture').every((c) => c.pass) && !C4.checks.find((c) => c.id === 'textOnPicture').pass,
+  () => `C4. a grey text that only just passes: the cards less see-through, the picture plain, the page's own failing check said: ${cut(C4)}`);
 chk(() => { const c = E.contrastChecks(LIGHT); return ['textOnGlass', 'labelsOnGlass', 'color1OnGlass', 'textOnPicture'].every((id) => c.checks.some((x) => x.id === id)) && !E.contrastChecks(design('Corporate')).checks.some((x) => /Glass|Picture/.test(x.id)); },
   () => 'C5. the readability check lists the worst cases with the look, and nothing new without it');
 
