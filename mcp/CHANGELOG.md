@@ -133,6 +133,10 @@ package's manifest; this file says what is in it.
 - **English words in Arabic downloads, in order:** the website's Arabic project download keeps English words and
   codes inside Arabic titles in their reading order, as the MCP's Arabic reports do. The metric switcher leaves out a
   measure its charts can't break down by their category or month, and the plan says which and why.
+- **Licence, support and a one-page privacy summary:** the licence now says you may run the DataArcus MCP on your
+  own computers and use what it writes for any purpose, client work included. SUPPORT.md and three GitHub issue forms
+  say where to ask (during the beta we answer within 2 working days). The MCP page's "How it works" shows the approval
+  step, and PRIVACY.md starts with a one-page summary.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
