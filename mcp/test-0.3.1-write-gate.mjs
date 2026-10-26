@@ -104,7 +104,7 @@ const LIST = {
   },
   'lib/model.mjs': {
     'fs.mkdirSync': { n: 1, why: 'prepareRoot: the working folder itself at the server\'s start, only when it is missing and the folder above it exists (one level, empty): no file of the user\'s' },
-    'fs.openSync': { n: 3, why: 'read only: O_RDONLY (readCapped and the folder walk) and \'r\' (the zip test)' },
+    'fs.openSync': { n: 4, why: 'read only: O_RDONLY (readCapped, the .pbit read by its parts (SQ6) and the folder walk) and \'r\' (the zip test)' },
     'writeFileNew()': { n: 1, why: `writeNew, the same writer under its old name: ${PLAN}` }
   },
   'lib/artifact.mjs': {
