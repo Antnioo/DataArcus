@@ -6,7 +6,7 @@ import { loadModel, visible, inside, modelOf, nothingAt, refuseUnreadable } from
 import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme } from './design.mjs';
 import { scopeOf } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
-import { resolveSwitch, addSwitch, switchSaid } from './metric-switcher.mjs';
+import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { takenNames } from './report-names.mjs';
 import { checkSummary, checkFiles } from './plan-lint.mjs';
 import { modelPrintOf } from './artifact.mjs';
@@ -42,6 +42,23 @@ const themeColors = (t) => {
   return Object.fromEntries(Object.entries(out).filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)));
 };
 const themeOf = (p) => readUserFile(p, { kind: 'theme', max: THEME_MAX, json: true });
+// (SQ15b, 0.2.9-reader-S8: plan-lint's binding was a hand copy of this one) the page and the binding of a plan's fields,
+// create_report's and plan-lint's one rule. fieldsDesign: fields.kpis decides the number of cards (the design block's
+// A2-4: 0-6), and the plan's table fields the table's share of a narrow row (SQ13, 0.2.9-design-S2).
+export function fieldsDesign(design, F) {
+  return { design: F && F.kpis ? Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) }) }) : design,
+    tableFields: F && F.table ? F.table.length : undefined };
+}
+// planBinding: the binding for n KPI cards, the picker's, with every field the plan names pinned (builder 7's audit A3-2:
+// the picker's rules are its own, so the website's download gets them too); the plan's measure, where it names one,
+// decides what is related (round 22b, the reviewer's second review, item 4). o: { m, pickFrom, lang, F, design?, full
+// (kpiValues "full"), more (create_report's page filters' options) }; with design, its fieldsDesign too.
+export function planBinding(o) {
+  const { m, pickFrom, lang, F } = o;
+  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
+  const pickOpts = () => Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, o.full ? { kpiValues: 'full' } : {}, pinned ? { pinned } : {}, o.more || {});
+  return Object.assign(o.design ? fieldsDesign(o.design, F) : {}, { pinned, pickOpts, bindFor: (n) => Bind.suggest(pickFrom, n, pickOpts()) });
+}
 // create_report's one build (J14): plan_layout runs it with the plan's inputs (mode 'build': no gate; it returns the
 // files and finish, which writes them and makes the answer), create_report without an approved artifact (mode 'write':
 // its refusals as before, then "make the plan again" where it would write)
@@ -143,10 +160,9 @@ export function reportRun(a, mode) {
   // The binding for n KPI cards: the picker's, with every given field in its place (builder 7's audit A3-2, 11 Oct: the
   // picker's rules, the fixed slicers, the flag's day axis, the Arabic calendar names and the short day names, are the
   // picker's own, so the website's download gets them too; the server passes options)
-  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
-  // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
-  const pickOpts = () => Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}, FULL ? { kpiValues: 'full' } : {}, pinned ? { pinned } : {},
-    PF ? { excludeColumns: PF.map((f) => ({ t: f.t, c: f.c })), axisFor: PF.map((f) => ({ t: f.t, c: f.c, values: f.values })) } : {});
+  // (SQ15b, 0.2.9-reader-S8: planBinding below, the one function plan-lint calls too)
+  const PB = planBinding({ m, pickFrom, lang: a.lang, F, full: FULL,
+    more: PF ? { excludeColumns: PF.map((f) => ({ t: f.t, c: f.c })), axisFor: PF.map((f) => ({ t: f.t, c: f.c, values: f.values })) } : null });
   // what the picker did for the page filters and the Arabic report, for the notes
   const noted = (b) => { (b.excluded || []).forEach((x) => slicersDropped.push(`${x.t}[${x.c}]`)); if (b.axisBy) byFlagDay.push(b.axisBy); (b.calendarNames || []).forEach((x) => englishNames.add(`${x.t}[${x.c}]`));
     // (kept as before A3-2, an open item: with fields or page filters the binding had no category pool, so the charts
@@ -155,10 +171,10 @@ export function reportRun(a, mode) {
     return b; };
   // a model without measures: the same binding, its numbers the columns the visuals count or sum (through build, so the
   // table's and the tooltip's rules are the picker's)
-  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, pickOpts()), C = COUNTS, ch = b.choices;
+  const countBind = (n) => { const b = PB.bindFor(n), C = COUNTS, ch = b.choices;
     const nb = Bind.build(Object.assign({}, ch, { kpis: Array.from({ length: n }, (_, i) => KPI_COUNTS[i] || null), main: C[0], table: [ch.catB || ch.catA, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i) }));
     delete b.notReached; return noted(Object.assign({}, b, nb)); };
-  const bindFor = (n) => (COUNTS.length ? countBind(n) : noted(Bind.suggest(pickFrom, n, pickOpts())));
+  const bindFor = (n) => (COUNTS.length ? countBind(n) : noted(PB.bindFor(n)));
   const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
     why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed.${built < asked && COUNTS.some((c) => c.category) ? ` Fewer cards than asked: a count of a category column (${COUNTS.filter((c) => c.category).slice(0, 3).map((f) => f.name).join(', ')}) is not a KPI, so it is shown in a chart or the table, never on a card.` : ''} For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
     : built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
@@ -260,9 +276,10 @@ export function reportRun(a, mode) {
     // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row: the design engine's default,
     // by the table's fields, tableFields below; the design block's A2-5)
     // (the design block's A2-4: kpis is the card count, 0-6; the report's measures cap every page through maxKpis)
-    if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) }) });
+    // (the table's share of a narrow row is by its fields: tableFields)
+    const FD = fieldsDesign(design, F), tableFields = FD.tableFields;
+    design = FD.design;
     const askedCards = design.layout.kpis, maxKpis = Math.min(F && F.kpis ? F.kpis.length : 6, nCards);
-    const tableFields = F && F.table ? F.table.length : undefined;   // (the table's share of a narrow row is by its fields)
     kpiCards = cardNote(askedCards, Math.min(askedCards, nCards));
     // (round 22, the owner's (a) for pages under 800 wide; golden task 5's second page in Desktop: cut card values and a
     // scrolling table) such a page gets no second page
@@ -345,9 +362,13 @@ export function reportRun(a, mode) {
   if (a.metricSwitcher) {
     const rs = resolveSwitch(m.tables, a.metricSwitcher);
     input(!rs.problems.length, `Nothing was written. ${rs.problems.join(' ')}`);
+    // (SQ15b, L3-S2) only the measures the charts' axes are related to (the model's relationships, metadata only)
+    const rr = switchReach(rs.measures, bind, relsOf(m));
+    input(rr.measures.length >= SWITCH_MIN, `Nothing was written. metricSwitcher takes ${SWITCH_MIN} to ${SWITCH_MAX} measures the Metric page's charts can show; ${rr.measures.length} of the ${rs.measures.length} named ${rr.measures.length === 1 ? 'is' : 'are'} related to their axes: ${rr.leftOut.map((x) => `${JSON.stringify(x.field)} ${x.why}`).join(' ')} Name measures of tables related to the chart's category and month.`);
+    rs.measures = rr.measures;
     const labels = Object.fromEntries(rs.measures.map((x) => { const g = given.get(Bind.fieldKey(x.t, x.m)); if (g) g.used = true; return [`${x.t}[${x.m}]`, g ? g.name : x.m]; }));
     SW = addSwitch(r, { raw: modelOf(m.tmsl).tables || [], measures: rs.measures, labels, bind, lang: a.lang, rtl: switchAt.rtl, smooth: a.smoothLines, page: switchAt.page,
-      seed: modelPrintOf(m) + '\0' + r.base + '\0' + JSON.stringify(rs.measures) });
+      seed: modelPrintOf(m) + '\0' + r.base + '\0' + JSON.stringify(rs.measures), leftOut: rr.leftOut });
     reportNotes.push(`The metric switcher is on its own page, ${JSON.stringify(SW.page)}: its field parameter is a TMDL script, "${SW.scriptFile}", next to the project (metricSwitcher.howToApply). ${switchSaid(SW).beforeApplied}`);
   }
   // (0.3.0 C1, the owner, 21 Oct) an Arabic report: the Arabic calendar columns its date table lacks, as a TMDL script next

@@ -20,8 +20,8 @@ const Preview = require('../../assets/js/page-preview.js');
 const LC = require('../../assets/js/layout-check.js');
 import { NAMES } from './design-lint.mjs';
 import { safeText } from './read-report.mjs';
+import { planBinding } from './report-run.mjs';   // (SQ15b, 0.2.9-reader-S8: create_report's page and binding, not a copy)
 
-const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
 
 // The writer's report of the plan, in memory (nothing is written): the pages create_report writes for the design and the
@@ -32,16 +32,15 @@ function build(a, o) {
   const { m, design: d0, lang, F } = a, pickFrom = a.tables || m.tables;
   // (the two settings create_report itself forces on a design: solid visuals when there is no background image, and the
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
-  let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
-  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
-  // (SQ13, 0.2.9-design-S2) the table's share of a narrow row by the plan's table fields, as create_report's (report-run.mjs)
-  const tableFields = F && F.table ? F.table.length : undefined;
-  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields });
   // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
-  // A3-2: the picker keeps them, so nothing is rebuilt here)
+  // A3-2: the picker keeps them, so nothing is rebuilt here); the card count (the design block's A2-4) and the table's
+  // share of a narrow row (SQ13, 0.2.9-design-S2) by the plan's fields: report-run.mjs's planBinding, create_report's own
+  const PB = planBinding({ m, pickFrom, lang, F, design: Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) }) });
+  let design = PB.design;
+  const tableFields = PB.tableFields;
+  let specs = E.projectPages(design.layout, lang, { second: !!o.second, panel: !!o.panel, tableFields });
   const n = Math.max(1, ...specs.map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
-  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
-  let bind = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, pinned ? { pinned } : {}));
+  let bind = PB.bindFor(n);
   if (!(bind.kpis || []).filter(Boolean).length) return { skipped: 'the model has no measure a card or a chart can show', design, specs };
   if (F) delete bind.catPool;   // (as create_report's binding with the plan's fields)
   // (o.names: the plan's display names on the bound fields, as create_report puts them; the lint's page reads none)

@@ -453,6 +453,8 @@ function summaryOf(kind, data) {
     if (ms) sections.push({ heading: 'Metric switcher', rows: [['Page', String(ms.page || '')]]
       .concat((Array.isArray(ms.measures) ? ms.measures : []).map((x, i) => [`Metric ${i + 1}: ${cut(String(x.field), 120)}`, `shown as "${cut(String(x.label), 100)}"`]))
       .concat([['Charts that switch', (Array.isArray(ms.charts) ? ms.charts : []).map((c) => `${CK[c.kind] || 'Chart'} by ${String(c.by)}`)]], (ms.notSwitched || []).length ? [['Not on the page', ms.notSwitched.map(String)]] : [],
+        // (SQ15b, L3-S2) the measures left out: their table is not related to the charts' axes
+        Array.isArray(ms.leftOut) && ms.leftOut.length ? [['Measures left out', ms.leftOut.map((x) => `${cut(String(x.field), 120)}: ${cut(String(x.why), 300)}`)]] : [],
         [['Title with nothing chosen', String(ms.fallbackTitle || '')], ['Model change', String(ms.modelChange || '')], ['Script file', String(ms.script || '')], ['Before the script is applied', String(ms.beforeApplied || '')], ['Saved selection', String(ms.savedSelection || '')]]) });
     // (0.3.0 D2) each gallery visual the user asked for: what is written and why (the writer's rule on the fields), and
     // how the preview draws it
