@@ -1,13 +1,27 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against 0.3.1 (the build writes its version into the package, and the source's
-`mcp/package.json` says 0.1.0 until then): each 0.3 change updated this page for what it changed; the whole page
-was last read against the code on 2026-10-19 (R7: every sentence, with its evidence in `mcp/work/R7-claims.md`), and
+Plain English. Checked against 0.3.1 (the version `mcp/package.json` names): each 0.3 change updated this page for
+what it changed; the whole page was last read against the code on 2026-10-19 (R7: every sentence, with its evidence
+in `mcp/work/R7-claims.md`), and
 0.3.1's new paths (the Arabic lens, one report in English and Arabic, the sample project, the approval page's pictures
 of the Arabic pages, the plugin folder) on 2026-10-25 (`mcp/work/D5.md`), with
 the version of Microsoft's validator that `mcp/package.json` pins: `mcp/server.mjs`, `mcp/lib/`, the report-design
 skill, and the shared engines it loads from `assets/js/`. If the code changes, this page
 is checked again before the next release. What is not true yet is listed under "Known gaps" at the end.
+
+## On one page
+Each line is said in full, with its evidence, in the section named in brackets.
+- **What runs on your computer:** the MCP, a program your AI app starts there [1]; its one local page, the approval
+  window, served to your own browser at 127.0.0.1 while a plan waits for your click [1]; the files it writes, only after
+  you approve their plan, as new files inside the working folder you chose (its own answers file is the one it may
+  replace) [4]; and at start, the one folder it may create: the working folder you chose, if the folder above it exists
+  [4]. The one write outside that folder: a check copy in the temporary folder, deleted when the check ends [1].
+- **What your AI app receives** (with Claude, Anthropic) [2]: your model's and reports' names and structure (tables,
+  columns, measures, types, formats, pages, visuals) [2], and the short texts people typed in a report (page names, text
+  boxes; for the Arabic twin, titles too), screened for instructions and length only, so a figure typed there is sent [3].
+- **What never happens:** no query to your data, no connection to Power BI Desktop or your data sources [3]; no
+  connection outside your computer, no account, telemetry or analytics [1]; no table rows in an answer, and no filter
+  or slicer values read from your reports (a filter value you give a plan yourself is repeated back) [2, 3].
 
 ## In one paragraph
 The DataArcus MCP runs on your own computer and sends nothing anywhere by itself. But it is a tool for an AI app

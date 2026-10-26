@@ -166,7 +166,8 @@
               <ol class="beta-steps">
                 <li data-i18n-html="beta.how.s1"><strong>Save as a project.</strong> In Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).</li>
                 <li data-i18n-html="beta.how.s2"><strong>Ask Claude.</strong> For example: "Read the model in Sales and suggest a report".</li>
-                <li data-i18n-html="beta.how.s3"><strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model.</li>
+                <li data-i18n-html="beta.how.s3"><strong>Check the plan and approve it.</strong> DataArcus's approval window opens in your browser with the plan and every file it writes; nothing of the report is written before your Approve.</li>
+                <li data-i18n-html="beta.how.s4"><strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model.</li>
               </ol>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.tools.title">The 11 tools</h2>
@@ -204,7 +205,7 @@
                 <li data-i18n="beta.safe.model">It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.</li>
                 <li data-i18n="beta.safe.ask">It writes only inside the one folder you choose (and a private check copy in your computer's temporary folder, deleted when the check ends).</li>
                 <li data-i18n="beta.safe.validator">Its check_report tool checks any PBIR report offline with Microsoft's report validator.</li>
-                <li data-i18n-html="beta.safe.data">It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>.</li>
+                <li data-i18n-html="beta.safe.data">It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>. The three boundaries on one page: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page' class='text-accent' target='_blank' rel='noopener'>the privacy summary</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">Requirements and limits</h2>
@@ -220,7 +221,7 @@
 
             <div id="join" class="glass-card p-4 p-md-5 mt-5">
               <h2 class="mb-3" data-i18n="beta.join.title">Download and install</h2>
-              <div class="text-white-50" data-i18n-html="beta.join.next"><ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here. No payment.</div>
+              <div class="text-white-50" data-i18n-html="beta.join.next"><ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here, or see <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>how to get help</a>. No payment.</div>
               <form id="beta-form" action="https://api.web3forms.com/submit" method="POST" class="row g-4" data-bs-theme="dark"> <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
                 <input type="hidden" name="subject" value="DataArcus for Power BI feedback">
                 <div class="col-12">
@@ -312,7 +313,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
-  <script src="../assets/js/translations/beta-page.min.js?v=20261025ds1" defer></script>
+  <script src="../assets/js/translations/beta-page.min.js?v=20261026pr1b" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

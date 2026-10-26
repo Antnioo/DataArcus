@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: How to get help (what to include, how fast we answer)
+    url: https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md
+    about: Read this first. Never attach a .pbix, your data or a screenshot that shows figures.
+  - name: Email hello@dataarcus.com
+    url: mailto:hello@dataarcus.com
+    about: For anything you would rather not post in public, and for security problems.
