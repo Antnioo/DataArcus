@@ -23,10 +23,12 @@
   killed; full run: the base's 91 suites + 1 = 92 passed.
 - **Invariants:** metadata only (property names, sizes, font names; never a text or a value); nothing written before
   the click; the original never changed; verifyCopy proves only the patches differ.
-- **Got:** cs1 43 checks (red first on 0cbb017: FAIL 12 of 17, stopped at the plan); report 29 -> 30 suites PASS (the
+- **Got:** cs1 44 checks (red first on 0cbb017: FAIL 12 of 17, stopped at the plan); report 29 -> 30 suites PASS (the
   29 the same counts), checker 5 = 5, core 6 = 6 (mcp 1591 = 1591, golden 12 match), mutation 72 -> 73 killed
   (CS-allow, by cs1); redesign 50 and redesign-overlay 29 unchanged, and without consistentText the copy's digest is
-  the base's on three plans; full run: (below).
+  the base's on three plans. The first full run failed fuzz (case 161: a visual's properties not an object crashed
+  visualText; fixed, cs1 T1 red first). Full run on 22185b3: "run-tests: 93 suites passed" (my 92 miscounted the
+  base: its registry has 92, + cs1).
 - **Resume:** done; waits for the reviewer, then the laptop's side by side ("For the laptop").
 
 ## The plan
