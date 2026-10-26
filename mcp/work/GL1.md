@@ -19,7 +19,10 @@
   picture); `run-all theme-generator design-engine pbip`: the baseline's counts plus the new checks, every existing
   design's theme byte for byte (the look is off by default: "auto"); `npm test -- report` and `-- core`: the baseline's
   suites PASS plus `glass`; full run: 91 -> 92 suites.
-- **Resume:** see "Results" (filled as the work lands).
+- **Got:** glass 33 of 50 red -> 50 PASS; theme-generator 898 -> 910; design-engine 598 = 598, pbip 109 = 109 (every
+  existing theme byte for byte); report 29 -> 30 suites PASS; core 6 = 6 (mcp 1591, golden 12, mutation 72 killed);
+  the lab: 4 reports, validator 0 errors, 0 "can break". Full run: see Results.
+- **Resume:** done; waits for the reviewer, then the laptop run of `mcp/lab/GLASS-LAB.md` picks the shipped values.
 
 ## The plan
 1. **Where it sits:** a sixth chart style, `chart.look`: `auto` (Power BI's default cards, nothing written, as every
@@ -55,12 +58,82 @@
    shadow off/soft/strong), labelled outside the visuals. `GLASS-LAB.md`: how to run it, the result table.
 
 ## Results
-(filled as the work lands)
+Commits: plan 828e26d, red first 3094fbe, the look f6f1fb1, the lab and docs bceeda2, this note (the next commit).
+
+| Before | After |
+|---|---|
+| Chart styles: labels, grid, legend, axis, table | + `look`: `auto` (nothing written) or `glass` |
+| A design's cards: solid, or transparent over panels drawn in the PNG | glass: card colour at T% transparency, a 1-px rim, the design's corners, a soft shadow, over a soft picture |
+| MCP report background: a blank pixel | glass: the engine's picture at each page's size in StaticResources (website: the same bytes) |
+
+**What the theme sets (glass), on `*` and every VISUAL_TYPES entry:** `background [{ show: true, color: card,
+transparency: T }]` (on `*`); `border [{ show: true, color: rim, width: 1, radius: corners in page units }]` (no radius on
+cardVisual); `dropShadow [{ show: true, color: #000000, position: Outer, preset: Bottom, transparency, shadowBlur,
+shadowDistance, shadowSpread: 0 }]` (design's shadow off: `show: false`); the labels (`foregroundNeutralSecondary`,
+`textClasses.label`, axis label colours) darkened towards the text only as far as 4.5:1 needs; tables' cells left without
+back colours. Rim: `#ffffff` on light, the card mixed 25% towards white on dark. Shadow at 1080: light 85% transparent,
+blur 18, distance 4; dark 55%, 18, 4 (scaled with the page: 12 and 3 at 720).
+
+**The picture:** the page colour with four Gaussian colour fields (data colours 1-3, the accent; strength 0.42 light,
+0.55 dark, lowered for the page's text), drawn in 2 x 2 squares, PNG (RGB, 8 bits) with the engine's own filters and
+deflate (dynamic Huffman); pngjs reads it back to the engine's pixels. Sizes at 1920 x 1080 / 1280 x 720: Corporate
+158 / 91 KB, DataArcus 181 / 101 KB, Desert Gulf 161 / 92 KB, Midnight 175 / 100 KB, Earthy 150 / 85 KB, Colorblind safe
+164 / 95 KB. About 0.4-0.6 s at 1920 x 1080 in Node.
+
+**Contrast, worst case (T asked 35%; the card over the darkest / lightest pixel):**
+
+| Preset | T | Text | Labels | Colour 1 | Text on picture |
+|---|---|---|---|---|---|
+| Corporate (light) | 35 | 11.37 | 5.01 | 6.68 | 6.46 |
+| DataArcus (dark) | 35 | 10.64 | 4.95 | 6.29 | 4.61 |
+| Colorblind safe | 35 | 12.65 | 4.71 | 4.12 | 7.95 |
+| Desert Gulf | 35 | 12.09 | 5.29 | 7.30 | 6.75 |
+| Midnight | 35 | 10.41 | 4.85 | 6.48 | 4.69 |
+| Earthy | 35 | 10.90 | 4.84 | 3.91 | 6.06 |
+
+A grey text of 4.6:1 on white (#757575) gets T 25% and a plain picture, and its own failing page check is said (C4).
+
+Suites (baseline on 0cbb017 in a separate worktree -> after):
+- `run-all theme-generator design-engine pbip`: 898 -> 910 (12 new glass checks, EN and AR, written after the code),
+  598 = 598, 109 = 109.
+- `npm test -- report`: 29 -> 30 suites passed (glass 50; red first: 33 of 50 failed on 3094fbe).
+- `npm test -- core`: 6 = 6 (mcp 1591, golden 12 tasks match, mutation 72 killed).
+- lint clean; check-min PASS; changelog-words PASS; check-result-lines PASS (93); check-agent-memory PASS (157).
+- Full run `npm test -- --keep-going`: FULL_RUN_LINE
 
 ## CHANGELOG line
+- **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
+  generate_theme (`chart.look: "glass"`). Power BI has no blur behind a visual, so the look is made of what Power BI
+  has: see-through cards, a thin light border, a soft shadow, and a soft page picture DataArcus draws from your theme's
+  own colours (no photo), which the report gets behind every page. Text stays readable (4.5:1, colour 1 3:1, worst case).
 
 ## Decisions I made
+1. The look is a chart style (`chart.look`), not a layout key: generate_theme, plan_layout and create_report carry it in
+   the design (pinned with it), and "auto" writes nothing, as every chart style.
+2. The theme carries no picture (an embedded data URI would make every theme ~200 KB); the picture goes in the report
+   (create_report, the site's project) or the site's background download. generate_theme's line says so.
+3. The engine writes the PNG itself (filters + deflate in plain JavaScript): the same bytes in the browser and Node, no
+   canvas, no zlib; the picture in 2 x 2 squares to halve the file (neighbours stay within 2 levels).
+4. The labels darken towards the text colour (in 0.05 steps) before the cards lose transparency: with Corporate the
+   labels alone would have forced T down to 6%.
+5. With glass, no header band, panels or KPI accent bars are drawn (the picture replaces them); slicers and buttons sit
+   on the picture, their text checked as "text on the picture".
+6. Glass wins over `transparent`; a table's back colours (minimal/banded) are not written with glass (solid cells).
+7. The shipped values (T 35, rim, shadow) are first guesses until the laptop's lab; one place: `GLASS`.
 
 ## For the laptop
+`node lab/glass-lab.mjs <empty folder>` (mcp/lab/GLASS-LAB.md): four reports (EN/AR, light/dark), Refresh, screenshot
+every page at full size with harness.ps1. Pick: transparency 20/35/50, corners 0/8/16, shadow none/soft/strong; check
+every text whole and readable, the rim, whether the card visual, table and matrix keep an inner fill of their own, the
+slicers and buttons on the picture, Arabic mirrored. Fill the table in GLASS-LAB.md.
 
 ## Seen, not in scope
+1. The approval page's preview (page-preview.js) draws a glass report's pages without the picture (solid cards on the
+   page colour); the website's preview is exact. Not changed (another engine).
+2. A new report that keeps an existing glass theme (themeColours: `cardTransparent`) gets solid cards and no picture,
+   as for any see-through theme today.
+3. generate_theme writes the theme file only; a user of the theme alone needs the site's background download.
+4. The writer has no matrix (pivotTable) of its own; the lab builds one from the table to see the look on it.
+5. The picture adds about 1-2 s to a glass create_report (the plan and the write each draw it, two pages).
+6. `scripts/check-min.mjs` could not compare ?v= stamps here (a shallow clone: no merge base with origin/main); the
+   three changed files were stamped 20261026gl1 by hand on both EN pages, the AR page regenerated.
