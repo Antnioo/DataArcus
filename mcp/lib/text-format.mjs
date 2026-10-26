@@ -42,6 +42,7 @@ export const TEXT_POINTER = new RegExp(`^/visual/(?:${[...new Set(ROLES.map((r) 
 export const rolesOf = (type) => ROLES.filter((r) => r.types.includes(type));
 
 // ---- a Literal's value: a font's first family, a size in points, true or false ----
+const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
 const lit = (p) => (p && p.expr && p.expr.Literal && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value : null);
 // "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica'" or "'Arial'": the face as a theme writes it (the list, the
 // outer quotes taken off) and its first family's name
@@ -59,12 +60,14 @@ export const shownValue = (prop, v) => (v == null ? 'the theme\'s' : prop === 's
 // json: the visual.json; returns { overrides: [{ cls, object, at, index, prop, property, pointer, raw, value }],
 // kept: [{ cls, object, property, why }] } (kept: a setting that is not a plain value of the whole visual)
 export function visualText(json) {
-  const v = (json && json.visual) || {}, type = v.visualType, out = { overrides: [], kept: [] };
+  // (a broken file: anything that is not the shape is read as nothing, never a crash: the fuzz test)
+  const v = obj(obj(json) && json.visual) || {}, type = v.visualType, out = { overrides: [], kept: [] };
   rolesOf(type).forEach((r) => {
-    const arr = (v[r.at] || {})[r.object];
+    const arr = (obj(v[r.at]) || {})[r.object];
     if (!Array.isArray(arr)) return;
     arr.forEach((e, i) => {
-      const ps = (e && e.properties) || {};
+      if (!obj(e)) return;
+      const ps = obj(e.properties) || {};
       PROPS.forEach((prop) => {
         const property = r.props[prop]; if (!(property in ps)) return;
         const raw = lit(ps[property]), value = raw == null ? null : valueOf(prop, raw);
@@ -80,10 +83,10 @@ export function visualText(json) {
 // ---- the theme's value for a class and property (null: Power BI's base theme, not read) ----
 // theme: the report's custom theme JSON or null; a visual style of the theme for that type and object comes first
 export function themeValue(theme, cls, prop, type, object, props) {
-  const th = theme && typeof theme === 'object' ? theme : {};
-  const vs = (((th.visualStyles || {})[type] || {})['*'] || {})[object], e = Array.isArray(vs) ? vs[0] : null, own = e && props ? e[props[prop]] : undefined;
+  const th = obj(theme) || {};
+  const vs = ((obj((obj(th.visualStyles) || {})[type]) || {})['*'] || {})[object], e = Array.isArray(vs) ? obj(vs[0]) : null, own = e && props ? e[props[prop]] : undefined;
   if (own !== undefined && (typeof own === 'string' || typeof own === 'number' || typeof own === 'boolean')) return { value: prop === 'family' ? String(own).split(',')[0].replace(/['"]/g, '').trim() : own, style: `${type} ${object}` };
-  const tc = (th.textClasses || {})[cls] || {};
+  const tc = obj((obj(th.textClasses) || {})[cls]) || {};
   if (prop === 'family' && typeof tc.fontFace === 'string') return { value: tc.fontFace.split(',')[0].replace(/['"]/g, '').trim() };
   if (prop === 'size' && typeof tc.fontSize === 'number') return { value: tc.fontSize };
   return { value: null };
@@ -95,7 +98,7 @@ export function themeValue(theme, cls, prop, type, object, props) {
 export function countsOf(items, theme) {
   const out = {};
   items.forEach((it) => {
-    const t = visualText(it.json), type = ((it.json || {}).visual || {}).visualType;
+    const t = visualText(it.json), type = (obj(obj(it.json) && it.json.visual) || {}).visualType;
     rolesOf(type).forEach((r) => PROPS.filter((p) => p === 'family' || p === 'size').forEach((prop) => {
       const own = t.overrides.find((o) => o.cls === r.cls && o.object === r.object && o.at === r.at && o.prop === prop);
       if (!own && t.kept.some((k) => k.object === r.object && k.property === r.props[prop])) return;

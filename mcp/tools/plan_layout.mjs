@@ -135,7 +135,8 @@ function redesignPlan(a) {
 function redesignFit(r, only) {
   if (only && only.length) { const want = new Set(only.map(String)); r.pagesNotShown = (r.pages || []).filter((p) => !want.has(p.id) && !want.has(p.page)).length; r.pages = (r.pages || []).filter((p) => want.has(p.id) || want.has(p.page)); }
   const size = (x) => pretty(out({ redesign: x })).length + 2500, pages = r.pages || [];
-  const tiers = [() => pages.map((p) => [p, 'notChanged']), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
+  // (0.3.1 CS1) the consistent copy's lists of visuals kept as they are go with the visuals not changed
+  const tiers = [() => pages.map((p) => [p, 'notChanged']).concat(r.text ? [[r.text, 'untouched'], [r.text, 'kept']] : []), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
   let cut = 0;
   for (const t of tiers) { const f = fitLists(r, t, size, AIM); if (!f) break; cut += f.cut; if (f.k > 0) break; }
   if (cut) r.listsCut = { how: `This plan lists fewer visuals than it changes or keeps, to stay under ${AIM.toLocaleString('en-US')} characters ("<list>NotListed" says how many each list leaves out). DataArcus's approval window shows every change and every visual not changed before the person approves. To list one page in full here, call plan_layout again with the same inputs and redesignPages: ["<page id>"] (redesign.pages[].id); the plan is the same.` };

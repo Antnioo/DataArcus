@@ -72,6 +72,10 @@ try {
     j.visual.objects.categoryLabels[0].properties.fontFamily = { expr: { Measure: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: 'Total Sales' } } };
     const cs = T.visualText(j);
     chk(() => cs.kept.length === 2 && cs.kept.some((k) => /selector/.test(k.why)) && cs.kept.some((k) => /expression/.test(k.why)) && cs.overrides.length === 3, () => `T1. a setting for one field (a selector) and one from an expression are kept, not removed: ${JSON.stringify(cs)}`);
+    // (the full run's fuzz case 161: a visual's properties that are not an object crashed check_report)
+    chk(() => [{ visual: { visualType: 'card', objects: { labels: [{ properties: 'x' }, null, 7, { properties: [1] }], categoryLabels: 'y' }, visualContainerObjects: { title: [{ properties: { fontSize: 'z' } }] } } }, { visual: 'v' }, null, 3]
+      .every((j) => { const t = T.visualText(j); return Array.isArray(t.overrides) && t.overrides.length === 0; }) && T.mixedOf(T.countsOf([{ json: { visual: { visualType: 'card', objects: { labels: [{ properties: 5 }] } } } }], { textClasses: 'x', visualStyles: 3 })).length === 0,
+      () => 'T1. a visual whose settings are not objects (a broken file) is read without a crash, nothing taken from it');
     chk(() => T.visualText(rd(vfile(REP, P1, 'header'))).overrides.length === 0 && T.KNOWN_TYPES.has('pivotTable') && !T.KNOWN_TYPES.has('textbox') && !T.KNOWN_TYPES.has('cardVisual'), () => 'T1. a text box has no roles; the known types are the native ones of the table');
   }
 
