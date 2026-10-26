@@ -22,7 +22,7 @@
       "checker": ["mcp/lib/check-report.mjs", "mcp/lib/arabic-lens.mjs", "mcp/lib/design-lint.mjs", "mcp/lib/fix-scripts.mjs", "mcp/tools/check_report.mjs", "assets/js/report-rules*.js", "assets/js/layout-check*.js", "assets/js/report-a11y*.js"],
       "model": ["mcp/lib/read-report.mjs", "mcp/lib/read-words.mjs", "mcp/lib/shadow-model.mjs", "mcp/lib/hidden-names.mjs", "mcp/lib/display-names.mjs", "mcp/lib/gulf-*.mjs", "mcp/lib/scope.mjs", "mcp/tools/read_model.mjs", "mcp/tools/read_report.mjs", "mcp/tools/check_model_health.mjs", "mcp/tools/suggest_fields.mjs", "mcp/tools/add_gulf_calendar.mjs", "assets/js/model-health*.js", "assets/js/tmdl-model*.js", "assets/js/confirm-memory*.js", "assets/js/field-meaning*.js", "assets/js/gulf-*.js"],
       "report": ["mcp/lib/report-*.mjs", "mcp/lib/redesign.mjs", "mcp/lib/design.mjs", "mcp/lib/flip-cards.mjs", "mcp/lib/metric-switcher.mjs", "mcp/lib/status-icons.mjs", "mcp/lib/sample-project.mjs", "mcp/lib/dax-functions.mjs", "mcp/lib/box-diff.mjs", "mcp/lib/model-script.mjs", "mcp/lib/plan-lint.mjs", "mcp/lib/visual-meaning.mjs", "mcp/lib/plain-words.mjs", "mcp/tools/create_report.mjs", "mcp/tools/plan_layout.mjs", "mcp/tools/generate_theme.mjs", "assets/js/pbip-*.js", "assets/js/design-engine*.js", "assets/js/page-preview*.js", "assets/js/story-titles*.js", "assets/js/visual-*.js", "assets/js/label-limits*.js", "assets/js/axis-units*.js", "assets/js/aggregation*.js", "assets/js/text-measure*.js", "assets/js/theme-generator*.js"],
-      "release": ["mcp/skills/", "mcp/skills-packaging/"]
+      "release": ["mcp/skills/", "mcp/skills-packaging/", "scripts/check-release.mjs", "scripts/tests/fixtures/release/"]
     }
   },
   "suites": [
@@ -105,6 +105,7 @@
     { "file": "test-0.3.1-sq15a.mjs", "name": "sq15a", "area": "model", "purpose": "the reader Seen items (SQ15a): read_report reads the drill level, image file names (screened), a group's decorations folded, a custom visual's name from its id; a model KPI's target as a measure or \"an expression\", never quoted, used by targetOf" },
     { "file": "test-0.3.1-sq7.mjs", "name": "sq7", "area": "model", "purpose": "the calendar and health Seen items (SQ7): Arabic labels in an Arabic calendar, Sharjah's change column and weekend in the Gulf check, the health card's Arabic counts, the DAX not parsed said" },
     { "file": "test-0.3.1-sq9.mjs", "name": "sq9", "area": "release", "purpose": "the tools' schemas and hints say what the code does: check_report's lang, idempotentHint from what a repeat writes, one table limit (SQ9)" },
+    { "file": "test-check-release.mjs", "name": "release-check", "area": "release", "purpose": "scripts/check-release.mjs (run on release day): every download line names one version, file name, SHA-256 and day, on its fixtures" },
     { "file": "test-skill-packaging.mjs", "name": "skill-packaging", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "name": "dax-functions", "area": "report", "purpose": "the DAX function library as one TMDL script" },
     { "file": "test-0.3.1-validator-gap.mjs", "name": "validator-gap", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
