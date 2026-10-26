@@ -11,7 +11,7 @@
   hints, the repeat behaviour; one line in `tests.json`); my 11 Status cells in SEEN-QUEUE.md. Not SQ13's or SQ14's files.
 - **Base:** `fix/0.3.1-sq9` from `origin/integration/0.3.1` (e1f895d). Push only this branch; the reviewer merges.
 - **Items:** 10 confirmed true on e1f895d; AF2-S1 OBSOLETE (create_report does pick a free name, measured below).
-- **Expected checks** (written before the work): claims 643 -> about 660, about 15 red first; new `sq9` suite about 14
+- **Expected checks:** (written before the work) claims 643 -> about 660, about 15 red first; new `sq9` suite about 14
   checks, about 9 red on the base (3 pass on the base: behaviour that already holds); then both PASS. `npm test --
   release` 3 suites -> 4 suites, all pass; `npm test -- core` unchanged and passing; `node
   scripts/check-agent-memory.mjs` PASS; no other test's numbers change.
