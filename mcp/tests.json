@@ -109,6 +109,7 @@
     { "file": "test-0.3.1-sq3.mjs", "name": "sq3", "area": "safety", "purpose": "the approval page in English and Arabic: the writes said in Arabic, the twin's options and counts, the base theme, the prompt's unchecked parts, the pair's preview tags (SQ3)" },
     { "file": "test-0.3.1-sq10.mjs", "name": "sq10", "area": "report", "purpose": "the plan's and create_report's notes from SEEN-QUEUE SQ10: the table notes' causes and words, a format script already there, the confirmed Hijri-year column, the bilingual plan's Not fully Arabic, a redesign's unused options, the flip cards once each" },
     { "file": "test-0.3.1-sq1.mjs", "name": "sq1", "area": "report", "purpose": "the written report's numbers and text: five seen items of the night run (SQ1, 0.3.1)" },
+    { "file": "test-0.3.1-sq13.mjs", "name": "sq13", "area": "report", "purpose": "the design engine and previews Seen items (SQ13): the plan's header growth, no slots drawn as a plan, the labels note's words, the time direction on chart previews, SWITCH results counted, no type is unknown, the lint's table share" },
     { "file": "test-0.3.1-mutation.mjs", "name": "mutation", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],
