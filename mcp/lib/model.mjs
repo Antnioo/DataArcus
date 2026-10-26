@@ -445,7 +445,12 @@ export function loadModel(p, opts) {
     if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it. No project yet? DataArcus can write a made-up sample to try: plan_layout with sample true.`);
     throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
-  dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
+  const depth = (d) => d.split(path.sep).length;
+  dirs.sort((a, b) => depth(a) - depth(b));
+  // (SQ6, 0.2.9-checks-S4; SQ15a, the owner's yes) two model folders at the nearest depth (two projects side by side):
+  // never the first one the folder lists, silently; both named, as for two models of one name
+  const tied = dirs.filter((d) => depth(d) === depth(dirs[0]));
+  if (tied.length > 1) { const rel = (d) => shownPath(path.relative(root, d)); throw new ReadError('MANY_MODELS', { path: p, models: tied.map(rel) }, `"${p}" holds ${tied.length} models at the same level: ${tied.map(rel).join('; ')}.`); }
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
   let tmsl = null, print = null, skipped = [];
