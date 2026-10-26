@@ -8,6 +8,8 @@
 //   W1  every call found is listed (file, call, count)
 //   W2  every listed call is still there (a stale entry would let a new one in at its place)
 //   W3  the scanner finds a planted write, a renamed import, a wrapper and a destructuring
+//   W5  Microsoft's validator, which runs in process: its modules (followed from its entry) write nothing unlisted
+//   W6  DataArcus loads only the validator's entry (its cli and preview write files); W7 the follow finds a planted write
 //   node test-0.3.1-write-gate.mjs        (DA_WRITES=1 prints what it finds)
 import fs from 'node:fs';
 import path from 'node:path';
@@ -168,6 +170,45 @@ chk(() => planted['fs.writeFileSync'] === 1 && planted['fs.cpSync'] === 1 && pla
   () => `W3. the scanner finds a planted write, a renamed import, an imported name, a wrapper, a destructuring and a child process: ${JSON.stringify(planted)}`);
 // every listed entry says why it is safe
 chk(() => Object.values(LIST).every((calls) => Object.values(calls).every((l) => typeof l.why === 'string' && l.why.length > 20)), () => 'W4. every listed write says why it is safe');
+
+// ---- (0.3.1 SQ14, S1-S3) Microsoft's validator runs in the server's process: its modules are read too ----
+// DataArcus loads only the package's own entry (check-report.mjs and artifact.mjs: runReportValidation and
+// getMetadataProvider; visual-meaning.mjs: getMetadataProvider). Read on 26 Oct with the version mcp/package.json pins:
+// the entry and the chunk it imports take from fs only existsSync, readFileSync, readdirSync, statSync and realpathSync;
+// they write no file, temporary or not. The temporary copy the validator checks is artifact.mjs's own (TMP, above).
+// The package's cli.js and preview/ do write files (its command line's output), and DataArcus never loads them (W6).
+const VALIDATOR = '@microsoft/powerbi-report-authoring-cli';
+const VALIDATOR_WRITES = {};   // every write found in the modules it loads: none (a new one must be listed here, with why)
+/** The write calls in an ES module and every module it imports by a relative path, followed: { '<file>': { call: n } }. */
+export function writesFollowed(entry) {
+  const out = {}, todo = [entry], base = path.dirname(entry);
+  while (todo.length) {
+    const f = todo.shift(); if (Object.prototype.hasOwnProperty.call(out, path.relative(base, f))) continue;
+    const src = fs.readFileSync(f, 'utf8');
+    out[path.relative(base, f)] = writesIn(src);
+    for (const m of src.matchAll(/(?:\bfrom|\bimport)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) todo.push(path.resolve(path.dirname(f), m[1]));
+  }
+  return out;
+}
+let vEntry = null; try { vEntry = fileURLToPath(import.meta.resolve(VALIDATOR)); } catch (e) { vEntry = null; }
+const vFound = vEntry ? writesFollowed(vEntry) : {};
+const vExtra = Object.entries(vFound).flatMap(([f, calls]) => Object.entries(calls).filter(([c, n]) => !VALIDATOR_WRITES[c] || VALIDATOR_WRITES[c].n !== n).map(([c, n]) => `${f}: ${c} x${n}`));
+chk(() => vEntry && Object.keys(vFound).length >= 2 && !vExtra.length,
+  () => `W5. the validator's modules (followed from its entry: ${Object.keys(vFound).join(', ') || 'none found'}) write nothing unlisted: ${vExtra.join('; ')}`);
+// DataArcus imports only the entry, never a subpath (cli, preview) that writes
+const subpaths = files.filter((f) => new RegExp(`['"]${VALIDATOR.replace(/[/]/g, '\\/')}/`).test(fs.readFileSync(path.join(HERE, f), 'utf8')));
+chk(() => !subpaths.length, () => `W6. the validator is loaded only by its entry (its cli and preview write files): ${subpaths.join(', ')}`);
+// the follow finds a write two imports away
+{
+  const d = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR || '/tmp'), 'dataarcus-gate-'));
+  try {
+    fs.writeFileSync(path.join(d, 'index.js'), "import { a } from './a.js';\nexport const x = a;\n");
+    fs.writeFileSync(path.join(d, 'a.js'), "export { b as a } from './b.js';\n");
+    fs.writeFileSync(path.join(d, 'b.js'), "import { writeFileSync as w } from \"fs\";\nexport const b = () => w('x', 1);\n");
+    const p = writesFollowed(path.join(d, 'index.js'));
+    chk(() => Object.keys(p).length === 3 && p['b.js'] && p['b.js']['w (imported)'] === 1, () => `W7. the follow finds a planted write two imports away: ${JSON.stringify(p)}`);
+  } finally { fs.rmSync(d, { recursive: true, force: true }); }
+}
 
 if (problems.length) { problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  test-0.3.1-write-gate  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  test-0.3.1-write-gate  ${checks} checks`);

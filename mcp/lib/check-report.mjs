@@ -14,8 +14,8 @@ import addFormats from 'ajv-formats';
 import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 // (Microsoft's report CLI, which needs Node 20 or later, is loaded when the validator runs, never at the server's start:
 // one tool's dependency cannot stop the others; round 22b, the review of round 22, item 5)
-import { loadModel, ROOT, visible } from './model.mjs';
-import { DAX_MEASURE } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures)
+import { loadModel, ROOT, visible, readCapped } from './model.mjs';
+import { DAX_MEASURE, SCRIPT_SUFFIX } from './dax-functions.mjs';   // (0.3.1 L6: the names the DAX function library gives its measures, its script's name)
 import { AIM } from './scope.mjs';
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
@@ -27,6 +27,7 @@ const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const Rules = require('../../assets/js/report-rules.js');
 const LC = require('../../assets/js/layout-check.js');
+const Tmdl = require('../../assets/js/tmdl-model.js');
 const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = 'af7b264';
@@ -65,6 +66,22 @@ const arr = (v) => (Array.isArray(v) ? v : []);
 // (0.3.0 step 2: the one copy is the shared check's, assets/js/layout-check.js)
 export const rulesInput = (inv) => LC.rulesInput(inv, { isCustom });   // (the reading block's one custom-visual test)
 
+// (0.3.1 SQ14, L6-S11) the measures the DAX functions scripts next to the project declare ("<name> - DAX functions.tmdl";
+// the twin and the EN-AR copy sit beside the original and read its script): only these are DataArcus's. A missing
+// measure whose name merely ends like one (" (KPI card)") is the user's own, never told to apply a script that is not
+// there. Read by the shared TMDL reader, links never followed, within the report file limit; names are only matched
+function daxScriptMeasures(loc) {
+  const out = new Set(), dir = path.dirname(loc.reportDir), up = path.relative(ROOT, dir);
+  if (up.startsWith('..') || path.isAbsolute(up)) return out;
+  let names = []; try { names = fs.readdirSync(dir).filter((n) => n.endsWith(SCRIPT_SUFFIX + '.tmdl')).sort().slice(0, 20); } catch (e) { return out; }
+  for (const n of names) {
+    let tree = null; try { tree = Tmdl.parse(readCapped(path.join(dir, n), REPORT_LIMITS.file, 'DAX functions script').toString('utf8')); } catch (e) { tree = null; }
+    const visit = (node, table) => ((node && node.children) || []).forEach((c) => { if (c.type === 'ref' && c.of === 'table') visit(c, c.name); else if (c.type === 'measure') { if (table != null) out.add(table + '\u0000' + c.name); } else visit(c, table); });
+    visit(tree, null);
+  }
+  return out;
+}
+
 // ---- the bundled schemas ----
 let AJV = null;
 function ajv() {
@@ -74,8 +91,17 @@ function ajv() {
   for (const f of files) { const url = SCHEMA_ROOT + path.relative(SCHEMAS, f).split(path.sep).join('/'); try { a.addSchema(Object.assign({}, readJson(f), { $id: url }), url); } catch (e) { /* a file that is not a schema */ } }
   AJV = a; return a;
 }
-// a JSON pointer with only the report's property names that are plain words (any other is left out)
-const pointer = (p) => String(p || '').split('/').slice(1).map((s) => (/^[A-Za-z0-9_$]{1,40}$/.test(s) ? s : '…')).join('.') || '(the file)';
+// a JSON pointer with only the words the bundled schemas name as properties, and list positions (any other segment is
+// left out: a key the report chose, as a bookmark's page and visual ids, is a name; 0.3.1 SQ14, S1-S8)
+let WORDS = null;
+function schemaWords() {
+  if (WORDS) return WORDS;
+  const w = new Set(), seen = new Set();
+  const visit = (o) => { if (!o || typeof o !== 'object' || seen.has(o)) return; seen.add(o); if (o.properties && typeof o.properties === 'object' && !Array.isArray(o.properties)) Object.keys(o.properties).forEach((k) => w.add(k)); Object.values(o).forEach(visit); };
+  for (const f of walk(SCHEMAS, [], 2000).filter((x) => x.endsWith('.json'))) { try { visit(readJson(f)); } catch (e) { /* a file that is not a schema */ } }
+  WORDS = w; return w;
+}
+export const pointer = (p) => String(p || '').split('/').slice(1).map((s) => { const k = s.replace(/~1/g, '/').replace(/~0/g, '~'); return /^\d{1,6}$/.test(k) || schemaWords().has(k) ? k : '…'; }).join('.') || '(the file)';
 function schemaCheck(loc, out, notChecked, all, sk) {
   const files = all.filter((f) => /\.(json|pbir)$/i.test(f) || path.basename(f) === '.platform');
   let checked = 0, errors = 0; const missing = new Map();
@@ -373,6 +399,7 @@ export async function checkReport(p, opts) {
   // never changed by DataArcus). Counted per visual; the measure's name is not quoted (a report's text is untrusted input)
   if (checks.includes('navigation')) {
     let tables = null;
+    const daxDeclared = daxScriptMeasures(loc), isDax = (ms) => DAX_MEASURE.test(String(ms.Property)) && daxDeclared.has(ms.Expression.SourceRef.Entity + '\u0000' + ms.Property);
     try { const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path; if (by) tables = loadModel(path.resolve(loc.reportDir, String(by))).tables; } catch (e) { tables = null; }
     if (tables) R.visuals.filter((x) => x.type === 'image').forEach((x) => {
       const im = arr((((x.json || {}).visual || {}).objects || {}).image).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
@@ -380,7 +407,7 @@ export async function checkReport(p, opts) {
       if (!ms) return;
       const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity);
       if (t && (t.measures || []).some((y) => y.name === ms.Property)) return;
-      if (DAX_MEASURE.test(String(ms.Property))) return;   // (L6: a DAX functions measure: DAX_MEASURE_PENDING below)
+      if (isDax(ms)) return;   // (L6: a DAX functions measure: DAX_MEASURE_PENDING below)
       add({ origin: 'rule', rule: 'IMAGE_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: 'image' },
         what: 'the image shows a picture measure the model does not have yet, so it is empty in Power BI Desktop (a flip card\'s face before its script is applied)',
         fix: 'Apply the report\'s flip cards script ("<model> - flip cards.tmdl", next to the project) in TMDL view: Preview, then Apply. Then check again.', source: 'DataArcus: the flip cards (0.3.0 L4), their measures written as a TMDL script' });
@@ -403,7 +430,7 @@ export async function checkReport(p, opts) {
       const found = [];
       const seek = (o) => { if (!o || typeof o !== 'object') return; if (o.Measure && o.Measure.Expression && o.Measure.Expression.SourceRef && !o.Measure.Expression.SourceRef.Schema && typeof o.Measure.Property === 'string') found.push(o.Measure); Object.values(o).forEach(seek); };
       seek((x.json || {}).visual);
-      const missing = found.filter((ms) => DAX_MEASURE.test(ms.Property)).filter((ms) => { const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity); return !(t && (t.measures || []).some((y) => y.name === ms.Property)); });
+      const missing = found.filter(isDax).filter((ms) => { const t = tables.find((y) => y.name === ms.Expression.SourceRef.Entity); return !(t && (t.measures || []).some((y) => y.name === ms.Property)); });
       const n = new Set(missing.map((ms) => ms.Expression.SourceRef.Entity + '\u0000' + ms.Property)).size;
       if (!n) return;
       add({ origin: 'rule', rule: 'DAX_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: x.type },

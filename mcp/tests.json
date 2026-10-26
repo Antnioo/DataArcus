@@ -97,6 +97,7 @@
     { "file": "test-0.3.1-arabic-lens.mjs", "name": "arabic-lens", "area": "checker", "purpose": "check_report lens \"arabic\": is this report ready for Arabic?" },
     { "file": "test-0.3.1-bilingual-report.mjs", "name": "bilingual-report", "area": "twin", "purpose": "one report in English and Arabic from create_report" },
     { "file": "test-0.3.1-sq4.mjs", "name": "sq4", "area": "twin", "purpose": "the twin's Seen items (SQ4): the screened nextSteps, a bookmark group's Arabic, sync groups by place, the phone title size, an alt text under its title, a button's icon off when there is no room" },
+    { "file": "test-0.3.1-sq14.mjs", "name": "sq14", "area": "arabic", "purpose": "one Arabic month list (arabic-calendar.js read by every engine), a schema finding's path without report names, the DAX functions note only for the script's own measures (SQ14)" },
     { "file": "test-0.3.1-arabic-terms.mjs", "name": "test-0.3.1-arabic-terms", "area": "arabic", "purpose": "one Arabic term per concept wherever DataArcus writes Arabic" },
     { "file": "test-0.3.1-sample-project.mjs", "name": "test-0.3.1-sample-project", "area": "report", "purpose": "the sample project for a new user with no model" },
     { "file": "test-0.3.1-audit-readers.mjs", "name": "audit-readers", "area": "safety", "purpose": "the release audit's readers and answers: a saved filter value never a top count, no theme through a linked folder, instruction-like names screened" },

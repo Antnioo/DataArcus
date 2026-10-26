@@ -357,7 +357,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| WORK-2026-10-11-14-S1 | own isCustom in report-mirror; two Arabic month lists | OPEN | isCustom now VT's (`report-mirror.js:51`); months `calendar-generator.js:18`, `theme-generator.js:51` | load arabic-calendar.js months on both pages · S · low · website → **SQ14** |
+| WORK-2026-10-11-14-S1 | own isCustom in report-mirror; two Arabic month lists | DONE (SQ14 7f611fa) | isCustom now VT's (`report-mirror.js:51`); months `calendar-generator.js:18`, `theme-generator.js:51` | load arabic-calendar.js months on both pages · S · low · website → **SQ14** |
 | WORK-2026-10-11-14-S2 | G1 third KPI computed Predicted Cost by name tiebreak | OBSOLETE | informational: shape cannot tell two computed measures; no fix defined |  |
 | WORK-2026-10-11-14-S3 | O-2, R1-R9, T2-T8 are their blocks' | OBSOLETE | pointer only; O-2 done in 0.2.9 (note :540, :563) |  |
 | WORK-2026-10-11-14-S4 | T1 invertAxis is the laptop's tonight | DONE | `assets/js/report-mirror.js:11` categoryAxis.invertAxis never written (T1, M1) |  |
@@ -748,7 +748,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | L6-S8 | picture rows (32 high) may leave a part row | OWNER | writer's whole-rows rule excludes picture tables (L6 note) | on the laptop, check a table with pictures for a part row above the total |
 | L6-S9 | bullet bar scale per row | OBSOLETE | informational, by design: progress against each row's target |  |
 | L6-S10 | approval preview draws pictures as placeholders | OBSOLETE | informational, no action: preview has no DAX values (metadata only) |  |
-| L6-S11 | DAX_MEASURE_PENDING matches by name suffix | OPEN | `mcp/lib/dax-functions.mjs:33` suffix regex | note only when the DA script file is next to the project, verify first · S · low · checker → **SQ14** |
+| L6-S11 | DAX_MEASURE_PENDING matches by name suffix | DONE (SQ14 b2c7670) | `mcp/lib/dax-functions.mjs:33` suffix regex | note only when the DA script file is next to the project, verify first · S · low · checker → **SQ14** |
 | L6-S12 | KPI card font sizes not measured in Desktop | OWNER | rule by height, not measured | on the laptop, measure the KPI card's fonts at two heights |
 | L6-S13 | one image size for sparkline and bullet bar | OWNER | bullet 120x20 in 120x30 box (Fit) | on the laptop, check the bullet bar reads well in the shared box |
 
@@ -785,7 +785,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | Q1-S1 | T1's mutation test is linted, 0 findings | OBSOLETE | informational, no action (`package.json:11` lints mcp) |  |
 | Q1-S2 | HTML pages' inline scripts are not linted | DONE (SQ11 de403a2) | `package.json:11` "eslint mcp assets/js"; `eslint.config.mjs` no html files | add eslint-plugin-html (or extract scripts) for tools/*.html, articles · M · low · tests-ci → **SQ11** |
-| Q1-S3 | Two Arabic month lists (arabic-calendar MONTHS, pbip-query AR_MONTHS) | OPEN | `assets/js/arabic-calendar.js:13`, `pbip-query.js:217`; third in `mcp/lib/shadow-model.mjs:22` | pbip-query reads arabic-calendar's MONTHS (T-5 keeps them equal meanwhile) · M · low · calendar → **SQ14** |
+| Q1-S3 | Two Arabic month lists (arabic-calendar MONTHS, pbip-query AR_MONTHS) | DONE (SQ14 7f611fa) | `assets/js/arabic-calendar.js:13`, `pbip-query.js:217`; third in `mcp/lib/shadow-model.mjs:22` | pbip-query reads arabic-calendar's MONTHS (T-5 keeps them equal meanwhile) · M · low · calendar → **SQ14** |
 | Q1-S4 | R5's planted titles never reach the report | DONE | 05f55b0 (T-4) `mcp/test-0.2.9i.mjs:145-150` checks the report's real titles |  |
 | Q1-S5 | calendar-generator.js 40% unrun; website suites lack coverage | OPEN | c8 job `tests.yml:244-279` covers the MCP npm test only | Chromium coverage (page.coverage) over website suites, report only · L · low · tests-ci → **SQ15** |
 | Q1-S6 | Tahoma header title 20pt in 46-high box trips validator floor | OWNER | `assets/js/pbip-page.js:691` size from header height; no Tahoma case | laptop: measure Tahoma header in Desktop, then pick 48-high box or 18pt title |
@@ -831,12 +831,12 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | S1-S1 | server instructions near 2,200 cap | DUPLICATE | measured 2,195 of 2,200 (`mcp/lib/agent-text.mjs:9`) | of 0.2.9-reader-S5 |
 | S1-S2 | report-design skill and README lack rule 7 | DONE 7653789 | rule at `mcp/lib/agent-text.mjs:17`; absent in `mcp/skills/report-design/SKILL.md`, README | one line in skill Rules (both copies) and README · S · none · tools-docs → **SQ9** |
-| S1-S3 | Microsoft validator's own writes not read by write gate | OPEN | `mcp/test-0.3.1-write-gate.mjs:2-3` scans mcp code only | verify first: read validator's fs writes, record in gate notes · M · low · checker → **SQ14** |
+| S1-S3 | Microsoft validator's own writes not read by write gate | DONE (SQ14 070ee85) | `mcp/test-0.3.1-write-gate.mjs:2-3` scans mcp code only | verify first: read validator's fs writes, record in gate notes · M · low · checker → **SQ14** |
 | S1-S4 | golden EN-AR tooltip pages get TOOLTIP_SCROLL note | OBSOLETE | informational, no action: there before S1 |  |
 | S1-S5 | arabicCopy remakes whole copy, hand edits lost | OBSOLETE | informational: said in its how; in-place fix not proposed |  |
 | S1-S6 | no Desktop step needed | OBSOLETE | informational, no action |  |
 | S1-S7 | read_report returns short text box as typed | DUPLICATE | `mcp/lib/read-report.mjs:23,377` safeText screens only; PRIVACY.md:240 known gap | R7-claims N1 |
-| S1-S8 | SCHEMA finding pointer() keeps plain-word segments | OPEN | `mcp/lib/check-report.mjs:78` any [A-Za-z0-9_$] segment kept | verify first: keep only schema property names, others "…" · S · low · checker → **SQ14** |
+| S1-S8 | SCHEMA finding pointer() keeps plain-word segments | DONE (SQ14 b2c7670) | `mcp/lib/check-report.mjs:78` any [A-Za-z0-9_$] segment kept | verify first: keep only schema property names, others "…" · S · low · checker → **SQ14** |
 | S1-S9 | "Last N months: measure" helper can mix scripts | DONE f026240 | `assets/js/pbip-query.js:410` no latinOnly; Keep uses it at :455 | same latinOnly fallback as Keep (e.g. "Last N months") · S · low · writer → **SQ1** |
 | S1-S10 | fuzz 8199 checks Linux vs 8226 Windows | OBSOLETE | informational, no action |  |
 
