@@ -464,6 +464,11 @@ function summaryOf(kind, data) {
     if (other.length) sections.push({ heading: 'More', rows: other.map((k) => [k, val(p[k])]) });
     // (0.3.1 X2) a report in English and Arabic: both halves, as the twin's EN-AR page shows them
     if (d.bilingual && typeof d.bilingual === 'object') languagesSections(d.bilingual, sections, 1);
+    // (0.3.1 SQ10, K2-S1) what stays English or unmirrored in its Arabic half, in one line, as the twin's page says it
+    const NFb = d.bilingual && d.bilingual.notFullyArabic && typeof d.bilingual.notFullyArabic === 'object' ? d.bilingual.notFullyArabic : null;
+    if (NFb && NFb.en) sections.push({ heading: 'ليست عربية بالكامل · Not fully Arabic', rows: [['العربية', String(NFb.ar || '')], ['English', String(NFb.en)]] });
+    // (0.3.1 SQ10, AF2-S4) a script the plan names that is already there with exactly its content: not among the files written
+    if (Array.isArray(d.alreadyThere) && d.alreadyThere.length) sections.push({ heading: `Already there, not written again (${d.alreadyThere.length})`, rows: d.alreadyThere.map((f) => [String(f), 'next to the project, holding exactly this script: named again, not written again']) });
     // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
     if (Array.isArray(d.customVisualsShown)) sections.push({ heading: `Custom visuals replaced (${d.customVisualsShown.length})`, rows: d.customVisualsShown.map((x) => [String(x.line), (x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows']]) });
     else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });

@@ -40,7 +40,7 @@ export function writePlannedScript(dir, name, script) {
   writeNew(f, script); noteWritten(f); return f;
 }
 // The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
-// same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
+// same rule everywhere) written by check_model_health, plan_layout and create_report, each with its own keys, next to the
 // project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
 const FORMAT_HOW = 'Save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (only the formats of the listed objects change), then Apply. The script is never applied by DataArcus: the model\'s files are not changed until the user applies it. It holds the model\'s own definitions of the objects it changes, which is why it is in a file: don\'t read the file into the conversation unless the user asks.';
 // AUD-032 (round 20) and the code review's a (round 22): a name with a control character (a tab, a line break) is
@@ -84,8 +84,10 @@ export function formatsAnswer(m, p, keys, maxItems, write = false, afterGo = '',
   const { mine, cap, s, list, scriptDir, scriptBase } = F;
   let file = {};
   if (s.script && !scriptDir) file = { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder as the working folder and ask again; until then set the formats by hand in Power BI Desktop (Measure tools or Column tools > Format).' };
-  else if (s.script && (!write || !put)) file = { scriptAfterGo: path.basename(freeScriptName(scriptDir, scriptBase + ' - fix formats', s.script)), notWrittenYet: 'Not written yet: ' + afterGo };
-  else if (s.script) { try { const f = put(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
+  // (0.3.1 SQ10, AF2-S4) the same script already there is named as already there: the write writes no copy of it
+  else if (s.script && (!write || !put)) { const f = freeScriptName(scriptDir, scriptBase + ' - fix formats', s.script);
+    file = nothingAt(f) ? { scriptAfterGo: path.basename(f), notWrittenYet: 'Not written yet: ' + afterGo } : { scriptAfterGo: path.basename(f), alreadyThere: `Already there: "${path.basename(f)}" next to the project holds exactly this script, so it is named again and not written again.` }; }
+  else if (s.script) { try { const f = put(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same kind of script check_model_health writes). ' + FORMAT_HOW }; }
     catch (e) { file = { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Set the formats by hand in Power BI Desktop.' }; } }
   return Object.assign({ fields: list }, mine.length > cap ? { more: mine.length - cap } : {}, s.more ? { scriptCovers: `The script covers ${s.count} objects; ${s.more} more need the same fix (a script is kept under 30,000 characters): apply it, then check the model again.` } : {}, file);
 }

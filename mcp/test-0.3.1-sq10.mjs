@@ -2,7 +2,7 @@
 // notes. Written red first, one block per item of mcp/work/SEEN-QUEUE.md:
 //   0.2.9-design-S13          a table made smaller and short of fields: the smaller-text note doesn't say "left out only"
 //   0.2.9-writer-S19          a report measure renamed: the note names the cause (this table, another, a report measure)
-//   audit-3-picker-writer-S2  two fields whose "T[c]" text is the same are two fields (Bind.fieldKey), never one
+//   audit-3-picker-writer-S2  two fields whose "T[c]" text is the same are two fields (by table and name), never one
 //   WORK-2026-10-05-09-S2     an English right-to-left table's total says "Total", an Arabic one «الإجمالي»
 //   AF2-S3                    the format script is never said to be "the same file check_model_health writes"
 //   AF2-S4                    a format script already there is listed as already there, never as written
@@ -56,9 +56,9 @@ const fn = (name) => (typeof Said[name] === 'function' ? Said[name] : () => { th
   chk(() => /another of the report's own measures is named "Keep: Calls by Agent"/.test(rep) && !/already has/.test(rep), () => `S19c. no model table has it (another report measure does): said so: ${JSON.stringify(rep)}`);
 
   // audit-3-picker-writer-S2
-  const A = { t: 'Sales', c: 'Region[x]' }, B = { t: 'Sales[Region', c: 'x]' };
+  const A = { t: 'Sales', c: 'Region[x' }, B = { t: 'Sales[Region', c: 'x' };   // (one text, and one Bind.fieldKey too)
   const keys = get(() => fn('uniqueFields')([A, B, A, null]));
-  chk(() => Array.isArray(keys) && keys.length === 2 && keys[0].f === A && keys[1].f === B && keys.every((k) => k.key === 'Sales[Region[x]]'), () => `S2a. two fields whose "T[c]" text is the same stay two (identity by Bind.fieldKey), each once, its text as the tools take it: ${JSON.stringify(keys)}`);
+  chk(() => Array.isArray(keys) && keys.length === 2 && keys[0].f === A && keys[1].f === B && keys.every((k) => k.key === 'Sales[Region[x]'), () => `S2a. two fields whose "T[c]" text is the same stay two (identity by table and name), each once, its text as the tools take it: ${JSON.stringify(keys)}`);
 
   // WORK-2026-10-05-09-S2
   const rl = [{ page: 'Details', t: 'Sales', c: 'Region', m: 'Row label: Region' }];
@@ -93,6 +93,7 @@ modelAt('fmt', [sales(null)]);
 modelAt('g', [sales('#,0.00')]);
 modelAt('ram', [sales('#,0.00'), { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [Object.assign(col('Date', 'dateTime'), { isKey: true }), col('Is Ramadan', 'boolean'), col('AH', 'int64'), col('Month', 'string')] }],
   [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }]);
+fs.cpSync(path.join(ROOT, 'ram'), path.join(ROOT, 'ram2'), { recursive: true });
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const linkAt = async (i) => { for (let k = 0; k < 100 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
@@ -125,7 +126,7 @@ try {
   chk(() => f2.scriptAfterGo === SCRIPT && /already there/i.test(String(f2.alreadyThere || '')) && !f2.notWrittenYet, () => `AF2-S4a. the plan names the script already there as already there, not "Not written yet": ${JSON.stringify(f2).slice(0, 500)}`);
   chk(() => !/and the format script "M - fix formats\.tmdl"(?! \(already there)/.test(writes2) && /M - fix formats\.tmdl" \(already there/.test(writes2), () => `AF2-S4b. the writes line says the script is already there, not that it writes it: ${writes2.slice(0, 500)}`);
   const listed = (H) => { const i = H.indexOf('id="files"'), j = i < 0 ? -1 : H.indexOf('</ul>', i); return i < 0 || j < 0 ? '' : unesc(H.slice(i, j)); };
-  chk(() => two.html && !listed(two.html).includes(SCRIPT) && /Already there[\s\S]*M - fix formats\.tmdl/.test(unesc(two.html)), () => `AF2-S4c. the approval page lists the script as already there, never among the files written: ${listed(two.html).slice(0, 300)} | ${(unesc(two.html).match(/.{0,60}fix formats.{0,80}/g) || []).join(' | ')}`);
+  chk(() => two.html && !/M - fix formats\.tmdl: the script/.test(listed(two.html)) && /Already there, not written again \(1\) M - fix formats\.tmdl/.test(unesc(two.html)), () => `AF2-S4c. the approval page lists the script as already there, never among the files written: ${listed(two.html).slice(0, 300)} | ${(unesc(two.html).match(/.{0,60}fix formats.{0,80}/g) || []).join(' | ')}`);
   chk(() => !two.c.err && !two.added.some((f) => /fix formats/.test(f)) && fs.readFileSync(path.join(ROOT, 'fmt', SCRIPT), 'utf8') === script0, () => `AF2-S4d. guard: the write writes no copy and leaves the script as it was: ${short(two.c)} ${JSON.stringify(two.added.filter((f) => /tmdl/.test(f)))}`);
   // the plan lists exactly what the write writes: the page's kinds line counts the files the write added
   const kinds = (H) => (unesc(H).match(/\d+ report: [^<]*?(?=\n|$)/) || [''])[0];
@@ -141,7 +142,8 @@ try {
   const rm = await planAndWrite(ramArgs);
   const note = (((rm.c.j && rm.c.j.pageFilters) || [])[0] || {}).note || '';
   chk(() => /add a second page filter on the Hijri year \(Calendar\[AH\]\)/.test(note) && !/found by name/.test(note), () => `J17-S2a. the note names the confirmed Hijri-year column Calendar[AH]: ${short(rm.c)} ${note}`);
-  const rm0 = await planAndWrite(Object.assign({}, ramArgs, { name: 'Ramadan 2', gulfDates: { grain: 'gregorian', scope: 'all' } }));
+  // (on a model of its own: the person's answer is remembered for the model it was given for)
+  const rm0 = await planAndWrite(Object.assign({}, ramArgs, { path: 'ram2', name: 'Ramadan 2', gulfDates: { grain: 'gregorian', scope: 'all' } }));
   const note0 = (((rm0.c.j && rm0.c.j.pageFilters) || [])[0] || {}).note || '';
   chk(() => /no Hijri year column was found by name/.test(note0), () => `J17-S2b. guard: no column confirmed and none named so: the note says it was not found: ${short(rm0.c)} ${note0}`);
 
@@ -164,7 +166,7 @@ try {
   // ---------- Q1-S8: the flip cards on two pages ----------
   const fc = await w.call('plan_layout', { path: 'g', name: 'Flip', layout: 'exec', lang: 'en', flipCards: true });
   const cards = (fc.j && fc.j.flipCards && fc.j.flipCards.cards) || [];
-  chk(() => cards.length === 3 && cards.every((c) => Array.isArray(c.pages) && c.pages.length === 2 && c.page === undefined) && new Set(cards.map((c) => c.measure)).size === 3, () => `Q1-S8a. one entry per card (3 on 2 pages), each with its pages: ${JSON.stringify(cards.map((c) => [c.measure, c.page, c.pages]))}`);
+  chk(() => cards.length === 3 && cards.every((c) => Array.isArray(c.pages) && c.pages.length === 2 && c.page === undefined && c.measures.length === 6) && new Set(cards.map((c) => c.measure)).size === 3, () => `Q1-S8a. one entry per card (3 on 2 pages), each with its pages: ${JSON.stringify(cards.map((c) => [c.measure, c.page, c.pages]))}`);
   chk(() => JSON.stringify(cards.map((c) => c.pages)[0]) === '["Executive summary","Details"]' && cards[0].title === 'Total Sales' && cards[0].back, () => `Q1-S8b. the pages in report order, the card's title and back kept: ${JSON.stringify(cards[0]).slice(0, 300)}`);
 } finally {
   await w.close();

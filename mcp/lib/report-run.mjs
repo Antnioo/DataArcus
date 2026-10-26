@@ -4,7 +4,6 @@
 import path from 'node:path';
 import { loadModel, visible, inside, modelOf, nothingAt } from './model.mjs';
 import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme } from './design.mjs';
-import { withPlan } from './files.mjs';
 import { scopeOf } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import { resolveSwitch, addSwitch, switchSaid } from './metric-switcher.mjs';
@@ -17,13 +16,13 @@ import { daxOption, resolveDax, applyDax, daxSaid, daxHow } from './dax-function
 import * as Plans from './plans.mjs';
 import * as Terms from './terminology.mjs';
 import { monthOffer as calendarOffer } from './arabic-twin.mjs';
-import { readUserFile, writeTree } from './files.mjs';
+import { withPlan, readUserFile, writeTree } from './files.mjs';
 import { modelRef, sameModelBeforeWrite } from './plan-keys.mjs';
 import { formatsAnswer, formatsScriptOf } from './fix-scripts.mjs';
 import { hiddenOf } from './hidden-names.mjs';
 import { relsOf, resolveFields, resolvePageFilters, SVG_STATUS, resolveSvgColumns, boundOf, axesProblems, axesOf } from './report-fields.mjs';
 import { unknownKeys, THEME_MAX, LOGO_MAX, BACKGROUND_MAX, reportPin } from './report-inputs.mjs';
-import { flipAnswer, topSaid, CARD_RULE, modelNotes, phoneAnswer, calendarSaid } from './report-said.mjs';
+import { flipAnswer, topSaid, CARD_RULE, modelNotes, phoneAnswer, calendarSaid, tableSmallerSaid, rowLabelSaid, rowLabelSkippedSaid, extRenamedSaid, uniqueFields } from './report-said.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
@@ -82,9 +81,12 @@ export function reportRun(a, mode) {
   // filter on a Hijri-year column the answer says so and names that column; the year itself comes from the user
   if (PF) {
     const isHijriYear = (c) => /hijri/i.test(c) && /year/i.test(c);
+    // (0.3.1 SQ10, J17-S2) the plan's own Hijri-year column first (a.hijriYear: declared by the calendar or confirmed by
+    // the person in gulfDates, from plan_layout's date questions), else one found by its name
+    const known = a.hijriYear && m.tables.find((x) => x.name === a.hijriYear.t && x.columns.some((c) => c.name === a.hijriYear.c));
     PF.filter((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true)).forEach((f) => {
-      if (PF.some((g) => isHijriYear(g.c))) return;
-      const own = m.tables.find((t) => t.name === f.t), t = [own].concat(m.tables).filter(Boolean).find((x) => x.columns.some((c) => isHijriYear(c.name))), c = t && t.columns.find((x) => isHijriYear(x.name));
+      if (PF.some((g) => isHijriYear(g.c) || (known && g.t === known.name && g.c === a.hijriYear.c))) return;
+      const own = m.tables.find((t) => t.name === f.t), t = known || [own].concat(m.tables).filter(Boolean).find((x) => x.columns.some((c) => isHijriYear(c.name))), c = t && (known ? t.columns.find((x) => x.name === a.hijriYear.c) : t.columns.find((x) => isHijriYear(x.name)));
       f.note = `${f.key} is true keeps every Ramadan of the calendar, not one. For one Ramadan ("this Ramadan") add a second page filter on the Hijri year${c ? ` (${t.name}[${c.name}])` : ' (no Hijri year column was found by name in this model: ask the user which column holds it)'}, with the year the user gives: ask the user which Hijri year, because the tools never return data values.`;
     });
   }
@@ -124,8 +126,9 @@ export function reportRun(a, mode) {
   // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: a measure's
   // table column carries the percent format its card shows: the picker's tableFormat)
   const FULL = a.kpiValues === 'full', cardFormats = [], tableFormats = [];
-  const listFormats = (b) => {
-    const list = (to, f, code) => { if (f && f.m != null && code && !to.some((x) => x.field === keyOf(f))) to.push({ field: keyOf(f), format: code }); };
+  // (SQ10, audit-3-picker-writer-S2: each measure once by its table and name, never by its "T[c]" text)
+  const listed = new Set(), listFormats = (b) => {
+    const list = (to, f, code) => { const id = f && JSON.stringify([to === cardFormats, String(f.t), String(f.m)]); if (f && f.m != null && code && !listed.has(id)) { listed.add(id); to.push({ field: keyOf(f), format: code }); } };
     (b.kpis || []).forEach((f) => list(cardFormats, f, f && f.cardFormat)); (b.table || []).forEach((f) => list(tableFormats, f, f && f.tableFormat));
     return b;
   };
@@ -419,10 +422,10 @@ export function reportRun(a, mode) {
   // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
   // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
   const noSep = (() => {
-    const model = modelOf(m.tmsl), seen = new Set(), out = [];
+    const model = modelOf(m.tmsl), out = [];
     // (measures wherever they are shown; number columns only in the table, and never an identifier or a date part)
-    fieldsOf(bind).filter((f) => f.m != null).concat((bind.table || []).filter((f) => f && f.c != null && f.num && !Fix.notAQuantity(f.c))).forEach((f) => {
-      const k = keyOf(f); if (seen.has(k)) return; seen.add(k);
+    // (SQ10, audit-3-picker-writer-S2: each field once by its table and name)
+    uniqueFields(fieldsOf(bind).filter((f) => f.m != null).concat((bind.table || []).filter((f) => f && f.c != null && f.num && !Fix.notAQuantity(f.c)))).forEach(({ key: k, f }) => {
       const t = (model.tables || []).find((x) => x.name === f.t), o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : f.num ? (t.columns || []).find((x) => x.name === f.c) : null);
       if (!o || o.formatStringDefinition) return;
       if (f.m != null && Bind.isPercent(f.m, o.formatString, o.expression)) return;
@@ -505,10 +508,10 @@ export function reportRun(a, mode) {
     reportNotes.push(`${[dyn.length ? `${ns(dyn)} ${dyn.length === 1 ? 'takes its' : 'take their'} format from a DAX expression in the model` : null, unf.length ? `${ns(unf)} ${unf.length === 1 ? 'has' : 'have'} no format in the model` : null].filter(Boolean).join('; ')}, so ${fm.length === 1 ? 'its card' : 'their cards'} may show no currency beside the cards that do: say so in the plan, give ${fm.length === 1 ? 'it' : 'them'} the currency format in the model, or name other measures in "fields".`); }
   if (byFlagDay.length) { const x = byFlagDay[0]; reportNotes.push(`The line chart runs by ${x.t}[${x.c}] (its days), not by month: the page filter keeps ${x.flag.t}[${x.flag.c}] true, and one such period by month is a line of two or three points.`); }
   // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
-  if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${r.tableSmaller.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}; a field is left out only where even 8pt doesn't hold it.`);
-  // round 23 (the owner's go, 8 Oct 2026): the right-to-left table's total row says «الإجمالي» (way 4, measured in Desktop)
-  if ((r.rowLabels || []).length) reportNotes.push(`The total row of the Arabic table${r.rowLabels.length === 1 ? '' : 's'} says «الإجمالي»: Power BI writes its own "Total" only in a table's first column, which is at the left, so the name column you see at the right is a measure that exists only in this report (${r.rowLabels.map((x) => `"${visible(x.m)}" in ${visible(x.t)}`).join(', ')}, definition/reportExtensions.json; the model was not changed), and the column itself is the table's first column, hidden at width 0: it keeps the rows and the click that filters the page. A click on that header sorts the names A to Z as text. To remove it: in Power BI Desktop select the table, remove the "Row label: ..." field, drag the column to the end of Columns and widen it; the total row then has no word.`);
-  if ((r.rowLabelSkipped || []).length) reportNotes.push(`The total row of the Arabic table by ${r.rowLabelSkipped.map((x) => `${visible(x.t)}[${visible(x.c)}]`).join(', ')} has no «الإجمالي»: the name holds a control character (a tab or a line break) that no DAX may name, so the table is as before (the name column at the right, no word). Rename it in Power BI Desktop (remove the hidden character) and create the report again for the word.`);
+  if ((r.tableSmaller || []).length) reportNotes.push(tableSmallerSaid(r.tableSmaller, r.tableColumns));
+  // round 23 (the owner's go, 8 Oct 2026): the right-to-left table's total row says «الإجمالي» (way 4, measured in Desktop); "Total" in an English report
+  if ((r.rowLabels || []).length) reportNotes.push(rowLabelSaid(r.rowLabels, a.lang));
+  if ((r.rowLabelSkipped || []).length) reportNotes.push(rowLabelSkippedSaid(r.rowLabelSkipped, a.lang));
   // (round 22b, the outside review's X-05) a measure whose name holds a control character gets no "No data" card
   if ((r.noDataSkipped || []).length) reportNotes.push(`No data message for ${r.noDataSkipped.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')}: not written, the name holds a control character (a tab or a line break) that no DAX may name. Rename it in Power BI Desktop (remove the hidden character) and create the report again for the message.`);
   // (round 22b, the review of round 22, item 8) a table whose name column and first measure need more than its width even at 8pt
@@ -530,8 +533,8 @@ export function reportRun(a, mode) {
   if (F) { const tw = Bind.twinsOf(m.tables), cl = Bind.langsOf(m.tables), named = [].concat(F.kpis || [], [F.measure, F.timeAxis, F.category, F.category2], F.table || [], F.slicers || []).filter(Boolean);
     const off = [...new Set(named.filter((f) => { const n = f.c != null ? f.c : f.m, l = f.c != null && cl[Bind.fieldKey(f.t, f.c)] ? cl[Bind.fieldKey(f.t, f.c)] : Bind.langOf(n); return a.lang === 'ar' ? l === 'en' && f.c != null && tw[Bind.fieldKey(f.t, f.c)] : l === 'ar'; }).map((f) => `${visible(f.t)}[${visible(f.c != null ? f.c : f.m)}]`))];
     if (off.length) reportNotes.push(`${off.join(', ')} ${off.length === 1 ? 'is' : 'are'} in ${a.lang === 'ar' ? 'English (the model has an Arabic column beside it)' : 'Arabic'}, and the report is ${a.lang === 'ar' ? 'Arabic' : 'English'}: used as named in "fields".`); }
-  // round 23: a report measure renamed because the model has an object of that name
-  if ((r.extRenamed || []).length) reportNotes.push(`${r.extRenamed.map((x) => `${visible(x.t)} already has "${visible(x.from)}", so the report's own measure is "${visible(x.to)}"`).join('; ')} (definition/reportExtensions.json; the model was not changed).`);
+  // round 23: a report measure renamed because its name is taken (by the model or another report measure: said by its cause)
+  if ((r.extRenamed || []).length) reportNotes.push(extRenamedSaid(r.extRenamed, modelNames));
   // round 23: a table's measures that do not reach its rows were left out of it (they would repeat one total on every row)
   if (bind && (bind.notReached || []).length) { const nr = bind.notReached; reportNotes.push(`${nr.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')} ${nr.length === 1 ? 'was' : 'were'} left out of the table by ${visible(nr[0].row.t)}[${visible(nr[0].row.c)}]: ${[...new Set(nr.map((x) => visible(x.t)))].join(', ')} ${nr.length === 1 ? 'is' : 'are'} not related to ${visible(nr[0].row.t)}, so ${nr.length === 1 ? 'it' : 'each'} would repeat one total on every row. Add the relationship in the model, or name the table's fields in "fields".`); }
   if (bind && bind.noRelatedCategory) { const n = bind.noRelatedCategory; reportNotes.push(`No category is related to ${visible(n.measure.t)}[${visible(n.measure.m)}]: the text columns of ${n.tables.map((t) => visible(t)).join(', ')} are in tables the measure's table does not reach through a relationship, so a chart by them would show the same total on every bar. The charts that need a category are left out. Add a relationship from ${visible(n.measure.t)} to one of those tables, or pick a category of a related table in "fields".`); }
@@ -562,9 +565,9 @@ export function reportRun(a, mode) {
   if (KT.shortened.length) reportNotes.push(`${KT.shortened.length} KPI title${KT.shortened.length === 1 ? ' was' : 's were'} shortened to fit their cards: ${[...new Set(KT.shortened.map((x) => `"${x.title}" as "${x.shown}"`))].join('; ')}. Ask the user for shorter display names if these read badly.`);
   // what was done with the display names; and in an Arabic report, the fields it shows under a model name that has no
   // Arabic letter (no name is ever made up for them)
-  const shown = [...new Set(fieldsOf(bind).map(keyOf))];
+  const shown = uniqueFields(fieldsOf(bind)).map((x) => x.key);   // (SQ10: each field once by its table and name)
   const names = given.size ? { displayNames: { used: [...given.values()].filter((g) => g.used).length, notUsed: [...given.values()].filter((g) => !g.used).map((g) => g.key) } } : {};
-  const missing = a.lang === 'ar' ? fieldsOf(bind).filter((f) => !f.name && !/[\u0600-\u06FF]/.test(f.c != null ? f.c : f.m)).map(keyOf).filter((k, i, l) => l.indexOf(k) === i) : null;
+  const missing = a.lang === 'ar' ? uniqueFields(fieldsOf(bind).filter((f) => !f.name && !/[\u0600-\u06FF]/.test(f.c != null ? f.c : f.m))).map((x) => x.key) : null;
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (propose names, show them to the user, and pass only the ones they approve or edit: never show a name the user has not approved). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   // formats fixed at the source: said first, with the script (the report already shows the right formats)

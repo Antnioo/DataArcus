@@ -1,7 +1,7 @@
 // The sentences create_report's run and plan_layout both answer with: the flip cards, the top N, the card values'
 // rule, the model's notes, the phone layout, the Arabic calendar.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
-import { shownName, modelOf } from './model.mjs';
+import { shownName, modelOf, visible } from './model.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Pbip = require('../../assets/js/pbip-export.js');
@@ -58,3 +58,25 @@ export const phoneAnswer = (written) => (written
 // fields that show English data until it is applied (those the report shows, when known), and how to switch
 export const calendarSaid = (co, shown, extra) => { const on = shown ? (co.englishData || []).filter((x) => shown.includes(x)) : co.englishData || [];
   return Object.assign({ offered: true, table: co.table, columns: co.columns, englishData: on, englishDataWhy: co.englishDataWhy, howToSwitch: co.howToSwitch }, co.leftOut ? { leftOut: co.leftOut } : {}, co.note ? { note: co.note } : {}, extra || {}); };
+
+// (0.3.1 SQ10) create_report's notes on its tables and its own measures, said here so each is tested alone
+// (0.2.9-design-S13) the smaller table text; "a field is left out only where even 8pt doesn't hold it" only when no
+// such table also left fields out (the "Fields were left out of the table" note then says which)
+export const tableSmallerSaid = (small, short) => { const cut = new Set((short || []).map((c) => c.page));
+  return `The table text is ${[...new Set(small.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${small[0].from}pt) on ${small.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${small.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}${small.some((x) => cut.has(x.page)) ? '.' : '; a field is left out only where even 8pt doesn\'t hold it.'}`; };
+// (WORK-2026-10-05-09-S2) the right-to-left table's total row: the word the writer writes, by the report's language
+// (pbip-page.js: «الإجمالي» in Arabic, "Total" otherwise)
+const totalWord = (lang) => (lang === 'ar' ? '«الإجمالي»' : '"Total"');
+export const rowLabelSaid = (labels, lang) => `The total row of the right-to-left table${labels.length === 1 ? '' : 's'} says ${totalWord(lang)}: Power BI writes its own "Total" only in a table's first column, which is at the left, so the name column you see at the right is a measure that exists only in this report (${labels.map((x) => `"${visible(x.m)}" in ${visible(x.t)}`).join(', ')}, definition/reportExtensions.json; the model was not changed), and the column itself is the table's first column, hidden at width 0: it keeps the rows and the click that filters the page. A click on that header sorts the names A to Z as text. To remove it: in Power BI Desktop select the table, remove the "Row label: ..." field, drag the column to the end of Columns and widen it; the total row then has no word.`;
+export const rowLabelSkippedSaid = (skipped, lang) => `The total row of the right-to-left table by ${skipped.map((x) => `${visible(x.t)}[${visible(x.c)}]`).join(', ')} has no ${totalWord(lang)}: the name holds a control character (a tab or a line break) that no DAX may name, so the table is as before (the name column at the right, no word). Rename it in Power BI Desktop (remove the hidden character) and create the report again for the word.`;
+// (0.2.9-writer-S19) a report measure renamed because its name was taken (pbip-notes.js: freeExt): by its own table,
+// by another table of the model, or by another of the report's own measures; DAX names ignore case
+export const extRenamedSaid = (renamed, modelNames) => { const N = modelNames || {}, has = (t, n) => (N[t] || []).some((x) => String(x).toLowerCase() === String(n).toLowerCase());
+  return `${renamed.map((x) => { const other = Object.keys(N).find((t) => t !== x.t && has(t, x.from)), why = has(x.t, x.from) ? `${visible(x.t)} already has "${visible(x.from)}"` : other != null ? `the model's table ${visible(other)} already has "${visible(x.from)}"` : `another of the report's own measures is named "${visible(x.from)}"`;
+    return `${why}, so the report's own measure is "${visible(x.to)}"`; }).join('; ')} (definition/reportExtensions.json; the model was not changed).`; };
+// (audit-3-picker-writer-S2) the fields once each, by their table and name (not by the "T[c]" text: a table "A[b" with
+// a column "c" and a table "A" with a column "b[c" give one text, and Bind.fieldKey doubles a "]" in the name only), so
+// two fields are never taken for one; key: that text, as the tools take it
+export const uniqueFields = (fields) => { const seen = new Set(), out = [];
+  (fields || []).filter(Boolean).forEach((f) => { const n = f.c != null ? f.c : f.m, id = JSON.stringify([String(f.t), String(n)]); if (seen.has(id)) return; seen.add(id); out.push({ key: `${f.t}[${n}]`, f }); });
+  return out; };
