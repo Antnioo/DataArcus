@@ -15,8 +15,10 @@
   checks, about 9 red on the base (3 pass on the base: behaviour that already holds); then both PASS. `npm test --
   release` 3 suites -> 4 suites, all pass; `npm test -- core` unchanged and passing; `node
   scripts/check-agent-memory.mjs` PASS; no other test's numbers change.
-- **Got:** (filled after the run)
-- **Resume:** plan pushed; next the red tests, then the fixes.
+- **Got:** claims 643 -> 672 (red a6a16f6: 29 failed) -> 672 PASS; `sq9` 22 checks (red: 11 failed; H3, I2-I6 held
+  on the base) -> 22 PASS; release 3 -> 4 suites pass; core 6 suites pass before and after (mcp 1591); agent-memory PASS;
+  lint clean; full run: pending (written in the next push).
+- **Resume:** done (c3d8428 plan, a6a16f6 red, 7653789 fixes, 3670659 queue, then this note); the reviewer merges.
 
 ## The items, confirmed on e1f895d (a scratch probe in process: the tools' handlers and the gate, made-up fixtures)
 1. **AF2-S1** (TOOLS.md "picks a free name"): NOT true as an item. `plan_layout` + `create_report` named "Sales Report"
@@ -49,3 +51,54 @@
 2. Red first: claims (C-S1, A2-S11, A2-S12, S1-S2, W2-S4, D5-S1, A2-S7) and `test-0.3.1-sq9.mjs` (checks-S9 enum and
    description, design-S8 hints and the repeat behaviour, Q1-S9 one limit and the 100-table answers under the cap).
 3. Fixes at the cause, one commit; the queue's Status cells; this note's results; one push.
+
+## Each item, before -> after (the code each new sentence rests on)
+1. **AF2-S1** OBSOLETE: TOOLS.md's "picks a free name" is true (`assets/js/pbip-export.js:319`); unchanged.
+2. **C-S1** "create_report (from redesign)" -> "create_report (from plan_layout with redesignFrom)"
+   (`lib/agent-text.mjs:33`; the kind `lib/plans.mjs:26`). Claims: no kind is ever named by its key.
+3. **0.2.9-checks-S9** lang auto/en/ar -> auto/en/ar/he, the description says ar and he run the right-to-left rules
+   (`tools/check_report.mjs:17`; `lib/check-report.mjs:324-326`; sq9 H3 runs it).
+4. **0.2.9-design-S8** check_model_health and add_gulf_calendar `idempotentHint` false -> true (`ADDS_SAME`,
+   `lib/tool-inputs.mjs:19`; `tools/check_model_health.mjs:61`, `tools/add_gulf_calendar.mjs:54`): a second plan names
+   the file that already holds the same script (`lib/fix-scripts.mjs:15`), the disk stays as it was (sq9 I5), the same
+   planId again is refused (I4). generate_theme, create_report, create_arabic_twin stay false: a repeat writes another
+   file (I6: `brand-2.json`; "- New design"). The README's annotations line says it.
+5. **Q1-S9** 60 (picker) and 100 (read_model) -> `LIMITS.tables` 100 for all four (`lib/tool-limits.mjs:17`,
+   `lib/tool-inputs.mjs:18`, `tools/read_model.mjs:16`); sq9 T3 measures 100 tables under 36,000 characters.
+6. **A2-S11** the skill gains three Rules lines: metricSwitcher (`lib/report-inputs.mjs:96`, `tools/plan_layout.mjs:523`),
+   the terminology sheet (`lib/terminology.mjs:220`, `tools/plan_layout.mjs:482,502`, `tools/create_arabic_twin.mjs:39`,
+   `lib/report-inputs.mjs:89`), gulfDates (`lib/gulf-date-questions.mjs:48`, `tools/plan_layout.mjs:171-174`).
+7. **A2-S12** "few members" -> waterfall a known count, at most 12 members; small multiples at most 9 panels, never an
+   id/code/name split; combo a time or ordered axis (`assets/js/visual-gallery.js:41,100-101,115-116,126-127`; the test
+   reads MAX_STEPS and MAX_PANELS).
+8. **S1-S2** rule 7 (`NO_DIRECT_EDITS`, `lib/agent-text.mjs:22`) word for word in the skill's Rules and the README's Safety.
+9. **W2-S4** PRODUCT_SPEC: every writing tool's Writes cell names its approval (`lib/plans.mjs:17-28`);
+   check_model_health "nothing" -> its fix scripts after approval; generate_theme and check_model_health return a
+   proposed planId without one; plan_layout returns the plan's planId (or planProblems); create_report writes exactly
+   the plan's files, a name taken after the go writes nothing (`lib/report-run.mjs:384-406`); suggest_fields 1-8 -> 1-6
+   (`LIMITS.kpiCards`); rule 4 as PRIVACY section 3 (read_report: page names and text boxes up to 120 characters, never
+   a static title; the twin: the texts a reader sees, titles included).
+10. **D5-S1** the plugin README's "short titles, screened" -> text boxes, never a static title, the twin's texts for
+   their Arabic (PRIVACY.md section 3); the skill's own privacy line said the same and got the same fix (Decision 3).
+11. **A2-S7** "read a model, suggest fields, check model health, create a report project" -> reads and checks models
+   and reports, writes new reports, themes and scripts after your approval (no list).
+
+## CHANGELOG line
+- The tool texts say what the tools do: check_report takes Hebrew (`lang: "he"`), every tool that takes tables takes
+  up to 100, and the two scripts tools that write nothing new on a repeat say so (`idempotentHint`).
+
+## Decisions I made
+1. **A new suite `test-0.3.1-sq9.mjs`** (area release) for the schemas, hints and the repeat behaviour: no suite checks
+   tool schemas in process; the public text stays in the claims test.
+2. **100, not 60, for every tool**: measured far under the cap; a lower read_model limit would take away what Q1 measured.
+3. **The skill's privacy line** (the same stale claim as D5-S1, read_report's titles) fixed with D5-S1, at its cause.
+4. **A new `ADDS_SAME`** beside `ADDS` rather than per-tool literals: one reason, said once.
+
+## Seen, not in scope
+1. `mcp/test-0.3.0-large-model-caps.mjs` still calls suggest_fields with "(60, the most it takes)": the label is stale
+   now (the most is 100); its numbers untouched (not my test).
+2. PRODUCT_SPEC's plan_layout "Takes" says "KPI cards (3-6)" (the schema takes 0-6, `tools/plan_layout.mjs:157`) and lists no `path`/`planFields`; its create_report
+   "Takes" names few of the 0.3.0 options (gallery, flip cards, status icons...): the rows' Writes are now right, their
+   Takes still short.
+3. PRIVACY's "In one paragraph" (`PRIVACY.md:17-19`) says a report's "titles" are returned, with no word that read_report
+   returns none (section 3 says it); not this batch's file.
