@@ -45,7 +45,7 @@ window.licensingCalculatorTranslations = {
       "faq": {
         "title": "Questions",
         "q1": "Do report viewers need a Power BI license?",
-        "a1": "Yes, unless the report sits on a Fabric capacity of <strong>F64 or larger</strong>. Below F64, everyone who opens a shared report needs Pro (or PPU for PPU workspaces). On F64 and above, viewers only need the free license. Creators always need Pro.",
+        "a1": "Yes, unless the report sits on a Fabric capacity of <strong>F64 or larger</strong>. Below F64, everyone who opens a shared report needs Pro (or PPU for PPU workspaces). On F64 and above, viewers only need the free license. Creators always need Pro or PPU.",
         "q2": "When is Premium Per User worth it?",
         "a2": "For small teams that need Premium features like bigger models, more frequent refreshes or deployment pipelines, but have too few viewers to justify F64. Remember that everyone reading PPU content needs PPU too. Paginated reports do not need Premium: with Pro you can publish them to shared workspaces.",
         "q3": "Reservation or pay-as-you-go?",
@@ -102,7 +102,7 @@ window.licensingCalculatorTranslations = {
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "هل يحتاج مشاهدو التقارير إلى ترخيص Power BI؟",
-        "a1": "نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro دائمًا.",
+        "a1": "نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro أو PPU دائمًا.",
         "q2": "متى يستحق Premium Per User؟",
         "a2": "للفرق الصغيرة التي تحتاج مزايا Premium مثل النماذج الأكبر أو التحديث الأكثر تكرارًا أو خطوط النشر، دون عدد مشاهدين يبرر F64. تذكّر أن كل من يطّلع على محتوى PPU يحتاج PPU أيضًا. أما التقارير مرقّمة الصفحات فلا تحتاج Premium، إذ يكفي ترخيص Pro لنشرها في مساحات العمل المشتركة.",
         "q3": "الحجز أم الدفع حسب الاستخدام؟",

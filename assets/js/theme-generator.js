@@ -817,7 +817,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const foldSum = (id) => {
     const c = lay(), p = page(c);
     if (id === 'colors') return (state.preset ? (isAr() ? PRESET_AR[state.preset] || state.preset : state.preset) : L('Your colors', 'ألوانك')) + ' · ' + state.font + ' · ' + (state.name || '');
-    if (id === 'layout') return nm(LAYOUTS[c.preset].name) + ' · ' + p.w + ' × ' + p.h + ' · ' + L(`${c.kpis} KPI cards`, `${c.kpis} بطاقات مؤشرات`);
+    // (0.3.1 SQ8, 0.2.9-design-S4) the layout the preview shows: a small page's executive layout is the single-focus one
+    if (id === 'layout') return nm(LAYOUTS[E.fitLayout(c).preset].name) + ' · ' + p.w + ' × ' + p.h + ' · ' + L(`${c.kpis} KPI cards`, `${c.kpis} بطاقات مؤشرات`);
     return L('Theme, background and layout table', 'السمة والخلفية وجدول المواضع');
   };
   const foldSums = () => FOLDS.forEach((id) => { const s2 = document.querySelector(`#${id} > .tg-fold-sum`); if (s2) s2.textContent = foldSum(id); });

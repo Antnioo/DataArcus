@@ -204,7 +204,7 @@ const PAGES = [
   ['best-practice-exceptions', 'Best practice · Power BI', 'Power BI Best Practices Have Exceptions: 5 We Missed', { size: 44, sub: 'Our own tool was wrong 206 times, each where a rule does not fit.' }, EXCEPTIONS, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 85.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],
-  ['gulf-calendar', 'Gulf calendar · DAX · Free tool', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid, and the right weekend for each country and year.' }, GULF, '470px 1fr'],
+  ['gulf-calendar', 'Gulf calendar · DAX · Hijri calendar', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid days, each country\'s weekend and the 2022 UAE change.' }, GULF, '470px 1fr'],
   ['copilot-audit', 'Service · Power BI · Copilot', 'Copilot Readiness Audit for Your Power\u00a0BI Model', { size: 44, sub: 'One model, a written report with the exact fixes, within 5 business days.' }, AUDIT, '470px 1fr']
 ];
 

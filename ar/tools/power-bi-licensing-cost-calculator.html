@@ -74,7 +74,7 @@
       { "@type": "WebApplication", "name": "Power BI Licensing Cost Calculator", "url": "https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html", "applicationCategory": "BusinessApplication", "operatingSystem": "Any (web browser)",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }, "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" } },
       { "@type": "FAQPage", "mainEntity": [
-        { "@type": "Question", "name": "Do report viewers need a Power BI license?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, unless the report is on a Fabric capacity of F64 or larger. Below F64 every viewer needs Pro, or PPU for PPU workspaces. Creators always need Pro." } },
+        { "@type": "Question", "name": "Do report viewers need a Power BI license?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, unless the report is on a Fabric capacity of F64 or larger. Below F64 every viewer needs Pro, or PPU for PPU workspaces. Creators always need Pro or PPU." } },
         { "@type": "Question", "name": "When is Premium Per User worth it?", "acceptedAnswer": { "@type": "Answer", "text": "For small teams that need Premium features but have too few viewers to justify F64. Everyone reading PPU content needs PPU." } },
         { "@type": "Question", "name": "Reservation or pay-as-you-go for Fabric?", "acceptedAnswer": { "@type": "Answer", "text": "A 1-year reservation is about 40% cheaper for capacity that runs all month. Pay-as-you-go suits testing or paused capacities." } },
         { "@type": "Question", "name": "How much does Power BI cost in the UAE and Saudi Arabia?", "acceptedAnswer": { "@type": "Answer", "text": "Microsoft publishes Power BI prices in US dollars only: Pro $14 and PPU $24 per user per month, paid yearly. There is no published dirham or riyal price, so this calculator converts at the fixed pegs of 3.6725 dirhams (Central Bank of the UAE) and 3.75 riyals (SAMA) to the dollar: Pro is about AED 51.42 or SAR 52.50. Fabric capacity in Azure's UAE North region costs more than the US price used here: $0.22 against $0.18 per capacity unit per hour. Confirm with your Microsoft reseller before you budget." } },
@@ -270,7 +270,7 @@
           <section class="tg-faq">
             <h2 class="h4 fw-bold" data-i18n="lc.faq.title">أسئلة شائعة</h2>
             <h3 data-i18n="lc.faq.q1">هل يحتاج مشاهدو التقارير إلى ترخيص Power BI؟</h3>
-            <p data-i18n-html="lc.faq.a1">نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro دائمًا.</p>
+            <p data-i18n-html="lc.faq.a1">نعم، إلا إذا كان التقرير على سعة Fabric بحجم <strong>F64 أو أكبر</strong>. تحت F64، يحتاج كل من يفتح تقريرًا مشتركًا إلى Pro (أو PPU لمساحات PPU). من F64 فأعلى، يكفي المشاهدين الترخيص المجاني. المنشئون يحتاجون Pro أو PPU دائمًا.</p>
             <h3 data-i18n="lc.faq.q2">متى يستحق Premium Per User؟</h3>
             <p data-i18n="lc.faq.a2">للفرق الصغيرة التي تحتاج مزايا Premium مثل النماذج الأكبر أو التحديث الأكثر تكرارًا أو خطوط النشر، دون عدد مشاهدين يبرر F64. تذكّر أن كل من يطّلع على محتوى PPU يحتاج PPU أيضًا. أما التقارير مرقّمة الصفحات فلا تحتاج Premium، إذ يكفي ترخيص Pro لنشرها في مساحات العمل المشتركة.</p>
             <h3 data-i18n="lc.faq.q3">الحجز أم الدفع حسب الاستخدام؟</h3>
@@ -340,7 +340,7 @@
   </footer>
 
   <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
-  <script src="/assets/js/translations/licensing-calculator.min.js?v=20261025f" defer=""></script>
+  <script src="/assets/js/translations/licensing-calculator.min.js?v=20261026sq8" defer=""></script>
   <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>

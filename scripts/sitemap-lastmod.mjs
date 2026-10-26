@@ -75,6 +75,12 @@ function lastChange(page, rev) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const write = process.argv.includes('--write');
+  // (0.3.1 SQ8, I-S1) a shallow clone's oldest commit holds every page, so each date would become that commit's,
+  // silently (a depth-1 clone moved 68 dates): refuse, in the check and in --write
+  if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') {
+    console.error('This clone is shallow: page dates would be the oldest commit it has. Run git fetch --unshallow first.');
+    process.exit(2);
+  }
   const file = path.join(ROOT, 'sitemap.xml');
   let xml = fs.readFileSync(file, 'utf8');
   const stale = [];
