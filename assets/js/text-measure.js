@@ -30,6 +30,36 @@
     }
     return em * t * 4 / 3 * 1.03;
   }
-  const api = { textWidth, LETTER, TAHOMA_LATIN };
+  // ---- bidi isolation (0.3.0 J18, B-171 item 5; moved here from the MCP's terminology.mjs by SQ15b, J18-S2, so the
+  // website's own Arabic download isolates by the same rule) ----
+  // Power BI draws a title as a left-to-right paragraph (DESKTOP-TESTS.md, round 13: a "…" after Arabic words went to the
+  // reading start of the line). A Latin run between Arabic words is read in the right place, but one at either end of
+  // the text, or one with signs inside it ("Q1/2024"), is not. Each Latin run (letters, with the digits and the signs
+  // between them: "KPI 2024", "Q1/2024") inside Arabic text is wrapped in a first-strong isolate (U+2068 ... U+2069), and
+  // a run at either end of the text gets a right-to-left mark (U+200F) beside it, so the reading order is mirrored, never
+  // the run's own characters. Numbers alone and {n} placeholders are left as they are (they read right in Arabic text);
+  // a text with no Arabic letter, or already isolated, is unchanged. The isolates come from the writer only: a name a
+  // person gives with one is refused (the MCP's display-names.mjs, writtenName). textWidth counts them 0 wide.
+  const ARABIC = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/, ISOLATED = /[\u2066-\u2069]/;
+  const RUN = /[A-Za-z0-9](?:[A-Za-z0-9_%]|[ .,'&+#/\-](?=[A-Za-z0-9]))*/g;
+  const FSI = '\u2068', PDI = '\u2069', RLM = '\u200F';
+  const runs = (t) => t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run));
+  const ends = (t) => t.replace(/^(\s*)\u2068/, '$1' + RLM + FSI).replace(/\u2069(\s*)$/, PDI + RLM + '$1');
+  function isolateLatin(s) {
+    const t = String(s == null ? '' : s);
+    if (!ARABIC.test(t) || !/[A-Za-z]/.test(t) || ISOLATED.test(t)) return t;
+    return ends(runs(t));
+  }
+  // (the full run's test.mjs, e/h and P3-2: isolating every mixed text changed Arabic titles that keep a model name in
+  // English, outside what a person approved: the owner decided that one, F1) a text with an approved name in it: that
+  // name's Latin runs isolated where the text holds it, and a right-to-left mark at an end the name's run reaches
+  function isolateNames(s, names) {
+    let t = String(s == null ? '' : s);
+    if (ISOLATED.test(t)) return t;
+    let hit = false;
+    for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
+    return hit ? ends(t) : t;
+  }
+  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DataArcusTextMeasure = api;
 })(typeof self !== 'undefined' ? self : this);

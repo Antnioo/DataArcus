@@ -14,6 +14,8 @@
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
   // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
   const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
+  // (SQ15b, J18-S2: the isolate rule, text-measure.js, loaded first on the website)
+  const Measure = (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
@@ -522,6 +524,10 @@
     }
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
+    // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
+    // acronym, a code, a model name kept in English) isolated, as the MCP's create_report has done since J18 (F1: every
+    // mixed text), so the website's Arabic download reads in the same order
+    if (lang === 'ar') isolateFiles(files, [], { all: true });
     const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
     if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
     // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
@@ -531,7 +537,48 @@
   }
 
 
+  // A report's visible texts isolated (0.3.0 J18; moved here from the MCP's terminology.mjs by SQ15b, J18-S2, so the
+  // website's Arabic download is isolated as the MCP's report), in its files ({ path, data }) as the writer built them: the
+  // formatting literals of pages, visuals and phone layouts (titles, alt texts, text boxes, button texts and tooltips), text
+  // box runs, the display names of projections, page and bookmark names, and the texts of the report's Text measures
+  // (their DAX string literals). Never a filter's values, a measure's or visual's name, or anything else. names: the
+  // approved Arabic names whose Latin runs are isolated (isolateNames); o.all (F1, the owner's decision of 20 Oct: the
+  // held-back line): EVERY mixed Arabic/Latin text (isolateLatin), a name kept in English inside an Arabic text too, page
+  // and tooltip tab names included (the proof: the Arabic tooltip tab "Tooltip · Month Short" read with the English
+  // first). Returns how many texts changed.
+  const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
+  function walkVisual(o, change) {
+    if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change)); return; }
+    if (!o || typeof o !== 'object') return;
+    for (const [k, v] of Object.entries(o)) {
+      if (k === 'filterConfig' || k === 'selector') continue;
+      if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.values(v).forEach((p) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = change(raw); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
+      if (k === 'textRuns' && Array.isArray(v)) v.forEach((r) => { if (r && typeof r.value === 'string') { const out = change(r.value); if (out !== r.value) r.value = out; } });
+      if (k === 'projections' && Array.isArray(v)) v.forEach((p) => { if (p && typeof p.displayName === 'string') { const out = change(p.displayName); if (out !== p.displayName) p.displayName = out; } });
+      walkVisual(v, change);
+    }
+  }
+  const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
+  function isolateFiles(files, names, o) {
+    // names: the approved Arabic names with a Latin run (the others need nothing), longest first
+    const list = [...new Set((names || []).map(String).filter((x) => Measure.ARABIC.test(x) && /[A-Za-z]/.test(x) && !Measure.ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
+    const all = !!(o && o.all);
+    if (!list.length && !all) return 0;
+    let n = 0; const change = (s) => { const out = all ? Measure.isolateLatin(s) : Measure.isolateNames(s, list); if (out !== s) n++; return out; };
+    for (const f of files || []) {
+      if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
+      const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
+      if (!j || typeof j !== 'object') continue;
+      const before = n;
+      if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change); }
+      else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
+      else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, change); }));
+      if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');
+    }
+    return n;
+  }
+
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

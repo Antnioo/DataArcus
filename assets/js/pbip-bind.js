@@ -580,6 +580,9 @@
     for (let grew = true; grew;) { grew = false; rels.forEach((r) => { if (reach.has(r.fromTable) && !reach.has(r.toTable)) { reach.add(r.toTable); grew = true; } if (r.both && reach.has(r.toTable) && !reach.has(r.fromTable)) { reach.add(r.fromTable); grew = true; } }); }   // (round 23 part 5, the review's 3: a relationship that filters both ways, both ways)
     return reach;
   }
+  // (SQ15b, L3-S2) the model tables a measure's DAX reads, its own and those of the measures it calls, by the rule above
+  // (its home table not counted, no relationship followed): none means a constant, the same value on any axis
+  function readTables(tables, f) { const r = reached(tables || [], { t: null, m: f.m }, []); r.delete(null); return [...r]; }
   // Round 23 (the owner, 8 Oct 2026; lab 1b "Delivered Qty 9,012 on every Hub Zone row", golden task 10): a table's
   // measures all reach its row column's table, by the rule its charts follow (reached): a measure of a fact table not
   // related to the rows would repeat one total on every row, so it is left out of the table and named (notReached).
@@ -929,6 +932,6 @@
     const each = (v) => (Array.isArray(v) ? v.map(one) : v && typeof v === 'object' && v.t == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, one(x)])) : one(v));
     return Object.assign({}, bind, Object.fromEntries(FIELD_KEYS.filter((k) => bind[k] != null).map((k) => [k, each(bind[k])])));
   }
-  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, isPercent, measureCard, nameLike, iso, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, readTables, relsOfTmsl, isPercent, measureCard, nameLike, iso, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
