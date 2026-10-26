@@ -3,7 +3,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
 import { loadModel, visible, inside, modelOf, nothingAt, refuseUnreadable } from './model.mjs';
-import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme } from './design.mjs';
+import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, isGlass, glassPng } from './design.mjs';
 import { scopeOf } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
@@ -207,6 +207,7 @@ export function reportRun(a, mode) {
   if (!m.projectDir) throw new Error(`Nothing was written: the working folder is the model folder itself (${path.basename(m.folder)}). A report is written next to its model, which would be outside the working folder. Choose the project folder (the folder that holds ${path.basename(m.folder)}) as the working folder, then ask again.`);
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
   const png1 = BLANK_PNG_BYTES;   // (the one copy: report-mirror.js; the twin knows it by its bytes)
+  // (0.3.1 GL1) a design with the glass look gets the engine's soft picture instead, at each page's size (glassPng)
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
   // display names: checked first, then put on the bound fields (the report writer shows a field's name when it has one)
   const given = new Map();
@@ -302,7 +303,7 @@ export function reportRun(a, mode) {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
       theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
-      texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
+      texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: isGlass(design) ? glassPng(design, p.page.w, p.page.h) : png1, panel: p.panel, grow: true }))
     });
     boundPages = pages; switchAt = { rtl: designRtl(design.layout, a.lang), page: pages[0].page };
     // (D16) the line charts the layout leaves out on a model without a time axis are named, with the reason, as before

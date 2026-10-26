@@ -10,6 +10,12 @@ package's manifest; this file says what is in it.
   size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
   already show (or keeps its own). The layout stays yours (`keepPositions` leaves every visual where it is); text boxes,
   shapes, buttons, groups and custom visuals are not touched. The plan lists every setting removed before you approve.
+- **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
+  generate_theme (`chart.look: "glass"`). Power BI has no blur behind a visual, so the look is made of what Power BI
+  has: see-through cards (the visual's background with transparency), a thin light border, a soft shadow, and a soft
+  page picture DataArcus draws from your theme's own colours (no photo), which the report gets behind every page.
+  Text stays readable: the cards are made less see-through until text and labels stand 4.5:1 and colour 1 3:1 over the
+  picture's darkest and lightest parts, and the numbers are shown. The website's preview draws what Power BI draws.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click

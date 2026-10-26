@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { visitor, settle } from './lib.mjs';
 const { PNG } = createRequire(import.meta.url)('pngjs');
+const E = createRequire(import.meta.url)('../../assets/js/design-engine.js');
 
 const PAGE = '/tools/power-bi-theme-generator.html';
 const STORE = 'dataarcus-theme-generator';
@@ -408,6 +409,30 @@ export default async function ({ browser, url, page = PAGE }) {
     const how1 = await v.pg.evaluate(() => document.querySelector('[data-i18n-html="tg.layout.how1"]').textContent.trim());
     check(lang === 'en' ? how1 === 'Set visual backgrounds to Transparent (above), then download the files.' : /شفافة/.test(how1) && /ثم نزّل/.test(how1), `${lang}: how-to step 1 reads "${how1}"`);
     if (v.errs.length) problems.push(`${lang} visuals: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  // (0.3.1 GL1) the glass look, EN and AR: the choice, the theme, a preview of what Power BI draws (the picture under
+  // see-through cards, no blur), the background download the engine's picture at the page's size, kept after a reload
+  for (const lang of ['en', 'ar']) {
+    const v = await open(lang);
+    await v.pg.selectOption('#csLook', 'glass');
+    const st = await v.pg.evaluate((k) => JSON.parse(localStorage.getItem(k)), STORE);
+    const all = await v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent).visualStyles), g = E.glassLook(st);
+    check(st.chart.look === 'glass' && all['*']['*'].background[0].transparency === g.t && all['*']['*'].background[0].show === true && all.barChart['*'].border[0].width === 1,
+      `${lang} glass: the theme's cards ${JSON.stringify(all['*']['*'].background)}, the engine's ${g.t}`);
+    const pv = await v.pg.evaluate(() => ({ bg: getComputedStyle(document.getElementById('preview')).backgroundImage, card: document.querySelector('#preview .tg-card').getAttribute('style'),
+      note: (document.querySelector('#preview .tg-glassnote') || {}).textContent || '', lay: !!document.querySelector('#layCanvas svg image'), vis: document.getElementById('dlVis').textContent }));
+    check(/url\("?data:image\/png;base64,/.test(pv.bg) && /rgba\(/.test(pv.card) && /border:1px solid/.test(pv.card) && pv.lay, `${lang} glass: the preview draws the picture under see-through cards: ${JSON.stringify(pv).slice(0, 300)}`);
+    check(lang === 'en' ? /no blur/.test(pv.note) && !/\b(first|only|official|free)\b/i.test(pv.note) : /ضبابية/.test(pv.note), `${lang} glass: the preview says Power BI has no blur: "${pv.note}"`);
+    const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pngBtn')]);
+    const bytes = fs.readFileSync(await d.path()), pg = E.page(st.layout);
+    check(bytes.equals(Buffer.from(E.glassPng(st, pg.w, pg.h))) && PNG.sync.read(bytes).width === pg.w, `${lang} glass: the background download is the engine's picture at ${pg.w} x ${pg.h} (${bytes.length} bytes)`);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(await v.pg.$eval('#csLook', (e) => e.value) === 'glass', `${lang} glass: the choice is not kept after a reload`);
+    await v.pg.selectOption('#csLook', 'auto');
+    const back = await v.pg.evaluate(() => ({ t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background, bg: getComputedStyle(document.getElementById('preview')).backgroundImage }));
+    check(back.bg === 'none' && !(back.t[0].transparency > 0), `${lang} glass: back to Power BI's default, the cards and the preview are solid again: ${JSON.stringify(back)}`);
+    if (v.errs.length) problems.push(`${lang} glass: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
   return { checks, problems };
