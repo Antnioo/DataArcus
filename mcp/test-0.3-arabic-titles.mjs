@@ -59,13 +59,16 @@ const uniq = (a) => [...new Set(a)];
 try {
   // ---------- AT-1: the engine ----------
   {
-    chk(() => ST.join('Web Orders Total Score', 'Plan Group', 'حسب') === 'Web Orders Total Score' && Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group') === 'Web Orders Total Score',
-      () => `AT-1a. two English names in an Arabic report are not joined with "by" (the measure's name alone): ${ST.join('Web Orders Total Score', 'Plan Group', 'حسب')} | ${Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group')}`);
+    // (0.3.1 LR2, the owner, 26 Oct: "Use «حسب»": the story titles of an Arabic report join two English names with
+    // «حسب», never "by"; the writer isolates the Latin runs. AT-1a, AT-1b's two mixed cases and AT-1c changed on purpose;
+    // the gallery's own joins (Q.byTitle, "and", "per") keep R2's rule)
+    chk(() => ST.join('Web Orders Total Score', 'Plan Group', 'حسب') === 'Web Orders Total Score حسب Plan Group' && Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group') === 'Web Orders Total Score',
+      () => `AT-1a. two English names in an Arabic report are joined with «حسب», never "by" (the gallery's byTitle: the measure's name alone): ${ST.join('Web Orders Total Score', 'Plan Group', 'حسب')} | ${Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group')}`);
     chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && Q.byTitle('Total Sales', 'by', 'Region') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة'
-      && Q.byTitle('إجمالي المبيعات', 'حسب', 'Region') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'حسب') === 'Total Sales',
-      () => 'AT-1b. unchanged: "M by C" in English, «M حسب C» in Arabic, one script per title');
+      && Q.byTitle('إجمالي المبيعات', 'حسب', 'Region') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'حسب') === 'Total Sales حسب المنطقة' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales',
+      () => 'AT-1b. unchanged: "M by C" in English, «M حسب C» in Arabic (whatever the names\' script), one script per English title');
     const v = ST.variants({ t: 'Sales', m: 'Sales PY' }, { t: 'Sales', c: 'Region' }, 'حسب');
-    chk(() => v.every((x) => words(x.text).every((w) => ['Sales', 'PY'].includes(w))), () => `AT-1c. an English measure's time intelligence is not said in English words in an Arabic report: ${JSON.stringify(v.map((x) => x.text))}`);
+    chk(() => v.every((x) => words(x.text).every((w) => ['Sales', 'PY', 'Region'].includes(w))), () => `AT-1c. an English measure's time intelligence is not said in English words in an Arabic report: ${JSON.stringify(v.map((x) => x.text))}`);
     chk(() => ST.variants({ t: 'Sales', m: 'Sales PY' }, { t: 'Sales', c: 'Region' }, 'by')[0].text === 'Sales last year by Region' && ST.variants({ t: 'S', m: 'المبيعات PY' }, { t: 'S', c: 'المنطقة' }, 'حسب')[0].text === 'المبيعات في العام الماضي حسب المنطقة',
       () => 'AT-1d. unchanged: "Sales last year by Region" in English; an Arabic name\'s abbreviation in Arabic words');
     const alts = [2, 3, 4].map((n) => ST.alternate('Web Orders Total Score', 'Plan Group', n, true, 'حسب'));

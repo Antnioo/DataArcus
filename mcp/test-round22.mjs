@@ -165,9 +165,11 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // (changed 20 Oct 2026, F1: the owner's decision, every mixed Arabic/Latin text isolated: the names compared without
     // the marks, and each Latin name checked isolated)
     const bare = (t) => String(t || '').replace(/[\u2066-\u2069\u200e\u200f]/g, ''), iso = (t) => /\u2068(Region|Channel)\u2069/.test(String(t || ''));
-    chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/\((Region|Channel)\)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => iso(titleOf(v))), () => `e. the wide charts end with "(Region)" and "(Channel)", the names isolated: ${JSON.stringify(wide.map(titleOf))}`);
+    // (changed 26 Oct 2026, 0.3.1 LR2, the owner's "Use «حسب»": an Arabic report joins the English names with «حسب», so the
+    // two charts' titles differ by their column and need no bracket: "عدد Order Id حسب Region")
+    chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/ حسب (Region|Channel)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => iso(titleOf(v)) && !/[()]/.test(titleOf(v))), () => `e. the wide charts end with «حسب Region» and «حسب Channel», no bracket, the names isolated: ${JSON.stringify(wide.map(titleOf))}`);
     const four = narrow.concat(wide);
-    chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(bare(altOf(v))) && iso(altOf(v))), () => `h. each chart's alt text carries its bracketed name, isolated: ${JSON.stringify(four.map(altOf))}`);
+    chk(() => four.length === 4 && four.every((v) => / حسب (Region|Channel)$/.test(bare(altOf(v))) && !/[()]/.test(altOf(v)) && iso(altOf(v))), () => `h. each chart's alt text carries its full title, «حسب» and its column, isolated: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
     // (changed in 0.2.9 rc1, item 4: a bar chart by a category that is not time shows its top N, its title starts
     // "Top N: "; the numbering is of the title without that prefix, so the prefix is left out of the comparison)

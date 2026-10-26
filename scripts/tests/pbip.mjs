@@ -476,6 +476,63 @@ export default async function ({ browser, url }) {
     fs.rmSync(lean, { recursive: true, force: true });
   }
 
+  // 0.3.1 LR2 (the laptop's run of 26 Oct, the owner's "Use «حسب»"): the Theme Generator's own download on a made-up model
+  // with English names, Arabic and English, through the page (the picker's suggestions, the page's own steps):
+  //  a. the Arabic chart titles say «Total Sales حسب Region» (the English "M by C" family in Arabic, the Latin runs
+  //     isolated by the writer, a U+200F where the text starts with one), never a bracket; the English ones unchanged
+  //  b, c, d (pins: the laptop saw them on a harness that skipped the page's steps): the Arabic charts are mirrored, a KPI
+  //     card has its measure's format, every KPI slot has a measure when the model has enough
+  {
+    const TM = createRequire(import.meta.url)('../../assets/js/text-measure.js');
+    const own = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-lr2-'));
+    fs.mkdirSync(path.join(own, 'Own', 'Own.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(own, 'Own', 'Own.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
+    const ms = [['Total Sales', 'SUM ( Sales[Amount] )'], ['Orders', 'COUNTROWS ( Sales )'], ['Total Cost', 'SUM ( Sales[Cost] )'], ['Units', 'SUM ( Sales[Qty] )'], ['Customers', 'DISTINCTCOUNT ( Sales[Customer] )']];
+    fs.writeFileSync(path.join(own, 'Own', 'Own.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+      { name: 'Sales', columns: [['Amount', 'double'], ['Cost', 'double'], ['Qty', 'double'], ['Customer', 'string'], ['Region', 'string'], ['Order Date', 'dateTime']].map(([name, dataType]) => ({ name, dataType })),
+        measures: ms.map(([name, expression]) => ({ name, expression, formatString: '#,0' })) },
+      { name: 'Calendar', dataCategory: 'Time', columns: [{ name: 'Date', dataType: 'dateTime', isKey: true }, { name: 'Month', dataType: 'string', sortByColumn: 'Month Number' }, { name: 'Month Number', dataType: 'int64' }] }],
+    relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }] } }));
+    const visualsOf = (files) => Object.entries(files).filter(([n]) => /\/visual\.json$/.test(n)).map(([n, b]) => ({ n, j: JSON.parse(b.toString('utf8')) })).filter((x) => x.j.visual);
+    // a title as Desktop shows it: its text, or the plain branch of its "Title:" report measure (the Top N text aside)
+    const titleOf = (files, v) => {
+      const t = (((v.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, e = t && t.expr;
+      if (e && e.Literal) return String(e.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'");
+      if (!e || !e.Measure) return null;
+      const ext = JSON.parse((Object.entries(files).find(([n]) => /reportExtensions\.json$/.test(n)) || [0, '{}'])[1].toString('utf8'));
+      const m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
+      const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); return x ? x[1].replace(/""/g, '"') : null;
+    };
+    const altOf = (v) => { const a = (((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText; return a && a.expr && a.expr.Literal ? String(a.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
+    const CHART = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/;
+    const got = {};
+    for (const lang of ['en', 'ar']) {
+      const { files } = await run(lang, 'Own', async (pg) => { await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', path.join(own, 'Own')); return picker(pg); });
+      const vs = visualsOf(files), charts = vs.filter((x) => CHART.test(x.j.visual.visualType));
+      got[lang] = { files, vs, titles: charts.map((x) => titleOf(files, x.j.visual)), tables: vs.filter((x) => x.j.visual.visualType === 'tableEx').map((x) => titleOf(files, x.j.visual)), alts: vs.filter((x) => CHART.test(x.j.visual.visualType) || x.j.visual.visualType === 'tableEx').map((x) => altOf(x.j.visual)) };
+      // d: the first page's KPI cards: as many as the picker's KPI rows, each with its measure (no "Select or add data")
+      const p1 = Object.keys(files).filter((n) => /\/pages\/[^/]+\/page\.json$/.test(n)).map((n) => ({ d: n.replace(/page\.json$/, ''), j: JSON.parse(files[n].toString('utf8')) })).filter((p) => p.j.type !== 'Tooltip')[0];
+      const cards = vs.filter((x) => x.n.startsWith(p1.d) && x.j.visual.visualType === 'cardVisual' && !isMessageCard(x.j.visual));
+      check(cards.length === 4 && cards.every((x) => x.j.visual.query), `LR2-d (${lang}): 4 KPI slots on a model with 5 measures, each with its measure: ${cards.length} cards, ${cards.filter((x) => !x.j.visual.query).length} empty`);
+      // c: the Orders card shows the measure's own format (#,0), not Desktop's default
+      const orders = vs.find((x) => x.j.visual.visualType === 'cardVisual' && /"Property":"Orders"/.test(JSON.stringify(x.j.visual.query || {})));
+      const fmt = orders && ((orders.j.visual.objects || {}).value || []).find((e) => e.selector && e.selector.metadata === 'Sales.Orders');
+      check(fmt && fmt.properties.customFormatString.expr.Literal.Value === "'#,0'" && fmt.properties.labelDisplayUnits.expr.Literal.Value === '-1D', `LR2-c (${lang}): the Orders card's format: ${JSON.stringify(fmt)}`);
+    }
+    const en = got.en, ar = got.ar, iso = (x) => TM.isolateLatin(x);
+    // a: each English title in its Arabic form: "M by C" -> «M حسب C», "C ranked by M" -> «ترتيب C حسب M»
+    const toAr = (t) => { let x; if ((x = /^(.+) ranked by (.+)$/.exec(t))) return iso(`ترتيب ${x[1]} حسب ${x[2]}`); if ((x = /^(.+?) by (.+)$/.exec(t))) return iso(`${x[1]} حسب ${x[2]}`); return t; };
+    const sorted = (a) => a.slice().sort().join(' | ');
+    check(en.titles.length >= 4 && sorted(ar.titles) === sorted(en.titles.map(toAr)), `LR2-a1: the Arabic chart titles in the «حسب» form, the English download's sentences: ${sorted(ar.titles)} (want ${sorted(en.titles.map(toAr))})`);
+    check(ar.titles.concat(ar.tables, ar.alts).every((t) => t && !/[()]/.test(t)), `LR2-a2: no bracket in an Arabic chart or table title or alt text: ${ar.titles.concat(ar.tables, ar.alts).filter((t) => !t || /[()]/.test(t)).slice(0, 4).join(' | ')}`);
+    check(ar.titles.filter((t) => /^‏⁨Total Sales⁩ حسب /.test(t)).length >= 3, `LR2-a3: a title that starts with a Latin run starts with U+200F and the isolate: ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
+    check(sorted(en.titles) === 'Total Sales by Customer | Total Sales by Customer | Total Sales by Month | Total Sales by Month | Total Sales by Region | Total Sales by Region | Total Sales by Region', `LR2-a4: the English download's titles unchanged: ${sorted(en.titles)}`);
+    // b: the Arabic charts mirrored, the line chart's months from the right (its month order reversed)
+    const arCharts = mirrorOf(ar.files), line = ar.vs.find((x) => x.j.visual.visualType === 'lineChart');
+    check(arCharts.length >= 4 && arCharts.every((c) => c.mirrored) && line && line.j.visual.query.sortDefinition.sort[0].direction === 'Descending', `LR2-b (ar): charts mirrored ${JSON.stringify(arCharts)}, line sort ${line && JSON.stringify(line.j.visual.query.sortDefinition)}`);
+    fs.rmSync(own, { recursive: true, force: true });
+  }
+
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
   {
     const { files, picked } = await run('ar', 'Exec Board', async (pg) => {
