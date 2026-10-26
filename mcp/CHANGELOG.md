@@ -114,6 +114,10 @@ package's manifest; this file says what is in it.
 - **Arabic and Sharjah calendars, finished:** an Arabic calendar from the Calendar Generator or add_gulf_calendar
   gets Arabic labels for its quarters, fiscal year and flags; a Sharjah calendar is checked against Sharjah's weekend
   and has its own change column; the Health Check card counts in correct Arabic.
+- **A model file that can't be read is said, not skipped:** when a TMDL file of your project is empty, cut short,
+  not text, badly indented or holds git merge-conflict markers, read_model and the Model Health Check name the file and
+  why first, give no score (a score of the part read would be wrong), and DataArcus won't plan a report, a twin or a
+  calendar on that model until the file is fixed. A file that only lacks a final line break is read as whole.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
