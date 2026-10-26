@@ -36,20 +36,37 @@ import { ROLES, CLASSES, KNOWN_TYPES, TEXT_POINTER, visualText, countsOf, mixedO
 export const SUFFIX = ' redesigned';
 // the new report's name: "<name> redesigned" within 30 characters (the writer's name limit, kept from step 1): the
 // original's name is cut at a whole word, so the suffix always stays
+// (0.3.1 RD1: NC1's lab, "Gulf Retail Review native" became "Gulf Retail Review redesigned", the name the original's own
+// redesign gets) the stem is cut, never DataArcus's own suffixes: a native copy's " native" and a bilingual copy's
+// " (EN-AR)" stay, so the copy's redesign is told apart from the original's. A cut name can still be another report's
+// (two long names that start alike): when it is taken (taken(name): its .Report or .pbip is there), " 2" to " 9" after
+// it, the stem cut again to fit. A name not cut that is taken is this report's own redesign: refused, as before.
 export const NAME_MAX = 30;
-export function nameFor(base) {
-  const b = Array.from(String(base).replace(/\p{Cf}/gu, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim()), room = NAME_MAX - Array.from(SUFFIX).length;
-  let cut = b.slice(0, room).join('');
-  if (b.length > room && b[room] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
-  cut = cut.replace(/[\s\-–—·:,;&+.]+$/, '').replace(/^[.\s]+/, '');
-  return (cut || 'Report') + SUFFIX;
+export const KEEP_SUFFIXES = [' native', ' (EN-AR)'];
+const len = (s) => Array.from(s).length;
+export function nameOf(base, taken) {
+  const clean = String(base).replace(/\p{Cf}/gu, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const sfx = KEEP_SUFFIXES.find((x) => clean.endsWith(x) && clean.length > x.length && clean.slice(0, -x.length).trim()) || '';
+  const b = Array.from(sfx ? clean.slice(0, -sfx.length).trim() : clean);
+  const fit = (extra) => {
+    const room = NAME_MAX - len(sfx) - len(SUFFIX) - len(extra);
+    let cut = b.slice(0, room).join('');
+    if (b.length > room && b[room] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
+    cut = cut.replace(/[\s\-–—·:,;&+.]+$/, '').replace(/^[.\s]+/, '');
+    return { name: (cut || 'Report') + sfx + SUFFIX + extra, cut: b.length > room };
+  };
+  let r = fit('');
+  if (r.cut && typeof taken === 'function') for (let n = 2; n <= 9 && taken(r.name); n++) r = fit(' ' + n);
+  return { name: r.name, cut: r.cut ? clean : null };
 }
+export const nameFor = (base, taken) => nameOf(base, taken).name;
 
 function locate(p) {
   const loc = readerLocate(p, 'plan_layout'), dir = loc.reportDir;
   if (!/\.Report$/i.test(dir)) throw new Error(`"${p}" is a folder holding a definition folder, not a .Report folder: give the report's .pbip file or its .Report folder (redesignFrom), so the redesign can be named after it. Nothing was written.`);
-  const base = path.basename(dir).replace(/\.Report$/i, ''), name = nameFor(base), project = path.dirname(dir);
-  return { dir, base, name, project, pbip: loc.pbipPath, outDir: path.join(project, name + '.Report'), outPbip: path.join(project, name + '.pbip') };
+  const base = path.basename(dir).replace(/\.Report$/i, ''), project = path.dirname(dir);
+  const { name, cut } = nameOf(base, (n) => !nothingAt(path.join(project, n + '.Report')) || !nothingAt(path.join(project, n + '.pbip')));
+  return { dir, base, name, cut, project, pbip: loc.pbipPath, outDir: path.join(project, name + '.Report'), outPbip: path.join(project, name + '.pbip') };
 }
 
 // the original's model, as its definition.pbir names it: the redesign is on the same model (the copy keeps the pbir)
@@ -158,9 +175,17 @@ function follow(o, from, to) {
 // grid: 16 between visuals and at the page's edges, 8 a step, in page units h/720), heights equal in a row, never
 // smaller for a table (a shorter table draws a scrollbar: the laptop's PROOF-rc24 block 2 (d)), never a new overlap
 // with anything that stays, never off the page. A row that can't be placed so keeps its place, and says why.
+// (0.3.1 RD1: NC1's lab found rows touching, y 248 and 248, and gaps of 8 to 24: each row was placed on its own) The rows
+// are placed top to bottom: a row sits 16 below what lies above it (a row placed before it, or a visual that stays: a
+// text box, shape, image, custom visual, group, or a row that keeps its place) when it was within 32 of it, else on
+// its own top (on the 8 step, never closer than 16); the same at its sides and, for a row with nothing below it, at the
+// page's bottom (16 above it when it ended within 32). A row's height is its own (equal in the row), cut only at the
+// page's bottom or above what stays below it. A row that fails (a table smaller, off the page, a new overlap) keeps
+// its place and the page is placed again with it as one more visual that stays. When what stays keeps a row from the
+// page's margin of 16, the plan says so (margins).
 function gridPage(page, items) {
   const u = page.h / 720, M = Math.round(16 * u), G = Math.round(16 * u), S = Math.max(1, Math.round(8 * u));
-  const snap = (v) => Math.round(v / S) * S, up = (v) => Math.ceil(v / S) * S;
+  const snap = (v) => Math.round(v / S) * S;
   // (D4) a unit is one row member, placed by its lead's box; its overlays follow the lead and never take a slot
   const movable = items.filter((x) => x.movable && !x.lead).sort((a, b) => a.b.y - b.b.y || a.b.x - b.b.x);
   const withOverlays = (placed) => placed.concat(...placed.map(([v, b]) => (v.overlays || []).map((o) => [o, follow(o.b, v.b, b)])));
@@ -170,35 +195,73 @@ function gridPage(page, items) {
     const row = rows.find((r) => r.every((o) => Math.min(o.b.y + o.b.h, v.b.y + v.b.h) - Math.max(o.b.y, v.b.y) >= 0.6 * Math.max(o.b.h, v.b.h)));
     if (row) row.push(v); else rows.push([v]);
   });
-  const plan = new Map(), why = new Map();
-  rows.forEach((r) => {
-    r.sort((a, b) => a.b.x - b.b.x);
-    const left = Math.min(...r.map((v) => v.b.x)), right = Math.max(...r.map((v) => v.b.x + v.b.w)), top = Math.min(...r.map((v) => v.b.y)), bottom = Math.max(...r.map((v) => v.b.y + v.b.h));
-    const L = left < 2 * M ? M : snap(left), R = right > page.w - 2 * M ? page.w - M : snap(right), T = top < 2 * M ? M : snap(top), H = up(bottom - top);
-    const sum = r.reduce((s, v) => s + v.b.w, 0), avail = R - L - (r.length - 1) * G;
-    let x = L; const leads = r.map((v, i) => { const w = i === r.length - 1 ? R - x : Math.round(avail * v.b.w / sum); const b = { x, y: T, w, h: H }; x += w + G; return [v, b]; });
-    const placed = withOverlays(leads), all = placed.map(([v]) => v);
-    const tableSmaller = placed.find(([v, b]) => TABLES.includes(v.type) && (b.w < v.b.w || b.h < v.b.h));
-    const off = placed.find(([, b]) => b.x < 0 || b.y < 0 || b.w < 8 || b.x + b.w > page.w + 0.01 || b.y + b.h > page.h + 0.01);
-    if (tableSmaller) all.forEach((v) => why.set(v, `its row keeps its place: ${safeName(tableSmaller[0].name)} (a table) would get smaller and could draw a scrollbar`));
-    else if (off) all.forEach((v) => why.set(v, 'its row keeps its place: on the grid it would leave the page'));
-    else placed.forEach(([v, b]) => plan.set(v, b));
-  });
-  // never a new overlap: a row whose place overlaps anything it did not overlap before keeps its place; again until none
-  // (a row with its units' overlays)
-  const rowOf = new Map(); rows.forEach((r) => { const all = r.concat(...r.map((v) => v.overlays || [])); all.forEach((v) => rowOf.set(v, all)); });
-  for (let pass = 0; pass < 50; pass++) {
-    const at = (v) => plan.get(v) || v.b;
-    let hit = null;
-    for (let i = 0; i < items.length && !hit; i++) for (let j = i + 1; j < items.length && !hit; j++) {
-      const a = items[i], b = items[j];
-      if ((plan.has(a) || plan.has(b)) && overlap(at(a), at(b)) && !overlap(a.b, b.b)) hit = [a, b];
+  rows.forEach((r) => r.sort((a, b) => a.b.x - b.b.x));
+  const span = rows.map((r) => ({ left: Math.min(...r.map((v) => v.b.x)), right: Math.max(...r.map((v) => v.b.x + v.b.w)), top: Math.min(...r.map((v) => v.b.y)), bottom: Math.max(...r.map((v) => v.b.y + v.b.h)) }));
+  const order = rows.map((r, i) => i).sort((i, j) => span[i].top - span[j].top || span[i].left - span[j].left);
+  const members = rows.map((r) => r.concat(...r.map((v) => v.overlays || [])));
+  const rowOf = new Map(); members.forEach((all, i) => all.forEach((v) => rowOf.set(v, i)));
+  const xs = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5, ys = (a, b) => Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5;
+  const edges = (b) => ({ left: b.x, right: b.x + b.w, top: b.y, bottom: b.y + b.h });
+  const kept = new Set(), why = new Map();
+  let plan = new Map(), margins = [];
+  for (let pass = 0; pass <= rows.length; pass++) {
+    plan = new Map(); margins = [];
+    // what stays: every visual in no row (and not an overlay of a placed row), and the rows that keep their place
+    const stays = items.filter((x) => !rowOf.has(x) || kept.has(rowOf.get(x)));
+    const place = new Map(), failed = [];
+    // the obstacles of row i: what stays, except what it already overlapped in the original (a backdrop behind it)
+    const obstaclesOf = (i) => stays.filter((o) => !members[i].some((v) => overlap(v.b, o.b)));
+    const said = (i, side, o, at) => margins.push(`the grid's margin of ${M} is not kept at the ${side} of ${rows[i].map((v) => safeName(v.name)).join(', ')}: ${safeName(o.name)} (${isCustom(o.type) ? 'a custom visual' : safeName(o.type)}) stays where it is ${side === 'top' ? 'above' : 'beside'} it, so the row keeps ${G} from it, ${Math.round(at)} from the page's edge`);
+    order.filter((i) => !kept.has(i)).forEach((i) => {
+      const s = span[i], obs = obstaclesOf(i).map((o) => [o, edges(o.b)]);
+      // the sides: the page's margin, or 16 from what stays beside the row
+      let L = s.left < 2 * M ? M : snap(s.left), R = s.right > page.w - 2 * M ? page.w - M : snap(s.right);
+      obs.filter(([, e]) => ys(e, s) && e.right <= s.left + TOL).forEach(([o, e]) => { const want = s.left - e.right < 2 * G ? e.right + G : Math.max(L, e.right + G); if (want > L) { if (s.left < 2 * M) said(i, 'left', o, want); L = want; } else if (s.left - e.right < 2 * G) L = want; });
+      obs.filter(([, e]) => ys(e, s) && e.left >= s.right - TOL).forEach(([o, e]) => { const want = e.left - s.right < 2 * G ? e.left - G : Math.min(R, e.left - G); if (want < R) { if (s.right > page.w - 2 * M) said(i, 'right', o, page.w - want); R = want; } else if (e.left - s.right < 2 * G) R = want; });
+      const sx = { left: Math.min(L, s.left), right: Math.max(R, s.right) };
+      // the top: 16 below what lies above (a row placed before it, by its new place; what stays), or the page's margin
+      const above = obs.filter(([, e]) => xs(e, sx) && e.bottom <= s.top + TOL).map(([o, e]) => ({ o, was: e.bottom, now: e.bottom }))
+        .concat([...place.entries()].filter(([j, p]) => span[j].top < s.top && xs({ left: p.L, right: p.R }, sx)).map(([j, p]) => ({ o: null, was: span[j].bottom, now: p.B })));
+      let T = s.top < 2 * M ? M : snap(s.top);
+      if (above.length) {
+        // (what it sat close to sets its top; what was far above only keeps it 16 away)
+        T = Math.max(...above.map((a) => a.now + G));
+        if (!above.some((a) => s.top - a.was < 2 * G)) T = Math.max(T, snap(s.top));
+        const first = above.find((a) => a.o && a.now + G === T);
+        if (s.top < 2 * M && T > M && first) said(i, 'top', first.o, T);
+      }
+      // the bottom: its own height; 16 above what stays below it when it was within 32; the page's margin when nothing is below
+      let B = T + (s.bottom - s.top);
+      const below = obs.filter(([, e]) => xs(e, sx) && e.top >= s.bottom - TOL);
+      const rowsBelow = order.some((j) => j !== i && !kept.has(j) && span[j].top > s.top && xs(span[j], sx));
+      below.forEach(([, e]) => { B = e.top - s.bottom < 2 * G ? e.top - G : Math.min(B, e.top - G); });
+      if (!below.length && !rowsBelow) B = page.h - s.bottom < 2 * M ? page.h - M : Math.min(B, page.h - M);
+      else if (!below.length) B = Math.min(B, page.h - M);
+      place.set(i, { L, R, T, B });
+      const sum = rows[i].reduce((a, v) => a + v.b.w, 0), avail = R - L - (rows[i].length - 1) * G;
+      let x = L; const leads = rows[i].map((v, k) => { const w = k === rows[i].length - 1 ? R - x : Math.round(avail * v.b.w / sum); const b = { x, y: T, w, h: B - T }; x += w + G; return [v, b]; });
+      const placed = withOverlays(leads);
+      const tableSmaller = placed.find(([v, b]) => TABLES.includes(v.type) && (b.w < v.b.w - 0.01 || b.h < v.b.h - 0.01));
+      const off = placed.find(([, b]) => b.x < 0 || b.y < 0 || b.w < 8 || b.h < 8 || b.x + b.w > page.w + 0.01 || b.y + b.h > page.h + 0.01);
+      if (tableSmaller) failed.push([i, `its row keeps its place: ${safeName(tableSmaller[0].name)} (a table) would get smaller and could draw a scrollbar`]);
+      else if (off) failed.push([i, 'its row keeps its place: on the grid it would leave the page']);
+      else placed.forEach(([v, b]) => plan.set(v, b));
+    });
+    // never a new overlap: a row whose place overlaps anything it did not overlap before keeps its place
+    if (!failed.length) {
+      const at = (v) => plan.get(v) || v.b;
+      for (let a = 0; a < items.length && !failed.length; a++) for (let b = a + 1; b < items.length && !failed.length; b++) {
+        const p = items[a], q = items[b];
+        if ((plan.has(p) || plan.has(q)) && overlap(at(p), at(q)) && !overlap(p.b, q.b)) { const mv = plan.has(p) ? p : q, other = mv === p ? q : p; failed.push([rowOf.get(mv), `its row keeps its place: on the grid it would overlap ${safeName(other.name)}`]); }
+      }
     }
-    if (!hit) break;
-    const [a, b] = hit, mv = plan.has(a) ? a : b, other = mv === a ? b : a;
-    rowOf.get(mv).forEach((v) => { plan.delete(v); why.set(v, `its row keeps its place: on the grid it would overlap ${safeName(other.name)}`); });
+    if (!failed.length) break;
+    // one row at a time (the first in the page's order), then the page again
+    failed.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+    const [i, w] = failed[0]; kept.add(i); members[i].forEach((v) => why.set(v, w));
   }
-  return { plan, why, gap: G };
+  kept.forEach((i) => members[i].forEach((v) => plan.delete(v)));
+  return { plan, why, gap: G, margins };
 }
 
 const twiceOf = (p) => { const names = p.visuals.map((v) => v.id); return new Set(names.filter((n, i) => names.indexOf(n) !== i)); };
@@ -326,6 +389,7 @@ export function planRedesign(reportPath, model, opts) {
     });
     // (CS1) keepPositions: no visual moves
     const grid = p.kind === 'Tooltip' || !p.w || !p.h || o.keepPositions ? { plan: new Map(), why: new Map() } : gridPage(p, items);
+    if (grid.margins && grid.margins.length) entry.margins = grid.margins;
     if (p.kind === 'Tooltip') entry.why = 'a tooltip page: kept as it is (its size is the tooltip\'s; the visuals that show it keep their link)';
     const records = new Map();
     p.visuals.forEach((v) => {
@@ -409,7 +473,7 @@ export function planRedesign(reportPath, model, opts) {
   };
   const counts = { changed: pages.reduce((s, p) => s + p.changes.length, 0), notChanged: pages.reduce((s, p) => s + p.notChanged.length, 0) };
   const answer = {
-    method: 'copy-and-patch', original: `${safeName(loc.base)}: only read, never changed`, newReport: `${safeName(loc.name)}.Report`, folder: 'next to the original (the same model: definition.pbir is copied as it is)',
+    method: 'copy-and-patch', original: `${safeName(loc.base)}: only read, never changed`, newReport: `${safeName(loc.name)}.Report`, ...(loc.cut ? { nameCut: `the original's name is longer than a redesign's name allows (${NAME_MAX} characters with "${SUFFIX.trim()}"): its words are cut, never DataArcus's own suffixes (${KEEP_SUFFIXES.map((x) => `"${x.trim()}"`).join(', ')}), and a number is added when the name is another report's: the new report is "${safeName(loc.name)}"` } : {}), folder: 'next to the original (the same model: definition.pbir is copied as it is)',
     counts, pages, ...(theme ? { theme } : {}), ...(TX.out.mixed.length || TX.out.mode || TX.out.boldOrItalic ? { text: TX.out } : {}), keptAsIs, ...(checks ? { checks } : {}),
     ...(files.includes('.platform') ? {} : { platform: 'The original has no .platform (Power BI\'s validator calls that a "can break"): the copy gets its own, with its name and a new logical id.' }),
     // (CS1) a removed text setting is listed with its visual (pages[].changes[].text), not again here: counted
