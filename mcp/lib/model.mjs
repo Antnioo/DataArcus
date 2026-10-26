@@ -358,6 +358,8 @@ function byName(p, root) {
  * @property {{format:string, files:Array<{path:string, json:Object}>}|null} report  the model's own reports, for the health check
  * @property {{counted:string[], notCounted:Array, skipped:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
  * @property {number} partsSkipped  model parts left out because they were not lists of objects (F-M2)
+ * @property {Array<{file:string, why:string}>} skipped  definition files that could not be read fully (AU47), named
+ *   relative to the project (screened), never their text; empty when every file was read
  */
 // (F-M2, the fuzz test: a model.bim or .pbit whose tables, columns, measures, partitions or relationships were not lists of
 // objects crashed in the field picker's catalog. The shape is checked here, where the model comes in: a list that is
@@ -375,7 +377,14 @@ function shapeChecked(tmsl) {
   return { tmsl: root, skipped };
 }
 const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({}, o0, { tmsl: c.tmsl }); return ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl, partsSkipped: c.skipped,
-  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null }); };
+  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null, skipped: o.skipped || [] }); };
+// (AU47, the night audit's AUD-047) a model with a definition file that could not be read fully: the answer's first key
+// (read_model, check_model_health), and the planning tools' refusal (nothing is planned on part of a model)
+export const unreadableOf = (m) => (m && m.skipped && m.skipped.length ? { unreadable: { message: Tmdl.unreadableSaid(m.skipped, 'en'), skipped: m.skipped } } : {});
+export function refuseUnreadable(m) {
+  if (m && m.skipped && m.skipped.length) throw new ReadError('MODEL_UNREADABLE', { skipped: m.skipped }, Tmdl.unreadableSaid(m.skipped, 'en') + ' Nothing was planned or written: DataArcus does not plan on a model it could read only in part.');
+  return m;
+}
 // (0.3, B-154, an outside audit of 0.2.9: an approval pinned the inputs, not the model) the model's fingerprint: a sha256 of
 // the definition files this read already read (model.bim, or each TMDL file by its path; a .pbit or model.bim file's own
 // bytes), never another file of the folder (Power BI's .pbi/cache.abf holds data). A plan pins it; the write reads the
@@ -439,7 +448,7 @@ export function loadModel(p, opts) {
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
-  let tmsl = null, print = null;
+  let tmsl = null, print = null, skipped = [];
   if (fs.existsSync(bim)) { const b = readCapped(bim, PBIT_LIMITS.model, 'model.bim'); print = sha(b); tmsl = partJson(b, 'model.bim'); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
@@ -457,7 +466,10 @@ export function loadModel(p, opts) {
     // (A1-8: one parse: the model's JSON from tmdl-model.js, the picker's fields from that JSON, as for a model.bim)
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
-    tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
+    const got = Tmdl.read(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
+    tmsl = got.model;
+    // (AU47) a definition file that could not be read fully: named relative to the project (screened), with why
+    skipped = got.skipped.map((x) => ({ file: shownPath(path.basename(folder) + '/' + x.path), why: Tmdl.whyOf(x, 'en') }));
   }
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
   // (A3-1's calendars are marked by fromTmsl, which every model now goes through)
@@ -481,10 +493,10 @@ export function loadModel(p, opts) {
   { let total = 0; for (const f of pbir) total += fs.lstatSync(f).size;
     if (total > PBIT_LIMITS.total) throw refuse(`the JSON files of its reports are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`); }
   // (A1-4: a file that cannot be read is listed as skipped with why, and the "unused" findings are said to be partial)
-  const skipped = [];
-  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { skipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
-  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
-  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen, print });
+  const reportSkipped = [];
+  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { reportSkipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
+  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, reportSkipped.length ? { skipped: reportSkipped, partial: PARTIAL } : {}) : null;
+  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen, print, skipped });
 }
 
 // why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder

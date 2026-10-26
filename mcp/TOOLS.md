@@ -17,7 +17,7 @@ library](#the-dax-function-library-031).
 
 | Tool | What it does |
 |---|---|
-| `read_model` | Tables, visible columns with types, measures with formats, date tables. Reads a project folder (TMDL or model.bim), a model.bim or a .pbit. `existingReports`: the names of the reports already beside the model (a new report never takes one). Changes nothing. A large model (a full answer over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables' names. `tables: [...]` returns named tables in full, on any model. |
+| `read_model` | Tables, visible columns with types, measures with formats, date tables. Reads a project folder (TMDL or model.bim), a model.bim or a .pbit. `existingReports`: the names of the reports already beside the model (a new report never takes one). Changes nothing. A large model (a full answer over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables' names. `tables: [...]` returns named tables in full, on any model. A TMDL file it can't read fully is named, not skipped silently (0.3.1): `unreadable` comes first, with the file and why; plan_layout, create_report, add_gulf_calendar and create_arabic_twin then refuse to plan. |
 
 ## `suggest_fields`
 

@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-health-engine.min.js?v=20261025f', 'tmdl-model.min.js?v=20261011r');
+importScripts('model-health-engine.min.js?v=20261025f', 'tmdl-model.min.js?v=20261026a');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
@@ -122,12 +122,14 @@ async function fromZip(buf, fileName) {
   const needed = (modelEntry ? [modelEntry] : tmdl.filter((x) => x.name.startsWith(root))).concat(layout ? [layout] : pbir.length ? pbir : legacyPbip ? [legacyPbip] : []);
   if (needed.reduce((a, e) => a + e.usize, 0) > LIMITS.total) throw new Error('ZIP_LIMIT');
   post('progress', { step: 'model' });
-  let model;
+  let model, unreadable = [];
   if (modelEntry) model = parseJson(await zip.read(modelEntry, LIMITS.model));
   else {
     const files = [];
     for (const e of tmdl.filter((x) => x.name.startsWith(root))) files.push({ path: e.name, text: decodeText(await zip.read(e)) });
-    model = TmdlModel.fromFiles(files, { lineageTags: true });
+    // (AU47, AUD-047) a TMDL file that could not be read fully is named, never skipped silently: the page gives no score
+    const got = TmdlModel.read(files, { lineageTags: true });
+    model = got.model; unreadable = got.skipped;
   }
 
   // report: legacy single Layout file, or PBIR folder of JSON files
@@ -142,7 +144,7 @@ async function fromZip(buf, fileName) {
     const j = parseJson(await zip.read(legacyPbip));
     if (j.sections) report = { format: 'legacy', files: [{ path: legacyPbip.name, json: j }] };
   }
-  return { model, report, source: /\.pbit$/i.test(fileName) ? 'pbit' : 'zip' };
+  return { model, report, source: /\.pbit$/i.test(fileName) ? 'pbit' : 'zip', unreadable };
 }
 
 self.onmessage = async (ev) => {
@@ -162,6 +164,8 @@ self.onmessage = async (ev) => {
     const result = MHEngine.analyze(input.model, input.report);
     if (!result.stats.tables) throw new Error('NO_MODEL');
     result.meta = { fileName, source: input.source, ms: Date.now() - t0, hasReport: !!input.report, analyzedAt: new Date().toISOString() };
+    // (AU47) the files' names and why, and the one message in English and Arabic (the MCP's words, tmdl-model.js)
+    if (input.unreadable && input.unreadable.length) result.unreadable = { files: input.unreadable, en: TmdlModel.unreadableSaid(input.unreadable, 'en', 'check'), ar: TmdlModel.unreadableSaid(input.unreadable, 'ar', 'check') };
     post('done', { result });
   } catch (e) {
     post('error', { code: /^[A-Z_]+$/.test(e.message) ? e.message : 'PARSE', message: String(e && e.message || e) });

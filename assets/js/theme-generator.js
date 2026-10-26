@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let binding = null;
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
-        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261011t')))
+        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
         .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261025f')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');

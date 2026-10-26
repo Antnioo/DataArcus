@@ -2,7 +2,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
 import { z } from 'zod';
-import { inside, loadModel, visible, modelOf } from '../lib/model.mjs';
+import { inside, loadModel, visible, modelOf, refuseUnreadable } from '../lib/model.mjs';
 import { designRtl, buildTheme, pageOf, planLayout, kindLabel } from '../lib/design.mjs';
 import { AIM, scopeOf } from '../lib/scope.mjs';
 import { proposeArabic } from '../lib/arabic-names.mjs';
@@ -118,7 +118,7 @@ function redesignPlan(a) {
     .concat(REPORT_LOOK.filter((k) => a[k] !== undefined && a[k] !== defaults[k]));
   if (other.length) problems.push(`redesignFrom is a plan of its own (a copy of the original with the allowlisted changes): leave ${other.join(', ')} out.`);
   if (problems.length) return { planProblems: problems, sayFirst: 'No plan id: change the call as each problem says, then call plan_layout again.' };
-  const m = loadModel(a.path), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle }), pin = redesignPin(a);
+  const m = refuseUnreadable(loadModel(a.path)), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle }), pin = redesignPin(a);
   const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
   const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
   return Object.assign({ redesign: redesignFit(JSON.parse(JSON.stringify(R.answer)), a.redesignPages) }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
@@ -191,7 +191,7 @@ export function register(server, ctx) {
     // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
     Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
     if (a.path) {
-      const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
+      const m = (m0 = refuseUnreadable(loadModel(a.path))), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
       // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
       a.reportTheme = existingTheme(m, a.themeFrom);
       const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))

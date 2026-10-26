@@ -1,6 +1,6 @@
 // The create_report tool: its registration (description, inputs, handler) and its own helpers; server.mjs registers it in its place.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
-import { inside, loadModel } from '../lib/model.mjs';
+import { inside, loadModel, refuseUnreadable } from '../lib/model.mjs';
 import { withPlan } from '../lib/files.mjs';
 import { writeNative } from '../lib/native-copy.mjs';
 import { writeRedesign } from '../lib/redesign.mjs';
@@ -41,14 +41,14 @@ export function register(server, ctx) {
     if (a.redesignFrom != null || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'redesign')) {
       if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles and restyle if it has them.');
       if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles and restyle if it has them.');
-      const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
+      const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
       const art = keptCopy(a.planId);
       return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle }, art); }));
     }
     // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
     if (a.customVisualsFrom != null) {
       if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
-      const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
+      const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
       const art = keptCopy(a.planId);
       return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes), art); }));
     }
@@ -75,7 +75,7 @@ function writeApproved(a, art) {
   const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
   input(!a.pages !== !a.design, 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   input(!!a.name, 'Give create_report a name for the new report (Report name).');
-  const m = loadModel(a.path);
+  const m = refuseUnreadable(loadModel(a.path));
   { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
   Plans.gate('create_report', a.planId, modelRef(m, a.path), reportPin(a, a.fields));
   const again = ' Make the plan again with plan_layout, show it to the user and wait for their go.';

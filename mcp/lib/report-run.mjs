@@ -2,7 +2,7 @@
 // write writes): one engine, kept whole.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
-import { loadModel, visible, inside, modelOf, nothingAt } from './model.mjs';
+import { loadModel, visible, inside, modelOf, nothingAt, refuseUnreadable } from './model.mjs';
 import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme } from './design.mjs';
 import { scopeOf } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
@@ -53,7 +53,7 @@ export function reportRun(a, mode) {
   const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
   input(!a.pages !== !a.design, 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   input(!!a.name, 'Give create_report a name for the new report (Report name).');
-  const m = loadModel(a.path);
+  const m = refuseUnreadable(loadModel(a.path));   // (AU47) nothing is planned on part of a model
   input(!!m.folder, 'create_report needs a project folder with a .SemanticModel (save the .pbix as a Power BI project first).');
   // the gate (0.2.9, P-1): nothing is written without an approved plan for this model, whatever the AI app asks before a tool
   // (the gate: below, once the inputs themselves are checked: a refused input is told as itself, and nothing is written either way)
