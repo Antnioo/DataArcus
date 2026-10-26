@@ -58,7 +58,8 @@ task routes.
    of its definition files). Ids expire after 2 hours and live in the server process only.
 4. **Write.** The writing tool, called with the `planId`, refuses if anything changed since the click (the model, an
    input file, an option) and writes exactly the approved files, as new files next to the model, through `files.mjs`;
-   a failed write removes only what that call created. create_report and the twin write the files their plan kept,
+   a failed write removes only what that call created, and only while its content is what
+   the call wrote (0.3.1 RB, `write-io.mjs`). create_report and the twin write the files their plan kept,
    byte for byte: `tools/create_report.mjs: writeApproved` compares their digest and binding; `lib/twin-write.mjs:
    writeTwin` (0.3.1 K2) the same, and builds the twin again for comparison only (a different build: nothing written). `mcp/test-0.3.1-write-gate.mjs` lists every file-writing call.
 5. **Check.** The report was validated before it was written; `check_report` (any report, read only) and Power BI
@@ -78,3 +79,13 @@ task routes.
 | Checking reports | `mcp/lib/check-report.mjs`, `arabic-lens.mjs`, `design-lint.mjs`; `assets/js/layout-check.js` |
 | Tests and CI | `mcp/tests.json`, `mcp/run-tests.mjs`, `mcp/test.mjs` (`SHARDS`), `.github/workflows/tests.yml`, `scripts/ci-sum.mjs` |
 | Public claims (README, PRIVACY, the MCP page) | `mcp/test-0.3.0-claims.mjs`, `mcp/test-release-text.mjs` |
+
+## A new create_report option is pinned in the plan
+
+Moved here unchanged by SQ12 (0.3.1, 26 Oct) from ARCHITECTURE.md's task routes (route c links here).
+
+1. Its schema in `CREATE_REPORT_INPUTS` (plan_layout takes the same entry) and its default in `LOOK_DEFAULTS`.
+2. Its name in `REPORT_LOOK`, so `reportPin` pins it: a write with another value is refused by the gate.
+3. The plan and the write build it from the same pinned value (`report-run.mjs`), never from a fresh default.
+4. The approval page says it (`lookOf`, `summary`) in English and Arabic.
+5. A test: the plan with it, the write with another value refused; `mcp/TOOLS.md` says it in the tool's section.

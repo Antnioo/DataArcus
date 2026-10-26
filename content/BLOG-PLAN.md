@@ -95,7 +95,7 @@ became a post). Add ideas here with the date and where they came from:
 - [ ] At least one link to the tool it leads to, and links to 1-2 related posts (and from them back to this one).
 - [ ] DAX run on a test model; numbers and claims checked; sources linked.
 - [ ] No employer data: no company names, dashboards, screenshots or numbers from the owner's job.
-- [ ] All 16 website suites pass (`node scripts/tests/run-all.mjs`), then merge.
+- [ ] Every website suite passes (`node scripts/tests/run-all.mjs`), then merge.
 - [ ] Then: the log below, the pillar table, and three LinkedIn posts queued in `content/LINKEDIN-PLAN.md`.
 
 ## Published log
