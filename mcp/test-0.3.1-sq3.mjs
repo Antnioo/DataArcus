@@ -8,6 +8,7 @@
 //   D6-S3   a base theme (StaticResources/SharedResources/BaseThemes) is grouped and counted as a theme
 //   A2-S9   the app's own prompt says what was not checked before writing
 //   V1-S3   the EN-AR copy's English pages are drawn with the English preview tag
+//   LR1-4   (the laptop run of 26 Oct) the Arabic sample page's rows in Arabic, the English line under each
 //   A3-S1   (OBSOLETE: fixed before SQ3) the approved display names passed again are written; another value is refused
 // Fixtures: mcp/fixtures/twin-project and health-project (made up), copied into a temp folder.
 //   node test-0.3.1-sq3.mjs
@@ -147,6 +148,17 @@ try {
   // ---------- the sample project in Arabic (T1-S6) ----------
   const s1 = await w.call('plan_layout', { sample: true, lang: 'ar' }), HS = idOf(s1) ? await pageOf(idOf(s1)) : '', IS = items(HS);
   chk(() => IS.length === 1 && /المجلد الجديد «[^»]+» في مجلد العمل/.test(unesc(IS[0])) && /بيانات مختلَقة/.test(unesc(IS[0])), () => `T1-S6k. the sample's Arabic page says its write in Arabic: ${IS.map(unesc).join(' | ') || short(s1)}`);
+
+  // ---------- LR1 item 4 (the laptop run of 26 Oct): the Arabic sample page's own rows in Arabic, the English under each ----------
+  const secRows = (H, head) => { const i = H.indexOf(head), j = i < 0 ? -1 : H.indexOf('</table>', i); return i < 0 || j < 0 ? [] : [...H.slice(i, j).matchAll(/<tr><td class="k"[^>]*>([\s\S]*?)<\/td><td[^>]*>([\s\S]*?)<\/td><\/tr>/g)].map((m) => [m[1], m[2]]); };
+  const both = (c) => AR.test(c.split('<br>')[0]) && /<br><span class="note" dir="ltr">[^<]+<\/span>$/.test(c);
+  const SR = secRows(HS, 'Sample project (made-up data)'), keysEn = SR.map(([k]) => unesc(k.split('<br>')[1] || ''));
+  chk(() => SR.length >= 7 && SR.every(([k, v]) => both(k) && both(v)) && ['What it is', 'Made up', 'Folder'].every((k) => keysEn.some((x) => x.trim() === k)),
+    () => `LR1-4a. the Arabic sample page: each row's name and value in Arabic, the English line under each: ${SR.map(([k, v]) => `${unesc(k)} = ${unesc(v).slice(0, 80)}`).join(' | ') || HS.slice(0, 200)}`);
+  const TR = secRows(HS, 'Tables (');
+  chk(() => TR.length === 4 && TR.every(([, v]) => both(v)), () => `LR1-4b. the Arabic sample page's Tables rows in Arabic, the English under each: ${TR.map(([k, v]) => `${unesc(k)} = ${unesc(v)}`).join(' | ')}`);
+  const s2 = await w.call('plan_layout', { sample: true, lang: 'en' }), HSE = idOf(s2) ? await pageOf(idOf(s2)) : '', ER = secRows(HSE, 'Sample project (made-up data)');
+  chk(() => ER.length >= 7 && ER.every(([k, v]) => !AR.test(k) && !AR.test(v) && !/<br>/.test(k)) && unesc(ER[0][0]).trim() === 'What it is', () => `LR1-4c. guard: the English sample page keeps its English rows, one line each: ${ER.map(([k]) => unesc(k)).join(' | ')}`);
 
   // ---------- A3-S1 (OBSOLETE: fixed before SQ3; kept as a check): the approved names passed again ----------
   const MP = 'hp/Health Test.SemanticModel', base = { path: MP, lang: 'ar', name: 'تقرير', layout: 'exec' };

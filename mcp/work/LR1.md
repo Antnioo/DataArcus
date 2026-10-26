@@ -63,3 +63,46 @@
 4. build:min; `?v=20261026lr1` on pbip-query in theme-generator.js's builder list and on theme-generator.min.js on its
    3 pages; csp --write, ar-pages --write; suites; the full run; check-result-lines, changelog-words,
    check-agent-memory; sitemap-lastmod --write after the last commit.
+
+## Results
+| Item | Before (0f7f6e8) | After | Test |
+|---|---|---|---|
+| 1. last n months | date branch: 13 of "last 12" (data to 15 Jun), 4 of "last 3" (15 Jun and 30 Jun); label branch: n | both branches exactly n, the last month with data counted (`EOMONTH ( _last, -n )`) | lr1 A (8 checks, 3 red before) |
+| 2. slicers in the plan | the plan and the approval page named the 2 asked; Branches[Country] said only by boundFields | `slicers { written, asked, added, sayInPlan, sayInPlanAr }`; the approval page's Slicers row adds "Branches[Country] (added by DataArcus to fill the design's slicer slots)", in Arabic on an Arabic page | lr1 B1-B4 (6 checks, all red before) |
+| 3. date words in Arabic | "Year Month" -> «السنة الشهر» (every pair of date words word for word) | «الشهر والسنة»; 14 fixed compounds; any other run of date words: no draft | lr1 C1-C4 (4 checks, all red before; C4's «الهجري التاريخ» too) |
+| 4. Arabic sample page | rows and Tables rows in English | each row's name and value in Arabic, the English line under it; the English page unchanged | sq3 LR1-4a-c (3 checks, 4a and 4b red before) |
+| 5. L1_DUMP | ENOENT on a missing folder | the folder made; PASS 31 checks, the file written | run by hand (below) |
+
+DAX text a test pins, changed because the rule changed: `mcp/test-0.2.9b.mjs` lines 65 and 138 (`EDATE \( [^,]+, -12 \)`
+and `-6`) now read `EOMONTH`. No golden report holds the DAX (grep: EDATE only in pbip-query.js, its .min.js and 0.2.9b).
+
+## CHANGELOG line
+- **Fixes from a Power BI Desktop run:** a line chart's "last 12 months" on a date table showed 13 months when the
+  data ended mid-month; it now shows exactly 12, the last month with data counted as one. The plan names every slicer
+  the report will have, in English and Arabic, and says when one was added to fill the design's slicer places. An
+  Arabic name drafted for a field such as "Year Month" now reads «الشهر والسنة», never word for word. The Arabic approval
+  page of the sample project shows its details in Arabic, the English under each.
+
+## Decisions I made
+1. Item 1: `EOMONTH ( _last, -n )` in the date branch only; the label branch left (lr1 A shows it right in all four cases).
+   The date branch's month MAX is taken as its last day (a full date table, as the tour's Calendar); a fact date column
+   whose month holds only some days is kept the same way (any date in a month after the cut keeps it).
+2. Item 2: the slot stays filled (pbip-bind's "a slot left over keeps the picker's" unchanged) and is said, because an
+   empty slot changes what Desktop draws and the design's look is what the person approved; the plan says how to choose
+   another field (name 3 slicers). The written slicers come from the writer's own bound list (report-fields `slicersOf`).
+   The approval page's row in Arabic too, beyond the brief's "plan text", since the same cell support served item 4.
+3. Item 3: the compounds live in `arabic-names.mjs` beside its PATTERNS (the glossary file keeps single words); 14 pairs
+   (Year/Month, Year/Quarter, Year/Week either order, Month/Day either order, Hijri + Year/Month/Quarter/Week/Day/Date);
+   «السنة الهجرية» agrees with its noun. Pairs with no clear reading ("Week Day", "Date Year", "Year Hijri") and runs of 3
+   date words get no draft: the assistant proposes, as for any name outside the list.
+4. Item 4: the values' Arabic is made in `sample-project.mjs` (`sampleSaidAr`, beside `sampleWritesAr`) and passed as the
+   plan's `sampleAr` for an Arabic plan only; the row names in `approval-window.mjs` (SAMPLE_AR); a cell `{ en, ar }`
+   renders Arabic then the English line (the writes' shape). The Tables rows too (the same section's facts).
+5. Item 4's checks went into `test-0.3.1-sq3.mjs` (the Arabic approval page suite, which already opens the Arabic sample page).
+
+## For the laptop
+- Item 1: the tour's "Total Sales by Year Month" line chart shows 12 points, July 2025 to June 2026 (data to mid-June
+  2026); the tooltip page's month bars show 6.
+- Item 4: the Arabic sample approval page (`plan_layout` with `sample: true, lang: "ar"`, then approve_plan): each row
+  of «مشروع المثال» and «الجداول» in Arabic with the English line under it, read right to left.
+- Item 2: the tour's plan names three slicers and says Branches[Country] was added (English and Arabic plan).

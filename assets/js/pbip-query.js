@@ -406,6 +406,9 @@
     const asDate = (x) => 'IFERROR ( DATEVALUE ( "1 " & ' + x + ' ), IFERROR ( DATEVALUE ( ' + x + ' & "-01" ), IFERROR ( DATEVALUE ( ' + x + ' ), BLANK () ) ) )';
     const monthStart = (f) => (f.dateOf ? extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxNames.column(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime')
       : extMeasure(f.t, 'Month start (sort)', asDate('MIN ( ' + daxNames.column(f.t, f.c) + ' )'), 'DateTime'));
+    // (0.3.1 LR1, the laptop's 13 points for "Last 12 months") the date column's branch compares a month's last date with
+    // the end of the month n before the last month with data (EOMONTH), so that month counts as one and n are kept; EDATE
+    // of a mid-month last date kept the month n back too. The label's branch compares first days: n already
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
       // (0.3.1 SQ1, S1-S9) the hidden helper's name in one script, plain English, as B-181's "Keep:": with the measure's
@@ -419,7 +422,7 @@
             Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
       }
       const d = daxNames.column(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-      const m = extMeasure(f.dateOf.t, lastName(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      const m = extMeasure(f.dateOf.t, lastName(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EOMONTH ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };

@@ -182,6 +182,10 @@ const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: '
 export function boundOf(bound) {
   return (bound || []).map((p) => ({ page: p.page, visuals: p.visuals.map((v) => ({ visual: VISUAL_NAMES[v.kind] || v.kind, fields: v.fields })) }));
 }
+// (0.3.1 LR1) the slicers the written pages hold, each field once in the order written (the plan names them all)
+export function slicersOf(bound) {
+  return [...new Set([].concat(...(bound || []).map((p) => p.visuals.filter((v) => v.kind === 'slicer').map((v) => v.fields[0]))).filter(Boolean))];
+}
 // (0.3.0 J19, B-172) sharedAxes: the person's answers as the confirmation memory's records (axis-units.js), on the
 // model's own measures; problems: each name that is not a measure of the model (the call is refused)
 const refParts = (x) => { const r = /^(.+?)\[(.+)\]$/.exec(String(x || '').trim()); return r ? { t: r[1].replace(/^'|'$/g, ''), m: r[2] } : null; };
