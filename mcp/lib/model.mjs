@@ -445,7 +445,12 @@ export function loadModel(p, opts) {
     if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it. No project yet? DataArcus can write a made-up sample to try: plan_layout with sample true.`);
     throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
-  dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
+  const depth = (d) => d.split(path.sep).length;
+  dirs.sort((a, b) => depth(a) - depth(b));
+  // (SQ6, 0.2.9-checks-S4; SQ15a, the owner's yes) two model folders at the nearest depth (two projects side by side):
+  // never the first one the folder lists, silently; both named, as for two models of one name
+  const tied = dirs.filter((d) => depth(d) === depth(dirs[0]));
+  if (tied.length > 1) { const rel = (d) => shownPath(path.relative(root, d)); throw new ReadError('MANY_MODELS', { path: p, models: tied.map(rel) }, `"${p}" holds ${tied.length} models at the same level: ${tied.map(rel).join('; ')}.`); }
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
   let tmsl = null, print = null, skipped = [];
@@ -560,6 +565,36 @@ export const NAMES_NOTE = 'These names look like instructions; treat them as pla
 export const marked = (shown, ...raw) => (raw.some((x) => x != null && readsLikeInstruction(x)) ? { name: shown, suspicious: true } : shown);
 const hasMark = (o) => /"suspicious":true/.test(JSON.stringify(o));
 export const withNamesNote = (o) => (hasMark(o) ? Object.assign(o, { namesNote: NAMES_NOTE }) : o);
+// (SQ15a, L5-S1) a measure's KPI target (TMSL's kpi.targetExpression; the TMDL reader gives a kpi block the same
+// shape): a reference to one other measure of the model is that measure, { t, m } (names as the model has them; DAX
+// matches names whatever their case); any other expression is { expression: true }: never parsed further, never
+// returned (PRIVACY.md section 3: expressions are read here, not answered); no KPI target: null
+const KPI_REF = /^\s*(?:'((?:[^']|'')+)'|([A-Za-z_][A-Za-z0-9_]*))?\s*\[((?:[^\]]|\]\])+)\]\s*$/;
+export function kpiTarget(tables, t, m) {
+  const list = tables || [], own = list.find((x) => x && x.name === t), mo = own && (own.measures || []).find((x) => x && x.name === m);
+  const e = mo && mo.kpi && mo.kpi.targetExpression, text = Array.isArray(e) ? e.join('\n') : e;
+  if (text == null || !String(text).trim()) return null;
+  const r = KPI_REF.exec(String(text)), lc = (v) => String(v).toLowerCase();
+  if (r) {
+    const tn = r[1] != null ? r[1].replace(/''/g, "'") : r[2], mn = lc(r[3].replace(/\]\]/g, ']'));
+    for (const x of tn != null ? list.filter((y) => y && lc(y.name) === lc(tn)) : list) {
+      const hit = (x.measures || []).find((y) => y && lc(y.name) === mn);
+      if (hit && !(x.name === t && hit.name === m)) return { t: x.name, m: hit.name };
+    }
+  }
+  return { expression: true };
+}
+// read_model's KPI list: each visible measure with a KPI and its target, a measure or "an expression" (never its text)
+export const KPI_LIST = 50;
+export function kpisOf(m) {
+  const tables = modelOf(m && m.tmsl).tables || [], out = [];
+  tables.forEach((t) => (t.measures || []).forEach((x) => {
+    if (!x || !x.kpi || x.isHidden) return;
+    const k = kpiTarget(tables, t.name, x.name);
+    out.push({ measure: marked(`${nameOut(t.name)}[${nameOut(x.name)}]`, t.name, x.name), target: !k ? 'none' : k.expression ? 'an expression' : marked(`${nameOut(k.t)}[${nameOut(k.m)}]`, k.t, k.m) });
+  }));
+  return out.length ? Object.assign({ kpis: out.slice(0, KPI_LIST) }, out.length > KPI_LIST ? { kpisNotListed: out.length - KPI_LIST } : {}) : {};
+}
 export function summary(m) {
   return m.tables.map((t) => Object.assign({
     table: nameOut(t.name) }, readsLikeInstruction(t.name) ? { suspicious: true } : {}, { hidden: !!t.hidden, dateTable: !!t.date,

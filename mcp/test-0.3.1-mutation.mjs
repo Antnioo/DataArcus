@@ -68,7 +68,11 @@ const MUTANTS = [
   { id: 'D-nfd', file: MO, edits: [["  const full = path.resolve(root, String(p || '.'));\n  if (within(root, full)) return full;", "  const full = path.resolve(root, String(p || '.').normalize('NFD'));\n  if (within(root, full)) return full;"]], guards: ['test-platform-paths.mjs'], only: ['linux', 'win32'] },
   // (AF1) the report reader opens a file through a linked folder: diskSource's check of every folder on the way skipped
   { id: 'R-ancestors', file: 'mcp/lib/read-report.mjs', edits: [['  const at = (rel) => {\n    const parts', "  const at = (rel) => { return path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));\n    const parts"]], guards: ['test-0.3.1-audit-readers.mjs'] },
-  // (SQ6) the reader: a .pbit link followed; a .pbit that changed while read used
+  // (SQ6) the reader: two models at one depth read silently as the first (SQ15a: the owner's yes); a .pbit link followed; a .pbit that changed while read used
+  // (SQ15a) a KPI's target expression returned as text; an image file name returned unscreened
+  { id: 'R-kpi-quoted', file: MO, edits: [["target: !k ? 'none' : k.expression ? 'an expression' :", "target: !k ? 'none' : k.expression ? String(x.kpi.targetExpression) :"]], guards: ['test-0.3.1-sq15a.mjs'] },
+  { id: 'R-image-screen', file: 'mcp/lib/read-report.mjs', edits: [['x.images = imgs.map(safeName);', 'x.images = imgs;']], guards: ['test-0.3.1-sq15a.mjs'] },
+  { id: 'R-model-tie', file: MO, edits: [['  if (tied.length > 1) {', '  if (false) {']], guards: ['test-0.3.1-reader-seen.mjs'] },
   { id: 'R-pbit-link', file: MO, edits: [["  if (isLink(f)) throw linkRefused('file');\n  let fd;\n  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }", "  let fd = fs.openSync(f, 'r');"]], guards: ['test-0.3.1-reader-seen.mjs'], only: ['linux', 'darwin'] },
   { id: 'R-pbit-changed', file: MO, edits: [['if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();', 'if (false) throw changedWhileRead();']], guards: ['test-0.3.1-reader-seen.mjs'] },
 

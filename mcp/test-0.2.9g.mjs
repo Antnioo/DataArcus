@@ -15,6 +15,9 @@ import { withPlans } from './test-plan.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const E = createRequire(import.meta.url)('../assets/js/design-engine.js');
 
+// (SQ15a, 0.2.9-checks-S4, the owner's yes, 26 Oct) every project holds M beside Other at the same level: a folder of
+// two models is now refused (MANY_MODELS), so each call names the model it means, M, as a user would
+const model = (dir) => `${dir}/M.SemanticModel`;
 export async function v029g({ call, check, ROOT }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
@@ -83,7 +86,7 @@ export async function v029g({ call, check, ROOT }) {
 
   const CORP = E.PRESETS.Corporate;
   const LINE = (n) => `Colours from your report's theme "${n}" (you can ask for a preset or your brand colours instead).`;
-  const plan = (dir, more) => ask('plan_layout', Object.assign({ path: dir }, more || {}));
+  const plan = (dir, more) => ask('plan_layout', Object.assign({ path: model(dir) }, more || {}));
   const colOf = (x) => (x.j && x.j.colours) || {};
 
   // ---------- 1. the reader: the colours a design needs, hex only, from a custom theme only ----------
@@ -97,7 +100,7 @@ export async function v029g({ call, check, ROOT }) {
   () => `1a. reportTheme gives the colours a design needs (8 data colours, page, visuals, border, text, accent, good/neutral/bad): ${JSON.stringify(tl)}`);
   chk(() => tp && tp.accent == null && tp.good == null && tp.text === '#cccccc', () => `1b. a value that is not a hex colour is left out, never passed on: ${JSON.stringify(tp)}`);
   chk(() => themeAt('tb', 'M') === null, () => `1c. a report with a base theme only has no theme of its own (null): ${JSON.stringify(themeAt('tb', 'M'))}`);
-  const MD = await import(pathToFileURL(path.join(HERE, 'lib', 'model.mjs')).href), mt = safely((d) => RR.existingTheme(MD.loadModel(d, { root: ROOT })));
+  const MD = await import(pathToFileURL(path.join(HERE, 'lib', 'model.mjs')).href), mt = safely((d) => RR.existingTheme(MD.loadModel(model(d), { root: ROOT })));
   chk(() => mt('tm') && mt('tm').report === 'M' && mt('tm').theme.name === 'Night Ops' && mt('tq') && mt('tq').report === 'B' && mt('tn') === null,
     () => `1d. the report chosen: the model's own name (with its .pbip) first, then the one a .pbip opens; a report of another model never; none: null: ${JSON.stringify([mt('tm'), mt('tq'), mt('tn')])}`);
 
@@ -129,7 +132,7 @@ export async function v029g({ call, check, ROOT }) {
   // ---------- 3. an explicit colour request always wins ----------
   const gm = await ask('generate_theme', { preset: 'Midnight', planId: null }), pm = await plan('tl', { design: gm.j && gm.j.design });
   chk(() => !pm.err && pm.j.design.data.join() === E.PRESETS.Midnight.data.join() && !(pm.j.colours && pm.j.colours.from === 'report theme'), () => `3a. a design with its own colours (a preset) wins: ${short(pm)}`);
-  const gb = await ask('generate_theme', { path: 'tl', brand: '#123456', planId: null }), gp = await ask('generate_theme', { path: 'tl', planId: null });
+  const gb = await ask('generate_theme', { path: model('tl'), brand: '#123456', planId: null }), gp = await ask('generate_theme', { path: model('tl'), planId: null });
   chk(() => !gb.err && gb.j.design.data[0] === '#123456' && !gp.err && gp.j.design.data.join() === d.data.join() && gp.j.design.ui.card === '#fdfefe' && (gp.j.sayInPlan || '').includes(LINE('Ocean Brand')),
     () => `3b. generate_theme with the model: no colours asked -> the report's theme (said); a brand colour wins: ${short(gp)} | ${short(gb)}`);
   const g0 = await ask('generate_theme', { planId: null }), ph = await plan('tl', { design: g0.j && g0.j.design });
@@ -139,7 +142,7 @@ export async function v029g({ call, check, ROOT }) {
   // ---------- 4. the written report has the theme's colours; the existing report is never touched ----------
   const hash = (dir) => crypto.createHash('sha256').update(fs.readdirSync(dir, { recursive: true }).sort().map((f) => { const p = path.join(dir, f); return fs.statSync(p).isFile() ? f + fs.readFileSync(p).toString('base64') : f; }).join('|')).digest('hex');
   const before = hash(path.join(ROOT, 'tl', 'M.Report'));
-  const cr = await ask('create_report', { path: 'tl', name: 'Fresh', design: d });
+  const cr = await ask('create_report', { path: model('tl'), name: 'Fresh', design: d });
   const made = !cr.err && fs.readdirSync(path.join(ROOT, 'tl')).filter((n) => /\.Report$/.test(n) && n !== 'M.Report');
   const themeFile = made && made.length === 1 ? fs.readdirSync(path.join(ROOT, 'tl', made[0], 'StaticResources', 'RegisteredResources')).find((n) => /\.json$/.test(n)) : null;
   const written = themeFile ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tl', made[0], 'StaticResources', 'RegisteredResources', themeFile), 'utf8')) : null;
@@ -155,7 +158,7 @@ export async function v029g5({ call, check }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? x.t.slice(0, 500) : (x.j ? JSON.stringify(x.j) : x.t).slice(0, 500));
-  const plan = (dir, more) => ask('plan_layout', Object.assign({ path: dir }, more || {}));
+  const plan = (dir, more) => ask('plan_layout', Object.assign({ path: model(dir) }, more || {}));
   const colOf = (x) => (x.j && x.j.colours) || {};
   const ps = await plan('ts'), ds = ps.j && ps.j.design;
   chk(() => !ps.err && ds.data.slice(0, 4).join() === '#2b2c8d,#eb6542,#3a877f,#20e2d7' && colOf(ps).source === 'theme and visuals' && !ds.data.includes('#c4c4dd') && !ds.data.includes('#10a010'),

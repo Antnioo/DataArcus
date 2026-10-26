@@ -1,7 +1,7 @@
 // The read_model tool: its registration (description, inputs, handler); server.mjs registers it in its place.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import { z } from 'zod';
-import { loadModel, unreadableOf } from '../lib/model.mjs';
+import { loadModel, unreadableOf, kpisOf } from '../lib/model.mjs';
 import { namedTables, isLarge, largeSummary, fullAnswer } from '../lib/scope.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { text, compact, safe } from '../lib/tool-answer.mjs';
@@ -17,7 +17,8 @@ export function register(server, ctx) {
   }, safe(async ({ path: p, tables }) => {
     // (AU47) a definition file that could not be read fully is named first, before the part that was read
     const m = loadModel(p), first = unreadableOf(m);
-    if (tables) return text(Object.assign({}, first, namedTables(m, tables, hiddenOf(m)), hiddenOf(m)));
-    return isLarge(m) ? compact(Object.assign({}, first, largeSummary(m), hiddenOf(m))) : text(Object.assign({}, first, fullAnswer(m), hiddenOf(m)));
+    // (SQ15a) each KPI and its target: a measure, or "an expression" (its text never)
+    if (tables) return text(Object.assign({}, first, namedTables(m, tables, hiddenOf(m)), kpisOf(m), hiddenOf(m)));
+    return isLarge(m) ? compact(Object.assign({}, first, largeSummary(m), kpisOf(m), hiddenOf(m))) : text(Object.assign({}, first, fullAnswer(m), kpisOf(m), hiddenOf(m)));
   }));
 }

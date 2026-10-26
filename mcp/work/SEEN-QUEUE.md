@@ -138,7 +138,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-checks-S1 | THEME_NAME fix says Desktop "may not load" the theme | OWNER | `assets/js/report-rules.js:337` still "Desktop may not load it" | decide the rewording "validator and Fabric reject it; Desktop opens it" (shared website rule) |
 | 0.2.9-checks-S2 | THEME_NAME "no .platform file" half never measured | OWNER | `assets/js/report-rules.js:336` unmeasured; not in DESKTOP_OPENS | laptop: open a project without .platform in Desktop, record result |
 | 0.2.9-checks-S3 | FORMATTING_OBJECT_UNKNOWN in a visual is canBreak | OWNER | `mcp/lib/check-report.mjs:115` Desktop-opens only for RegisteredResources files | laptop: open a visual with an unknown object; if it opens, widen DESKTOP_OPENS |
-| 0.2.9-checks-S4 | loadModel picks first of two models at same depth silently | OPEN (SQ6: the refusal breaks v029g's fixture, the owner's call: SQ6.md Decisions 1) | `mcp/lib/model.mjs:399` sort then dirs[0], no tie check | refuse with MANY_MODELS listing both when two share the top depth · S · low · reader → **SQ6** |
+| 0.2.9-checks-S4 | loadModel picks first of two models at same depth silently | DONE (SQ15a 41bd0da) | `mcp/lib/model.mjs:399` sort then dirs[0], no tie check | refuse with MANY_MODELS listing both when two share the top depth · S · low · reader → **SQ6** |
 | 0.2.9-checks-S5 | engine repo attach needed owner's go | OBSOLETE | informational, no action (session permission event) | — |
 | 0.2.9-checks-S6 | test-0.2.9b.mjs not run by test.mjs | DONE | `mcp/test.mjs:16` imports v029b; `mcp/tests.json:112` | fixed before fab795c (history starts there) |
 | 0.2.9-checks-S7 | last-6-months tooltip trend still gets TOOLTIP_SCROLL | DONE | `assets/js/report-rules.js:313-318` "Last N months" filter counted (rc.22 B-142) | fixed before fab795c; TIP_ROWS_6 27/40 at :70 |
@@ -210,7 +210,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S1 | AXIS_HAS_BLANK never fires: blank count needs consented query | OWNER | every lint call passes facts null: `mcp/lib/plan-lint.mjs:83,132`, `artifact.mjs:140` | decide whether to add a consented blank-count read (laptop-only); else keep as notChecked |
 | 0.2.9-reader-S2 | plan-lint passes logoPlaceholder false; name may differ | OBSOLETE | name matches writer: `assets/js/pbip-page.js:702`, `plan-lint.mjs:68` | informational, no action |
 | 0.2.9-reader-S3 | Desktop Extension manifest must list read_report | OWNER | no manifest in this repo (packaging is private) | on the laptop: check the extension manifest lists all 11 tools incl. read_report |
-| 0.2.9-reader-S4 | not read: drill level, image names, z, decoration, custom names | OPEN | z read now `mcp/lib/read-report.mjs:363,548`; others absent | verify first which lab-list items remain; read them in inventory · M · low · reader → **SQ15** |
+| 0.2.9-reader-S4 | not read: drill level, image names, z, decoration, custom names | DONE (SQ15a 7f8275e; z was already read) | z read now `mcp/lib/read-report.mjs:363,548`; others absent | verify first which lab-list items remain; read them in inventory · M · low · reader → **SQ15** |
 | 0.2.9-reader-S5 | server instructions near their character cap | OWNER | 2,195 of INSTRUCTIONS_MAX 2,200 `mcp/lib/agent-text.mjs:9` | decide: raise the 2,200 cap (`mcp/lib/agent-text.mjs:9`) or move a rule into tool descriptions; unblocks 0.2.9-design-S9 |
 | 0.2.9-reader-S6 | merge conflicts with builder 5; npm test should run 0.2.9b | OBSOLETE | merged; 0.2.9b runs inside test.mjs `mcp/tests.json:112` | merge past; suite registered |
 | 0.2.9-reader-S7 | browser suites not run locally | OBSOLETE | CI runs them | informational, no action |
@@ -727,7 +727,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| L5-S1 | model KPI (TMSL kpi) not read as a target | OPEN | `assets/js/tmdl-model.js` no kpi; `mcp/lib/status-icons.mjs:39` names only | read a measure's kpi targetExpression in the reader, use in targetOf · M · low · reader → **SQ15** |
+| L5-S1 | model KPI (TMSL kpi) not read as a target | DONE (SQ15a 7f8275e) | `assets/js/tmdl-model.js` no kpi; `mcp/lib/status-icons.mjs:39` names only | read a measure's kpi targetExpression in the reader, use in targetOf · M · low · reader → **SQ15** |
 | L5-S2 | Way C has two states, no warning band | OWNER | `mcp/lib/status-icons.mjs:8` target only, no threshold | decide whether Way C takes a user-given threshold for a warning band |
 | L5-S3 | Arabic icon placement 'Before' not proven | OWNER | laptop item (L5 note) | on the laptop, check the other placement in an Arabic table |
 | L5-S4 | new card, slicers, KPI cards get no icon | OWNER | not tried in the lab | decide whether to lab icons on these visuals on the laptop |
