@@ -118,6 +118,11 @@ package's manifest; this file says what is in it.
   not text, badly indented or holds git merge-conflict markers, read_model and the Model Health Check name the file and
   why first, give no score (a score of the part read would be wrong), and DataArcus won't plan a report, a twin or a
   calendar on that model until the file is fixed. A file that only lacks a final line break is read as whole.
+- **Plans and previews say more:** a plan lists the header growth a report gets when its page tabs need two rows;
+  the page previews say plainly that axis labels come from the data and show which way time runs on a chart over time;
+  a button slicer counts only the values an IF or SWITCH column can return.
+- **The tool texts say what the tools do:** check_report takes Hebrew (`lang: "he"`), every tool that takes tables
+  takes up to 100, and the two script tools that write nothing new on a repeat say so.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
