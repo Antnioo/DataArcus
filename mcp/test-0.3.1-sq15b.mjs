@@ -6,6 +6,9 @@
 //   L   L3-S2: the metric switcher leaves out a measure its charts' axes are not related to (the model's relationships
 //       and the measure's DAX names: metadata only), and the plan says which and why
 //   S   0.2.9-reader-S8: plan-lint's binding is report-run's one page-and-binding function, not a copy
+//   T   0.3.1 LR2 (the laptop's run of 26 Oct, the owner's "Use «حسب»"; mcp/work/LR2.md): the website's Arabic download,
+//       built with the page's own input (chartAxes 'mirrored'), titles its charts «Total Sales حسب Region» (story-titles.js,
+//       one engine with the MCP), the ranked and second-chart forms too, never a bracket; the English download unchanged
 //   node test-0.3.1-sq15b.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -50,7 +53,7 @@ try {
   // the website's download on the person's own model (English names), Arabic, as the Theme Generator builds it
   const M = (m) => ({ t: 'Sales', m, name: m }), C = (c, extra) => Object.assign({ t: 'Sales', c, name: c }, extra || {});
   const site = (lang) => { const d = E.fresh(); E.repairState(d); const pages = E.projectPages(d.layout, lang, { second: true, panel: false });
-    return Pbip.build({ name: 'Own', title: 'Own Sales', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, sample: false, logo: null, theme: E.buildTheme(d, lang), ui: d.ui, texts: E.REPORT_TEXTS[lang],
+    return Pbip.build({ name: 'Own', title: 'Own Sales', pageName: pages[0].name, lang, rtl: lang === 'ar', ...(lang === 'ar' ? { chartAxes: 'mirrored' } : {}), font: d.font, sample: false, logo: null, theme: E.buildTheme(d, lang), ui: d.ui, texts: E.REPORT_TEXTS[lang],
       model: { byPath: 'T.SemanticModel' }, bind: { kpis: [M('Total Sales'), M('Orders')], measure: M('Total Sales'), date: C('Month', { sortBy: { t: 'Sales', c: 'Month Number' } }), cats: { bar: C('Region'), column: C('Region') }, y: {}, table: [C('Region'), M('Total Sales'), M('Orders')], slicers: [C('Region')], tip: null },
       pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) }); };
   const ar = get(() => site('ar')), en = get(() => site('en'));
@@ -63,10 +66,28 @@ try {
   chk(() => en.files && !isoTexts(en).length, () => `J6. an English download has no isolate: ${cut(isoTexts(en))}`);
   const tg = fs.readFileSync(path.join(HERE, '../assets/js/theme-generator.js'), 'utf8'), bl = (tg.match(/const BUILDER = \[[^\]]*\]/) || [''])[0];
   chk(() => bl.indexOf('text-measure.min.js') >= 0 && bl.indexOf('text-measure.min.js') < bl.indexOf('pbip-export.min.js'), () => 'J7. the Theme Generator loads text-measure before pbip-export (the writer finds the isolate rule)');
+  // ---------- LR2: the Arabic download's chart titles in the «حسب» form ----------
+  const ST = require('../assets/js/story-titles.js');
+  const titleOf = (r, v) => { const e = ((((v.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text || {}).expr;
+    if (e && e.Literal) return String(e.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'");
+    if (!e || !e.Measure) return null;
+    const ext = JSON.parse(((r.files || []).find((f) => /reportExtensions\.json$/.test(f.path)) || { data: '{}' }).data), m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
+    const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); return x ? x[1].replace(/""/g, '"') : null; };
+  const titled = (r, re) => (r.files || []).filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(f.data).visual).filter((v) => v && re.test(v.visualType)).map((v) => ({ type: v.visualType, t: titleOf(r, v), alt: ((((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText || { expr: { Literal: { Value: '' } } }).expr.Literal.Value }));
+  const CH = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/, arT = titled(ar, CH), enT = titled(en, CH), I = TM.isolateLatin || ((x) => x);
+  chk(() => ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales حسب Region' && ST.join('إجمالي المبيعات', 'Region', 'حسب') === 'إجمالي المبيعات حسب Region' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales' && ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region'
+    && ST.alternate('Total Sales', 'Region', 2, true, 'حسب') === 'ترتيب Region حسب Total Sales' && ST.alternate('Total Sales', 'Region', 2, false, 'حسب') === 'Total Sales لكل Region',
+  () => `T1. story-titles.js: an Arabic report joins any two names with «حسب» and says its second-chart sentences in Arabic; an English report as before: ${cut([ST.join('Total Sales', 'Region', 'حسب'), ST.alternate('Total Sales', 'Region', 2, true, 'حسب')])}`);
+  chk(() => arT.some((x) => x.type === 'lineChart' && x.t === I('Total Sales حسب Month')) && I('Total Sales حسب Month').startsWith('‏⁨'), () => `T2. the Arabic download's line chart: «Total Sales حسب Month», isolated, U+200F first: ${cut(arT.filter((x) => x.type === 'lineChart'))}`);
+  chk(() => ['clusteredBarChart', 'clusteredColumnChart'].every((k) => arT.some((x) => x.type === k && x.t === I('Total Sales حسب Region'))) && arT.some((x) => x.type === 'clusteredBarChart' && x.t === I('ترتيب Region حسب Total Sales')),
+    () => `T3. the Arabic bar and column charts: «Total Sales حسب Region», the ranked second bar «ترتيب Region حسب Total Sales»: ${cut(arT.filter((x) => x.type !== 'lineChart'))}`);
+  chk(() => arT.length >= 4 && arT.concat(titled(ar, /^tableEx$/)).every((x) => x.t && !/[()]/.test(x.t) && !/[()]/.test(x.alt)), () => `T4. no bracket in an Arabic chart or table title or alt text: ${cut(arT.concat(titled(ar, /^tableEx$/)).filter((x) => !x.t || /[()]/.test(x.t + x.alt)))}`);
+  chk(() => enT.map((x) => x.t).sort().join('|') === ['Region ranked by Total Sales', 'Region ranked by Total Sales', 'Total Sales by Month', 'Total Sales by Region', 'Total Sales by Region'].join('|'), () => `T5. the English download's chart titles unchanged: ${cut(enT.map((x) => x.t))}`);
   // the MCP's Arabic report: built isolated by the writer, report-run's own pass after its additions changes nothing more
   const { reportRun } = await import('./lib/report-run.mjs'), { withLookDefaults } = await import('./lib/report-inputs.mjs'), { planLayout } = await import('./lib/design.mjs');
   const mcpAr = get(() => reportRun(withLookDefaults({ path: 'sw/M.SemanticModel', name: 'Own AR', lang: 'ar', design: planLayout({ layout: 'exec', lang: 'ar' }).design, secondPage: false }), 'build'));
   chk(() => mcpAr.files && Terms.isolateFiles(copy(mcpAr), [], { all: true }) === 0 && isoTexts(mcpAr).length > 0, () => `J8. the MCP's Arabic report: every mixed text isolated (pin): ${cut(mcpAr.threw || isoTexts(mcpAr))}`);
+  chk(() => mcpAr.files && titled(mcpAr, /^lineChart$/).some((x) => x.t === I('Total Sales حسب Month')), () => `T6. the MCP's Arabic report on the same names: the same engine, «Total Sales حسب Month»: ${cut(mcpAr.threw || titled(mcpAr, CH))}`);
 
   // ---------- L3-S2: the switch measures the charts' axes are related to ----------
   const S = await import('./lib/metric-switcher.mjs');
