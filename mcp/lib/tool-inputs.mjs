@@ -1,7 +1,7 @@
 // The input schemas more than one tool takes (zod), and the annotations that say what a tool does to the user's files.
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import { z } from 'zod';
-import { VISUAL_KINDS } from './tool-limits.mjs';
+import { VISUAL_KINDS, LIMITS } from './tool-limits.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -13,9 +13,13 @@ export const WATERFALL_RTL_INPUT = () => z.enum(Gallery.WATERFALL_RTL).optional(
 // The plan id every writing tool takes (0.2.9, the gate inside the tools: see lib/plans.mjs)
 export const planIdInput = z.string().max(40).optional().describe('The approved plan id (from plan_layout, or from this tool\'s own answer without one, then approve_plan after the user\'s go). Without an approved planId this tool writes nothing and answers with what it would write and a proposed planId');
 export const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
+// (SQ9, 0.2.9-design-S8) a tool whose repeat writes nothing new: a second plan on the same model names the same files, already
+// there with the same content, and writes none of them again (check_model_health's scripts, add_gulf_calendar's); the same
+// planId again is refused. The other writing tools stay ADDS: a repeat writes another file ("brand-2.json", "- New design")
+export const ADDS_SAME = Object.assign({}, ADDS, { idempotentHint: true });
 // the part of a large model a request is about (see lib/scope.mjs)
 export const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
-export const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
+export const tablesInput = z.array(z.string()).min(1).max(LIMITS.tables).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
 export const modelPath = z.string().describe('A Power BI project folder, its .SemanticModel folder, a model.bim or a .pbit, relative to the DataArcus folder');
 
 export const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])

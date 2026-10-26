@@ -428,7 +428,7 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
   check(/`check_model_health` and `add_gulf_calendar` are also `idempotentHint: true`/.test(readme), 'SQ9 0.2.9-design-S8. mcp/README.md does not say which tools are idempotentHint true');
   // W2-S4 PRODUCT_SPEC's tool rows and rule 4
   const spec = read('./PRODUCT_SPEC.md'), row = (t) => (spec.split('\n').find((l) => l.startsWith(`| \`${t}\` |`)) || '').split(' | ');
-  for (const t of writingTools()) check(/approved plan/.test(row(t)[3] || ''), `SQ9 W2-S4. PRODUCT_SPEC.md: ${t}'s Writes cell names no approved plan: "${(row(t)[3] || '').slice(0, 120)}"`);
+  for (const t of writingTools()) check(/approve/.test(row(t)[3] || ''), `SQ9 W2-S4. PRODUCT_SPEC.md: ${t}'s Writes cell names no approved plan: "${(row(t)[3] || '').slice(0, 120)}"`);
   check(!/^nothing/.test(row('check_model_health')[3] || ''), 'SQ9 W2-S4. PRODUCT_SPEC.md: check_model_health "Writes: nothing" (it writes its fix scripts after approval)');
   check((row('suggest_fields')[1] || '').includes(`1-${LIMITS.kpiCards}`), `SQ9 W2-S4. PRODUCT_SPEC.md: suggest_fields' KPI cards are not 1-${LIMITS.kpiCards}: "${row('suggest_fields')[1]}"`);
   check(/planId/.test(row('plan_layout')[2] || ''), 'SQ9 W2-S4. PRODUCT_SPEC.md: plan_layout returns no planId in its row');

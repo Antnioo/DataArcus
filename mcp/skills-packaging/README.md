@@ -58,8 +58,9 @@ plugin sets no flag or variable that would.
 
 ## Privacy
 DataArcus runs on your computer and reads and writes only inside the working folder you choose. Its tools return
-metadata (names, types and formats of your tables, columns and measures, and a report's short titles, screened and returned as typed),
-never data values, and what they return is sent to your AI app. Put in the working folder only models whose names
+metadata (names, types and formats of your tables, columns and measures) and the texts a person typed into a report,
+screened for instructions and returned as typed (page names and text boxes, never a static title; for an Arabic twin,
+the texts a reader sees, titles included, so their Arabic can be drafted), never data values, and what they return is sent to your AI app. Put in the working folder only models whose names
 you may share with your AI app. Details: https://dataarcus.com/power-bi-mcp/
 
 ## Licence

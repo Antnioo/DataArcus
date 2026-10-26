@@ -12,7 +12,7 @@ import { whereSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
 import { readAnswers, Memory, answerKey, writeAnswers, answersName, REPLACES } from '../lib/answers.mjs';
 import { fitLists, out } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
-import { planIdInput, ADDS, modelPath } from '../lib/tool-inputs.mjs';
+import { planIdInput, ADDS_SAME, modelPath } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
 import { notWrittenWhy, freeScriptName, plannedTaken, writePlannedScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
@@ -58,7 +58,7 @@ export function register(server, ctx) {
       forgetAnswers: z.boolean().optional().describe('The user asked to forget their recorded answers: empties the answers file (after an approved plan)'),
       columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
         .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
-    }, annotations: ADDS
+    }, annotations: ADDS_SAME
   }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, weekend, asOf, planId, answers, forgetAnswers, only }) => {
     const m = loadModel(p);
     // (AU47, the night audit's AUD-047) a definition file that could not be read fully: no score, the findings the check
