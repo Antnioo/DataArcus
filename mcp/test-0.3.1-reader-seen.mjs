@@ -1,6 +1,6 @@
 // 0.3.1 SQ6 (the night run's Seen batch 6: the reader; written red first). Made-up names only (no employer or client
 // data), in temp working folders, on copies of mcp/fixtures/twin-project. In process: the reading block's own modules.
-//   S4   two model folders at the same top depth: refused (MANY_MODELS) naming both, never the first one listed
+//   S4   (pins only: the refusal of two models at one depth waits for the owner, SQ6.md) the nearest model still reads
 //   S15  a model part that is not JSON, or nested too deep: a coded ReadError (BAD_JSON, TOO_DEEP), its text never quoted
 //   S12  a .pbit is read by its parts: no read of the whole file at once; the same print (SHA-256 of the whole file);
 //        a .pbit that is a link is refused; one that changes while it is read is refused
@@ -28,7 +28,6 @@ const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8')), wr = (f, o) => { fs.mk
 const M = await import('./lib/model.mjs');
 const RR = await import('./lib/read-report.mjs');
 const S = await import('./lib/scope.mjs');
-const { wordOf } = await import('./lib/read-words.mjs');
 const attempt = (f) => { try { return { v: f() }; } catch (e) { return { e }; } };
 const said = (r) => (r.e ? `threw ${r.e.code || ''}: ${String(r.e.message).slice(0, 200)}` : `read ${JSON.stringify(r.v && (r.v.source || r.v)).slice(0, 200)}`);
 
@@ -54,14 +53,10 @@ fs.readSync = function (fd, buf, off, len, pos) { const n = typeof len === 'numb
 const watched = (f) => { biggest = 0; try { return f(); } finally { onRead = null; } };
 
 try {
-  // ---------- S4: two model folders at the same top depth ----------
+  // ---------- S4 (pins): the nearest model reads; one of two named by path reads ----------
   {
     const two = path.join(ROOT, 'two'); fs.mkdirSync(two);
     fs.cpSync(FIX, path.join(two, 'Alpha'), { recursive: true }); fs.cpSync(FIX, path.join(two, 'Beta'), { recursive: true });
-    const r = attempt(() => M.loadModel('two'));
-    chk(() => r.e && r.e.code === 'MANY_MODELS' && /Alpha/.test(r.e.message) && /Beta/.test(r.e.message) && (r.e.data.models || []).length === 2, () => `S4-1. two models at the same depth are refused (MANY_MODELS), both named: ${said(r)}`);
-    chk(() => r.e && /path of the one you mean/.test(wordOf(r.e)), () => `S4-2. the tool layer words MANY_MODELS (give the path of the one): ${r.e ? wordOf(r.e) : said(r)}`);
-    // pins: one model, a backup deeper down, and one of the two named by path still read
     const one = fresh('one'); fs.cpSync(path.join(one, BASE + '.SemanticModel'), path.join(one, 'old', 'backup', BASE + '.SemanticModel'), { recursive: true });
     const r1 = attempt(() => M.loadModel('one')), r2 = attempt(() => M.loadModel('two/Alpha'));
     chk(() => r1.v && r1.v.folder && !/backup/.test(r1.v.folder) && r2.v && /Alpha/.test(r2.v.folder), () => `S4-3. one model (and a backup deeper down) still reads the nearest; one of two named by path reads: ${said(r1)} | ${said(r2)}`);

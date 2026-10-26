@@ -4,7 +4,6 @@ export function wordOf(e) {
   const d = (e && e.data) || {};
   switch (e && e.code) {
     case 'MANY_MODELS_NAMED': return `${e.message} Give read_model the path of the one you mean.`;
-    case 'MANY_MODELS': return `${e.message} Give read_model the path of the one you mean.`;
     case 'NO_MODEL_NAMED': return `${e.message} ${(d.models || []).length ? 'Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`;
     default: return String((e && e.message) || e);
   }
