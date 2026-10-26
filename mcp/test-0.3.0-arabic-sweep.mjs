@@ -48,7 +48,7 @@ const FX = [
     switcher: ['Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Total Value]'], ramadan: [{ field: 'Calendar[Is Ramadan]', values: [true] }], planFields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] }, filters: 'top' },
   { id: 'F2 arabic-long-names', src: 'test-models/arabic-long-names', dir: 'along', model: 'along/Arabic Long Names.SemanticModel',
     switcher: ['المبيعات اليومية[إجمالي صافي المبيعات بعد الخصومات والمرتجعات]', 'المبيعات اليومية[عدد الفواتير الصادرة خلال الفترة المحددة]'], ramadan: [{ field: 'التقويم[هل هو شهر رمضان]', values: [true] }] },
-  { id: 'F3 health-project', src: 'fixtures/health-project', dir: 'health', model: 'health/Health Test.SemanticModel', switcher: ['_Measures[Total]', '_Measures[Unused One]'] },
+  { id: 'F3 health-project', src: 'fixtures/health-project', dir: 'health', model: 'health/Health Test.SemanticModel', switcher: ['_Measures[Total]', '_Measures[Unused One]'], own: 'health/Health Test Report.pbip' },   // (SQ11, A3-S6: its own hand-made report twinned too)
   { id: 'F4 twin-project', src: 'fixtures/twin-project', dir: 'twin', model: 'twin/Twin Sales.SemanticModel', switcher: ['Sales[Total Sales]', 'Sales[Orders]'], own: 'twin/Twin Sales.pbip' },
   { id: 'F5 no-measures', src: 'test-models/no-measures', dir: 'nom', model: 'nom/Plain Orders.SemanticModel' }   // (no measure: the visuals that need one are left out)
 ];
