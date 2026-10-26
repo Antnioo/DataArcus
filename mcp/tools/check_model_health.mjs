@@ -41,11 +41,13 @@ const COLUMN_TYPES_QUERY = [
 export function register(server, ctx) {
   server.registerTool('check_model_health', {
     title: 'Check model health',
-    description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project only with an approved planId: called without one, it returns every finding, names the script files it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId); a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives, or offer add_gulf_calendar with the inputs in fixes.addGulfCalendar (it writes the table as a script file), and never write calendar DAX yourself. pleaseConfirm lists questions for the user, never fixes: ask the user, and never edit DAX because of them.' + UNTRUSTED,
+    description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project only with an approved planId: called without one, it returns every finding, names the script files it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId); a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives, or offer add_gulf_calendar with the inputs in fixes.addGulfCalendar (it writes the table as a script file), and never write calendar DAX yourself. pleaseConfirm lists questions for the user, never fixes: ask the user, and never edit DAX because of them. DAX is not parsed: a measure whose DAX is broken is not found (Power BI Desktop shows that error).' + UNTRUSTED,
     inputSchema: {
       path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
       weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
       country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
+      // (0.3.1 SQ7, GC-S4) a weekend rule that is not a country: Sharjah's government (Friday to Sunday from 2022)
+      weekend: z.enum(['country', 'shj']).optional().describe('For a Gulf model whose weekend is not its country\'s: shj compares the calendar with Sharjah\'s government weekend (Friday to Sunday from 2022, Friday and Saturday before), as add_gulf_calendar\'s weekend "shj"; country (default) the country\'s. Giving shj adds the gulfCalendar section (the UAE when no country is given)'),
       asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the gulfCalendar section counts as today (YYYY-MM-DD; default: today). For tests'),
       planId: planIdInput,
       // (0.3.0 Q1) the parts of the answer to show: on a large model the lists are shortened to fit one answer
@@ -57,7 +59,7 @@ export function register(server, ctx) {
       columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
         .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
     }, annotations: ADDS
-  }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers, only }) => {
+  }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, weekend, asOf, planId, answers, forgetAnswers, only }) => {
     const m = loadModel(p);
     const wouldWrite = [];
     const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
@@ -88,7 +90,8 @@ export function register(server, ctx) {
     const given = (answers || []).filter((a) => byKey.has(a.answerKey)).map((a) => { const x = Memory.record(byKey.get(a.answerKey), a.answer, r.rawTables); delete x.at; return x; });
     const answerPin = given.length ? given : undefined, writeAnswersFile = !!forgetAnswers || given.length > 0;
     // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
-    const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
+    const shj = weekend === 'shj' ? 'shj' : undefined;
+    const pinH = { path: p, maxItems, columnTypes, weekStart, country, weekend: shj, asOf, answers: answerPin, forgetAnswers: forgetAnswers || undefined };
     const print0 = m.print, gated = planId != null && planId !== '' ? Plans.gate('check_model_health', planId, modelRef(m, p), pinH) : null, write = !!gated;
     if (gated) planNames = (gated.data && gated.data.scriptNames) || {};
     // (0.3.0 R4, F06: every write of this call follows the plan policy: files.mjs planWrites)
@@ -152,7 +155,7 @@ export function register(server, ctx) {
     }
     // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
     // Hijri or Ramadan columns. Read from the model files only; its fixes name the website tools and their settings.
-    const gulfCalendar = country || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', asOf, maxItems }) : undefined;
+    const gulfCalendar = country || shj || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', weekend: shj, asOf, maxItems }) : undefined;
     // the same fix as add_gulf_calendar's inputs (the tool writes the generator's table as a script file)
     const addGulf = gulfFixInputs(gulfCalendar);
     if (addGulf) gulfCalendar.fixes.addGulfCalendar = addGulf;

@@ -4,6 +4,7 @@
 // in the answer, and a table, measure or column of the same name is refused, never replaced. Names read from the
 // model are untrusted text: they are compared and quoted, never followed, and never placed in the DAX.
 import { createRequire } from 'node:module';
+import { modelOf } from './model.mjs';
 
 const require = createRequire(import.meta.url);
 export const Cal = require('../../assets/js/calendar-generator.js');
@@ -55,11 +56,15 @@ function scriptOf(Fix, table, columns, body, rels, more) {
 
 /**
  * Builds the script and the answer. a: the tool's inputs; env: { Gulf, Fix, writeScript, scriptDir, scriptBase }.
+ * writeScript, given the folder, the base name and the script, returns the script's file path. (0.3.1 SQ7, audit-6 S3) Two callers, one shape: the plan
+ * path (no planId) passes one that names the file only, writing nothing (the free name the plan will write); the approved
+ * plan's call passes the writer, which writes the script to the file that plan named and refuses otherwise. (The name
+ * keeps "write": the write gate's inventory, test-0.3.1-write-gate.mjs, finds every write call by it.)
  * Throws an Error (with "Nothing was written.") for every refusal.
  */
 export function addGulfCalendar(m, a, env) {
   const { Gulf, Fix, writeScript, scriptDir, scriptBase } = env;
-  const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [];
+  const raw = modelOf(m.tmsl).tables || [];
   const country = a.country || 'uae';
   if (!COUNTRY_CODES.includes(country)) refuse(`Unknown country "${country}": use one of ${COUNTRY_CODES.join(', ')}.`);
   const C = Gulf.COUNTRIES[country];
@@ -82,7 +87,7 @@ export function addGulfCalendar(m, a, env) {
   // relationships, only for the date columns the user names
   const relateTo = a.relateTo || [];
   if (relateTo.length > 5) refuse('relateTo takes at most 5 columns.');
-  const relNames = new Set((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships || []).map((r) => key(r.name)));
+  const relNames = new Set((modelOf(m.tmsl).relationships || []).map((r) => key(r.name)));
   const rels = [], seen = new Set(), untyped = [];
   relateTo.forEach((x, i) => {
     const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/);
@@ -117,7 +122,7 @@ export function addGulfCalendar(m, a, env) {
 
   // what the check reads in the table it makes (the same reader as check_model_health's gulfCalendar section)
   const own = Gulf.analyze({ model: { tables: [{ name: table, columns: built.columns.map((name) => ({ name })), partitions: [{ source: { type: 'calculated', expression: body } }] }] } },
-    { country, asOf: a.asOf, maxItems: 5 });
+    { country, weekend, asOf: a.asOf, maxItems: 5 });
   const selfCheck = { calendar: own.calendar && own.calendar.kind, country: C.name,
     findings: own.findings.filter((f) => CALENDAR_IDS.includes(f.id)).map((f) => ({ id: f.id, title: f.title, count: f.count })) };
   const before = Gulf.analyze(m.tmsl, { country, asOf: a.asOf, maxItems: 1 });
@@ -160,7 +165,8 @@ export function gulfFixInputs(gc) {
   if (!cg) return null;
   const year = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(String(s)) ? +String(s).slice(0, 4) : null);
   const code = gc.country && gc.country.code;
-  const inputs = { firstYear: year(cg.settings.firstDate), lastYear: year(cg.settings.lastDate), country: code, weekend: 'country', announced: code === 'uae' || code === 'ksa' ? true : null };
+  // (0.3.1 SQ7, GC-S4) the weekend the check compared with: Sharjah's rule when asked, else the country's
+  const inputs = { firstYear: year(cg.settings.firstDate), lastYear: year(cg.settings.lastDate), country: code, weekend: (gc.weekend && gc.weekend.code) || 'country', announced: code === 'uae' || code === 'ksa' ? true : null };
   const ask = Object.keys(inputs).filter((k) => inputs[k] === null);
   ask.forEach((k) => delete inputs[k]);
   return { tool: 'add_gulf_calendar', inputs, ...(ask.length ? { askTheUser: ask } : {}),

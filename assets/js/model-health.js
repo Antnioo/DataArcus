@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (n) => new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US').format(n);
   const bdi = (x) => '<bdi dir="ltr">' + esc(x) + '</bdi>';
+  // an Arabic count: w { one, two, few (3-10), many (11-99), hundred (100, 101, 102...) }, fmt the number's format
+  const arCount = (n, w, fmt) => { const r = n % 100; return n === 1 ? w.one : n === 2 ? w.two : fmt(n) + ' ' + (r >= 3 && r <= 10 ? w.few : r >= 11 ? w.many : n >= 100 ? w.hundred : w.few); };
   const RULES = () => (window.MHEngine && window.MHEngine.RULES) || {};
 
   let R = null;          // analysis result
@@ -709,8 +711,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const SEVC = { high: '#ef4444', medium: '#f59e0b', low: '#38bdf8', info: '#94a3b8' };
   function cardContent() {
     const s = R.stats, sc = score().overall, cut = (x) => (x.length > 60 ? x.slice(0, 59) + '…' : x);
-    const many = (n, one, more, ar) => num(n) + ' ' + L(n === 1 ? one : more, ar);
-    const size = [many(s.tables, 'table', 'tables', 'جداول'), many(s.measures, 'measure', 'measures', 'مقاييس')].concat(R.meta.hasReport ? [many(s.visuals, 'visual', 'visuals', 'مرئيات')] : []).join('  ·  ');
+    // (0.3.1 SQ7, E-S2) the Arabic word agrees with the number: 1 and 2 by the word alone, 3-10 the plural, 11-99 the
+    // singular (accusative), and a hundred and its 1 and 2 the singular; E2's singular of «المرئيات» is «مرئي»
+    const many = (n, one, more, ar) => (isAr() ? arCount(n, { one: ar[0], two: ar[1], few: ar[2], many: ar[3], hundred: ar[4] }, num) : num(n) + ' ' + (n === 1 ? one : more));
+    const size = [many(s.tables, 'table', 'tables', ['جدول واحد', 'جدولان', 'جداول', 'جدولًا', 'جدول']), many(s.measures, 'measure', 'measures', ['مقياس واحد', 'مقياسان', 'مقاييس', 'مقياسًا', 'مقياس'])]
+      .concat(R.meta.hasReport ? [many(s.visuals, 'visual', 'visuals', ['مرئي واحد', 'مرئيان', 'مرئيات', 'مرئيًا', 'مرئي'])] : []).join('  ·  ');
     const top = R.findings.filter((f) => !ignored.has(f.id)).slice(0, 5).map((f, i) => {
       const obj = f.items[0] && f.items[0].obj, n = f.items.length;
       // the rule on one line, its first object below it (its count when names are hidden)

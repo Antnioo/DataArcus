@@ -220,7 +220,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-reader-S11 | audit A1-4/5/6/8/9/10/11/14, website bim cap, byName readdirSync | DONE | fab795c: `pbip-bind.js:57` unknown, `:103` cap, `model.mjs:295` readdirSafe, field-meaning.js | - |
 | 0.2.9-reader-S12 | .pbit route reads the zip whole up to 300 MB | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:378` readCapped(full, 300 MB) before unzipNeeded | read only the needed entries by fd from the central directory · M · low · reader → **SQ6** |
 | 0.2.9-reader-S13 | pbip-bind picker keeps its own 'string' type fallbacks | OPEN | `assets/js/pbip-bind.js:334,412,430,505` `c.dataType or 'string'` | drop the fallbacks (reader gives a type) with min rebuild · S · low · reader → **SQ13** |
-| 0.2.9-reader-S14 | gulf-calendar.mjs unwraps m.tmsl itself twice | OPEN | `mcp/lib/gulf-calendar.mjs:62,85` | use model.mjs's one unwrap helper (`model.mjs:92`) · S · low · calendar → **SQ7** |
+| 0.2.9-reader-S14 | gulf-calendar.mjs unwraps m.tmsl itself twice | DONE f888207 | `mcp/lib/gulf-calendar.mjs:62,85` | use model.mjs's one unwrap helper (`model.mjs:92`) · S · low · calendar → **SQ7** |
 | 0.2.9-reader-S15 | JSON-part errors (not valid JSON, too deep) lack codes | DONE 08493ad (SQ6) | `mcp/lib/model.mjs:208` plain Error; ReadError codes list has none | throw ReadError('BAD_JSON') / ('TOO_DEEP') · S · low · reader → **SQ6** |
 | 0.2.9-reader-S16 | .pbit route reads the file whole before unpacking | DUPLICATE | same as S12 | 0.2.9-reader-S12 |
 | 0.2.9-reader-S17 | A1-11 percent rule not touched | DONE | fab795c: shared `assets/js/field-meaning.js`, used `pbip-bind.js:10` | - |
@@ -302,7 +302,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | audit-6-mcp-tools-S1 | report plan lets generate_theme write any folder | DONE | `mcp/lib/plans.mjs:21-22` report allows create_report only; theme has its own plan (Z-01) |  |
 | audit-6-mcp-tools-S2 | CARD_RULE used before defined | DONE | `mcp/lib/report-said.mjs:19` exported const, imported `report-run.mjs:26` (S9 split) |  |
-| audit-6-mcp-tools-S3 | add_gulf_calendar plan path passes a fake writeScript | OPEN | `mcp/tools/add_gulf_calendar.mjs:24,66` scriptNameNow as writeScript; `gulf-calendar.mjs:57` undocumented | name the env key nameOnly or document it in gulf-calendar.mjs:57 · S · none · calendar → **SQ7** |
+| audit-6-mcp-tools-S3 | add_gulf_calendar plan path passes a fake writeScript | DONE f888207 | `mcp/tools/add_gulf_calendar.mjs:24,66` scriptNameNow as writeScript; `gulf-calendar.mjs:57` undocumented | name the env key nameOnly or document it in gulf-calendar.mjs:57 · S · none · calendar → **SQ7** |
 
 ### audit-7-instructions
 
@@ -341,7 +341,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | WORK-2026-10-05-09-S5 | All in slicers, English names, task 10 totals, Your logo | DONE | "All" said `report-run.mjs:209`; table reach PASS (note :403); `pbip-page.js:700` |  |
 | WORK-2026-10-05-09-S6 | mcp/quick.tmp.mjs committed on main | DONE | file absent; `git log -- mcp/quick.tmp.mjs` empty (removed before fab795c) |  |
 | WORK-2026-10-05-09-S7 | ring note wording for a table without value column | DONE | "fixed tonight" in the note's table (:1132) |  |
-| WORK-2026-10-05-09-S8 | health check cannot tell a measure's DAX does not parse | OPEN | `mcp/tools/check_model_health.mjs:44` description names no limit | add "DAX is not parsed: a broken measure is not found" to description and TOOLS.md · S · none · tools-docs → **SQ7** |
+| WORK-2026-10-05-09-S8 | health check cannot tell a measure's DAX does not parse | DONE f888207 | `mcp/tools/check_model_health.mjs:44` description names no limit | add "DAX is not parsed: a broken measure is not found" to description and TOOLS.md · S · none · tools-docs → **SQ7** |
 | WORK-2026-10-05-09-S9 | Arabic table has no "Total" word | DONE | round 23 row label «الإجمالي», `assets/js/pbip-query.js:243-251` |  |
 | WORK-2026-10-05-09-S10 | Arabic Reset arrow touches last letter | DONE | round 22 gap on the arrow side, `assets/js/pbip-page.js:189-192` |  |
 | WORK-2026-10-05-09-S11 | 18pt table title above 9pt rows in small slot | OWNER | open, taste (note :1136); no rule in pbip-page.js | decide: scale the title with the table text in small hand-placed slots, or keep |
@@ -458,7 +458,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| C1-S1 | Arabic Calendar Generator keeps Q1, FY, FQ, true/false | OPEN | `assets/js/calendar-generator.js:73` arabicOn needs lang!=ar; `:107`, `:128` | write Arabic labels when lang ar (same builder), EN/AR tests · M · low · calendar → **SQ7** |
+| C1-S1 | Arabic Calendar Generator keeps Q1, FY, FQ, true/false | DONE f888207 | `assets/js/calendar-generator.js:73` arabicOn needs lang!=ar; `:107`, `:128` | write Arabic labels when lang ar (same builder), EN/AR tests · M · low · calendar → **SQ7** |
 | C1-S2 | calc columns on a DAX date table via TMDL unproven | OWNER | no row in `scripts/tests/DESKTOP-TESTS.md` | laptop: apply the twin's month script on a calculated date table, Problems 0? |
 | C1-S3 | Day Name (Arabic) sorted by Weekday Number | OWNER | DESKTOP-TESTS:2137 proves gulf calendar only | laptop: apply the twin's calendar script, confirm Problems 0 and day order |
 | C1-S4 | headers show display names; field list shows "(Arabic)" | OBSOLETE | informational, works as designed | informational, no action |
@@ -540,7 +540,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | E-S1 | sitemap-lastmod --write moved stale earlier dates | OBSOLETE | informational, no action | - |
-| E-S2 | Health Check size line: one Arabic plural for every count | OPEN | `assets/js/model-health.js:712-713` many() one Arabic form | count-aware Arabic (1, 2, 3-10, 11+) for tables, measures, visuals · S · low · health → **SQ7** |
+| E-S2 | Health Check size line: one Arabic plural for every count | DONE f888207 | `assets/js/model-health.js:712-713` many() one Arabic form | count-aware Arabic (1, 2, 3-10, 11+) for tables, measures, visuals · S · low · health → **SQ7** |
 | E-S3 | Calendar Generator EN "Calendar Table" vs AR «جدول التاريخ» | OWNER | `tools/dax-calendar-table-generator.html:14` vs `ar/...:13` | owner: one name for the tool in both languages (SEO vs Microsoft's "date table") |
 | E-S4 | Desktop Arabic menus to confirm three "to choose" terms | DONE | E2 9861e51: owner chose the terms, `mcp/work/E2.md:21-29` | - |
 
@@ -608,8 +608,8 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | GC-S1 | share image says "the right weekend for each country and year" | DONE 0c69f686 (SQ8) | `scripts/make-share-images.mjs:207` old line (+ "Free tool") | new sub line, regenerate `assets/img/og/gulf-calendar.jpg` · S · low · website → **SQ8** |
 | GC-S2 | "Free" and "Copy, paste, done" on generator page, site-wide | OWNER | `tools/dax-calendar-table-generator.html:15,185` | owner: keep or drop "free" site-wide; drop "Copy, paste, done"? |
 | GC-S3 | Egypt quick setup keeps fixed Fri + Sat weekend | OBSOLETE | informational: no sourced Egypt history, by design |  |
-| GC-S4 | Sharjah calendar self-check flags every Sunday as GC_WEEKEND | OPEN | `mcp/lib/gulf-calendar.mjs:119` analyze by country only; `mcp/tools/check_model_health.mjs:48` | weekend option (shj) on Gulf.analyze and check_model_health · M · low · calendar → **SQ7** |
-| GC-S5 | "Is After UAE Weekend Change" only for UAE, not Sharjah | OPEN | `assets/js/calendar-generator.js:126` weekend === 'uae' only | also write it (or a Sharjah column) for 'shj' · S · low · calendar → **SQ7** |
+| GC-S4 | Sharjah calendar self-check flags every Sunday as GC_WEEKEND | DONE f888207 | `mcp/lib/gulf-calendar.mjs:119` analyze by country only; `mcp/tools/check_model_health.mjs:48` | weekend option (shj) on Gulf.analyze and check_model_health · M · low · calendar → **SQ7** |
+| GC-S5 | "Is After UAE Weekend Change" only for UAE, not Sharjah | DONE f888207 | `assets/js/calendar-generator.js:126` weekend === 'uae' only | also write it (or a Sharjah column) for 'shj' · S · low · calendar → **SQ7** |
 | GC-S6 | Arabic notes: «و» sits next to inline English names | OWNER | generator AR notes, visual reading only | owner reads AR page at 390/1280 px: isolate English names or accept |
 
 ### GC2
