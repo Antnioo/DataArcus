@@ -138,9 +138,14 @@
   const eventAr = (e) => e.replace(/^(Ramadan|Eid al-Fitr|Eid al-Adha)/, (m) => EVENT_AR[m]);
   const longDate = (t) => { const d = new Date(t); return d.getUTCDate() + ' ' + ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
 
-  // opts: { country: 'uae' (default) | 'ksa' | 'qat' | 'kwt' | 'bhr' | 'omn', asOf: 'YYYY-MM-DD' (default today), maxItems: 15 }
+  // opts: { country: 'uae' (default) | 'ksa' | 'qat' | 'kwt' | 'bhr' | 'omn', weekend: 'shj' (a rule of WEEKEND_RULES; the
+  // country's weekend otherwise), asOf: 'YYYY-MM-DD' (default today), maxItems: 15 }
   function analyze(model, opts) {
     const o = opts || {}, code = Object.prototype.hasOwnProperty.call(COUNTRIES, o.country) ? o.country : 'uae', C = COUNTRIES[code];
+    // (0.3.1 SQ7, GC-S4) the weekend compared: a rule that is not a country (Sharjah's government) when asked, else the
+    // country's; the dates are still the country's
+    const rule = Object.prototype.hasOwnProperty.call(WEEKEND_RULES, o.weekend) && GD.weekends[o.weekend] ? o.weekend : null;
+    const W = rule ? WEEKEND_RULES[rule] : C, wCode = rule || code, wSaid = rule ? W.name + ' weekend' : C.name + '\'s weekend';
     const asOf = o.asOf && Number.isFinite(T(o.asOf)) ? T(o.asOf) : T(new Date().toISOString().slice(0, 10));
     const max = Math.max(1, Math.min(200, o.maxItems || 15));
     const findings = [], cantTell = [];
@@ -161,6 +166,7 @@
       scored: false,
       note: 'Not part of the health score: these are checks of the calendar for a Gulf model, read from the model files only.',
       country: { code, name: C.name === 'the UAE' ? 'UAE' : C.name, nameAr: C.nameAr },
+      ...(rule ? { weekend: { code: rule, name: W.name, nameAr: W.nameAr } } : {}),
       asOf: iso(asOf),
       datesComparedWith: uaeDates
         ? { with: 'uae-announced', checked: GD.checked, note: (code === 'ksa' ? 'Ramadan and Eid dates are compared with ' + SAME + ' (scripts/gulf-calendar/DATES-SOURCES.md)' : 'Ramadan and Eid dates are compared with the dates announced in the UAE') + ', checked to ' + GD.checked + '; later dates are Umm al-Qura estimates.' }
@@ -207,19 +213,19 @@
 
     // --- the weekend against the country's rule ---
     if (cols.weekend) {
-      if (!gen) cantTell.push({ check: 'weekend', why: 'Which days ' + cal.name + '[' + cols.weekend + '] marks is in the data, not in the model files, so it is not compared with ' + C.name + '\'s weekend.' });
-      else if (!gen.weekend || !range) cantTell.push({ check: 'weekend', why: 'Is Weekend is not written in one of the Calendar Generator\'s forms (or the calendar\'s range could not be read), so it is not compared with ' + C.name + '\'s weekend.' });
+      if (!gen) cantTell.push({ check: 'weekend', why: 'Which days ' + cal.name + '[' + cols.weekend + '] marks is in the data, not in the model files, so it is not compared with ' + wSaid + '.' });
+      else if (!gen.weekend || !range) cantTell.push({ check: 'weekend', why: 'Is Weekend is not written in one of the Calendar Generator\'s forms (or the calendar\'s range could not be read), so it is not compared with ' + wSaid + '.' });
       else {
         const items = []; let n = 0;
         for (let t = range.start; t <= range.end; t += DAY) {
-          const inModel = !!gen.weekend(t), inCountry = countryWeekend(code, t).includes(weekday(t));
+          const inModel = !!gen.weekend(t), inCountry = countryWeekend(wCode, t).includes(weekday(t));
           if (inModel !== inCountry) { n++; if (items.length < max) items.push({ date: iso(t), day: WEEKDAYS[weekday(t) - 1], inTheModel: inModel ? 'weekend' : 'working day', in: inCountry ? 'weekend' : 'working day' }); }
         }
         if (n) {
           const x = items[0];
           add('GC_WEEKEND', 'high',
-            ['The weekend doesn\'t match ' + C.name, 'Working-day counts and averages are wrong on ' + n + ' days, for example ' + x.day + ' ' + longDate(T(x.date)) + ' marked as a ' + x.inTheModel + '.', 'Use the ' + (C.name === 'the UAE' ? 'UAE' : C.name) + ' weekend (fixes.calendarGenerator).'],
-            ['عطلة نهاية الأسبوع لا تطابق ' + C.nameAr, 'عدد أيام العمل ومتوسطاتها خاطئة في ' + n + ' يومًا، مثل ' + x.date + ' المسجل ' + (x.inTheModel === 'weekend' ? 'عطلة' : 'يوم عمل') + '.', 'استخدم عطلة ' + C.nameAr + ' (fixes.calendarGenerator).'], items, n);
+            ['The weekend doesn\'t match ' + W.name, 'Working-day counts and averages are wrong on ' + n + ' days, for example ' + x.day + ' ' + longDate(T(x.date)) + ' marked as a ' + x.inTheModel + '.', 'Use ' + (rule ? wSaid : 'the ' + (C.name === 'the UAE' ? 'UAE' : C.name) + ' weekend') + ' (fixes.calendarGenerator).'],
+            ['عطلة نهاية الأسبوع لا تطابق ' + W.nameAr, 'عدد أيام العمل ومتوسطاتها خاطئة في ' + n + ' يومًا، مثل ' + x.date + ' المسجل ' + (x.inTheModel === 'weekend' ? 'عطلة' : 'يوم عمل') + '.', 'استخدم عطلة ' + W.nameAr + ' (fixes.calendarGenerator).'], items, n);
         }
       }
     }
@@ -300,7 +306,7 @@
           settings: {
             firstDate: c && c.range ? iso(c.range.start) : 'the first date of your data (or of your calendar today)',
             lastDate: last || 'the last date of your calendar today' + (nextRamadan ? ', and not before ' + iso(nextRamadan.end) + ' (the end of Ramadan ' + nextRamadan.hijriYear + ')' : ''),
-            weekend: C.weekendOption,
+            weekend: W.weekendOption,
             hijriDates: 'on ("Hijri dates, Ramadan and Eid")',
             announcedDates: code === 'uae' ? 'on' : code === 'ksa' ? 'on: "Announced Ramadan and Eid dates (UAE)" gives ' + SAME
               : 'your choice: "Announced Ramadan and Eid dates (UAE)" moves Ramadan and Eid to the UAE\'s announced dates. ' + NONE + ': where a date differs from Umm al-Qura, ' + CHECK

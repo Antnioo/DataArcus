@@ -1043,7 +1043,7 @@ export default async function ({ browser, url }) {
       const L = (en, ar) => (lang === 'en' ? en : ar);
       check(a.w === 1200 && a.h === 630 && /\.png$/.test(a.name), `${tag}: the card is a 1200 x 630 PNG: ${a.w} x ${a.h} ${a.name}`);
       const score = await v.pg.$eval('.mh-scorecard .mh-ring b', (b) => b.textContent);
-      check(a.text.includes(score) && a.text.includes(L('3 tables', '3 جداول')) && a.text.includes(L('3 measures', '3 مقاييس')) && a.text.includes(L('1 visual', '1 مرئيات'))
+      check(a.text.includes(score) && a.text.includes(L('3 tables', '3 جداول')) && a.text.includes(L('3 measures', '3 مقاييس')) && a.text.includes(L('1 visual', 'مرئي واحد'))
         && a.lines[a.lines.length - 1] === 'dataarcus.com/tools/power-bi-model-health-check', `${tag}: score ${score}, the size line and the footer: ${JSON.stringify(a.lines)}`);
       const finds = a.lines.filter((l) => /^\d\. /.test(l));
       check(finds.length === Math.min(5, issues.length) && finds.every((l) => (lang === 'en' ? /[A-Za-z]/ : /[\u0600-\u06FF]/).test(l)), `${tag}: the top ${Math.min(5, issues.length)} findings by rule name in the page's language: ${JSON.stringify(finds)}`);

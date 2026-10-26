@@ -71,6 +71,10 @@
   // the Arabic name columns: written when the names are not Arabic already
   const ARABIC = { day: 'Day Name (Arabic)', month: 'Month Name (Arabic)', hijri: 'Hijri Month Name (Arabic)' };
   const arabicOn = (st) => !!st.arabicNames && st.lang !== 'ar';
+  // (0.3.1 SQ7, C1-S1) a table in Arabic still writes "Q1", "FY2025", "FQ1" and true/false: their Arabic labels beside them
+  // (the shared builder's quarters, fiscal and flags); its month, day and Hijri names are Arabic already, so no name twin
+  const labelsOn = (st) => !!st.arabicNames;
+  const NAME_KINDS = ['month', 'day', 'hijri'];
   // the announced dates apply only to the Hijri columns
   const observedOn = (st) => !!(st.observed && st.hijri && hijriFmt && GD);
   const dateDax = (s) => `DATE ( ${s.split('-').map(Number).join(', ')} )`;
@@ -124,6 +128,10 @@
     col('Is Weekend', weekendDax(st), 'boolean');
     col('Is Working Day', `NOT ( ${weekendDax(st)} )`, 'boolean');
     if (st.weekend === 'uae' && GD) col('Is After UAE Weekend Change', `[Date] >= ${dateDax(GD.uaeWeekendChange)}`);
+    // (0.3.1 SQ7, GC-S5) Sharjah's government changed its weekend too: the date of its rule's last change (gulf-dates.js,
+    // sourced in DATES-SOURCES.md: the Sharjah Executive Council's decision)
+    const shjChange = st.weekend === 'shj' && own(COUNTRY, 'shj') ? COUNTRY.shj.filter((r) => r.from).map((r) => r.from).pop() : null;
+    if (shjChange) col('Is After Sharjah Weekend Change', `[Date] >= ${dateDax(shjChange)}`);
     if (st.fiscal && fy !== 1) {
       col('Fiscal Year', `"FY" & ( YEAR ( [Date] ) + IF ( MONTH ( [Date] ) >= ${fy}, 1, 0 ) )`);
       col('Fiscal Month Number', `MOD ( MONTH ( [Date] ) - ${fy}, 12 ) + 1`);
@@ -181,11 +189,12 @@ ${starts.map((h) => `            { "${iso(h.t)}", ${h.y}, ${h.m} }`).join(',\n')
     // (0.3.0 C1) the other Arabic twins, from the shared builder (arabic-calendar.js), made from the date itself (a column
     // of ADDCOLUMNS can't read one added in the same call): quarters, fiscal year and quarter, the short names, the flags
     const sorts = [];
-    if (arabicOn(st) && AC) {
+    if (labelsOn(st) && AC) {
       const flagDax = { 'Is Weekend': weekendDax(st), 'Is Working Day': `NOT ( ${weekendDax(st)} )` };
       if (hijriCols) Object.assign(flagDax, { 'Is Ramadan': '[Hijri Month Number] = 9', 'Is Eid al-Fitr': '[Hijri Month Number] = 10 && [Hijri Day] <= 3', 'Is Eid al-Adha': '[Hijri Month Number] = 12 && [Hijri Day] >= 10 && [Hijri Day] <= 13' });
       const fyNo = st.fiscal && fy !== 1 ? `( YEAR ( [Date] ) + IF ( MONTH ( [Date] ) >= ${fy}, 1, 0 ) )` : st.fiscal ? 'YEAR ( [Date] )' : null;
-      const r = AC.columnsFor({ columns: names.map((n) => ({ name: n, type: types[n] || 'string' })),
+      const named = arabicOn(st) ? names : names.filter((n) => !NAME_KINDS.includes(AC.kindOf(n)));
+      const r = AC.columnsFor({ columns: named.map((n) => ({ name: n, type: types[n] || 'string' })),
         src: { month: 'MONTH ( [Date] )', weekday: 'WEEKDAY ( [Date], 1 )', quarter: 'ROUNDUP ( MONTH ( [Date] ) / 3, 0 )', year: 'YEAR ( [Date] )', hijriMonth: hijriCols ? '[Hijri Month Number]' : null,
           fiscalMonth: st.fiscal ? `MOD ( MONTH ( [Date] ) - ${fy}, 12 ) + 1` : null, fiscalYearNo: fyNo, flag: (n) => flagDax[n] || null },
         sorts: { month: 'Month Number', day: 'Day of Week', hijri: 'Hijri Month Number' } });

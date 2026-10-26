@@ -55,3 +55,41 @@
      check: «مرئي واحد».
    - S8: the description and TOOLS.md say "DAX is not parsed: a measure whose DAX is broken is not found".
 3. Fixes at the cause, then `npm run build:min`, `?v=` stamps, csp, ar-pages, the suites, sitemap-lastmod.
+
+## Before -> after
+1. **C1-S1** an Arabic generator table (lang "ar") had only "Q1", "2025 Q1", "FY2025", "FQ1" and true/false -> with
+   `arabicNames` on (the default) it also has Quarter, Year Quarter, Fiscal Year, Fiscal Quarter, Is Weekend, Is
+   Working Day, Is Ramadan and the two Eid flags "(Arabic)", from the shared builder (arabic-calendar.js); no name
+   twin (its names are Arabic); the English columns unchanged. Test: sq7 C1-S1a-g.
+2. **GC-S5** a Sharjah table had no change column -> "Is After Sharjah Weekend Change" from its rule's last change in
+   gulf-dates.js (2022-01-01, sourced in DATES-SOURCES.md). Test: sq7 GC-S5a-e.
+3. **GC-S4** a Sharjah table's selfCheck listed 104 GC_WEEKEND days (2021-2023) -> none: `Gulf.analyze` takes
+   `weekend: "shj"` (titles, fix and the generator option name Sharjah's government); check_model_health takes
+   `weekend: "shj"` (pinned in its plan only when given) and `fixes.addGulfCalendar` passes it on. The days were
+   Fridays, not Sundays as the queue said (Sharjah: Fri to Sun; the UAE: Sat and Sun). Test: sq7 GC-S4a-i.
+4. **0.2.9-reader-S14** two own unwraps of `m.tmsl` -> `modelOf` from model.mjs. Test: sq7 R-S14.
+5. **audit-6-mcp-tools-S3** an undocumented `writeScript` that names only on the plan path -> documented in the JSDoc
+   on both paths (name kept: the write gate's inventory finds writes by it). Test: sq7 A6-S3a-b.
+6. **E-S2** «1 مرئيات», «11 جداول» -> «مرئي واحد», «مرئيان», «3 جداول», «11 جدولًا», «100 جدول» (E2's singular
+   «مرئي»). Test: sq7 E-S2a-b; model-health's card check «1 مرئيات» -> «مرئي واحد» (this item's own expectation).
+7. **WORK-2026-10-05-09-S8** nothing said -> "DAX is not parsed: a measure whose DAX is broken is not found (Power BI
+   Desktop shows that error)" in the description and TOOLS.md. Test: sq7 W-S8a-b.
+
+## CHANGELOG line
+- An Arabic calendar from the Calendar Generator or add_gulf_calendar gets Arabic labels for its quarters, fiscal year and flags; a Sharjah calendar is checked against Sharjah's weekend and has its own change column; the Health Check card counts in correct Arabic.
+
+## Decisions I made
+1. C1-S1: Arabic labels are added beside the English columns, never in place of them: measures and the Gulf check read
+   Quarter "Q1" and Is Weekend true/false. They follow `arabicNames` (the page's box stays as it was, disabled for an
+   Arabic table: its note speaks of the name columns, still true; a save with the box off keeps its columns).
+2. GC-S5: a column of its own ("Is After Sharjah Weekend Change"), not the UAE's name: it is another decision, on the
+   same date. Its date is read from the rule, not written twice.
+3. GC-S4: only rules that are not a country (`shj`) are taken as `weekend`; a fixed weekend (sat-sun...) is still
+   compared with the country's, a real difference to show. The dates stay the country's.
+4. audit-6-S3: documented, not renamed (renaming would hide a write from test-0.3.1-write-gate.mjs).
+5. E-S2: 0 reads «0 جداول» (the plural); no digit for 1 and 2 («جدول واحد», «جدولان»).
+
+## Seen, not in scope
+- Since GC, the queue and GC.md say the Sharjah selfCheck flagged Sundays; it flagged Fridays (corrected here only).
+- The Calendar Generator page's "Add Arabic name columns" note does not mention the label twins (quarters, fiscal,
+  flags) it has written for English tables since 0.3.0 C1; page text, route (d).

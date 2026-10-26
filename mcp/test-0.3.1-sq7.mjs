@@ -6,7 +6,7 @@
 //   GC-S4   the Gulf check takes Sharjah's weekend: add_gulf_calendar's selfCheck of a shj table has no GC_WEEKEND, and
 //           check_model_health takes weekend "shj" and passes it on to add_gulf_calendar's inputs
 //   R-S14   gulf-calendar.mjs reads the model through model.mjs's one unwrap helper (modelOf)
-//   A6-S3   add_gulf_calendar's env key says what it is on both paths (a planned name, or the approved write)
+//   A6-S3   add_gulf_calendar's env key writeScript is documented on both paths (a planned name, or the approved write)
 //   E-S2    the Health Check card's Arabic counts agree with the number (1, 2, 3-10, 11-99, 100)
 //   W-S8    check_model_health says the DAX is not parsed (description and TOOLS.md)
 // Fixtures: mcp/fixtures/twin-project (made up), copied into a temp folder.
@@ -70,12 +70,12 @@ const ids = (r) => ((r && r.findings) || []).map((f) => f.id);
   chk(() => !ids(r).includes('GC_WEEKEND') && r.weekend && r.weekend.code === 'shj', () => `GC-S4b. checked with weekend "shj": no GC_WEEKEND, the section says the rule: ${ids(r).join(', ')} ${JSON.stringify(r.weekend)}`);
   const uae = tableOf(Cal.build(st({ weekend: 'uae', start: '2022-01-01', end: '2022-03-31' })));
   const u = Gulf.analyze(uae, { country: 'uae', weekend: 'shj', asOf: '2022-01-15' }), f = (u.findings || []).find((x) => x.id === 'GC_WEEKEND');
-  chk(() => f && /Sharjah/.test(f.title) && /الشارقة/.test(f.ar.title) && f.count === 13, () => `GC-S4c. a federal table checked with "shj": GC_WEEKEND names Sharjah's government, 13 Sundays: ${JSON.stringify(f && { t: f.title, a: f.ar.title, n: f.count })}`);
+  chk(() => f && /Sharjah/.test(f.title) && /الشارقة/.test(f.ar.title) && f.count === 12 && f.items.every((i) => i.day === 'Friday'), () => `GC-S4c. a federal table checked with "shj": GC_WEEKEND names Sharjah's government, its 12 Fridays (Sharjah: Fri to Sun; the UAE: Sat and Sun): ${JSON.stringify(f && { t: f.title, a: f.ar.title, n: f.count })}`);
   chk(() => u.fixes && u.fixes.calendarGenerator && u.fixes.calendarGenerator.settings.weekend === Gulf.WEEKEND_RULES.shj.weekendOption, () => `GC-S4d. its fix names the generator's Sharjah option: ${JSON.stringify(u.fixes && u.fixes.calendarGenerator && u.fixes.calendarGenerator.settings.weekend)}`);
   const k = Gulf.analyze(uae, { country: 'ksa', weekend: 'nope', asOf: '2022-01-15' });
   chk(() => k.country.code === 'ksa' && !k.weekend, () => 'GC-S4e. an unknown weekend is the country\'s (pin)');
   // add_gulf_calendar's selfCheck (in process, the script never written)
-  const env = { Gulf, Fix, writeScript: (d, b) => path.join(d, b + '.tmdl'), scriptFile: (d, b) => path.join(d, b + '.tmdl'), scriptDir: os.tmpdir(), scriptBase: 'X' };
+  const env = { Gulf, Fix, writeScript: (d, b) => path.join(d, b + '.tmdl'), scriptDir: os.tmpdir(), scriptBase: 'X' };
   const a = G.addGulfCalendar({ tmsl: { model: { tables: [] } } }, { firstYear: 2021, lastYear: 2023, country: 'uae', weekend: 'shj', asOf: '2022-06-01' }, env);
   chk(() => !a.selfCheck.findings.some((x) => x.id === 'GC_WEEKEND'), () => `GC-S4f. add_gulf_calendar's selfCheck of a Sharjah table: no GC_WEEKEND: ${JSON.stringify(a.selfCheck.findings)}`);
   chk(() => G.gulfFixInputs(r).inputs.weekend === 'shj' && G.gulfFixInputs(Gulf.analyze(shj, { country: 'uae', asOf: '2022-01-15' })).inputs.weekend === 'country',
@@ -86,8 +86,10 @@ const ids = (r) => ((r && r.findings) || []).map((f) => f.id);
 {
   const s = src('lib/gulf-calendar.mjs');
   chk(() => /import \{[^}]*\bmodelOf\b[^}]*\} from '\.\/model\.mjs'/.test(s) && !/m\.tmsl\.model \|\|/.test(s) && !/tmsl && \(m\.tmsl\.model/.test(s), () => 'R-S14. gulf-calendar.mjs reads the model through model.mjs\'s modelOf, never unwraps m.tmsl itself');
-  chk(() => !/\bwriteScript\b/.test(s) && /scriptFile\(dir, base, script\)/.test(s) && /names the file only/.test(s), () => 'A6-S3a. the env key is scriptFile, documented on both paths (the plan names the file only; the approved plan writes it)');
-  chk(() => !/writeScript:/.test(src('tools/add_gulf_calendar.mjs')), () => 'A6-S3b. add_gulf_calendar passes scriptFile on both paths');
+  chk(() => /writeScript\(dir, base, script\) returns the script's file path/.test(s) && /names the file only, writing nothing/.test(s) && /writes the script to the file that plan named/.test(s),
+    () => 'A6-S3a. the env key writeScript is documented on both paths (the plan names the file only; the approved plan writes it)');
+  const t = src('tools/add_gulf_calendar.mjs');
+  chk(() => /writeScript: plannedWriter\(a, m\)/.test(t) && /writeScript: scriptNameNow/.test(t), () => 'A6-S3b. add_gulf_calendar passes the two the JSDoc names (pin)');
 }
 
 // ---------- E-S2: the card's Arabic counts ----------
@@ -114,7 +116,7 @@ fs.cpSync(path.join(HERE, 'fixtures/twin-project'), path.join(ROOT, 'p'), { recu
 try {
   const w = await serverClient(ROOT, {});
   const h = await w.call('check_model_health', { path: 'p', country: 'uae', weekend: 'shj', asOf: '2026-01-01' });
-  const gc = h.j && h.j.gulfCalendar, add = h.j && h.j.fixes && h.j.fixes.addGulfCalendar;
+  const gc = h.j && h.j.gulfCalendar, add = gc && gc.fixes && gc.fixes.addGulfCalendar;
   chk(() => !h.err && gc && gc.weekend && gc.weekend.code === 'shj' && add && add.inputs.weekend === 'shj', () => `GC-S4h. check_model_health with weekend "shj": the section and fixes.addGulfCalendar say it: ${String(h.err ? h.t : JSON.stringify({ w: gc && gc.weekend, add })).slice(0, 300)}`);
   const s = await w.call('check_model_health', { path: 'p', weekend: 'shj', asOf: '2026-01-01' });
   chk(() => !s.err && s.j.gulfCalendar && s.j.gulfCalendar.country.code === 'uae', () => `GC-S4i. weekend "shj" alone shows the section for the UAE: ${String(s.err ? s.t : JSON.stringify(s.j.gulfCalendar && s.j.gulfCalendar.country)).slice(0, 200)}`);
