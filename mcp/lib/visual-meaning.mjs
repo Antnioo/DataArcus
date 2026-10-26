@@ -459,14 +459,14 @@ const objName = (s) => (typeof s === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.
 // name the form; the fields still decide what can be written.
 export const FORMS = { tornado: ['tornado', 'butterfly'], bullet: ['bullet'], cloud: ['cloud', 'wordcloud', 'tagcloud'], calendar: ['heatmap', 'calendar'] };
 const formOf = (type) => { const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, '')); const e = Object.entries(FORMS).find(([, l]) => w.some((x) => l.includes(x))); return e ? e[0] : null; };
-function formLost(form, kind, calendarNote) {
+function formLost(form, kind, calendarNote, rows) {
   if (form === 'tornado') return ['its two-sided layout (its two values drawn left and right of one centre line, per category): the native chart draws both bars side by side from the same axis'];
   if (form === 'bullet') return kind === 'combo'
     ? ['its horizontal bars: the native combo draws upright columns, the target as a long dash across each column', 'its bands behind each bar (the ranges from poor to good): no native chart draws them']
     : ['its target marker (a line across each bar): the target becomes a second bar beside the value', 'its bands behind each bar (the ranges from poor to good): no native chart draws them'];
   if (form === 'cloud') return ['its cloud (each word sized by its value, laid out as a cloud): the native bar chart ranks the same words by the same value, longest bar first (Power BI sorts a bar chart by its value), the same facts read as lengths'];
   if (form === 'calendar') return kind === 'matrix'
-    ? ['its calendar grid of one square per day: the matrix shades one cell per weekday in each month (the sum of those days), not each day']
+    ? ['its calendar grid of one square per day: the matrix shades one cell per weekday in each month (the sum of those days), not each day'].concat(rows > 1 ? ['with the year and the month as its rows, the matrix may open at years: "Expand all down one level" (the forked arrow above it) shows the months'] : [])
     : ['its calendar grid of one square per day, shaded by its value: the days become one line over time, with no shading'].concat(calendarNote ? [calendarNote] : []);
   return [];
 }
@@ -572,7 +572,7 @@ export function nativeFor(visual, opts) {
       const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
       if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
     }
-    lost.push(...formLost(form, best ? best.kind : null, best && best.kind !== 'matrix' ? calendarNote : null));
+    lost.push(...formLost(form, best ? best.kind : null, best && best.kind !== 'matrix' ? calendarNote : null, best && best.roles && best.roles.Rows ? best.roles.Rows.length : 0));
     return { lost, format, expand, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') };
   };
   const D = detailsOf(best), lost = D.lost;

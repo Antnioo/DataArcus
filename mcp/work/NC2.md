@@ -40,3 +40,27 @@
    today's line; no weekday or month column: the line, said why. The word cloud: a bar ranked by value, said.
    `customVisualsSecond` (["page:x,y"]) picks the second option, only the user's choice.
 4. **The approval page** shows each replacement's confidence and evidence, its losses and its second option.
+
+## Before -> after (the lab's plan, sharedAxes answered "comparable")
+1. **Confidence** (Seen 5): before 7 high, 3 medium, 1 low, every one "a guess"; after 0 high, 7 medium (the id's
+   words name the kind written: KPI tile, dial gauge, drill bar, chip slicer, data grid, multi card, smooth line), 4 low
+   (inferred: bullet, word cloud, tornado, calendar heatmap). Lead line: "11 replacements: 0 high, 7 medium, 4 low; 11 of
+   11 are guesses (the report holds no package for them: ...)". `confidence.levels` says each level once; each
+   replacement has `evidence`. Test: NC2-1a to e.
+2. **Losses** (Seen 4, 9): before "its own format settings (1: labels): the report's theme formats the native
+   visual" for every form; after the tornado "its two-sided layout (its two values drawn left and right of one centre
+   line, per category): the native chart draws both bars side by side from the same axis"; the bullet its horizontal
+   bars and its bands (the second option: its target marker); the word cloud "its cloud (each word sized by its value
+   ...): the native bar chart ranks the same words by the same value, longest bar first"; the calendar heatmap "its
+   calendar grid of one square per day: ...". The format line: "its own format settings (1: labels): kept: labels (as
+   the native value labels); not carried over: none; the report's theme formats the rest". Test: NC2-2a to e.
+3. **Closer natives** (Seen 1, 3): the bullet clusteredBarChart -> lineClusteredColumnComboChart (Total Sales as
+   columns, Sales Target as long-dash markers, no line, one axis), second option clusteredBarChart; the calendar
+   heatmap lineChart -> pivotTable (Rows Calendar Year, Month; Columns Weekday; Total Sales shaded), second option
+   lineChart; the word cloud stays a bar, its loss says the bars rank by value. `customVisualsSecond ["2:24,172",
+   "4:24,160"]` writes the second options; an unknown key refuses the plan. Validator 0 errors on the native copy.
+   Unanswered axes: the bullet still splits into 2 panels (now clustered bar charts, its own bars). Test: NC2-3a to f,
+   CL-3b, CL-6c.
+4. **The approval page** (customVisualsShown, `shownOf`): "In short" with the lead line and the three levels, then per
+   replacement "confidence: low (no package in the report: ...)", every "loses ...", and "second option: ..." with its
+   key and its losses. Test: NC2-4.

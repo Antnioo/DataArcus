@@ -142,6 +142,12 @@ try {
     () => `NC2-3c. customVisualsSecond: the second option written, the first offered back: ${short(S2.pl)}`);
   { const bad = await planOf({ sharedAxes: COMPARABLE, customVisualsSecond: ['9:1,1'] });
     chk(() => bad.pl.err || /customVisualsSecond/.test(JSON.stringify(bad.pl.j && bad.pl.j.planProblems || bad.pl.j)), () => `NC2-3d. a key that names no second option is refused: ${short(bad.pl)}`); }
+  // (NC2-3g) a date table with no weekday or month column: the line stays first, and the plan says why no matrix
+  { const { nativeFor } = await import('./lib/visual-meaning.mjs');
+    const v = { type: 'calendarHeatmap1600000000099', fields: { Date: [{ kind: 'column', table: 'D', name: 'Day', queryRef: 'D.Day' }], Values: [{ kind: 'measure', table: 'F', name: 'Amount', queryRef: 'F.Amount' }] } };
+    const r = nativeFor(v, { typeOf: (f) => (f.name === 'Day' ? 'dateTime' : undefined), calendarOf: () => null, declared: new Set([v.type]) });
+    chk(() => r.native === 'lineChart' && !r.second && r.lost.some((x) => /weekday and a month column/.test(x)) && r.confidence === 'low',
+      () => `NC2-3g. no weekday or month column: the line, and why no matrix: ${JSON.stringify([r.native, r.lost, r.confidence])}`); }
   // ---- NC2-4 the approval page's rows ----
   { const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
     const sm = summary('report', { customVisualsShown: shownOf(B.cv) }), sec = (sm.sections || []).find((x) => /Custom visuals replaced/.test(x.heading)), flat = JSON.stringify(sec || null);
