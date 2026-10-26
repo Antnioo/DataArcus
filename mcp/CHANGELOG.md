@@ -123,6 +123,10 @@ package's manifest; this file says what is in it.
   a button slicer counts only the values an IF or SWITCH column can return.
 - **The tool texts say what the tools do:** check_report takes Hebrew (`lang: "he"`), every tool that takes tables
   takes up to 100, and the two script tools that write nothing new on a repeat say so.
+- **Reading models and reports, more complete:** two Power BI projects side by side in one folder are no longer read
+  as whichever comes first: DataArcus names both and asks which; a measure's own KPI target is used as its target for
+  status icons and bullet bars (named, never quoted); read_report says the drill level a chart shows, the image files a
+  report uses, a custom visual's name, and folds a group's shapes and images into one line.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
