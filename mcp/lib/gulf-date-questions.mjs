@@ -230,7 +230,10 @@ export function gulfDateQuestions(m, a, opts) {
     ...(seasonal ? [['Grain', answers.grain ? { gregorian: 'Gregorian months', hijri: 'Hijri months', seasonDay: 'day of the season' }[answers.grain] + (grain && grain.axis ? ` (${grain.axis}${grain.sortedBy ? `, sorted by ${grain.sortedBy}` : ''})` : '') : 'not answered'],
       ['Seasonal scope', SCOPE_SAID + (scopeNote && answers.scope === 'all' ? `; ${scopeNote.replace(/^[^:]*: /, '')}` : '')]] : []),
     ...(status ? [[`${season} dates`, status.en]] : [])];
-  return { answer, problems, rows };
+  // (0.3.1 SQ10, J17-S2) the calendar's Hijri-year column when it is known (declared by the Calendar Generator's table or
+  // confirmed by the person; a guess by name is not), for create_report's Ramadan note: { t, c } or null
+  const hy = columns.hijriYear && columns.hijriYear.by !== 'name' ? keyOf(columns.hijriYear.field) : null;
+  return { answer, problems, rows, hijriYear: hy ? { t: hy.t, c: hy.c } : null };
 }
 
 // the add_gulf_calendar offer: the person's own country and years (never a default), the country's weekend option
