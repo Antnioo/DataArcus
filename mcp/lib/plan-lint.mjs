@@ -153,7 +153,8 @@ export function checkSummary(c, cap) {
   const worthByRule = {}; c.worthALook.forEach((f) => { worthByRule[f.rule] = (worthByRule[f.rule] || 0) + 1; });
   // (0.3.0 T1, T-3: "0 problems Power BI Desktop would show, 3 more worth a look" with no list) each item in one plain
   // line: where, what, and what to do, or "No action needed" for a note that asks for nothing
-  const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.visual ? `${f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
+  // (0.3.1 SQ5, T1-S7) the visual by its place in plain words ("the bar chart, top left of the page"), never its box
+  const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.place || f.visual ? `${f.place || f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
   return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
     c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.slice(0, 12).map(plain) } : {}, c.worthALook.length > 12 ? { worthALookMore: c.worthALook.length - 12 } : {});
 }

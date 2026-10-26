@@ -103,6 +103,9 @@ package's manifest; this file says what is in it.
   a size that fits on one line; a button with no room for its icon and its Arabic text drops the icon instead of being
   cut; the slicers kept in sync are numbered by their place on the page; an alt text that repeats its title is listed
   once, under the title.
+- **check_report, more exact:** it counts a tooltip bar chart's rows by the row height measured in Power BI Desktop,
+  no longer flags the Tab order DataArcus itself writes beside a tall visual, and the check before a write names each item
+  worth a look by its place on the page.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

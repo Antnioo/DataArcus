@@ -192,13 +192,13 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-writer-S9 | column top N uses 12-letter label guess | OWNER | `scripts/tests/DESKTOP-TESTS.md:2493` S5 still to measure | laptop: run DESKTOP-TESTS S5 (columns per width), set categoryFit from it |
 | 0.2.9-writer-S10 | row beside short rail keeps width; ~200 gap | OPEN | `assets/js/design-engine.js:811-812` only slots wholly below take column | verify first; widen rows beside a shortened rail · M · low · design → **SQ13** |
 | 0.2.9-writer-S11 | S3, S6, D9-D12 not the writer's | OBSOLETE | informational, no action (routing) | — |
-| 0.2.9-writer-S12 | TIP_ROWS still 22 a row + 46; measured 22.2 + 53 | OPEN | `assets/js/report-rules.js:69,306` 22/46 | set TIP_ROWS to 22.2 + 53 with its source; update texts · S · low · checker → **SQ5** |
+| 0.2.9-writer-S12 | TIP_ROWS still 22 a row + 46; measured 22.2 + 53 | DONE (SQ5 11a85ab) | `assets/js/report-rules.js:69,306` 22/46 | set TIP_ROWS to 22.2 + 53 with its source; update texts · S · low · checker → **SQ5** |
 | 0.2.9-writer-S13 | table panel one row shorter on solid theme | OWNER | note's S3 change; edge alignment is visual | laptop: look whether the table's bottom edge misaligns on a solid theme |
 | 0.2.9-writer-S14 | quarter column labels automatic units ("8.0Kkg") | DONE f026240 | `assets/js/pbip-page.js:825` labelDisplayUnits 0 always | use num(1) when yf.wholeFormat and not pct, as tooltips at :1511 · S · low · writer → **SQ1** |
 | 0.2.9-writer-S15 | T3, T4, T5, T7, A2 picker or design | OBSOLETE | informational, no action (routing) | — |
 | 0.2.9-writer-S16 | multi-line header 26.9, title-off/subtitle/960x720 unmeasured, 8pt header | OWNER | prose at `mcp/work/0.2.9-writer.md:225` | laptop: measure title-off, subtitle, 960 x 720; find page 1 header's 8pt source |
 | 0.2.9-writer-S17 | table shadow/grey border inside panel | OWNER | prose at `mcp/work/0.2.9-writer.md:238` | laptop: look at solid and light themes' table edges |
-| 0.2.9-writer-S18 | check_report passes duplicate measure names across tables | OPEN | no such rule in `report-rules.js` / `check-report.mjs` (grep) | add a rule: report measure names unique across model, no case · M · low · checker → **SQ5** |
+| 0.2.9-writer-S18 | check_report passes duplicate measure names across tables | OWNER (SQ5: no Desktop measurement yet; laptop first, `mcp/work/SQ5.md`) | no such rule in `report-rules.js` / `check-report.mjs` (grep) | add a rule: report measure names unique across model, no case · M · low · checker → **SQ5** |
 | 0.2.9-writer-S19 | extRenamed note says the table has the name | OPEN | `mcp/lib/report-run.mjs:534` "T already has X" for any cause | say "the model or another report measure has" when other table · S · low · writer → **SQ10** |
 | 0.2.9-writer-S20 | SVG measure names named by server, not gate | OBSOLETE | informational, no action | — |
 | 0.2.9-writer-S21 | picker: two charts by same-name columns of two tables | DONE | `assets/js/pbip-bind.js:688-692` otherName excludes same name | D7, before fab795c |
@@ -807,7 +807,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
 | R1-S1 | check_report reads whole EN-AR copy as one language | DONE | 24c8387 (S1 item 1) `mcp/lib/check-report.mjs:319-323` pageLanguages per page |  |
-| R1-S2 | writer readingOrder and check_report inversions disagree | OPEN | measured: A, tall T right, B below: readingOrder A,T,B gives 1 inversion | align rules (row join for tall box) + test of this layout · M · low · checker → **SQ5** |
+| R1-S2 | writer readingOrder and check_report inversions disagree | DONE (SQ5 11a85ab) | measured: A, tall T right, B below: readingOrder A,T,B gives 1 inversion | align rules (row join for tall box) + test of this layout · M · low · checker → **SQ5** |
 | R1-S3 | Arabic Detail title 45 chars at 24pt cannot fit | OBSOLETE | informational: plan already asks for a shorter Arabic text (as designed) |  |
 | R1-S4 | matrix/table at 14pt show fewer rows | OBSOLETE | informational, no action: now a note; English pages keep user's sizes |  |
 | R1-S5 | fixture visuals have no alt text | OBSOLETE | informational, no action: user's own report, not the twin's to add |  |
@@ -859,7 +859,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | T1-S4 | golden baseline differs under parallel workers | DONE | RB 932f61b: copy holds gulf-calendar; `mcp/test-0.3.1-mutation.mjs:140` |  |
 | T1-S5 | known-gap path dead with today's catalog | DONE | RB fe96c24: `mcp/test-0.3.1-validator-gap.mjs`, `mcp/tests.json:104` |  |
 | T1-S6 | Arabic page: writes lines and row texts stay English | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:210` writes printed as given; `create_arabic_twin.mjs:61` English | Arabic writes line per tool (writesAr) shown when ar · M · low · approval → **SQ3** |
-| T1-S7 | worth-a-look names visual by type and box | OPEN | `assets/js/layout-check.js:304` rule findings `${type} at x,y wxh` | plain place words (top left, second row) not titles (R5) · M · low · checker → **SQ5** |
+| T1-S7 | worth-a-look names visual by type and box | DONE (SQ5 11a85ab) | `assets/js/layout-check.js:304` rule findings `${type} at x,y wxh` | plain place words (top left, second row) not titles (R5) · M · low · checker → **SQ5** |
 | T1-S8 | twin plan says "0 Arabic texts as approved" before approval | DONE (SQ3 a6130f7) | `mcp/tools/create_arabic_twin.mjs:62` prints labels.given even when 0 | when 0 say "no Arabic texts approved yet" · S · low · approval → **SQ3** |
 | T1-S9 | Arabic heading keeps English count words | DONE (SQ3 a6130f7) | `mcp/lib/approval-window.mjs:492` "Shown in English (n, no Arabic text)" | count words via the ar table (as line 183) · S · low · approval → **SQ3** |
 | T1-S10 | judge's unplanned slicer not reproduced | OWNER | needs a tester's model; not reproducible on fixtures | if a tester sees it, get that model's layout to find the visual |

@@ -2088,15 +2088,16 @@ if (part('check-report-2')) {
     const r = await one(dir, 'SORT_IN_VISUAL', rel(dir, x.f));
     chk(() => r.ok, () => `SORT_IN_VISUAL: a sort by a field not in the chart must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))}`);
   }
-  // 7. TOOLTIP_SCROLL (round 0, 2.158: a bar chart without its value axis needs about 22 a row plus 46): how many rows a
-  //    tooltip page's bar chart shows depends on the data, which check_report never reads, so the finding is a note
-  //    with the rows that fit: floor((height - 46) / 22)
+  // 7. TOOLTIP_SCROLL: how many rows a tooltip page's bar chart shows depends on the data, which check_report never
+  //    reads, so the finding is a note with the rows that fit: floor((height - 45 - 8) / 22.2) without its value axis
+  //    (changed in 0.3.1 SQ5, 0.2.9-writer-S12: was round 0's floor((height - 46) / 22), 3 rows at 112; the measurement in
+  //    force is the night of 6-7 Oct, Desktop 2.158: 22.2 a row, 45 above, 8 under, so 112 holds 2)
   {
     const dir = copyOf('CR Gold EN', 'CR2 Tooltip'), tip = path.dirname(pageOf(dir, true).f);
     const x = tree(tip).filter((f) => f.endsWith('visual.json')).map((f) => ({ f, j: J(f) })).find((v) => v.j.visual && v.j.visual.visualType === 'clusteredBarChart');
     x.j.position.height = 112; W(x.f, x.j);
     const a = await ask('check_report', { path: path.relative(ROOT, dir) }), mine = a.err ? [] : a.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === rel(dir, x.f));
-    chk(() => mine.length === 1 && mine[0].severity === 'note' && /\b3 rows\b/.test(mine[0].what) && /scrollbar/.test(mine[0].what), () => `TOOLTIP_SCROLL: a 112-high tooltip bar chart must give a note that 3 rows fit: ${JSON.stringify(mine).slice(0, 400)} ${a.err ? short(a) : ''}`);
+    chk(() => mine.length === 1 && mine[0].severity === 'note' && /\b2 rows\b/.test(mine[0].what) && /scrollbar/.test(mine[0].what), () => `TOOLTIP_SCROLL: a 112-high tooltip bar chart must give a note that 2 rows fit: ${JSON.stringify(mine).slice(0, 400)} ${a.err ? short(a) : ''}`);
   }
 }
 
