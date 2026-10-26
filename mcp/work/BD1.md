@@ -20,7 +20,7 @@
 - **Invariants:** metadata only (the lab is a made-up model; the lens reads texts a person typed, as before); nothing
   written without approval (the lab writes only into the empty folder it is given, as the other labs).
 - **Got:** bd1 18 checks (14 red first on 0f7f6e8), bidi-lab 11 (B0 red without the lab; 135 tested texts, 38 pages,
-  validator 0 errors, 0 warnings); arabic 10 -> 12 suites; report 28, release 5, core 6, checker 5: every line the same
+  validator 0 errors, 0 warnings); full run 93 suites passed; arabic 10 -> 12 suites; report 28, release 5, core 6, checker 5: every line the same
   count; website run-all 21 = 21; dax-functions 92 = 92 (no pin changed); full run: below.
 - **Resume:** done; waits for the reviewer. Desktop: "For the laptop" 1-3 (the batched run).
 
@@ -56,7 +56,7 @@
 - `scripts/tests/run-all.mjs` (the website, for the article): All 21 passed -> All 21 passed, every count the same.
 - check-agent-memory PASS (153), check-result-lines PASS (93), changelog-words PASS (132), test-site-config PASS,
   ar-pages PASS, test-arabic-terms 87 PASS, check-min PASS (every changed .min.js has a new stamp).
-- Full run `npm test -- --keep-going`: FULL_RESULT.
+- Full run `npm test -- --keep-going` on d56f03d2: "run-tests: 93 suites passed" (91 on the base, plus bd1 and bidi-lab), exit 0.
 
 ## Results
 Commits: plan 8e17490, red first 71208eb, the work 6cc745c, the article 0023591 and its sitemap dates 9c7978c, this note.
