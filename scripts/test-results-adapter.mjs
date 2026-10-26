@@ -157,6 +157,22 @@ try {
     assert.equal(r.status, 1); assert.match(r.stdout, /check="dax: no result line" cause=missing-suite/); assert.match(r.stdout, /cause=unknown-suite/);
   });
 
+  // (SQ11, A2-S1) a website suite that ran nothing passes nothing: ci-sum and run-all both say zero-checks
+  t('ci-sum website: a PASS with 0 checks (or no count) is zero-checks', () => {
+    const all = path.join(D, 'run-all-z.mjs'); fs.writeFileSync(all, "const ALL = ['site', 'dax', 'pbip'];\n");
+    const d = fs.mkdtempSync(path.join(D, 'webz-'));
+    fs.writeFileSync(path.join(d, 'suites-1.log'), 'PASS  site               0 checks  3s\nPASS  dax                5 checks  3s\nPASS  pbip  3s\n\nAll 3 passed (3s)\n');
+    const r = node([path.join(REPO, 'scripts/ci-sum.mjs'), 'website', d, '--all', all, '--os', 'linux']);
+    assert.equal(r.status, 1, r.stdout);
+    assert.match(r.stdout, /FAIL script=scripts\/tests\/run-all\.mjs:site check="PASS site 0 checks 3s" cause=zero-checks os=linux shard=1\/1/);
+    assert.match(r.stdout, /script=scripts\/tests\/run-all\.mjs:pbip check="PASS pbip 3s" cause=zero-checks/);
+    assert.doesNotMatch(r.stdout, /run-all\.mjs:dax/);
+  });
+  t('run-all: a suite that ran 0 checks fails as zero-checks (its source)', () => {
+    const src = fs.readFileSync(path.join(REPO, 'scripts/tests/run-all.mjs'), 'utf8');
+    assert.match(src, /zero-checks/); assert.match(src, /res\.checks/);
+  });
+
   // ---- --affected (local only)
   const R = JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/tests.json'), 'utf8'));
   t('--affected: a twin module picks area twin with its reason; a suite file itself; a note picks nothing', () => {

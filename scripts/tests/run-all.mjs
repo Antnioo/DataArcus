@@ -77,13 +77,16 @@ let failed = 0;
 const spend = budget(), FILE = { 'svg-kpi': 'scripts/test-svg-kpi.mjs' };
 if (logDir) fs.mkdirSync(logDir, { recursive: true });
 for (const name of ALL.filter((n) => results[n])) {
-  const res = results[name], ok = !res.problems.length;
+  const res = results[name];
+  // (SQ11, A2-S1) a suite that ran no check passed nothing: zero-checks, as ci-sum and the MCP's runner say it
+  if (!res.problems.length && !(res.checks > 0)) Object.assign(res, { zero: true, problems: [`${name} ran 0 checks`] });
+  const ok = !res.problems.length;
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(16)} ${String(res.checks).padStart(5)} checks  ${res.secs}s`);
   if (ok) continue;
   const log = logDir ? path.join(logDir, name + '.log') : '';
   if (log) fs.writeFileSync(log, res.problems.map((p) => '- ' + p).join('\n') + '\n');
-  console.log(oneLine({ script: FILE[name] || `scripts/tests/${LAB[name] || name}.mjs`, check: res.problems[0], cause: res.crashed ? 'crash' : 'checks-failed', os: osName(), shard: shard ? `${shard[1]}/${shard[2]}` : '-' }));
+  console.log(oneLine({ script: FILE[name] || `scripts/tests/${LAB[name] || name}.mjs`, check: res.problems[0], cause: res.crashed ? 'crash' : res.zero ? 'zero-checks' : 'checks-failed', os: osName(), shard: shard ? `${shard[1]}/${shard[2]}` : '-' }));
   spend.take(res.problems.map((p) => '      - ' + scrub(p)), { log }).forEach((l) => console.log(l));
 }
 await browser.close(); server.close();

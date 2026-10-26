@@ -63,10 +63,17 @@ const reportFacts = (project, report, rtl) => {
   const order = JSON.parse(String(files[Object.keys(files).find((f) => /\/pages\/pages\.json$/.test(f))])).pageOrder;
   const pages = Object.keys(files).filter((f) => /\/pages\/[^/]+\/page\.json$/.test(f)).map((f) => JSON.parse(String(files[f]))).sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
   const lp = layoutProblems(filesOf(dir, dir));
+  // (SQ11, 0.2.9-writer-S8) every table's and matrix's written text size, values/headers (the theme's tableEx size where
+  // the visual sets none), sorted: a moved text size (B-06's kind of change) fails here, not only in Desktop
+  const theme = Object.keys(files).filter((f) => /\/RegisteredResources\/[^/]+\.json$/.test(f)).map((f) => { try { return JSON.parse(String(files[f])); } catch { return {}; } }).find((t) => t.visualStyles) || {};
+  const themeSize = +((((theme.visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize || 'theme';
+  const sizeOf = (v, k) => { const p = ((((v.visual || {}).objects || {})[k] || [])[0] || {}).properties || {}; return p.fontSize ? +String(p.fontSize.expr.Literal.Value).replace(/D$/, '') : themeSize; };
+  const tableText = Object.keys(files).filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f)).map((f) => JSON.parse(String(files[f])))
+    .filter((v) => v.visual && ['tableEx', 'pivotTable'].includes(v.visual.visualType)).map((v) => `${v.visual.visualType} ${sizeOf(v, 'values')}/${sizeOf(v, 'columnHeaders')}`).sort().join(', ');
   return { pages: pages.filter((p) => p.visibility !== 'HiddenInViewMode' && !/tooltip/i.test(p.type || '')).map((p) => `${p.displayName} ${p.width}x${p.height}`),
     hidden: pages.filter((p) => p.visibility === 'HiddenInViewMode' || /tooltip/i.test(p.type || '')).length,
     visuals: Object.keys(files).filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f)).length,
-    validator: validate(dir), sizeProblems: lp.sizes.length, phoneProblems: lp.phone.length, project: projectProblems(files).length, tableHeaders: tableProblems(files, rtl).bad.length,
+    validator: validate(dir), sizeProblems: lp.sizes.length, phoneProblems: lp.phone.length, project: projectProblems(files).length, tableHeaders: tableProblems(files, rtl).bad.length, tableText,
     firstProblems: lp.sizes.concat(lp.phone).slice(0, 2) };
 };
 // right to left: every slot of the Arabic plan is the English slot mirrored on the page (x -> width - x - w); the engine
