@@ -10,7 +10,7 @@
   `mcp/test-0.3.1-reader-seen.mjs` (S4-1, S4-2 back); new mutants in `mcp/test-0.3.1-mutation.mjs`; three Status cells.
   Not SQ14's files (arabic-calendar.js, pbip-query.js, report-mirror.js, check-report internals) nor SQ12's (docs).
 - **Base:** `fix/0.3.1-sq15a` from `origin/integration/0.3.1` (fe3682f). Push only this branch; the reviewer merges.
-- **Expected checks** (written before the work): sq15a about 20 checks, about 16 red first; reader-seen 19 -> 21 (2
+- **Expected checks:** (written before the work) sq15a about 20 checks, about 16 red first; reader-seen 19 -> 21 (2
   red first); mutation 69 -> 72 mutants, all killed; v029g 21 checks before and after (same count, its model path
   named); `npm test -- --keep-going` 86 -> 87 suites, all PASS; `DA_SHARD=1/4 npm test` PASS; `npm test -- model`,
   `-- safety`, `-- report`, `node test-platform-paths.mjs` PASS; check-agent-memory PASS.
