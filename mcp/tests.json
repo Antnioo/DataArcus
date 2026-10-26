@@ -100,6 +100,7 @@
     { "file": "test-0.3.1-arabic-terms.mjs", "name": "test-0.3.1-arabic-terms", "area": "arabic", "purpose": "one Arabic term per concept wherever DataArcus writes Arabic" },
     { "file": "test-0.3.1-sample-project.mjs", "name": "test-0.3.1-sample-project", "area": "report", "purpose": "the sample project for a new user with no model" },
     { "file": "test-0.3.1-audit-readers.mjs", "name": "audit-readers", "area": "safety", "purpose": "the release audit's readers and answers: a saved filter value never a top count, no theme through a linked folder, instruction-like names screened" },
+    { "file": "test-0.3.1-reader-seen.mjs", "name": "reader-seen", "area": "model", "purpose": "the reader's Seen items (SQ6): two models at one depth refused, coded JSON errors, a .pbit read by its parts, the auto date hierarchy, the base theme's colours, cut table names in the large summary" },
     { "file": "test-skill-packaging.mjs", "name": "skill-packaging", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "name": "dax-functions", "area": "report", "purpose": "the DAX function library as one TMDL script" },
     { "file": "test-0.3.1-validator-gap.mjs", "name": "validator-gap", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
