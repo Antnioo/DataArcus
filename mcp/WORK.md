@@ -13,7 +13,7 @@ section of `WORK-2026-10-25.md`).
   [SQ3](work/SQ3.md), [SQ4](work/SQ4.md), [SQ5](work/SQ5.md), [SQ6](work/SQ6.md), [SQ7](work/SQ7.md),
   [SQ8](work/SQ8.md), [SQ9](work/SQ9.md), [SQ10](work/SQ10.md), [SQ11](work/SQ11.md), [SQ13](work/SQ13.md).
   Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
-- Running: [SQ12](work/SQ12.md) (docs and memory), SQ14, SQ15 (one item per builder; SQ15a the reader).
+- Running: [SQ12](work/SQ12.md) (docs and memory), SQ14, SQ15 (one item per builder; SQ15a the reader); [BD1](work/BD1.md) (Arabic Latin runs, the bidi lab).
 
 ## Next step
 1. The reviewer merges SQ12, SQ14, SQ15; every batch and item status: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).
