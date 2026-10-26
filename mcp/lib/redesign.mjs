@@ -256,9 +256,10 @@ function gridPage(page, items) {
       }
     }
     if (!failed.length) break;
-    // one row at a time (the first in the page's order), then the page again
+    // one row at a time (the first in the page's order), then the page again; after 20 passes every row that fails at
+    // once (a page of many rows stays quick)
     failed.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-    const [i, w] = failed[0]; kept.add(i); members[i].forEach((v) => why.set(v, w));
+    (pass < 20 ? failed.slice(0, 1) : failed).forEach(([i, w]) => { kept.add(i); members[i].forEach((v) => why.set(v, w)); });
   }
   kept.forEach((i) => members[i].forEach((v) => plan.delete(v)));
   return { plan, why, gap: G, margins };
