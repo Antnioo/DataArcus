@@ -102,13 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName) {
     if (worker) worker.terminate();
-    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261025e'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261026a'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
       else if (d.type === 'error') { showError(d.code, d.message); worker.terminate(); worker = null; }
       else if (d.type === 'done') {
         R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
+        // (AU47, AUD-047) a model file that could not be read: no score, so none is kept in the history either
+        if (R.unreadable) { worker.terminate(); worker = null; render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
         qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
         const hist = store.get('dataarcus-mh-history', {});
         const key = String(fileName).toLowerCase();
@@ -152,7 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- views ----------
   function render() {
     if (!R) return renderDrop();
+    if (R.unreadable) return renderUnreadable();
     renderResult();
+  }
+  // (AU47) a model read only in part: the files that could not be read and why, no score, no score card or share, and
+  // the findings the check could still make, marked partial
+  function renderUnreadable() {
+    const fs0 = R.findings || [], rule = (f) => (RULES()[f.id] || {})[isAr() ? 'ar' : 'en'] || [f.id];
+    root.innerHTML =
+      '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(R.meta.fileName) + '</b></span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
+      '<div class="mh-panel mh-error mh-unreadable"><i class="bi bi-exclamation-triangle"></i><div><b>' + L('No score: part of this model could not be read', 'لا توجد نتيجة: تعذّرت قراءة جزء من هذا النموذج') + '</b>' +
+      '<p>' + esc(L(R.unreadable.en, R.unreadable.ar)) + '</p>' +
+      '<p class="mh-note">' + L('A score of the part that was read would be wrong: a model Power BI Desktop cannot open could score higher than the whole model.', 'نتيجة الجزء المقروء ستكون خاطئة: قد يحصل نموذج لا يفتحه Power BI Desktop على نتيجة أعلى من النموذج كاملًا.') + '</p></div></div>' +
+      '<div class="mh-panel mt-3"><span class="tg-label">' + L('Partial findings: what the check could still find in the part that was read', 'ملاحظات جزئية: ما وجده الفحص في الجزء المقروء فقط') + '</span>' +
+      (fs0.length ? '<ul class="mh-partial">' + fs0.map((f) => '<li>' + esc(rule(f)[0]) + ' <small>(' + num(f.items.length) + ')</small></li>').join('') + '</ul>' : '<p class="mh-note">' + L('No findings in the part that was read.', 'لا توجد ملاحظات في الجزء المقروء.') + '</p>') + '</div>';
+    $('mhNew').onclick = () => { R = null; render(); };
   }
   function renderDrop() {
     root.innerHTML =

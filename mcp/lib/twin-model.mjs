@@ -2,7 +2,7 @@
 // column's offer, and the right-to-left waterfall's facts.
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import path from 'node:path';
-import { loadModel, shownName } from './model.mjs';
+import { loadModel, shownName, refuseUnreadable } from './model.mjs';
 // (AF1, the release audit's F11) a model name as the month offer's answer shows it: the one screen (withheld when it reads
 // like an instruction), invisible characters as code points, never cut (the plan's lists match these names)
 const nm = (s) => shownName(s, Infinity);
@@ -20,7 +20,10 @@ const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)
 export function modelOf(R, loc) {
   const ref = byPathOf(R.pbir);
   if (!ref || !ref.path) return { m: null, why: 'the report is connected to a published model (not a model folder next to it): the column is a model step for the model\'s owner' };
-  try { return { m: loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))) }; } catch (e) { return { m: null, why: 'the model that definition.pbir names next to the report could not be read (a model folder saved from Power BI Desktop is needed there; the error is not repeated: it holds the file\'s own path)' }; }
+  // (AU47) a model read only in part is refused, never planned on: outside the catch, so the refusal reaches the tool
+  let m;
+  try { m = loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))); } catch (e) { return { m: null, why: 'the model that definition.pbir names next to the report could not be read (a model folder saved from Power BI Desktop is needed there; the error is not repeated: it holds the file\'s own path)' }; }
+  return { m: refuseUnreadable(m) };
 }
 const isDateCol = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
 // (T-5 of the laptop's rc.2 twins: "the model has no date table" on a table spelled "Calender" and on one named

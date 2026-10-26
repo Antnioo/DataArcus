@@ -2,7 +2,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
 import { z } from 'zod';
-import { loadModel, inside } from '../lib/model.mjs';
+import { loadModel, inside, refuseUnreadable } from '../lib/model.mjs';
 import { withPlan } from '../lib/files.mjs';
 import { addGulfCalendar } from '../lib/gulf-calendar.mjs';
 import { modelPrintOf } from '../lib/artifact.mjs';
@@ -53,7 +53,7 @@ export function register(server, ctx) {
       planId: planIdInput
     }, annotations: ADDS
   }, safe(async (a) => {
-    const m = loadModel(a.path);
+    const m = refuseUnreadable(loadModel(a.path));   // (AU47) nothing is planned on part of a model
     if (a.arabicColumnsOnly) return arabicColumnsOnly(m, a);
     if (a.firstYear == null || a.lastYear == null) throw new Error('Nothing was written: firstYear and lastYear are needed (ask the user the years their data covers); for Arabic names on the model\'s own date table only, pass arabicColumnsOnly true instead.');
     // the gate (0.2.9): with an approved plan the script is written; without one every check runs and the file is only named

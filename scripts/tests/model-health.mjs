@@ -951,6 +951,27 @@ export default async function ({ browser, url }) {
       if (v.errs.length) problems.push(`TMDL project ${name}: ${v.errs.join(' | ')}`);
       await v.ctx.close();
     }
+    // (AU47, AUD-047) a project with a TMDL file that can't be read (Dates.tmdl cut short): the page names the file and
+    // why, in English and Arabic, and gives no score, no score card and no history entry
+    {
+      const dir = path.join(ROOT, 'mcp/test-models/no-measures/Plain Orders.SemanticModel'), files = walk(dir).filter((f) => /\.tmdl$/i.test(f));
+      const rel = (f) => 'cut.SemanticModel/' + path.relative(dir, f).split(path.sep).join('/');
+      const body = (f) => { const b = fs.readFileSync(f); return /Dates\.tmdl$/.test(f) ? b.subarray(0, Math.floor(b.length / 3)) : b; };
+      const zip = zipOf([['cut.pbip', Buffer.from('{"version":"1.0"}')], ...files.map((f) => [rel(f), body(f)])]);
+      for (const lang of ['en', 'ar']) {
+        const v = await visitor(browser, { viewport: [1440, 900] });
+        await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+        await v.pg.setInputFiles('#mhFile', { name: 'cut.zip', mimeType: 'application/zip', buffer: zip });
+        const got = await v.pg.waitForSelector('.mh-unreadable, #mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
+          said: (document.querySelector('.mh-unreadable') || {}).textContent || '', ring: !!document.querySelector('.mh-ring'), share: !!document.querySelector('#mhShare, #mhCard'),
+          partial: !!document.querySelector('.mh-partial li'), hist: localStorage.getItem('dataarcus-mh-history') }))).catch((e) => ({ said: 'timeout ' + e.message.slice(0, 60) }));
+        const want = lang === 'en' ? /1 model file\(s\) could not be read: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(cut short: line \d+, the last, ends without a line break\)\. The check below is missing what they hold; fix the file in Power BI Desktop or your editor and check it again\./
+          : /تعذّرت قراءة 1 من ملفات النموذج: cut\.SemanticModel\/definition\/tables\/Dates\.tmdl \(الملف مقطوع: السطر \d+، وهو الأخير، لا ينتهي بفاصل أسطر\)\. الفحص أدناه ينقصه ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop/;
+        check(want.test(got.said) && !got.ring && !got.share && got.partial && !got.hist, `unreadable TMDL file (${lang}): the message names the file and why, no score ring, card or share, findings partial, no history: ${JSON.stringify(got).slice(0, 400)}`);
+        if (v.errs.length) problems.push(`unreadable TMDL file (${lang}): ${v.errs.join(' | ')}`);
+        await v.ctx.close();
+      }
+    }
     // the drop zone says what really works
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });

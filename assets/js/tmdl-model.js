@@ -47,7 +47,10 @@
       const l = raw.replace(/^( {4})+/, (s) => '\t'.repeat(s.length / 4)), d = l.match(/^\t*/)[0].length;
       return { d, t: l.slice(d).trim(), raw: raw.replace(/\s+$/, '') };
     });
-    const top = { type: 'file', props: [], children: [] }, owners = [top];
+    // (AU47, the night audit's AUD-047: a file Power BI Desktop could not open was read in part, silently) what this
+    // parse could not place, with its line: read() names the file, never its text
+    const top = { type: 'file', props: [], children: [], problems: [] }, owners = [top];
+    const problem = (code, i) => { if (!top.problems.length) top.problems.push({ code, line: i + 1 }); };
     let desc = [];
     // the expression after "=": inline text, ``` fenced lines, or the lines deeper than `deeper`
     const expr = (inline, i, deeper) => {
@@ -55,6 +58,7 @@
       let j = i + 1;
       if (inline === '```') {
         for (; j < lines.length && lines[j].t !== '```'; j++) block.push(lines[j]);
+        if (j >= lines.length) problem('stopped', i);   // a ``` fence never closed
         j++;
         inline = '';
       } else {
@@ -72,6 +76,8 @@
       if (t.startsWith('///')) { desc.push(t.replace(/^\/\/\/ ?/, '')); i++; continue; }
       // (F-M1, the fuzz test: a truncated or mis-indented file left holes in this stack and the reader threw. A line
       // deeper than its parent belongs to the deepest object there is, and the stack never has a hole.)
+      // (AU47) indentation that is neither tabs nor four spaces, or a line more than one level deeper than its parent
+      if (/^\s/.test(lines[i].raw.replace(/^( {4})+/, (x) => '\t'.repeat(x.length / 4)).slice(d)) || d > owners.length - 1) problem('indent', i);
       const at = Math.min(d, owners.length - 1), owner = owners[at];
       let m;
       if ((m = t.match(/^(\w+)\s*:\s*(.*)$/))) { owner.props.push([m[1], m[2].trim()]); i++; continue; }
@@ -90,7 +96,7 @@
         node = { type: m[1], name };
         const eq = rest.match(/^\s*=\s*(.*)$/);
         if (eq) { const e = expr(eq[1].trim(), i, d + 1); node.expr = e.value; i = e.next; } else i++;
-      } else { i++; continue; }
+      } else { problem('stopped', i); i++; continue; }
       node.props = []; node.children = [];
       if (desc.length) { node.description = desc.join('\n'); desc = []; }
       owner.children.push(node);
@@ -159,14 +165,54 @@
   }
 
   // ---------- 3. a project's files into one model ----------
+  const modelFiles = (files) => (files || []).filter((f) => f && /\.tmdl$/i.test(f.path) && !/(^|\/)TMDLScripts\//i.test(f.path.replace(/\\/g, '/')));
   // opts.lineageTags: keep each object's lineageTag and sourceLineageTag
-  function fromFiles(files, opts) { return build(files, opts || {}); }
-  function build(files, opts) {
+  function fromFiles(files, opts) { return build(modelFiles(files), opts || {}, new Map()); }
+  // (AU47) the model and every file that could not be read fully: { model, skipped: [{ path, code, line? }] }. A skipped
+  // file is named with why, never with its text; what it held in part is still in the model, and the caller says so first
+  // (the MCP's read_model and check_model_health, the website's Health Check) or refuses to plan on it
+  function read(files, opts) {
+    const files0 = modelFiles(files), parsed = new Map(files0.map((f) => [f, parse(f.text)]));
+    const problemOf = (f) => problemIn(f, parsed.get(f));
+    const skipped = files0.map(problemOf).filter(Boolean);
+    return { model: build(files0, opts || {}, parsed), skipped };
+  }
+  // why one file can't be read fully, or null: the first of empty, not text, git merge-conflict markers, a line the
+  // parse could not place (indentation, a line it stopped at), cut short (Power BI Desktop ends every line, the last too,
+  // with a line break), a tables/ file with no table in it
+  function problemIn(f, tree) {
+    const text = String(f.text == null ? '' : f.text).replace(/^\uFEFF/, ''), at = (re) => { const k = text.split(/\r?\n/).findIndex((l) => re.test(l)); return k + 1; };
+    const out = (code, line) => Object.assign({ path: f.path, code }, line ? { line } : {});
+    if (!text.trim()) return out('empty');
+    if (/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]/.test(text)) return out('notText');
+    if (/^(<{7}|>{7})( |$)/m.test(text)) return out('conflict', at(/^(<{7}|={7}|>{7})( |$)/));
+    if (tree.problems.length) return out(tree.problems[0].code, tree.problems[0].line);
+    if (!/\n$/.test(text)) return out('cut', text.split(/\r?\n/).length);
+    if (/(^|\/)tables\/[^/]+$/i.test(f.path.replace(/\\/g, '/')) && !tree.children.some((n) => n.type === 'table')) return out('noTable');
+    return null;
+  }
+  const WHY = {
+    empty: ['empty file', 'ملف فارغ'],
+    notText: ['not text', 'ليس ملفًا نصيًا'],
+    conflict: ['git merge-conflict markers (<<<<<<<) at line #', 'علامات تعارض دمج من git (<<<<<<<) في السطر #'],
+    indent: ['unexpected indentation at line #', 'مسافة بادئة غير متوقعة في السطر #'],
+    stopped: ['parse stopped at line #', 'توقفت القراءة عند السطر #'],
+    cut: ['cut short: line #, the last, ends without a line break', 'الملف مقطوع: السطر #، وهو الأخير، لا ينتهي بفاصل أسطر'],
+    noTable: ['no table definition in it', 'لا يحتوي على تعريف جدول']
+  };
+  const whyOf = (s, lang) => (WHY[s.code] || WHY.stopped)[lang === 'ar' ? 1 : 0].replace('#', String(s.line || 1));
+  // the one message, first in every answer that read such a model: items { path | file, code | why } (a caller passes
+  // the file as it shows names, screened, and the reason in its words); again: 'check' on the website, else 'ask'
+  function unreadableSaid(skipped, lang, again) {
+    const list = (skipped || []).map((s) => `${s.file != null ? s.file : s.path} (${s.why != null && lang !== 'ar' ? s.why : whyOf(s, lang)})`), n = list.length;
+    if (lang === 'ar') return `تعذّرت قراءة ${n} من ملفات النموذج: ${list.join('؛ ')}. ${again === 'check' ? 'الفحص أدناه ينقصه' : 'الإجابة أدناه ينقصها'} ما تحتويه هذه الملفات؛ أصلح الملف في Power BI Desktop أو في محرر النصوص ثم ${again === 'check' ? 'افحصه' : 'اسأل'} مرة أخرى.`;
+    return `${n} model file(s) could not be read: ${list.join('; ')}. The ${again === 'check' ? 'check' : 'answer'} below is missing what they hold; fix the file in Power BI Desktop or your editor and ${again === 'check' ? 'check it' : 'ask'} again.`;
+  }
+  function build(files, opts, parsed) {
     const parts = { tables: [], relationships: [], expressions: [], functions: [], roles: [], perspectives: [], cultures: [], dataSources: [], queryGroups: [], annotations: [] };
     const refs = {};
     let database = null, model = null;
-    (files || []).filter((f) => f && /\.tmdl$/i.test(f.path) && !/(^|\/)TMDLScripts\//i.test(f.path.replace(/\\/g, '/')))
-      .forEach((f) => parse(f.text).children.forEach((n) => {
+    files.forEach((f) => (parsed.get(f) || parse(f.text)).children.forEach((n) => {
         if (n.type === 'database') database = n;
         else if (n.type === 'model') model = n;
         else if (n.type === 'ref') (refs[n.of] = refs[n.of] || []).push(n.name);
@@ -199,7 +245,7 @@
     return Object.assign(db, { model: m });
   }
 
-  const api = { fromFiles, parse };
+  const api = { fromFiles, read, whyOf, unreadableSaid, parse };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TmdlModel = api;
 })(typeof self !== 'undefined' ? self : this);

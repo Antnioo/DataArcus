@@ -2,7 +2,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
 import { z } from 'zod';
-import { loadModel, inside, applyColumnTypes, visible, ROOT } from '../lib/model.mjs';
+import { loadModel, inside, applyColumnTypes, visible, ROOT, unreadableOf, refuseUnreadable } from '../lib/model.mjs';
 import { planWrites } from '../lib/files.mjs';
 import { AIM } from '../lib/scope.mjs';
 import { gulfFixInputs } from '../lib/gulf-calendar.mjs';
@@ -59,6 +59,9 @@ export function register(server, ctx) {
     }, annotations: ADDS
   }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId, answers, forgetAnswers, only }) => {
     const m = loadModel(p);
+    // (AU47, the night audit's AUD-047) a definition file that could not be read fully: no score, the findings the check
+    // could still make marked partial, no script plan; with a planId nothing is written
+    if (m.skipped.length) { if (planId != null && planId !== '') refuseUnreadable(m); return text(healthFit(partialHealth(m, maxItems), only)); }
     const wouldWrite = [];
     const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
     // where a fix script may go: next to the project (never inside the model folder), or beside a model file. When the
@@ -202,10 +205,7 @@ export function register(server, ctx) {
       ...hiddenOf(m),
       // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
       columnTypes: typed,
-      findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
-        // (HC2, the owner's 15 Oct: the website and the MCP run the same engine) the rule's source, as the website shows it
-        const src = rule.source ? Object.assign({ kind: rule.source.kind }, rule.source.url ? { url: rule.source.url } : {}, rule.source.title ? { rule: rule.source.title } : {}, { says: (rule.source.says || {}).en }) : undefined;
-        return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], source: src, count: f.items.length, items: f.items.slice(0, maxItems) }; }),
+      findings: r.findings.map((f) => findingOut(f, maxItems)),
       // (HC3) the engine's "Please confirm" questions: never findings, never in the score. The DAX piece the website shows
       // stays on the machine (PRIVACY.md section 3: expressions are not returned); the measure and the question are given
       pleaseConfirm: (r.confirm || []).length || mem.problem || answersNotRecorded.length || answersDone.answersNotWritten ? Object.assign({ note: 'Questions for the user, not findings and not in the score: the check reads structure and DAX, not the numbers. Ask the user each question; never edit DAX because of them. The DAX piece behind a question is not returned: the user sees it in Power BI Desktop or in the website\'s Health Check. To remember the user\'s own answer, call again with answers [{ answerKey, answer }] (through a plan, like the fix scripts); answered questions are not asked again until their measure or relationship changes.',
@@ -222,6 +222,23 @@ export function register(server, ctx) {
       } : undefined
     }, only));
   }));
+}
+// one finding as the answer gives it
+function findingOut(f, maxItems) {
+  const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
+  // (HC2, the owner's 15 Oct: the website and the MCP run the same engine) the rule's source, as the website shows it
+  const src = rule.source ? Object.assign({ kind: rule.source.kind }, rule.source.url ? { url: rule.source.url } : {}, rule.source.title ? { rule: rule.source.title } : {}, { says: (rule.source.says || {}).en }) : undefined;
+  return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], source: src, count: f.items.length, items: f.items.slice(0, maxItems) };
+}
+// (AU47) the answer on a model read only in part: the unreadable files first, no score (a score of what was read would
+// be wrong: the audit measured 96 for a model Desktop could not open, 92 for the whole one), the findings partial
+function partialHealth(m, maxItems) {
+  const r = Health.analyze(m.tmsl, m.report);
+  return Object.assign(unreadableOf(m), { source: m.source,
+    scoreWithheld: `No score: ${m.skipped.length} model file(s) could not be read, and a score of the part that was read would be wrong (a model Power BI Desktop cannot open can score higher than the whole model). Fix the file and check again for the score.`,
+    stats: r.stats, reportRead: !!m.report,
+    findingsPartial: 'Partial: these are the findings the check could still make on the part of the model that was read; nothing in the files above was checked, and no fix script is offered until they are read.',
+    findings: r.findings.map((f) => findingOut(f, maxItems)) }, hiddenOf(m));
 }
 // (0.3.0 Q1) check_model_health's answer on a large model: at maxItems 200 on the 300-table model it was 168,550
 // characters, and the backstop kept 1 of its 6 findings. Every finding, fix and question is kept with its count; their
