@@ -22,6 +22,7 @@ import { lint } from './design-lint.mjs';
 import { fieldParametersOf, titleProblems } from './metric-switcher.mjs';
 import { NO_DIRECT_EDITS } from './agent-text.mjs';
 import { COPY_TAG } from './arabic-twin.mjs';
+import { KNOWN_TYPES, countsOf, mixedOf, boldItalicOf } from './text-format.mjs';   // (0.3.1 CS1: FORMAT_MIXED)
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -437,6 +438,19 @@ export async function checkReport(p, opts) {
         what: `the visual shows ${n === 1 ? 'a measure' : n + ' measures'} of the DataArcus DAX functions script that the model does not have yet, so Power BI Desktop shows an error in ${n === 1 ? 'it' : 'them'} (a picture, a column or a title) until the script is applied`,
         fix: 'Apply the report\'s DAX functions script ("<report> - DAX functions.tmdl", next to the project) in TMDL view: Preview, then Apply. It raises the model\'s compatibility level to 1702, which cannot be undone; save a copy first. Then check again.', source: 'DataArcus: the DAX function library (0.3.1 L6), its functions and measures written as a TMDL script' });
     });
+  }
+  // (0.3.1 CS1) FORMAT_MIXED: the visuals' own text settings (text-format.mjs) that make one kind of text show in more
+  // than one font or size, per page and for the report; a note. Names and numbers only: a font's name, a size in points
+  if (checks.includes('theme')) {
+    const theme = inv.themeFile ? inv.themeJson || {} : null, pages = inv.pages.filter((p) => p.kind !== 'Tooltip');
+    const itemsOf = (p) => p.visuals.filter((v) => !v.group && KNOWN_TYPES.has(v.type) && !isCustom(v.type)).map((v) => ({ json: v.json }));
+    const FIX = 'To give every visual one text set, call plan_layout with redesignFrom (this report), path (its model) and consistentText "report" (the font and size most visuals already show) or "theme" (the theme\'s own): it plans "<name> redesigned", a copy where each visual\'s own font, size, bold and italic are removed so the theme governs (keepPositions true leaves every place as it is). The original is never changed.';
+    const SRC = 'DataArcus (0.3.1 CS1): each visual\'s own text settings, by the theme\'s text class (Microsoft Learn, report themes: "Set formatted text defaults"; Microsoft\'s report theme schema)';
+    const said = (items) => { const m = mixedOf(countsOf(items, theme)), b = boldItalicOf(items); return m.length ? m.map((x) => x.said).join('; ') + (b ? `; ${b} visual${b === 1 ? ' sets' : 's set'} bold or italic of ${b === 1 ? 'its' : 'their'} own` : '') : null; };
+    let anyPage = 0;
+    pages.forEach((p) => { const w = said(itemsOf(p)); if (w) { anyPage++; add({ origin: 'rule', rule: 'FORMAT_MIXED', severity: 'note', file: `definition/pages/${p.id}/page.json`, page: { id: p.id, name: p.name }, visual: null, what: `the page's visuals mix fonts or sizes: ${w}`, fix: FIX, source: SRC }); } });
+    const all = pages.flatMap(itemsOf), w = said(all);
+    if (w) add({ origin: 'rule', rule: 'FORMAT_MIXED', severity: 'note', file: null, page: null, visual: null, what: `the report's visuals mix fonts or sizes (${pages.length} page${pages.length === 1 ? '' : 's'}, ${anyPage} mixed on the page itself): ${w}`, fix: FIX, source: SRC });
   }
   // 4. untrusted text: page names that read like an instruction (the name is not repeated)
   R.pages.forEach((pg) => { if (INSTRUCTION.test(pg.rawName)) add({ origin: 'instruction', rule: 'INSTRUCTION_TEXT', severity: 'note', file: `definition/pages/${pg.id}/page.json`, page: { id: pg.id, name: null }, visual: null,

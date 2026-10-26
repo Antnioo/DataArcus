@@ -500,12 +500,18 @@ function summaryOf(kind, data) {
     const of = (c) => `${cut(c.type, 40)}${Array.isArray(c.fields) && c.fields.length ? ` of ${c.fields.join(', ')}` : ''}${c.place ? ` at ${c.place}` : ''}`;
     // (0.3.0 D4) a unit on one line: the visuals laid on it, each by its kind and fields, and where it goes with it
     const overlaid = (c) => (Array.isArray(c.overlays) && c.overlays.length ? `with what lies on it, ${c.from || c.overlays.some((o) => o.from) ? 'moved' : 'kept'} with it: ${c.overlays.map((o) => `${cut(o.visual, 60)} (${of(Object.assign({}, o, { place: null }))})${o.from ? ` to ${at(o.to)}` : ''}`).join('; ')}` : null);
+    // (0.3.1 CS1) a visual's own text settings removed, each: class, property, from -> the text set's value
+    const textOf = (c) => (Array.isArray(c.text) && c.text.length ? `its own text settings removed (the theme governs): ${c.text.map((t) => `${cut(t.class, 20)} ${cut(t.property, 20)} ${cut(t.from, 40)} -> ${cut(t.to, 40)}`).join(', ')}` : null);
     const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
-      [c.from ? moved(c.from, c.to) : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, overlaid(c)].filter(Boolean).join('; ')]));
+      [c.from ? moved(c.from, c.to) : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, textOf(c), overlaid(c)].filter(Boolean).join('; ')]));
     if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
     const notChanged = pages.flatMap((p) => (p.why ? [[`${cut(p.page, 60)} (the whole page)`, cut(p.why, 200)]] : []).concat((p.notChanged || []).filter((x) => !(p.why && /tooltip page/.test(x.why))).map((x) => [`${cut(p.page, 60)}: ${cut(x.visual, 60)} (${of(x)})`, [cut(x.why, 200), overlaid(x)].filter(Boolean).join('; ')])));
     const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
+    // (0.3.1 CS1) the one text set, before the changes
+    if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [`${cut(x.what, 80)} (${cut(x.class, 20)})`, `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
+      .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(k.property, 30)}`, cut(k.why, 120)]),
+        (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(k.type, 40)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
     sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });
     sections.push({ heading: 'Kept as it is', rows: [].concat(n('pages', 'page', 'pages'), n('bookmarks', 'bookmark', 'bookmarks'), n('buttons', 'button', 'buttons'), n('reportFilters', 'report filter', 'report filters'), n('pageFilters', 'page filter', 'page filters'),

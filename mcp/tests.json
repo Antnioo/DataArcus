@@ -120,6 +120,7 @@
     { "file": "test-0.3.1-bd1.mjs", "name": "bd1", "area": "arabic", "purpose": "Arabic text with a Latin run as Desktop drew it (BD1): DA.StoryTitle opens with U+200F, the Arabic lens's mixed-text words, what Desktop shows before the DAX functions script" },
     { "file": "test-0.3.1-bidi-lab.mjs", "name": "bidi-lab", "area": "arabic", "purpose": "the bidi lab for the laptop (lab/bidi-lab.mjs): every kind, position and variant written as its rule, validator 0 errors" },
     { "file": "test-0.3.1-custom-visuals-lab.mjs", "name": "custom-visuals-lab", "area": "report", "purpose": "the custom visuals lab (NC1): a made-up 5-page report with 13 custom visuals and a hand report's clutter; the native copy's plan on it (each replacement, the networks not replaced), written and redesigned through the tools, validator 0 errors on each" },
+    { "file": "test-0.3.1-cs1.mjs", "name": "cs1", "area": "report", "purpose": "one text set for a hand-made report (CS1): each visual's own text settings, check_report's FORMAT_MIXED, the redesign's consistentText and keepPositions" },
     { "file": "test-0.3.1-mutation.mjs", "name": "mutation", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],

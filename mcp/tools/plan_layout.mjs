@@ -118,12 +118,12 @@ function redesignPlan(a) {
     .concat(REPORT_LOOK.filter((k) => a[k] !== undefined && a[k] !== defaults[k]));
   if (other.length) problems.push(`redesignFrom is a plan of its own (a copy of the original with the allowlisted changes): leave ${other.join(', ')} out.`);
   if (problems.length) return { planProblems: problems, sayFirst: 'No plan id: change the call as each problem says, then call plan_layout again.' };
-  const m = refuseUnreadable(loadModel(a.path)), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle }), pin = redesignPin(a);
+  const m = refuseUnreadable(loadModel(a.path)), R = planRedesign(a.redesignFrom, m, { titles: a.titles, restyle: a.restyle, consistentText: a.consistentText, keepPositions: a.keepPositions }), pin = redesignPin(a);
   const writes = [`the new report "${R.answer.newReport}" and its "${visible(R.name)}.pbip" next to the original: a copy of every file of "${R.answer.original.replace(/: only read, never changed$/, '')}" with the ${R.answer.counts.changed} change(s) listed; the original is not changed`];
-  const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, keptAsIs: R.answer.keptAsIs };
+  const shown = { original: R.answer.original, newReport: R.answer.newReport, pages: R.answer.pages, theme: R.answer.theme || null, text: R.answer.text || null, keptAsIs: R.answer.keptAsIs };
   return Object.assign({ redesign: redesignFit(JSON.parse(JSON.stringify(R.answer)), a.redesignPages) }, R.problems.length ? { planProblems: R.problems, sayFirst: 'This redesign can\'t be written as asked: no plan id. Change it as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(attached(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: pin }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to })), shown,
-      outputs: R.files.map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), copied: R.files.length }),
+    : { plan: Plans.proposal(attached(Plans.propose('redesign', modelRef(m, a.path), writes, { pins: { create_report: pin }, patches: R.patches.map((x) => ({ file: x.file, pointer: x.pointer, to: x.to, op: x.op })), shown,
+      outputs: R.files.concat(R.added).map((r) => `${visible(R.name)}.Report/${r}`).concat([`${visible(R.name)}.pbip`]), copied: R.files.length }),
       // (0.3.1 AF2, the release audit's F08) the copy's exact files, built now with the logical id chosen now, kept with the
       // plan (this session only) and bound to its pins and the model's print: after the go they are written byte for byte
       R.tree ? { files: R.tree, digest: R.digest, logicalId: R.logicalId, copy: 'redesign', pin, modelPrint: modelPrintOf(m), binding: bindingOf(R.digest, pin, modelPrintOf(m)) } : null)) });
@@ -135,7 +135,8 @@ function redesignPlan(a) {
 function redesignFit(r, only) {
   if (only && only.length) { const want = new Set(only.map(String)); r.pagesNotShown = (r.pages || []).filter((p) => !want.has(p.id) && !want.has(p.page)).length; r.pages = (r.pages || []).filter((p) => want.has(p.id) || want.has(p.page)); }
   const size = (x) => pretty(out({ redesign: x })).length + 2500, pages = r.pages || [];
-  const tiers = [() => pages.map((p) => [p, 'notChanged']), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
+  // (0.3.1 CS1) the consistent copy's lists of visuals kept as they are go with the visuals not changed
+  const tiers = [() => pages.map((p) => [p, 'notChanged']).concat(r.text ? [[r.text, 'untouched'], [r.text, 'kept']] : []), () => [[r, 'patches']], () => pages.map((p) => [p, 'changes'])];
   let cut = 0;
   for (const t of tiers) { const f = fitLists(r, t, size, AIM); if (!f) break; cut += f.cut; if (f.k > 0) break; }
   if (cut) r.listsCut = { how: `This plan lists fewer visuals than it changes or keeps, to stay under ${AIM.toLocaleString('en-US')} characters ("<list>NotListed" says how many each list leaves out). DataArcus's approval window shows every change and every visual not changed before the person approves. To list one page in full here, call plan_layout again with the same inputs and redesignPages: ["<page id>"] (redesign.pages[].id); the plan is the same.` };
@@ -174,7 +175,7 @@ export function register(server, ctx) {
         .partial().strict().optional().describe('With path: the person\'s own answers to gulfDates.askNext: the date the report follows (dateRole, one of gulfDates.candidates), the grain, the seasonal scope (all, or one Hijri year the person names: never "the current" one), the calendar\'s Hijri-year column they confirmed, and for a missing calendar their country and years'),
       pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
       svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom,
-      redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle, sample: CREATE_REPORT_INPUTS.sample,
+      redesignFrom: CREATE_REPORT_INPUTS.redesignFrom, titles: CREATE_REPORT_INPUTS.titles, restyle: CREATE_REPORT_INPUTS.restyle, consistentText: CREATE_REPORT_INPUTS.consistentText, keepPositions: CREATE_REPORT_INPUTS.keepPositions, sample: CREATE_REPORT_INPUTS.sample,
       redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or its name) in full, when the plan\'s answer shortened its lists (listsCut); the plan is the same'),
       // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
       ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))

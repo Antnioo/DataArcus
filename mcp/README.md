@@ -50,12 +50,12 @@ For testers on Windows: download the file, check it with one command, then insta
 | `check_model_health` | The Model Health Check, the same engine as the website's: a score and every finding with where its rule comes from. Fix scripts for you to apply yourself, written only after you approve. |
 | `add_gulf_calendar` | A Gulf date table (Hijri dates, Ramadan and Eid, the country's weekend) as a TMDL script you apply yourself in Power BI Desktop, written only after you approve. |
 | `generate_theme` | A Power BI report theme from your colours or a preset, as the website's Theme Generator makes it; saved as a file only after you approve. |
-| `plan_layout` | Plans the report with you: every page, where each visual goes, its fields, names and look, checked against your model. Writes nothing; the plan is what you approve. With `sample: true` it plans the sample project. |
+| `plan_layout` | Plans the report with you: every page, where each visual goes, its fields, names and look, checked against your model. Writes nothing; the plan is what you approve. With `sample: true` it plans the sample project. With `redesignFrom` it plans a copy of a report you already have; `consistentText` gives that copy one font and size per kind of text (`keepPositions` keeps every visual where it is). |
 | `approve_plan` | Opens DataArcus's approval window so you can approve a plan (below). Writes no file. |
 | `create_report` | Writes the approved report as a new `.pbip` next to your model. It never touches the model or an existing report. |
 | `create_arabic_twin` | Writes the right-to-left Arabic copy of an existing report ("<name> AR"), or one report holding both languages; the Arabic texts are drafts you approve. |
 | `read_report` | Reads an existing report's pages and visuals (place, size, fields); returns no filter values, slicer selections or data values. Changes nothing. |
-| `check_report` | Checks any existing report with Microsoft's validator, offline, and the rules DataArcus measured in Power BI Desktop; `lens: "arabic"` answers "is this report ready for Arabic?". Changes nothing. |
+| `check_report` | Checks any existing report with Microsoft's validator, offline, and the rules DataArcus measured in Power BI Desktop; `lens: "arabic"` answers "is this report ready for Arabic?"; it says where visuals mix fonts or sizes. Changes nothing. |
 
 **How approval works.** No tool writes a file without a plan you approved. `approve_plan` opens DataArcus's approval
 window in your default browser, served on your computer only; it shows the plan and every file it writes, and only

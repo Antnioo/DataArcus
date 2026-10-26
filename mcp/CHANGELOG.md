@@ -5,6 +5,11 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **One text set for a report you built by hand:** check_report now says where visuals mix fonts or sizes ("visual
+  titles: 7 at 14pt, 2 at 11pt"), page by page. A redesign with `consistentText` makes them one: each visual's own font,
+  size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
+  already show (or keeps its own). The layout stays yours (`keepPositions` leaves every visual where it is); text boxes,
+  shapes, buttons, groups and custom visuals are not touched. The plan lists every setting removed before you approve.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
