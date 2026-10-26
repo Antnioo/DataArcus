@@ -14,7 +14,8 @@ section of `WORK-2026-10-25.md`).
   [SQ8](work/SQ8.md), [SQ9](work/SQ9.md), [SQ10](work/SQ10.md), [SQ11](work/SQ11.md), [SQ13](work/SQ13.md).
   Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
 - Merged into integration/0.3.1 on 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md) (Arabic Latin runs, the bidi lab),
-  [NC1](work/NC1.md) (the custom visuals lab), [CS1](work/CS1.md) (one text set), [GL1](work/GL1.md) (the glass look). Running: NC2 (the native copy, honest).
+  [NC1](work/NC1.md) (the custom visuals lab), [CS1](work/CS1.md) (one text set), [GL1](work/GL1.md) (the glass look),
+  [NC2](work/NC2.md) (the native copy, honest), [RD1](work/RD1.md) (the redesign's grid and names). No builder running.
 
 ## Next step
 1. The reviewer merges SQ12, SQ14, SQ15; every batch and item status: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).
