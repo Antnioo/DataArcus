@@ -17,7 +17,7 @@
 - **Got:** sq15b 19 -> 25 (5 red first: T1-T4, T6); pbip 100 -> 109 (LR2-a1..a3 red first, a4 and b, c, d pins green
   on 0f7f6e8); report 28 PASS, arabic 10 PASS, theme-generator 898 = 898, core 6 PASS (mcp 1591 = 1591, golden 12
   tasks match, mutation 72 killed), each after 4 older checks were moved to the owner's rule (Decisions 2); full run:
-  see Results.
+  "run-tests: 91 suites passed" (no suite added; my 89 was SQ15b's count, the base has 91).
 - **Invariants:** metadata only; the isolates from the writer only (pbip-export.js isolateFiles, unchanged); one engine
   (story-titles.js) for the site and the MCP; the English download's titles unchanged (LR2-a4, T5 pins).
 - **Resume:** done; waits for the reviewer, and the owner's word on Decisions 1 (the MCP gets «حسب» too).
@@ -38,7 +38,7 @@ suggestions, "Download project"; the zip read back.
 
 ## Results
 Commits: plan e41c8452, red first c5291f3f, the fix f2d20caf, arabic-titles/story-titles 5398eb22, round22/v029i
-eb65b051, this note (next commit).
+eb65b051, this note b6021acd, the full run's line (this commit).
 
 | Item | Before | After | Test (red -> green) |
 |---|---|---|---|
@@ -54,8 +54,8 @@ Suites (baseline on 0f7f6e8 -> after):
   golden-expected.json records no chart title text, so task 7's Arabic titles (a model without measures) change
   without a golden line changing: «عدد Order Id حسب Region» where they read «عدد Order Id (Region)»; mutation 72 killed).
 - check-min PASS (every changed .min.js has a new stamp), test-site-config PASS, check-result-lines PASS,
-  changelog-words PASS, check-agent-memory: see the last commit.
-- Full run `npm test -- --keep-going`: (the result line, next commit).
+  changelog-words PASS, check-agent-memory PASS (153 checks).
+- Full run `npm test -- --keep-going` on b6021acd: "run-tests: 91 suites passed" (tests.json unchanged: the base's 91).
 
 ## CHANGELOG line
 - Arabic reports on a model with English names title their charts with «حسب» («Total Sales حسب Region», «ترتيب Region حسب Total Sales»), in the website's download and the MCP alike, instead of the measure's name alone with the column in brackets.
