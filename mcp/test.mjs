@@ -39,8 +39,23 @@ import { withPlans } from './test-plan.mjs';
 import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { inventory, diskSource } from './lib/read-report.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
+// (SQ15c, 0.2.9-reader-S21) a written report read as the product reads it: lib/read-report.mjs's inventory through its
+// disk source (its path checks and caps kept), never a reader of this file's own. A file it could not read, a link or a
+// cap fails the read, so no check runs on a report read in part. Each page: { name (as written), w, h, hidden, visuals }
+// in pageOrder; each visual: its box on the page (a group's offset added), type ('group' for a group), hidden, json,
+// mobile (its phone file or null), text (its JSON as one string, for the checks that search it)
+const reportOf = (dir) => {
+  const sk = { big: [], deep: 0 }, inv = inventory(diskSource({ reportDir: dir }, sk), path.basename(dir));
+  const left = inv.unreadableFiles.concat(sk.big.map((b) => b.file), sk.links || []);
+  if (left.length || sk.capped) throw new Error(`the reader left part of ${path.basename(dir)} unread: ${left.slice(0, 5).join(', ') || 'capped'}`);
+  return inv.pages.map((p) => ({ name: p.rawName, w: p.w, h: p.h, hidden: p.hidden, raw: p.raw,
+    visuals: p.visuals.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h, type: x.type, hidden: x.hidden, json: x.json, mobile: x.mobile, text: JSON.stringify(x.json) })) }));
+};
+// every visual.json of a written report, parsed (through reportOf)
+const visualJsons = (dir) => reportOf(dir).flatMap((p) => p.visuals.map((v) => v.json));
 // Round 23 (the owner's go, 8 Oct 2026; way 4, measured in Desktop 2.158.1304): an Arabic table with a total row has its
 // name column first in the file at width 0 (hidden) and shows it through a report-level row-label measure at the right.
 // shownOf gives a table's projections as the reader sees them: the hidden column left out, the row label read as the
@@ -285,8 +300,7 @@ if (!r.err) {
   // entities are the field's own)
   const has = (k, t, n) => model.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
   const refs = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
-  walk(dir);
+  visualJsons(dir).forEach((j) => JSON.stringify(j, (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }));
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
   const { PNG } = (await import('node:module')).createRequire(import.meta.url)('pngjs');   // the MCP's own dev dependency
@@ -300,8 +314,7 @@ fs.writeFileSync(path.join(ROOT, 'dark.json'), JSON.stringify({ name: 'Dark', fo
   visualStyles: { page: { '*': { background: [{ color: { solid: { color: '#0a0f1c' } }, transparency: 0 }] } } } }));
 r = await call('create_report', { path: 'bim-project', name: 'Dark Test', theme: 'dark.json', pages: [page] });
 if (!r.err) {
-  const titles = []; const walkT = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walkT(f); else if (e.name === 'visual.json') { const t = fs.readFileSync(f, 'utf8'); if (/"textRuns"/.test(t) && /Dark Test/.test(t)) titles.push(t); } });
-  walkT(path.join(ROOT, 'bim-project', r.j.report));
+  const titles = reportOf(path.join(ROOT, 'bim-project', r.j.report)).flatMap((p) => p.visuals.map((v) => v.text)).filter((t) => /"textRuns"/.test(t) && /Dark Test/.test(t));
   check(titles.length && titles.every((t) => /#f8fafc/i.test(t) && !/#1f2937/i.test(t)), 'dark theme: the title does not use the theme text colour');
 } else check(false, `dark theme report: ${r.t}`);
 r = await call('create_report', { path: 'sample.pbit', name: 'X', pages: [page] });
@@ -407,21 +420,11 @@ for (const [tag, dz] of [['partial layout', { name: 'P', layout: { preset: 'anal
 }
 }
 // ---------- create_report with a design: the website's project pages, positions exactly as planned ----------
-// a written report read back: its visible pages in order, each with its size and every visual's absolute box (a visual in
+// a written report read back (reportOf): its pages in order, each with its size and every visual's absolute box (a visual in
 // a group stores its position relative to the group), type, hidden flag and text
-const readReport = (dir) => {
-  const D = path.join(dir, 'definition'), order = JSON.parse(fs.readFileSync(path.join(D, 'pages/pages.json'), 'utf8')).pageOrder;
-  return order.map((id) => {
-    const P = path.join(D, 'pages', id), pj = JSON.parse(fs.readFileSync(path.join(P, 'page.json'), 'utf8')), vs = {};
-    const vdir = path.join(P, 'visuals');
-    if (fs.existsSync(vdir)) fs.readdirSync(vdir).forEach((n) => { const t = fs.readFileSync(path.join(vdir, n, 'visual.json'), 'utf8'), v = JSON.parse(t); vs[v.name] = { v, t }; });
-    const abs = (v) => { const p = v.position, g = v.parentGroupName && vs[v.parentGroupName] ? abs(vs[v.parentGroupName].v) : { x: 0, y: 0 }; return { x: p.x + g.x, y: p.y + g.y }; };
-    const visuals = Object.values(vs).map(({ v, t }) => Object.assign(abs(v), { w: v.position.width, h: v.position.height, type: v.visual ? v.visual.visualType : 'group', hidden: !!v.isHidden, text: t }));
-    return { name: pj.displayName, w: pj.width, h: pj.height, hidden: pj.visibility === 'HiddenInViewMode', visuals };
-  });
-};
+const readReport = (dir) => reportOf(dir).map(({ name, w, h, hidden, visuals }) => ({ name, w, h, hidden, visuals }));
 // (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
-const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
+const boundFields = (dir) => { const refs = []; visualJsons(dir).forEach((j) => JSON.stringify(j, (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; })); return refs; };
 if (part('design-report')) {
 const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
@@ -590,14 +593,12 @@ if (part('quality')) {
 // and no inner outline, each on the "default" selector; padding set; the height they need fits their box (Microsoft's
 // card sizing: text takes 1.5 x its size); the title follows the reading direction; on the phone, their own sizes
 const cardProblems = (dir, rtl) => {
-  const files = [], bad = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (/^(visual|mobile)\.json$/.test(e.name)) files.push(f); });
-  walk(dir);
+  const bad = [];
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), n = (p) => parseFloat(lit(p));
   const def = (list) => (list || []).find((x) => x.selector && x.selector.id === 'default'), props = (list) => ((list || [])[0] || {}).properties || {};
   let cards = 0;
-  files.filter((f) => f.endsWith('visual.json')).forEach((f) => {
-    const j = JSON.parse(fs.readFileSync(f, 'utf8')), v = j.visual, id = j.name;
+  reportOf(dir).flatMap((p) => p.visuals).forEach(({ json: j, mobile: m }) => {
+    const v = j.visual, id = j.name;
     if (!v) return;
     if (v.visualType === 'card' || v.visualType === 'multiRowCard') { bad.push(`${id}: legacy ${v.visualType}`); return; }
     if (v.visualType !== 'cardVisual' || isMessageCard(v)) return;   // (round 22: a "No data" message card is not a KPI card)
@@ -617,9 +618,7 @@ const cardProblems = (dir, rtl) => {
     // (5 Oct: a KPI title too long for one line at 8pt may wrap to two, titleWrap; then it needs two lines)
     const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? (lit(t.titleWrap) === 'true' ? 2 : 1) * Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
     if (!(need <= j.position.height)) bad.push(`${id}: needs ${need} high, box ${j.position.height}`);
-    const mf = path.join(path.dirname(f), 'mobile.json');
-    if (fs.existsSync(mf)) {
-      const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
+    if (m) {
       if (n((def((m.objects || {}).value) || { properties: {} }).properties.fontSize) !== 20 || n(props((m.visualContainerObjects || {}).title).fontSize) !== 10) bad.push(`${id}: phone sizes ${JSON.stringify(m.objects)} ${JSON.stringify(m.visualContainerObjects)}`);
     }
   });
@@ -1279,10 +1278,8 @@ if (part('round6')) {
   const f = (x) => (x ? `${x.t}[${x.c != null ? x.c : x.m}]` : null);
   const plan = await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end' }), design = plan.j && plan.j.design;
   // every visual of a written report: page name, type, and the fields of its query in role order
-  const visualsOf = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
-    return order.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
-      return fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual && v.visual.query)
-        .map((v) => ({ page: pg.displayName, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })); }); };
+  const visualsOf = (dir) => reportOf(dir).flatMap((pg) => pg.visuals.map((x) => x.json).filter((v) => v.visual && v.visual.query)
+        .map((v) => ({ page: pg.name, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })));
   const SALES = (m) => `Sales[${m}]`, RAM = { kpis: ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'].map(SALES) };
 
   // 1. create_report takes the approved plan's fields: bound as given, nothing re-picked, and the answer says what was bound
@@ -1632,10 +1629,8 @@ if (part('round9')) {
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   // every page of a written report: { name, tooltip, filters, visuals }
-  const report = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
-    return order.map((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
-      return { name: pg.displayName, tooltip: pg.type === 'Tooltip', filters: (pg.filterConfig && pg.filterConfig.filters) || [],
-        visuals: fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual) }; }); };
+  const report = (dir) => reportOf(dir).map((pg) => ({ name: pg.name, tooltip: pg.raw.type === 'Tooltip', filters: (pg.raw.filterConfig && pg.raw.filterConfig.filters) || [],
+    visuals: pg.visuals.map((x) => x.json).filter((v) => v.visual) }));
   const reportsIn = (proj) => fs.readdirSync(path.join(ROOT, proj)).filter((n) => /\.Report$/.test(n)).length;
   const hashDir = (dir) => { const h = crypto.createHash('sha256'); const walk = (d) => fs.readdirSync(d).sort().forEach((n) => { const f = path.join(d, n); if (fs.statSync(f).isDirectory()) walk(f); else { h.update(n); h.update(fs.readFileSync(f)); } }); walk(dir); return h.digest('hex'); };
   const lit = (s) => ({ expr: { Literal: { Value: s } } });
