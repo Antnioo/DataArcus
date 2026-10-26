@@ -112,7 +112,7 @@ and `-6`) now read `EOMONTH`. No golden report holds the DAX (grep: EDATE only i
 ## Suites (before on 0f7f6e8 -> after)
 `npm test -- report` 28 -> 29 passed (lr1); `arabic` 10 -> 10; `core` 6 -> 6; `scripts/tests/run-all.mjs pbip
 theme-generator` 2 -> 2 (898 and 100 checks); `npm test -- --keep-going`: "run-tests: 92 suites passed";
-check-result-lines 92 PASS, changelog-words 137 PASS, check-agent-memory 153 PASS, test-site-config PASS, eslint clean.
+check-result-lines 92 PASS, changelog-words 137 PASS, check-agent-memory 154 PASS, test-site-config PASS, eslint clean.
 
 ## Seen, not in scope
 1. The date branch of lastMonths still has no `ISBLANK ( _last )` guard (the label branch keeps every month when no month
