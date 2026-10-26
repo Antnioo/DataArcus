@@ -13,6 +13,14 @@
 //         the 2 networks stay custom and declared; every replaced visual keeps its name; validator 0 errors
 //   CL-7  plan_layout redesignFrom on the native copy: a plan id, every page, the clutter's boxes changed (the card off
 //         its row back on it, page 1's top row with even gaps); approved and written: "<name> native redesigned"
+//   NC2-1 (NC2) confidence from evidence: no package in the report, so none is "high"; each level said once, the lead
+//         line counts the guesses; 7 medium (a known id), 4 low (inferred), each with its evidence in words
+//   NC2-2 every loss named: the tornado's two sides, the bullet's bars, the word cloud's look (and that the bars rank by
+//         value), the calendar's grid; the format settings line says which were kept and which were not
+//   NC2-3 closer natives first, the current one second: the bullet a combo with the target as markers on one axis, the
+//         calendar heatmap a matrix (year and month by weekday) shaded by conditional formatting; customVisualsSecond
+//         gives the second option; the written files carry the markers and the shading
+//   NC2-4 the approval page's rows: each replacement's confidence, evidence, losses and second option
 //   CL-8  the laptop's driver (lab/custom-visuals-run.mjs) runs the same chain on its own and fills the result table
 // The laptop's run (mcp/lab/CUSTOM-VISUALS-LAB.md) is this chain, then Desktop.
 //   node test-0.3.1-custom-visuals-lab.mjs
@@ -43,6 +51,8 @@ const errorsOf = (v) => (v.json && v.json.data ? v.json.data.errorCount : -1), w
 const FIELDS = /Total Sales|Sales LY|Sales Target|Units Sold|\bOrders\b|Branches|Products|Calendar|Month Start/;
 const COMPARABLE = [{ measures: ['Sales[Total Sales]', 'Sales[Sales Target]'], answer: 'comparable' }, { measures: ['Sales[Total Sales]', 'Sales[Sales LY]'], answer: 'comparable' }];
 const SPLIT = ['bulletChart', 'tornadoChart', 'smoothLineChart'];
+const SECOND = Lab.VISUALS_CUSTOM.filter((c) => c.second);
+const keyOfLab = (c) => { const pg = Lab.PAGES[c.page - 1], b = pg.boxes[c.name]; return `${c.page}:${b[0]},${b[1]}`; };
 
 let client = null;
 try {
@@ -89,7 +99,7 @@ try {
   chk(() => !A.pl.err && A.reps.length === 11 && A.not.length === 2, () => `CL-3a. 11 replacements, 2 not replaced: ${short(A.pl)}`);
   Lab.VISUALS_CUSTOM.filter((c) => c.expect).forEach((c) => {
     const r = A.reps.find((x) => x.from === c.type);
-    chk(() => r && r.native === c.expect && r.page === c.page && /^custom visual \S+ on page \d+ at \d+,\d+ -> /.test(r.line) && r.lost.length >= 1 && /It loses/.test(r.tell) && ['low', 'medium', 'high'].includes(r.confidence),
+    chk(() => r && r.native === (r.axes && r.axes.panels && c.split ? c.split : c.expect) && r.page === c.page && /^custom visual \S+ on page \d+ at \d+,\d+ -> /.test(r.line) && r.lost.length >= 1 && /It loses/.test(r.tell) && ['low', 'medium', 'high'].includes(r.confidence),
       () => `CL-3b. ${c.name} (page ${c.page}) becomes ${c.expect}, with its line, confidence and what it loses: ${JSON.stringify(r || null).slice(0, 500)}`);
   });
   chk(() => Lab.VISUALS_CUSTOM.filter((c) => !c.expect).every((c) => A.not.some((x) => x.line.includes(c.type) && /no native visual draws it/.test(x.why) && /network/.test(x.line))),
@@ -103,6 +113,40 @@ try {
   chk(() => !B.pl.err && B.reps.length === 11 && B.not.length === 2 && B.reps.every((r) => !(r.axes && r.axes.panels)) && !((B.pl.j.sharedAxes || {}).ask || []).length && B.pl.j.plan && B.pl.j.plan.planId,
     () => `CL-4. with the person's answers (comparable): 11 replacements, none split, nothing asked, a plan id: ${short(B.pl)}`);
   chk(() => SPLIT.every((t) => { const r = B.reps.find((x) => x.from.startsWith(t)); return r && r.native === want[r.from]; }), () => 'CL-4b. answered, the three charts keep their native type, in one visual each');
+  // ---- NC2-1 confidence from evidence ----
+  { const C = B.cv.confidence || {}, lv = C.levels || {}, count = (k) => B.reps.filter((r) => r.confidence === k).length;
+    chk(() => B.reps.every((r) => r.confidence !== 'high') && count('medium') === 7 && count('low') === 4,
+      () => `NC2-1a. no package in the report: none high, 7 medium, 4 low: ${JSON.stringify(B.reps.map((r) => [r.from, r.confidence]))}`);
+    chk(() => typeof lv.high === 'string' && typeof lv.medium === 'string' && typeof lv.low === 'string' && /package/.test(lv.high) && /id/.test(lv.medium) && /inferred|kinds/.test(lv.low),
+      () => `NC2-1b. each level's meaning said once in the plan: ${JSON.stringify(lv)}`);
+    chk(() => typeof C.lead === 'string' && /11 replacements/.test(C.lead) && /0 high, 7 medium, 4 low/.test(C.lead) && /11 of 11 are guesses/.test(C.lead),
+      () => `NC2-1c. the plan's lead line counts the levels and the guesses: ${JSON.stringify(C.lead)}`);
+    chk(() => B.reps.every((r) => typeof r.evidence === 'string' && r.evidence.length > 10 && !FIELDS.test(r.evidence)) && /no package|package is not/.test(B.reps[0].evidence),
+      () => `NC2-1d. each replacement's evidence in words, no field name: ${JSON.stringify(B.reps.map((r) => r.evidence))}`);
+    chk(() => B.reps.find((r) => r.from.startsWith('dialGauge')).confidence === 'medium' && B.reps.find((r) => r.from.startsWith('wordCloud')).confidence === 'low',
+      () => 'NC2-1e. a known id (the dial gauge) is medium; a word cloud, inferred from its fields, low'); }
+  // ---- NC2-2 every loss named ----
+  { const L = (t) => ((B.reps.find((r) => r.from.startsWith(t)) || {}).lost || []).join(' | ');
+    chk(() => /two-sided/.test(L('tornadoChart')) && /left and right/.test(L('tornadoChart')), () => `NC2-2a. the tornado's two-sided layout is named: ${L('tornadoChart')}`);
+    chk(() => /horizontal bars/.test(L('bulletChart')) && /bands/.test(L('bulletChart')) && /target/.test(L('bulletChart')), () => `NC2-2b. the bullet's losses: its horizontal bars and bands; the target said: ${L('bulletChart')}`);
+    chk(() => /cloud/.test(L('wordCloud')) && /sized by/.test(L('wordCloud')) && /ranks/.test(L('wordCloud')), () => `NC2-2c. the word cloud's look named, and the bars rank by value: ${L('wordCloud')}`);
+    chk(() => /one square per day/.test(L('calendarHeatmap')), () => `NC2-2d. the calendar heatmap's day squares named: ${L('calendarHeatmap')}`);
+    chk(() => /kept: labels \(as the native value labels\)/.test(L('tornadoChart')) && /not carried over: none/.test(L('tornadoChart')) && /not carried over: weekStartDay|not carried over: calendar/.test(L('calendarHeatmap')),
+      () => `NC2-2e. the format settings line says which were kept and which not: ${L('tornadoChart')} || ${L('calendarHeatmap')}`); }
+  // ---- NC2-3 closer natives first, the current one second ----
+  chk(() => SECOND.every((c) => { const r = B.reps.find((x) => x.from === c.type); return r && r.native === c.expect && r.second && r.second.native === c.second && r.second.pick === keyOfLab(c) && (r.second.lost || []).length; }),
+    () => `NC2-3a. the bullet and the calendar heatmap: the closer native first, today's second (with its key and losses): ${JSON.stringify(B.reps.filter((r) => r.second).map((r) => [r.from, r.native, r.second]))}`);
+  chk(() => B.reps.filter((r) => r.second).length === 2, () => 'NC2-3b. only those two have a second option');
+  const S2 = await planOf({ sharedAxes: COMPARABLE, customVisualsSecond: SECOND.map(keyOfLab) });
+  chk(() => !S2.pl.err && SECOND.every((c) => { const r = S2.reps.find((x) => x.from === c.type); return r && r.native === c.second && r.second && r.second.native === c.expect; }) && S2.reps.length === 11,
+    () => `NC2-3c. customVisualsSecond: the second option written, the first offered back: ${short(S2.pl)}`);
+  { const bad = await planOf({ sharedAxes: COMPARABLE, customVisualsSecond: ['9:1,1'] });
+    chk(() => bad.pl.err || /customVisualsSecond/.test(JSON.stringify(bad.pl.j && bad.pl.j.planProblems || bad.pl.j)), () => `NC2-3d. a key that names no second option is refused: ${short(bad.pl)}`); }
+  // ---- NC2-4 the approval page's rows ----
+  { const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
+    const sm = summary('report', { customVisualsShown: shownOf(B.cv) }), sec = (sm.sections || []).find((x) => /Custom visuals replaced/.test(x.heading)), flat = JSON.stringify(sec || null);
+    chk(() => sec && /0 high, 7 medium, 4 low/.test(flat) && /confidence: medium/.test(flat) && /confidence: low/.test(flat) && /second option/.test(flat) && /loses /.test(flat) && /two-sided/.test(flat),
+      () => `NC2-4. the approval page shows the lead line, each confidence with its evidence, the losses and the second option: ${flat.slice(0, 900)}`); }
   // ---- CL-5 ----
   chk(() => hashOf(RD) === before && !fs.existsSync(NAT), () => 'CL-5. the plans change nothing: the original as it was, no native copy written');
 
@@ -119,6 +163,15 @@ try {
   const v1 = Lab.validate(NAT);
   chk(() => errorsOf(v1) === 0, () => `CL-6d. the validator on the native copy: 0 errors: ${v1.text.slice(0, 800)}`);
   chk(() => hashOf(RD) === before, () => 'CL-6e. the original is still as it was');
+  // (NC2-3) the written files: the bullet's target as markers, the heatmap's matrix shaded
+  { const bu = nvs.find((x) => x.name === 'cvBullet').visual, ls = ((bu.objects || {}).lineStyles || [])[0] || {}, P = ls.properties || {}, lit = (p) => p && p.expr && p.expr.Literal && p.expr.Literal.Value;
+    chk(() => bu.visualType === 'lineClusteredColumnComboChart' && bu.query.queryState.Y.projections.map((p) => p.queryRef).join() === 'Sales.Total Sales' && bu.query.queryState.Y2.projections.map((p) => p.queryRef).join() === 'Sales.Sales Target'
+      && lit(P.strokeShow) === 'false' && lit(P.showMarker) === 'true' && lit(P.markerShape) === "'longDash'" && lit(bu.objects.valueAxis[0].properties.secShow) === 'false',
+      () => `NC2-3e. the bullet written: the value as columns, the target as long-dash markers with no line, one axis: ${JSON.stringify(bu).slice(0, 900)}`);
+    const hm = nvs.find((x) => x.name === 'cvCalendarHeat').visual, q = hm.query.queryState, bc = (((hm.objects || {}).values || [])[0] || {});
+    chk(() => hm.visualType === 'pivotTable' && q.Rows.projections.map((p) => p.queryRef).join() === 'Calendar.Year,Calendar.Month' && q.Columns.projections.map((p) => p.queryRef).join() === 'Calendar.Weekday'
+      && q.Values.projections.map((p) => p.queryRef).join() === 'Sales.Total Sales' && bc.properties.backColor.solid.color.expr.FillRule.FillRule.linearGradient2 && bc.selector.metadata === 'Sales.Total Sales',
+      () => `NC2-3f. the calendar heatmap written as a matrix, year and month by weekday, the value shaded: ${JSON.stringify(hm).slice(0, 1200)}`); }
 
   // ---- CL-7 the redesign of the native copy (the clutter) ----
   const rd = await call('plan_layout', { path: 'lab', redesignFrom: 'lab/' + Lab.NAME + ' native.Report' });

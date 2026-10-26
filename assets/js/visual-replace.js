@@ -27,6 +27,8 @@
   const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
   // Power BI's QueryAggregateFunction: Avg 1, Min 3
   const AGG = { Avg: 1, Min: 3 }, AGG_WORD = { Avg: 'Average of', Min: 'First' };
+  // (0.3.1 NC2) the heat shading's ends: a pale blue to a mid blue, both light enough for dark text
+  const HEAT = { low: '#f3f8fe', high: '#8cc2f5' };
 
   // What the custom visual showed, from its own format flags (the property names and true/false only, never data):
   // { valueLabels, categoryLabels, trend, thresholds, legend (true, false, or null when not set) }. Weak by nature: a
@@ -65,6 +67,10 @@
     const v = json.visual, st = ((v.query || {}).queryState) || {};
     const byRef = {};
     Object.values(st).forEach((r) => list(r && r.projections).forEach((p) => { if (p && p.queryRef != null && !(p.queryRef in byRef)) byRef[p.queryRef] = p; }));
+    // (0.3.1 NC2) columns the native visual adds from the model (the calendar heatmap's year, month and weekday):
+    // mapping.add { queryRef: { table, column } }, written as Power BI writes a column; never counted as dropped
+    const addedRefs = new Set();
+    Object.entries(mapping.add || {}).forEach(([ref, c]) => { if (!(ref in byRef) && c && typeof c.table === 'string' && typeof c.column === 'string') { byRef[ref] = { field: { Column: { Expression: { SourceRef: { Entity: c.table } }, Property: c.column } }, queryRef: ref, nativeQueryRef: c.column }; addedRefs.add(ref); } });
     const qs = {}, used = new Set(), agg = mapping.aggregate || {};
     // (the laptop proof's Z2: one measure may sit in two roles, a map's Size and its Tooltips; Tooltips are written last)
     const order = Object.keys(mapping.roles || {}).sort((a, b) => (a === 'Tooltips') - (b === 'Tooltips'));
@@ -75,7 +81,7 @@
       if (DRILL_ROLES.includes(role) && ps.length > 1 && !ps.some((p) => p.active)) ps[0].active = true;
       qs[role] = { projections: ps };
     });
-    const dropped = Object.keys(byRef).filter((r) => !used.has(r));
+    const dropped = Object.keys(byRef).filter((r) => !used.has(r) && !addedRefs.has(r));
     const fieldsIn = new Set(Object.values(qs).flatMap((r) => r.projections.map((p) => JSON.stringify(p.field))));
     let sort = (v.query || {}).sortDefinition;
     // a sort by a field no role carries (a helper column): Min of it, or the measure itself, goes to Tooltips and the
@@ -105,6 +111,9 @@
     if (fm.axisTitles === false) { put('categoryAxis', { showAxisTitle: 'false' }); put('valueAxis', { showAxisTitle: 'false' }); }
     if (fm.legend === false) put('legend', { show: 'false' });
     if (fm.stylePicker === false) put('mapControls', { showStylePicker: 'false' });
+    // (0.3.1 NC2) a bullet's target on the combo: its line drawn as long-dash markers only (Microsoft's capabilities of
+    // lineClusteredColumnComboChart: lineStyles.strokeShow, showMarker, markerShape longDash, markerSize)
+    if (fm.targetMarkers && mapping.native === 'lineClusteredColumnComboChart') put('lineStyles', { strokeShow: 'false', showMarker: 'true', markerShape: "'longDash'", markerSize: '12D' });
     if (Object.keys(objects).length) visual.objects = objects;
     // a date hierarchy opened one level down (the level a timeline showed): written per Microsoft's schema, both levels
     // expanded from the root (to be proved in Desktop: no measured example yet)
@@ -116,6 +125,17 @@
     }
     // (J19) a combo the person confirmed keeps one shared axis: its secondary axis off
     if (mapping.native === 'lineClusteredColumnComboChart') { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.secShow = lit('false'); }
+    // (0.3.1 NC2) a calendar heatmap's matrix: each value cell shaded by the value, the background's conditional formatting
+    // (values.backColor as a FillRule linearGradient2 on the value, the form measured for a chart's dataPoint.fill in
+    // round 13; light ends so the default dark text stays readable on every cell)
+    const heatOn = fm.heat && mapping.native === 'pivotTable' && qs.Values ? qs.Values.projections[0] : null;
+    if (heatOn) {
+      visual.objects = visual.objects || {};
+      visual.objects.values = [{ properties: { backColor: { solid: { color: { expr: { FillRule: { Input: clone(heatOn.field), FillRule: { linearGradient2: {
+        min: { color: { Literal: { Value: "'" + HEAT.low + "'" } } }, max: { color: { Literal: { Value: "'" + HEAT.high + "'" } } },
+        nullColoringStrategy: { strategy: { Literal: { Value: "'asZero'" } } } } } } } } } } },
+      selector: { data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata: heatOn.queryRef } }];
+    }
     const out = clone(json); out.visual = visual;
     const objs = Object.keys(v.objects || {}), named = objs.map(plainName).filter(Boolean);
     const lost = [];
@@ -134,7 +154,8 @@
     const used = new Set(list(taken).map(String)), base = String(json.name || 'visual').slice(0, 44);
     const nameAt = (i) => { if (!i) return json.name; let k = i + 1, nm = base + '_' + k; while (used.has(nm)) nm = base + '_' + (++k); used.add(nm); return nm; };
     const all = { dropped: new Set(), lost: [] }, outs = P.map((p, i) => {
-      const r = replaceVisual(json, Object.assign({}, mapping, { native: p.native, roles: p.roles, panels: undefined }));
+      // (NC2) a panel draws its own values: no target markers across panels
+      const r = replaceVisual(json, Object.assign({}, mapping, { native: p.native, roles: p.roles, panels: undefined, format: Object.assign({}, mapping.format, { targetMarkers: false }) }));
       r.dropped.forEach((d) => all.dropped.add(d)); r.lost.forEach((x) => { if (!all.lost.includes(x)) all.lost.push(x); });
       const j = r.json; j.name = nameAt(i);
       j.position = Object.assign({}, pos, { x: (pos.x || 0) + (across ? i * (w + GAP) : 0), y: (pos.y || 0) + (across ? 0 : i * (h + GAP)), width: Math.floor(w), height: Math.floor(h) },

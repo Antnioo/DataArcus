@@ -82,19 +82,20 @@ export const CUSTOM = {
   grid: id('dataGrid', 23), cloud: id('wordCloud', 31), tornado: id('tornadoChart', 32), multiCard: id('multiInfoCard', 33), heat: id('calendarHeatmap', 41),
   smooth: id('smoothLineChart', 42), sankey: id('sankeyDiagram', 51), graph: id('forceGraph', 52)
 };
-// each: page, the visual's name, its type, its roles, what the plan should give (native visualType, or null: not replaced),
+// each: page, the visual's name, its type, its roles, what the plan should give (native visualType, or null: not replaced;
+// (NC2) second: the plan's second option, when it offers one; split: its panels' type before the shared axes are answered),
 // and the custom visual's own format objects (names only matter: the copy drops them and says so)
 export const VISUALS_CUSTOM = [
   { page: 1, name: 'cvKpiTile', type: CUSTOM.kpiTile, roles: { Indicator: [mea('Total Sales')], TrendAxis: [col('Calendar', 'Month Start')], Goal: [mea('Sales Target')] }, expect: 'kpi', objects: { indicator: { fontSize: '28D' } } },
   { page: 1, name: 'cvDialGauge', type: CUSTOM.dialGauge, roles: { Value: [mea('Total Sales')], TargetValue: [mea('Sales Target')], Minimum: [mea('Sales LY')], Maximum: [mea('Sales Max')] }, expect: 'gauge', objects: { needle: { show: 'true' } } },
   { page: 1, name: 'cvDrillBar', type: CUSTOM.drillBar, roles: { Category: [col('Branches', 'City'), col('Branches', 'Branch')], Values: [mea('Total Sales')] }, expect: 'clusteredBarChart', objects: { dataLabels: { show: 'true' } } },
   { page: 2, name: 'cvChipSlicer', type: CUSTOM.chip, roles: { Category: [col('Branches', 'Country')] }, expect: 'slicer', objects: { general: { columns: '4D' } } },
-  { page: 2, name: 'cvBullet', type: CUSTOM.bullet, roles: { Category: [col('Branches', 'Branch')], Value: [mea('Total Sales')], TargetValue: [mea('Sales Target')] }, expect: 'clusteredBarChart', objects: { labels: { show: 'true' } } },
+  { page: 2, name: 'cvBullet', type: CUSTOM.bullet, roles: { Category: [col('Branches', 'Branch')], Value: [mea('Total Sales')], TargetValue: [mea('Sales Target')] }, expect: 'lineClusteredColumnComboChart', second: 'clusteredBarChart', split: 'clusteredBarChart', objects: { labels: { show: 'true' } } },
   { page: 2, name: 'cvDataGrid', type: CUSTOM.grid, roles: { Values: [col('Branches', 'Branch'), col('Branches', 'City'), mea('Total Sales'), mea('Orders')] }, expect: 'tableEx', objects: { grid: { rowPadding: '4D' } } },
   { page: 3, name: 'cvWordCloud', type: CUSTOM.cloud, roles: { Category: [col('Products', 'Product')], Values: [mea('Units Sold')] }, expect: 'clusteredBarChart', objects: { general: { maxNumberOfWords: '100D' } } },
   { page: 3, name: 'cvTornado', type: CUSTOM.tornado, roles: { Category: [col('Products', 'Category')], Values: [mea('Total Sales'), mea('Sales LY')] }, expect: 'clusteredBarChart', objects: { labels: { show: 'true' } } },
   { page: 3, name: 'cvMultiCard', type: CUSTOM.multiCard, roles: { Values: [mea('Total Sales'), mea('Units Sold'), mea('Orders')] }, expect: 'cardVisual', objects: { cardTitle: { show: 'true' } } },
-  { page: 4, name: 'cvCalendarHeat', type: CUSTOM.heat, roles: { Date: [col('Calendar', 'Date')], Values: [mea('Total Sales')] }, expect: 'lineChart', objects: { calendar: { weekStartDay: '0D' } } },
+  { page: 4, name: 'cvCalendarHeat', type: CUSTOM.heat, roles: { Date: [col('Calendar', 'Date')], Values: [mea('Total Sales')] }, expect: 'pivotTable', second: 'lineChart', objects: { calendar: { weekStartDay: '0D' } } },
   { page: 4, name: 'cvSmoothLine', type: CUSTOM.smooth, roles: { Axis: [col('Calendar', 'Month Start')], Values: [mea('Total Sales'), mea('Sales LY')] }, expect: 'lineChart', objects: { lineStyle: { smooth: 'true' } } },
   { page: 5, name: 'cvSankey', type: CUSTOM.sankey, roles: { Source: [col('Branches', 'City')], Destination: [col('Products', 'Category')], Weight: [mea('Total Sales')] }, expect: null, objects: { links: { show: 'true' } } },
   { page: 5, name: 'cvForceGraph', type: CUSTOM.graph, roles: { Source: [col('Branches', 'Country')], Target: [col('Products', 'Product')], Weight: [mea('Units Sold')] }, expect: null, objects: { nodes: { showLabels: 'true' } } }

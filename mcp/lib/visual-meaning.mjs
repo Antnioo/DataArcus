@@ -203,7 +203,7 @@ export function meaningOf(visual, opts) {
   if (!live.length) return out('unknown', {}, { why: `${custom} with no fields in its roles: nothing tells what it shows` });
 
   // the shape: which family of kinds the fields can show
-  let shape, roles, drill = [], series = null, why, kind, aggregate = null;
+  let shape, roles, drill = [], series = null, why, kind, aggregate = null, targets = [], idFit = null;
   const valueRoles = by('value', 'indicator', 'bar', 'anonVal', 'y', 'size', 'line', 'goal', 'min', 'max', 'x');
   const catRoles = by('category', 'time', 'x', 'y').filter((r) => r.cols.length).concat(by('anonCol'));
   if (by('start').length && by('end').length) {
@@ -280,6 +280,7 @@ export function meaningOf(visual, opts) {
     const isTime = cat.length > 0 && cat.every((f) => temporal(f) || (catRole.eff === 'time' && !!f.level));
     const timeTyped = cat.length > 0 && cat.every((f) => temporal(f));
     const goal = vals('goal');
+    targets = goal.map(copy);
     if (goal.length && cat.length === 1 && timeTyped) {
       shape = 'kpi';
       roles = { Indicator: vals('indicator', 'value', 'anonVal', 'bar', 'y').slice(0, 1), TrendLine: cat, Goal: goal.slice(0, 1) };
@@ -350,6 +351,7 @@ export function meaningOf(visual, opts) {
         conf = named ? 'medium' : 'low';
       } else conf = up(conf);
       kind = want;
+      if (hint !== objHint) idFit = kind;
       if (kind === 'combo' && idHints.includes('bar')) lost.push('its horizontal bars: Power BI\'s line and column combo is vertical, so the bars become columns');
       why += `; the ${hint === objHint ? 'format objects' : 'id\'s words'} hint at a ${hint === 'time' ? 'timeline' : hint}, which the fields can show`;
     } else {
@@ -363,7 +365,9 @@ export function meaningOf(visual, opts) {
     else lost.push(`the ${drill.length} drill levels: the native visual shows them side by side, not as a drill-down`);
   }
   lost.push('the custom visual\'s own look (colours, labels, animation) is not carried over: the report\'s theme gives the native one its look');
-  return out(kind, roles, Object.assign({ drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network' }, aggregate ? { aggregate } : {}));
+  // (0.3.1 NC2) the evidence nativeFor weighs: idFit, the kind the id's words named and the fields could show (the
+  // meaning's kind); named, every role's words known; targets, the values in a target role
+  return out(kind, roles, Object.assign({ drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network', idFit: idFit === kind ? kind : null, named, targets }, aggregate ? { aggregate } : {}));
 }
 
 // ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema, the version mcp/package.json pins) ----
@@ -450,68 +454,144 @@ function candidatesOf(m) {
 // a custom object's name as the answer may show it (plain names only; the reading block screens them first)
 const objName = (s) => (typeof s === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(s) ? s : null);
 
+// (0.3.1 NC2, NC1 "Seen" 1-5, 9) a custom visual's form, by its id's words: what the reader no longer sees in the
+// native one, in words, and the closer native Power BI has for it (the bullet, the calendar heatmap). The words only
+// name the form; the fields still decide what can be written.
+export const FORMS = { tornado: ['tornado', 'butterfly'], bullet: ['bullet'], cloud: ['cloud', 'wordcloud', 'tagcloud'], calendar: ['heatmap', 'calendar'] };
+const formOf = (type) => { const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, '')); const e = Object.entries(FORMS).find(([, l]) => w.some((x) => l.includes(x))); return e ? e[0] : null; };
+function formLost(form, kind, calendarNote) {
+  if (form === 'tornado') return ['its two-sided layout (its two values drawn left and right of one centre line, per category): the native chart draws both bars side by side from the same axis'];
+  if (form === 'bullet') return kind === 'combo'
+    ? ['its horizontal bars: the native combo draws upright columns, the target as a long dash across each column', 'its bands behind each bar (the ranges from poor to good): no native chart draws them']
+    : ['its target marker (a line across each bar): the target becomes a second bar beside the value', 'its bands behind each bar (the ranges from poor to good): no native chart draws them'];
+  if (form === 'cloud') return ['its cloud (each word sized by its value, laid out as a cloud): the native bar chart ranks the same words by the same value, longest bar first (Power BI sorts a bar chart by its value), the same facts read as lengths'];
+  if (form === 'calendar') return kind === 'matrix'
+    ? ['its calendar grid of one square per day: the matrix shades one cell per weekday in each month (the sum of those days), not each day']
+    : ['its calendar grid of one square per day, shaded by its value: the days become one line over time, with no shading'].concat(calendarNote ? [calendarNote] : []);
+  return [];
+}
+// the custom visual's own format objects the native visual carries over, by their names (formatFacts' words)
+const KEPT = [{ re: /valuelabel|^labels$|^datalabels$/i, fact: 'valueLabels', as: 'the native value labels' }, { re: /categorylabel|nodelabel/i, fact: 'categoryLabels', as: 'the native category labels' }, { re: /regression|trend/i, fact: 'trend', as: 'the native trend line' }];
+// a loss's head: the text before its first colon outside brackets ("its own format settings (1: labels): ..." -> the part
+// before ": ...")
+const headOf = (x) => { let d = 0; for (let i = 0; i < x.length; i++) { const c = x[i]; if (c === '(') d++; else if (c === ')') d--; else if (c === ':' && d <= 0) return x.slice(0, i); } return x; };
+// the levels of confidence, said once in the plan
+export const CONFIDENCE_LEVELS = {
+  high: 'the custom visual\'s package is in the report (its own role definitions read) and its id names the kind written',
+  medium: 'one of the two: its id names the kind written, or its package\'s role definitions were read and name every role',
+  low: 'inferred: matched by its fields\' kinds (columns, values, dates) and its role names alone; look at it in Desktop'
+};
+
 // The design decision for one visual (audit 5, A5-14): which native visual takes a custom visual's place, ranked.
-// visual: as meaningOf takes it; opts: meaningOf's, plus customObjects: the names of its formatting objects.
+// visual: as meaningOf takes it; opts: meaningOf's, plus customObjects: the names of its formatting objects; (NC2)
+// calendarOf(date field) -> { year, month, weekday } columns of the date's own table (the heatmap's matrix), second: true
+// to write the second option.
 // Returns meaningOf's answer, and: candidates [{ kind, native, roles, fits, problems }] (the fitting ones first),
 // the chosen one (kind, native, roles; native null when none fits or the kind needs HTML), guess (true when the custom
-// visual's own role definitions were not given: matched by field kinds only), lost, and tell: the sentence for the user.
+// visual's own role definitions were not given: matched by field kinds only), lost, tell: the sentence for the user,
+// (NC2) confidence and evidence from what was read, and second: { kind, native, roles, lost, format, add } when a
+// closer native was put first (or, with opts.second, the closer one offered back).
 export function nativeFor(visual, opts) {
   const o = opts || {}, m = meaningOf(visual, o);
   const type = String((visual && visual.type) || ''), custom = VT.isCustom(type, null, o.declared);
   if (!custom) return Object.assign({}, m, { custom: false, candidates: [], guess: false, tell: 'a Power BI visual: kept as it is' });
   const cands = candidatesOf(m).map((c, i) => Object.assign({}, c, fitsCapabilities(c.native, c.roles), { rank: i }));
   const ranked = cands.filter((c) => c.ok).concat(cands.filter((c) => !c.ok)).map(({ ok, rank, ...c }) => Object.assign(c, { fits: ok }));
-  const best = m.kind === 'network' ? null : ranked.find((c) => c.fits) || null;
+  const best0 = m.kind === 'network' ? null : ranked.find((c) => c.fits) || null;
   const guess = !(Array.isArray(o.customRoles) && o.customRoles.length);
-  const lost = m.lost.filter((x) => !/own look/.test(x));
-  const objs = (o.customObjects || visual.customObjects || []).map(objName), named = objs.filter(Boolean);
-  if (objs.length) lost.push(`its own format settings (${objs.length}${named.length ? ': ' + named.slice(0, 8).join(', ') + (named.length > 8 ? ', …' : '') : ''}): the report's theme formats the native visual`);
-  else lost.push('its own look (colours, labels, animation): the report\'s theme formats the native visual');
-  lost.push('its own interactions (its clicks, animation and drill behaviour): Power BI\'s cross-filtering and drill buttons take their place');
-  // when the chosen visual is not the meaning's first choice, its drill note follows the chosen one
-  if (best && best.native !== m.native && m.drill.length > 1) {
-    const i = lost.findIndex((x) => /drill levels|drill-down/.test(x));
-    const note = drillsIn(best.native) ? `the custom visual's own drill-down: Power BI's drill buttons on the native visual take its place, the ${m.drill.length} levels kept as a hierarchy` : `the ${m.drill.length} drill levels: the native visual shows them side by side, not as a drill-down`;
-    if (i >= 0) lost[i] = note; else lost.push(note);
+  const form = formOf(type);
+  // (NC2) the closer native first, the meaning's choice second
+  let closer = null, calendarNote = null;
+  if (best0 && form === 'bullet' && ['bar', 'column'].includes(best0.kind) && (m.targets || []).length === 1 && (best0.roles.Y || []).length === 2 && !best0.roles.Series) {
+    // a bar's target: Microsoft's capabilities give the bar chart error bars (error, by field), but error.errorRange is
+    // {"errorRange":{}} there, its JSON not described and not measured; a constant line is one value per chart. The
+    // combo's line drawn as markers only (lineStyles: strokeShow, showMarker, markerShape longDash) marks each target
+    const tq = (f) => `${f.table}[${f.name}]`, t = m.targets[0], Y = best0.roles.Y.filter((f) => tq(f) !== tq(t));
+    const c = { kind: 'combo', native: NATIVE.combo, roles: Object.assign({ Category: best0.roles.Category || [], Y, Y2: [copy(t)] }, best0.roles.Tooltips ? { Tooltips: best0.roles.Tooltips } : {}), targetMarkers: true };
+    if (Y.length === 1 && fitsCapabilities(c.native, c.roles).ok) closer = c;
+  } else if (best0 && form === 'calendar' && ['line', 'area', 'column', 'bar'].includes(best0.kind) && (best0.roles.Category || []).length === 1 && (best0.roles.Y || []).length === 1 && !best0.roles.Series) {
+    const cal = typeof o.calendarOf === 'function' ? (() => { try { return o.calendarOf(best0.roles.Category[0]); } catch (e) { return null; } })() : null;
+    if (cal && cal.month && cal.weekday) {
+      const c = { kind: 'matrix', native: 'pivotTable', roles: { Rows: [cal.year, cal.month].filter(Boolean).map(copy), Columns: [copy(cal.weekday)], Values: best0.roles.Y.map(copy) }, heat: true, added: [cal.year, cal.month, cal.weekday].filter(Boolean).map(copy) };
+      if (fitsCapabilities(c.native, c.roles).ok) closer = c;
+    } else if (typeof o.calendarOf === 'function') calendarNote = 'a matrix of weekdays by month, shaded by the value, would be closer: it needs a weekday and a month column in the date\'s own table that the model sorts, and none was found';
   }
-  // what the custom visual showed and the native one can show too (opts.facts: the writer's formatFacts of its own flags)
-  const f = o.facts || {}, format = {}, bc = best ? capsOf(best.native) || {} : {}, bobj = bc.objects || {};
-  let expand = 0;
-  if (best) {
-    if (best.twoLevel) { const i = lost.findIndex((x) => /drill/.test(x)); const note = 'the drill-down from its first category to its second: the native donut shows both at once, the second as its details'; if (i >= 0) lost[i] = note; else lost.push(note); }
-    if (CHARTS.includes(best.kind) && !['pie', 'donut'].includes(best.kind)) format.axisTitles = false; // the custom visuals have none; Power BI would add the fields' names
-    if (f.valueLabels) { if (bobj.labels) format.valueLabels = true; else lost.push('its value labels: the native visual has none'); }
-    if (f.categoryLabels) { if (bobj.categoryLabels && best.kind === 'scatter') format.categoryLabels = true; else lost.push('the labels under its marks (the category\'s names): the native visual has no such labels'); }
-    if (f.trend) { if (bobj.trend) { format.trend = true; lost.push('its own regression line: the native trend line is switched on in its place (a straight line through the points; check it draws)'); } else lost.push('its regression line: the native visual has none'); }
-    if (f.thresholds) lost.push('its threshold lines: add constant lines on the native visual by hand');
-    if (best.kind === 'scatter' && f.legend !== true && (best.roles.Series || []).length) {
-      best.roles = Object.assign({}, best.roles); delete best.roles.Series;
-      lost.push('its colour split by a legend field: the original showed no legend, so the native scatter keeps one colour');
+  let best = closer || best0, other = closer ? best0 : null;
+  if (o.second && other) { const x = best; best = other; other = x; }
+
+  // what the reader no longer sees with one option, and the native visual's own settings for what the custom one showed
+  const detailsOf = (best) => {
+    const lost = m.lost.filter((x) => !/own look/.test(x));
+    const objs = (o.customObjects || visual.customObjects || []).map(objName), named = objs.filter(Boolean);
+    const f = o.facts || {}, format = {}, bc = best ? capsOf(best.native) || {} : {}, bobj = bc.objects || {};
+    let expand = 0;
+    if (best) {
+      if (CHARTS.includes(best.kind) && !['pie', 'donut'].includes(best.kind)) format.axisTitles = false; // the custom visuals have none; Power BI would add the fields' names
+      if (f.valueLabels && bobj.labels) format.valueLabels = true;
+      if (f.categoryLabels && bobj.categoryLabels && best.kind === 'scatter') format.categoryLabels = true;
+      if (f.trend && bobj.trend) format.trend = true;
+      if (best.targetMarkers) format.targetMarkers = true;
+      if (best.heat) format.heat = true;
     }
-    if (best.kind === 'map') format.stylePicker = false;
-    // a timeline shows a finer date level than the top one: the native chart opens one level down (years with their quarters)
-    const lv = m.drill.filter((x) => x.level);
-    if (hintsOf(type).includes('time') && lv.length >= 2 && drillsIn(best.native)) {
-      expand = 1;
-      const nm = (x) => (/^[A-Za-z ]{1,20}$/.test(String(x.level)) ? String(x.level).toLowerCase() : 'the next level');
-      lost.push(`the date level it chose by its zoom: the native chart is set to open at ${nm(lv[1])} within ${nm(lv[0])}; if it opens at ${nm(lv[0])}, use "Expand all down one level" (the forked arrow above the chart) to see ${nm(lv[1])}`);
+    // (NC2, NC1 "Seen" 9) which of its own settings the native one keeps, and as what; the rest named as not carried over
+    if (objs.length) {
+      const kept = named.filter((x) => KEPT.some((k) => k.re.test(x) && format[k.fact])), rest = named.filter((x) => !kept.includes(x)), hidden = objs.length - named.length;
+      const keptWords = kept.map((x) => `${x} (as ${KEPT.find((k) => k.re.test(x)).as})`);
+      const restWords = rest.slice(0, 8).join(', ') + (rest.length > 8 ? ', …' : '') + (hidden ? `${rest.length ? ', ' : ''}${hidden} more (names not shown)` : '');
+      lost.push(`its own format settings (${objs.length}${named.length ? ': ' + named.slice(0, 8).join(', ') + (named.length > 8 ? ', …' : '') : ''}): kept: ${keptWords.length ? keptWords.join(', ') : 'none'}; not carried over: ${restWords || 'none'}; the report's theme formats the rest`);
+    } else lost.push('its own look (colours, labels, animation): the report\'s theme formats the native visual');
+    lost.push('its own interactions (its clicks, animation and drill behaviour): Power BI\'s cross-filtering and drill buttons take their place');
+    // when the chosen visual is not the meaning's first choice, its drill note follows the chosen one
+    if (best && best.native !== m.native && m.drill.length > 1) {
+      const i = lost.findIndex((x) => /drill levels|drill-down/.test(x));
+      const note = drillsIn(best.native) ? `the custom visual's own drill-down: Power BI's drill buttons on the native visual take its place, the ${m.drill.length} levels kept as a hierarchy` : `the ${m.drill.length} drill levels: the native visual shows them side by side, not as a drill-down`;
+      if (i >= 0) lost[i] = note; else lost.push(note);
     }
-  }
-  if (best) {
-    // a picture that becomes another kind of visual says so first, in plain words (rc.2b: a map written as a table)
-    const PIC = ['map', 'scatter', 'gauge', 'kpi', 'pie', 'donut', 'waterfall'];
-    if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
-    // a sort by a field no role carries (a helper): kept through the tooltips, said
-    const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
-    if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
-  }
+    if (best) {
+      if (best.twoLevel) { const i = lost.findIndex((x) => /drill/.test(x)); const note = 'the drill-down from its first category to its second: the native donut shows both at once, the second as its details'; if (i >= 0) lost[i] = note; else lost.push(note); }
+      if (f.valueLabels && !format.valueLabels) lost.push('its value labels: the native visual has none');
+      if (f.categoryLabels && !format.categoryLabels) lost.push('the labels under its marks (the category\'s names): the native visual has no such labels');
+      if (f.trend) { if (format.trend) lost.push('its own regression line: the native trend line is switched on in its place (a straight line through the points; check it draws)'); else lost.push('its regression line: the native visual has none'); }
+      if (f.thresholds) lost.push('its threshold lines: add constant lines on the native visual by hand');
+      if (best.kind === 'scatter' && f.legend !== true && (best.roles.Series || []).length) {
+        best.roles = Object.assign({}, best.roles); delete best.roles.Series;
+        lost.push('its colour split by a legend field: the original showed no legend, so the native scatter keeps one colour');
+      }
+      if (best.kind === 'map') format.stylePicker = false;
+      // a timeline shows a finer date level than the top one: the native chart opens one level down (years with their quarters)
+      const lv = m.drill.filter((x) => x.level);
+      if (hintsOf(type).includes('time') && lv.length >= 2 && drillsIn(best.native)) {
+        expand = 1;
+        const nm = (x) => (/^[A-Za-z ]{1,20}$/.test(String(x.level)) ? String(x.level).toLowerCase() : 'the next level');
+        lost.push(`the date level it chose by its zoom: the native chart is set to open at ${nm(lv[1])} within ${nm(lv[0])}; if it opens at ${nm(lv[0])}, use "Expand all down one level" (the forked arrow above the chart) to see ${nm(lv[1])}`);
+      }
+      // a picture that becomes another kind of visual says so first, in plain words (rc.2b: a map written as a table)
+      const PIC = ['map', 'scatter', 'gauge', 'kpi', 'pie', 'donut', 'waterfall'];
+      if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
+      // a sort by a field no role carries (a helper): kept through the tooltips, said
+      const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
+      if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
+    }
+    lost.push(...formLost(form, best ? best.kind : null, best && best.kind !== 'matrix' ? calendarNote : null));
+    return { lost, format, expand, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') };
+  };
+  const D = detailsOf(best), lost = D.lost;
   const keeps = best ? Object.entries(best.roles).filter(([, l]) => l.length).map(([r, l]) => `${roleLabel(best.native, r)} (${n(l.length, 'field', 'fields')})`).join(', ') : '';
-  const short = lost.map((x) => x.split(':')[0]).join('; ');
+  const short = lost.map(headOf).join('; ');
   const tell = best ? `This custom visual becomes a native ${LABEL[best.kind] || best.native}${best.native === 'multiRowCard' ? ' (multi-row card)' : ''}${guess ? ' (a guess from its fields\' kinds: the custom visual\'s own role definitions are not in the report)' : ''}. It keeps ${keeps}. It loses ${short}.`
     : m.kind === 'network' ? `No native Power BI visual draws this custom visual's network: an HTML/SVG measure in an image-capable visual can (you approve it in the plan), or a table of its links. It loses ${short}.`
     : `No native Power BI visual can show this custom visual's fields as they are: it can be kept as it is or left out. Nothing is decided without you.`;
-  const extras = best ? Object.assign({ format, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') }, expand ? { expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}) : {};
-  return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null, aggregate: undefined }, extras, { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network' });
+  // (NC2, NC1 "Seen" 5) confidence from what was read: high = its package's roles AND an id that names the kind written;
+  // medium = one of the two; low = inferred from the fields' kinds. Never high without the package.
+  const idKnown = !!(best && m.idFit && best.kind === m.idFit), rolesRead = !guess && !!m.named;
+  const confidence = !best ? (guess && m.confidence === 'high' ? 'medium' : m.confidence) : !guess && idKnown ? 'high' : idKnown || rolesRead ? 'medium' : 'low';
+  const idSaid = idKnown ? `its id's words name a ${LABEL[best.kind] || best.native}` : hintsOf(type).length ? 'its id\'s words name no kind its fields could be written as here' : 'its id names no kind DataArcus knows';
+  const evidence = `${guess ? 'no package in the report: its own role definitions are not read' : `its package's role definitions read${rolesRead ? ', every role named' : ''}`}; ${idSaid}; ${idKnown && !guess ? 'both agree' : 'matched by its fields\' kinds and its role names'}`;
+  const extras = best ? Object.assign({ format: D.format, tooltips: D.tooltips }, D.expand ? { expand: D.expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}, best.added ? { added: best.added } : {}) : {};
+  const sec = other ? (() => { const d = detailsOf(other); return Object.assign({ kind: other.kind, native: other.native, roles: other.roles, label: LABEL[other.kind] || other.native, lost: d.lost, format: d.format }, other.added ? { added: other.added } : {}); })() : null;
+  return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null, aggregate: undefined }, extras,
+    { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network', confidence, evidence }, sec ? { second: sec, secondChosen: !!o.second } : {},
+    best && best === closer ? { why: m.why + (best.targetMarkers ? '; written as columns with its target as a long-dash marker on each (the closer native for a bullet)' : '; written as a matrix of months by weekday, each cell shaded by the value (the closer native for a calendar heatmap)') } : {});
 }
 
 // read_report's record of one visual (step B): null for a Power BI visual; for a custom one { kind, native, why, tell,
@@ -557,7 +637,8 @@ function axesFor(r, o, type, lang) {
   if (d.share) return r.native === 'lineClusteredColumnComboChart' ? { share: true, why: d.why } : null;
   const cat = r.roles.Category || [], time = !!r.drill && r.drill.some((f) => f.level) || cat.some((f) => /^date/i.test(String((o.typeOf && o.typeOf(f)) || '')));
   // (a combo's panels: lines over time, else the custom visual's own bars where its id says bars, else columns)
-  const bars = hintsOf(type).includes('bar'), one = r.native === 'lineClusteredColumnComboChart' ? (time ? 'lineChart' : bars ? 'clusteredBarChart' : 'clusteredColumnChart') : r.native;
+  // (NC2) or the bars the meaning read (a bullet's combo split: its own bars)
+  const bars = hintsOf(type).includes('bar') || (r.native === 'lineClusteredColumnComboChart' && r.drewBars), one = r.native === 'lineClusteredColumnComboChart' ? (time ? 'lineChart' : bars ? 'clusteredBarChart' : 'clusteredColumnChart') : r.native;
   const refs = (l) => l.map((f) => f.queryRef).filter(Boolean);
   const ar = lang === 'ar', units = d.groups.map((g) => (d.labels[g[0]] && d.labels[g[0]][ar ? 'ar' : 'en']) || null);
   const alike = units.some((u, i) => !u || units.indexOf(u) !== i), placeOf = (i) => (ar ? FSI : '') + `${i + 1}/${units.length}` + (ar ? PDI : '');
@@ -565,19 +646,26 @@ function axesFor(r, o, type, lang) {
     unit: units[i], titleTag: alike ? [units[i], placeOf(i)].filter(Boolean).join(' · ') : units[i] }));
   return { share: false, why: d.why, ask: d.ask, panels, bars: one === 'clusteredBarChart' };
 }
+// (NC2) opts.second: the keys ("page:x,y") of the replacements to write as their second option (customVisualsSecond);
+// opts.calendarOf: the date's own table's year, month and weekday columns (the calendar heatmap's matrix)
+export const pickOf = (p, x) => `${p.n}:${x.x},${x.y}`;
 export function replacementsOf(inv, opts) {
-  const o = opts || {}, out = [];
+  const o = opts || {}, out = [], second = new Set(o.second || []);
   ((inv && inv.pages) || []).forEach((p) => (p.visuals || []).forEach((x) => {
     if (!x.meaning) return; // the reading block gives a meaning to custom visuals only
-    const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }, o.factsOf && x.json ? { facts: o.factsOf(x.json) } : {}));
+    const pick = pickOf(p, x);
+    const r0 = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]), second: second.has(pick) }, o.factsOf && x.json ? { facts: o.factsOf(x.json) } : {}));
+    const r = Object.assign(r0, { drewBars: r0.native === 'lineClusteredColumnComboChart' && !!r0.second && r0.second.kind === 'bar' });
     const ax = r.native ? axesFor(r, o, x.type, o.langOf ? o.langOf(p) : 'en') : null, panels = ax && ax.panels ? ax.panels : null, kindOf = (t) => Object.keys(NATIVE).find((k) => NATIVE[k] === t) || r.kind;
     out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: panels ? kindOf(panels[0].native) : r.kind, native: panels ? panels[0].native : r.native,
       label: r.native ? LABEL[panels ? kindOf(panels[0].native) : r.kind] || r.native : null,
       ...(ax ? { axes: Object.assign({ share: ax.share, why: ax.why }, panels ? { panels: panels.length } : {}) } : {}), ...(panels ? { panels } : {}), ...(ax && ax.ask && ax.ask.length ? { ask: ax.ask } : {}),
       roles: r.native ? Object.fromEntries(Object.entries(r.roles).map(([k, l]) => [k, l.map((f) => f.queryRef).filter(Boolean)])) : {},
       format: r.format || {}, tooltips: !!r.tooltips, ...(r.expand ? { expand: r.expand } : {}), ...(r.aggregate ? { aggregate: r.aggregate } : {}),
+      ...(r.added && r.native ? { add: Object.fromEntries(r.added.map((f) => [f.queryRef, { table: f.table, column: f.name }])) } : {}),
       why: r.why, tell: panels ? r.tell.replace(/^This custom visual becomes a native [^.(]+/, `This custom visual becomes ${panels.length} separate native ${LABEL[kindOf(panels[0].native)] || panels[0].native}s in its box, one axis each (${ax.why.en})`) : r.tell,
-      lost: ax && ax.bars ? r.lost.filter((l) => !/horizontal bars/.test(l)) : r.lost, guess: r.guess, confidence: r.confidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })) });
+      lost: ax && ax.bars ? r.lost.filter((l) => !/horizontal bars/.test(l)) : r.lost, guess: r.guess, confidence: r.confidence, evidence: r.evidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })),
+      ...(r.second ? { second: { pick, native: r.second.native, label: r.second.label, chosen: r.secondChosen, lost: r.second.lost } } : {}) });
   }));
   return out;
 }
