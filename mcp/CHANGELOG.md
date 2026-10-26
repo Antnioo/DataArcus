@@ -145,6 +145,10 @@ package's manifest; this file says what is in it.
 - **Arabic chart titles with «حسب»:** an Arabic report on a model with English names titles its charts «Total Sales حسب
   Region» and «ترتيب Region حسب Total Sales», in the website's download and the MCP alike, instead of the English name
   with its column in brackets. The English words keep their reading order (U+200F and isolates).
+- **Arabic text order, as Desktop draws it:** Arabic story titles from the DAX function library start with a
+  right-to-left mark, so an English name at the start keeps the sentence in order. check_report's Arabic lens says an
+  English word anywhere in Arabic text can swap the words around it, with the fix. The DAX functions option says Desktop
+  shows an error in those visuals until the script is applied, and asks for the compatibility upgrade at Preview and Apply.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
