@@ -100,15 +100,18 @@ export const LIBRARY = [
       `VAR sz = "width='" & ${n1('w')} & "' height='" & ${n1('h')} & "'"`,
       'RETURN "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' " & sz & " viewBox=\'0 0 " & ' + n1('w') + ' & " " & ' + n1('h') + ' & "\'><foreignObject x=\'0\' y=\'0\' " & sz & "><div xmlns=\'http://www.w3.org/1999/xhtml\' dir=\'" & IF ( ar, "rtl", "ltr" ) & "\' style=\'box-sizing:border-box;width:" & ' + n1('w') + ' & "px;height:" & ' + n1('h') + ' & "px;padding:12px 16px;border-radius:12px;background:" & bg & ";color:" & fg & ";font-family:Segoe UI,Tahoma,sans-serif;display:flex;flex-direction:column;justify-content:space-between\'><div style=\'display:flex;justify-content:space-between;align-items:center;gap:8px\'><span style=\'font-size:" & ft & "px;opacity:0.75\'>" & t & "</span>" & d & "</div><div style=\'font-size:" & fv & "px;font-weight:700\'>" & v & "</div></div></foreignObject></svg>"'] },
   { name: 'DA.StoryTitle',
-    description: 'Plain text for a dynamic title. delta is a ratio; blank says no change. period: what the delta compares with ("last year", "العام الماضي"). lang: "en" or "ar"; in Arabic the leader, the value and the noun are isolated (U+2068 / U+2069), so a Latin name keeps the sentence in order.',
+    description: 'Plain text for a dynamic title. delta is a ratio; blank says no change. period: what the delta compares with ("last year", "العام الماضي"). lang: "en" or "ar"; in Arabic the leader, the value and the noun are isolated (U+2068 / U+2069) and the text opens and closes with U+200F, so a Latin name keeps the sentence in order.',
     params: 'leader : STRING, valueText : STRING, noun : STRING, delta : NUMERIC, period : STRING, lang : STRING',
     body: [
       'VAR pct = FORMAT ( ABS ( delta ) * 100, "0", "en-US" ) & "%"',
       'VAR i = UNICHAR ( 8296 )',
       'VAR o = UNICHAR ( 8297 )',
+      // (BD1, measured in Desktop 2.159, 26 Oct: a title starting with an isolate read out of order; with U+200F first it
+      // read in order) the Arabic opens and closes with a right-to-left mark, as isolateLatin's rule puts one beside an end run
+      'VAR r = UNICHAR ( 8207 )',
       'VAR en = leader & " leads with " & valueText & " " & noun & IF ( ISBLANK ( delta ), "", ", " & IF ( delta >= 0, "up ", "down " ) & pct & " on " & period )',
       'VAR ar = i & leader & o & " في الصدارة بـ " & i & valueText & o & " " & i & noun & o & IF ( ISBLANK ( delta ), "", "، " & IF ( delta >= 0, "بارتفاع ", "بانخفاض " ) & i & pct & o & " عن " & period )',
-      'RETURN IF ( ISBLANK ( leader ) || leader = "", BLANK (), IF ( lang = "ar", ar, en ) )'] }
+      'RETURN IF ( ISBLANK ( leader ) || leader = "", BLANK (), IF ( lang = "ar", r & ar & r, en ) )'] }
 ];
 export const FUNCTION_NAMES = LIBRARY.map((f) => f.name);
 export const exprOf = (f) => [`(${f.params}) =>`].concat(f.body.map((l) => '\t' + l)).join('\n');
@@ -326,7 +329,7 @@ export function compatSaidAr(compat) {
 }
 
 /** How the user applies the script, for the answer. */
-export const daxHow = (file, compat) => `${compatSaid(compat)} Then apply the script: it is in the file "${file}", next to the project. Open it in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (the DA.* functions and new measures only, in the folder "${FOLDER}"; nothing changed or replaced), then Apply${compat != null && compat >= COMPAT_UDF ? '' : ' and accept the compatibility upgrade Power BI asks for'}. The model is not changed by DataArcus. Until the script is applied the pictures are empty and the story titles blank.`;
+export const daxHow = (file, compat) => `${compatSaid(compat)} Then apply the script: it is in the file "${file}", next to the project. Open it in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (the DA.* functions and new measures only, in the folder "${FOLDER}"; nothing changed or replaced), then Apply${compat != null && compat >= COMPAT_UDF ? '' : '. Power BI Desktop asks for the compatibility upgrade at Preview and again at Apply: accept it both times (its prompt names only the first function, "... needed for [function DA.Sparkline]", but the upgrade is for the whole script)'}. The model is not changed by DataArcus. Each KPI card, story title and table picture column shows an error until you apply the script.`;
 
 // (AF1, the release audit's F11) the model's and the report's names in what daxSaid returns (Table[Measure], the source
 // columns, the pages, a chart's own title): through the one screen, withheld when one reads like an instruction; the
@@ -340,7 +343,7 @@ export function daxSaid(r) {
     status: 'DAX user-defined functions are generally available in Power BI Desktop and the Power BI service since the June 2026 release (Microsoft Learn); they need compatibility level 1702 or higher.',
     functions: LIBRARY.map((f) => ({ name: f.name, params: f.params, inScript: !r.present.includes(f.name) })),
     measures: r.measures.map((x) => screened({ use: x.use, measure: `${x.t}[${x.name}]`, of: x.of })), used: Object.fromEntries(Object.entries(r.used).map(([k, l]) => [k, l.map(screened)])),
-    modelChange: `${r.functions.length} DAX function${r.functions.length === 1 ? '' : 's'} and ${r.measures.length} new measure${r.measures.length === 1 ? '' : 's'} in the script "${r.scriptFile}" next to the project. The model is not changed by DataArcus: the user applies the script in TMDL view first; until then the pictures are empty and the story titles blank.`,
+    modelChange: `${r.functions.length} DAX function${r.functions.length === 1 ? '' : 's'} and ${r.measures.length} new measure${r.measures.length === 1 ? '' : 's'} in the script "${r.scriptFile}" next to the project. The model is not changed by DataArcus: the user applies the script in TMDL view first. Each KPI card, story title and table picture column shows an error until you apply the script.`,
     colours: `the theme's: good ${r.colours.good}, bad ${r.colours.bad} (3:1 on the card ${r.colours.card}), the sparkline ${r.colours.line}, text ${r.colours.text}` },
   r.present.length ? { alreadyInModel: r.present } : {}, r.notUsed.length ? { notUsed: r.notUsed.map(screened) } : {});
 }

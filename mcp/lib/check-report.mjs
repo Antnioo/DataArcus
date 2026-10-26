@@ -434,7 +434,7 @@ export async function checkReport(p, opts) {
       const n = new Set(missing.map((ms) => ms.Expression.SourceRef.Entity + '\u0000' + ms.Property)).size;
       if (!n) return;
       add({ origin: 'rule', rule: 'DAX_MEASURE_PENDING', severity: 'note', file: x.file, page: x.page, visual: { name: x.name, type: x.type },
-        what: `the visual shows ${n === 1 ? 'a measure' : n + ' measures'} of the DataArcus DAX functions script that the model does not have yet, so ${n === 1 ? 'it is' : 'they are'} empty in Power BI Desktop (a picture, a column or a title before the script is applied)`,
+        what: `the visual shows ${n === 1 ? 'a measure' : n + ' measures'} of the DataArcus DAX functions script that the model does not have yet, so Power BI Desktop shows an error in ${n === 1 ? 'it' : 'them'} (a picture, a column or a title) until the script is applied`,
         fix: 'Apply the report\'s DAX functions script ("<report> - DAX functions.tmdl", next to the project) in TMDL view: Preview, then Apply. It raises the model\'s compatibility level to 1702, which cannot be undone; save a copy first. Then check again.', source: 'DataArcus: the DAX function library (0.3.1 L6), its functions and measures written as a TMDL script' });
     });
   }
