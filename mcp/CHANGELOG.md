@@ -127,6 +127,9 @@ package's manifest; this file says what is in it.
   as whichever comes first: DataArcus names both and asks which; a measure's own KPI target is used as its target for
   status icons and bullet bars (named, never quoted); read_report says the drill level a chart shows, the image files a
   report uses, a custom visual's name, and folds a group's shapes and images into one line.
+- **check_report, fewer wrong notes:** it no longer tells you to apply the DAX functions script for a measure that script
+  does not hold, and its schema findings no longer show page or visual ids. The website's tools and the MCP now share
+  one list of Arabic month names.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
