@@ -4,3 +4,5 @@
 files the check reads (the same paths as in the repo, cut to their download lines); `registry.json` is the MCP
 Registry's answer for it. `mcp/test-check-release.mjs` checks this set (0 mismatches) and copies of it with one thing
 changed (a wrong hash, the CHANGELOG still unreleased, the section hidden, the date left as the placeholder).
+The two pages are kept as `index.html.fixture`, never as tracked `.html` (the site's suites open every tracked page):
+the test copies the set into a temporary folder under their real names first.

@@ -11,17 +11,23 @@ import { fileURLToPath } from 'node:url';
 import { checkRelease, dayOf, registryDays, LIVE } from '../scripts/check-release.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.join(HERE, '..');
-const FIX = path.join(ROOT, 'scripts/tests/fixtures/release'), MATCH = path.join(FIX, 'match'), SCRIPT = path.join(ROOT, 'scripts/check-release.mjs');
+const FIX = path.join(ROOT, 'scripts/tests/fixtures/release'), FIXED = path.join(FIX, 'match'), SCRIPT = path.join(ROOT, 'scripts/check-release.mjs');
 const SHA = '1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e', WRONG = 'f'.repeat(64);
 let checks = 0; const problems = [];
 const chk = (ok, msg) => { checks++; if (!ok) problems.push(typeof msg === 'function' ? msg() : msg); };
 const show = (r) => JSON.stringify(r.mismatches);
 
-// a copy of the matching set with one file changed
+// a copy of the matching set (its pages kept as .html.fixture, so the site's suites never open them) with one file
+// changed
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-release-'));
-const variant = (name, file, from, to) => {
+const copy = (name) => {
   const dir = path.join(tmp, name);
-  fs.cpSync(MATCH, dir, { recursive: true });
+  fs.cpSync(FIXED, dir, { recursive: true });
+  for (const f of fs.readdirSync(dir, { recursive: true })) if (f.endsWith('.html.fixture')) fs.renameSync(path.join(dir, f), path.join(dir, f.replace(/\.fixture$/, '')));
+  return dir;
+};
+const variant = (name, file, from, to) => {
+  const dir = copy(name);
   const p = path.join(dir, file), t = fs.readFileSync(p, 'utf8');
   if (!t.includes(from)) throw new Error(`fixture ${file} has no "${from}"`);
   fs.writeFileSync(p, t.replace(from, to));
@@ -29,6 +35,7 @@ const variant = (name, file, from, to) => {
 };
 
 try {
+  const MATCH = copy('match');
   // 1. the matching set: no mismatch, and every kind of fact was compared
   const m = await checkRelease({ root: MATCH, version: '1.2.3' });
   chk(m.mismatches.length === 0 && m.checks >= 40, () => `R1. the matching set gives no mismatch in 40 checks or more: ${m.checks} checks, ${show(m)}`);
