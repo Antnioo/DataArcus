@@ -68,7 +68,7 @@ suites; `npm test -- --keep-going` once; `node scripts/check-agent-memory.mjs`.
 - Before (3bda227): `npm test -- --keep-going` 79 suites passed, 5603 checks.
 - After, the full run on 11a85ab: 79 of 80 passed, 5625 checks; `mcp` (test.mjs) failed 1 check: part 7 of check_report's
   rules pinned round 0's formula (a 112-high tooltip chart "3 rows"). Changed with its cause beside it (below), as
-  the item asks: by the measurement in force 112 holds 2. Then `node test.mjs` alone: PASS 1591 checks; so 80 of 80, 5625.
+  the item asks: by the measurement in force 112 holds 2. Then `node test.mjs` alone: PASS 1591 checks (the other 79 suites passed in the full run; the full run was not repeated).
 - `node scripts/test-site-config.mjs` PASS, `node scripts/ar-pages.mjs` PASS (38), `node scripts/csp.mjs` 139 pages,
   `node scripts/check-min.mjs` 74 match, stamps new; website `scripts/tests/run-all.mjs` all 20 passed (11,373 checks).
 
