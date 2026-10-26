@@ -13,6 +13,7 @@
 //      terms): every file of every page the same, byte for byte, but what INTENDED.bilingual lists.
 // Per kind, W against T and C against T: the place, alignment, order, projections, sort and every formatting card
 // (objects and container objects), after taking out the differences that are meant, each listed in INTENDED with why.
+// (SQ11, M1-S5) Each visual's phone layout (mobile.json) too, C and W against T, and the Reset button W against T.
 //   L  the lab writes its project and Microsoft's validator gives 0 errors
 //   E  the engine: the chart rules live in report-mirror.js only (the writer calls them); the matrix's lab switch
 //      (opts.matrixRtl) is the engine's, set by the lab alone; the default is today's
@@ -101,7 +102,7 @@ const INTENDED = {
   textSize: 'text sizes, column widths and the title\'s heading: the writer fits them to its Arabic font (Tahoma, measured); the twins keep the original\'s (R1: never a size)',
   table: 'tables: the writer builds its right-to-left table from the fields (the first text column first so the total row says "Total", round 10; a hidden name column, round 23); the twins reverse the original\'s columns. Same columns, a different order',
   matrix: 'matrices: no new matrix behaviour reaches users before the laptop proves a variant (M1); create_report keeps its measures in order, the twins reverse them (today\'s, R1\'s sentence). When the variant is chosen it is one engine value for every path',
-  slicerBar: 'the slicer row and its Reset button: the writer lays them out for the Arabic texts\' widths (the Reset icon only with room); the twins mirror the English row',
+  slicerBar: 'the slicer row and its Reset button: the writer lays them out for the Arabic texts\' widths (the Reset icon only with room); the twins mirror the English row; the Reset\'s icon follows the room each path gives it (the twin switches it off where its Arabic text and the icon do not fit side by side, SQ4 X2-S1, as the writer does in a narrow place)',
   copyFit: 'the copy keeps the language button\'s box free (R1); its Arabic pages are otherwise the twin\'s',
   copyIds: 'the copy\'s own references: its bookmarks, each Arabic slicer synced with its English one (a sync group, R1/X1), and an Arabic copy of each text measure ("No data AR: ...") so the English pages keep theirs',
   noDataCard: 'the "No data" card over a table names the table\'s first measure: the writer\'s table order (INTENDED.table)',
@@ -133,7 +134,10 @@ function shape(v, opts) {
   delete j.name; delete j.parentGroupName; delete j.$schema; delete j.howCreated;
   if (j.position) { delete j.position.tabOrder; delete j.position.z; }
   if (j.filterConfig && Array.isArray(j.filterConfig.filters)) j.filterConfig.filters.forEach((f) => { delete f.name; });
-  const walk = (x) => { if (Array.isArray(x)) return x.forEach(walk); if (x && typeof x === 'object') Object.keys(x).forEach((k) => { if (TEXT_KEYS.has(k) || (o.sizes && ['fontSize', 'heading', 'titleWrap', 'fontFamily'].includes(k))) delete x[k]; else walk(x[k]); }); };
+  // (SQ11, M1-S5) a text property goes, not a formatting card of the same name: a button's "text" card (its font, colour
+  // and alignment: [{ properties }]) was dropped whole, so no button's text formatting was compared
+  const card = (v) => Array.isArray(v) && v.some((e) => e && typeof e === 'object' && e.properties);
+  const walk = (x) => { if (Array.isArray(x)) return x.forEach(walk); if (x && typeof x === 'object') Object.keys(x).forEach((k) => { if ((TEXT_KEYS.has(k) && !card(x[k])) || (o.sizes && ['fontSize', 'heading', 'titleWrap', 'fontFamily'].includes(k))) delete x[k]; else walk(x[k]); }); };
   const vis = j.visual || {};
   walk(vis.objects || {}); walk(vis.visualContainerObjects || {}); walk(j.visualGroup || {});
   if (vis.objects && o.sizes) delete vis.objects.columnWidth;
@@ -161,7 +165,7 @@ const pair = (a, b, tol) => a.map((x) => ({ a: x, b: b.find((y) => y.kind === x.
 // ---------- the twins, through the server ----------
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-m1-')));
 fs.cpSync(path.join(HERE, 'test-models/service-orders/Service Orders.SemanticModel'), path.join(ROOT, 'so/Service Orders.SemanticModel'), { recursive: true });
-let T_V = [], C_V = [], W_V = [];
+let T_V = [], C_V = [], W_V = [], T_PID = null, C_PID = null;
 if (EN.files) {
   const pid = firstPage(EN), pe = pill(PEN);
   EN.files.forEach((f) => { const p = path.join(ROOT, 'so', f.path); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, f.data); });
@@ -194,11 +198,11 @@ try {
   const t1 = await twin(null), t2 = await twin('same');
   chk(() => t1.ok && t2.ok, () => `S2. the twin and the copy are written: ${t1.err || ''} ${t2.err || ''}`);
   const TW = path.join(ROOT, 'so/Parity AR.Report'), CO = path.join(ROOT, 'so/Parity (EN-AR).Report');
-  T_V = (pagesOf(TW)[0] && visualsOf(TW, pagesOf(TW)[0])) || [];
+  T_PID = pagesOf(TW)[0]; T_V = (T_PID && visualsOf(TW, T_PID)) || [];
   // (the copy's Arabic page: the copy of the English page, by the copy's own page names)
   const cp = pagesOf(CO), en0 = pagesOf(path.join(ROOT, 'so/Parity.Report'));
   const arPage = cp.filter((p) => !en0.includes(p)).map((p) => ({ p, n: visualsOf(CO, p).length })).sort((a, b) => b.n - a.n)[0];
-  C_V = arPage ? visualsOf(CO, arPage.p) : [];
+  C_PID = arPage ? arPage.p : null; C_V = arPage ? visualsOf(CO, arPage.p) : [];
   chk(() => T_V.length >= OWN.length && C_V.length >= T_V.length, () => `S3. the twin's page and the copy's Arabic page hold the visuals: ${T_V.length}, ${C_V.length}`);
 } finally { await w.close(); }
 
@@ -246,6 +250,37 @@ W_KINDS.forEach((kind) => {
   });
   chk(() => ps.length && d.length === 0, () => `W ${kind}: create_report's Arabic ${kind} differs from the twin's (${ps.length} compared; first the writer's, then the twin's): ${d.slice(0, 6).join(' ; ')}`);
 });
+// (SQ11, M1-S5) the phone layouts (mobile.json: the phone position and its own formatting) and the Reset button
+// the phone view of a visual: its mobile.json read as a visual of the same kind, through shape() (null: none written)
+const mobileShape = (v, m, o) => (m ? shape({ name: v.name, position: m.position, visual: { visualType: (v.visual || {}).visualType, objects: m.objects, visualContainerObjects: m.visualContainerObjects } }, o) : null);
+const mobileAt = (dir, pid, v) => { const f = pid && path.join(dir, 'definition/pages', pid, 'visuals', String(v.name), 'mobile.json'); return f && fs.existsSync(f) ? rd(f) : null; };
+const mobileW = (v) => { const f = AR.files && AR.files.find((g) => g.path.endsWith(`/pages/${firstPage(AR)}/visuals/${v.name}/mobile.json`)); return f ? JSON.parse(String(f.data)) : null; };
+{
+  const TWd = path.join(ROOT, 'so/Parity AR.Report'), COd = path.join(ROOT, 'so/Parity (EN-AR).Report');
+  // C against T: each visual's phone layout the same (position, alignment, formatting; texts and sizes as above)
+  const ps = pair(PT, PC, 0.5).filter((p) => p.b && (mobileAt(TWd, T_PID, p.a.v) || mobileAt(COd, C_PID, p.b.v)));
+  const d = ps.flatMap((p) => diff(mobileShape(p.a.v, mobileAt(TWd, T_PID, p.a.v)), mobileShape(p.b.v, mobileAt(COd, C_PID, p.b.v))).map((x) => `${p.a.kind} ${p.a.v.name}${x}`));
+  chk(() => ps.length >= 12 && d.length === 0, () => `C phone: the copy's Arabic phone layout differs from the twin's (${ps.length} visuals with a mobile.json): ${d.slice(0, 6).join(' ; ')}`);
+  // W against T: the writer's Arabic phone layout is the twin's of its English (the writer's own visuals, by place)
+  const pw = PT.filter((a) => a.v.name.indexOf('own') !== 0).map((a) => ({ a, b: PWr.find((y) => y.kind === a.kind && Math.abs(y.x - a.x) <= 1 && Math.abs(y.y - a.y) <= 1 && Math.abs(y.w - a.w) <= 1) })).filter((p) => p.b && (mobileAt(TWd, T_PID, p.a.v) || mobileW(p.b.v)));
+  const dw = pw.flatMap((p) => diff(mobileShape(p.b.v, mobileW(p.b.v), { sizes: true }), mobileShape(p.a.v, mobileAt(TWd, T_PID, p.a.v), { sizes: true })).map((x) => `${p.a.kind} ${p.a.v.name}${x}`));
+  chk(() => pw.length >= 10 && dw.length === 0, () => `W phone: create_report's Arabic phone layout differs from the twin's (${pw.length} visuals; first the writer's, then the twin's): ${dw.slice(0, 6).join(' ; ')}`);
+  // the Reset button: the writer's Arabic Reset against the twin's mirror of the English one, its own formatting (not its
+  // place nor its size: INTENDED.slicerBar); the icon is the one meant difference (its room), so it is checked apart:
+  // each path's icon is the English Reset's or switched off (blank, no size), never another
+  const rt = PT.find((x) => x.kind === 'button' && x.v.name.indexOf('own') !== 0), rw = PWr.find((x) => x.kind === 'button');
+  const re = (pageVisuals(EN)[firstPage(EN)] || []).find((v) => KIND(v) === 'button');
+  const icon = (v) => JSON.stringify(((((v || {}).visual || {}).objects || {}).icon || []).map((e) => e.properties && { shapeType: lit(e.properties.shapeType), iconSize: lit(e.properties.iconSize) }));
+  const noIcon = (v) => { const x = shape(v, { sizes: true }); delete x.position; ((x.visual.objects || {}).icon || []).forEach((e) => { if (e.properties) { delete e.properties.shapeType; delete e.properties.iconSize; } }); return x; };
+  const dr = rt && rw ? diff(noIcon(rw.v), noIcon(rt.v)) : ['no Reset on ' + (rt ? 'the writer\'s page' : 'the twin\'s page')];
+  chk(() => dr.length === 0, () => `W reset: create_report's Arabic Reset button differs from the twin's (first the writer's, then the twin's): ${dr.slice(0, 6).join(' ; ')}`);
+  const OFF = JSON.stringify([{ shapeType: "'blank'" }]);
+  chk(() => rt && rw && re && [rt, rw].every((x) => [icon(re), OFF].includes(icon(x.v))), () => `W reset icon: the Reset's icon is the English one's or switched off (INTENDED.slicerBar): twin ${icon(rt && rt.v)}, writer ${icon(rw && rw.v)}, English ${icon(re)}`);
+  // the Reset's phone layout, W against T, by its own (the writer's Reset is at another place, so not paired above): the
+  // same phone formatting, its text size included (one phone size for a button in both languages: pbip-page.js PHONE)
+  const mr = rt && rw ? diff(mobileShape(rw.v, mobileW(rw.v)), mobileShape(rt.v, mobileAt(TWd, T_PID, rt.v))) : ['no Reset'];
+  chk(() => rt && rw && mobileW(rw.v) && mr.length === 0, () => `W reset phone: the Reset's phone formatting differs (writer, twin): ${mr.slice(0, 6).join(' ; ')}`);
+}
 // the meant differences, said where they show: the table's column order and the matrix's measures
 {
   const t = PT.filter((x) => x.kind === 'table').map((a) => ({ a, b: PWr.find((b) => b.kind === 'table' && Math.abs(b.x - a.x) <= 1 && Math.abs(b.y - a.y) <= 1) })).find((p) => p.b), m = pair(PT.filter((x) => x.kind === 'matrix'), PWr, 1).find((p) => p.b);

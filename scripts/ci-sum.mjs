@@ -71,6 +71,8 @@ if (area === 'mcp') {
     for (const r of results(l.text)) {
       found.push({ ...r, where: l.f });
       if (r.status === 'FAIL') failOf(l, r, shard, `scripts/tests/run-all.mjs:${r.name}`);
+      // (SQ11, A2-S1) a suite that ran nothing passed nothing, as for the MCP's suites
+      if (r.status === 'PASS' && !count(r.rest)) problem({ script: `scripts/tests/run-all.mjs:${r.name}`, check: `PASS  ${r.name}  ${r.rest}`.trim(), cause: 'zero-checks', shard });
       rows.push([r.name, count(r.rest), l.f]);
     }
   }

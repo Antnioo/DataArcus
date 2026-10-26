@@ -4,34 +4,41 @@
     "1": {
       "visuals": "40 -> 44: round 10 (3803b7a), the owner's design note R10.6a: the page navigator became one button per page with a line under the current one, in both directions (on each of the 2 pages: 1 navigator -> 2 buttons + 1 line, +2) | 44 -> 50: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (3 on each of the 2 pages, +6) | 50 -> 48: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | 48 -> 50: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)",
       "modelNotes": "Calendar[Month Name] -> Calendar[Month Short]: round 12 (d048c8d), #16: the time axis takes the short month names, so the note is on them",
-      "contrastWarnings": "1 -> 0: 0.2.9 part 2 (the reviewer's answer of 11 Oct, O-11): a brand colour with no harmony asked gets a light page and a calm set of 7 colours, each checked 3:1 on the card; the warning was a loud harmony colour on the dark default"
+      "contrastWarnings": "1 -> 0: 0.2.9 part 2 (the reviewer's answer of 11 Oct, O-11): a brand colour with no harmony asked gets a light page and a calm set of 7 colours, each checked 3:1 on the card; the warning was a loud harmony colour on the dark default",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "2": {
       "visuals": "36 -> 38: round 10 (3803b7a): the line under the current page's button (+1 on each page; an Arabic report had one button per page since round 2) | 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6) | 44 -> 42: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page)",
-      "modelNotes": "Month Short: round 12, #16 (see task 1)"
+      "modelNotes": "Month Short: round 12, #16 (see task 1)",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "3": {
       "visuals": "20 -> 19 -> 17: round 12 (85d54c1), #20: the 'What it means' box is left out when no text is given (-1); round 12 (d048c8d), #21: one Ramadan's line chart runs by Ramadan Day, so the monthly trend tooltip page and its card and bar chart are not written (-2) | 17 -> 18: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (the one chart of the one page, +1) | 18 -> 17: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page)",
       "hidden": "2 -> 1: the trend tooltip page (#21)",
-      "slicers": "Hijri Year and Is Ramadan -> Year, Quarter, Day Name: round 12 (d048c8d), #22: no slicer on a column a page filter fixes; the picker's next columns instead"
+      "slicers": "Hijri Year and Is Ramadan -> Year, Quarter, Day Name: round 12 (d048c8d), #22: no slicer on a column a page filter fixes; the picker's next columns instead",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "4": {
       "wide": "visuals 34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | visuals 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6) | visuals 44 -> 42: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | visuals 42 -> 44: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)",
-      "square": "visuals 34 -> 38: round 10 (3803b7a), as wide | visuals 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6) | visuals 44 -> 42: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | visuals 42 -> 44: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)"
+      "square": "visuals 34 -> 38: round 10 (3803b7a), as wide | visuals 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6) | visuals 44 -> 42: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | visuals 42 -> 44: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "5": {
       "visuals": "34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1); 38 -> 35: round 19, the single-focus layout on the 640 x 360 page (one large chart for the executive layout's line, bar, column and table) | 35 -> 14: round 22: one page instead of two (the Details page and its tooltip-free visuals are gone), and the one chart's \"No data\" card (+1) | 14 -> 13: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page)",
-      "pages": "\"Executive summary 640x360\" -> \"Single focus 640x360\": round 19, the owner's choice B (6 Oct): below 800 wide the executive layout is not used | 2 -> 1: round 22 (the owner's (a) for pages under 800 wide; in Desktop the second page cut its card values and scrolled its table): a page under 800 wide gets no second page"
+      "pages": "\"Executive summary 640x360\" -> \"Single focus 640x360\": round 19, the owner's choice B (6 Oct): below 800 wide the executive layout is not used | 2 -> 1: round 22 (the owner's (a) for pages under 800 wide; in Desktop the second page cut its card values and scrolled its table): a page under 800 wide gets no second page",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "6": {
       "visuals": "43 -> 45: round 10 (3803b7a), the line under the current page's button (see task 2) | 45 -> 51: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6) | 51 -> 49: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | 49 -> 51: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1) and its \"No data\" card (+1)",
       "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report | 64 -> 81: round 22: the \"No data\" message cards and their report-level measures carry the long measure name too (reportExtensions.json and each card's query) | 81 -> 84: round 23, item 8 (the owner's \"nothing critical left\", 8 Oct): a bar or column chart by a text category is sorted by its measure, largest first, so the long measure name is written once more in the sortDefinition of each of its 3 bar and column charts | 84 -> 86: round 23 part 5 (the reviewer's code review, R1): the Arabic tables' row label is blank where the row's numbers are, so its DAX names the table's measures; the two tables (pages 1 and 2) show different measures, so each has its own label (\"Row label: ...\", \"Row label: ... (2)\"), each naming the long measure once | 86 -> 84: 0.2.9 part 2 (O-2): the measure is a sum of money (المبيعات, SUM), an amount: its KPI card keeps automatic units with 2 decimals, so the card's own format entry naming it (one on each of the 2 pages) is no longer written | 84 -> 83: 0.2.9 design block, the laptop's sweep (builder 10), traced file by file against the gate: S7 (6818396): the first page's table sits under the filter rail shortened to its slicers and takes its column (771 -> 1083 wide), so it holds all five fields like the second page's table, and the two tables share one row-label measure (reportExtensions 4 -> 3); S5 (c83a63a): Top N filters by the long measure on the three report-page bar and column charts; the changed visuals' uses are 24 before and after (3 + 7 + 7 + 7 -> 8 + 8 + 8); net -1 | 83 -> 90: the laptop's second sweep, T4 (builder 10): the category tooltip's bar chart showed the picker's second measure (the invoice count) under the hovered chart's net-sales card; its bars now show the hovered chart's own measure, net sales by branch, Top 6: the measure in its query, its sort, its Top N filter and its title (+7; the title is shortened where two lines of the tooltip don't hold it) | 90 -> 91: integration round 7 (fix/0.2.9-writer 34450a3 meets fix/0.2.9-design dafcbe0): the writer's measured table column widths (builder 11) leave the quantity out of the first page's 1083-wide table (it held all four measures by the design's estimate, S7), so its fields differ from the second page's table again and it gets its own row-label measure (\"Row label: ... (2)\", reportExtensions 3 -> 4), which names the long measure once more; the visuals' other uses are unchanged (16 visuals, 3 x 4 + 5 x 6 + 7 x 3 + 8 x 3 on both) | 91 -> 103: design round 8, N2/N3 (builder 10): the three charts cut to their Top N take their titles from report-level measures, \"أعلى N من M: ...\" only when they leave categories out, the plain title otherwise; each measure names the long measure four times in reportExtensions.json (its name, its DAX and its two title texts: +12); each chart's title names it once, as a measure reference now instead of a text (+0) | 103 -> 117: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart: the bar chart names the long measure 8 times (its query, sort, Top N filter, colours and title measure reference; the title measure itself is page 1's bar chart's, reused), and two more \"No data\" cards on the details page name it 3 times each (+14) | 117 -> 121: design round 9, S7 (builder 10), traced: the details page's bar chart is 1083 wide, so its Top 9 title is whole where page 1's 509-wide bar chart shortens it with \"…\"; the two title texts differ, so each chart has its own title measure, which names the long measure 4 times (+4) | 121 -> 142: design round 10, N14/N15 (builder 10), traced file by file against the gate 1ed1530: the four report Top N charts each name the long measure once more (their keep filter names its \"Keep: ...\" measure twice where the Top N filter named it once: +4); three keep measures name it 3 times each (+9); each of the four chart title measures names it 5 times instead of 4 (its DAX ranks by the measure too: +4); the tooltip's title is now a counting report measure that names it 4 times (+4; the tooltip visual's own count stays 7) | 142 -> 128: 0.3 J4, B-131 (feat/0.3-story-titles, 18 Oct): a title too long for its box is shortened by rule (the measure's «إجمالي», a trailing clause) instead of cut with …, so 14 titles and alt texts name «صافي المبيعات ...»; the fields and DAX keep the model's name (the owner's go on the plan before merge) | 128 -> 131: the owner's decision of 19 Oct (#57): a visual's alt text is the full story title, never the fitted one, so 3 alt texts name the long measure whole again (the drawn titles stay shortened) | 131 -> 120: 0.3.0 S1, B-181 (20 Oct): a hidden \"Keep: ...\" measure is named in one script, plain English: \"Keep: <Arabic measure> by <Arabic name>\" mixed scripts, so these are \"Keep: top categories\" now; the 3 keep measures' names in reportExtensions.json (-3) and the 4 charts' keep filters, which name their keep measure twice (-8), no longer hold the long measure; their DAX still names it",
-      "kpis": "growth % -> average invoice value as the 4th card: 0.2.9 audit fixes (A3-5, builder 7's audit, 11 Oct): the growth measure's DAX uses time intelligence (same period last year), so it is a time variant, and every base measure ranks before any variant; an Arabic name has none of the Latin variant words, so only its DAX tells"
+      "kpis": "growth % -> average invoice value as the 4th card: 0.2.9 audit fixes (A3-5, builder 7's audit, 11 Oct): the growth measure's DAX uses time intelligence (same period last year), so it is a time variant, and every base measure ranks before any variant; an Arabic name has none of the Latin variant words, so only its DAX tells",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "7": {
       "visuals": "39 -> 38: round 16, design finding #14 (the owner's go): Count of Region is no longer a KPI card (one card fewer) | 38 -> 36: 0.2.9 part 2 (11 Oct 2026, O-6 of the owner's test of 0.2.8): create_report writes no \"Your logo\" placeholder when no logo is given (-1 on each page) | 36 -> 38: writer round 8 with the design's N6 (the reviewer's resolution, 12 Oct): each page's table ends on its whole rows (S3, measured) inside a panel kept at its slot's height; this model has no measures, so no \"No data\" card is behind the table and the panel is an empty text box (+1 on each of the 2 pages) | 38 -> 39: design round 9, the re-score's S7 (builder 10): the details page's last row is the table beside a new bar chart (+1; a model without measures has no \"No data\" card)",
       "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why",
-      "health": "93 -> 92: round 20 (the owner's yes, 6 Oct): the test model's tables became DAX tables with made-up rows and a Month Number column (a chart by month runs over six months); the new number column is one more the score counts"
+      "health": "93 -> 92: round 20 (the owner's yes, 6 Oct): the test model's tables became DAX tables with made-up rows and a Month Number column (a chart by month runs over six months); the new number column is one more the score counts",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "8": {
       "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
@@ -41,10 +48,12 @@
       "category": "Carrier[Carrier Group] -> Hub[Hub Region]: round 22 (seen in Desktop, 7 Oct: the same total for every Carrier Group; Carrier is related to Deliveries only): the picker reads the relationships and takes a lookup the main measure's table (Shipments) is related to",
       "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names) | 14364 -> 5610: round 22b (the review of round 22, item 2): the pool of slicer columns (slicerPool) holds only the tables the measure reaches (Shipments and its lookups), no longer every category of the Logistics area; the picked categories, slicers and KPIs are the same | 5610 -> 5113: round 23, item 1 (a table's measures all reach its row column's table): Deliveries[Deliveries Total Tax Amount] and Freight Costs[Freight Costs Total Tax Amount] left the table by Lane[Lane Region] (they repeated one total on every row) and are named in notReached; item 3 (an ID-like column is never a category or a slicer): the \"... Code\" columns left the slicer pool | 5113 -> 5119: round 23 part 7 (the laptop's W1): the tooltip's bar by Hub[Hub Region] shows Freight Costs[Freight Costs Total Tax Amount], which reaches Hub, instead of Deliveries[Deliveries Total Tax Amount], which does not (it repeated one total on every bar); diffed answer by answer, the only change | 5119 -> 5111: round 23 part 8 (the review of part 7, 1): the tooltip page is opened by the charts of both categories (Hub Region and Lane Region), and Freight Costs does not reach Lane, so the tooltip's bar shows the main measure, Shipments[Shipments Total Net Amount]; diffed, the only change | 5111 -> 5097: 0.2.9 part 2 (O-2): an amount (a SUM of money) no longer carries wholeFormat in suggest_fields' picks | 5097 -> 6085: 0.2.9 audit fixes, A3-8 and A3-7 picker side (c2e445b, builder 7's audit): every column the picker gives out says whether it is time (time: true/false) and a calendar's kind, rows and family (cal), for the writer; the picks are the same (diffed: only these marks added; A3-3, d750912, leaves the answer the same size) | 6085 -> 6105: the rc's laptop proof, D14 (fix/0.2.9-picker): 'Freight Costs Units Share %' is DIVIDE([Total Units], CALCULATE([Total Units], ALL(...))), a share of all, 100 % on a card, so no card; the 4th card is the next amount, 'Returns Total Amount'",
       "kpis": "4th card 'Freight Costs Units Share %' -> 'Returns Total Amount': the rc's laptop proof, D14 (fix/0.2.9-picker): 'Freight Costs Units Share %' is DIVIDE([Total Units], CALCULATE([Total Units], ALL(...))), a share of all, 100 % on a card, so no card",
-      "modelNotes": "['Freight Costs[Freight Costs Units Share %]'] -> []: its card is gone (the rc's laptop proof, D14 (fix/0.2.9-picker): 'Freight Costs Units Share %' is DIVIDE([Total Units], CALCULATE([Total Units], ALL(...))), a share of all, 100 % on a card, so no card), and with it the note on its missing percent format"
+      "modelNotes": "['Freight Costs[Freight Costs Units Share %]'] -> []: its card is gone (the rc's laptop proof, D14 (fix/0.2.9-picker): 'Freight Costs Units Share %' is DIVIDE([Total Units], CALCULATE([Total Units], ALL(...))), a share of all, 100 % on a card, so no card), and with it the note on its missing percent format",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     },
     "12": {
-      "task": "new, 12 Oct (the layout matrix, builder 10, the reviewer with the owner's go): the operations layout had no golden task. The six-tile operations monitor on the Ramadan model with its three Ramadan cards and filters at the end, in English and as its right-to-left twin (dir rtl, lang en): two pages each, 54 visuals, validator clean, no size, phone, project or table-header problems. The golden script's right-to-left facts now follow dir as well as lang (a right-to-left report in English was checked as left to right)."
+      "task": "new, 12 Oct (the layout matrix, builder 10, the reviewer with the owner's go): the operations layout had no golden task. The six-tile operations monitor on the Ramadan model with its three Ramadan cards and filters at the end, in English and as its right-to-left twin (dir rtl, lang en): two pages each, 54 visuals, validator clean, no size, phone, project or table-header problems. The golden script's right-to-left facts now follow dir as well as lang (a right-to-left report in English was checked as left to right).",
+      "tableText": "new key, SQ11 (26 Oct 2026, 0.2.9-writer-S8: the golden pinned no table text size): each table's and matrix's written text size, values/headers in pt, sorted (the theme's size where a visual sets none). Measured on 8c7f660 with --update; no other value moved"
     }
   },
   "tasks": {
@@ -65,6 +74,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "tableEx 12/12, tableEx 15/15",
       "firstProblems": [],
       "overwritten": 0,
       "modelNotes": [
@@ -89,6 +99,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "tableEx 12/12, tableEx 15/15",
       "firstProblems": [],
       "overwritten": 0,
       "modelNotes": [
@@ -117,6 +128,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "",
       "firstProblems": [],
       "overwritten": 0,
       "modelNotes": [
@@ -139,6 +151,7 @@
         "phoneProblems": 0,
         "project": 0,
         "tableHeaders": 0,
+        "tableText": "tableEx 10/10, tableEx 9/9",
         "firstProblems": []
       },
       "square": {
@@ -153,6 +166,7 @@
         "phoneProblems": 0,
         "project": 0,
         "tableHeaders": 0,
+        "tableText": "tableEx 10/10, tableEx 8/8",
         "firstProblems": []
       },
       "overwritten": 0
@@ -170,6 +184,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "",
       "firstProblems": [],
       "overwritten": 0
     },
@@ -189,6 +204,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "tableEx 10/10, tableEx 10/10",
       "firstProblems": [],
       "overwritten": 0
     },
@@ -209,6 +225,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "tableEx 15/15, tableEx 15/15",
       "firstProblems": [],
       "overwritten": 0,
       "modelNotes": [
@@ -268,6 +285,7 @@
       "phoneProblems": 0,
       "project": 0,
       "tableHeaders": 0,
+      "tableText": "tableEx 15/15, tableEx 15/15",
       "firstProblems": [],
       "overwritten": 0,
       "modelNotes": []
@@ -296,6 +314,7 @@
         "phoneProblems": 0,
         "project": 0,
         "tableHeaders": 0,
+        "tableText": "tableEx 12/12, tableEx 13/13",
         "firstProblems": []
       },
       "rtl": {
@@ -310,6 +329,7 @@
         "phoneProblems": 0,
         "project": 0,
         "tableHeaders": 0,
+        "tableText": "tableEx 12/12, tableEx 13/13",
         "firstProblems": []
       },
       "overwritten": 0,

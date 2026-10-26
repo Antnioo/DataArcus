@@ -3,6 +3,7 @@
 // all as errors; no formatting rule, no Prettier. Every exception below says why (mcp/work/Q1.md lists them all).
 import fs from 'node:fs';
 import globals from 'globals';
+import html from 'eslint-plugin-html';
 
 const BUGS = {
   'no-undef': 'error',
@@ -62,6 +63,16 @@ export default [
   {
     files: ['assets/js/main.js'],
     languageOptions: { globals: { AOS: 'readonly', bootstrap: 'readonly' } },
+  },
+  // (SQ11, Q1-S2) the inline scripts of every site page (eslint-plugin-html; JSON-LD and other non-script types are
+  // skipped by the plugin), the same bug rules. gtag and dataLayer: set by the pages' own consent script as
+  // window.gtag / window.dataLayer and read by name after it, the Google tag's documented form
+  {
+    files: ['**/*.html'],
+    plugins: { html },
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'script', globals: { ...globals.browser, gtag: 'readonly', dataLayer: 'readonly' } },
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
+    rules: BUGS,
   },
   // the model health check's Web Worker (importScripts, self)
   {

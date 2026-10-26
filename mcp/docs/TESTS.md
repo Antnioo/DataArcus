@@ -32,8 +32,8 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   every suite (tests.json `affected`). CI and the final gate never use it: they run every suite (it refuses in CI).
 - CI (`.github/workflows/tests.yml`) runs on pushes to `main`, on every pull request and by hand: a branch without a
   PR gets no automatic CI: open a (draft) PR, or use Run workflow (Actions > Tests > Run workflow, pick the branch).
-- Website: `node scripts/tests/run-all.mjs` from the repo root (20 suites: `ALL` there, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
+- Website: `node scripts/tests/run-all.mjs` from the repo root (21 suites: `ALL` there, 3 at a time; `tmdl-model` and `github-links` (SQ11: every GitHub blob link's file and #anchor) run in Node alone too: `node scripts/tests/<name>.mjs`; a suite that ran 0 checks fails, `zero-checks`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
 - After editing a file in `assets/js/`, rebuild its `.min.js` (`npm run build:min` in the repo root: terser, pinned to 5.51.2 in the root `package.json`, rebuilds every stale one; CI fails when a committed `.min.js` is not what its source gives); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
-- Lint and coverage (Q1, 0.3.1; root `package.json`): `npm run lint` (ESLint, bug rules only, `eslint.config.mjs`;
+- Lint and coverage (Q1, 0.3.1; root `package.json`): `npm run lint` (ESLint, bug rules only, `eslint.config.mjs`; the site pages' inline scripts too, SQ11;
   CI's website-checks) and `npm run coverage:mcp` (c8 over `npm test`, `.c8rc.json`; CI's `coverage` job, not a gate).
