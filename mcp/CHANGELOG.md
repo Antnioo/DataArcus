@@ -106,6 +106,8 @@ package's manifest; this file says what is in it.
 - **check_report, more exact:** it counts a tooltip bar chart's rows by the row height measured in Power BI Desktop,
   no longer flags the Tab order DataArcus itself writes beside a tall visual, and the check before a write names each item
   worth a look by its place on the page.
+- **Reading reports, steadier:** reading a .pbit no longer loads the whole file into memory, a field on Power BI's
+  automatic date hierarchy is read as its date column, and a report without its own theme shows its base theme's colours.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
