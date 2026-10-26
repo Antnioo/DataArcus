@@ -61,7 +61,8 @@ window.betaPageTranslations = {
         "title": "How it works",
         "s1": "<strong>Save as a project.</strong> In Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).",
         "s2": "<strong>Ask Claude.</strong> For example: \"Read the model in Sales and suggest a report\".",
-        "s3": "<strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model."
+        "s3": "<strong>Check the plan and approve it.</strong> DataArcus's approval window opens in your browser with the plan and every file it writes; only your Approve lets a tool write.",
+        "s4": "<strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model."
       },
       "tools": {
         "title": "The 11 tools",
@@ -89,7 +90,7 @@ window.betaPageTranslations = {
         "model": "It never changes your model and never writes over your files: every report is new, next to your model. The one file it replaces is its own answers file, and only after you approve.",
         "ask": "It writes only inside the one folder you choose (and a private check copy in your computer's temporary folder, deleted when the check ends).",
         "validator": "Its check_report tool checks any PBIR report offline with Microsoft's report validator.",
-        "data": "It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "It reads files on your machine to check and fingerprint them. What it sends to Claude is your model's and report's names and structure (tables, columns, measures, formats, pages, visuals) and the short texts typed on report pages: page names and short text boxes, and for the Arabic twin its titles too, which can hold a figure or a name. Never table rows, filter or slicer values, or bookmark states. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>. The three boundaries on one page: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page' class='text-accent' target='_blank' rel='noopener'>the privacy summary</a>."
       },
       "req": {
         "title": "Requirements and limits",
@@ -102,7 +103,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "Download and install",
-        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here. No payment.",
+        "next": "<ol class='mb-3'><li>Download <code>dataarcus-0.3.0.mcpb</code> from the <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>0.3.0 release</a>.</li><li>Check its SHA-256 before you install it. Run: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>It must print: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>With Claude Desktop installed, double-click the file and choose Install. Every step: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>the install guide</a>.</li></ol>Questions, problems or feedback? Write to us here, or see <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>how to get help</a>. No payment.",
         "name": "Name *",
         "email": "Email *",
         "model": "What is your model about? *",
@@ -174,7 +175,8 @@ window.betaPageTranslations = {
         "title": "كيف يعمل",
         "s1": "<strong>احفظ التقرير كمشروع.</strong> في Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).",
         "s2": "<strong>اطلب من Claude.</strong> مثلًا: \"اقرأ النموذج في مجلد Sales واقترح تقريرًا\".",
-        "s3": "<strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك."
+        "s3": "<strong>راجع الخطة ووافق عليها.</strong> تفتح نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه؛ ولا تكتب أي أداة إلا بعد موافقتك.",
+        "s4": "<strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك."
       },
       "tools": {
         "title": "الأدوات: 11 أداة",
@@ -202,7 +204,7 @@ window.betaPageTranslations = {
         "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.",
         "ask": "يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).",
         "validator": "تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.",
-        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+        "data": "يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>. الحدود الثلاثة في صفحة واحدة: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page' class='text-accent' target='_blank' rel='noopener'>ملخص الخصوصية</a>."
       },
       "req": {
         "title": "المتطلبات والحدود",
@@ -215,7 +217,7 @@ window.betaPageTranslations = {
       },
       "join": {
         "title": "التنزيل والتثبيت",
-        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا. دون أي دفع.",
+        "next": "<ol class='mb-3'><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href='https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0' class='text-accent'>صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir='ltr' class='d-block my-1'>certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir='ltr' class='d-block text-break my-1'>aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md' class='text-accent'>دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا، أو راجع <a href='https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md' class='text-accent'>كيف تحصل على المساعدة</a>. دون أي دفع.",
         "name": "الاسم *",
         "email": "البريد الإلكتروني *",
         "model": "عن ماذا يتحدث نموذجك؟ *",

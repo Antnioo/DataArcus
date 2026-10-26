@@ -6,7 +6,7 @@ its approval window. It works next to Microsoft's Power BI Authoring MCP server 
 Power BI Desktop bridge (reload, screenshots).
 
 This page is the user guide. Every tool's options and answers in detail: [TOOLS.md](TOOLS.md). How DataArcus is
-built: [ARCHITECTURE.md](../ARCHITECTURE.md).
+built: [ARCHITECTURE.md](../ARCHITECTURE.md). Help, bug reports and how fast we answer: [SUPPORT.md](../SUPPORT.md).
 
 ## Claude Desktop (beta)
 
