@@ -226,6 +226,10 @@ export default async function ({ browser, url }) {
     const prac = await rows();
     check(prac.length >= 2 && prac.every((r) => (r.pct === '100%' ? r.links.length === 0 : r.pct === '0%' && r.links.length === 1 && r.links[0].href === want(r.d))),
       `${tag} practice: areas under 70% link to their section, the others don't: ${JSON.stringify(prac)}`);
+    // (0.3.1 SQ8, I-S3) the skill table's bars are green from 70% and amber under it, as the area rows and the mock's
+    const sk = await v.pg.evaluate(() => [...document.querySelectorAll('.dp-end .dp-skilltable > div')].map((d) => { const [a, b] = d.querySelector('b').textContent.split('/').map(Number);
+      return { pct: a / b, cls: d.querySelector('.dp-bar').className }; }));
+    check(sk.length >= 1 && sk.every((s) => s.cls.includes(s.pct >= 0.7 ? 'good' : 'warn')), `${tag} practice: skill bars not green / amber by score: ${JSON.stringify(sk)}`);
     if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }

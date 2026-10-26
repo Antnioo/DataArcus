@@ -3,6 +3,7 @@
 // itself must be true in the code. One check per sentence A2 found untrue and fixed (each failed before its fix), and the
 // forbidden-words scan over every file that speaks for DataArcus (English and Arabic).
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import { groupFiles, summary, promptSummary } from './lib/approval-window.mjs';
 import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 const read = (f) => fs.readFileSync(new URL(f, import.meta.url), 'utf8');
@@ -353,6 +354,46 @@ for (const page of ['lic', 'home', 'mcp']) {
   const [trEn, trAr] = halves(DS1[page + 'Tr'], page);
   for (const [k, t] of [[page, DS1[page]], [page + 'Tr', trEn]]) for (const [re, what] of DS1_EN[page]) check(re.test(t), `${what}: ${k}: missing`);
   for (const [k, t] of [[page + 'Ar', DS1[page + 'Ar']], [page + 'Tr', trAr]]) for (const [re, what] of DS1_AR[page]) check(re.test(t), `${what}: ${k}: missing`);
+}
+
+// SQ8 (0.3.1, 26 Oct; mcp/work/SQ8.md): the website's seen items, each sourced
+// GC2-S4 Umm al-Qura: not called "official" without a source; the calculated Saudi Hijri calendar, its tables licensed
+// from the Saudi government (Microsoft Learn, UmAlQuraCalendar), linked in EN and AR
+const UAQ = /learn\.microsoft\.com\/(?:ar-sa\/)?dotnet\/api\/system\.globalization\.umalquracalendar/;
+for (const [f, t] of Object.entries(GC)) { const m = /Saudi Arabia's official calculated calendar|التقويم المحسوب الرسمي في السعودية/.exec(t); check(!m, `SQ8 GC2-S4. Umm al-Qura called official with no source: ${f}`); }
+for (const [k, t] of [['article', GC.article], ['articleTr', enHalf(GC.articleTr)]]) check(/Umm al-Qura, Saudi Arabia's calculated Hijri calendar, whose tables are licensed from the Saudi government/.test(t) && UAQ.test(t), `SQ8 GC2-S4. ${k}: the Umm al-Qura sentence or its Microsoft Learn link is missing`);
+for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.articleTr)]]) check(/تقويم أم القرى، التقويم الهجري المحسوب في السعودية، وجداوله مرخّصة من الحكومة السعودية/.test(t) && UAQ.test(t), `SQ8 GC2-S4. ${k}: the Umm al-Qura sentence or its Microsoft Learn link is missing (AR)`);
+// GC-S1 the Gulf calendar's share image says what the article says today (its description), with no "free" and no
+// "right weekend"; the JPG is regenerated (not the old picture)
+{
+  const shots = read('../scripts/make-share-images.mjs'), gulf = (shots.match(/\['gulf-calendar',[^\n]*/) || [''])[0].replace(/\\'/g, "'");
+  const desc = (GC.article.match(/<meta name="description" content="A Power BI date table for the Gulf in DAX: ([^"]+)" \/>/) || [])[1] || '';
+  check(gulf && !/right weekend|free/i.test(gulf), `SQ8 GC-S1. the Gulf share image still says "right weekend" or "free": ${gulf.slice(0, 160)}`);
+  check(desc && gulf.includes(`sub: '${desc.charAt(0).toUpperCase() + desc.slice(1)}'`), `SQ8 GC-S1. the share image's line is not the article's description ("${desc}")`);
+  const jpg = createHash('sha256').update(fs.readFileSync(new URL('../assets/img/og/gulf-calendar.jpg', import.meta.url))).digest('hex');
+  check(jpg !== '0da0d2e25ad3069f2deefaaa6dd6e51ec3c236791edde580891d721ca0306a46', 'SQ8 GC-S1. assets/img/og/gulf-calendar.jpg is still the old picture');
+}
+// DS1-S3 the licensing guide and the cost calculator, re-checked against Microsoft on 26 Oct 2026: every figure follows
+// from the prices the weekly check keeps (assets/data/powerbi-prices.json: the Power BI pricing page and Azure's Retail
+// Prices API, East US) and, for the UAE, Azure's Retail Prices API for uaenorth (read 26 Oct: 0.22 a CU hour, 1,146 a
+// CU year reserved); a creator needs Pro or PPU (Microsoft Learn, subscriptions, licenses and trials)
+{
+  const P = JSON.parse(read('../assets/data/powerbi-prices.json')), H = 730, UAE = { cu: 0.22, resYear: 1146 }, AED = 3.6725, SAR = 3.75;
+  const usd = (n) => '$' + Math.round(n).toLocaleString('en-US'), two = (n) => (Math.round(n * 100) / 100).toFixed(2);
+  const f64 = 64 * P.cuPayg * H, f64r = f64 * (1 - P.reservedSaving), uae = 64 * UAE.cu * H, uaeR = 64 * UAE.resYear / 12;
+  const want = [`$${P.pro} per user per month`, `$${P.ppu} per user per month`, `$${P.cuPayg} per capacity unit per hour`, `about ${(P.reservedSaving * 100).toFixed(1)}% less`,
+    `about ${usd(f64)} a month pay-as-you-go`, `about ${usd(f64r)} a month with a one-year reservation`, `about ${Math.ceil(f64r / P.pro)} viewers`, `about ${Math.ceil(f64 / P.pro)} viewers`,
+    `212 × $${P.pro} = ${usd(212 * P.pro)}`, `${usd(f64r)} + ${usd(12 * P.pro)} = ${usd(f64r + 12 * P.pro)}`, `462 × $${P.pro} = ${usd(462 * P.pro)}`,
+    `add-on of $${P.ppuAddon} per user per month`, `AED ${two(P.pro * AED)} or SAR ${two(P.pro * SAR)} for Pro`, `AED ${two(P.ppu * AED)} or SAR ${two(P.ppu * SAR)} for PPU`,
+    `$${UAE.cu} an hour pay-as-you-go in UAE North`, `about ${usd(uae)} a month pay-as-you-go, or about ${usd(uaeR)} with a one-year reservation`, `to about ${Math.ceil(uaeR / P.pro)} viewers`,
+    'checked 26 October 2026', 'Report creators always need Pro or PPU'];
+  const plain = (t) => t.replace(/<[^>]+>/g, '');
+  for (const [k, t] of [['lic', plain(DS1.lic)], ['licTr', plain(enHalf(DS1.licTr))]]) for (const w of want) check(t.includes(w), `SQ8 DS1-S3. ${k}: "${w}" is not said`);
+  for (const [k, t] of [['licAr', DS1.licAr], ['licTr', arHalf(DS1.licTr)]]) check(/تمت مراجعتها في 26 أكتوبر 2026/.test(t) && /ومنشئو التقارير يحتاجون دائمًا إلى Pro أو PPU/.test(t), `SQ8 DS1-S3. ${k}: the check date or the creators' licence (AR)`);
+  const calc = { calc: flat('../tools/power-bi-licensing-cost-calculator.html'), calcAr: flat('../ar/tools/power-bi-licensing-cost-calculator.html'), calcTr: flat('../assets/js/translations/licensing-calculator.js') };
+  for (const [k, t] of Object.entries(calc)) check(!/Creators always need Pro\.|المنشئون يحتاجون Pro دائمًا\./.test(t), `SQ8 DS1-S3. ${k}: "creators always need Pro" (Pro or PPU)`);
+  for (const [k, t] of [['calc', calc.calc], ['calcTr', calc.calcTr]]) check(/Creators always need Pro or PPU\./.test(t) && t.includes(`$${UAE.cu} against $${P.cuPayg}`) && t.includes(`AED ${two(P.pro * AED)} or SAR ${two(P.pro * SAR)}`), `SQ8 DS1-S3. ${k}: the creators' licence or the UAE and peg figures`);
+  for (const [k, t] of [['calcAr', calc.calcAr], ['calcTr', calc.calcTr]]) check(/المنشئون يحتاجون Pro أو PPU دائمًا\./.test(t), `SQ8 DS1-S3. ${k}: the creators' licence (AR)`);
 }
 
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }

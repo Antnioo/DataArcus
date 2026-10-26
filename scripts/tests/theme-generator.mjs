@@ -363,6 +363,27 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.ctx.close();
   }
 
+  // 8b. (0.3.1 SQ8, 0.2.9-design-S4) under 800 wide the executive layout becomes the single-focus one: the folded
+  //     Layout step names the layout the preview shows, not the one picked
+  for (const lang of ['en', 'ar']) {
+    v = await open(lang, { viewport: [1440, 900] });
+    await v.pg.click('[data-l=preset][data-v=exec]');
+    await v.pg.click('[data-l=page][data-v=custom]');
+    await v.pg.fill('input[data-l=pageW]', '640'); await v.pg.press('input[data-l=pageW]', 'Tab');
+    await v.pg.fill('input[data-l=pageH]', '360'); await v.pg.press('input[data-l=pageH]', 'Tab');
+    await v.pg.click('#layout > .tg-fold');
+    const sum = await v.pg.evaluate(() => document.querySelector('#layout > .tg-fold-sum').textContent);
+    check(sum.startsWith(lang === 'ar' ? 'رسالة واحدة · 640 × 360' : 'Single focus · 640 × 360'), `${lang}: a 640 x 360 executive page folds as "${sum}", not single focus`);
+    await v.pg.click('#layout > .tg-fold');
+    await v.pg.fill('input[data-l=pageW]', '1280'); await v.pg.press('input[data-l=pageW]', 'Tab');
+    await v.pg.fill('input[data-l=pageH]', '720'); await v.pg.press('input[data-l=pageH]', 'Tab');
+    await v.pg.click('#layout > .tg-fold');
+    const big = await v.pg.evaluate(() => document.querySelector('#layout > .tg-fold-sum').textContent);
+    check(big.startsWith(lang === 'ar' ? 'ملخص تنفيذي · 1280 × 720' : 'Executive summary · 1280 × 720'), `${lang}: a 1280 x 720 executive page folds as "${big}"`);
+    if (v.errs.length) problems.push(`small-page fold ${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // 6. Visual backgrounds follow what the visitor uses (owner 2026-10-04): a colour-only visitor keeps Solid; the first
   //    change in the Layout step switches to Transparent and says so; the visitor's own choice always wins
   for (const lang of ['en', 'ar']) {

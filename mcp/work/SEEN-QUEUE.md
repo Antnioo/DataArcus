@@ -164,7 +164,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | 0.2.9-design-S1 | unused tooltip page; two RTL mirrors; rowH +4 unmeasured | OWNER | mirrors one engine f1216d6; tips on demand `pbip-export.js:455`; `pbip-page.js:48` +4 | laptop: measure a tab row in a non-Segoe font; set the +4 from it |
 | 0.2.9-design-S2 | plan-lint builds pages without tableFields (5-field table) | OPEN | `mcp/lib/plan-lint.mjs:37` projectPages without tableFields | pass tableFields (plan's table field count) to projectPages · S · low · checker → **SQ13** |
 | 0.2.9-design-S3 | LIMITS.kpiCards is a limit name, not layout key | OBSOLETE | informational, no action (`mcp/lib/tool-limits.mjs:14`) | — |
-| 0.2.9-design-S4 | website layout label names chosen layout, preview shows single focus | OPEN | `assets/js/theme-generator.js:820` uses LAYOUTS[c.preset].name | name single focus when E.smallPage(c), EN and AR · S · low · website → **SQ8** |
+| 0.2.9-design-S4 | website layout label names chosen layout, preview shows single focus | DONE 0c69f686 (SQ8) | `assets/js/theme-generator.js:820` uses LAYOUTS[c.preset].name | name single focus when E.smallPage(c), EN and AR · S · low · website → **SQ8** |
 | 0.2.9-design-S5 | packaging needs new mcp/lib/files.mjs | DUPLICATE | same check as packaging list | of 0.2.9-checks-S8 |
 | 0.2.9-design-S6 | A2-3 one pure fitSlots | DONE | `assets/js/design-engine.js:803-813` one pure fitSlots | fixed before fab795c (builder 11) |
 | 0.2.9-design-S7 | approve_plan text claims refusal and 2 hours falsely | DONE | `mcp/lib/plans.mjs:14,49` TTL enforced; `mcp/PRIVACY.md:258` A7-3 fixed | fixed before fab795c (gate rc.17) |
@@ -532,7 +532,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 |---|---|---|---|---|
 | DS1-S1 | MCP page hero, meta, facts say only "Claude Desktop" | OWNER | `power-bi-mcp/index.html:17,116,121`; AR `ar/power-bi-mcp/index.html:16` | owner: name other MCP clients in hero/meta, or keep one-click wording |
 | DS1-S2 | homepage FAQ 7 says "in Claude Desktop" | DUPLICATE | `index.html:679` kept: the one-click path | DS1-S1 |
-| DS1-S3 | licensing guide: rest not re-checked against Learn | OPEN | `articles/article-power-bi-licensing-guide.html:196` only Pro limits checked | verify first: re-check every figure against Learn, EN and AR · M · low · website → **SQ8** |
+| DS1-S3 | licensing guide: rest not re-checked against Learn | DONE 0c69f686 (SQ8) | `articles/article-power-bi-licensing-guide.html:196` only Pro limits checked | verify first: re-check every figure against Learn, EN and AR · M · low · website → **SQ8** |
 | DS1-S4 | GitHub main links need public repo; anchor checked by eye | OPEN | repo public today; anchors match `mcp/README.md:102`, `mcp/PRIVACY.md:62` | site test: each blob link's anchor matches a local heading · S · low · tests-ci → **SQ11** |
 
 ### E
@@ -605,7 +605,7 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| GC-S1 | share image says "the right weekend for each country and year" | OPEN | `scripts/make-share-images.mjs:207` old line (+ "Free tool") | new sub line, regenerate `assets/img/og/gulf-calendar.jpg` · S · low · website → **SQ8** |
+| GC-S1 | share image says "the right weekend for each country and year" | DONE 0c69f686 (SQ8) | `scripts/make-share-images.mjs:207` old line (+ "Free tool") | new sub line, regenerate `assets/img/og/gulf-calendar.jpg` · S · low · website → **SQ8** |
 | GC-S2 | "Free" and "Copy, paste, done" on generator page, site-wide | OWNER | `tools/dax-calendar-table-generator.html:15,185` | owner: keep or drop "free" site-wide; drop "Copy, paste, done"? |
 | GC-S3 | Egypt quick setup keeps fixed Fri + Sat weekend | OBSOLETE | informational: no sourced Egypt history, by design |  |
 | GC-S4 | Sharjah calendar self-check flags every Sunday as GC_WEEKEND | OPEN | `mcp/lib/gulf-calendar.mjs:119` analyze by country only; `mcp/tools/check_model_health.mjs:48` | weekend option (shj) on Gulf.analyze and check_model_health · M · low · calendar → **SQ7** |
@@ -619,16 +619,16 @@ Item ids: `<NOTE>-S<n>`, the note's top-level items in file order across all its
 | GC2-S1 | article dateModified still 2026-10-03; published_time 09:00Z | DONE | 63cd0b2: `articles/article-gulf-calendar-power-bi.html:98` 2026-10-25 (AR :97) | published_time 09:00Z left as is: owner's call |
 | GC2-S2 | article GitHub links work only while repo is public | OBSOLETE | `gh api repos/Antnioo/DataArcus` public; sources link HTTP 200 today |  |
 | GC2-S3 | "Book a Free Call" and "the free ... Generator" | DUPLICATE | `articles/article-gulf-calendar-power-bi.html:124,155` | GC-S2 |
-| GC2-S4 | AR p3 calls Umm al-Qura official, no source linked | OPEN | `ar/articles/article-gulf-calendar-power-bi.html:151` p3 no href | link a source for Umm al-Qura's status in p3 (EN and AR) · S · low · website → **SQ8** |
+| GC2-S4 | AR p3 calls Umm al-Qura official, no source linked | DONE 0c69f686 (SQ8) | `ar/articles/article-gulf-calendar-power-bi.html:151` p3 no href | link a source for Umm al-Qura's status in p3 (EN and AR) · S · low · website → **SQ8** |
 | GC2-S5 | Eid columns 1-3 Shawwal / 10-13 Dhu al-Hijjah vs u.ae | OWNER | column definitions unchanged; u.ae differs | owner: align Is Eid columns with u.ae's holiday spans or keep |
 
 ### I
 
 | Id | Item | Status | Evidence | Fix · size · risk · area → batch (OPEN) / decision (OWNER) / of (DUPLICATE) |
 |---|---|---|---|---|
-| I-S1 | sitemap-lastmod --write in shallow clone gives wrong dates silently | OPEN | `scripts/sitemap-lastmod.mjs` no "shallow" check | refuse/warn when git rev-parse --is-shallow-repository is true · S · low · website → **SQ8** |
+| I-S1 | sitemap-lastmod --write in shallow clone gives wrong dates silently | DONE 0c69f686 (SQ8) | `scripts/sitemap-lastmod.mjs` no "shallow" check | refuse/warn when git rev-parse --is-shallow-repository is true · S · low · website → **SQ8** |
 | I-S2 | Arabic results: "25–30%" percent placed by bidi rules | OWNER | `assets/js/dp600-sim.js:103,327` `<small>` weight, no dir | owner looks at AR results: want ltr-isolated weight or as is? |
-| I-S3 | practice summary skill table bars blue, area rows green/amber | OPEN | `assets/js/dp600-sim.js:454` bar() without class | pass good/warn class as at line 688, rebuild .min.js · S · none · website → **SQ8** |
+| I-S3 | practice summary skill table bars blue, area rows green/amber | DONE 0c69f686 (SQ8) | `assets/js/dp600-sim.js:454` bar() without class | pass good/warn class as at line 688, rebuild .min.js · S · none · website → **SQ8** |
 | I-S4 | deny-scan.mjs needs DENY_TERMS secret | OBSOLETE | informational: runs in CI, `.github/workflows/privacy.yml:37` |  |
 
 ### J17
