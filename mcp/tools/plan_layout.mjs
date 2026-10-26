@@ -3,7 +3,7 @@
 import path from 'node:path';
 import { z } from 'zod';
 import { inside, loadModel, visible, modelOf } from '../lib/model.mjs';
-import { E, designRtl, buildTheme, pageOf, planLayout, kindLabel } from '../lib/design.mjs';
+import { designRtl, buildTheme, pageOf, planLayout, kindLabel, projectPages } from '../lib/design.mjs';
 import { AIM, scopeOf } from '../lib/scope.mjs';
 import { proposeArabic } from '../lib/arabic-names.mjs';
 import { writtenName, readableName } from '../lib/display-names.mjs';
@@ -248,7 +248,7 @@ export function register(server, ctx) {
     // the report's pages and title: the plan's first page is measured among the same pages, names and title)
     const planFit = (design, slots) => { if (!m0) return {}; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return {};
       const lang = a.lang === 'ar' ? 'ar' : 'en', pf0 = a.planFields || {}, sug = Bind.suggest(sc.tables, 1, relsOf(m0, lang)) || {};
-      const specs = E.projectPages(design.layout, lang, { second: a.secondPage !== false, panel: a.slidePanel === true });
+      const specs = projectPages(design.layout, lang, { second: a.secondPage !== false, panel: a.slidePanel === true });
       return Pbip.fitOptions({ lang, rtl: designRtl(design.layout, lang), font: design.font, theme: buildTheme(design, lang), model: { byPath: 'Model.SemanticModel' }, title: a.title || a.name,
         bind: { date: pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: specs.map((p, i) => ({ name: p.name, page: pageOf(design.layout).page, slots: i ? p.slots : slots, panel: p.panel, grow: true })) })[0]; };
     // (the laptop's sweep, D16: a model with no time axis is planned with the layout made for it, as create_report writes it)

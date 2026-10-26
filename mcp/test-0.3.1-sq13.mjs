@@ -83,14 +83,19 @@ try {
   chk(() => JSON.stringify(got) === JSON.stringify([392, 308, 329, 245, 197]), () => `S10. the gaps under a shortened rail beside a row, as measured in SQ13.md (exec 2 and 3 slicers, ops 2 and 3, a second page): ${JSON.stringify(got)}`);
 }
 
-// ---------- R1-see-the-result-S3: no picture of slots the writer doesn't write ----------
+// ---------- R1-see-the-result-S3 (OBSOLETE, verified): the approval page and the website draw the writer's files ----------
 {
+  // a model with no measure: create_report's own build (the plan's exact artifact) writes its counts report, so the
+  // approval page's picture is drawn from those files, never the design engine's slots (planPreview's slot pages are only
+  // for a direct call with no files, pinned by test-0.3.0-preview.mjs P-08)
+  const { reportRun } = await import('./lib/report-run.mjs'), { withLookDefaults } = await import('./lib/report-inputs.mjs');
   const m = loadModel('nom/M.SemanticModel', { root: ROOT }), design = planLayout({ layout: 'exec', lang: 'en' }).design;
-  const pv = get(() => PL.planPreview({ m, tables: m.tables, design, lang: 'en', second: true }));
-  chk(() => pv && pv.from !== 'slots' && Array.isArray(pv.pages) && pv.pages.length === 0, () => `R1-S3a. a plan whose report can't be built in memory draws no slots: ${JSON.stringify(pv && { from: pv.from, pages: (pv.pages || []).length })}`);
-  chk(() => pv && /not|no /i.test(String(pv.why || '')), () => `R1-S3b. and says why: ${JSON.stringify(pv && pv.why)}`);
-  const m2 = loadModel('cal/M.SemanticModel', { root: ROOT }), ok = get(() => PL.planPreview({ m: m2, tables: m2.tables, design, lang: 'en', second: true }));
-  chk(() => ok && ok.pages && ok.pages.length === 2 && ok.from !== 'none', () => `R1-S3c. guard: a model with measures keeps its two written pages: ${JSON.stringify(ok && { from: ok.from, n: (ok.pages || []).length })}`);
+  const built = get(() => reportRun(withLookDefaults({ path: 'nom/M.SemanticModel', name: 'Counts', lang: 'en', design }), 'build'));
+  chk(() => built && Array.isArray(built.files) && built.files.length > 10, () => `R1-S3a. a model with no measure gets create_report's counts report built: ${JSON.stringify(built && built.threw)}`);
+  const pv = built && built.files ? get(() => PL.planPreview({ m, tables: m.tables, design, lang: 'en', second: true, files: built.files })) : null;
+  chk(() => pv && pv.from !== 'slots' && pv.pages && pv.pages.length === 2, () => `R1-S3b. its picture is the written pages: ${JSON.stringify(pv && { from: pv.from, n: (pv.pages || []).length })}`);
+  const pl = fs.readFileSync(path.join(HERE, 'tools/plan_layout.mjs'), 'utf8'), tg = fs.readFileSync(path.join(HERE, '../assets/js/theme-generator.js'), 'utf8');
+  chk(() => /previewOf\(exact \? exact\.files : null\)/.test(pl) && /PV\.fromFiles\(files,/.test(tg) && !/fromSlots/.test(tg), () => 'R1-S3c. plan_layout draws the exact artifact\'s files; the website\'s Preview draws the download\'s files (no fromSlots on the website)');
 }
 
 // ---------- V1-S2: the labels note in plain words ----------

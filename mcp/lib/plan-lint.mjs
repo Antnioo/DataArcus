@@ -118,15 +118,15 @@ export function planLint(a) {
 // second page, as create_report writes it), panel (the slide-in filter panel), title (the report's title), displayNames
 // (the plan's: the names the report shows); files (0.3.0 D5): the exact artifact's files (create_report's own build,
 // "<name>.Report/..." paths): drawn as they are, nothing is built again.
-// Returns { pages: [page] } (page: the renderer's, with flags); { pages: [], from: 'none', why } when the writer can't
-// build the report here (SQ13: the design engine's slots are never drawn as the plan).
+// Returns { pages: [page] } (page: the renderer's, with flags), from the design engine's slots when the writer can't
+// build the report (a model with no measure: create_report counts its columns then).
 const FLAG_OF = { OVERLAP: 'overlap', OFF_PAGE: 'cut', BAR_LABELS_MAY_BE_CUT: 'cut', TABLE_GROW_TO_FIT: 'cut', TABLE_WIDTHS_TOO_WIDE: 'cut' };
 export function planPreview(a) {
   const lang = a.lang === 'ar' ? 'ar' : 'en', b = a.files ? { r: { files: a.files }, design: a.design } : build(a, { second: a.second !== false, panel: !!a.panel, title: a.title, names: a.displayNames }), design = b.design, rtl = E.rtl(design.layout, lang);
   const ui = design.ui || {}, colors = { background: ui.background, card: ui.card, ink: ui.text, accent: ui.accent };
-  // (SQ13, R1-see-the-result-S3: the design engine's slots scored 0.15-0.50 against the written pages) no picture of a
-  // layout create_report never writes: no pages, and why
-  if (b.skipped) return { pages: [], from: 'none', why: `no preview: the report could not be built in memory (${b.skipped})` };
+  if (b.skipped) return { pages: (a.second !== false ? b.specs : b.specs.slice(0, 1)).map((p) => {
+    let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
+    return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
   const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors });
   const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
   pages.forEach((p, k) => {
