@@ -21,7 +21,11 @@
   position said below with why); custom-visuals-lab 38 PASS; `npm test -- report` the base's suites + 1, `-- core` the
   same; mutation the same killed; full run the base's count + 1; check-result-lines, changelog-words,
   check-agent-memory PASS.
-- **Resume:** the plan (this note) pushed; then the tests red, the fix, the suites.
+- **Got:** rd1 PASS 14 checks (red first on df14c65: 9 of 14); report 32 -> 33 suites PASS (redesign 50, cs1 44, lab
+  38 the same; redesign-overlay 29, O2's 5 places changed on purpose, below); core 6 = 6 (mcp 1591, golden 12 match);
+  mutation 73 killed = 73; full run on 098260c "run-tests: 98 suites passed" (the base's 97 + rd1); check-result-lines
+  PASS 98, changelog-words PASS 160, check-agent-memory PASS 164.
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The plan
 1. `nameFor(base, taken)`: the stem is the name without a trailing DataArcus suffix (" native", " (EN-AR)"); the
