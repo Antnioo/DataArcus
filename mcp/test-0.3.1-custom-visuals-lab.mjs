@@ -225,6 +225,13 @@ try {
     { const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
       const sm = summary('report', { customVisualsShown: shownOf(cv2) }), flat = JSON.stringify(sm);
       chk(() => SET1.test(flat.replace(/\\"/g, '"')) && /turn on/i.test(flat), () => `NC3-1e. the approval page shows what to turn on: ${flat.slice(0, 900)}`); }
+    // (ST1, NC3-S5) the map as the second option (the bar chart chosen): its needs reach the plan and the approval page
+    { const pl3 = await call('plan_layout', { path: 'lab2', customVisualsFrom: 'lab2/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE, customVisualsSecond: ['5:940,480'] });
+      const cv3 = (pl3.j && pl3.j.customVisuals) || {}, m3 = (cv3.replacements || []).find((r) => r.from.startsWith('geoMapVisual')) || {};
+      const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
+      const flat3 = JSON.stringify(summary('report', { customVisualsShown: shownOf(cv3) })).replace(/\\"/g, '"');
+      chk(() => !pl3.err && m3.native === 'clusteredBarChart' && m3.second && m3.second.native === 'azureMap' && SET1.test((m3.second.needs || []).join(' ')) && /second option, to turn on: [^"]*"Users can use the Azure Maps visual"/.test(flat3),
+        () => `NC3-1g. the map as the second option: what it needs turned on is in the plan and on the approval page: ${JSON.stringify(m3.second || null).slice(0, 600)} ${flat3.slice(0, 600)}`); }
     chk(() => se.native === 'slicer' && /dropdown/.test(se.tell || '') && /search/.test(se.tell || '') && se.second && se.second.native === 'textSlicer' && (se.lost || []).some((x) => /search box/.test(x)),
       () => `NC3-2a. the text search: a dropdown slicer with its search on, said; the input slicer second: ${JSON.stringify(se).slice(0, 900)}`);
     const id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
