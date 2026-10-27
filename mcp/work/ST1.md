@@ -7,9 +7,12 @@
   with its red-first test; the old notes are not edited. Not GD2's files (the glass twin, the previews), not SF1's
   (README's install section, CHANGELOG's 0.3.1 section, the hard rules: verdict "SF1").
 - **Base:** `fix/0.3.1-seen-sweep` from `origin/integration/0.3.1` (44d1f32). Push only this branch.
-- **Expected checks:** (written before the work) the count: **595 items in 108 notes** (method below; the brief's 451
-  in 94 used another rule). Expected verdicts: FIXED-SINCE about 45 %, NOT-A-PROBLEM about 25 %, NEEDS-DESKTOP about
-  12 %, 0.3.2 about 12 %, FIXED-HERE 10-25, GAP 0-5. Tests: the baseline full run (105 suites) + 0 or 1 suite; each
+- **Expected checks:** (written before the work; revised 13:56 after the reviewer's correction: SQ0's queue stands)
+  the count: **595 items in 108 notes**: the queue's 442 (73 notes; its DONE, OBSOLETE, DUPLICATE stand, 10 spot-checked;
+  its 106 OPEN confirmed against their SQ batch; its OWNER items triaged) + **153 NEW** in 35 notes written after
+  639c42b3 (none of the queue's notes gained an item since: compared item by item). Expected for the 153 new: FIXED-SINCE
+  about 30 %, NOT-A-PROBLEM about 25 %, 0.3.2 about 20 %, NEEDS-DESKTOP about 15 %, FIXED-HERE 10-20, GAP 0-5; OWNER
+  triage: NEEDS-DESKTOP about 55, the rest 0.3.2 / DROP / CHOICE. Tests: the baseline full run (105 suites) + 0 or 1 suite; each
   fix's suite +1 or more checks, red first; `npm run lint` exit 0; check-agent-memory, changelog-words PASS.
 - **Resume:** step 1 (the plan); next: the register, 0.3.1's own notes first.
 
@@ -23,8 +26,10 @@
 ## The plan
 1. This note, the count and the plan; commit, push.
 2. The register, in the brief's order: GD1, GL2, TT1, BD2, CS2, NC3, GC3, R4A, then 0.3.1's other notes, then the
-   older ones. Every verdict checked in today's code (file:line or a command's output); the queue's evidence is a lead,
-   never the verdict. Push every 50 items.
+   older ones. New items: every verdict checked in today's code (file:line or a command's output). Queue items: its
+   DONE/OBSOLETE/DUPLICATE linked to its row (10 spot-checked), formerly OPEN confirmed by their batch's commit, OWNER
+   read against the owner's decisions: GAP, NEEDS-DESKTOP, 0.3.2, DROP or CHOICE (his list: 40 lines at most).
+   Push every 50 items.
 3. Fixes: FIXED-HERE (about 20 lines with the test) and GAP (about 60) in this branch, test red first, one commit each;
    at most 25; past that FIXED-HERE-NEXT.
 4. The summary on top: counts, GAPs, the 0.3.2 list (30 lines at most), the NEEDS-DESKTOP list.
