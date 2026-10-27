@@ -225,6 +225,9 @@ try {
     { const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
       const sm = summary('report', { customVisualsShown: shownOf(cv2) }), flat = JSON.stringify(sm);
       chk(() => SET1.test(flat.replace(/\\"/g, '"')) && /turn on/i.test(flat), () => `NC3-1e. the approval page shows what to turn on: ${flat.slice(0, 900)}`); }
+    // (ST1, NC3-S2) the words say "an" before a vowel ("its id's words name an Azure map", not "a Azure map")
+    { const words = JSON.stringify((cv2.replacements || []).map((r) => [r.evidence, r.tell, r.why, r.lost, r.second && r.second.lost]));
+      chk(() => !/\ba (?=[aeio])/i.test(words) && /name an Azure map/.test(words), () => `NC3-2g. "an" before a vowel: ${(words.match(/.{40}\ba (?=[aeio]).{20}/gi) || []).slice(0, 4).join(' | ')}`); }
     // (ST1, NC3-S5) the map as the second option (the bar chart chosen): its needs reach the plan and the approval page
     { const pl3 = await call('plan_layout', { path: 'lab2', customVisualsFrom: 'lab2/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE, customVisualsSecond: ['5:940,480'] });
       const cv3 = (pl3.j && pl3.j.customVisuals) || {}, m3 = (cv3.replacements || []).find((r) => r.from.startsWith('geoMapVisual')) || {};
