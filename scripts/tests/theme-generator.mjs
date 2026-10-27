@@ -415,7 +415,7 @@ export default async function ({ browser, url, page = PAGE }) {
   // AR; Plain one click away and kept; a design saved without a look stays plain; colours where glass can't keep the
   // text readable go to Plain, said
   for (const lang of ['en', 'ar']) {
-    const v = await open(lang);
+    const v = await open(lang, { plainDesign: false });
     const first = await v.pg.evaluate((k) => ({ look: document.getElementById('csLook').value, opts: [...document.querySelectorAll('#csLook option')].map((o) => [o.value, o.textContent.trim()]),
       saved: JSON.parse(localStorage.getItem(k)).chart, t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background,
       bg: getComputedStyle(document.getElementById('preview')).backgroundImage }), STORE);
