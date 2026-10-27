@@ -64,7 +64,13 @@ Full run on 6ea6820b: "run-tests: 109 suites passed"
 - The plan says the table shape in `mirrors` (`Mirror.KIND_WHAT.table`, one clause), not in a field of its own: a
   `tables` field (307 characters) took room from the twin's answer, so `twinFit` paged one more text out and which
   title landed on the second page followed the random visual ids (terminology-sheet TS-2b failed 2 runs in 4; with
-  the clause, 5 of 5 pass). The bilingual (EN-AR) answer gets one line (`totalRows`); the full entry there dropped its
+  the clause, 5 of 5 pass).
+- **TS-2b, why flaky and why deterministic now:** TS-2b looks for two titles in the first page of the twin's `texts`.
+  The list is paged by size (`twinFit`), its order follows the visuals' random ids, so when the list paged (1 text on
+  the base 7131b72, 2 with my `tables` field) the titles left for the next page changed run by run. On the merge with
+  TS1 the answer is 33,396 characters and all 82 texts are listed (no `moreTexts`, 3 runs measured). TS-2's check now
+  also requires no `moreTexts` (stricter, nothing loosened): if the list ever pages again it fails there, by name, every
+  run, instead of TS-2b failing by chance. The bilingual (EN-AR) answer gets one line (`totalRows`); the full entry there dropped its
   `cannot` list (bilingual-report B5f); see Seen 1.
 
 ## For the owner

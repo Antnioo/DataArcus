@@ -96,14 +96,19 @@ const base = get(() => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'data
 chk(() => typeof base.buildTheme === 'function', () => `N0. the base engine (${BASE_REF}) loads: ${cut(base)}`);
 if (typeof base.buildTheme === 'function') {
   const differ = [];
+  // (0.3.1 TS1, on purpose: the base engine's text on 1920 x 1080 was x 1.5 of the 720 sizes, now x 1.25, the owner's
+  // D-1027-16: its sizes are mapped 15 -> 12.5, 18 -> 15, 27 -> 22.5, 42 -> 35 on a 1080 page, 720 as it is; the rest
+  // byte for byte as before)
+  const TS1 = { 15: 12.5, 18: 15, 27: 22.5, 42: 35 };
+  const at125 = (th, layout) => ((layout || {}).page === '1280x720' ? th : JSON.parse(JSON.stringify(th), (k, v) => ((k === 'fontSize' || k === 'textSize') && typeof v === 'number' && TS1[v] !== undefined ? TS1[v] : v)));
   const bdesign = (preset, look, table, layout) => { const d = base.fresh(); d.preset = preset; d.data = base.PRESETS[preset].data.slice(); d.ui = Object.assign({}, base.PRESETS[preset].ui); d.chart = Object.assign({}, look ? { look } : {}, table ? { table } : {}); base.repairState(d); Object.assign(d.layout, layout || {}); return d; };
   for (const preset of Object.keys(E.PRESETS)) for (const look of [null, 'auto']) for (const table of ['auto', 'minimal', 'banded']) for (const layout of [{}, { transparent: true }, { page: '1280x720', shadow: false }]) for (const lang of ['en', 'ar']) {
-    if (JSON.stringify(E.buildTheme(design(preset, look, table, layout), lang)) !== JSON.stringify(base.buildTheme(bdesign(preset, look, table, layout), lang))) differ.push([preset, look, table, JSON.stringify(layout), lang].join(' '));
+    if (JSON.stringify(E.buildTheme(design(preset, look, table, layout), lang)) !== JSON.stringify(at125(base.buildTheme(bdesign(preset, look, table, layout), lang), layout))) differ.push([preset, look, table, JSON.stringify(layout), lang].join(' '));
   }
   chk(() => !differ.length, () => `N1. every non-glass theme byte for byte the base's (presets x look none/auto x table x layouts x EN/AR): differ on ${differ.slice(0, 4).join('; ')}`);
   // (the dark shadow is D's, below: every dropShadow left out of this comparison)
   const strip = (th) => { const c = JSON.parse(JSON.stringify(th)); delete c.visualStyles.tableEx; delete c.visualStyles.pivotTable; Object.values(c.visualStyles).forEach((v) => Object.values(v).forEach((x) => { delete x.dropShadow; })); return JSON.stringify(c); };
-  const glassDiffer = Object.keys(E.PRESETS).flatMap((preset) => ['auto', 'banded'].filter((table) => strip(E.buildTheme(design(preset, 'glass', table), 'en')) !== strip(base.buildTheme(bdesign(preset, 'glass', table), 'en'))).map((t) => preset + ' ' + t));
+  const glassDiffer = Object.keys(E.PRESETS).flatMap((preset) => ['auto', 'banded'].filter((table) => strip(E.buildTheme(design(preset, 'glass', table), 'en')) !== strip(at125(base.buildTheme(bdesign(preset, 'glass', table), 'en')))).map((t) => preset + ' ' + t));
   chk(() => !glassDiffer.length, () => `N2. the glass theme unchanged outside tables and matrices: differs on ${glassDiffer.join(', ')}`);
   const keep = Object.keys(E.PRESETS).filter((preset) => { const a = E.glassLook(design(preset, 'glass')), b = base.glassLook(bdesign(preset, 'glass')); return a.t !== b.t || a.rim !== b.rim || a.labels !== b.labels || a.strength !== b.strength; });
   chk(() => !keep.length, () => `N3. the look's cards, rim, labels and picture unchanged: differ on ${keep.join(', ')}`);

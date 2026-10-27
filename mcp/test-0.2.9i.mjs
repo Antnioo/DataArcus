@@ -287,9 +287,11 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
       measures: [ms('Total Loans', 'SUM ( Loans[Amount] )', '#,0'), ms('Avg Risk', 'AVERAGE ( Loans[Risk] )', '0.0'), ms('Loan Count', 'COUNTROWS ( Loans )', '#,0')] }]);
     const BOLD = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
     const build = async (font, page, filters) => { const pl = await ask('plan_layout', { path: 'i-n21', layout: 'exec', page, kpis: 3, filters, lang: 'en' }); if (pl.err) return pl;
-      return ask('create_report', { path: 'i-n21', name: 'N21 ' + font + ' ' + page, design: Object.assign({}, pl.j.design, { font }), lang: 'en' }); };
+      return ask('create_report', { path: 'i-n21', name: 'N21 ' + font + ' ' + (page.w ? page.w + 'x' + page.h : page), design: Object.assign({}, pl.j.design, { font }), lang: 'en' }); };
     const themeOf = (x) => { const R = path.join(ROOT, 'i-n21', x.j.report, 'StaticResources', 'RegisteredResources'); return JSON.parse(fs.readFileSync(path.join(R, fs.readdirSync(R).find((f) => f.endsWith('.json'))), 'utf8')); };
-    const sb = await build(SB, '1920x1080', 'none'), rg = await build(RG, '1920x1080', 'none');
+    // (0.3.1 TS1: the rows were measured at the 15pt table text 1920 x 1080 had up to 0.3.0; it has 12.5 now, so the
+    // measured numbers are checked on a 2560 x 1440 page, whose text is 15 and titles 18 (x 1.5), as they were)
+    const sb = await build(SB, { w: 2560, h: 1440 }, 'none'), rg = await build(RG, { w: 2560, h: 1440 }, 'none');
     const tables = (x) => visualsOf(x, 'i-n21').filter((v) => v.visual && v.visual.visualType === 'tableEx' && !(((v.visual.objects || {}).grid || [])[0] || {}).properties?.imageHeight);
     // a capped table's height is its whole rows by the face's numbers: (h - fixed) / pitch is whole, within the 1 the height is rounded up by
     const whole = (x, fixed) => tables(x).length && tables(x).every((v) => { const r = (v.position.height - fixed) / 30; return r - Math.floor(r) < 1 / 30 + 1e-9 || v.position.height < fixed; });

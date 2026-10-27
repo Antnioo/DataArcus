@@ -2,8 +2,8 @@
 // preview of draft PR #37 (assets/js/page-preview.js: fromFiles + render) with Power BI Desktop's PDF export of the same
 // written reports: every box was placed right, but the titles, two kinds of cut content and the words that carry meaning
 // were not what Desktop draws.
-//   F-01: a title is drawn at its visual's own size (the theme's 18pt = 24 on a 1920 page for charts and tables; a KPI
-//         card's own 10pt) and wraps at the box's inner width by the writer's text measure: two lines in a ~508 slot
+//   F-01: a title is drawn at its visual's own size (the theme's 15pt = 20 on a 1920 page since 0.3.1 TS1, was 18pt = 24; a KPI
+//         card's own 10pt) and wraps at the box's inner width by the writer's text measure: two lines in a ~508 slot for a long title
 //   F-02: the placeholder plot starts below the title's lines (it shrinks by the lines the title takes)
 //   F-03: "to check" (cut): a table column narrower than its header needs (0.3.0 D5, changed on purpose: check_report's
 //         own measure, TABLE_HEADER_CUT, per column with a set width, no longer the sum of all headers); on the dense
@@ -59,29 +59,35 @@ try {
   chk(() => dense.w === 1920 && idx(dense, 'lineChart', 509) >= 0 && idx(dense, 'tableEx', 507) >= 0 && dense.visuals.filter((v) => v.type === 'cardVisual' && v.title).length === 6, () => `the dense page as the laptop's: ${dense.visuals.map((v) => `${v.type} ${v.w}`).join(', ')}`);
 
   // ---------- F-01: titles at their own size, wrapped ----------
-  const li = idx(dense, 'lineChart', 509), lg = groupOf(dsvg, li), ll = titleLines(lg);
-  chk(() => ll.length === 2 && ll.every((l) => near(l.size, 24)), () => `F-01. the 509-wide line chart's title on 2 lines at 24 (18pt): ${JSON.stringify(ll)}`);
+  // (0.3.1 TS1, on purpose: the theme's title on 1920 x 1080 is 15pt = 20, x 1.25 (the owner's D-1027-16), was 18pt = 24;
+  // the dense page's titles now fit their ~508 slots on one line, so the wrapping is checked with a longer title, and
+  // every title takes the lines the writer's measure gives it at 15pt)
+  const TP = 15, TPX = TP * 4 / 3, LONG = 'Shipments Total Net Amount by Month and Lane Region Short';
+  const li = idx(dense, 'lineChart', 509), withTitle = (i, t) => Object.assign({}, dense, { visuals: dense.visuals.map((v, k) => (k === i ? Object.assign({}, v, { title: t }) : v)) });
+  const longPage = withTitle(li, LONG), lg = groupOf(P.render(longPage), li), ll = titleLines(lg);
+  chk(() => ll.length === 2 && ll.every((l) => near(l.size, TPX)), () => `F-01. a long title in the 509-wide line chart on 2 lines at 20 (15pt): ${JSON.stringify(ll)}`);
   const slots = dense.visuals.map((v, i) => ({ v, i })).filter(({ v }) => /^(lineChart|clusteredBarChart|clusteredColumnChart|donutChart|tableEx)$/.test(v.type) && !v.panel && v.w >= 505 && v.w <= 510);
-  chk(() => slots.length >= 4 && slots.every(({ i }) => titleLines(groupOf(dsvg, i)).length === 2), () => `F-01. every chart and table title in a ~508 slot takes 2 lines on the dense page: ${slots.map(({ i, v }) => `${v.type} ${titleLines(groupOf(dsvg, i)).length}`).join(', ')}`);
-  chk(() => titleLines(lg).map((l) => l.text).join(' ') === dense.visuals[li].title, () => `F-01. the lines are the whole title, split at words: ${JSON.stringify(titleLines(lg).map((l) => l.text))}`);
   const { textWidth } = require('../assets/js/text-measure.js');
-  chk(() => ll.every((l) => textWidth(l.text, 18, true, 'Segoe UI') <= 509 - 2 * 16), () => `F-01. each line fits the box's inner width by the writer's measure (509 less 16 a side)`);
+  const needs = (v) => (textWidth(v.title, TP, true, 'Segoe UI') <= v.w - 2 * 16 ? 1 : 2);
+  chk(() => slots.length >= 4 && slots.every(({ i, v }) => titleLines(groupOf(dsvg, i)).length === needs(v)), () => `F-01. every chart and table title in a ~508 slot takes the lines the writer's measure gives it at 15pt: ${slots.map(({ i, v }) => `${v.type} ${titleLines(groupOf(dsvg, i)).length} (needs ${needs(v)})`).join(', ')}`);
+  chk(() => titleLines(lg).map((l) => l.text).join(' ') === LONG, () => `F-01. the lines are the whole title, split at words: ${JSON.stringify(titleLines(lg).map((l) => l.text))}`);
+  chk(() => ll.every((l) => textWidth(l.text, TP, true, 'Segoe UI') <= 509 - 2 * 16), () => `F-01. each line fits the box's inner width by the writer's measure (509 less 16 a side)`);
   const ci = dense.visuals.findIndex((v) => v.type === 'cardVisual' && v.title), cl = titleLines(groupOf(dsvg, ci));
   chk(() => cl.length >= 1 && near(cl[0].size, 13.3, 0.1), () => `F-01. a KPI card's title at its own 10pt (13.3): ${JSON.stringify(cl)}`);
   const wide = exec.visuals.findIndex((v) => v.type === 'lineChart' && !v.panel);
-  chk(() => wide >= 0 && titleLines(groupOf(esvg, wide)).length === 1 && near(titleLines(groupOf(esvg, wide))[0].size, 24), () => `F-01. a title that fits stays on one line: ${JSON.stringify(titleLines(groupOf(esvg, wide)))}`);
+  chk(() => wide >= 0 && titleLines(groupOf(esvg, wide)).length === 1 && near(titleLines(groupOf(esvg, wide))[0].size, TPX), () => `F-01. a title that fits stays on one line: ${JSON.stringify(titleLines(groupOf(esvg, wide)))}`);
 
   // ---------- F-02: the plot shrinks by the title's lines ----------
-  const one = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === li ? Object.assign({}, v, { title: 'Net by Month' }) : v)) });
+  const one = withTitle(li, 'Net by Month');
   const lg1 = groupOf(P.render(one), li), top2 = phTop(lg), top1 = phTop(lg1);
   chk(() => top2 != null && top2 > ll[1].y, () => `F-02. the plot starts below the title's 2nd line: plot ${top2}, 2nd line ${ll[1] && ll[1].y}`);
   // (Q1 T-3, 0.3.1: top1 was computed and never compared) the same chart with a 1-line title: its plot starts higher, by
   // no more than the one line it saves (36 at 24; the line's highest point moves with the plot: 26.8 measured here)
   chk(() => titleLines(lg1).length === 1 && top1 != null && top2 != null && top1 < top2 && top2 - top1 <= 40, () => `F-02. a 1-line title gives the plot back its line: plot ${top1} with 1 line, ${top2} with 2`);
   // (measured on the 508 bar chart: its first bar sits at a fixed share of the plot, a line's highest point moves with it)
-  const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(dsvg, bi), bone = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === bi ? Object.assign({}, v, { title: 'Net by Hub' }) : v)) });
+  const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(P.render(withTitle(bi, LONG)), bi), bone = withTitle(bi, 'Net by Hub');
   const btop2 = phTop(bg), btop1 = phTop(groupOf(P.render(bone), bi));
-  chk(() => titleLines(bg).length === 2 && btop1 != null && btop2 - btop1 >= 30 && btop2 - btop1 <= 40, () => `F-02. a 2-line title takes about one line (36 at 24) more from the plot than a 1-line one: ${btop1} -> ${btop2}`);
+  chk(() => titleLines(bg).length === 2 && btop1 != null && btop2 - btop1 >= 25 && btop2 - btop1 <= 34, () => `F-02. a 2-line title takes about one line (30 at 20, 15pt: the bounds 30-40 of 18pt's 36 x 20 / 24) more from the plot than a 1-line one: ${btop1} -> ${btop2}`);
 
   // ---------- F-03: the table's columns cut ----------
   const ti = idx(dense, 'tableEx', 507), eti = idx(exec, 'tableEx');

@@ -89,9 +89,11 @@ try {
   }
 
   // ---------- ST-2, ST-3: golden models ----------
-  const runs = [['health', 'en', 'exec'], ['health', 'en', 'analysis'], ['large', 'en', 'ops', 'logistics'], ['arabic', 'ar', 'exec'], ['arabic', 'ar', 'ops'], ['ramadan', 'en', 'exec'], ['ramadan', 'ar', 'exec'], ['plain', 'en', 'analysis']];
-  for (const [m, lang, layout, focus] of runs) {
-    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}) }, { layout });
+  const runs = [['health', 'en', 'exec'], ['health', 'en', 'analysis'], ['large', 'en', 'ops', 'logistics'], ['arabic', 'ar', 'exec'], ['arabic', 'ar', 'ops', null, { kpis: 6, filters: 'start' }], ['ramadan', 'en', 'exec'], ['ramadan', 'ar', 'exec'], ['plain', 'en', 'analysis']];
+  // (0.3.1 TS1: the Arabic ops report on the dense variant, six KPI cards and the filter rail, ~508 slots: at the theme's
+  // 15pt titles (x 1.25, was 18pt) its long titles fit the wider slots whole, so ST-6b's shortened title is drawn here)
+  for (const [m, lang, layout, focus, more] of runs) {
+    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}) }, Object.assign({ layout }, more || {}));
     chk(() => !r.err, () => `ST-2 setup ${name}: ${r.t.slice(0, 300)}`);
     if (r.err) continue;
     const pages = pagesOf(path.join(ROOT, m, name + '.Report'));

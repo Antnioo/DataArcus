@@ -375,10 +375,11 @@ for (const [w, h] of [[3840, 2160], [640, 360]]) {
   check(!r.err && sizes.length && sizes.every((s) => s >= 8 && s <= 60), `generate_theme ${w}x${h} font sizes: ${r.err ? r.t.slice(0, 100) : sizes}`);
 }
 // no layout, or only part of one: the engine's current defaults (1920 x 1080 and its text sizes), never an old save's
+// (0.3.1 TS1, on purpose: 1920 x 1080's text x 1.25 of the 720 sizes, the owner's D-1027-16; was 15,18,27,42 at x 1.5)
 const themeSizes = (file) => { const s = new Set(); JSON.stringify(JSON.parse(fs.readFileSync(file, 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') s.add(v); return v; }); return [...s].sort((a, b) => a - b).join(); };
 for (const [tag, extra] of [['no layout', {}], ['only radius', { layout: { radius: 4 } }]]) {
   r = await tryCall('generate_theme', Object.assign({ name: 'Default ' + tag }, extra));
-  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.page === '1920x1080' && themeSizes(r.j.path) === '15,18,27,42' && (!extra.layout || r.j.design.layout.radius === 4),
+  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.page === '1920x1080' && themeSizes(r.j.path) === '12.5,15,22.5,35' && (!extra.layout || r.j.design.layout.radius === 4),
     `generate_theme ${tag}: page ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ', text sizes ' + themeSizes(r.j.path)}`);
 }
 // the contrast checks come back, with a warning for each one that fails
@@ -443,7 +444,10 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
       // (0.2.9, the design block's S7: a slot wholly under the shortened filter rail takes the rail's column: the same row,
       // one edge kept, wider)
-      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.3.1 TS1, on purpose: the owner's yes to 0.2.9-writer-S10, REFLOW_KEEP 0.45: on the details page the chart beside
+      // the shortened rail ends with it, keeping REFLOW_KEEP of its height at least, and the rows under it move up, their
+      // bottoms kept, one edge kept, as wide or wider)
+      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && !got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w && v.y === s.y && v.h < s.h && v.h >= E.REFLOW_KEEP * s.h) || (v.y < s.y && v.w >= s.w && (v.x === s.x || v.x + v.w === s.x + s.w) && s.y + s.h - (v.y + v.h) >= 0 && s.y + s.h - (v.y + v.h) < (v.type === 'tableEx' ? 30 : 1)))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;

@@ -47,6 +47,8 @@
   // DESKTOP-TESTS.md, so not in SRC. The one copy of the numbers is the writer's sizing module, loaded when the rule runs
   const TABLE_ROWS_SRC = { file: 'assets/js/pbip-sizing.js (TABLE_ROWS)', date: '2026-10-13', desktop: '2.158', section: 'a table\'s title, header, rows and total, measured for the report writer (N21-LAB)' };
   const Sizing = () => { try { return typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null; } catch (e) { return null; } };
+  // (0.3.1 TS1) the design engine, for the theme's text size on a page (sizeAt: the one place, x 1.25 on 1920 x 1080)
+  const Engine = () => { try { return typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine || null; } catch (e) { return null; } };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
   const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
@@ -188,12 +190,12 @@
     { id: 'TABLE_ROWS_SHOWN', group: 'sizes', severity: 'note', source: TABLE_ROWS_SRC,
       about: 'a table or matrix at a text size larger than Power BI\'s label size for its page (10pt at 720 high) shows fewer rows in its box than at that size (the rows measured for the report writer: title, header, rows and total); values set to wrap put a long name on two lines',
       run(R, out) {
-        const Z = Sizing(); if (!Z) return;
+        const Z = Sizing(), En = Engine(); if (!Z || !En) return;
         const VS = ((R.theme || {}).json || {}).visualStyles || {}, TC = ((R.theme || {}).json || {}).textClasses || {};
         const themed = (type, card, k) => { const one = (t) => ((((VS[t] || {})['*'] || {})[card] || [])[0] || {})[k]; const v = one(type); return +(v !== undefined ? v : one('*')) || NaN; };
         R.visuals.filter((x) => x.type === 'tableEx' || x.type === 'pivotTable').forEach((x) => {
           const o = (x.json.visual || {}).objects || {}, vco = (x.json.visual || {}).visualContainerObjects || {}, pg = (R.pages || []).find((p) => x.page && p.id === x.page.id);
-          const H = pg && pg.h > 0 ? pg.h : 720, c = Math.min(60, Math.max(8, Math.round(10 * H / 720 * 2) / 2));
+          const H = pg && pg.h > 0 ? pg.h : 720, c = En.sizeAt(10, H);
           const t = num(plain(o.values).fontSize) || themed(x.type, 'values', 'fontSize') || R.labelSize || 10, ht = num(plain(o.columnHeaders).fontSize) || themed(x.type, 'columnHeaders', 'fontSize') || t;
           const tl = plain(vco.title), title = lit(tl.show) === 'false' ? 0 : num(tl.fontSize) || themed(x.type, 'title', 'fontSize') || +((TC.title || {}).fontSize) || 12;
           const rows = (s, hs) => { let k = 0; while (k < 500 && Z.tableHeight(k + 1, s, title, 1, hs, R.font) <= x.h + 0.5) k++; return k; };

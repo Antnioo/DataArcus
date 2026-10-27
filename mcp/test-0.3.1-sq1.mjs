@@ -27,7 +27,9 @@ const oneScript = (s) => !(/\p{Script=Latin}/u.test(s) && /[^\P{L}\p{Script=Lati
 const T = 'Work Orders', M = (m, x) => Object.assign({ t: T, m }, x || {}), C = (c, x) => Object.assign({ t: T, c }, x || {});
 const QUARTER = { t: 'Dim Date', c: 'Quarter', kind: 'quarter' };
 const bindOf = (y) => ({ kpis: [y], measure: y, cats: { column: QUARTER, bar: C('Technician') }, y: {}, table: [C('Technician'), y], slicers: [C('Department'), C('Status'), null] });
-const build = (lang, slots, bind) => { const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma'; E.repairState(d);
+// (0.3.1 TS1: these slots were measured with the theme's 15pt text, 1920 x 1080's up to 0.3.0; 1080 is 12.5 now, x 1.25,
+// so the theme is made for a 2560 x 1440 page, whose sizes are those, x 1.5; every number below as it was)
+const build = (lang, slots, bind) => { const d = E.fresh(); if (lang === 'ar') d.font = 'Tahoma'; E.repairState(d); Object.assign(d.layout, { page: 'custom', pageW: 2560, pageH: 1440 });
   return Px.build({ name: 'SQ1', title: 'Work orders', pageName: 'Overview', lang, rtl: lang === 'ar', font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: false,
     model: { byPath: 'Service Orders.SemanticModel' }, bind, texts: E.REPORT_TEXTS[lang], pages: [{ name: 'Overview', page: { w: 1280, h: 720 }, slots, panel: null, hand: true }] }); };
 const visuals = (r) => r.files.filter((f) => /\/visual\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((v) => v.visual);

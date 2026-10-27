@@ -61,7 +61,9 @@ const sameBoxes = (drawn, wr) => { const a = drawn.map(key).sort(), b = wr.map(k
 const diffBoxes = (drawn, wr) => { const a = drawn.map(key), b = wr.map(key); return { drawnOnly: a.filter((x) => !b.includes(x)).slice(0, 4), writtenOnly: b.filter((x) => !a.includes(x)).slice(0, 4), n: [a.length, b.length] }; };
 
 try {
-  const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang: 'en', layout: 'exec', name: 'Orders EN', secondPage: true });
+  // (0.3.1 TS1: filters at the start, so the charts are narrower: at the theme's 15pt titles, x 1.25 (was 18pt), V1-5's
+  // 200-character title fitted two lines of the 1242-wide chart; beside the rail it does not)
+  const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang: 'en', layout: 'exec', filters: 'start', name: 'Orders EN', secondPage: true });
   const id0 = pl.j && pl.j.plan && pl.j.plan.planId;
   if (id0) await s.call('approve_plan', { planId: id0 });
   const en = id0 ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'en', name: 'Orders EN', planId: id0, design: pl.j.design }) : { err: true, t: 'no plan' };

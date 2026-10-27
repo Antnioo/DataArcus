@@ -220,7 +220,10 @@ try {
     const fieldsOf = (k) => T1.filter((t) => t.kind === 'field' && (t.field === k));
     chk(() => !p1.err && Object.keys(DN).every((k) => fieldsOf(k).length && fieldsOf(k).every((t) => t.label === DN[k] && /term/i.test(String(t.labelFrom || '')))),
       () => `TS-2a. each field header of the twin takes its term (field, labelFrom): ${p1.err ? short(p1) : JSON.stringify(T1.filter((t) => t.kind === 'field').map((t) => [t.id, t.field, t.label, t.labelFrom]).slice(0, 8))}`);
-    chk(() => !J.truncated, () => `TS-2 the twin's plan is answered whole (no cut), the sheet in it: ${JSON.stringify(J.truncated)}`);
+    // (0.3.1 TW1: TS-2b reads its titles from the first page of texts; when the list paged (moreTexts), which titles were
+    // left for the next page followed the visuals' random ids, and TS-2b failed now and then. Every text on this page,
+    // said here, so a list that pages fails here, by name, every time)
+    chk(() => !J.truncated && !J.moreTexts, () => `TS-2 the twin's plan is answered whole (no cut, every text listed: no moreTexts), the sheet in it: ${JSON.stringify([J.truncated, J.moreTexts])}`);
     const tm = T1.find((t) => t.kind === 'titleMeasure' && t.text === 'Top {1} of {2}: Web Orders Total Score by Coupon Region'), al = T1.find((t) => t.kind === 'altText' && t.text === 'Web Orders Total Score by Plan Group: detail');
     chk(() => tm && tm.label === `أعلى {1} من {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
       () => `TS-2b. a title and an alt text made of the fields' names take the terms (derived): ${JSON.stringify([tm, al].map((t) => t && [t.text, t.label, t.labelFrom]))}`);
