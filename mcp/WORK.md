@@ -2,12 +2,11 @@
 
 The current release only, capped (60 lines, 3,200 characters: `scripts/check-agent-memory.mjs`). Rules:
 [CLAUDE.md, "Keeping the memory"](CLAUDE.md#keeping-the-memory). Each job: `mcp/work/<ID>.md`, its `## Summary`
-first. Finished entries, unchanged: [work/archive/](work/archive/README.md) (this file before A1's cap: its first
-section of `WORK-2026-10-25.md`).
+first. Finished entries: [work/archive/](work/archive/README.md).
 
 ## Where it stands (0.3.1, 26 Oct)
 - `integration/0.3.1` (from main d501c78): builders branch from it and push only their branch; the reviewer merges;
-  one PR integration -> main at the end, the owner merges (max 4 builders for three rounds, then 2-3).
+  one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
 - Merged: waves 1-6 (to A2, K2, GC2, RB, Q1); the release audit [AF1](work/AF1.md), [AF2](work/AF2.md),
   [DS1](work/DS1.md), [AU47](work/AU47.md); the Seen batches [SQ1](work/SQ1.md), [SQ2](work/SQ2.md),
   [SQ3](work/SQ3.md), [SQ4](work/SQ4.md), [SQ5](work/SQ5.md), [SQ6](work/SQ6.md), [SQ7](work/SQ7.md),
@@ -15,14 +14,15 @@ section of `WORK-2026-10-25.md`).
   Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
 - Merged 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md), [NC1](work/NC1.md), [CS1](work/CS1.md),
   [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md).
-- 27 Oct: [R4A](work/R4A.md), [GL2](work/GL2.md), [BD2](work/BD2.md), [CS2](work/CS2.md), [NC3](work/NC3.md), [TT1](work/TT1.md), [GC3](work/GC3.md), [GD1](work/GD1.md). Now: GD2.
+- 27 Oct merged: [R4A](work/R4A.md), [GL2](work/GL2.md), [BD2](work/BD2.md), [CS2](work/CS2.md), [NC3](work/NC3.md),
+  [TT1](work/TT1.md), [GC3](work/GC3.md), [GD1](work/GD1.md) (glass the default).
+- Running (the release bar): GD2 (the twin identical in glass; glass previews), ST1 (the Seen sweep on
+  [SEEN-QUEUE.md](work/SEEN-QUEUE.md)), SF1 (the hard rules proven; the way back to 0.3.0).
 
 ## Next step
-1. The reviewer merges SQ12, SQ14, SQ15; every batch and item status: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).
-2. One batched laptop run: every "For the laptop" list (R1, M1, V1, L1, X2, C, L6) and the queue's laptop list; the
-   owner picks M1's matrix variant or none.
-3. The release: `mcp/work/D5.md` "For the reviewer" 1-4; the PR integration -> main (the owner merges); then K1's
-   public repo (`mcp/work/K1.md` "For the owner").
+1. The reviewer merges GD2, ST1, SF1; then the final full run and two identical dry builds.
+2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
+3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
 ## Open decisions (the owner's; no work before his go)
 - M1 "Seen" 1-2 (text-box panels; the twin's tables lose "Total"); the matrix variant, then `MATRIX_RTL_DEFAULT`.

@@ -11,7 +11,7 @@
 - **Expected checks:** new `sq4` about 22; twin suites and mirror-parity: the same names and counts (twin-complete 24,
   language-toggle 27, en-ar-copy 27, twin-preview 23, twin-artifact 21, mirror-parity 58, bilingual-report 32);
   `npm test -- --keep-going` all PASS; `check-agent-memory` PASS. **Measured:** sq4 20 (13 red on 3bda227); every twin
-  suite and mirror-parity the same counts; the full run: FULLRUN.
+  suite and mirror-parity the same counts; the full run 80 of 80 suites passed (mcp 1591, mutation 174, 67 mutants all killed).
 - **Resume:** done: 6 DONE (082860a; Q1-S7 also f564362), J18-S4 OBSOLETE; the reviewer reviews and merges. For the
   laptop below.
 
@@ -75,7 +75,7 @@ The first full run (on 082860a): 79 of 80 suites passed, rc24 T-1 failed ("every
 the labels sent). Cause: an alt text under its title takes the title's Arabic, and `given` counted every text with
 Arabic. Fixed at its cause, not in the test (f564362): `labels.given` counts the labels the call gave (by id or words)
 that a text takes; `labels.arabic` counts every text made Arabic (the approval summary's number, unchanged). rc24 28,
-sq3 28, sq4 20 PASS. The full run on f564362: FULLRUN.
+sq3 28, sq4 20 PASS. The full run on f564362: 80 of 80 suites passed (mcp 1591, mutation 174 checks, 67 mutants all killed).
 
 ## CHANGELOG line
 - The Arabic twin: a bookmark group's name gets its Arabic; a long Arabic title in the phone header gets a size that fits

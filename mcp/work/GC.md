@@ -142,6 +142,8 @@ missing); `gulf-calendar` crashed at its first Sharjah calendar (no `shj` rule).
   `mcp/test.mjs` shard 3/4 632 PASS (with the 2 new add_gulf_calendar checks); `test-arabic-terms` 87 PASS;
   site config PASS; csp PASS (139 pages); ar-pages PASS (38 copies); check:min PASS with new `?v=` stamps;
   sitemap-lastmod PASS (full clone).
+- Full runs at the end (25 Oct): `cd mcp && npm test -- --keep-going` 72 PASS, 0 FAIL, 13,600 -> 13,747 checks on G1's
+  count (+145 claims, +2 test.mjs); `node scripts/tests/run-all.mjs` all 20 suites PASS (gulf-calendar 905, tools 391).
 
 ## CHANGELOG line
 - **The Gulf calendar says what it knows.** Sharjah's government weekend (Friday to Sunday since 2022) is a weekend

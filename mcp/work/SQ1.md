@@ -57,8 +57,8 @@ Commits: bedf032 the plan, aa48d96 the suite red first (12 of 18 failed on the b
 
 Suites, base (a worktree at 639c42b) -> this branch: `npm test -- report` 24 suites PASS -> 25 (+ sq1 18 checks),
 every other count equal; `npm test -- core` 6 PASS -> 6 PASS, equal (mcp 1591, golden 12 tasks, mutation 165);
-`scripts/tests/run-all.mjs` 20 PASS -> 20 PASS, equal; site config, CSP, the 38 Arabic copies PASS. The full run and
-`check-agent-memory`: in the report (end of the night run).
+`scripts/tests/run-all.mjs` 20 PASS -> 20 PASS, equal; site config, CSP, the 38 Arabic copies PASS. The full run
+`npm test -- --keep-going`: 78 suites PASS (sq1 included), none failed or skipped; `check-agent-memory` PASS.
 
 ## CHANGELOG line
 - Reports: a quarter chart's labels keep a whole-number measure's own format (no more "8.0Kkg"); a slicer slot too narrow for its slicers leaves out the Reset button (and then slicers), told in the answer, instead of writing slicers Power BI cannot draw.
