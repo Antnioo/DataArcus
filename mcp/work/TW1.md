@@ -118,6 +118,8 @@ Part 3 of 0.3.1, one sitting: one glass report and its twin side by side, EN and
    the same on this branch. TS1's text sizes (x 1.25) change the English download TT2 pinned before TS1. Left as it is:
    it is TT2's expected number, and whether TS1's change is meant there is the reviewer's call (the fix would be the
    fixture re-captured on the merged integration).
+   Then: the reviewer re-pinned it on integration (71237b02); merged here (d6673f10): arabic-names PASS 14. The full run
+   on 43286d77 stands for this merge (it brings only that fixture).
 
 ## Lessons for the reviewer
 - `git stash push -- <file>` after a commit compares with HEAD, not the base: to prove red on the base, stash before the
