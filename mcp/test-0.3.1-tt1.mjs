@@ -35,6 +35,16 @@ const wholeIso = (s) => new RegExp('^' + RLM + FSI + '[^⁦-⁩]+' + PDI + RLM +
 const lit = (p) => (p && p.expr && p.expr.Literal && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'") : null);
 const props = (vco, k) => Object.assign({}, ...(((vco || {})[k] || []).map((e) => (e && e.properties) || {})));
 // every written title (a visual's title text, and its alt text when it repeats the title), from visual.json and mobile.json
+// (a chart cut to its top N takes its title from a report measure: its plain text, "_s = _n, "<title>"", and its lead
+// and rest, read from reportExtensions.json)
+const dq = (x) => x.replace(/""/g, '"');
+function measureTitle(files, e) {
+  if (!e || !e.Measure) return null;
+  const x = files.find((f) => /reportExtensions\.json$/.test(String(f.path))); if (!x) return null;
+  const ext = typeof x.data === 'string' ? JSON.parse(x.data) : x.json || x.data, m = (ext.entities || []).flatMap((y) => y.measures || []).find((y) => y.name === e.Measure.Property);
+  const r = m && /_s = _n, "((?:[^"]|"")*)", "((?:[^"]|"")*)" & _s & "((?:[^"]|"")*)" & _n & "((?:[^"]|"")*)"/.exec(m.expression);
+  return r ? { plain: dq(r[1]), topped: dq(r[2]) + '6' + dq(r[3]) + '9' + dq(r[4]) } : null;
+}
 function titlesOf(files) {
   const out = [];
   for (const f of files) {
@@ -42,8 +52,10 @@ function titlesOf(files) {
     let j; try { j = typeof f.data === 'string' ? JSON.parse(f.data) : f.json || f.data; } catch (e) { continue; }
     const vco = /mobile\.json$/.test(f.path) ? (j || {}).visualContainerObjects : ((j || {}).visual || {}).visualContainerObjects;
     const t = lit(props(vco, 'title').text), alt = lit(props(vco, 'general').altText), type = ((j || {}).visual || {}).visualType || 'phone';
+    const mt = measureTitle(files, ((props(vco, 'title').text || {}).expr));
+    if (mt) { out.push({ path: f.path, type, what: 'title', s: mt.plain }); out.push({ path: f.path, type, what: 'topped', s: mt.topped }); }
     if (t) out.push({ path: f.path, type, what: 'title', s: t });
-    if (alt && t && bare(alt).includes(bare(t))) out.push({ path: f.path, type, what: 'alt', s: alt });
+    if (alt && (t || mt) && bare(alt).includes(bare(t || mt.plain))) out.push({ path: f.path, type, what: 'alt', s: alt });
   }
   return out;
 }
@@ -58,6 +70,8 @@ const sales = () => ({ name: 'Sales', partitions: mp('Sales'), columns: [col('Am
   measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] });
 const REL = [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }];
 modelAt('tt', [sales(), calendar()], REL);
+// names the fixed list of report words has no Arabic for (the plan proposes none)
+modelAt('od', [{ name: 'Web Orders', partitions: mp('Web Orders'), columns: [col('Score', 'double'), col('Plan Group', 'string'), col('Sign Up Date', 'dateTime')], measures: [{ name: 'Web Orders Total Score', expression: 'SUM ( \'Web Orders\'[Score] )', formatString: '#,0' }] }]);
 // a model without measures (report-run counts its columns)
 modelAt('nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Amount', 'double'), col('Order Date', 'dateTime')] }, calendar()],
   [{ name: 'r1', fromTable: 'Orders', fromColumn: 'Order Date', toTable: 'Calendar', toColumn: 'Date' }]);
@@ -122,7 +136,7 @@ try {
   // the plan lists the titles that stay English, and how to make them Arabic
   const { serverClient } = await import('./test-0.2.9.mjs');
   const s = await serverClient(ROOT, {});
-  const pl = await s.call('plan_layout', { path: 'tt/M.SemanticModel', lang: 'ar', layout: 'exec', name: 'TT plan', secondPage: true });
+  const pl = await s.call('plan_layout', { path: 'od/M.SemanticModel', lang: 'ar', layout: 'exec', name: 'TT plan', secondPage: true });
   const te = pl.j && pl.j.arabicNames && pl.j.arabicNames.titlesInEnglish;
   chk(() => te && Array.isArray(te.titles) && te.titles.length > 0 && te.titles.every((x) => !AR.test(x) && /[A-Za-z]/.test(x)) && /displayNames/.test(String(te.how)) && /Arabic/.test(String(te.how)),
     () => `R6. an Arabic plan lists the titles that stay English (titlesInEnglish) and how to make them Arabic: ${cut(pl.err ? pl.t : te)}`);
@@ -146,7 +160,7 @@ try {
   let k = 0; const L = {}; texts.filter((t) => /^(page|textbox):/.test(t.id)).forEach((t) => { L[t.id] = 'نص ' + (++k); });
   const tw = get(() => planTwin({ path: 'tt/TT EN.pbip', labels: L })), cp = get(() => planTwin({ path: 'tt/TT EN.pbip', labels: L, into: 'same' }));
   const twinFiles = tw.built ? tw.built.pages.flatMap((pg) => pg.visuals.map((j, i) => ({ path: 'p/' + i + '/visual.json', json: j })).concat((pg.mobiles || []).filter(Boolean).map((j, i) => ({ path: 'p/' + i + '/mobile.json', json: j })))) : [];
-  const tT = titlesOf(twinFiles), tC = cp.copy ? titlesOf(cp.copy.files || []) : [];
+  const tT = titlesOf(twinFiles), tC = cp.copy ? titlesOf((cp.copy.files || []).map((f) => ({ path: f.rel, data: f.data != null ? String(f.data) : fs.readFileSync(path.join(ROOT, 'tt/TT EN.Report', f.from), 'utf8') }))) : [];
   chk(() => texts.length > 5 && tT.length > 5 && tT.every((x) => !mixed(x.s)) && tT.filter((x) => !AR.test(x.s) && /[A-Za-z]/.test(x.s)).every((x) => wholeIso(x.s)),
     () => `T1. the twin: a title the person left English is isolated whole, none mixed: ${cut(tw.threw || p0.threw || tT.filter((x) => mixed(x.s) || (!AR.test(x.s) && !wholeIso(x.s))).map((x) => x.s))}`);
   chk(() => tC.length > 5 && tC.every((x) => !mixed(x.s)) && tC.some((x) => wholeIso(x.s)), () => `T2. the EN-AR copy: no title mixed, its Arabic pages' English titles isolated whole: ${cut(cp.threw || tC.filter((x) => mixed(x.s)).map((x) => x.s))}`);
