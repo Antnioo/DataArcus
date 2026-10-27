@@ -81,8 +81,10 @@ export default async function ({ browser, url }) {
       `saved hh 44 on 960 x 720: kept ${l.hh}, sizes ${z.hh}, slider from ${E.rangeOf('hh', PW, l)[0]}, title box ${title.h} (want 49 and 25+)`);
     check(z.fh === 70 && E.rangeOf('fh', PW, l)[0] === 70 && rail.h >= 16 + 4 * 10 + 13, `saved fh 56 on 960 x 720: sizes ${z.fh}, slider from ${E.rangeOf('fh', PW, l)[0]}, rail ${rail.h} (want 70)`);
     const big = Object.assign({}, l, { page: '1920x1080' });
-    check(E.sizes(big, E.pw(big)).hh === 44 && E.rangeOf('hh', E.pw(big), big)[0] === 44 && E.rangeOf('fh', E.pw(big), big)[0] === 64,
-      `1920 x 1080: header from ${E.rangeOf('hh', E.pw(big), big)[0]} (want 44), top rail from ${E.rangeOf('fh', E.pw(big), big)[0]} (want 64)`);
+    // (0.3.1 TS1, on purpose: the slicer text on 1080 is 12.5pt (x 1.25, the owner's D-1027-16), not 15; the measured rule
+    // 16 + 4 x pt and the padding 20 give ceil((16 + 50 + 20) / 1.5) = 58 on the grid, was 64 at 15pt)
+    check(E.sizes(big, E.pw(big)).hh === 44 && E.rangeOf('hh', E.pw(big), big)[0] === 44 && E.rangeOf('fh', E.pw(big), big)[0] === 58,
+      `1920 x 1080: header from ${E.rangeOf('hh', E.pw(big), big)[0]} (want 44), top rail from ${E.rangeOf('fh', E.pw(big), big)[0]} (want 58)`);
     const small = Object.assign({}, l, { page: 'custom', pageW: 640, pageH: 360, hh: undefined, fh: undefined });
     check(E.sizes(small, E.pw(small)).hh === 74 && E.sizes(small, E.pw(small)).fh === 110, `640 x 360 defaults: header ${E.sizes(small, E.pw(small)).hh} (want 74), top rail ${E.sizes(small, E.pw(small)).fh} (want 110)`);
   }

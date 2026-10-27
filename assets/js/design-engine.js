@@ -387,7 +387,8 @@
   const CATEGORY_KINDS = ['bar', 'column', 'donut'];
   // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
   // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
-  // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
+  // and the plan says so. On the 720 grid (positions scale h / 720; the rows below were measured at 10pt on 720 and are
+  // kept as measured on a 1080 page, whose text is now x 1.25, not x 1.5: a row there has room to spare, never less).
   //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/docs/RULES-POWERBI.md): 22.2 a row at the theme's 10pt,
   //    45 above the first row, 8 under the last and 38 for the value axis;
   //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
@@ -540,10 +541,18 @@
   // the rounded panels, so transparent visuals never get it; solid visuals follow the Soft shadows option
   const shadowStyle = (l) => [{ show: !!(l && !l.transparent && l.shadow) }];
   // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
-  // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
+  // everything looks small, so every size grows with the page: × 1.25 on 1920 × 1080, unchanged on 1280 × 720.
+  // FHD_TEXT: the text factor on 1920 × 1080, the ONE place it is set (the owner's decision of 27 Oct, D-1027-16: "no go
+  // for 1.25 in 0.3.1"; from Codex's text-sizes review, dataarcus-exchange results/2026-10-26-text-sizes: × 1.5 kept the
+  // 720 page's apparent size at Fit to page, × 1.25 is its role-based profile: body 12.5, visual title 15, KPI 35).
+  // Up to 0.3.0 it was 1.5 (the page's own factor, h / 720). textScale: the factor on a page h high, a straight line
+  // through 1 at 720 and FHD_TEXT at 1080 (2 at 2160, 0.75 at 360). Only text follows it: a box the laptop measured
+  // keeps its measured minimum (the pills, pbip-sizing.js pillH; the KPI title gap, kpiInset), and positions stay h / 720.
   // Power BI rejects the whole theme when one font size is outside 8-60 (tested in Desktop), so very big or small pages stop there
-  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60
-  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
+  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60 (Power BI takes half points)
+  const FHD_TEXT = 1.25;
+  const textScale = (h) => 1 + (h / 720 - 1) * (FHD_TEXT - 1) / (1080 / 720 - 1);
+  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * textScale(h) * 2) / 2));
   const fs = (n, l) => sizeAt(n, page(l).h);
   const textSizes = (d) => {
     const l = d.layout, f = (n) => fs(n, l), g = isGlass(d) ? glassLook(d) : null;
@@ -560,15 +569,18 @@
   // them is its base at one page height (0.2.9, the tools audit's A6-10: the MCP server copied these sizes and the
   // rounding to find a theme's page; an engine change would have broken it without a word)
   const TEXT_BASES = [['tableEx', 'values', 'fontSize', 10], ['slicer', 'header', 'textSize', 10], ['card', 'labels', 'fontSize', 28], ['multiRowCard', 'cardTitle', 'fontSize', 12], ['multiRowCard', 'dataLabels', 'fontSize', 18], ['pivotTable', 'rowHeaders', 'fontSize', 10]];
-  // The page height a theme's text sizes were made for: { h } (the middle of the heights that give all its sizes), or
-  // null for a theme the engine did not make (its sizes are its author's)
+  // The page height a theme's text sizes were made for: { h, f } (h the middle of the heights that give all its sizes, f
+  // its text factor, textScale(h): a rescale to another page is textScale(there) / f), or null for a theme the engine
+  // did not make (its sizes are its author's). (TS1) A 1920 × 1080 theme made before 0.3.1 (× 1.5) reads as one made
+  // for a page about 1440 high: its sizes are exactly those
   const themeScaleOf = (theme) => {
     const vs = (theme && theme.visualStyles) || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
     const got = TEXT_BASES.map(([v, k, prop]) => at(v, k, prop));
     if (!(got[0] > 0)) return null;
     const fits = (h) => TEXT_BASES.every(([, , , n], i) => got[i] === sizeAt(n, h));
     const hs = []; for (let h = 200; h <= 4400; h++) if (fits(h)) hs.push(h);
-    return hs.length ? { h: hs[Math.floor(hs.length / 2)] } : null;
+    const h = hs[Math.floor(hs.length / 2)];
+    return hs.length ? { h, f: textScale(h) } : null;
   };
   // A copy of a theme with every text size times r, in half points within 8-60 (the theme given is not changed)
   const scaleTheme = (theme, r) => {
@@ -1056,7 +1068,7 @@
     return out;
   }
   const SLOT_GAP = 40;
-  const REFLOW_KEEP = 0.5;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too) a chart beside the rail keeps this share of its height at least when the page reflows
+  const REFLOW_KEEP = 0.45;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too; 0.3.1 TS1, the owner's yes of 26 Oct to 0.2.9-writer-S10, SQ13's option (a): 0.5 -> 0.45, so a second page's chart keeps 168 of 347 and the 197 gap under the rail closes) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
@@ -1254,7 +1266,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, FHD_TEXT, textScale, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, REFLOW_KEEP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

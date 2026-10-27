@@ -160,8 +160,9 @@ export async function v029designEngine({ check }) {
     chk(() => !bad.length, () => `A6-10: themeScaleOf finds the height every buildTheme was made for: ${bad.join(' | ')}`);
     const user = { name: 'Mine', visualStyles: { tableEx: { '*': { values: [{ fontSize: 12 }] } } } };
     chk(() => get(() => E.themeScaleOf(user)) === null, () => `A6-10: a theme the user made gives null: ${JSON.stringify(get(() => E.themeScaleOf(user)))}`);
+    // (0.3.1 TS1, on purpose: the 1080 callout is 35, 28 x 1.25, the owner's D-1027-16; was 42 at x 1.5; half of it 17.5)
     const t = E.buildTheme(design({ preset: 'exec', page: '1920x1080' }), 'en'), half = get(() => E.scaleTheme(t, 0.5));
-    chk(() => half.visualStyles.card['*'].labels[0].fontSize === 21 && half.textClasses.callout.fontSize === 21 && t.visualStyles.card['*'].labels[0].fontSize === 42 && get(() => E.scaleTheme(t, 10)).textClasses.callout.fontSize === 60,
+    chk(() => half.visualStyles.card['*'].labels[0].fontSize === 17.5 && half.textClasses.callout.fontSize === 17.5 && t.visualStyles.card['*'].labels[0].fontSize === 35 && get(() => E.scaleTheme(t, 10)).textClasses.callout.fontSize === 60,
       () => `A6-10: scaleTheme scales every text size within 8-60 and leaves the theme given as it was: ${JSON.stringify(half && half.textClasses)}`);
     chk(() => !/fsz\(|for \(let h = 200; h <= 4400/.test(serverSource()), () => 'A6-10: server.mjs no longer re-derives the theme\'s scale');
   }

@@ -3,7 +3,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import path from 'node:path';
 import { loadModel, visible, inside, modelOf, nothingAt, refuseUnreadable } from './model.mjs';
-import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, isGlass, glassPng } from './design.mjs';
+import { planLayout, absorb, imageSize, isSmall, projectPages, designRtl, buildTheme, texts, themeName, themeScaleOf, scaleTheme, textScale, isGlass, glassPng } from './design.mjs';
 import { scopeOf } from './scope.mjs';
 import { writtenName } from './display-names.mjs';
 import { resolveSwitch, switchReach, addSwitch, switchSaid, SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
@@ -325,7 +325,7 @@ export function reportRun(a, mode) {
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
     let theme = a.theme ? themeOf(a.theme) : { name: a.name };   // (let: the design block's A2 scales it to the page below)
     // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
-    // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
+    // layout.page, 1920 x 1080 by default: 10pt x the engine's textScale of the page's height, as plan_layout's pages are), and a smaller
     // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text
     // size in it follows the pages' height, within Power BI's 8-60. Pages of different heights, or a theme without that
     // mark, keep the theme as it is, told.
@@ -342,12 +342,16 @@ export function reportRun(a, mode) {
       // (the tools audit's A6-10: the engine finds the theme's page and scales it; nothing of its sizes is copied here)
       const sc = themeScaleOf(theme), themeH = sc ? sc.h : null;
       const ours = !!themeH;
-      const ratio = ours && hs.length === 1 ? hs[0] / themeH : null;
+      // (0.3.1 TS1, the owner's x 1.25 on 1920 x 1080: text grows by the engine's textScale, no longer with the page's
+      // height, so the ratio is the two pages' text factors; a 1080 theme from before 0.3.1, x 1.5, reads as made for
+      // about 1440 and its text takes the new sizes, said)
+      const ratio = ours && hs.length === 1 ? textScale(hs[0]) / sc.f : null;
       if (ratio && Math.abs(ratio - 1) > 0.01) {
         theme = scaleTheme(theme, ratio);
-        reportNotes.push(`The theme's text sizes were made for a page about ${themeH} high; they were scaled to these ${hs[0]}-high pages (x ${ratio.toFixed(2)}, within 8-60), as a planned page's theme is. The theme file itself was not changed.`);
+        const was = Math.abs(themeH - 1440) <= 20 ? ' (or a 1920 x 1080 theme made before DataArcus 0.3.1, when text grew x 1.5 with the page; it grows x 1.25 now)' : '';
+        reportNotes.push(`The theme's text sizes were made for a page about ${themeH} high${was}; they were scaled to these ${hs[0]}-high pages (x ${ratio.toFixed(2)}, within 8-60), as a planned page's theme is. The theme file itself was not changed.`);
       } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
-      else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
+      else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page about ${themeH} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
     }
     written = theme;
     look = { ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}), font: a.font, rtl: rtlHand };

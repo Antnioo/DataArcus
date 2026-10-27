@@ -9,7 +9,7 @@ export const E = require('../../assets/js/design-engine.js');
 export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
-export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, textScale, projectPages, themeName, fileBase, imageSize, isSmall } = E;
 // (0.3.1 GL1) the glass look: its cards and contrast (glassLook) and the page picture (glassPng), the engine's
 export const { isGlass, glassLook, glassPng } = E;
 // (0.3.1 GD1) the glass look is the default of a new design, and the gate that keeps it readable

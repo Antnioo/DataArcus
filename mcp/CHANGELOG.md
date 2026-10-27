@@ -10,6 +10,13 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **Calmer text on 1920 x 1080 pages:** the theme's text now grows x 1.25 from the 1280 x 720 sizes, not x 1.5: body
+  text 12.5 (was 15), visual titles 15 (was 18), KPI values 35 (was 42); 1280 x 720 pages are unchanged. This holds for
+  every new theme from the Theme Generator, generate_theme, plan_layout and create_report, and for a design you saved
+  on the website when you download its theme again. A redesign and the Arabic twin keep the original report's sizes.
+  A theme made by DataArcus 0.3.0 for 1920 x 1080 and used with create_report takes the new sizes on its pages (the
+  answer says so). On a details page with filters at the side, the chart beside a short filter panel now ends with the
+  panel and the rows under it move up, which closes the empty band that was left under the filters there.
 - **No option dropped without a word:** `consistentText`, `keepPositions`, `titles` and `restyle` work on a redesign
   only. Given with a native copy of custom visuals or a new report, they were ignored, so a native copy asked "with
   consistent text" kept each visual's own fonts. Now the plan says so and names the way: write the native copy, then

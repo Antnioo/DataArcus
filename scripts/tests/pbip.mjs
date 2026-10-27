@@ -295,10 +295,11 @@ export default async function ({ browser, url }) {
       check(a.trend === 4, `default report: ${a.trend} of 5 charts linked to the monthly trend tooltip (4 expected: all but the line chart)`);
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
       check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
-      // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
+      // value sizes: the default cards keep the theme's callout, 35 (1080: 28 x 1.25, the owner's D-1027-16 in 0.3.1 TS1, on
+      // purpose; was 42 at x 1.5) and 28 (720); the tooltip card 20
       const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v)).map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
       const s720 = sizes(build(std('1280x720'), 'en', { second: true, panel: false }).files);
-      check(sizes(b.files) === '20,42' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,42), 720 ${s720} (want 20,28)`);
+      check(sizes(b.files) === '20,35' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,35), 720 ${s720} (want 20,28)`);
       // a side accent bar: the title's side padding clears it (26 on 1080, 17 on 720); a bar on top needs none
       const ins = ['1920x1080', '1280x720'].map((pg) => inset(std(pg, { kpiBar: 'start' }).layout)).concat(inset(std('1920x1080', { kpiBar: 'top' }).layout));
       check(JSON.stringify(ins) === '[26,17,0]', `accent bar inset: ${JSON.stringify(ins)}, want [26,17,0]`);

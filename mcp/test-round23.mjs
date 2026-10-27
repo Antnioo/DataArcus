@@ -183,14 +183,14 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const t1 = tables(ar, d)[0], t2 = tables(lt, d)[0];
     chk(() => t1 && refs(t1)[refs(t1).length - 1] === 'Sales.Row label: Region' && t2 && refs(t2)[0] === 'Sales.Region' && !width0(t2).length, () => `4. lang ar hand page right to left by default, rtl false left to right: ${t1 ? refs(t1) : short(ar)} | ${t2 ? refs(t2) : short(lt)}`);
   }
-  // 5. A theme made for 1920 x 1080 on a 1280 x 720 hand-placed page: its text sizes follow the page (x 720/1080), as a
-  //    plan_layout page's theme does
+  // 5. A theme made for 1920 x 1080 on a 1280 x 720 hand-placed page: its text sizes follow the page, as a
+  //    plan_layout page's theme does ((0.3.1 TS1, on purpose: x 1 / 1.25, the text factors; the 1080 table text 12.5, was 15)
   {
     const th = await ask('generate_theme', { name: 'R23 big', preset: 'DataArcus', folder: 'r23-themes' });
     const x = th.err ? th : await ask('create_report', { path: d, name: 'R23 theme small', theme: th.j.path, noDataMessage: false, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', table: ['Sales[Region]', 'Sales[Total Sales]'] }, pages: page([tableSlot]) });
     const tf = x.err ? null : Object.entries(filesOf(x, d)).find(([k]) => /RegisteredResources\/[^/]+\.json$/.test(k)), T = tf ? JSON.parse(String(tf[1])) : null;
     const size = T ? T.visualStyles.tableEx['*'].values[0].fontSize : null, big = th.err ? null : JSON.parse(fs.readFileSync(path.join(ROOT, th.j.path), 'utf8')).visualStyles.tableEx['*'].values[0].fontSize;
-    chk(() => big === 15 && size === 10 && /text sizes/.test(notes(x)), () => `5. the theme's table text 15 at 1920 x 1080 becomes 10 on a 1280 x 720 page, told: ${big} -> ${size} ${notes(x).slice(0, 400)} ${short(x)}`);
+    chk(() => big === 12.5 && size === 10 && /text sizes/.test(notes(x)), () => `5. the theme's table text 12.5 at 1920 x 1080 becomes 10 on a 1280 x 720 page, told: ${big} -> ${size} ${notes(x).slice(0, 400)} ${short(x)}`);
   }
   // 6. A measure that reaches no calendar: the line chart is left out with the true reason, and the visual beside it
   //    takes its room (no empty slot)
