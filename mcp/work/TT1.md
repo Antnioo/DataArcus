@@ -1,50 +1,106 @@
-# TT1 (0.3.1): every generated title wholly one language
+# TT1 (0.3.1): every generated title wholly one language; an Arabic report's titles Arabic
 
 ## Summary
-- **Approval:** the reviewer's brief "Go on TT1"; the owner, 27 Oct, after seeing LR2's titles: "regarding the arabic
-  word in title i want the whole title to be either arabic or english". This REPLACES his 26 Oct "«حسب» in both" (LR2).
-- **The rule (the owner's, 27 Oct):** a title is ALL ARABIC when every name in it has an Arabic text (one the person
-  approved: displayNames, the plan's pinned proposals, the twin's labels; or Arabic in the model): «إجمالي المبيعات حسب
-  المنطقة». Otherwise ALL ENGLISH, even in an Arabic report: "Total Sales by Region", "Region ranked by Total Sales";
-  never an Arabic word joining English names or the other way round, never a bracket unless two charts would share a
-  title. An English title in an Arabic report is isolated as a whole (U+200F, then U+2068 ... U+2069).
-- **Scope:** `assets/js/story-titles.js` (join, variants, alternate), `pbip-page.js` (the Top-N lead, the «التفاصيل»
-  tail and the Top-N title measure follow the title's language), `text-measure.js` + `pbip-export.js` (isolateWhole,
-  a title and its alt text), their `.min.js` and `?v=` stamps; `mcp/lib/report-run.mjs` (a count of an English column is
-  "Count of X", never «عدد X»), `mcp/lib/dax-functions.mjs` (storyDax: the Arabic sentence only for an Arabic noun),
-  `mcp/lib/twin-pages.mjs` (a title the twin leaves English is isolated whole), `mcp/tools/plan_layout.mjs` (the plan
-  lists the titles that stay English and how to make them Arabic); the tests LR2 changed, moved to this rule; a new
-  suite `mcp/test-0.3.1-tt1.mjs`; `mcp/CHANGELOG.md`; this note. Not R4A's files (approval-window.mjs, plans.mjs,
-  label-limits.js, layout-check.js) nor GL2's (design-engine.js). byTitle (the gallery) keeps R2's rule.
-- **Base:** `fix/0.3.1-tt1` from `origin/integration/0.3.1` (e2236be). Push only this branch; the reviewer merges.
-- **Expected checks (written before the work):** tt1 new, about 25 checks, the engine and build checks red first on
-  e2236be; arabic-titles 27 = 27, story-titles 94 = 94, sq15b 25 = 25, round22/v029i same counts, pbip.mjs 109 = 109
-  (each moved check says "the owner's new rule, 27 Oct"); `report`, `arabic`, `core` the baseline's suites + tt1;
-  golden 12 tasks match (golden-expected.json holds no title text; task 7's Arabic titles change, said);
-  theme-generator 898 = 898; full run: the base's suites + 1, all PASS.
-- **Resume:** plan pushed; next: tt1 red first, then the fix.
+- **Approval:** the reviewer's brief "Go on TT1"; the owner, 27 Oct: "i want the whole title to be either arabic or
+  english" (REPLACES his 26 Oct «حسب» between English names, LR2); then, relayed by the reviewer the same morning: "Also
+  in arabic if title is english then translate it don't keep english titles in arabic reports"; and the reviewer's note:
+  marks only from the shared rule (text-measure.js), so BD2's V3 reaches titles.
+- **The rule:** an Arabic report's titles are Arabic («إجمالي المبيعات حسب المنطقة»): a field with no Arabic name yet is
+  listed in the plan (titlesInEnglish.fields, proposeYourself) for a draft the person approves; nothing is translated
+  unapproved. Until approved, or for a field the person keeps English on purpose (displayNames: its model name), the
+  title is WHOLLY English ("Total Sales by Region", "Region ranked by Total Sales", "Top 6: …", ": detail"), isolated as
+  one run by text-measure.js isolateWhole; never an Arabic word between English names or the reverse, never a bracket
+  unless two charts would share a title. English reports unchanged.
+- **Scope:** where it is written: `story-titles.js` join/variants/alternate, `pbip-page.js` (leads and tails), `text-measure.js`
+  isolateWhole + `pbip-export.js` isolateFiles, `twin-pages.mjs`, `report-run.mjs` (counts), `dax-functions.mjs`
+  storyDax, `plan_layout.mjs` (titlesInEnglish, the plan's texts).
+- **Base:** `fix/0.3.1-tt1` from `origin/integration/0.3.1` (e2236be). Not R4A's or GL2's files.
+- **Expected checks:** (written before the work) tt1 new, about 25, red first; arabic-titles 27, story-titles 94, sq15b
+  25, pbip 109, round22/v029i the same counts, each moved check saying "the owner's new rule, 27 Oct"; report, arabic,
+  core: the baseline's suites + tt1; golden 12 match (titles said); theme-generator = base; full run: base + 1 suite.
+- **Got:** tt1 24 (22 red first on e2236be) then 28 with the refinement; arabic-titles 27 = 27, story-titles 94 = 94,
+  sq15b 25 = 25, pbip 109 = 109, mcp (test.mjs) 1591 = 1591, golden 12 match (4 titles changed, below); full run below.
+- **Resume:** done; waits for the reviewer. Merge note: BD2 changes text-measure.js's isolate rule; isolateWhole sits
+  beside isolateLatin there and should follow V3 when BD2 lands (one function, every title takes it).
 
-## Plan
-1. **story-titles.js.** `join(m, c, by)`: in an Arabic report (an Arabic `by`) two Arabic names take «حسب», two English
-   names take "by", a mixed pair gives the measure alone; an English report as before. `variants`: in an Arabic report
-   each field is named in ONE language for both: Arabic when both have an Arabic text (the display name given, else the
-   model's), else English (an English display name, else the model's English name, kept as the model has it, R2), else
-   the measure alone in the language it has. `alternate`: the sentence in the names' language ("Region ranked by Total
-   Sales"), none for a mixed pair.
-2. **pbip-page.js.** «أعلى N:» / "Top N:", the Top-N title measure's words and the table's «: التفاصيل» / ": detail"
-   follow the title's language, not the report's.
-3. **Isolation.** `isolateWhole` (text-measure.js): a text with Latin letters and no Arabic gets U+200F U+2068 ... U+2069
-   U+200F, the same marks isolateLatin puts at an end run. pbip-export.js isolateFiles (Arabic build) applies it to a
-   visual's title text and alt text (page, phone, tooltip pages); the twin to a title or alt text it leaves English.
-4. **report-run.mjs.** A model without measures: «عدد X» / «مجموع X» only for an Arabic column, else "Count of X" /
-   "Sum of X" (the mixed «عدد Order Id» was a generated mixed name).
-5. **dax-functions.mjs storyDax.** lang "ar" only when the noun is Arabic; else the English sentence. The leader is a
-   data value: the plan says it may be the other language (the twin's "Not fully Arabic" line already lists the DAX
-   titles).
-6. **plan_layout.mjs.** An Arabic plan's `arabicNames.titlesInEnglish`: the exact build's titles that stay English, and
-   how to make them Arabic (approve Arabic names for their fields, displayNames); the "why" text and sayInPlan follow.
-7. Tests LR2 changed, back to this rule: arabic-titles AT-1a/b/c/e, story-titles ST-1i, test.mjs round22 e/h, v029i
-   P3-2, sq15b T1-T6, pbip.mjs LR2-a1..a3.
-8. tt1: engine (English, approved, half approved, Arabic model measure + English column), the site's Arabic download,
-   create_report Arabic (English names; approved; half), the twin and the EN-AR copy: never a mixed title, an English
-   one isolated whole.
+## Plan (written first, f4c836e; the refinement added steps 9-10)
+1. story-titles.js: in an Arabic report both fields named in Arabic when both have an Arabic text (given or the model's),
+   else both in English (half approved is English), else the measure alone; join: «حسب» only between Arabic names, "by"
+   between English names; alternate in the names' language.
+2. pbip-page.js: «أعلى»/"Top", the Top-N title measure's words and «التفاصيل»/"detail" follow the title's language.
+3. isolateWhole (text-measure.js) on an English title and alt text of an Arabic build (pbip-export.js), the twin's and
+   the EN-AR copy's titles left English (twin-pages.mjs), the Top-N title measure (pbip-page.js, through the same function).
+4. report-run.mjs: "Count of X"/"Sum of X" for an English column, «عدد X» only for an Arabic one.
+5. dax-functions.mjs storyDax: the Arabic sentence only for an Arabic noun; the plan says each story title's language.
+6. plan_layout.mjs: titlesInEnglish (from the exact build). 7. The checks LR2 changed, moved. 8. tt1.
+9. (refinement) titlesInEnglish.fields: the fields to draft; sayFirst, sayInPlan, the why: draft, approve, plan again.
+10. (reviewer) no hand-written marks: pbip-page.js takes them from isolateWhole.
+
+## Results
+Commits: plan f4c836e, red first 5670708, the fix 1dfd868, the moved checks 2b2ed22, v029i + CHANGELOG 35a8d22, the
+refinement 043be5d, this note (next).
+
+| Before (e2236be) | After |
+|---|---|
+| «Total Sales حسب Region», «ترتيب Region حسب Total Sales» (Arabic download and MCP, English names) | "Total Sales by Region", "Region ranked by Total Sales", each U+200F U+2068 … U+2069 U+200F |
+| half approved: «إجمالي المبيعات حسب Region» | "Total Sales by Region" (the plan asks a draft for Region) |
+| «أعلى 6: Total Sales …», «Total Sales حسب Region: التفاصيل» | "Top 6: Total Sales …", "Total Sales by Region: detail", whole |
+| «عدد Order Id حسب Region» (no measures) | "Count of Order Id by Region" |
+| DA.StoryTitle "ar" for an English noun | "en" (the English sentence); "ar" for an Arabic noun |
+| twin: an untranslated title raw | isolated whole; EN-AR copy the same |
+| plan: "titles keep it alone" / «أعلى 6» "mixes" | titlesInEnglish { titles, fields, how }: draft, approve, plan again |
+
+Tests (red -> green): tt1 E1-E9, S1-S5, R1-R11, D1, T1-T2 (22 of the first 24 red on e2236be; R8 and R11 red there too).
+Moved to the new rule, same counts, each comment "changed 27 Oct 2026, 0.3.1 TT1": arabic-titles AT-1a/b/c/e and its
+stray-word check (an Arabic text still holds no English word), story-titles ST-1i, sq15b T1-T3/T6, pbip.mjs LR2-a1/a3,
+round22 e/h, v029i P3-2 (back to its round-14 condition, stricter than LR2's), test-0.2.9-sweep A2, test-0.2.9w A3-11,
+test.mjs's KPI title sweep, test-0.3.0-twin T6 (the navigator's English title isolated whole).
+
+Golden (12 tasks match golden-expected.json; it holds no title text), titles diffed base -> branch, task 2 (Arabic,
+"Golden Arabic"): bar and line «إجمالي المبيعات حسب Month Short» -> "Total Sales by Month Short" (isolated whole; Month
+Short has no Arabic name); the two cards "Total Sales vs Last Ramadan %" isolated whole. No other title changed.
+
+Suites (baseline on e2236be -> after): report 33 -> 33 suites; arabic 12 -> 13 (+ tt1); core 6 -> 6 (mcp 1591 = 1591);
+theme-generator 910 -> FILL; pbip 109 -> 109; lint 0 problems; check-min, test-site-config, ar-pages, csp,
+sitemap-lastmod, check-result-lines, changelog-words, check-agent-memory PASS.
+Full run `npm test -- --keep-going` on FILL: "FILL".
+
+## CHANGELOG line
+- **Arabic reports get Arabic titles, never half Arabic, half English:** in an Arabic report every chart title is Arabic («إجمالي المبيعات حسب المنطقة»). A field with no Arabic name yet is listed in the plan for an Arabic name to be drafted and approved before anything is written; nothing is translated without your approval. A title stays English only for a field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English); the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence only for a measure with an Arabic name (its leader is a value from your data, shown as it is).
+
+## Decisions I made
+1. **No hard block (proposed, not done).** The MCP never translates by itself (B-88: the fixed list, else the assistant
+   drafts), so "the plan drafts" = the fixed list's names pinned (as before) + titlesInEnglish.fields / proposeYourself
+   for the assistant. Withholding the plan id until every title field is drafted would change golden task 2 and most
+   Arabic suites and needs the owner's go; today the plan says it first and the titles are wholly English until approved.
+2. **The website's Arabic download** has no name-approval step: English names give wholly English titles, isolated. An
+   approval step on the site would be a new feature (Seen 1).
+3. **English names kept as the model has them** in an Arabic report's English title ("Sales PY by Region", R2's rule; no
+   "last year" words), so a card and a chart of one report say the same name.
+4. **A mixed pair with no English text** (an Arabic model measure, an English column with no Arabic name): the measure
+   alone, one language.
+5. **isolateWhole** in text-measure.js beside isolateLatin, built on its ends() (the marks isolateLatin puts at an end
+   run); twin-pages.mjs and pbip-page.js call it, never marks of their own (the reviewer's note on BD2).
+6. **Alt texts:** a title's alt text follows its title; the other alt texts of the checked builds hold no mixed text
+   (checked on an Arabic build of an English-named model, none).
+7. The public pages: no page or article says titles join English names with «حسب» (the Arabic-readiness article speaks
+   of a mixed title in general and the twin's isolates: true, unchanged).
+
+## For the laptop (Power BI Desktop, the batched run)
+1. MCP, Arabic, a made-up model with English names: plan_layout, draft the names it lists (titlesInEnglish.fields),
+   approve, create_report: every title wholly Arabic, read right to left; no English word in any title.
+2. The same with one field kept English (displayNames: its model name): its titles wholly English, one run (no swapped
+   words, no boxes where the marks are), alignment as the other titles; "Top 6: …" in the tooltip.
+3. The website's Arabic download on English names: "Total Sales by Region", "Region ranked by Total Sales" whole, read as
+   one run in the right-aligned title; the English download unchanged.
+4. The twin of an English report with the chart titles left untranslated: each wholly English, one run.
+
+## Seen, not in scope
+1. The website's Arabic download cannot ask for Arabic names (no approval step): its titles on English names stay wholly
+   English (Decision 2).
+2. A gallery page whose charts share a title gets "Sales PY per Quarter (Quarter)" (the alternate and the bracket both):
+   the same in English reports; the bracket repeats the column already said.
+3. The gallery's joins (pbip-query.js byTitle, "and", "per") keep R2's rule (the measure alone for a mixed or English pair
+   in an Arabic report): one language, as the brief says; not "by".
+4. test.mjs line 4578's comment still says "test-round22.mjs keeps the brackets' case" (comment only, LR2's Seen 2).
+5. Golden task 2's "Month Short" has no draft in the fixed list: its two charts are now English until a name is given.
