@@ -354,7 +354,14 @@ export default async function ({ browser, url }) {
       localStorage.setItem('dataarcus-theme-generator', JSON.stringify(s)); }, name);
     await v.pg.reload({ waitUntil: 'networkidle' });
     const picked = await setup(v.pg);
-    const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
+    // (0.3.1 TT2, the owner's D-1027-19) an Arabic download on English names asks for the names first: these checks were
+    // written for English names kept as they are, so "Keep English" is ticked for every name listed (the person's
+    // explicit choice; scripts/tests/arabic-names.mjs checks the step itself), then the download is approved
+    const dlp = v.pg.waitForEvent('download');
+    await v.pg.click('#pbipBtn');
+    const asked = await Promise.race([dlp.then(() => false), v.pg.waitForSelector('#pbipNames:not([hidden])', { timeout: 60000 }).then(() => true)]);
+    if (asked) { await v.pg.$$eval('#pbipNames input[type=checkbox]', (cs) => cs.forEach((c) => { c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); })); await v.pg.click('#pbipNamesOk'); }
+    const dl = await dlp;
     const files = unzip(fs.readFileSync(await dl.path()));
     const msg = await v.pg.$eval('#pbipOwnMsg', (e) => e.textContent).catch(() => '');
     if (v.errs.length) problems.push(`${lang} ${name}: ${v.errs.join(' | ')}`);

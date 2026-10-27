@@ -12,12 +12,12 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - Merged 26 Oct: LR1, LR2, BD1, NC1, CS1, GL1, NC2, RD1.
 - 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass the default), GD2 (the twin identical in glass; glass
   previews), [ST1](work/ST1.md) (every Seen item swept: its register is what is left),
-  [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0).
-- Running: TS1 (FHD text x 1.25), TW1 (the rest of the twin identical), TT2 (Arabic names
-  on the website's download), then LC1 (the layout preview after the fit).
+  [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0), [TT2](work/TT2.md) (Arabic names approved on the
+  website's download).
+- Running: TS1 (FHD text x 1.25), TW1 (the rest of the twin identical), then LC1 (the layout preview after the fit).
 
 ## Next step
-1. The reviewer merges TS1, TW1, TT2, then LC1 (after TS1); then the final full run and two identical dry builds.
+1. The reviewer merges TS1, TW1, then LC1 (after TS1); then the final full run and two identical dry builds.
 2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
 3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
