@@ -191,6 +191,12 @@ package's manifest; this file says what is in it.
   tornado's two sides, a bullet's bands, a word cloud's sizes, a calendar's day squares) and which of its own settings
   were kept. A bullet chart now becomes columns with its target as a marker on each, and a calendar heatmap a matrix of
   months by weekday shaded by the value; the earlier replacement is offered second (`customVisualsSecond`).
+- **Native copies that draw in Desktop:** a map now says, in the plan and after the write, the two Power BI tenant
+  settings Azure Maps needs by their exact names (a tenant outside the United States and the European Union needs the
+  second) and a location column without a geographic data category, and offers a bar chart second that draws without
+  Azure Maps. A text search box becomes a dropdown slicer with its search on in its own box (the input slicer second),
+  a row of chips a dropdown with why (the pills' measured height), never a list cut by its box; a word cloud's bars are
+  sorted by their value, largest first.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
