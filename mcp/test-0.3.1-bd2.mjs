@@ -188,6 +188,9 @@ function texts(r) {
   chk(() => Array.isArray(btn) && btn.some((e) => !e.selector && e.properties.show && Object.keys(e.properties).length === 1) && btn.some((e) => e.selector && e.selector.id === 'default' && e.properties.text && !('show' in e.properties)), () => `B2. page 4's buttons: "show" in an entry of its own, the text under selector default (as pbip-page.js's buttons): ${cut(btn)}`);
 }
 
+// (ST1, BD2-S1) the measurement the rule stands on is in the record of Desktop measurements, linked to the lab's note
+{ const dt = src('../scripts/tests/DESKTOP-TESTS.md'), at = dt.indexOf('## 2026-10-27: Arabic text with a Latin run'), part = at < 0 ? '' : dt.slice(at, dt.indexOf('\n## ', at + 5));
+  chk(() => /2\.159/.test(part) && /V3/.test(part) && /U\+2067/.test(part) && /BIDI-LAB\.md/.test(part) && /isolateLatin/.test(part), () => `DESKTOP-TESTS.md records the 27 Oct bidi measurement (V3, Desktop 2.159, BIDI-LAB.md): ${part.slice(0, 300) || 'no entry'}`); }
 fs.rmSync(ROOT, { recursive: true, force: true });
 if (problems.length) { console.log(`FAIL script=test-0.3.1-bd2.mjs cause=${problems[0].slice(0, 160).replace(/\s+/g, ' ')}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  bd2  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  bd2  ${checks} checks`);
