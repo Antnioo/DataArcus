@@ -14,7 +14,8 @@ section of `WORK-2026-10-25.md`).
   [SQ8](work/SQ8.md), [SQ9](work/SQ9.md), [SQ10](work/SQ10.md), [SQ11](work/SQ11.md), [SQ13](work/SQ13.md).
   Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
 - Merged 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md), [NC1](work/NC1.md), [CS1](work/CS1.md),
-  [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md). No builder running.
+  [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md).
+- 27 Oct: [GL2](work/GL2.md) (the glass look's tables: no solid fill) on `fix/0.3.1-gl2`, waits for the reviewer.
 
 ## Next step
 1. The reviewer merges SQ12, SQ14, SQ15; every batch and item status: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).

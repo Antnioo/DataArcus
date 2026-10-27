@@ -21,6 +21,9 @@ package's manifest; this file says what is in it.
   page picture DataArcus draws from your theme's own colours (no photo), which the report gets behind every page.
   Text stays readable: the cards are made less see-through until text and labels stand 4.5:1 and colour 1 3:1 over the
   picture's darkest and lightest parts, and the numbers are shown. The website's preview draws what Power BI draws.
+  Tables and matrices in the glass look have no fill of their own: no solid rows, headers or totals, the picture
+  shows through every cell, and a banded table's every other row is a faint tint; the grid lines stay as visible as
+  on solid cards.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
