@@ -219,9 +219,16 @@ package's manifest; this file says what is in it.
   field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in
   the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This
   holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English);
-  the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model
+  the website's Arabic download asks for the names first (below). A report on a model
   without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence
   only for a measure with an Arabic name (its leader is a value from your data, shown as it is).
+- **The website's Arabic download asks for Arabic names before it builds:** in the Theme Generator, an Arabic project on
+  your own model lists every field name the report shows in English, each with an Arabic draft you can edit. Drafts come
+  only from DataArcus's fixed list of report words; a name the list doesn't hold starts empty for you to type. Nothing is
+  translated by a service and nothing about your model is sent. The report is built only when you approve every name,
+  either your Arabic name or "Keep English" for that name (your choice, never the default); then every title is wholly
+  Arabic, or wholly English for a name you kept in English, and the download's README lists each name. The English
+  download is unchanged, and a model already named in Arabic downloads at once.
 - **Arabic text order, as Desktop draws it:** Arabic story titles from the DAX function library start with a
   right-to-left mark, so an English name at the start keeps the sentence in order. check_report's Arabic lens says an
   English word anywhere in Arabic text can swap the words around it, with the fix. The DAX functions option says Desktop

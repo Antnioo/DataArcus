@@ -180,6 +180,14 @@
     .tg-ck-box .tg-ok { color: #55efc4; }
     .tg-ck-box ul { margin: 0 0 4px; padding-inline-start: 18px; color: rgba(255, 255, 255, .8); }
     .tg-ck-box small { display: block; color: rgba(255, 255, 255, .55); }
+    /* (0.3.1 TT2) an Arabic download on English names: each name, its Arabic draft, "keep English" */
+    .tg-names { margin-bottom: 10px; padding: 10px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 8px; font-size: .85rem; }
+    .tg-names[hidden] { display: none; }
+    .tg-names-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 4px 8px; align-items: center; padding: 6px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+    .tg-names-en { direction: ltr; unicode-bidi: isolate; overflow-wrap: anywhere; font-weight: 600; margin: 0; }
+    html[dir="rtl"] .tg-names-en { text-align: right; }
+    .tg-names-keep { grid-column: 1 / -1; margin: 0; font-size: .8rem; }
+    .tg-names .tg-warn:empty { display: none; }
     .tg-pv-box figure { margin: 0 0 10px; }
     .tg-pv-box svg { display: block; width: 100%; height: auto; border-radius: 6px; }
     .tg-pv-box figcaption, .tg-pv-box p { font-size: .8rem; color: rgba(255, 255, 255, .6); margin: 4px 0 0; }
@@ -483,6 +491,7 @@
             </div>
             <button class="tg-btn2 w-100 mb-2" id="pbipPreviewBtn" type="button"><i class="bi bi-eye me-1" aria-hidden="true"></i><span data-i18n="tg.dl.pbipPreview">Preview the download</span></button>
             <div id="pbipPreview" class="tg-pv-box" hidden></div>
+            <div id="pbipNames" class="tg-names" role="group" aria-labelledby="pbipNamesH" hidden></div>
             <div id="pbipCheck" class="tg-ck-box" role="status" hidden></div>
             <button class="btn btn-accent w-100" id="pbipBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.pbipBtn">Download project</span></button>
           </div>
@@ -608,6 +617,6 @@
   <script src="../assets/js/main.min.js?v=20261022d" defer></script>
   <script src="../assets/js/design-engine.min.js?v=20261027gd2" defer></script>
   <script src="../assets/js/arabic-calendar.min.js?v=20261021w16" defer></script>
-  <script src="../assets/js/theme-generator.min.js?v=20261027tw1" defer></script>
+  <script src="../assets/js/theme-generator.min.js?v=20261027tw1m" defer></script>
 </body>
 </html>

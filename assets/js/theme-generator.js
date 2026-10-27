@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
     const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261027tw1', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261027tw1', '/assets/js/pbip-notes.min.js?v=20261019l2',
-      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261027tw1', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2'];
+      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261027tw1', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -647,6 +647,70 @@ document.addEventListener('DOMContentLoaded', () => {
         if (out) out.textContent = f.name + (size && size.h > size.w ? '. ' + L('This logo is tall; a horizontal version will read much better in the header.', 'هذا الشعار طولي؛ نسخة أفقية منه ستكون أوضح بكثير في الشريط العلوي.') : '');
       });
     });
+    // ---- (0.3.1 TT2; the owner, 27 Oct, D-1027-19 "Both A") an Arabic download on English names: the names first ----
+    // Every field the report's visuals show with no Arabic name is listed (#pbipNames): its English name, an Arabic draft
+    // from DataArcus's fixed words (assets/data/arabic-report-words.json, this site's own file: nothing about the model is
+    // sent) or an empty box, and "Keep English" (never ticked by default). Nothing is built until the person approves
+    // every one; the approved names are the display names the titles use (each title wholly Arabic, or wholly English for
+    // a name kept English), and the README says them. The English download, the sample and a model named in Arabic: no step.
+    const namesBox = $('pbipNames');
+    let words = null, namesAnswers = {};   // the person's last approved answers, by field ("Table[Field]"), on this page only
+    const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=20261027tt2n').then(() => window.DAArabicNames),
+      words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
+    const namesFor = (P, DB, input, m) => {
+      if (!namesBox || !isAr() || !(m === 'local' || m === 'service') || !input.bind) return Promise.resolve({ input });
+      return loadNames().then(([N, list]) => {
+        // the fields the report would show, from a build of this very input (its pictures aside)
+        const items = N.toApprove(P.build(Object.assign({}, input, { pages: input.pages.map((p) => Object.assign({}, p, { png: null })) })), input.bind, list);
+        const a = N.approve(items, namesAnswers);
+        if (!items.length) return { input };
+        if (!a.ok) return { input, pending: { N, items } };
+        return { input: Object.assign({}, input, { bind: N.withNames(input.bind, a.names, DB.mapFields), namesNote: N.note(a) }) };
+      });
+    };
+    const askNames = ({ N, items }) => {
+      const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+      const iso = (s) => '⁨' + s + '⁩';
+      namesBox.textContent = '';
+      const h = el('h3', 'h6 fw-bold mb-1', L('Arabic names for your fields', 'أسماء عربية لحقول نموذجك')); h.id = 'pbipNamesH';
+      // the drafts are suggestions to check: said in Arabic and in English
+      const ar = el('p', 'small mb-1', 'هذه المسودات اقتراحات من قائمة كلمات DataArcus الثابتة، وليست ترجمة: راجع كل اسم وعدّله قبل الموافقة. المربع الفارغ لا اقتراح له، فاكتب الاسم بنفسك، أو أبقِه بالإنجليزية. لا يُرسَل شيء من نموذجك.'); ar.lang = 'ar'; ar.dir = 'rtl';
+      const en = el('p', 'small text-white-50 mb-2', 'These drafts are suggestions from DataArcus\'s fixed word list, not a translation: check and edit each name before you approve. An empty box has no suggestion: type the name, or keep it in English. Nothing from your model is sent.'); en.lang = 'en'; en.dir = 'ltr';
+      namesBox.append(h, ar, en);
+      items.forEach((x, i) => {
+        const row = el('div', 'tg-names-row'), was = namesAnswers[x.key] || {}; row.setAttribute('data-name-key', x.key);
+        const name = el('label', 'tg-names-en', x.english); name.setAttribute('data-name-en', ''); name.lang = 'en'; name.dir = 'ltr'; name.htmlFor = 'pbipName' + i;
+        const box = el('input', 'form-control form-control-sm'); box.type = 'text'; box.id = 'pbipName' + i; box.maxLength = 80; box.lang = 'ar'; box.dir = 'rtl'; box.autocomplete = 'off';
+        box.value = was.ar != null ? was.ar : x.draft;
+        const keep = el('label', 'tg-check tg-names-keep'), cb = el('input'); cb.type = 'checkbox'; cb.checked = was.keep === true;
+        cb.setAttribute('aria-label', L('Keep in English: ', 'إبقاؤه بالإنجليزية: ') + iso(x.english));
+        keep.append(cb, ' ', el('span', null, L('Keep English', 'إبقاؤه بالإنجليزية')));
+        box.disabled = cb.checked; cb.addEventListener('change', () => { box.disabled = cb.checked; });
+        row.append(name, box, keep); namesBox.appendChild(row);
+      });
+      const msg = el('p', 'small tg-warn mb-2'); msg.id = 'pbipNamesMsg'; msg.setAttribute('role', 'alert');
+      const ok = el('button', 'btn btn-accent w-100'); ok.type = 'button'; ok.id = 'pbipNamesOk';
+      ok.append(el('i', 'bi bi-check2 me-1'), el('span', null, L('Approve these names and download', 'اعتمد هذه الأسماء ونزّل التقرير'))); ok.firstChild.setAttribute('aria-hidden', 'true');
+      ok.addEventListener('click', () => {
+        const answers = {};
+        namesBox.querySelectorAll('[data-name-key]').forEach((r) => { answers[r.getAttribute('data-name-key')] = { ar: r.querySelector('input[type=text]').value, keep: r.querySelector('input[type=checkbox]').checked }; });
+        const a = N.approve(items, answers);
+        if (!a.ok) {
+          const why = { hidden: L('has an invisible sign', 'فيه علامة غير مرئية'), notArabic: L('has no Arabic letter (tick "Keep English" to keep it in English)', 'ليس فيه حرف عربي (اختر «إبقاؤه بالإنجليزية» لتبقيه بالإنجليزية)'), long: L('is longer than 80 characters', 'أطول من 80 حرفًا') };
+          msg.textContent = (a.missing.length ? L('Type an Arabic name, or tick "Keep English", for: ', 'اكتب اسمًا عربيًا، أو اختر «إبقاؤه بالإنجليزية»، لـ: ') + a.missing.map(iso).join(L(', ', '، ')) + '. ' : '')
+            + a.bad.map((b) => iso(b.english) + ' ' + why[b.why] + '.').join(' ');
+          const first = items.find((x) => a.missing.includes(x.english) || a.bad.some((b) => b.key === x.key));
+          const row = first && [...namesBox.querySelectorAll('[data-name-key]')].find((r) => r.getAttribute('data-name-key') === first.key);
+          if (row) row.querySelector('input[type=text]').focus();
+          return;
+        }
+        namesAnswers = answers; namesBox.hidden = true; namesBox.textContent = '';
+        pbipBtn.click();
+      });
+      namesBox.append(msg, ok); namesBox.hidden = false;
+      toast(L('Approve the Arabic names first', 'وافق على الأسماء العربية أولًا'));
+      const first = namesBox.querySelector('input[type=text]'); if (first) first.focus();
+    };
     // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
     // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
     const withProject = (then) => {
@@ -693,11 +757,12 @@ document.addEventListener('DOMContentLoaded', () => {
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
           })
         };
-        return then(P, input, { c, m, sample, bind, specs, pages });
+        // (0.3.1 TT2) an Arabic download on English names: with the names the person approved, or the list to approve
+        return namesFor(P, DB, input, m).then((names) => then(P, names.input, { c, m, sample, bind, specs, pages, names }));
       });
     };
     pbipBtn.addEventListener('click', () => {
-      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => loadCheck().catch(() => null).then((Ck) => {
+      const run = withProject((P, input, { c, m, sample, bind, specs, pages, names }) => (names.pending ? askNames(names.pending) : loadCheck().catch(() => null).then((Ck) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
         // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
         // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
@@ -714,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
         });
-      }));
+      })));
       if (!run) return;
       pbipBtn.disabled = true;
       run.catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });

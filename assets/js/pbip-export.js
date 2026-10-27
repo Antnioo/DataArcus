@@ -213,6 +213,7 @@
    * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
    *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
+   * @property {string} [namesNote]  (0.3.1 TT2) the README's section on the Arabic names the person approved (arabic-names.js note)
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
    *   { page, ... } entries unless said)
@@ -260,7 +261,7 @@
     const bad = [], isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x), num = (x) => typeof x === 'number' && Number.isFinite(x);
     const opt = (k, test, what) => { if (o[k] != null && !test(o[k])) bad.push(k + ' must be ' + what); };
     if (!isObj(o)) throw new TypeError('build(o): o must be an object');
-    ['name', 'title', 'font', 'pageName'].forEach((k) => opt(k, (x) => typeof x === 'string', 'a text'));
+    ['name', 'title', 'font', 'pageName', 'namesNote'].forEach((k) => opt(k, (x) => typeof x === 'string', 'a text'));
     opt('lang', (x) => x === 'en' || x === 'ar', "'en' or 'ar'");
     if (!isObj(o.ui) || !['text', 'card', 'background'].every((k) => HEX6.test(String(o.ui[k])))) bad.push('ui must hold the colours text, card and background as #rrggbb');
     opt('theme', isObj, 'an object (a Power BI theme)');
@@ -518,10 +519,13 @@
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
+    // (0.3.1 TT2) o.namesNote: the Arabic names the person approved before the website's Arabic download, and each kept
+    // English by their choice (arabic-names.js note), after the README's own text; next to their project, where a README
+    // would replace theirs, in the report's own <report>.README.md
     if (!theirs) {
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
-      add('README.md', (W.readme || '').replace(/\{name\}/g, base));
-    }
+      add('README.md', (W.readme || '').replace(/\{name\}/g, base) + (o.namesNote || ''));
+    } else if (o.namesNote) add(base + '.README.md', '# ' + base + o.namesNote);
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
     // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
