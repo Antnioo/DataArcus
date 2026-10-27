@@ -385,6 +385,10 @@ export default async function ({ browser, url }) {
     if (lang === 'ar') { const z = await look(); check(z.off && z.cols === 0, `calendar ar: Arabic names by default, yet the Arabic name columns are written (${JSON.stringify(z)})`);
       await v.pg.selectOption('#cgLang', 'en'); await v.pg.waitForTimeout(150); }
     const a = await look();
+    // (ST1, SQ7-S2) the option's note names every kind of Arabic column it writes: the names and the labels' twins
+    const note = await v.pg.evaluate(() => { const d = document.getElementById('dax').textContent, n = (document.querySelector('[data-i18n="cg.col.arabicNote"]') || {}).textContent || '';
+      return { n, both: ['Quarter (Arabic)', 'Is Weekend (Arabic)'].every((c) => n.includes(c) && d.includes('"' + c + '"')) }; });
+    check(note.both, `calendar ${lang}: the Arabic columns note names the label twins it writes (Quarter (Arabic), Is Weekend (Arabic)): ${note.n}`);
     check(a.on && !a.off && a.cols === 3 && a.ar && (lang === 'ar' ? /[؀-ۿ]/.test(a.label) : /Arabic name columns/i.test(a.label)), `calendar ${lang}: Arabic name columns not on by default (${JSON.stringify(a)})`);
     await v.pg.evaluate(() => document.getElementById('cgArabic').click()); await v.pg.waitForTimeout(150);
     const b = await look();
