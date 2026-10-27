@@ -10,6 +10,19 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **No English titles slip into an Arabic report:** when a title of an Arabic report would be written in English
+  because a field in it has no Arabic name yet, the plan now gets no approval number until each such field has an
+  Arabic name you approved, or you chose to keep it in English on purpose. The plan names the fields and both choices.
+- **Fix scripts written all or none:** when the Health Check writes the fix scripts you approved and one of them can't
+  be written (a full disk), the others are removed again too, the answer says it as an error, and your approval stays
+  usable once the cause is fixed. A file that was there before is never removed, and your earlier answers file is kept.
+- **No page out of reach in the English and Arabic report:** when a page has no free place at the top for its language
+  button, both that page and its other-language page now stay in the page tabs, so a reader can always reach each; the
+  plan and the approval page say which pages.
+- **Long answers capped:** a plain text answer longer than 40,000 characters is now cut like every other answer, and
+  says it was cut.
+- **The weekly Microsoft watch reads every comment:** on an issue with more than 100 comments it now reads them all
+  before deciding what is new, so it never repeats a finding it already reported.
 - **Calmer text on 1920 x 1080 pages:** the theme's text now grows x 1.25 from the 1280 x 720 sizes, not x 1.5: body
   text 12.5 (was 15), visual titles 15 (was 18), KPI values 35 (was 42); 1280 x 720 pages are unchanged. This holds for
   every new theme from the Theme Generator, generate_theme, plan_layout and create_report, and for a design you saved
