@@ -178,9 +178,15 @@ package's manifest; this file says what is in it.
   the report will have, in English and Arabic, and says when one was added to fill the design's slicer places. An
   Arabic name drafted for a field such as "Year Month" now reads «الشهر والسنة», never word for word. The Arabic approval
   page of the sample project shows its details in Arabic, the English under each.
-- **Arabic chart titles with «حسب»:** an Arabic report on a model with English names titles its charts «Total Sales حسب
-  Region» and «ترتيب Region حسب Total Sales», in the website's download and the MCP alike, instead of the English name
-  with its column in brackets. The English words keep their reading order (U+200F and isolates).
+- **Arabic reports get Arabic titles, never half Arabic, half English:** in an Arabic report every chart title is Arabic
+  («إجمالي المبيعات حسب المنطقة»). A field with no Arabic name yet is listed in the plan for an Arabic name to be drafted
+  and approved before anything is written; nothing is translated without your approval. A title stays English only for a
+  field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in
+  the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This
+  holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English);
+  the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model
+  without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence
+  only for a measure with an Arabic name (its leader is a value from your data, shown as it is).
 - **Arabic text order, as Desktop draws it:** Arabic story titles from the DAX function library start with a
   right-to-left mark, so an English name at the start keeps the sentence in order. check_report's Arabic lens says an
   English word anywhere in Arabic text can swap the words around it, with the fix. The DAX functions option says Desktop

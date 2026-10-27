@@ -547,15 +547,18 @@
   // and tooltip tab names included (the proof: the Arabic tooltip tab "Tooltip · Month Short" read with the English
   // first). Returns how many texts changed.
   const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
-  function walkVisual(o, change) {
-    if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change)); return; }
+  // (0.3.1 TT1) whole: a visual's title text and alt text (its title, said whole) that are English, isolated as a whole
+  // (isolateWhole); parent: the object the properties belong to ('title', 'general')
+  const TITLED = { title: 'text', general: 'altText' };
+  function walkVisual(o, change, whole, parent) {
+    if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change, whole, parent)); return; }
     if (!o || typeof o !== 'object') return;
     for (const [k, v] of Object.entries(o)) {
       if (k === 'filterConfig' || k === 'selector') continue;
-      if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.values(v).forEach((p) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = change(raw); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
+      if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.entries(v).forEach(([pk, p]) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = (whole && TITLED[parent] === pk ? whole(change(raw)) : change(raw)); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
       if (k === 'textRuns' && Array.isArray(v)) v.forEach((r) => { if (r && typeof r.value === 'string') { const out = change(r.value); if (out !== r.value) r.value = out; } });
       if (k === 'projections' && Array.isArray(v)) v.forEach((p) => { if (p && typeof p.displayName === 'string') { const out = change(p.displayName); if (out !== p.displayName) p.displayName = out; } });
-      walkVisual(v, change);
+      walkVisual(v, change, whole, k);
     }
   }
   // (0.3.1 BD2) a Text measure's literals take the isolates (V1) and, where one did, the whole text is wrapped at run time
@@ -573,6 +576,8 @@
     const all = !!(o && o.all);
     if (!list.length && !all) return 0;
     let n = 0; const change = (s) => { const out = all ? Measure.isolateLatin(s) : Measure.isolateNames(s, list); if (out !== s) n++; return out; };
+    // (0.3.1 TT1, the owner's rule of 27 Oct) an Arabic build (all): an English title or alt text isolated as a whole
+    const whole = all ? (s) => { const out = Measure.isolateWhole(s); if (out !== s) n++; return out; } : null;
     // a DAX literal is a part of its measure's text: its isolates only, the wrap goes round the whole expression (daxTexts)
     const part = (s) => { let out = all ? Measure.isolateRuns(s) : Measure.isolateNames(s, list); if (out !== s && !all && Measure.wrapped(out)) out = out.slice(1, -1); if (out !== s) n++; return out; };
     for (const f of files || []) {
@@ -580,7 +585,7 @@
       const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
       if (!j || typeof j !== 'object') continue;
       const before = n;
-      if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change); }
+      if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change, whole); }
       else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
       else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, part); }));
       if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');

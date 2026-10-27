@@ -64,6 +64,15 @@
     if (!mixed(t)) return t;
     return wrap(ISOLATED.test(t) ? t : ends(runs(t)));
   }
+  // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) an English title in an Arabic report is
+  // isolated as a whole where the writer places it, by the rule above (V3) with the whole title as its one run: V1's
+  // marks (U+200F, U+2068 ... U+2069, U+200F) wrapped in U+2067 ... U+2069, so it reads as one run; a text with an Arabic
+  // letter, without a Latin letter, or already isolated is unchanged
+  function isolateWhole(s) {
+    const t = String(s == null ? '' : s);
+    if (ARABIC.test(t) || !/[A-Za-z]/.test(t) || ISOLATED.test(t)) return t;
+    return wrap(ends(FSI + t + PDI));
+  }
   // (the full run's test.mjs, e/h and P3-2: isolating every mixed text changed Arabic titles that keep a model name in
   // English, outside what a person approved: the owner decided that one, F1) a text with an approved name in it: that
   // name's Latin runs isolated where the text holds it, and a right-to-left mark at an end the name's run reaches; the
@@ -75,6 +84,6 @@
     for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
     return hit ? wrap(ends(t)) : t;
   }
-  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames, isolateRuns, wrapped };
+  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames, isolateRuns, wrapped, isolateWhole };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DataArcusTextMeasure = api;
 })(typeof self !== 'undefined' ? self : this);

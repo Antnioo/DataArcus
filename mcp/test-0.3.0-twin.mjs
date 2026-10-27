@@ -172,8 +172,13 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => same(noLabel(p1.slRegion), o1.slRegion) && p1.slRegion.visual.query.queryState.Values.projections[0].displayName === 'المنطقة', () => 'T6. slicer: moved, the approved field label as its header, nothing else');
     // (the navigator has a shown title: the labs' title rule right-aligns every title, so its title's alignment is the
     // one other change; the plan said both "moved only" and "titles right", and the title rule is the more specific)
-    const noAlign = (v) => { const c = JSON.parse(JSON.stringify(v)); delete c.visual.visualContainerObjects.title[0].properties.alignment; return c; };
-    chk(() => same(noAlign(p1.nav), o1.nav) && objProp(p1.nav, 'title', 'alignment', true) === "'right'", () => 'T6. navigator: moved, its title right-aligned, nothing else');
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title the person left English is isolated whole in the
+    // twin, text-measure.js isolateWhole: its text compared as the original's isolated)
+    const TMw = createRequire(import.meta.url)('../assets/js/text-measure.js');
+    const noAlign = (v, o) => { const c = JSON.parse(JSON.stringify(v)), tp = c.visual.visualContainerObjects.title[0].properties, op = o.visual.visualContainerObjects.title[0].properties; delete tp.alignment;
+      const raw = (p) => String(p.text.expr.Literal.Value).slice(1, -1).replace(/''/g, "'");
+      if (tp.text && op.text && raw(tp) === TMw.isolateWhole(raw(op))) tp.text = JSON.parse(JSON.stringify(op.text)); return c; };
+    chk(() => same(noAlign(p1.nav, o1.nav), o1.nav) && objProp(p1.nav, 'title', 'alignment', true) === "'right'", () => 'T6. navigator: moved, its title right-aligned and isolated whole when English, nothing else');
     const pj = rd(path.join(pagesDir(TWIN), 'p1overview/page.json')), pjo = rd(path.join(pagesDir(ORIG), 'p1overview/page.json'));
     chk(() => pj.displayName === 'نظرة عامة' && pj.name === pjo.name && pj.width === pjo.width, () => `T6. page: the approved name, its id and size kept: ${JSON.stringify([pj.name, pj.displayName, pj.width])}`);
   }

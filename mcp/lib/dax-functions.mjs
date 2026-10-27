@@ -168,7 +168,11 @@ export const bulletDax = (t, m, target, c) => [`VAR _a = ${dax.column(t, m)}`, `
 export const cardDax = (t, mo, title, cal, c, w, h, lang) => { const mref = dax.column(t, mo.name);
   return [`VAR _v = ${mref}`, `VAR _s = ${valueDax(mo, mref, lang)}`, yoyDax(mref, cal),
     `RETURN DA.KpiCard ( ${dax.string(title)}, _s, _d, TRUE (), ${w}, ${h}, ${dax.string(c.good)}, ${dax.string(c.bad)}, ${dax.string(c.text)}, ${dax.string(c.card)}, ${dax.string(lang)} )`].join('\n'); };
-export const storyDax = (t, mo, cat, noun, cal, lang) => { const mref = dax.column(t, mo.name), cref = dax.column(cat.t, cat.c);
+// (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) the Arabic sentence only for an Arabic noun;
+// an English noun takes the English sentence in an Arabic report too (the leader is a data value: the plan says it may
+// be in the other language)
+export const storyLang = (noun, lang) => (lang === 'ar' && /[\u0600-\u06FF]/.test(String(noun)) ? 'ar' : 'en');
+export const storyDax = (t, mo, cat, noun, cal, lang0) => { const lang = storyLang(noun, lang0), mref = dax.column(t, mo.name), cref = dax.column(cat.t, cat.c);
   return [`VAR _top = TOPN ( 1, FILTER ( VALUES ( ${cref} ), NOT ISBLANK ( ${mref} ) ), ${mref}, DESC )`, `VAR _k = MAXX ( _top, ${cref} )`,
     `VAR _v = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ) )`, `VAR _s = ${valueDax(mo, mref, lang)}`,
     cal ? `VAR _p = CALCULATE ( ${mref}, TREATAS ( { _k }, ${cref} ), SAMEPERIODLASTYEAR ( ${dax.column(cal.t, cal.c)} ) )\nVAR _d = IF ( ISBLANK ( _v ) || ISBLANK ( _p ) || _p = 0, BLANK (), DIVIDE ( _v - _p, ABS ( _p ) ) )` : 'VAR _d = BLANK ()',
@@ -298,7 +302,7 @@ export function applyDax(files, o) {
     const g = Object.assign({}, ...((vco.general || []).map((e) => e.properties)));
     if (!textOf(g.altText) && before) vco.general = obj(Object.assign(g, { altText: str(before) }));
     put(v.path, v.j);
-    used.storyTitles.push({ page: v.page, chart: before || null, measure: `${x.t}[${x.m}]`, by: `${cat.t}[${cat.c}]`, title: `${x.t}[${name}]`, yearOnYear: !!cal });
+    used.storyTitles.push({ page: v.page, chart: before || null, measure: `${x.t}[${x.m}]`, by: `${cat.t}[${cat.c}]`, title: `${x.t}[${name}]`, yearOnYear: !!cal, sentence: storyLang(noun, lang) === 'ar' ? 'Arabic' : 'English' });
   });
   if (uses.includes('storyTitles') && !used.storyTitles.length) notUsed.push({ use: 'storyTitles', why: 'no bar or column chart of the report shows one measure by one category' });
 

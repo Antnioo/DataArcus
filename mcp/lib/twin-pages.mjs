@@ -12,6 +12,22 @@ const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Rules = require('../../assets/js/report-rules.js');
 const Sizing = require('../../assets/js/pbip-sizing.js');
+const TextMeasure = require('../../assets/js/text-measure.js');
+
+// (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) a visual's title and alt text the person left
+// English, isolated as a whole as the writer isolates an Arabic report's English title (text-measure.js isolateWhole)
+const WHOLE = { title: 'text', general: 'altText' };
+function wholeTitles(vco) {
+  let n = 0;
+  if (!isObj(vco)) return n;
+  Object.keys(WHOLE).forEach((k) => (Array.isArray(vco[k]) ? vco[k] : []).forEach((e) => {
+    const p = isObj(e) && isObj(e.properties) ? e.properties[WHOLE[k]] : null, v = p && isObj(p.expr) && isObj(p.expr.Literal) ? p.expr.Literal.Value : null;
+    if (typeof v !== 'string' || !/^'.*'$/s.test(v)) return;
+    const t = litStr(p), w = TextMeasure.isolateWhole(t);
+    if (w !== t) { e.properties[WHOLE[k]] = Ls(w); n++; }
+  }));
+  return n;
+}
 
 // A button narrower than its Arabic text (check_report's buttonNeed) is widened: first toward its end (its left in the
 // twin), the visuals beside it in its row moving with it, then toward its start; inside its page or group, never over a
@@ -282,6 +298,7 @@ export function buildTwin(P, labels) {
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     r.visuals.forEach((vj) => {
       applied += Mirror.labelVisual(pg.id, vj, labels);
+      if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
       if (textRename.size) rewireMeasures(vj, textRename);
       const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
@@ -302,7 +319,7 @@ export function buildTwin(P, labels) {
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
       const m = P.keepLtr(pg) ? JSON.parse(JSON.stringify(v.mobile.json)) : Mirror.mirrorMobile(v.json, v.mobile.json);
-      applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels); return m; });
+      applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels); if (isObj(m)) wholeTitles(m.visualContainerObjects); return m; });
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
     return { pg, page, visuals: r.visuals, mobiles };
   });

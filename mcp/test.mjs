@@ -2624,7 +2624,11 @@ if (part('round10-choices')) {
           return { wrap: t.wrap, from: N(pad.top) + (t.wrap ? 2 : 1) * Math.ceil(1.5 * t.size) + I, to: v.at.h - N(pad.bottom) - I }; });
         if (row.some((r) => r.wrap)) { rows++; if (new Set(row.map((r) => r.from + ':' + r.to)).size !== 1) uneven.push(`${page} ${lang} ${k}: ${row.map((r) => (r.wrap ? 'w' : '') + r.from + '-' + r.to).join(' ')}`); } }
       pageVisuals(x, 'd5-project').filter(isKpi).forEach((v) => {
-        const t = titleOf(v), full = altOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
+        // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: an English title in an Arabic report is isolated whole by
+        // the writer, U+200F U+2068 ... U+2069 U+200F, zero wide: measured and compared without those marks, each checked there)
+        const W = req(path.join(REPO, 'assets/js/text-measure.js')).isolateWhole, strip = (x) => String(x).replace(/[\u200e\u200f\u2066-\u2069]/g, ''), own = (x) => (lang === 'ar' && String(x) === W(strip(x)) ? strip(x) : x), t0 = titleOf(v);   // (the shared rule's marks, BD2's V3)
+        const t = Object.assign({}, t0, { text: own(t0.text) }), full = own(altOf(v)), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
+        if (lang === 'ar' && /^[^\u0600-\u06FF]*[A-Za-z][^\u0600-\u06FF]*$/.test(t0.text) && t0.text === t.text) bad.push(`${page} ${lang} ${k}: the English title "${t0.text}" is not isolated whole`);
         const I = N(lookOf(v, 'padding').paddingUniform), V = N(valueOf(v).fontSize), room = v.at.h - N(pad.top) - N(pad.bottom) - 2 * I;
         const where = `${page} ${lang} ${k} "${full}" ${t.size}pt`;
         if (tw(t.text, t.size, true, font) <= avail + 0.5 && !t.wrap && t.text === full) { seen.one++; return; }
