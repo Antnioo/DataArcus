@@ -22,7 +22,7 @@
   (R4: consistentText and the redesign's options dropped silently outside a redesign; C1: the Gulf calendar wrote a raw
   tab in a relationship line; C2: a consistent copy wrote a font face with a tab into the theme); the way back in the
   CHANGELOG and README; report 37 suites PASS, safety 15 PASS (sf1 included); lint exit 0; changelog-words,
-  release-text, check-result-lines PASS. Full run: below.
+  release-text, check-result-lines PASS. Full run 105 -> 106 suites (below).
 - **Resume:** done; waits for the reviewer. Desktop shows nothing new (nothing is written differently for a valid call).
 
 ## Round 4's finding, reproduced first (before this note)
@@ -49,6 +49,8 @@ The tester's own report (36 visuals) is not reachable here; the cause matches "a
    - one block per gap the map finds.
 4. The smallest fixes (`mcp/tools/plan_layout.mjs`, `mcp/tools/create_report.mjs` for R4).
 5. CHANGELOG, this note, the full run.
+
+Full run on 8608e49: "run-tests: 106 suites passed"
 
 ## The map (rule, path, proving test, status)
 Status: proven (a test today), added (a new guard in sf1, green on 44d1f32 too), FIXED (red on 44d1f32, fixed here),
