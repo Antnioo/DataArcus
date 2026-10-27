@@ -83,7 +83,8 @@ test.mjs's KPI sweep compare with isolateWhole instead of spelled-out marks. ?v=
 story-titles, pbip-page, pbip-export in the builder list; theme-generator.min.js on its three pages); build:min,
 ar-pages --write, csp --write; tests.json keeps tt1 and cs2.
 Touched suites on the merge: bd2 33, sq15b 25, arabic-titles 27, twin-complete 24, cs2 29, tt1 28, test.mjs shards
-33 + 584 + 634 + 339; lint 0 problems.
+33 + 584 + 634 + 339; lint 0 problems. On 53c04d1 (the merge and bd2's fixture): theme-generator 910, pbip 109; full
+run `npm test -- --keep-going`: "run-tests: 103 suites passed" (mutation 74 killed).
 
 ## CHANGELOG line
 - **Arabic reports get Arabic titles, never half Arabic, half English:** in an Arabic report every chart title is Arabic («إجمالي المبيعات حسب المنطقة»). A field with no Arabic name yet is listed in the plan for an Arabic name to be drafted and approved before anything is written; nothing is translated without your approval. A title stays English only for a field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English); the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence only for a measure with an Arabic name (its leader is a value from your data, shown as it is).
