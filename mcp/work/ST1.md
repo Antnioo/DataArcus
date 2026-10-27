@@ -195,7 +195,8 @@ FIXED-SINCE (fixed since 25 Oct, for example A3-S2 by TT1 8ddfe11) or SF1. Its 1
 ## Before -> after
 (each "before" is the red run's own count less the checks added; each "after" is the passing run)
 - Website suites: tools 395 -> 399 (I-2: one check per exam and language); site 622 PASS (new: one static headline
-  check per page and go/ link, the shown headlines inside each page view's existing check); gulf-calendar 905 -> 907;
+  check per page and go/ link, the shown headlines inside each page view's existing check; run again on 381b264a after
+  the calendar and beta pages changed: 622 PASS); gulf-calendar 905 -> 907;
   test-site-config, csp, ar-pages PASS.
 - MCP suites touched: v029i 35 -> 36, skill-packaging 24 -> 25, v029a4 40 -> 41, custom-visuals-lab 70 -> 72, gc3 22 ->
   23, cs1 44 -> 45, aud047 98 -> 106, agent-memory 183 -> 184, 0.3.0-claims 672 -> 674, sq15a 23 -> 24, bd2 33 -> 34,
