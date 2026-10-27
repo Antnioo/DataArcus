@@ -845,6 +845,22 @@
   const GLASS_MARK = 'DataArcus glass look';
   const MARK_AT = 33, MARK = [...'tEXtComment\0' + GLASS_MARK].map((ch) => ch.charCodeAt(0));
   const isGlassPng = (b) => !!b && b.length > MARK_AT + 4 + MARK.length && MARK.every((c, i) => b[MARK_AT + 4 + i] === c) && ((b[MARK_AT] << 24) | (b[MARK_AT + 1] << 16) | (b[MARK_AT + 2] << 8) | b[MARK_AT + 3]) === MARK.length - 4;
+  // (0.3.1 GD2) a theme used alone, with pages DataArcus does not write (hand-placed, an existing report): the glass look's
+  // picture goes in the theme itself, as its page background image. Microsoft's report theme schema
+  // (powerbi-desktop-samples, reportThemeSchema-2.159.json) has visualStyles.page["*"].background[] { color, image { name,
+  // url, scaling Normal|Fit|Fill }, transparency }; the url is the picture as a data URI, at the theme's page size,
+  // scaling "Fit" (the schema's "Stretch", as the report writer's page.json sets it). A copy of theme with it; the theme
+  // given is not changed. Whether Desktop draws a theme's picture: measured on the laptop (mcp/work/GD2.md)
+  const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const base64 = (b) => { let out = ''; for (let i = 0; i < b.length; i += 3) { const n = (b[i] << 16) | ((b[i + 1] || 0) << 8) | (b[i + 2] || 0);
+    out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (i + 1 < b.length ? B64[(n >> 6) & 63] : '=') + (i + 2 < b.length ? B64[n & 63] : '='); } return out; };
+  const withGlassPicture = (theme, d) => {
+    if (!isGlass(d)) return theme;
+    const p = page((d && d.layout) || {}), t = JSON.parse(JSON.stringify(theme)), vs = (t.visualStyles = t.visualStyles || {});
+    const pg = (vs.page = vs.page || { '*': {} })['*'] = vs.page['*'] || {}, bg = (pg.background = Array.isArray(pg.background) && pg.background.length ? pg.background : [{}]);
+    bg[0] = Object.assign({}, bg[0], { image: { name: 'DataArcus glass ' + p.w + 'x' + p.h + '.png', url: 'data:image/png;base64,' + base64(glassPng(d, p.w, p.h)), scaling: 'Fit' }, transparency: 0 });
+    return t;
+  };
   // (GD1: glass is the default, so every new report draws it, in its plan and again in its write: the last few pictures
   // are kept, by their colours, strength and size; each call gets its own copy)
   const pngCache = new Map();
@@ -1238,7 +1254,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

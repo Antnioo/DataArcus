@@ -4,7 +4,7 @@ The current release only, capped (60 lines, 3,200 characters: `scripts/check-age
 [CLAUDE.md, "Keeping the memory"](CLAUDE.md#keeping-the-memory). Each job: `mcp/work/<ID>.md`, its `## Summary`
 first. Finished entries: [work/archive/](work/archive/README.md).
 
-## Where it stands (0.3.1, 26 Oct)
+## Where it stands (0.3.1, 27 Oct)
 - `integration/0.3.1` (from main d501c78): builders branch from it and push only their branch; the reviewer merges;
   one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
 - Merged: waves 1-6 (to A2, K2, GC2, RB, Q1); the release audit [AF1](work/AF1.md), [AF2](work/AF2.md),
@@ -15,17 +15,19 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - Merged 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md), [NC1](work/NC1.md), [CS1](work/CS1.md),
   [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md).
 - 27 Oct merged: [R4A](work/R4A.md), [GL2](work/GL2.md), [BD2](work/BD2.md), [CS2](work/CS2.md), [NC3](work/NC3.md),
-  [TT1](work/TT1.md), [GC3](work/GC3.md), [GD1](work/GD1.md) (glass the default).
-- Running (the release bar): GD2 (the twin identical in glass; glass previews), ST1 (the Seen sweep on
-  [SEEN-QUEUE.md](work/SEEN-QUEUE.md)), SF1 (the hard rules proven; the way back to 0.3.0).
+  [TT1](work/TT1.md), [GC3](work/GC3.md), [GD1](work/GD1.md) (glass the default), [GD2](work/GD2.md) (the twin
+  identical in glass; glass previews).
+- Done, merging next: ST1 (the Seen sweep on [SEEN-QUEUE.md](work/SEEN-QUEUE.md)), SF1 (the hard rules proven; the way
+  back to 0.3.0). Next builders: TS1 (FHD text x 1.25), then TW1 (the rest of the twin identical), TT2 (Arabic names
+  on the website's download), then LC1 (the layout preview after the fit).
 
 ## Next step
-1. The reviewer merges GD2, ST1, SF1; then the final full run and two identical dry builds.
+1. The reviewer merges ST1, SF1, then TS1, TW1, TT2, LC1; then the final full run and two identical dry builds.
 2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
 3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
 ## Open decisions (the owner's; no work before his go)
-- M1 "Seen" 1-2 (text-box panels; the twin's tables lose "Total"); the matrix variant, then `MATRIX_RTL_DEFAULT`.
+- The matrix variant, then `MATRIX_RTL_DEFAULT` (M1 "Seen" 1-2, panels and "Total": decided, the owner's "twin identical", TW1).
 - L6 "Seen" 1: Arabic DA measures for the twin and the bilingual report's Arabic half.
 - C: the beta task list's line.
 - Every other item for him: the queue's [decisions](work/SEEN-QUEUE.md#decisions) and laptop list.

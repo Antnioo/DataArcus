@@ -300,7 +300,9 @@ const gonePage = () => page('Not available', '<p class="done">This approval link
 
 function headers(res, code, type) {
   res.writeHead(code, { 'Content-Type': type || 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'same-origin',
-    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
+    // (0.3.1 GD2: the preview draws a glass page on its soft picture, inline in the page as a PNG data URL) img-src data:
+    // only: no image is ever fetched, from anywhere
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'" });
 }
 
 function onRequest(req, res, decide) {

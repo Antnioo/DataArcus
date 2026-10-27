@@ -6,7 +6,8 @@
 // theme colours). It never shows a data value and never makes one up: each visual gets a grey placeholder shape (bars,
 // a line, a ring, rows), with no text and no number in it, and the page is labelled "preview".
 // A page: { name, w, h, rtl, colors: { background, card, ink, accent }, visuals: [{ type (Power BI's visualType),
-// x, y, w, h (page units, as the page places them: a right-to-left page is already mirrored), z, title }] }.
+// x, y, w, h (page units, as the page places them: a right-to-left page is already mirrored), z, title }], glass?: { url,
+// t (the cards' transparency, %), rim } (0.3.1 GD2: the glass look, drawn as written) }.
 (function (root) {
   'use strict';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -219,6 +220,11 @@
     const c = Object.assign({ background: '#F4F6FA', card: '#FFFFFF', ink: '#14213D', accent: '#0F7C90' }, page.colors || {});
     const col = { background: hex(c.background, '#F4F6FA'), card: hex(c.card, '#FFFFFF'), ink: hex(c.ink, '#14213D'), accent: hex(c.accent, '#0F7C90') };
     const fs = 11 * u, pad = 8 * u, vs = page.visuals || [], kk = H / 1080;
+    // (0.3.1 GD2, the owner, 27 Oct: "in the approval page it should not be solid cards") a glass page as the report is
+    // written: its soft picture behind (page.glass.url: a PNG data URL or a blob URL, nothing else) and every card, a
+    // table's too, at the theme's own transparency (page.glass.t, %) with the look's rim
+    const gl = page.glass && /^(data:image\/png;base64,[A-Za-z0-9+/=]+|blob:[A-Za-z0-9:/._-]+)$/.test(String(page.glass.url || '')) && +page.glass.t > 0 ? page.glass : null;
+    const glassFill = gl ? ` fill-opacity="${String(Math.round((1 - Math.min(100, +gl.t) / 100) * 100) / 100)}" stroke="${hex(gl.rim, '#FFFFFF')}" stroke-opacity="1"` : '';
     const flags = check(page);
     (page.flags || []).concat(o.flags || []).forEach((f) => { if (f && vs[f.i] && /^(cut|overlap|small)$/.test(f.kind) && !flags.some((g) => g.i === f.i && g.kind === f.kind)) flags.push({ i: f.i, kind: f.kind }); });
     // (one line of a title that may not wrap, shortened with "…" by the writer's measure: a picture, not a measurement)
@@ -233,7 +239,8 @@
     const body = order.map((i) => {
       const v = vs[i], k = kindOf(v), b = { x: +v.x || 0, y: +v.y || 0, w: Math.max(0, +v.w || 0), h: Math.max(0, +v.h || 0) };
       const title = clean(v.title), boxed = !/^(text|image|button|shape)$/.test(k);
-      const panel = boxed ? `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}" stroke="${GREY}" stroke-opacity=".35" stroke-width="${n(u)}"/>`
+      const panel = boxed ? (gl ? `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}"${glassFill} stroke-width="${n(u)}"/>`
+        : `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" rx="${n(6 * u)}" fill="${col.card}" stroke="${GREY}" stroke-opacity=".35" stroke-width="${n(u)}"/>`)
         : `<rect class="box" x="${n(b.x)}" y="${n(b.y)}" width="${n(b.w)}" height="${n(b.h)}" fill="none"/>`;
       const end = '</g><!--/v-->';
       if (k === 'panel') return `<g class="v" data-i="${i}" data-kind="panel">${panel}${end}`;
@@ -318,7 +325,8 @@
     // flips an SVG text's start and end). Arabic still shapes right to left inside each text, and the writer's titles
     // carry their own direction marks and isolates (J18)
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n(W)} ${n(H)}" width="${width}" height="${height}" direction="ltr" role="img" aria-label="${esc(label)}">`
-      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>${body}${marks}${said}${tag}</svg>`;
+      + `<rect class="page" x="0" y="0" width="${n(W)}" height="${n(H)}" fill="${col.background}" stroke="${GREY}" stroke-opacity=".5" stroke-width="${n(u)}"/>`
+      + (gl ? `<image class="glass" x="0" y="0" width="${n(W)}" height="${n(H)}" preserveAspectRatio="none" href="${gl.url}"/>` : '') + `${body}${marks}${said}${tag}</svg>`;
   }
 
   // ---- the pages, from what the report writer writes or from the design engine's slots ----
@@ -432,9 +440,14 @@
    *  every shown visual at its page position (inside groups too); the tooltip and hidden pages and hidden visuals left
    *  out. A card with no field and no title, or a text box with no text, is a panel (the writer's panel behind a chart,
    *  the header band, the filter rail). The visuals in their drawing
-   *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors }. */
+   *  order (z, then place: the writer's names are random, so they never decide it). opts: { rtl, colors, picture (GD2:
+   *  bytes -> a URL for a glass page's picture, or null) }. */
   function fromFiles(files, opts) {
     const o = opts || {}, by = new Map(), res = [];
+    // (GD2) the page pictures: opts.picture(bytes) gives a picture's URL for the preview when it is the glass look's (the
+    // MCP: a small copy; the website: the bytes themselves), else null: any other picture is not drawn, as before
+    const pics = new Map();
+    (files || []).forEach((f) => { const q = /(?:^|\/)StaticResources\/RegisteredResources\/([^/]+\.png)$/i.exec(String(f.path || '')); if (q && f.data && typeof f.data !== 'string') pics.set(q[1], f.data); });
     (files || []).forEach((f) => { const m = /(?:^|\/)definition\/pages\/(.+)$/.exec(String(f.path || '')); if (m) by.set(m[1], f.data); else if (/(?:^|\/)StaticResources\/RegisteredResources\/[^/]+\.json$/.test(String(f.path || '')) || /(?:^|\/)definition\/(report|reportExtensions)\.json$/.test(String(f.path || ''))) res.push(f); });
     const json = (rel) => { try { return by.has(rel) ? JSON.parse(txt(by.get(rel))) : null; } catch (e) { return null; } };
     const parse = (f) => { try { return JSON.parse(txt(f.data)); } catch (e) { return null; } };
@@ -447,6 +460,13 @@
     const themes = res.filter((f) => f !== rep && f !== xf).map((f) => ({ f, j: parse(f) })).filter((x) => x.j && x.j.textClasses);
     const theme = ((want && themes.find((x) => x.f.path.endsWith('/' + want))) || themes[0] || {}).j || null;
     const order = ((json('pages.json') || {}).pageOrder || []).map(String);
+    // (GD2) a page on the glass look's picture: the picture's URL, the cards' transparency and rim as the theme writes them
+    const star = (card) => ((((((theme && theme.visualStyles) || {})['*'] || {})['*'] || {})[card]) || [])[0] || {};
+    const glassT = +star('background').transparency, rim = ((star('border').color || {}).solid || {}).color;
+    const glassOf = (pj) => { if (!(glassT > 0) || typeof o.picture !== 'function') return null;
+      const e = (((pj.objects || {}).background) || []).find((x) => x && x.properties && x.properties.image), nm = e ? lit(((e.properties.image || {}).image || {}).name) : null;
+      const url = nm && pics.has(nm) ? o.picture(pics.get(nm)) : null;
+      return url ? { url: String(url), t: glassT, rim: typeof rim === 'string' ? rim : null } : null; };
     return order.map((id) => ({ id, pj: json(`${id}/page.json`) })).filter((p) => p.pj && p.pj.type !== 'Tooltip' && p.pj.visibility !== 'HiddenInViewMode').map(({ id, pj }) => {
       const list = [...by.keys()].filter((k) => k.startsWith(id + '/visuals/') && /\/visual\.json$/.test(k)).map((k) => json(k)).filter(Boolean)
         .sort((a, b) => ((+(a.position || {}).z || 0) - (+(b.position || {}).z || 0)) || (+(a.position || {}).y || 0) - (+(b.position || {}).y || 0) || (+(a.position || {}).x || 0) - (+(b.position || {}).x || 0));
@@ -464,7 +484,7 @@
           type !== 'textbox' && shortened(title, altOf(j)) ? { titleCut: true } : {},
           (/^(card|cardVisual|multiRowCard)$/.test(type) && !hasFields(j) || type === 'textbox') && !title ? { panel: true } : {});
       }).filter(Boolean);
-      return { id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals };
+      return Object.assign({ id, name: String(pj.displayName || id), w: +pj.width || 0, h: +pj.height || 0, rtl: !!o.rtl, colors: o.colors || null, visuals }, glassOf(pj) ? { glass: glassOf(pj) } : {});
     });
   }
 

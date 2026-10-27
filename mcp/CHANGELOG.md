@@ -47,6 +47,11 @@ package's manifest; this file says what is in it.
   report or theme is plain and the plan says why. The plain look is one choice away ("Plain" in the Theme Generator,
   `chart.look: "auto"` or `"plain"` for the tools). A report you already have keeps its own look: a redesign, the
   Arabic twin and the copy in English and Arabic don't change it.
+- **The Arabic twin is identical to its English report, glass included:** in the twin, the copy in both languages and
+  the bilingual report, each Arabic page sits on its English page's soft picture mirrored left to right, with the same
+  see-through cards, tables and colours. The approval page and the Theme Generator's preview now draw a glass report as
+  it is written: the soft picture behind each page and the see-through cards. A glass theme made on its own carries
+  its soft picture as the page background, for reports DataArcus does not write.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click

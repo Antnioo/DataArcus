@@ -21,6 +21,7 @@ const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
+import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
 
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
@@ -164,6 +165,16 @@ export function planTwin(a) {
   const ref = byPathOf(R.pbir);
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
+  // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") a mirrored page drawn on DataArcus's glass picture
+  // gets that picture flipped left to right, pixel by pixel (built.pictures: its file -> the flipped bytes); the twin
+  // writes it under the same name, the copy holding both languages as a picture of the Arabic page's own
+  built.pictures = new Map();
+  R.pages.filter((pg) => !keepLtr(pg)).forEach((pg) => Mirror.pageImages(pg.page).forEach((n) => {
+    const rel = 'StaticResources/RegisteredResources/' + n;
+    if (n == null || built.pictures.has(rel) || !R.files.includes(rel)) return;
+    let b = null; try { b = flipGlassPng(new Uint8Array(bytesAt(loc, rel))); } catch (e) { b = null; }
+    if (b) built.pictures.set(rel, Buffer.from(b));
+  }));
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
   // (0.3.1 K2) the .platform logical id, chosen once here (the write builds again with the plan's: the approved bytes hold it)
   const logicalId = typeof a.logicalId === 'string' && a.logicalId ? a.logicalId : crypto.randomUUID();

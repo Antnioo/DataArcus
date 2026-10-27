@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { z } from 'zod';
 import { loadModel, visible, inside, nothingAt } from '../lib/model.mjs';
 import { folderSaid } from '../lib/plain-words.mjs';   // (0.3.1 R4A, T-9: the working folder by its path)
-import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook, lookFor, askedLook } from '../lib/design.mjs';
+import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook, lookFor, askedLook, withGlassPicture } from '../lib/design.mjs';
 import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
@@ -64,7 +64,7 @@ export function register(server, ctx) {
     // (0.3.1 GL1) the glass look: what it is made of, its transparency and the worst cases, in one line for the plan
     const glass = isGlass(design) ? (() => { const g = glassLook(design), r = (x) => (Math.floor(x * 10) / 10).toFixed(1), at = (id) => r(g.checks.find((c) => c.id === id).ratio);
       return { transparency: g.t, asked: g.asked, border: g.rim, tables: g.table, shadow: design.layout.shadow ? g.shadow : null, labels: g.labels, picture: { mode: g.mode, darkest: g.image.darkest, lightest: g.image.lightest }, checks: g.checks,
-        sayInPlan: `The glass look. Power BI has no blur behind a visual, so the look is made of what it has: every visual's background in ${design.ui.card} at ${g.t}% transparency, a 1-pixel ${g.rim} border at the corners, ${design.layout.shadow ? 'a soft shadow' : 'no shadow'}, and a soft page picture drawn from the theme's own colours (no photo), which create_report puts behind every page.${g.t < g.asked ? ` The transparency is ${g.t}%, not ${g.asked}%, so the text stays readable over the picture's darkest and lightest parts.` : ''} Worst cases over the picture: text ${at('textOnGlass')}:1, labels ${at('labelsOnGlass')}:1, colour 1 ${at('color1OnGlass')}:1 on the cards; text ${at('textOnPicture')}:1 on the picture. Tables and matrices have no fill of their own: their cells are the see-through card${g.table.band ? `, every other row a faint ${g.table.bandAlpha}% tint` : ''}. A theme file alone carries no picture: the report (create_report) or the Theme Generator's background download does.` }; })() : null;
+        sayInPlan: `The glass look. Power BI has no blur behind a visual, so the look is made of what it has: every visual's background in ${design.ui.card} at ${g.t}% transparency, a 1-pixel ${g.rim} border at the corners, ${design.layout.shadow ? 'a soft shadow' : 'no shadow'}, and a soft page picture drawn from the theme's own colours (no photo), which create_report puts behind every page.${g.t < g.asked ? ` The transparency is ${g.t}%, not ${g.asked}%, so the text stays readable over the picture's darkest and lightest parts.` : ''} Worst cases over the picture: text ${at('textOnGlass')}:1, labels ${at('labelsOnGlass')}:1, colour 1 ${at('color1OnGlass')}:1 on the cards; text ${at('textOnPicture')}:1 on the picture. Tables and matrices have no fill of their own: their cells are the see-through card${g.table.band ? `, every other row a faint ${g.table.bandAlpha}% tint` : ''}. The theme file carries the soft picture too, as its page background image (the report theme format's page background), for pages that have no background of their own; if a page shows none, set it in Power BI Desktop under Format page, Canvas background, Image (the picture: the Theme Generator's background download; a report create_report writes has it on every page).` }; })() : null;
     // the gate (0.2.9, P-1): the file only with an approved plan; without one, the theme for the plan and a proposed plan id
     if (a.planId == null || a.planId === '') {
       // (0.3.1 AF2, the release audit's F09) the file's name chosen now (the first free one; nothing made) and kept with the
@@ -82,7 +82,7 @@ export function register(server, ctx) {
       // (AF2) the name the plan showed, or nothing: taken since, nothing is written (and no folder made)
       if (!name) throw new Error(`Nothing was written: plan ${a.planId} names no theme file. Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
       if (!nothingAt(path.join(inside(a.folder || '.'), name))) throw new Error(`Nothing was written: "${name}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
-      const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
+      const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(withGlassPicture(buildTheme(design, a.lang), design), null, 2), { madeDirs: made }); noteWritten(f); return f; });
     return text({ path: file, file: path.basename(file), page, colours, sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
   }));
 }

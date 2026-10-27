@@ -150,6 +150,17 @@ export function languageCopy(P, built, labels) {
       const b = litStr(e.properties.bookmark); if (b != null && bmOf.has(b)) e.properties.bookmark = Ls(bmOf.get(b));
     }));
   };
+  // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") an Arabic page drawn on DataArcus's glass picture gets
+  // a picture of its own, the English page's flipped left to right (built.pictures), "<name>-ar.png", registered below
+  const RES = 'StaticResources/RegisteredResources/', pics = built.pictures || new Map(), arPics = new Map();
+  const takenRes = new Set(R.files.filter((f) => f.startsWith(RES)).map((f) => f.slice(RES.length).toLowerCase()));
+  const arPicOf = (n) => { if (arPics.has(n)) return arPics.get(n).to; const m = /^(.*?)(\.[^.]+)?$/.exec(n); let to = m[1] + '-ar' + (m[2] || ''); for (let k = 2; takenRes.has(to.toLowerCase()); k++) to = m[1] + '-ar-' + k + (m[2] || ''); takenRes.add(to.toLowerCase()); arPics.set(n, { to, data: pics.get(RES + n) }); return to; };
+  const withArPicture = (pgj) => ['background', 'wallpaper'].forEach((k) => (isObj(pgj.objects) && Array.isArray(pgj.objects[k]) ? pgj.objects[k] : []).forEach((e) => {
+    const im = isObj(e) && isObj(e.properties) && isObj(e.properties.image) && isObj(e.properties.image.image) ? e.properties.image.image : null, n = im ? litStr(im.name) : null;
+    if (n == null || !pics.has(RES + n)) return;
+    const to = arPicOf(n); im.name = Ls(to);
+    if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to;
+  }));
   let n = 0;
   built.pages.forEach(({ pg, page, visuals, mobiles }) => {
     const id = String(pg.id), arId = arOf.get(id), nm = names.get(id), folder = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1), arFolder = 'definition/pages/' + arId + '/';
@@ -163,6 +174,7 @@ export function languageCopy(P, built, labels) {
       arPage.name = arId;
       if (isObj(arPage.pageBinding) && arPage.pageBinding.name != null) arPage.pageBinding.name = newId('binding\u0000' + arId);
       if (tabsShown === 'en') arPage.visibility = hidden;
+      if (pics.size) withArPicture(arPage);
       if (Array.isArray(arPage.visualInteractions)) arPage.visualInteractions.forEach((x) => { if (isObj(x)) ['source', 'target'].forEach((k) => { if (x[k] != null && nm.has(String(x[k]))) x[k] = nm.get(String(x[k])); }); });
     }
     arV.forEach((v, i) => { renameFilters(v, arId, String(pg.visuals[i] ? pg.visuals[i].json.name : i)); remap(v, nm); });
@@ -244,6 +256,16 @@ export function languageCopy(P, built, labels) {
     activePage = j.activePageName != null ? safeName(String(j.activePageName)) : null;
     changed.set(PJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
   if (built.ext) changed.set(EXT, json(built.ext));
+  // (GD2) the Arabic pages' pictures, written and registered beside the English pages' (report.json's RegisteredResources)
+  const RJ = 'definition/report.json';
+  if (arPics.size && R.files.includes(RJ)) { try { const j = jsonAt(loc, RJ); if (isObj(j)) {
+    if (!Array.isArray(j.resourcePackages)) j.resourcePackages = [];
+    let pk = j.resourcePackages.find((x) => isObj(x) && x.name === 'RegisteredResources');
+    if (!pk) { pk = { name: 'RegisteredResources', type: 'RegisteredResources', items: [] }; j.resourcePackages.push(pk); }
+    if (!Array.isArray(pk.items)) pk.items = [];
+    arPics.forEach(({ to }) => pk.items.push({ name: to, path: to, type: 'Image' }));
+    changed.set(RJ, json(j)); } } catch (e) { /* not JSON: copied as it is */ } }
+  arPics.forEach(({ to, data }) => added.push({ rel: RES + to, data }));
   // (0.3.1 X2) a report built in English and Arabic keeps its own name (P.name): it is new, not a copy
   if (R.hasPlatform) { const pl = loc.mem ? jsonAt(loc, '.platform') : mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: P.name || loc.base + COPY_TAG }); pl.config = Object.assign({}, pl.config, { logicalId: P.logicalId || crypto.randomUUID() }); changed.set('.platform', json(pl)); }
   // (0.3.0 A1) a report without .platform (the validator's PBIR_PLATFORM_MISSING, a "can break"): the twin writes its own, as create_report does

@@ -1,6 +1,7 @@
 // The Arabic twin, step 7: its pages drawn on the approval page, from the plan's own build (0.3.1 V1).
 // (0.3.1 S9: moved out of lib/arabic-twin.mjs as it was, no change of behaviour; arabic-twin.mjs re-exports what others import)
 import { json, isObj } from './twin-read.mjs';
+import { glassPreviewUrl } from './glass-picture.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
@@ -22,11 +23,13 @@ export function twinPreview(P, kept) {
     const pre = P.outBase + '.Report/';
     if (!Array.isArray(kept)) return null;
     kept.filter((f) => f.path.startsWith(pre)).map((f) => ({ rel: f.path.slice(pre.length), data: f.data })).filter((f) => /^definition\/(pages\/|reportExtensions\.json$)/.test(f.rel)).forEach((f) => files.push({ path: f.rel, data: shown(f.rel, f.data) }));
+    // (0.3.1 GD2) the pages' pictures (the Arabic pages' flipped), so a glass page is drawn as written
+    kept.filter((f) => f.path.startsWith(pre + 'StaticResources/RegisteredResources/') && /\.png$/i.test(f.path) && f.data && typeof f.data !== 'string').forEach((f) => files.push({ path: f.path.slice(pre.length), data: f.data }));
     if (!files.some((f) => f.path === PJ)) files.push({ path: PJ, data: json({ pageOrder: R.pages.map((pg) => String(pg.id)) }) });
     if (R.theme) files.push({ path: 'StaticResources/RegisteredResources/theme.json', data: json(R.theme) });
     const T = R.theme || {}, pg0 = isObj(T.visualStyles) && isObj(T.visualStyles.page) && isObj(T.visualStyles.page['*']) && Array.isArray(T.visualStyles.page['*'].background) ? T.visualStyles.page['*'].background[0] : null;
     const colors = { background: pg0 && pg0.color && pg0.color.solid ? pg0.color.solid.color : undefined, card: T.background, ink: T.foreground, accent: Array.isArray(T.dataColors) ? T.dataColors[0] : undefined };
-    const pages = Preview.fromFiles(files, { colors });
+    const pages = Preview.fromFiles(files, { colors, picture: (bytes) => glassPreviewUrl(bytes) });
     // which pages are Arabic: the twin's all (but those kept left to right), the copy's its pairs' Arabic pages
     const ltrIds = new Set(R.pages.filter((pg) => P.keepLtr(pg)).map((pg) => String(pg.id)));
     const arIds = P.copy ? new Map(P.copy.pairs.map((x) => [String(x.arabic.id), String(x.english.id)])) : null;

@@ -7,6 +7,7 @@
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
 // (0.3, J14: the plan's gate is the exact check, lib/artifact.mjs: create_report's own build, every page and everything
 // above included, the bytes create_report writes. This lint stays the plan's view of its first page, and its kinds.)
+import { glassPreviewUrl } from './glass-picture.mjs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -126,7 +127,8 @@ export function planPreview(a) {
   if (b.skipped) return { pages: (a.second !== false ? b.specs : b.specs.slice(0, 1)).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });
     return Preview.fromSlots(slots, p.page, { name: p.name, rtl, colors }); }), from: 'slots' };
-  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors });
+  // (0.3.1 GD2) a glass page drawn on a small copy of its picture (glass-picture.mjs), the approval page's only
+  const files = inReport(b.r), pages = Preview.fromFiles(files, { rtl, colors, picture: (bytes) => glassPreviewUrl(bytes) });
   const inv = inventory(memorySource(files), 'the planned report'), shown = inv.pages.filter((p) => p.kind !== 'Tooltip' && !p.hidden);
   pages.forEach((p, k) => {
     const ip = shown[k]; if (!ip) return;
