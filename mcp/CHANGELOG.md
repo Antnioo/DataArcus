@@ -17,6 +17,10 @@ package's manifest; this file says what is in it.
   A theme made by DataArcus 0.3.0 for 1920 x 1080 and used with create_report takes the new sizes on its pages (the
   answer says so). On a details page with filters at the side, the chart beside a short filter panel now ends with the
   panel and the rows under it move up, which closes the empty band that was left under the filters there.
+- **The website's layout preview shows what the download writes:** on the Theme Generator page with the Power BI
+  project download, the layout preview draws page 1 as the project places it (the filter panel as high as its slicers
+  and Reset, the chart under it taking its column), not the layout's slots before that; a line under it says when they
+  differ. The MCP writes each new glass page picture faster (the same pixels).
 - **No option dropped without a word:** `consistentText`, `keepPositions`, `titles` and `restyle` work on a redesign
   only. Given with a native copy of custom visuals or a new report, they were ignored, so a native copy asked "with
   consistent text" kept each visual's own fonts. Now the plan says so and names the way: write the native copy, then

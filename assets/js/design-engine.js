@@ -833,7 +833,14 @@
   // bytes); the browser keeps the JavaScript deflate. opt.deflate 'js': the JavaScript one in Node too (its test)
   const ZLIB = (() => { try { return typeof module !== 'undefined' && module.exports && typeof require === 'function' ? require('zlib') : null; } catch (e) { return null; } })();
   const encodePng = (w, h, rgb, text, opt) => {
-    const row = w * 3, raw = new Uint8Array(h * (row + 1)), line = new Uint8Array(row);
+    const row = w * 3, raw = new Uint8Array(h * (row + 1)), line = new Uint8Array(row), js = !ZLIB || (opt && opt.deflate === 'js');
+    // node:zlib: every row but the first filtered Up (as glass-picture.mjs, PF1: the choice per row cost more than it
+    // saved), in a plain loop; the pixels the same
+    if (!js) {
+      for (let y = 0; y < h; y++) { const p = y * row, q = y * (row + 1); raw[q] = y ? 2 : 0;
+        if (y) for (let x = 0; x < row; x++) raw[q + 1 + x] = (rgb[p + x] - rgb[p + x - row]) & 255; else raw.set(rgb.subarray(0, row), 1); }
+      return pngOf(w, h, new Uint8Array(ZLIB.deflateSync(raw)), text);
+    }
     const pred = (f, p, x, y) => { const a = x >= 3 ? rgb[p + x - 3] : 0, b = y ? rgb[p + x - row] : 0, c = x >= 3 && y ? rgb[p + x - row - 3] : 0;
       if (f === 1) return a; if (f === 2) return b; if (f === 3) return (a + b) >> 1;
       if (f === 4) { const q = a + b - c, pa = Math.abs(q - a), pb = Math.abs(q - b), pc = Math.abs(q - c); return pa <= pb && pa <= pc ? a : pb <= pc ? b : c; }
@@ -844,11 +851,13 @@
       for (let x = 0; x < row; x++) line[x] = (rgb[p + x] - pred(best, p, x, y)) & 255;
       raw[q] = best; raw.set(line, q + 1);
     }
-    const idat = ZLIB && !(opt && opt.deflate === 'js') ? new Uint8Array(ZLIB.deflateSync(raw)) : (() => {
-      let a = 1, b = 0; for (let i = 0; i < raw.length; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
-      const z = deflate(raw), out = new Uint8Array(z.length + 6); out.set([0x78, 0x01]); out.set(z, 2);
-      const ad = ((b << 16) | a) >>> 0; out.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
-      return out; })();
+    let a = 1, b = 0; for (let i = 0; i < raw.length; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
+    const z = deflate(raw), idat = new Uint8Array(z.length + 6); idat.set([0x78, 0x01]); idat.set(z, 2);
+    const ad = ((b << 16) | a) >>> 0; idat.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
+    return pngOf(w, h, idat, text);
+  };
+  // the PNG's chunks around its zlib stream: signature, IHDR (RGB, 8 bits), the tEXt comment right after it, IDAT, IEND
+  const pngOf = (w, h, idat, text) => {
     const u32 = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
     const chunk = (type, body) => { const c = new Uint8Array(12 + body.length); c.set(u32(body.length)); c.set([...type].map((ch) => ch.charCodeAt(0)), 4); c.set(body, 8); c.set(u32(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
     const parts = [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Uint8Array.from(u32(w).concat(u32(h), [8, 2, 0, 0, 0])))]
