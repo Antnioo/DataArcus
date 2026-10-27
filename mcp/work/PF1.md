@@ -16,7 +16,8 @@
 - **Got:** glass-speed 23 (4 of 21 red on a69fffc5 first: 48 decodes for 24 figures, 3 for 3 flips, no node:zlib;
   P6-P7 added after, they pass on the old code too: pixel checks) -> 23 PASS; twin area 10 suites (9 = 9 + glass-speed),
   glass-twin 28 = 28, twin-preview 23 = 23; no other test changed. twin-preview 39.3 s -> 11.3 s plain, 347 s (RED,
-  timed out) -> 21.5 s under NODE_V8_COVERAGE. Full run: below.
+  timed out) -> 21.5 s under NODE_V8_COVERAGE. Full run 108 -> 109 suites (+ glass-speed).
+- Full run on d42befe: "run-tests: 109 suites passed"
 - **Resume:** done once the full run's line is written; then CI on the branch, then the reviewer.
 
 ## The plan
@@ -49,7 +50,7 @@
 | the same under NODE_V8_COVERAGE | 8454 / 2149 / 2558 / 10921 ms | 8528 / 502 / 34 / 352 ms |
 | twin-preview, plain | 39.3 s (23 PASS) | 11.3 s (23 PASS) |
 | twin-preview, NODE_V8_COVERAGE | 347 s, RED (V1-8 timed out) | 21.5 s (23 PASS) |
-| the full run (`npm test -- --keep-going`) | FULLBEFORE | FULLAFTER |
+| the full run (`npm test -- --keep-going`) | FULLBEFORE | 2405 s (40.1 min), 109 suites passed |
 
 "make" is the engine's glassPng (design-engine.js, TS1's file, not changed here: its 8 s under coverage stays; it is
 cached by the engine per colours and size). The bench calls decode, then preview and flip of the same bytes, so those
