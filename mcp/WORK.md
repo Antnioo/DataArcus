@@ -11,9 +11,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   (each note in `mcp/work/<ID>.md`).
 - Merged 26 Oct: LR1, LR2, BD1, NC1, CS1, GL1, NC2, RD1.
 - 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass the default), GD2 (the twin identical in glass; glass
-  previews).
-- Done, merging next: ST1 (the Seen sweep on [SEEN-QUEUE.md](work/SEEN-QUEUE.md)), SF1 (the hard rules proven; the way
-  back to 0.3.0). Next builders: TS1 (FHD text x 1.25), then TW1 (the rest of the twin identical), TT2 (Arabic names
+  previews), [ST1](work/ST1.md) (every Seen item swept: its register is the list of what is left).
+- Done, merging next: SF1 (the hard rules proven; the way back to 0.3.0). Running: TS1 (FHD text x 1.25). Next: TW1 (the rest of the twin identical), TT2 (Arabic names
   on the website's download), then LC1 (the layout preview after the fit).
 
 ## Next step

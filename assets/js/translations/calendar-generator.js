@@ -64,7 +64,7 @@ window.calendarGeneratorTranslations = {
         "rel": "Relative offsets",
         "relNote": "Day, month and year offsets from the day of the last refresh, for \"last 3 months\" slicers that move on with each refresh.",
         "arabic": "Add Arabic name columns",
-        "arabicNote": "Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, for Arabic report pages. Sort each by Day of Week, Month Number or Hijri Month Number."
+        "arabicNote": "Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, and Arabic labels beside the quarters, the fiscal year and quarter and the yes/no flags (Quarter (Arabic), Is Weekend (Arabic) and the like), for Arabic report pages. Sort each name by Day of Week, Month Number or Hijri Month Number."
       },
       "preview": "Preview",
       "ramadanRange": "Ramadan in your date range",
@@ -161,7 +161,7 @@ window.calendarGeneratorTranslations = {
         "rel": "الإزاحات النسبية",
         "relNote": "إزاحة اليوم والشهر والسنة عن يوم آخر تحديث، لفلاتر مثل \"آخر 3 أشهر\" تتقدم مع كل تحديث.",
         "arabic": "إضافة أعمدة الأسماء العربية",
-        "arabicNote": "أعمدة Day Name (Arabic) وMonth Name (Arabic) وHijri Month Name (Arabic) بجانب الأسماء الإنجليزية، لصفحات التقارير العربية. رتّب كلًا منها حسب Day of Week أو Month Number أو Hijri Month Number."
+        "arabicNote": "أعمدة Day Name (Arabic) وMonth Name (Arabic) وHijri Month Name (Arabic) بجانب الأسماء الإنجليزية، وتسميات عربية بجانب الأرباع والسنة المالية وربعها وأعمدة نعم/لا (مثل Quarter (Arabic) وIs Weekend (Arabic))، لصفحات التقارير العربية. رتّب كل اسم حسب Day of Week أو Month Number أو Hijri Month Number."
       },
       "preview": "معاينة",
       "ramadanRange": "رمضان ضمن نطاق التواريخ",

@@ -199,6 +199,9 @@ export default async function ({ browser, url }) {
     const rows = () => v.pg.$$eval('.dp-domrow[data-dom]', (rs) => rs.map((r) => ({ d: r.dataset.dom, pct: (r.querySelector('.dp-domtop b') || {}).textContent || '',
       links: [...r.querySelectorAll('a[data-study]')].map((a) => ({ href: a.href, text: a.textContent.trim(), rel: a.rel, target: a.target })) })));
     const mock = await rows();
+    // (ST1, I-S2) an area's exam weight ("25–30%") is a Latin run: isolated left to right, so Arabic never draws it reversed
+    const weights = await v.pg.$$eval('.dp-domrow[data-dom] .dp-domtop small', (ss) => ss.map((x) => { const b = x.querySelector('bdi[dir="ltr"]'); return b && b.textContent === x.textContent ? b.textContent : '!' + x.textContent; }));
+    check(weights.length === doms.length && weights.every((w) => /^\d+–\d+%$/.test(w)), `${tag} mock: each area's weight in its own <bdi dir="ltr">: ${JSON.stringify(weights)}`);
     const want = (d) => GUIDE + STUDY[page][d];
     const by = Object.fromEntries(mock.map((r) => [r.d, r]));
     check(mock.length === doms.length, `${tag} mock: one row per exam area: ${JSON.stringify(mock.map((r) => r.d))}`);

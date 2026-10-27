@@ -107,6 +107,7 @@ window.betaPageTranslations = {
         "name": "Name *",
         "email": "Email *",
         "model": "What is your model about? *",
+        "modelHint": "In general words, for example \"sales by branch\": no figures, client names or private table names.",
         "linkedin": "LinkedIn (optional)",
         "button": "Send",
         "privacy": "What you send reaches our email through Web3Forms, only so we can reply: <a href='../privacy.html' class='text-accent'>Privacy</a>."
@@ -221,6 +222,7 @@ window.betaPageTranslations = {
         "name": "الاسم *",
         "email": "البريد الإلكتروني *",
         "model": "عن ماذا يتحدث نموذجك؟ *",
+        "modelHint": "بكلمات عامة، مثل «المبيعات حسب الفرع»: بلا أرقام ولا أسماء عملاء ولا أسماء جداول خاصة.",
         "linkedin": "LinkedIn (اختياري)",
         "button": "أرسل",
         "privacy": "ما ترسله يصل إلى بريدنا عبر Web3Forms، فقط لنرد عليك: <a href='../privacy.html' class='text-accent'>الخصوصية</a>."

@@ -394,7 +394,7 @@ const INPUT_WORDS = {
   announced: ['Ramadan and Eid dates', (v, val, all) => (!v ? 'the Umm al-Qura calendar only' : `the UAE's announced dates (later ones are Umm al-Qura estimates)${all && all.country && all.country !== 'uae' ? `: DataArcus holds no announced dates of ${COUNTRY[all.country] || 'this country'}'s own, so where ${COUNTRY[all.country] || 'it'} announced another day, the table has the UAE's` : ''}`)],
   weekend: ['Weekend', (v) => ({ country: 'the country\'s official weekend', 'sat-sun': 'Saturday and Sunday', 'fri-sat': 'Friday and Saturday', fri: 'Friday', sun: 'Sunday' })[v] || String(v)],
   lang: ['Language of the names', (v) => (v === 'ar' ? 'Arabic' : 'English')], arabicNames: ['Arabic name columns too', (v) => (v ? 'yes' : 'no')], fiscalStart: ['Fiscal year starts in month', (v) => String(v)],
-  relateTo: ['Related to the new table\'s Date', (v) => [].concat(v).join(', ')], arabicColumnsOnly: ['What is written', (v) => (v ? 'only the Arabic calendar columns, for your own date table' : 'a new calendar table')],
+  relateTo: ['Asked to relate to the new table\'s Date', (v) => [].concat(v).join(', ')], arabicColumnsOnly: ['What is written', (v) => (v ? 'only the Arabic calendar columns, for your own date table' : 'a new calendar table')],
   brand: ['Brand colour', (v) => String(v)], mode: ['Mode', (v) => String(v)]
 };
 /** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
@@ -547,7 +547,7 @@ function summaryOf(kind, data) {
         .concat(reps.map((x) => [String(x.line), (x.confidence ? [`confidence: ${String(x.confidence)}${x.evidence ? ` (${String(x.evidence)})` : ''}`] : [])
           .concat((x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows'])
           .concat((x.needs || []).map((l) => 'to turn on: ' + String(l)))
-          .concat(x.second ? [`second option${x.second.chosen ? ' (chosen; the first is the closer one)' : ''}: ${String(x.second.label || x.second.native)} (${String(x.second.native)}), key "${String(x.second.pick)}": it loses ${(x.second.lost || []).map((l) => String(l).split(/: /)[0]).join('; ')}`] : [])])) }); }
+          .concat(x.second ? [`second option${x.second.chosen ? ' (chosen; the first is the closer one)' : ''}: ${String(x.second.label || x.second.native)} (${String(x.second.native)}), key "${String(x.second.pick)}": it loses ${(x.second.lost || []).map((l) => String(l).split(/: /)[0]).join('; ')}`].concat((x.second.needs || []).map((l) => 'second option, to turn on: ' + String(l))) : [])])) }); }
     else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
     // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click
     const nc = d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
@@ -558,6 +558,9 @@ function summaryOf(kind, data) {
   // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
   // is copied as it is
   if (kind === 'redesign') {
+    // (ST1, R4A-S4) a text setting in plain words: "font", "text size", "title font" (the visual's own property names
+    // are text-format.mjs's: fontFamily, fontSize, textSize, titleFontFamily, titleFontSize, bold, italic...)
+    const plainProp = (p) => { const s = String(p || ''), w = /family/i.test(s) ? 'font' : /size/i.test(s) ? 'text size' : /bold/i.test(s) ? 'bold' : /italic/i.test(s) ? 'italic' : s; return /^title/.test(s) && w !== s ? 'title ' + w : w; };
     const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
     const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
     // (0.3.0 T1, T-7: "moves from 40, 40, 700 x 640 to 40, 40, 704 x 640") a change of place or size, in words
@@ -589,7 +592,7 @@ function summaryOf(kind, data) {
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
     // (0.3.1 CS1) the one text set, before the changes
     if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [cut(x.what || TEXT_CLASSES[x.class] || 'text', 80), `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
-      .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(k.property, 30)}`, cut(k.why, 120)]),
+      .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(plainProp(k.property), 30)}`, cut(k.why, 120)]),
         (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(k.type, 40)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
     sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });

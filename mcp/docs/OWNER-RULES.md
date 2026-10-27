@@ -40,7 +40,7 @@ The owner wants this done fast without losing accuracy. So:
   descriptions. Analyse, then propose, then write; never execute anything automatically. Tool results return
   metadata only, never data values (the owner, 25 Oct: "never", as the product promises): everything a tool returns is sent to Claude.
 - **Judge from full-size crops**, never from a scaled-down page, and list everything visibly wrong under "Seen,
-  not in scope" (rule 9 in `mcp/CLAUDE.md`).
+  not in scope" (rule 10 in `mcp/CLAUDE.md`).
 - **Short reports, fixed shape:** what was done (commits), tests before → after, Desktop results per item, the one
   decision needed, "Seen, not in scope". No narration of each step.
 

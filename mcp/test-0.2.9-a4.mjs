@@ -74,6 +74,11 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
     let out = null, err = null; try { out = Rules.check(R, { groups: Rules.GROUPS }); } catch (e) { err = e; }
     chk(() => out && !err && out.findings.some((f) => f.rule === 'THEME_NAME') && (out.failed || []).length && out.failed.every((f) => f.rule && f.why),
       () => `A4-2: Rules.check isolates each rule (THEME_NAME still found, the failed rules named): ${err ? err.message : JSON.stringify(out && { failed: out.failed, rules: out.findings.map((f) => f.rule) })}`);
+    // (ST1, 0.2.9-checks-S1) THEME_NAME's fix says what was measured (DESKTOP_OPENS, 2026-10-10): Desktop opens it
+    const R2 = { ...R, pages: [{ id: 'p', name: 'P', w: 1280, h: 720, visuals: [] }], visuals: [], hasPlatform: true, theme: { ref: 'Glass.json', json: { name: 'Other' }, file: 'StaticResources/RegisteredResources/Glass.json' } };
+    let tn = null; try { tn = Rules.check(R2, { groups: Rules.GROUPS }).findings.find((f) => f.rule === 'THEME_NAME'); } catch (e) { tn = { err: e.message }; }
+    chk(() => tn && !/may not load/.test(JSON.stringify(tn)) && /Fabric/.test(JSON.stringify(tn)) && /Desktop opens it/.test(JSON.stringify(tn)),
+      () => `THEME_NAME's fix text matches the measurement (the validator and Fabric reject it, Desktop opens it): ${JSON.stringify(tn)}`);
   }
 
   // ---------- A4-3: "opens in Power BI Desktop" only when the validator ran offline and every file was read ----------
