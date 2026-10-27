@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // (I-2) one exam area's result row: under 70% (the percent as shown) a link to its section of Microsoft's study guide
   const domRow = (d, right, n) => {
     const p = n ? right / n : 0, pct = Math.round(p * 100), weak = n > 0 && pct < 70;
-    return '<div class="dp-domrow" data-dom="' + d + '"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (n ? pct + '%' : '·') + '</b></div>' + bar(p, pct >= 70 ? 'good' : 'warn') +
+    return '<div class="dp-domrow" data-dom="' + d + '"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (n ? pct + '%' : '·') + '</b></div>' + bar(p, pct >= 70 ? 'good' : 'warn') +
       (weak && DOM[d].study ? '<div class="dp-domsub"><a href="' + esc(DOM[d].study) + '" target="_blank" rel="noopener" data-learn data-study><i class="bi bi-book"></i> ' + L('Study: this area in Microsoft\'s study guide', 'ذاكر: هذا المحور في دليل المذاكرة من Microsoft') + '</a></div>' : '') + '</div>';
   };
 
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inProg = !!P.mock;
     const domRows = Object.keys(DOM).map((d) => {
       const s = stats(ALL.filter((q) => q.d === d));
-      return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (s.seen ? Math.round(s.acc * 100) + '%' : '·') + '</b></div>' + bar(s.acc * Math.min(1, s.seen / s.total * 1.6)) + '<div class="dp-domsub">' + L(num(s.seen) + ' of ' + num(s.total) + ' answered', 'أجبت ' + num(s.seen) + ' من ' + num(s.total)) + '</div></div>';
+      return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (s.seen ? Math.round(s.acc * 100) + '%' : '·') + '</b></div>' + bar(s.acc * Math.min(1, s.seen / s.total * 1.6)) + '<div class="dp-domsub">' + L(num(s.seen) + ' of ' + num(s.total) + ' answered', 'أجبت ' + num(s.seen) + ' من ' + num(s.total)) + '</div></div>';
     }).join('');
     root.innerHTML =
       (inProg ? '<div class="dp-resume"><span><i class="bi bi-hourglass-split"></i> ' + L('You have a mock exam in progress.', 'لديك اختبار تجريبي لم يكتمل.') + '</span><button type="button" class="btn btn-accent btn-sm" data-go="resume">' + L('Resume', 'متابعة') + '</button></div>' : '') +
