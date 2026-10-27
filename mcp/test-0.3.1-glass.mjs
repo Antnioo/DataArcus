@@ -145,9 +145,10 @@ try {
     chk(() => !c.err && cj.validator && cj.validator.ran && cj.validator.errors === 0 && cj.impact.kinds.canBreak.count === 0,
       () => `W4-${nm}. Microsoft's validator 0 errors and check_report 0 "can break": ${cut(c.err ? c.t : { v: cj.validator, k: cj.impact && cj.impact.kinds, f: (cj.findings || []).filter((f) => f.impact === 'canBreak' || f.severity === 'error').slice(0, 4) })}`);
   }
-  // a report without the look keeps the blank pixel (the page colour shows)
-  const plain = await s.call('generate_theme', { lang: 'en' });
-  chk(() => !plain.err && !(plain.j || {}).glass, () => 'G2. without the look generate_theme says nothing of glass');
+  // (GD1: glass is now the default, so the plain case asks for it: chart.look "auto"; the default in
+  // test-0.3.1-glass-default.mjs) the plain look says nothing of glass
+  const plain = await s.call('generate_theme', { lang: 'en', chart: { look: 'auto' } });
+  chk(() => !plain.err && !(plain.j || {}).glass, () => 'G2. with the plain look generate_theme says nothing of glass');
 } finally {
   await s.close();
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* the OS cleans its temp folder */ }

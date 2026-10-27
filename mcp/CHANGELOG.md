@@ -41,6 +41,12 @@ package's manifest; this file says what is in it.
   Tables and matrices in the glass look have no fill of their own: no solid rows, headers or totals, the picture
   shows through every cell, and a banded table's every other row is a faint tint; the grid lines stay as visible as
   on solid cards. On a dark page the cards' shadow is stronger, so it shows.
+- **Glass by default:** new reports and themes now start in the glass look: the Theme Generator opens on it,
+  generate_theme gives it, and every new report create_report writes has it, with the soft page picture behind every
+  page. It is used only where every text stays readable: with colours where it can't (a pale brand colour, say), the
+  report or theme is plain and the plan says why. The plain look is one choice away ("Plain" in the Theme Generator,
+  `chart.look: "auto"` or `"plain"` for the tools). A report you already have keeps its own look: a redesign, the
+  Arabic twin and the copy in English and Arabic don't change it.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click

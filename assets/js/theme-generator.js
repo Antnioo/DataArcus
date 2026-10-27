@@ -26,7 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE)); } catch (e) { state = null; }
   // an old or hand-edited save may be partial: each value that is not valid falls back to its default
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") a first visit, with nothing saved,
+  // opens on the glass look; a saved design keeps its own look (one saved without a look: plain, as it was made)
+  const firstVisit = !state || typeof state !== 'object';
   state = E.repairState(state);
+  if (firstVisit) state.chart = Object.assign({}, state.chart, { look: E.DEFAULT_LOOK });
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   // ---------- builders ----------
@@ -94,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
           ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${gl ? 'transparent' : i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
-      </div>${gl ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${L(`Glass: see-through cards (${gl.t}% transparency) over a soft page picture made from your colours. Power BI has no blur behind a visual: this preview draws what Power BI draws, and the report gets the same picture.`, `زجاجي: بطاقات شفافة (شفافية ${gl.t}%) فوق صورة صفحة ناعمة مصنوعة من ألوانك. لا يرسم Power BI ضبابية خلف المرئيات: هذه المعاينة ترسم ما يرسمه Power BI، والتقرير يأخذ الصورة نفسها.`)}</p>` : ''}`;
+      </div>${gl ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${L(`Glass: see-through cards (${gl.t}% transparency) over a soft page picture made from your colours. Power BI has no blur behind a visual: this preview draws what Power BI draws, and the report gets the same picture.`, `زجاجي: بطاقات شفافة (شفافية ${gl.t}%) فوق صورة صفحة ناعمة مصنوعة من ألوانك. لا يرسم Power BI ضبابية خلف المرئيات: هذه المعاينة ترسم ما يرسمه Power BI، والتقرير يأخذ الصورة نفسها.`)}</p>` : lookMsg ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${lookMsg}</p>` : ''}`;
   };
 
   const renderContrast = () => {
@@ -112,7 +116,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); updateStatus(); };
-  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
+  // (GD1) contrast is the gate: glass only where it keeps everything readable (the engine's glassFit); otherwise the
+  // page goes to Plain and the preview says why
+  let lookMsg = '';
+  const lookGate = () => {
+    if (!E.isGlass(state)) return;
+    const f = E.glassFit(state);
+    if (f.fits) { lookMsg = ''; return; }
+    state.chart = Object.assign(chart(), { look: 'auto' }); $('csLook').value = 'auto';
+    lookMsg = L('Plain look: with these colours the glass look can\'t keep every text readable, so the cards are solid. Choose other colours for glass.', 'شكل عادي: بهذه الألوان لا يُبقي الشكل الزجاجي كل النصوص مقروءة، لذا البطاقات مصمتة. اختر ألوانًا أخرى للشكل الزجاجي.');
+  };
+  const renderAll = () => { lookGate(); renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
   // Every font in the list is built into Power BI, but only some have Arabic letters: in an Arabic or
   // right-to-left report the others fall back to another font, so say so under the font picker.
   const AR_FONTS = E.AR_FONTS;
@@ -224,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('themeName').addEventListener('input', (e) => { state.name = e.target.value.slice(0, 60); renderJson(); save(); });
   $('font').addEventListener('change', (e) => { state.font = e.target.value; renderAll(); });
   Object.entries(CHART_INPUTS).forEach(([id, k]) => $(id).addEventListener('change', (e) => {
-    state.chart = Object.assign(chart(), { [k]: e.target.value }); renderAll(); track('theme_chart_style', { [k]: e.target.value });
+    state.chart = Object.assign(chart(), { [k]: e.target.value }); lookMsg = ''; renderAll(); track('theme_chart_style', { [k]: e.target.value });
   }));
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };

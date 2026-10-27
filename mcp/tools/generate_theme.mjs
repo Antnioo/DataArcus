@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { z } from 'zod';
 import { loadModel, visible, inside, nothingAt } from '../lib/model.mjs';
 import { folderSaid } from '../lib/plain-words.mjs';   // (0.3.1 R4A, T-9: the working folder by its path)
-import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook } from '../lib/design.mjs';
+import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook, lookFor, askedLook } from '../lib/design.mjs';
 import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
@@ -35,7 +35,7 @@ export function register(server, ctx) {
       preset: z.string().optional().describe(`A preset palette: ${Object.keys(PRESETS).join(', ')} (default DataArcus)`),
       font: z.string().optional().describe(`One of: ${FONTS.join(', ')}. For Arabic reports: ${AR_FONTS.join(', ')}`),
       chart: z.object({ labels: z.string(), grid: z.string(), legend: z.string(), axis: z.string(), table: z.string(), look: z.string() }).partial().optional()
-        .describe(`Chart style: ${Object.entries(CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" sits at the right in both directions. look "glass" (only when the user asks for a glass or frosted look): see-through cards (background transparency, a 1-pixel light border, a soft shadow) over a soft page picture create_report draws from the theme's colours; Power BI has no blur behind a visual, so never call it blur`),
+        .describe(`Chart style: ${Object.entries(CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" sits at the right in both directions. look: "glass" by default (left out), where it keeps every text readable (else plain, said in look and sayInPlan): see-through cards (background transparency, a 1-pixel light border, a soft shadow) over a soft page picture create_report draws from the theme's colours; Power BI has no blur behind a visual, so never call it blur. "auto" (or "plain"): the plain look, Power BI's own cards, when the user asks for it`),
       layout: z.object({ page: pageInput.optional(), radius: z.number().optional().describe('Corner radius 0-24 (default 8)'), shadow: z.boolean().optional(),
         transparent: z.boolean().optional().describe('Transparent visuals, for a background image with the panels'), dir: z.enum(['ltr', 'rtl']).optional() }).optional()
         .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
@@ -50,6 +50,8 @@ export function register(server, ctx) {
   }, safe(async (a) => {
     const m = a.path ? loadModel(a.path) : null, reportTheme = m ? existingTheme(m, a.themeFrom) : null;
     const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme }));
+    // (0.3.1 GD1) no look asked: the glass look, where it keeps everything readable (else plain, and why)
+    const look = lookFor(design, askedLook(a.chart), 'theme');
     const ref = m ? themeRef(m, a.path, reportTheme) : null;   // (R6, F07: null only for a theme made without a model)
     const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
     if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
@@ -58,7 +60,7 @@ export function register(server, ctx) {
     // what the plan says about the colours (0.2.9, O-11): light unless dark was asked, the brand exact, a failing check said
     const light = lum(design.ui.background) > 0.45, colours = { page: design.ui.background, visuals: design.ui.card, text: design.ui.text, accent: design.ui.accent, data: design.data, mode: light ? 'light' : 'dark' };
     const sayInPlan = (fromReport ? `${fromReport.sayInPlan} ` : '') + `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
-      (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '');
+      (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '') + ` ${look.sayInPlan}`;
     // (0.3.1 GL1) the glass look: what it is made of, its transparency and the worst cases, in one line for the plan
     const glass = isGlass(design) ? (() => { const g = glassLook(design), r = (x) => (Math.floor(x * 10) / 10).toFixed(1), at = (id) => r(g.checks.find((c) => c.id === id).ratio);
       return { transparency: g.t, asked: g.asked, border: g.rim, tables: g.table, shadow: design.layout.shadow ? g.shadow : null, labels: g.labels, picture: { mode: g.mode, darkest: g.image.darkest, lightest: g.image.lightest }, checks: g.checks,
@@ -68,7 +70,7 @@ export function register(server, ctx) {
       // (0.3.1 AF2, the release audit's F09) the file's name chosen now (the first free one; nothing made) and kept with the
       // plan: the write writes that name or nothing
       const base = freeName(a.folder, fileBase(design.name), '.json');
-      return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
+      return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
         plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" ${a.folder ? `in the folder "${visible(String(a.folder).replace(/[\\/]+$/, ''))}"` : `in ${folderSaid('.')}`} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
           // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
           outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], outputsAt: '.', file: base, colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
@@ -81,6 +83,6 @@ export function register(server, ctx) {
       if (!name) throw new Error(`Nothing was written: plan ${a.planId} names no theme file. Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
       if (!nothingAt(path.join(inside(a.folder || '.'), name))) throw new Error(`Nothing was written: "${name}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call generate_theme without planId), show it to the user and wait for their go.`);
       const made = [], f = path.join(folderFor(a.folder, made), name); writeFileNew(f, JSON.stringify(buildTheme(design, a.lang), null, 2), { madeDirs: made }); noteWritten(f); return f; });
-    return text({ path: file, file: path.basename(file), page, colours, sayInPlan, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
+    return text({ path: file, file: path.basename(file), page, colours, sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
   }));
 }

@@ -5,9 +5,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// (0.3.1 GD1) the design the Theme Generator saved on a first visit before glass became its default (visitor's plainDesign)
+const PLAIN_DESIGN = JSON.stringify(createRequire(import.meta.url)('../../assets/js/design-engine.js').repairState(null));
 
 // (SQ15c, Q1-S5: a report, never a gate) DA_WEB_COVERAGE=<folder> (scripts/coverage-web.mjs sets it): every page a test
 // opens records Chromium's JS coverage (page.coverage) from its first script to its close; the engines' entries
@@ -80,9 +83,12 @@ export const pages = () => {
 /**
  * A fresh visitor. Options: viewport [w, h], timezone, consent ('denied' | 'granted' | null for a first visit),
  * downloads (true to accept file downloads), motion ('reduce' for visitors who turn animations off).
+ * plainDesign (default true; 0.3.1 GD1): the Theme Generator's first visit opens on the glass look, so a visitor starts
+ * with the design the page saved on a first visit before that (E.repairState(null): no look, plain), the path the
+ * website's suites were written for; false for a true first visit (theme-generator.mjs, GD1).
  * Returns { ctx, pg, errs, hits } — errs collects page errors and console errors, hits counts analytics requests.
  */
-export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference' } = {}) {
+export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference', plainDesign = true } = {}) {
   const ctx = await browser.newContext({ viewport: { width: viewport[0], height: viewport[1] }, timezoneId: timezone, acceptDownloads: downloads, reducedMotion: motion });
   // opening a page on a busy machine can take longer than Playwright's default 30 s
   ctx.setDefaultNavigationTimeout(120000);
@@ -99,6 +105,7 @@ export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asi
   await ctx.addInitScript(() => { window.__scrolling = false;
     document.addEventListener('scroll', () => { window.__scrolling = true; }, { passive: true });
     document.addEventListener('scrollend', () => { window.__scrolling = false; }); });
+  if (plainDesign) await ctx.addInitScript((d) => { try { if (!localStorage.getItem('dataarcus-theme-generator')) localStorage.setItem('dataarcus-theme-generator', d); } catch (e) { /* ignore */ } }, PLAIN_DESIGN);
   if (consent) await ctx.addInitScript((c) => { try { if (!localStorage.getItem('dataarcus-consent')) localStorage.setItem('dataarcus-consent', c); } catch (e) { /* ignore */ } }, consent);
   const pg = await ctx.newPage();
   if (COVERAGE) {

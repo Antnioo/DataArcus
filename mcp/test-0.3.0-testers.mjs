@@ -97,7 +97,9 @@ try {
     chk(() => !/a small text file that/i.test(H) && !(repPlan.j.plan || {}).scriptIs, () => 'T4-1 (guard). a plan that writes no script says nothing about scripts');
     // T-6 (it-reviewer / exec-report): "...executive-report-background.png" listed, then "There is no background image."
     const png = written.find((r) => /-background\.png$/.test(r));
-    chk(() => png && /Page background[^.]*blank/i.test(H), () => `T6-1. the blank page background is listed as what it is (blank, see-through): ${png} | ${H.slice(H.indexOf('Images') - 50, H.indexOf('Images') + 200)}`);
+    // (0.3.1 GD1: a new report is in the glass look by default, its page background the look's soft picture; the blank
+    // background of the plain look is checked in test-0.3.1-glass-default.mjs, R2-plain)
+    chk(() => png && /Page background[^.]*glass look's soft picture/i.test(H), () => `T6-1. the page background is listed as what it is (the glass look's soft picture): ${png} | ${H.slice(H.indexOf('Images') - 50, H.indexOf('Images') + 200)}`);
     const panels = repOut.j && String(repOut.j.panels || '');
     chk(() => panels && !/There is no background image\./.test(panels) && /blank/.test(panels), () => `T6-2. the write answer agrees with the page (a blank background file, no picture): ${panels}`);
     // T-7 (beginner / nice-report): "...to check and fingerprint them, and never returns data values to Claude."
