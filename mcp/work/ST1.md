@@ -22,7 +22,7 @@
   M1-S1/S2/S3); TT1-S1 (the website's Arabic download keeps English titles: L, the owner's scope call). Below.
 - **Tests:** before: 105 suites (GD1's full run on ac296cc3; my own baseline run was cut at 30 min after 24 suites, all
   PASS). After: see "Before -> after" (the full-run line at the end).
-- **Resume:** done when the full-run line is written; the reviewer: STOP-GAP briefs, the owner's lists below.
+- **Resume:** done (full run on 381b264a: 105 suites passed); the reviewer: STOP-GAP briefs, the owner's lists below.
 
 ## The count (how)
 - Every note in `mcp/work/` (and `archive/WORK-*`, as the queue did) with a "Seen, not in scope" part.
@@ -199,6 +199,9 @@ FIXED-SINCE (fixed since 25 Oct, for example A3-S2 by TT1 8ddfe11) or SF1. Its 1
 - Tests changed on purpose: v029i's first month-list check drops `/AR_MONTHS/.test(twin)` (it passed on the dead line
   removed; the new check says the twin keeps no list); large-model-caps' label text. Nothing else.
 - `npm run lint`: exit 0 on 381b264.
+- Full run, MCP: 105 suites before (GD1's run on ac296cc3) -> 105 after (no suite added; checks added inside them).
+
+Full run on 381b264a: "run-tests: 105 suites passed"
 
 ## Seen, not in scope
 1. The `no-unused-vars` lint did not flag twin-model.mjs's MONTHS_AR because of an eslint-disable line written for it.
