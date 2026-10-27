@@ -13,8 +13,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass the default), GD2 (the twin identical in glass; glass
   previews), [ST1](work/ST1.md) (every Seen item swept: its register is what is left),
   [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0).
-- Running: TS1 (FHD text x 1.25), TW1 (the rest of the twin identical), TT2 (Arabic names
-  on the website's download), then LC1 (the layout preview after the fit).
+- Done, waits for the reviewer: [TS1](work/TS1.md) (FHD text x 1.25; S10's gap). Running: TW1 (the rest of the twin
+  identical), TT2 (Arabic names on the website's download), then LC1 (the layout preview after the fit).
 
 ## Next step
 1. The reviewer merges TS1, TW1, TT2, then LC1 (after TS1); then the final full run and two identical dry builds.
