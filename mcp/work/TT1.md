@@ -20,8 +20,7 @@
   core: the baseline's suites + tt1; golden 12 match (titles said); theme-generator = base; full run: base + 1 suite.
 - **Got:** tt1 24 (22 red first on e2236be) then 28 with the refinement; arabic-titles 27 = 27, story-titles 94 = 94,
   sq15b 25 = 25, pbip 109 = 109, mcp 1591 = 1591, golden 12 match (4 titles changed); full run: 99 suites passed.
-- **Resume:** done; waits for the reviewer. Merge note: BD2 changes text-measure.js's isolate rule; isolateWhole sits
-  beside isolateLatin there and should follow V3 when BD2 lands (one function, every title takes it).
+- **Resume:** done; integration/0.3.1 (88ee4df, BD2's V3) merged in, below; waits for the reviewer.
 
 ## Plan (written first, f4c836e; the refinement added steps 9-10)
 1. story-titles.js: in an Arabic report both fields named in Arabic when both have an Arabic text (given or the model's),
@@ -67,6 +66,24 @@ sitemap-lastmod, check-result-lines, changelog-words, check-agent-memory PASS.
 Full run `npm test -- --keep-going` on 9164ec0: "run-tests: 99 suites passed" (the base's 98 + tt1; mutation 73 killed).
 The first full run on 043be5d had 2 of 99 red (twin-complete TC-3g, arabic-sweep F3/F5: English runs of whole English
 titles the plan did not list); fixed in 9164ec0 (the plan lists a Top-N title's lead form too; the checks moved).
+
+## Merged with integration/0.3.1 (88ee4df: BD2, GL2, CS2, R4A), 27 Oct, the reviewer's ask
+Both rules hold. **BD2's V3 is the shared rule** (each Latin run isolated, the whole Arabic text wrapped in U+2067 ...
+U+2069); `isolateWhole` is that rule with the whole English title as its one run (`wrap(ends(FSI + title + PDI))`:
+U+2067 U+200F U+2068 title U+2069 U+200F U+2069), in text-measure.js beside isolateLatin; every title, alt text, twin
+title and Top-N title measure takes its marks from it, none spelled out in code. pbip-export.js keeps BD2's DAX
+part/wrap and TT1's whole-title pass (an English Top-N text carries isolateWhole's marks in its first and last literal,
+so BD2's run-time wrap does not wrap it twice). **The one-language rule** is unchanged: Arabic titles, drafted and
+approved; a kept English name makes that whole title English; never mixed.
+Tests both touched, each saying both rules: test-0.2.9w A3-11 (BD2's U+2067 allowed; a title or alt text isolated whole
+allowed), sq15b T2 (U+2067 first, then U+200F and the isolate), pbip.mjs LR2-a3 (an English title one run inside BD2's
+wrap), bd2 K/D (its Arabic build shows approved Arabic names, one with a Latin run, «إجمالي مبيعات KPI»: the mixed text
+TT1 still writes, each V3; English names would now give English titles and no mixed text). tt1 E9, round22 e/h and
+test.mjs's KPI sweep compare with isolateWhole instead of spelled-out marks. ?v= `20261027tt2` (text-measure,
+story-titles, pbip-page, pbip-export in the builder list; theme-generator.min.js on its three pages); build:min,
+ar-pages --write, csp --write; tests.json keeps tt1 and cs2.
+Touched suites on the merge: bd2 33, sq15b 25, arabic-titles 27, twin-complete 24, cs2 29, tt1 28, test.mjs shards
+33 + 584 + 634 + 339; lint 0 problems.
 
 ## CHANGELOG line
 - **Arabic reports get Arabic titles, never half Arabic, half English:** in an Arabic report every chart title is Arabic («إجمالي المبيعات حسب المنطقة»). A field with no Arabic name yet is listed in the plan for an Arabic name to be drafted and approved before anything is written; nothing is translated without your approval. A title stays English only for a field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English); the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence only for a measure with an Arabic name (its leader is a value from your data, shown as it is).

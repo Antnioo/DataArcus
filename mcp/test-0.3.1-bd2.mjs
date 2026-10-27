@@ -46,8 +46,13 @@ const V1 = { start: RLM + FSI + 'Department' + PDI + ': عدد الأوامر ف
 }
 
 // ---------- K: each kind through the writer (the website's Arabic download on a model with English names) ----------
-const M = (m) => ({ t: 'Sales', m, name: m }), C = (c, extra) => Object.assign({ t: 'Sales', c, name: c }, extra || {});
-const site = (lang) => { const d = E.fresh(); E.repairState(d); const pages = E.projectPages(d.layout, lang, { second: true, panel: false });
+// (changed 27 Oct 2026, 0.3.1 TT1, the owner's rule: a title is wholly Arabic or wholly English, so English names give
+// English titles and no mixed text; the Arabic build here shows its fields under approved Arabic names, one with a Latin
+// run, «إجمالي مبيعات KPI», the mixed text TT1 still writes: each title, alt text and header that holds it is V3)
+const AR_NAME = { 'Total Sales': 'إجمالي مبيعات KPI', Orders: 'الطلبات', Region: 'المنطقة', Month: 'الشهر' };
+let LANG = 'en';
+const M = (m) => ({ t: 'Sales', m, name: LANG === 'ar' ? AR_NAME[m] || m : m }), C = (c, extra) => Object.assign({ t: 'Sales', c, name: LANG === 'ar' ? AR_NAME[c] || c : c }, extra || {});
+const site = (lang) => { LANG = lang; const d = E.fresh(); E.repairState(d); const pages = E.projectPages(d.layout, lang, { second: true, panel: false });
   return Pbip.build({ name: 'Own', title: 'Own Sales', pageName: pages[0].name, lang, rtl: lang === 'ar', ...(lang === 'ar' ? { chartAxes: 'mirrored' } : {}), font: d.font, sample: false, logo: null, theme: E.buildTheme(d, lang), ui: d.ui, texts: E.REPORT_TEXTS[lang],
     model: { byPath: 'T.SemanticModel' }, bind: { kpis: [M('Total Sales'), M('Orders')], measure: M('Total Sales'), date: C('Month', { sortBy: { t: 'Sales', c: 'Month Number' } }), cats: { bar: C('Region'), column: C('Region') }, y: {}, table: [C('Region'), M('Total Sales'), M('Orders')], slicers: [C('Region')],
       tip: { card: M('Total Sales'), cat: C('Region'), y: M('Orders'), date: C('Month', { sortBy: { t: 'Sales', c: 'Month Number' } }) } },
@@ -73,7 +78,7 @@ function texts(r) {
   const all = ar.files ? texts(ar) : [], mixed = all.filter((t) => TM.ARABIC.test(t.s) && /[A-Za-z]/.test(t.s.replace(MARKS, '')));
   const kinds = (re) => mixed.filter((t) => re.test(t.where));
   chk(() => mixed.length > 5 && mixed.every((t) => V3(t.s)), () => `K1. every mixed Arabic/Latin text of the Arabic download is wrapped whole (V3): ${cut(ar.threw || mixed.filter((t) => !V3(t.s)).slice(0, 4).map((t) => t.where + ' ' + cps(t.s)))}`);
-  chk(() => kinds(/:text$/).length && kinds(/:altText$/).length, () => `K2. guard: titles and alt texts among them (the headers are English names alone here: K5): ${cut([...new Set(mixed.map((t) => t.where))])}`);
+  chk(() => kinds(/:text$/).length && kinds(/:altText$/).length, () => `K2. guard: titles and alt texts among them (the other kinds: K5): ${cut([...new Set(mixed.map((t) => t.where))])}`);
   chk(() => mixed.every((t) => TM.isolateRuns && t.s === RLI + TM.isolateRuns(t.s.slice(1, -1)) + PDI), () => `K3. inside the wrap, V1's isolates kept: ${cut(mixed.slice(0, 2).map((t) => cps(t.s)))}`);
   // the kinds a build on English names has no mixed text in: a text box run, a button's text, a table or slicer header, a
   // tooltip's text, a page name, a bookmark: through the writer's own pass (isolateFiles, as report-run and the download call it)
