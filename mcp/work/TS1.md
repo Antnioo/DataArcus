@@ -18,8 +18,10 @@
   suites: every changed number said below; run-all design-engine, theme-generator, pbip; full run +1 suite, all PASS.
 - **Got:** every expected number above, measured (ts1 T2, T4, T5; the lab's written report: column 168 high at y 249,
   the table and bar chart from y 435, EN and AR). ts1 red on d6d3159 first (16 of 24), now 25 PASS. Tests moved on
-  purpose: 8 (below). Lab: validator 0, "can break" 0, EN and AR.
-- **Resume:** done after the full run line below; waits for the reviewer, then the laptop ("For the laptop").
+  purpose: 13 (below), none losing a check. Lab: validator 0, "can break" 0, EN and AR.
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
+
+Full run on 55d997c: "run-tests: 108 suites passed"
 
 ## The plan
 1. `FHD_TEXT = 1.25` (the owner's D-1027-16, Codex's review) in the theme's text block of design-engine.js. The text
@@ -57,7 +59,8 @@
    and create_report on 1080 write 12.5 / 15 / 35; redesign copies the original theme's text classes (restyle changes
    colour tokens only), the twin reads the original's theme. A 0.3.0 theme for 1080 has exactly the sizes of a new
    theme for about 1440, so create_report reads it as such and scales it to its pages (x 0.83 on 1080), and says so.
-4. **Tests:** ts1 (new, 25 checks, red first on d6d3159: 16 of 24; T6 added after, for the lab). Moved on purpose:
+4. **Tests:** ts1 (new, 25 checks, red first on d6d3159: 16 of 24; T6 added after, for the lab). Moved on purpose (none loses a
+   check):
    - scripts/tests/design-engine.mjs: the top rail from 64 -> 58 on 1080 (above); its fixtures cases.json and
      project-pages.json remade: compared leaf by leaf, only fontSize/textSize change (15 -> 12.5, 18 -> 15, 27 -> 22.5,
      42 -> 35), and one background (page-out-of-range-plain, 3840 x 2160: the S10 reflow applies, its chart 231 -> 113
@@ -71,6 +74,16 @@
    - test-0.2.9i.mjs P3-3: the measured rows (134.2 / 130.2 + 30N, at 15pt) checked on 2560 x 1440, whose text is
      15 / 18 as 1080's was (the numbers unchanged).
    - test-0.3.1-sq13.mjs S10: [392, 308, 329, 245, 197] -> [..., 18].
+   - test-0.3-preview-fidelity.mjs F-01/F-02: the dense page's ~508 titles fit one line at 15pt now: the wrap is
+     checked with a long title (2 lines at 20 = 15pt), every title takes the lines the writer's measure gives it, and
+     the plot moves by about one line (25-34 for a 30 line; was 30-40 for 36).
+   - test-0.3-story-titles.mjs ST-6b: the Arabic ops report on the dense variant (6 KPIs, filters at the start), where
+     a title is still shortened; 94 = 94 checks.
+   - test-0.3.1-glass-tables.mjs N1/N2: the base engine's (cba24a5) sizes mapped by x 1.25 on 1080 (15 -> 12.5,
+     18 -> 15, 27 -> 22.5, 42 -> 35), the rest byte for byte as before.
+   - test-0.3.1-sq1.mjs B: its theme made for 2560 x 1440 (= the old 15pt text): every number as it was.
+   - test-0.3.1-twin-preview.mjs V1-5: the fixture's filters at the start (narrower charts), so the 200-character
+     planted title is again too long for two lines at 15pt.
    - golden: tasks 1, 2, 7, 10, 12 tableText (the theme's 15 -> 12.5; a table fitted to its rows 13 -> fits at 12.5),
      task 6 longTitleUses 120 -> 124 (the long Arabic name whole in 4 more places at 15pt titles); each in "why".
 5. **S10** REFLOW_KEEP 0.5 -> 0.45: the second page's 197 gap -> 18 (one row gap); the column chart 347 -> 168 high
@@ -126,6 +139,8 @@ ts1 T2 (the numbers), the lab's written report (168, 435).
 
 ## Lessons for the reviewer
 - `pkill -f run-tests.mjs` matched my own shell's command line and killed it: stop a background run by its task id.
+- My exploratory full run was cut short (I stopped it), so five suites past test.mjs (fidelity, story-titles,
+  twin-preview, sq1, glass-tables) showed up only in the first real full run: let an exploratory run finish.
 - theme-generator's "new visitor: page size" check failed once while a full run ran beside it, passed alone (base and
   branch): the site suites are flaky under load; run them alone.
 - The design engine's fixtures say "remade only with the owner's approval": D-1027-16 is that approval here; the
