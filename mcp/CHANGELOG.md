@@ -10,6 +10,14 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **The Arabic twin matches the English report more closely:** text boxes keep the panel they have on the English
+  pages. A table that starts with a text column keeps its total row word: it is written as create_report writes its
+  Arabic tables, «الإجمالي» on the total row through a report measure the plan names. A chart on a whole-number axis
+  runs right to left as create_report's does, and a phone card title wraps its Arabic text by the same rule as
+  create_report. Also: the website's glass preview draws its table clear with banded rows, a plan from a theme with
+  see-through visuals now says the new report is glass, the preview of an Arabic plan turns its time charts, a filter
+  slot higher than wide never puts a slicer below its bottom (what does not fit is named), and the bullet bar says
+  when a measure's target in the model is an expression.
 - **No option dropped without a word:** `consistentText`, `keepPositions`, `titles` and `restyle` work on a redesign
   only. Given with a native copy of custom visuals or a new report, they were ignored, so a native copy asked "with
   consistent text" kept each visual's own fonts. Now the plan says so and names the way: write the native copy, then

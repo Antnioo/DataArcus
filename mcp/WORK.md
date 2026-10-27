@@ -13,7 +13,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 - 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass the default), GD2 (the twin identical in glass; glass
   previews), [ST1](work/ST1.md) (every Seen item swept: its register is what is left),
   [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0).
-- Running: TS1 (FHD text x 1.25), TW1 (the rest of the twin identical), TT2 (Arabic names
+- Running: TS1 (FHD text x 1.25), [TW1](work/TW1.md) (the twin identical: done, for the merge), TT2 (Arabic names
   on the website's download), then LC1 (the layout preview after the fit).
 
 ## Next step
