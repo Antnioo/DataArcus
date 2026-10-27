@@ -24,7 +24,7 @@
   proposeArabic checks the same counts; full run: the base's suites + 1 (tt2).
 - **Got:** tt2 13 (13 of 13 red on 13afb3a first); arabic-names 14 (12 of 14 red on 13afb3a first: W7 is the pin of the
   English download, W8 the no-step guard, both green there by design); pbip 111 = 111; theme-generator-lab 920 = 920;
-  tt1 28 = 28, lr1 18 = 18; npm test arabic 15 suites; lint 0; full run: below.
+  tt1 28 = 28, lr1 18 = 18; npm test arabic 15 suites; lint 0; full run: 108 suites (the base's 107 + tt2).
 - **Resume:** done; waits for the reviewer (the full-run line below, then CI on the branch).
 
 ## Plan
@@ -43,7 +43,10 @@
 7. build:min, ?v= stamps, csp, ar-pages, sitemap; suites; full run; CI.
 
 ## Results
-Commits: plan d6152c4, red first a89c230 (re-pinned 126fc8e), the work c3e0cb8, CHANGELOG and this note (next).
+Full run on 9956958: "run-tests: 108 suites passed"
+(the base's 107 + tt2; website suites on the same code: arabic-names 14, pbip 111, theme-generator-lab 920.)
+
+Commits: plan d6152c4, red first a89c230 (re-pinned 126fc8e), the work c3e0cb8, CHANGELOG and the note 9956958 (the full run's commit), this line (next).
 
 | Before (13afb3a) | After |
 |---|---|
