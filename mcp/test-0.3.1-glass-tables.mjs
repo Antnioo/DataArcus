@@ -70,7 +70,7 @@ for (const preset of Object.keys(E.PRESETS)) {
   const min = E.contrast(R.grid, u.card), gridOk = (x) => x.every((b) => E.contrast(tb.grid, b) >= min - 0.005);
   chk(() => tb.grid && gridOk(bases) && gridOk(bands) && bands.every((b) => E.contrast(u.text, b) >= 4.5),
     () => `C2-${preset}. over the darkest and the lightest pixel: text on the band 4.5:1, the grid lines at least their solid ${min.toFixed(2)}:1: ${cut(tb)}`);
-  chk(() => tb.bandAlpha >= 0 && tb.bandAlpha <= 8 && (tb.bandAlpha === 8 || (() => { const b2 = bases.map((b) => E.mix(b, u.accent, (tb.bandAlpha + 1) / 100)); return !(b2.every((b) => E.contrast(u.text, b) >= 4.5) && gridOk(b2)); })()),
+  chk(() => tb.bandAlpha >= 0 && tb.bandAlpha <= 8 && (tb.bandAlpha === 8 || (() => { const b2 = bases.map((b) => E.mix(b, u.accent, (tb.bandAlpha + 1) / 100)); return !(b2.every((b) => E.contrast(u.text, b) >= 4.5 + E.GLASS.margin) && gridOk(b2)); })()),
     () => `C3-${preset}. the band's transparency raised only as far as needed (alpha 8% asked): ${cut(tb)}`);
   chk(() => tb.band === u.accent + Math.round(tb.bandAlpha * 2.55).toString(16).padStart(2, '0'), () => `C4-${preset}. the band is the accent at its alpha: ${cut(tb)}`);
 }

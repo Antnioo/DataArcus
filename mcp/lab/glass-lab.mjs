@@ -5,7 +5,9 @@
 // data), four reports written through the tools as a person would (generate_theme with chart.look "glass" ->
 // plan_layout -> approve -> create_report): "Glass EN light", "Glass EN dark", "Glass AR light", "Glass AR dark", each
 // with its two report pages (KPI cards, line, bar and column charts, a table, dropdown slicers, the page and Reset
-// buttons) and three variant pages, each variant labelled above its row, outside the visuals:
+// buttons) and three variant pages, each variant labelled above its row, outside the visuals. (GL2, 27 Oct) Tables and
+// matrices keep no fill of their own (clear cells); "Glass EN dark" and "Glass AR light" ask Chart style table "banded",
+// so the laptop sees the faint tint on every other row too:
 //   "Variants: transparency"  the cards at 20, 35 (shipped) and 50% (the contrast floor may lower a value: the label says
 //                             what was written)
 //   "Variants: corners"       radius 0, 8 (shipped) and 16 on the 720 grid (x 1.5 on this 1920 x 1080 page)
@@ -69,9 +71,9 @@ export async function writeLab(out) {
   const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
   const made = [];
   try {
-    for (const [lang, mode] of [['en', 'light'], ['en', 'dark'], ['ar', 'light'], ['ar', 'dark']]) {
+    for (const [lang, mode, table] of [['en', 'light', 'auto'], ['en', 'dark', 'banded'], ['ar', 'light', 'banded'], ['ar', 'dark', 'auto']]) {
       const name = `Glass ${lang.toUpperCase()} ${mode}`;
-      const gt = await s.call('generate_theme', { chart: { look: 'glass' }, mode, lang });
+      const gt = await s.call('generate_theme', { chart: { look: 'glass', table }, mode, lang });
       if (gt.err) throw new Error('generate_theme: ' + gt.t.slice(0, 300));
       let args = Object.assign({ path: 'glass/Glass Shop.SemanticModel', lang, layout: 'exec', filters: 'top', secondPage: true, name, design: gt.j.design, planFields: FIELDS }, lang === 'ar' ? { displayNames: AR_NAMES } : {});
       let pl = await s.call('plan_layout', args);
@@ -92,7 +94,7 @@ export async function writeLab(out) {
       if (r.err) throw new Error('not written: ' + r.t.slice(0, 400));
       const design = pl.j.design, g = E.glassLook(design), variants = addVariants(path.join(ROOT, ...r.j.open.split('/').slice(0, -1), name + '.Report'), design, g, lang);
       const c = await s.call('check_report', { path: r.j.open }), cj = c.j || {};
-      made.push({ name, pbip: path.join(ROOT, ...r.j.open.split('/')), look: { transparency: g.t, asked: g.asked, rim: g.rim, shadow: g.shadow, checks: g.checks.map((x) => `${x.id} ${x.ratio.toFixed(2)}:1`) }, variants,
+      made.push({ name, pbip: path.join(ROOT, ...r.j.open.split('/')), look: { transparency: g.t, asked: g.asked, rim: g.rim, shadow: g.shadow, tables: g.table, checks: g.checks.map((x) => `${x.id} ${x.ratio.toFixed(2)}:1`) }, variants,
         validator: c.err ? c.t.slice(0, 200) : cj.validator && cj.validator.errors, canBreak: cj.impact && cj.impact.kinds.canBreak.count, gt: gt.j.glass && gt.j.glass.sayInPlan });
     }
   } finally { await s.close(); }
@@ -151,6 +153,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     made.forEach((m) => {
       console.log(`Open in Power BI Desktop: ${m.pbip}`);
       console.log(`  the look: ${m.look.transparency}% transparency (asked ${m.look.asked}%), rim ${m.look.rim}, shadow ${JSON.stringify(m.look.shadow)}; worst cases ${m.look.checks.join(', ')}`);
+      console.log(`  tables and matrices: cells ${m.look.tables.clear} (clear)${m.look.tables.band ? `, every other row ${m.look.tables.band} (${m.look.tables.bandAlpha}%)` : ''}, grid lines ${m.look.tables.grid}`);
       console.log(`  variant rows: ${m.variants.length}; Microsoft's validator errors: ${m.validator}; check_report "can break": ${m.canBreak}`);
     });
     console.log(`The plan's words (EN light): ${made[0].gt}`);

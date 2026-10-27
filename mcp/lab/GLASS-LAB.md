@@ -15,7 +15,8 @@ From `mcp/`, with an empty folder (made-up data only; nothing outside the folder
 node lab/glass-lab.mjs C:\DataArcus\tests\glass-lab
 ```
 
-It prints four `.pbip` files: `Glass EN light`, `Glass EN dark`, `Glass AR light`, `Glass AR dark`. Each has:
+It prints four `.pbip` files: `Glass EN light`, `Glass EN dark`, `Glass AR light`, `Glass AR dark` (the two middle ones
+with Chart style table "banded": every other row a faint tint; GL2, [mcp/work/GL2.md](../work/GL2.md)). Each has:
 - its two report pages as `create_report` writes them with the look (KPI cards, line, bar and column charts, a table,
   dropdown slicers, the page and Reset buttons), the soft picture behind every page;
 - three variant pages, each row labelled above it, outside the visuals (a KPI card, the bar chart, the table and a
@@ -37,7 +38,12 @@ lab-tools harness (`harness.ps1`, the laptop's builder scripts), at full size.
 4. Which shadow reads best (none / soft / strong); on a dark page whether the soft one shows at all.
 5. Whether the rim reads (white on light; the card lightened 25% on dark).
 6. The KPI card visual, the table and the matrix: are their cells see-through, or does an inner fill of their own
-   cover the look (a card visual's own background, a table's value background)?
+   cover the look (a card visual's own background, a table's value background)? (GL2) The table and the matrix: no
+   solid row anywhere (values, alternate rows, column and row headers, totals): the picture shows through every cell,
+   the text readable, the grid lines visible; on "Glass EN dark" and "Glass AR light" every other row a faint tint
+   (6% and 4% as the contrast left it), not a solid colour. If Desktop draws a clear fill (alpha 00) as solid or
+   black, say so: the theme's colours carry alpha (#RRGGBBAA, the theme schema's pattern) because these cards have
+   no transparency of their own.
 7. The slicers and buttons sit straight on the picture (no card of their own): readable?
 8. Arabic: the same, mirrored; the labels above the rows at the right.
 

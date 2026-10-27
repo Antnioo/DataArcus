@@ -614,6 +614,7 @@
       // (GL1) glass cards keep their table cells see-through: no back colour, which would be solid
       if (c.look !== 'glass') add(['tableEx', 'pivotTable'], 'values', { backColorPrimary: { solid: { color: u.card } }, backColorSecondary: { solid: { color: c.table === 'banded' ? mix(u.card, u.accent, 0.08) : u.card } } });
     }
+    if (c.look === 'glass') glassTables(glassLook(d).table).forEach(([types, card, props]) => add(types, card, props));
     return out;
   };
   // Adds the chart style cards into the per-visual entries built above (tables already carry text sizes there)
@@ -655,8 +656,9 @@
   // reaches into the page colour at its centre (lowered until the page's text holds); fields: [x, y (0-1 of the page),
   // radius (of the page's height), the colour: data colour 1-3 or the accent]; the shadow at 1080 high, scaled with the
   // page; grid: the samples the contrast is checked on (the picture is the same at any size). To be picked from the
-  // laptop's lab (mcp/lab/GLASS-LAB.md): t, the rim, the shadow.
-  const GLASS = { t: 35, max: 60, strength: { light: 0.42, dark: 0.55 }, fields: [[0.1, 0.15, 0.55, 0], [0.9, 0.22, 0.6, 1], [0.6, 1, 0.65, 2], [0.02, 0.98, 0.45, 'accent']],
+  // laptop's lab (mcp/lab/GLASS-LAB.md): t, the rim, the shadow. band: the alpha (%) of a banded table's alternate rows
+  // (GL2: the solid look's 8% of the accent), raised in transparency until the text and the grid lines stand on it.
+  const GLASS = { t: 35, max: 60, band: 8, strength: { light: 0.42, dark: 0.55 }, fields: [[0.1, 0.15, 0.55, 0], [0.9, 0.22, 0.6, 1], [0.6, 1, 0.65, 2], [0.02, 0.98, 0.45, 'accent']],
     shadow: { light: { transparency: 85, blur: 18, distance: 4 }, dark: { transparency: 55, blur: 18, distance: 4 } }, grid: [192, 108], margin: 0.02 };
   const isGlass = (d) => !!(d && d.chart && d.chart.look === 'glass');
   // the picture's pixels (RGB, 8 bits, rows top to bottom) at w x h for colours cc ({ ui, data }) at strength s: each
@@ -688,7 +690,7 @@
   // picture (the strength lowered until it does). opt.t: another transparency to ask (the lab's variants).
   const glassLook = (d, opt) => {
     const cc = colours(d), u = cc.ui, l = (d && d.layout) || {}, asked = Math.max(0, Math.min(GLASS.max, Math.round(opt && opt.t != null ? +opt.t : GLASS.t)));
-    const key = JSON.stringify([u, cc.data, page(l).h, asked]);
+    const banded = !!(d && d.chart && d.chart.table === 'banded'), key = JSON.stringify([u, cc.data, page(l).h, asked, banded]);
     if (glassCache.has(key)) return glassCache.get(key);
     const light = lum(u.background) > 0.45, R = roles(u), [gw, gh] = GLASS.grid, mg = GLASS.margin;
     let s = light ? GLASS.strength.light : GLASS.strength.dark, ends = null;
@@ -704,10 +706,22 @@
     const pairs = [['textOnGlass', u.text, 4.5], ['labelsOnGlass', labels, 4.5], ['color1OnGlass', cc.data[0], 3]];
     let t = asked; while (t > 0 && !pairs.every(([, fg, min]) => over(t, fg) >= min + mg)) t--;
     const k = page(l).h / 1080, sh = light ? GLASS.shadow.light : GLASS.shadow.dark;
-    const checks = pairs.map(([id, fg, min]) => ({ id, ratio: over(t, fg), min })).concat([{ id: 'textOnPicture', ratio: Math.min(contrast(u.text, ends.darkest), contrast(u.text, ends.lightest)), min: 4.5 }])
+    // (GL2) tables and matrices keep no fill of their own (glassTables): their cells are the glass card. The grid lines
+    // stand at least what they stand on the solid card, darkened towards the text (steps of 0.05) until they do over
+    // the glass; a banded table's alternate rows: the accent at GLASS.band % alpha, one point more transparent at a
+    // time until the text (4.5:1) and the grid lines stand on it; all over the darkest and the lightest pixel
+    const glass = [ends.darkest, ends.lightest].map((p) => mix(p, u.card, 1 - t / 100)), gmin = contrast(R.grid, u.card);
+    const worst = (fg, xs) => Math.min(...xs.map((b) => contrast(fg, b))), bandsAt = (a) => glass.map((b) => mix(b, u.accent, a / 100));
+    let grid = R.grid;
+    for (let r = 0.8; r > 0 && worst(grid, glass) < gmin; r = Math.round((r - 0.05) * 100) / 100) grid = mix(u.text, u.card, r);
+    let a = banded ? GLASS.band : 0;
+    while (a > 0 && !(worst(u.text, bandsAt(a)) >= 4.5 + mg && worst(grid, bandsAt(a)) >= gmin)) a--;
+    const table = { clear: u.card + '00', band: banded ? u.accent + Math.round(a * 255 / 100).toString(16).padStart(2, '0') : null, bandAlpha: a, grid };
+    const checks = pairs.map(([id, fg, min]) => ({ id, ratio: over(t, fg), min })).concat([{ id: 'textOnPicture', ratio: Math.min(contrast(u.text, ends.darkest), contrast(u.text, ends.lightest)), min: 4.5 },
+      { id: 'gridOnGlass', ratio: worst(grid, glass), min: gmin }], banded ? [{ id: 'textOnBand', ratio: worst(u.text, bandsAt(a)), min: 4.5 }, { id: 'gridOnBand', ratio: worst(grid, bandsAt(a)), min: gmin }] : [])
       .map((x) => Object.assign(x, { pass: x.ratio >= x.min }));
     const out = { asked, t, labels, rim: light ? '#ffffff' : mix(u.card, '#ffffff', 0.25), strength: s, mode: light ? 'light' : 'dark',
-      shadow: { transparency: sh.transparency, blur: Math.max(1, Math.round(sh.blur * k)), distance: Math.max(1, Math.round(sh.distance * k)) }, image: ends, checks };
+      shadow: { transparency: sh.transparency, blur: Math.max(1, Math.round(sh.blur * k)), distance: Math.max(1, Math.round(sh.distance * k)) }, image: ends, table, checks };
     if (glassCache.size > 50) glassCache.clear();
     glassCache.set(key, out);
     return out;
@@ -816,6 +830,20 @@
     border: [Object.assign({ show: true, color: { solid: { color: g.rim } }, width: 1 }, t === 'cardVisual' ? {} : { radius: toPage(+l.radius || 0, l) })],
     dropShadow: [l && l.shadow ? { show: true, color: { solid: { color: '#000000' } }, position: 'Outer', preset: 'Bottom', transparency: g.shadow.transparency, shadowBlur: g.shadow.blur, shadowDistance: g.shadow.distance, shadowSpread: 0 } : { show: false }]
   });
+
+  // (0.3.1 GL2, the owner, 27 Oct: "tables are not cleared of alternate rows formating") the look's tables and matrices:
+  // no fill of their own. Without one Power BI's default style fills every cell (the theme's background and
+  // backgroundLight) over the see-through card. Their cards have no transparency (Microsoft's capabilities for tableEx
+  // and pivotTable, @microsoft/powerbi-core-visual-schema): each back colour is the card's colour with alpha 00
+  // (#RRGGBBAA, the report theme schema's colour pattern), a banded table's alternate rows the look's tint; the grid
+  // lines the look's own colour (their show and width stay the table style's). tb: glassLook(d).table
+  const glassTables = (tb) => {
+    const fill = (h) => ({ solid: { color: h } }), clear = fill(tb.clear), both = ['tableEx', 'pivotTable'];
+    return [[both, 'values', { backColor: clear, backColorPrimary: clear, backColorSecondary: tb.band ? fill(tb.band) : clear }], [both, 'columnHeaders', { backColor: clear }],
+      [both, 'total', { backColor: clear }], [['pivotTable'], 'rowHeaders', { backColor: clear }], [['pivotTable'], 'subTotals', { backColor: clear }],
+      [['pivotTable'], 'rowTotal', { backColor: clear }], [['pivotTable'], 'columnTotal', { backColor: clear }],
+      [both, 'grid', { gridHorizontalColor: fill(tb.grid), gridVerticalColor: fill(tb.grid) }]];
+  };
 
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
@@ -1183,7 +1211,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    GLASS, isGlass, glassLook, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
