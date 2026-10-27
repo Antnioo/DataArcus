@@ -60,7 +60,8 @@ export function twinTree(P) {
   // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
   // (X1) the copy holding both languages: its files as the plan built them (the original's copied as they are)
   const tree = P.copy ? P.copy.files.map((f) => ({ path: path.basename(twinDir) + '/' + f.rel, data: f.data != null ? f.data : readBytes(path.join(loc.dir, ...f.from.split('/'))) }))
-    : R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
+    // (0.3.1 GD2) a glass page's picture flipped left to right: every page of the twin is Arabic, so under the same name
+    : R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : P.built.pictures && P.built.pictures.has(rel) ? P.built.pictures.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
   // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
   if (!P.copy && out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
   if (!P.copy && !R.hasPlatform) tree.push({ path: path.basename(twinDir) + '/.platform', data: out.get('.platform') });

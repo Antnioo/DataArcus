@@ -14,6 +14,8 @@ export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, cla
 export const { isGlass, glassLook, glassPng } = E;
 // (0.3.1 GD1) the glass look is the default of a new design, and the gate that keeps it readable
 export const { DEFAULT_LOOK, glassFit, isGlassPng } = E;
+// (0.3.1 GD2) a theme used alone carries the glass look's picture as its page background image
+export const { withGlassPicture } = E;
 // (0.2.9, audit 2's A2-3: the slot rules are the engine's: absorb for a text slot without its sentence, fitSlots for the rest)
 export const { absorb, fitSlots } = E;
 export const designRtl = E.rtl;

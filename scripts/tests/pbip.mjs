@@ -681,6 +681,30 @@ export default async function ({ browser, url }) {
       check(/horizontal version will read much better/.test(note) === tall, `${file} on the page: note "${note}"`);
     }
   }
+  // (0.3.1 GD2, the owner, 27 Oct: "the live website theme generator should also be updated") a glass design (the first
+  // visit's default): the preview draws each page on the picture the download writes, its cards at the written
+  // transparency, EN and AR; the Arabic page rendered (the picture's box the page's, loaded)
+  {
+    const require = createRequire(import.meta.url);
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900], downloads: true, plainDesign: false });
+      await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
+      await v.pg.selectOption('#pbipData', 'sample');
+      await v.pg.click('#pbipPreviewBtn');
+      await v.pg.waitForFunction(() => { const b = document.getElementById('pbipPreview'); return b && !b.hidden && b.querySelectorAll('svg image.glass').length; }, null, { timeout: 15000 }).catch(() => null);
+      const shown = await v.pg.evaluate(async () => Promise.all([...document.querySelectorAll('#pbipPreview svg')].map(async (svg) => { const im = svg.querySelector('image.glass'), bb = im ? im.getBBox() : null, vb = svg.viewBox.baseVal;
+        const href = im ? im.getAttribute('href') : '', bytes = href.startsWith('data:image/png;base64,') ? [...atob(href.slice(22))].map((ch) => ch.charCodeAt(0)) : [];
+        return { href: href.slice(0, 5), full: !!bb && Math.abs(bb.width - vb.width) < 1 && Math.abs(bb.height - vb.height) < 1, bytes, ops: [...svg.querySelectorAll('rect.box[fill-opacity]')].map((r) => +r.getAttribute('fill-opacity')) }; })));
+      const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
+      const files = unzip(fs.readFileSync(await dl.path())), E = require('../../assets/js/design-engine.js');
+      const theme = Object.entries(files).filter(([p0]) => /RegisteredResources\/[^/]+\.json$/.test(p0)).map(([, b]) => JSON.parse(b.toString('utf8'))).find((t) => t.visualStyles), t = theme.visualStyles['*']['*'].background[0].transparency;
+      const pics = Object.entries(files).filter(([p0]) => /\.png$/i.test(p0) && E.isGlassPng(new Uint8Array(files[p0]))).map(([, b]) => Buffer.from(b));
+      check(shown.length >= 2 && shown.every((x) => x.href === 'data:' && x.full && pics.some((b) => b.equals(Buffer.from(x.bytes))) && x.ops.length >= 4 && x.ops.every((o) => Math.abs(o - (1 - t / 100)) < 0.006)),
+        `glass preview ${lang}: every page drawn on the download's own picture (the page's whole box), its cards at ${100 - t}% (the theme's ${t}% transparency): ${JSON.stringify(shown.map((x) => [x.href, x.full, x.bytes.length, x.ops.slice(0, 3)])).slice(0, 300)}`);
+      if (v.errs.length) problems.push(`glass preview ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
   // 0.3.0 step 1, "Preview before Approve" (the owner's go, 18 Oct): the lab's preview of its download is the MCP's
   // approval-window picture (assets/js/page-preview.js), drawn from the download itself: one picture per page the
   // download shows (not the hidden tooltip page), every visual's box where the download places it, its type and title,

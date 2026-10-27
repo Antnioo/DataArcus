@@ -745,12 +745,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261026sq13').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261027gd2').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
-      const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+      const run = withProject((P, input, { m, specs, pages: pp }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+        // (0.3.1 GD2) a glass design's pages get the pictures the download writes (pngBlob's glass picture, each page's layout)
+        if (E.isGlass(state)) specs.forEach((sp, i) => { const p = page(sp.layout); pp[i].png = E.glassPng(Object.assign({}, state, { layout: sp.layout }), p.w, p.h); });
         const files = P.build(input).files;
         if (Ck) showCheck(Ck, files, m);
-        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
+        // (0.3.1 GD2) a glass page drawn on its own picture, the bytes the project writes (a data URL: the page's policy
+        // allows data: images, not blob:)
+        const picture = (b) => { if (!E.isGlassPng(b)) return null; let bin = ''; for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return 'data:image/png;base64,' + btoa(bin); };
+        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent }, picture });
         pvBox.textContent = '';
         pages.forEach((pg, i) => {
           const fig = document.createElement('figure'), cap = document.createElement('figcaption');
