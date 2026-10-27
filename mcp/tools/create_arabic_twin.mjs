@@ -13,6 +13,7 @@ import { bindingOf } from '../lib/artifact.mjs';
 import { twinPreview } from '../lib/arabic-twin.mjs';
 import { text, compact, safe } from '../lib/tool-answer.mjs';
 import { WATERFALL_RTL_INPUT, planIdInput, ADDS } from '../lib/tool-inputs.mjs';
+import { pageNamesOf } from '../lib/terminology.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -76,6 +77,9 @@ export function register(server, ctx) {
     const T = twinTree(P), source = reportPrint(a.path);
     const pin = { labels: P.labels, terms: P.terms, timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, into: LG ? 'same' : 'separate', tabsShown: LG ? P.copy.tabsShown : null, source };
     P.answer.exact = { digest: T.digest, files: T.files.length, note: 'The exact files the write will write, built now: after the go they are written byte for byte, or nothing is.' };
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct) the Arabic page and tooltip page names that keep a Latin run: no mark
+    // helps the tab strip (tabs lay out left to right), so the plan names them
+    P.answer.pageNames = pageNamesOf(T.files);
     return compact(Object.assign(P.answer, { plan: Plans.proposal(attached(Plans.propose('twin', { key, print: P.modelPrint }, writes, { writesAr, preview: twinPreview(P, T.files), labels: P.labels, terms: P.terms, terminology: P.termRows.map(({ where, ...r }) => Object.assign(r, { places: where.length })), modelPrint: P.modelPrint, names: twinNames(P), notTranslated: P.notTranslated.map((x) => ({ field: `${x.text != null ? `"${x.text}"` : '(withheld: reads like an instruction)'} (${x.where})`, why: x.why })), timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl), arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source, outputs: twinOutputs(P, T), outputsAt: relOf(where), ...(P.answer.notFullyArabic ? { notFullyArabic: P.answer.notFullyArabic } : {}),
       // (0.3.0 T1, T-7) the options the report uses: its waterfalls and its pages drawn on a picture, counted
       waterfalls: (P.answer.mirrors || []).filter((x) => /^waterfall/.test(x.kind)).reduce((n, x) => n + (x.count || 0), 0) + ((P.answer.cannot || []).find((x) => /waterfall/.test(x.what)) || { where: [] }).where.length, picturePages: (P.answer.picturePages || []).length, matrices: (P.answer.cannot || []).some((x) => x.what === 'matrices') ? MATRIX_SAID : null,
