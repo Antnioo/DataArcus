@@ -11,15 +11,18 @@
   stand, 10 spot-checked; 106 OPEN confirmed; OWNER triaged) + 153 new. New: FIXED-SINCE ~30 %, NOT-A-PROBLEM ~25 %,
   0.3.2 ~20 %, NEEDS-DESKTOP ~15 %, FIXED-HERE 10-20, GAP 0-5. Full run 105 suites + 0; each fix's suite +1 check or
   more, red first; lint 0; agent-memory, changelog-words PASS.
-- **Got (595):** FIXED-SINCE 200 · NOT-A-PROBLEM 167 · 0.3.2 68 · NEEDS-DESKTOP 58 · DUPLICATE 32 · FIXED-HERE 16 ·
-  GAP fixed here 2 · FIXED-HERE-NEXT 2 · STOP-GAP 11 · SF1 12 · DROP 14 · CHOICE 13. Spot-check of the queue: 10 of
-  10 hold. The new 153: NOT-A-PROBLEM 49, 0.3.2 48, FIXED-SINCE 17, FIXED-HERE 13, DUPLICATE 8, STOP-GAP 8,
+- **Got (595):** FIXED-SINCE 200 · NOT-A-PROBLEM 167 · 0.3.2 66 · NEEDS-DESKTOP 58 · DUPLICATE 33 · FIXED-HERE 16 ·
+  GAP fixed here 2 · FIXED-HERE-NEXT 2 · STOP-GAP 12 · SF1 12 · DROP 14 · CHOICE 13. Spot-check of the queue: 10 of
+  10 hold. The new 153: NOT-A-PROBLEM 49, 0.3.2 47, FIXED-SINCE 17, FIXED-HERE 13, DUPLICATE 9, STOP-GAP 8,
   NEEDS-DESKTOP 6, SF1 2, FIXED-HERE-NEXT 2 (more 0.3.2 and fewer FIXED-SINCE than expected: the notes are a day old).
 - **GAPs fixed here:** GC-S2 ("Free" in 26 page headlines and 17 go/ links), 0.2.9-checks-S1 (THEME_NAME's untrue
   "Desktop may not load it"). **STOP-GAP (11):** 9 are GD2's files (the glass preview GD1-S2, the twin's mirrored
   glass picture GD1-S4, the generator's glass table GL2-S2, a glass plan saying "solid" GL1-S2, plan-lint's chartAxes
   SQ13-S1, the layout canvas SQ13-S2, the twin's phone card title SQ4-S2, the twin's panels, "Total" and number axes
-  M1-S1/S2/S3); TT1-S1 (the website's Arabic download keeps English titles: L, the owner's scope call). Below.
+  M1-S1/S2/S3); TT1-S1 (the website's Arabic download keeps English titles: L, the owner's scope call);
+  0.2.9-writer-S10 (his 26 Oct yes not carried out: a layout option in GD2's design-engine.js). Below.
+- **The owner's 73 yes answers (26 Oct):** 70 fixed by their SQ batch (commit or test in each row; checks-S4 with option
+  (a), the refusal), AF2-S1 and R1-see-the-result-S3 nothing left (checked), 0.2.9-writer-S10 STOP-GAP. None in his list.
 - **Tests:** before: 105 suites (GD1's full run on ac296cc3; my own baseline run was cut at 30 min after 24 suites, all
   PASS). After: see "Before -> after" (the full-run line at the end).
 - **Resume:** done (full run on 381b264a: 105 suites passed); the reviewer: STOP-GAP briefs, the owner's lists below.
@@ -58,6 +61,7 @@
 | M1-S2 | the twin's mirrored table loses "Total" (columns reversed; measured round 10) | M, 40-60 lines: the writer's right-to-left table (`pbip-page.js:979,1029`) in the twin; a laptop check first |
 | M1-S3 | the twin keeps a whole-number continuous axis left to right (`twin-model.mjs:28,53`); create_report reverses it | 5-10 lines + a parity check; measured in Desktop first |
 | TT1-S1 | the website's Arabic download keeps English titles on English field names (TT1 Decision 2) against the owner's "don't keep english titles in arabic reports" | L, 60-120 lines: before the Arabic download, the names without Arabic listed with drafts the person edits and approves (never silent); 0.3.1 or 0.3.2 is his call |
+| 0.2.9-writer-S10 (= SQ13-S3) | the owner's yes (26 Oct): rows beside a shortened rail keep their width, a 197-392 gap (pinned by sq13 S10) | one of SQ13's options in `design-engine.js` (GD2's): my pick (a) REFLOW_KEEP 0.5 -> 0.45 (closes the 197 gaps; the chart 347 -> 168 high), then a laptop look |
 
 ## For the owner (40 lines at most)
 **0.3.2 (one line each, most valuable first; ids in the register):**
@@ -90,7 +94,7 @@
 13. Packaging: --live checks the SHA-256; tool counts read from mcp/tools; build tests on a copy; privacy in the
     manifest; root plugin.json (PR1-S4, audit-8-packaging-S1,
     audit-8-packaging-S2, audit-8-packaging-S3, K1-S6); the share-image script's browser (SQ8-S6). Smaller: TT1-S2, TT1-S3, LR1-S1, LR1-S3,
-    RD1-S4, SQ12-S3, 0.2.9-reader-S25, 0.2.9-writer-S10 (= SQ13-S3).
+    RD1-S4, SQ12-S3, 0.2.9-reader-S25.
 
 **His choice (one question each):** keep naming Microsoft's skill in the plugin (D5-S2); positioning and tiers
 (D5-S7); name Claude Code and VS Code beside Claude Desktop (DS1-S1); one tool name EN/AR, "calendar table" (E-S3); Eid
@@ -143,18 +147,18 @@ RB-S4, W-S4, 0.2.9-custom-visuals-S1, 0.2.9-reader-S5, 0.3.0-arabic-twin-S5, aud
 |---|---|---|---|
 | FIXED-SINCE (a later commit: sha and file:line, or the test) | 17 | 183 | 200 |
 | NOT-A-PROBLEM (checked: informational, by design, the code changed) | 49 | 118 | 167 |
-| 0.3.2 (still true, outside the decisions: his list) | 48 | 20 | 68 |
+| 0.3.2 (still true, outside the decisions: his list) | 47 | 19 | 66 |
 | NEEDS-DESKTOP (the laptop list) | 6 | 52 | 58 |
-| DUPLICATE (of the id named) | 8 | 24 | 32 |
+| DUPLICATE (of the id named) | 9 | 24 | 33 |
 | FIXED-HERE (this branch, red first) | 13 | 3 | 16 |
 | GAP, fixed here | 0 | 2 | 2 |
 | FIXED-HERE-NEXT (small, not done here: why in its row) | 2 | 0 | 2 |
-| STOP-GAP | 8 | 3 | 11 |
+| STOP-GAP | 8 | 4 | 12 |
 | SF1 (the hard rules: SF1's job; today's state in the row) | 2 | 10 | 12 |
 | DROP / CHOICE (the queue's OWNER decisions) | 0 | 14 / 13 | 14 / 13 |
 The queue's OWNER 108 went to: NEEDS-DESKTOP 52, CHOICE 13, DROP 14, 0.3.2 20, GAP 2 (fixed here), the rest
 FIXED-SINCE (fixed since 25 Oct, for example A3-S2 by TT1 8ddfe11) or SF1. Its 106 OPEN: all fixed by their SQ batch
-(FIXED-SINCE, with the batch's commit) but 0.2.9-writer-S10 (the owner's layout call: in the 0.3.2 list, = SQ13-S3).
+(FIXED-SINCE, with the batch's commit) but 0.2.9-writer-S10 (= SQ13-S3: STOP-GAP, the owner said yes on 26 Oct).
 
 ## Decisions I made
 1. **The count:** the queue's ids for its 73 notes (its rule numbered prose too) and the brief's rule for the 35 new
@@ -436,7 +440,7 @@ Full run on 381b264a: "run-tests: 105 suites passed"
 |---|---|---|---|
 | 1 | plan-lint's in-memory build passes no chartAxes, so Arabic time charts keep English sort | STOP-GAP (GD2's) | plan-lint.mjs:66-68 builds without chartAxes: an Arabic plan's preview (no exact artifact) draws charts over time unmirrored; fix: pass chartAxes and the look options as report-run.mjs:308 does, about 3 lines + a check in test-0.3.1-sq13 |
 | 2 | website layout canvas draws slots before the writer's fit; fitted pages only in Preview | STOP-GAP (GD2's) | the layout canvas (design-engine.js slots, page-preview.js) draws before the writer's fit; fix M-L: run the writer's fit after a slider stops and draw the fitted boxes (30-80 lines + a page-speed check) |
-| 3 | S10's rail gaps (the owner's decision) | 0.3.2 | still OPEN: SEEN-QUEUE.md:193 0.2.9-writer-S10, gaps 197-392 pinned by test-0.3.1-sq13 S10; owner picks (a) REFLOW_KEEP 0.5 -> 0.45 (assets/js/design-engine.js:1043, OFF LIMITS now), (b) row under the rail, or (c) leave |
+| 3 | S10's rail gaps (the owner's decision) | DUPLICATE-OF 0.2.9-writer-S10 | the same gaps (SEEN-QUEUE.md:193, sq13 S10): STOP-GAP there |
 
 ### SQ14 (new since 639c42b3)
 
@@ -1107,7 +1111,7 @@ Full run on 381b264a: "run-tests: 105 suites passed"
 | 1 | THEME_NAME fix says Desktop "may not load" the theme | GAP, FIXED-HERE | fbd0132: report-rules.js THEME_NAME fix 'the validator and Fabric reject it (Power BI Desktop opens it: measured 2026-10-10)', as DESKTOP_OPENS says; test-0.2.9-a4 (red on c11eb9a first) |
 | 2 | THEME_NAME "no .platform file" half never measured | NEEDS-DESKTOP | assets/js/report-rules.js:342 unmeasured. Laptop: delete .platform from a copy of a working PBIP, open in Desktop; record opens yes/no, any error text, and whether Save writes .platform back |
 | 3 | FORMATTING_OBJECT_UNKNOWN inside a visual is canBreak | NEEDS-DESKTOP | mcp/lib/check-report.mjs:142 Desktop-opens only under StaticResources/RegisteredResources. Laptop: a visual.json with an unknown objects key; record opens yes/no, the visual draws yes/no, validator code |
-| 4 | loadModel picks first of two models at same depth silently | FIXED-SINCE | 41bd0da (SQ15a): mcp/lib/model.mjs:453 MANY_MODELS names both; test mcp/test-0.3.1-reader-seen.mjs:63 S4-1 |
+| 4 | loadModel picks first of two models at same depth silently | FIXED-SINCE | the owner's yes (26 Oct) carried out by SQ15a 41bd0da with SQ6's option (a): loadModel refuses two models at the top depth, MANY_MODELS naming both (mcp/lib/model.mjs:452-453), v029g names its model; reader-seen S4-1, S4-2 PASS today. (a) over (b) name order or (c) leave: never a silent or arbitrary pick of the model a plan is built on |
 | 5 | engine repo attach needed owner's go | NOT-A-PROBLEM | Session permission event, no code |
 | 6 | test-0.2.9b.mjs not run by test.mjs | FIXED-SINCE | mcp/test.mjs:16 imports v029b, :4670 runs it; mcp/tests.json:140 |
 | 7 | last-6-months tooltip trend still gets TOOLTIP_SCROLL | FIXED-SINCE | assets/js/report-rules.js:318-323 "Last N months" filter counted as a Top N (rc.22 B-142); TIP_ROWS measured 22.2 + 45 + 8 at :75 |
@@ -1159,7 +1163,7 @@ Full run on 381b264a: "run-tests: 105 suites passed"
 | 7 | B-06/B-23 text not in repo; readings may be partial | CHOICE | Does B-06 mean "a text column's room is 12 letters" and B-23 "the table's grid entry", or more? (B-list not in the repo; grep) |
 | 8 | golden pins no table text size | FIXED-SINCE | 478d565 (SQ11): mcp/test-models/golden-expected.json has 20 tableText pins |
 | 9 | column top N uses 12-letter label guess | NEEDS-DESKTOP | assets/js/pbip-sizing.js:22-24 still 12 letters at 0.55 em; design-engine.js:397 categoryFit. Laptop: DESKTOP-TESTS.md S5 (20 and 40 values, 1920x1080 and 1280x720, EN and AR); record columns shown unslanted per width |
-| 10 | row beside short rail keeps width; about 200 gap | 0.3.2 | Still true (SQ13 measured gaps 197-392; owner's call, SQ13.md Decisions 1): widen rows beside a shortened rail in design-engine.js fitSlots, after the owner's layout rule |
+| 10 | row beside short rail keeps width; about 200 gap | STOP-GAP | the owner's yes (26 Oct) not carried out: SQ13 confirmed the gaps (197-392, pinned by test-0.3.1-sq13 S10) and stopped on its options (SQ13.md Decisions 1): (a) REFLOW_KEEP 0.5 -> 0.45 in design-engine.js:1043 (GD2's file; closes the 197 gaps, the column chart 347 -> 168 high), (b) the row under the rail, (c) leave. My pick: (a), one constant, the smallest move, its result pinned by S10; a laptop look at the reflowed page after |
 | 11 | S3, S6, D9-D12 not the writer's | NOT-A-PROBLEM | Routing note |
 | 12 | TIP_ROWS 22 a row + 46; measured 22.2 + 53 | FIXED-SINCE | 11a85ab (SQ5): assets/js/report-rules.js:75 (h - 45 - 8 - axis 38) / 22.2 |
 | 13 | table panel one row shorter on solid theme | NEEDS-DESKTOP | Laptop: a create_report table beside a chart on a solid theme, 1280x720; record the bottom edges' y of the table panel and its neighbour (px difference) |
