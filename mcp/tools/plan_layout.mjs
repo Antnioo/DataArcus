@@ -155,7 +155,11 @@ function englishTitles(files) {
     const p = String(f.path || '');
     if (/\/visual\.json$/.test(p)) { const j = parse(f), e = j && j.visual && j.visual.visualContainerObjects && Array.isArray(j.visual.visualContainerObjects.title) ? j.visual.visualContainerObjects.title : [];
       e.forEach((x) => { const L = x && x.properties && x.properties.text && x.properties.text.expr && x.properties.text.expr.Literal; const t = L && typeof L.Value === 'string' ? L.Value.replace(/^'|'$/g, '').replace(/''/g, "'").replace(MARKS, '') : ''; if (isEn(t)) out.add(t); }); }
-    if (/reportExtensions\.json$/.test(p)) { const j = parse(f); ((j && j.entities) || []).forEach((en) => (en.measures || []).forEach((m) => { const r = typeof m.expression === 'string' && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); const t = r ? r[1].replace(/""/g, '"').replace(MARKS, '') : ''; if (isEn(t)) out.add(t); })); }
+    if (/reportExtensions\.json$/.test(p)) { const j = parse(f); ((j && j.entities) || []).forEach((en) => (en.measures || []).forEach((m) => {
+      // (a Top-N title measure: its plain title, and the title with its lead, "Top N of M: …", as a viewer may see it)
+      const dq = (x) => x.replace(/""/g, '"').replace(MARKS, ''), r = typeof m.expression === 'string' && /_s = _n, "((?:[^"]|"")*)", "((?:[^"]|"")*)" & _s & "((?:[^"]|"")*)" & _n & "((?:[^"]|"")*)"/.exec(m.expression);
+      const t = r ? dq(r[1]) : '', lead = r ? dq(r[2]) + 'N' + dq(r[3]) + 'M' + dq(r[4]) : '';
+      if (isEn(t)) out.add(t); if (isEn(lead)) out.add(lead); })); }
   });
   return [...out].sort();
 }
