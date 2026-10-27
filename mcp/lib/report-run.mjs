@@ -310,6 +310,8 @@ export function reportRun(a, mode) {
     if (noTime) projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields })
       .forEach((p) => p.slots.filter((x) => x.kind === 'line').forEach((x) => (r.leftOut = r.leftOut || []).push({ page: p.name, kind: 'line', title: x.title || null, noTime: true })));
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: themeName(design.name),
+      // (0.3.1 GD1) the cards' look written: glass by default, plain where glass can't keep the text readable, or as asked
+      look: Object.assign({ look: planned.look.look, chosenBy: planned.look.chosenBy }, planned.look.glassFailed ? { glassFailed: planned.look.glassFailed } : {}),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
     // hand-placed pages: KPI slots beyond the measures are left out, and named

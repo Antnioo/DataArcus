@@ -411,6 +411,35 @@ export default async function ({ browser, url, page = PAGE }) {
     if (v.errs.length) problems.push(`${lang} visuals: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") a first visit opens on glass, EN and
+  // AR; Plain one click away and kept; a design saved without a look stays plain; colours where glass can't keep the
+  // text readable go to Plain, said
+  for (const lang of ['en', 'ar']) {
+    const v = await open(lang);
+    const first = await v.pg.evaluate((k) => ({ look: document.getElementById('csLook').value, opts: [...document.querySelectorAll('#csLook option')].map((o) => [o.value, o.textContent.trim()]),
+      saved: JSON.parse(localStorage.getItem(k)).chart, t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background,
+      bg: getComputedStyle(document.getElementById('preview')).backgroundImage }), STORE);
+    check(first.look === 'glass' && first.saved && first.saved.look === 'glass' && first.t[0].transparency > 0 && /url\("?data:image\/png;base64,/.test(first.bg),
+      `${lang} GD1: a first visit opens on the glass look (the choice, the theme, the preview): ${JSON.stringify(first).slice(0, 300)}`);
+    check(JSON.stringify(first.opts.map((o) => o[0])) === '["glass","auto"]' && (lang === 'en' ? first.opts[0][1] === 'Glass (default)' && first.opts[1][1] === 'Plain' : /افتراضي/.test(first.opts[0][1]) && first.opts[1][1] === 'عادي'),
+      `${lang} GD1: Card look offers "Glass (default)" and "Plain": ${JSON.stringify(first.opts)}`);
+    await v.pg.selectOption('#csLook', 'auto');
+    const plain = await v.pg.evaluate(() => ({ t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background, bg: getComputedStyle(document.getElementById('preview')).backgroundImage }));
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(plain.bg === 'none' && !(plain.t[0].transparency > 0) && await v.pg.$eval('#csLook', (e) => e.value) === 'auto', `${lang} GD1: Plain is one click away (solid cards, no picture) and kept after a reload: ${JSON.stringify(plain)}`);
+    // a design saved before the look existed (no chart.look) opens as it was made: plain
+    await v.pg.evaluate((k) => { const d = JSON.parse(localStorage.getItem(k)); delete d.chart; localStorage.setItem(k, JSON.stringify(d)); }, STORE);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(await v.pg.$eval('#csLook', (e) => e.value) === 'auto', `${lang} GD1: a design saved without a look stays plain`);
+    // the gate: a pale lead colour (1.4:1 on the white cards) can't stay readable on glass: Plain, and the preview says why
+    await v.pg.evaluate((k) => { const d = JSON.parse(localStorage.getItem(k)); d.preset = null; d.ui = Object.assign(d.ui, { background: '#f4f6f9', card: '#ffffff', text: '#1f2329', accent: '#ffd54f' }); d.data[0] = '#ffd54f'; d.chart = { look: 'glass' }; localStorage.setItem(k, JSON.stringify(d)); }, STORE);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    const gate = await v.pg.evaluate(() => ({ look: document.getElementById('csLook').value, note: (document.querySelector('#preview .tg-glassnote') || {}).textContent || '', t: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background }));
+    check(gate.look === 'auto' && !(gate.t[0].transparency > 0) && (lang === 'en' ? /Plain look/.test(gate.note) && /readable/.test(gate.note) && !/blur/i.test(gate.note) : /عادي/.test(gate.note) && /مقروءة/.test(gate.note)),
+      `${lang} GD1: colours where glass can't keep the text readable go to Plain, said: ${JSON.stringify(gate).slice(0, 300)}`);
+    if (v.errs.length) problems.push(`${lang} GD1: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   // (0.3.1 GL1) the glass look, EN and AR: the choice, the theme, a preview of what Power BI draws (the picture under
   // see-through cards, no blur), the background download the engine's picture at the page's size, kept after a reload
   for (const lang of ['en', 'ar']) {

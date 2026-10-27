@@ -38,7 +38,8 @@ window.betaPageTranslations = {
         "l5": "<strong>A better EN-AR copy.</strong> On a report without page tabs the language buttons now show their text; the Arabic pages move through the keyboard right to left; an Arabic title that needs more room is widened into free space, and the Arabic title and subtitle are no longer drawn as bordered cards; button slicers stay in sync between the two languages.",
         "l6": "<strong>One set of right-to-left rules.</strong> An Arabic report written from scratch and an Arabic copy of an English report now turn their charts round with the same shared rules, and the checker judges each page of a report in English and Arabic in its own language.",
         "l7": "<strong>One Arabic word for each idea.</strong> Reports, the approval page, the health checks and this website write DataArcus in Latin letters and use the same Arabic term for each Power BI and DataArcus idea.",
-        "l8": "<strong>Names that read like instructions are never followed.</strong> A name in a model or a folder that asks the AI to call a tool, claims you already approved or asks for your data's values is flagged and never followed, look-alike letters included; ordinary names such as \"Execute Time\" are no longer hidden."
+        "l8": "<strong>Names that read like instructions are never followed.</strong> A name in a model or a folder that asks the AI to call a tool, claims you already approved or asks for your data's values is flagged and never followed, look-alike letters included; ordinary names such as \"Execute Time\" are no longer hidden.",
+        "l9": "<strong>The glass look, by default.</strong> New reports and themes start with see-through cards over a soft page picture made from your theme's own colours, only where every text stays readable (the plan says when it can't, and why). The plain look is one request away; a report you already have keeps its own look."
       },
       "new": {
         "title": "What's new in 0.3.0",
@@ -152,7 +153,8 @@ window.betaPageTranslations = {
         "l5": "<strong>نسخة EN-AR أفضل.</strong> في تقرير بلا أزرار للصفحات صارت أزرار اللغة تُظهر نصوصها؛ ويتنقل لوح المفاتيح في الصفحات العربية من اليمين إلى اليسار؛ ويُوسَّع العنوان العربي الذي يحتاج مساحة أكبر في المكان الفارغ، ولم يعد العنوان العربي والعنوان الفرعي يُرسمان كبطاقتين بإطار؛ وتبقى مقسمات الأزرار متزامنة بين اللغتين.",
         "l6": "<strong>قواعد واحدة للاتجاه من اليمين إلى اليسار.</strong> صار التقرير العربي المكتوب من البداية والنسخة العربية من تقرير إنجليزي يعكسان مخططاتهما بالقواعد المشتركة نفسها، وصار الفحص يحكم على كل صفحة في التقرير ذي اللغتين بلغتها هي.",
         "l7": "<strong>كلمة عربية واحدة لكل مفهوم.</strong> تكتب التقارير وصفحة الموافقة وفحوص الصحة وهذا الموقع اسم DataArcus بالحروف اللاتينية، وتستخدم المصطلح العربي نفسه لكل مفهوم من مفاهيم Power BI وأدواتنا.",
-        "l8": "<strong>الأسماء التي تُقرأ كتعليمات لا تُتّبع أبدًا.</strong> الاسم في النموذج أو المجلد الذي يطلب من الذكاء الاصطناعي استدعاء أداة، أو يدّعي أنك وافقت، أو يطلب قيم بياناتك، يُعلَّم ولا يُتّبع أبدًا، حتى لو كُتب بحروف متشابهة؛ ولم تعد الأسماء العادية مثل \"Execute Time\" تُخفى."
+        "l8": "<strong>الأسماء التي تُقرأ كتعليمات لا تُتّبع أبدًا.</strong> الاسم في النموذج أو المجلد الذي يطلب من الذكاء الاصطناعي استدعاء أداة، أو يدّعي أنك وافقت، أو يطلب قيم بياناتك، يُعلَّم ولا يُتّبع أبدًا، حتى لو كُتب بحروف متشابهة؛ ولم تعد الأسماء العادية مثل \"Execute Time\" تُخفى.",
+        "l9": "<strong>الشكل الزجاجي افتراضيًا.</strong> تبدأ التقارير والسمات الجديدة ببطاقات شفافة فوق صورة صفحة ناعمة مصنوعة من ألوان سمتك، حيث تبقى كل النصوص مقروءة فقط (وتقول الخطة متى لا يمكن ذلك ولماذا). والشكل العادي على بُعد طلب واحد؛ والتقرير الموجود لديك يحتفظ بشكله."
       },
       "new": {
         "title": "الجديد في الإصدار 0.3.0",

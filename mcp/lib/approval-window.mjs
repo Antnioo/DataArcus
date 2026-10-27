@@ -504,6 +504,10 @@ function summaryOf(kind, data) {
     if (dc) look.push(['Data colours', { swatches: dc.map((c, i) => ['', written(c, i)]) }]);
     const own = (c) => (HEX.test(String(c.to)) && HEX.test(String(d.colours.card)) ? `; the written colour's own contrast: ${E.contrast(String(c.to), String(d.colours.card)).toFixed(2)}:1` : '');
     cc.forEach((c) => look.push(['The first data colour, made readable', `approved colour ${String(c.from)} -> written colour ${String(c.to)}: contrast ${c.contrast}:1 against the visuals' background ${String(d.colours.card || '')}, needs 3:1 for a data colour${own(c)} (the 3:1 contrast for graphics of WCAG 2.1, criterion 1.4.11; the hue is kept)`]));
+    // (0.3.1 GD1) the cards' look: glass by default, plain where glass can't keep the text readable (and why), or as asked
+    const lk = d.look && typeof d.look === 'object' ? d.look : null;
+    if (lk) look.unshift(['Card look', lk.look === 'glass' ? (lk.chosenBy === 'default' ? 'Glass look (default): see-through cards over a soft page picture made from the theme\'s colours (Power BI has no blur behind a visual); plain: chart.look "auto"' : 'Glass look, as asked: see-through cards over a soft page picture made from the theme\'s colours')
+      : Array.isArray(lk.glassFailed) ? `Plain: with these colours glass can't keep everything readable (${lk.glassFailed.map((c) => `${String(c.check || '')}${c.ratio != null ? ` ${(Math.floor(+c.ratio * 10) / 10).toFixed(1)}:1, needs ${+c.min}:1` : ''}`).join('; ')}), so the cards are solid` : 'Plain, as asked: Power BI\'s own cards']);
     if (bars) look.unshift([LK.chartColors, bars === 'gradient' ? 'each bar fades by its value; a chart by a second category field gets a second colour, the same on every page' : 'one colour for every bar']);
     sections.push({ heading: 'Look and options', rows: look });
     // (L3) the metric switcher: the measures and their labels, the charts that switch, and the model change it needs

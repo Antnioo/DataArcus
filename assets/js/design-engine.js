@@ -728,6 +728,18 @@
     glassCache.set(key, out);
     return out;
   };
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") the look a new design starts in: the
+  // Theme Generator's first visit, generate_theme and every new report without a look asked. A saved design without a
+  // look keeps the look it was made with (CHART_DEFAULTS: "auto", plain); the redesign, the twin and the EN-AR copy keep
+  // the original report's
+  const DEFAULT_LOOK = 'glass';
+  // The gate (GD1): glass only where it keeps everything readable: the cards keep some transparency (t > 0) and every
+  // glass check passes, except the page's own text on its own colour once the picture is plain (strength 0), which the
+  // plain look fails the same way. { fits, failed: [{ id, ratio, min }], t }
+  const glassFit = (d) => {
+    const g = glassLook(d), failed = g.checks.filter((c) => !c.pass && !(c.id === 'textOnPicture' && g.strength === 0)).map((c) => ({ id: c.id, ratio: c.ratio, min: c.min }));
+    return { fits: g.t > 0 && !failed.length, failed, t: g.t };
+  };
   // the picture's pixels at w x h (RGB), as glassLook's strength makes them
   const glassPixels = (d, w, h, opt) => glassRgb(colours(d), glassLook(d, opt).strength, Math.max(1, Math.round(+w)), Math.max(1, Math.round(+h)));
   // ---- a PNG in plain JavaScript, so the website and the MCP write the same bytes (no canvas, no zlib) ----
@@ -825,7 +837,12 @@
     return png;
   };
   // The page's background picture of the glass look, a PNG at w x h (the page's own size: 1280 x 720, 1920 x 1080...)
-  const glassPng = (d, w, h, opt) => { const W = Math.max(1, Math.round(+w)), H = Math.max(1, Math.round(+h)); return encodePng(W, H, glassPixels(d, W, H, opt)); };
+  // (GD1: glass is the default, so every new report draws it, in its plan and again in its write: the last few pictures
+  // are kept, by their colours, strength and size; each call gets its own copy)
+  const pngCache = new Map();
+  const glassPng = (d, w, h, opt) => { const W = Math.max(1, Math.round(+w)), H = Math.max(1, Math.round(+h)), cc = colours(d), key = JSON.stringify([cc.ui, cc.data, glassLook(d, opt).strength, W, H]);
+    if (!pngCache.has(key)) { if (pngCache.size >= 8) pngCache.delete(pngCache.keys().next().value); pngCache.set(key, encodePng(W, H, glassPixels(d, W, H, opt))); }
+    return pngCache.get(key).slice(); };
   // the look's cards in the theme: background, border, shadow (see GLASS); t: the visual type
   const glassCards = (u, l, g, t) => ({
     background: [{ show: true, color: { solid: { color: u.card } }, transparency: g.t }],
@@ -1213,7 +1230,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    GLASS, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, DEFAULT_LOOK, glassFit, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
