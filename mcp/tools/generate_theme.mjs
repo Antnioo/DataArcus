@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import { loadModel, visible, inside, nothingAt } from '../lib/model.mjs';
+import { folderSaid } from '../lib/plain-words.mjs';   // (0.3.1 R4A, T-9: the working folder by its path)
 import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook } from '../lib/design.mjs';
 import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
@@ -68,9 +69,9 @@ export function register(server, ctx) {
       // plan: the write writes that name or nothing
       const base = freeName(a.folder, fileBase(design.name), '.json');
       return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-        plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" ${a.folder ? `in the folder "${visible(String(a.folder).replace(/[\\/]+$/, ''))}"` : 'in the working folder itself'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
+        plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" ${a.folder ? `in the folder "${visible(String(a.folder).replace(/[\\/]+$/, ''))}"` : `in ${folderSaid('.')}`} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
           // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
-          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], file: base, colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], outputsAt: '.', file: base, colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
     }
     const P = Plans.gate('generate_theme', a.planId, ref, inputsPin(a)), name = P.data && P.data.file;
     // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)

@@ -13,6 +13,7 @@
 import { createRequire } from 'node:module';
 import { freeNamer, tagOf, scriptFileOf, nameKey } from './model-script.mjs';
 import { kpiTarget } from './model.mjs';
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), Bind = require('../../assets/js/pbip-bind.js'), E = require('../../assets/js/design-engine.js');
@@ -180,7 +181,7 @@ export function iconsScript(measures, seed) {
 }
 
 /** How the user applies the script, for the answer and the plan. */
-export const iconsHow = (file) => `Apply the script first: the status icons show only once the model has the status measures. The script is in the file "${file}", next to the project. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Until the script is applied the columns show no icon.`;
+export const iconsHow = (file, dir) => `Apply the script first: the status icons show only once the model has the status measures. The script is in the file "${file}", ${besideSaid(dir)}. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Until the script is applied the columns show no icon.`;
 
 /** What the plan, the approval page and the answer say (names screened by the caller's JSON; no value is ever read). */
 export function iconsSaid(r) {

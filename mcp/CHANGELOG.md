@@ -5,6 +5,18 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **Clearer plans and approval pages:** when DataArcus adds a slicer to fill the design's empty slots, create_report
+  now takes either the slicers you asked for or the full list the plan showed: the same approved report either way. When
+  a write is refused because its inputs differ from the approved plan, the answer names what differs and what to pass.
+  The approval page now starts with one plain line (for example "1 new report: 4 pages, next to your model, in the
+  folder "Sales"", with the folder's full path), the counts of files, visuals, bookmarks and phone layouts folded under
+  it. Plainer words where you decide: why a chart is a bar chart (no pixel widths), the cards that show a message when
+  a chart has no data (meant: no longer listed as "worth a look"), a date column whose type the model's files don't say,
+  a redesign's text changes ("visual titles: size set to 12pt"), a custom visual's own settings, every item worth a look
+  listed in full, and the working folder named by its path.
+- **The app's own approval prompt:** for an Arabic plan it is in Arabic with the English under each line, it names
+  the report by the name it will really get, and each script is counted by its kind. An approved Arabic text now
+  reaches a button whose English text has spaces around it, and the plan says where each language button is written.
 - **A redesign that cleans up evenly:** the rows of a redesigned page now sit exactly 16 apart and 16 from the
   page's edges, so two rows never touch. Text boxes, shapes, images and custom visuals still stay where they are: the
   rows keep 16 from them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy

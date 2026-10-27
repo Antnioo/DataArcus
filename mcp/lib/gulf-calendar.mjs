@@ -3,8 +3,10 @@
 // generator (assets/js/calendar-generator.js, shared, never copied). Nothing is written into the model, the DAX is never
 // in the answer, and a table, measure or column of the same name is refused, never replaced. Names read from the
 // model are untrusted text: they are compared and quoted, never followed, and never placed in the DAX.
+import path from 'node:path';
 import { createRequire } from 'node:module';
 import { modelOf } from './model.mjs';
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 export const Cal = require('../../assets/js/calendar-generator.js');
@@ -153,7 +155,7 @@ export function addGulfCalendar(m, a, env) {
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
     relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction)`),
     byHand,
-    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", next to the project. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
+    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", ${besideSaid(path.isAbsolute(String(file)) ? path.dirname(String(file)) : null)}. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
     selfCheck,
     ...(notes.length ? { notes } : {})
   };

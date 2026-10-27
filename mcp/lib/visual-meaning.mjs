@@ -168,6 +168,15 @@ const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
 
 // opts: { typeOf(field) -> data type, customRoles: the custom visual's dataRoles (optional), declared: a Set of the types
 // the report declares custom (visual-types.js customTypesOf; optional) }
+// (0.3.1 R4A, round 4's problem 9: "its own format settings (1: needle)") a custom visual's own settings in plain words:
+// how many, their names (the visual's own object names, quoted), which the native visual keeps and as what, the rest not
+// carried over. o: { count, named, kept (words), rest (names), hidden (settings without a name shown) }
+export function ownSettingsSaid(o) {
+  const named = o.named || [], rest = o.rest || [], hidden = o.hidden || 0, n = o.count || 0;
+  const names = named.slice(0, 8).map((x) => `"${x}"`).join(', ') + (named.length > 8 ? ', …' : '');
+  const restWords = rest.slice(0, 8).join(', ') + (rest.length > 8 ? ', …' : '') + (hidden ? `${rest.length ? ', ' : ''}${hidden} more (names not shown)` : '');
+  return `the custom visual's own formatting (${n} setting${n === 1 ? '' : 's'}${names ? ': ' + names : ''}): kept: ${(o.kept || []).length ? o.kept.join(', ') : 'none'}; not carried over: ${restWords || 'none'}; the report's theme formats the rest`;
+}
 export function meaningOf(visual, opts) {
   const o = opts || {}, type = String((visual && visual.type) || '');
   const typeOf = (f) => { try { return o.typeOf ? o.typeOf(f) : undefined; } catch (e) { return undefined; } };
@@ -472,7 +481,7 @@ function formLost(form, kind, calendarNote, rows) {
 }
 // the custom visual's own format objects the native visual carries over, by their names (formatFacts' words)
 const KEPT = [{ re: /valuelabel|^labels$|^datalabels$/i, fact: 'valueLabels', as: 'the native value labels' }, { re: /categorylabel|nodelabel/i, fact: 'categoryLabels', as: 'the native category labels' }, { re: /regression|trend/i, fact: 'trend', as: 'the native trend line' }];
-// a loss's head: the text before its first colon outside brackets ("its own format settings (1: labels): ..." -> the part
+// a loss's head: the text before its first colon outside brackets ("the custom visual's own formatting (1 setting: "labels"): ..." -> the part
 // before ": ...")
 const headOf = (x) => { let d = 0; for (let i = 0; i < x.length; i++) { const c = x[i]; if (c === '(') d++; else if (c === ')') d--; else if (c === ':' && d <= 0) return x.slice(0, i); } return x; };
 // the levels of confidence, said once in the plan
@@ -537,8 +546,7 @@ export function nativeFor(visual, opts) {
     if (objs.length) {
       const kept = named.filter((x) => KEPT.some((k) => k.re.test(x) && format[k.fact])), rest = named.filter((x) => !kept.includes(x)), hidden = objs.length - named.length;
       const keptWords = kept.map((x) => `${x} (as ${KEPT.find((k) => k.re.test(x)).as})`);
-      const restWords = rest.slice(0, 8).join(', ') + (rest.length > 8 ? ', …' : '') + (hidden ? `${rest.length ? ', ' : ''}${hidden} more (names not shown)` : '');
-      lost.push(`its own format settings (${objs.length}${named.length ? ': ' + named.slice(0, 8).join(', ') + (named.length > 8 ? ', …' : '') : ''}): kept: ${keptWords.length ? keptWords.join(', ') : 'none'}; not carried over: ${restWords || 'none'}; the report's theme formats the rest`);
+      lost.push(ownSettingsSaid({ count: objs.length, named, kept: keptWords, rest, hidden }));
     } else lost.push('its own look (colours, labels, animation): the report\'s theme formats the native visual');
     lost.push('its own interactions (its clicks, animation and drill behaviour): Power BI\'s cross-filtering and drill buttons take their place');
     // when the chosen visual is not the meaning's first choice, its drill note follows the chosen one

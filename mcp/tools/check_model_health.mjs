@@ -8,7 +8,7 @@ import { AIM } from '../lib/scope.mjs';
 import { gulfFixInputs } from '../lib/gulf-calendar.mjs';
 import * as Plans from '../lib/plans.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
-import { whereSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
+import { whereSaid, besideSaid, NEVER_APPLIED } from '../lib/plain-words.mjs';
 import { readAnswers, Memory, answerKey, writeAnswers, answersName, REPLACES } from '../lib/answers.mjs';
 import { fitLists, out } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
@@ -81,7 +81,7 @@ export function register(server, ctx) {
       const base = scriptBase + ' - fix ' + what;
       if (!write) { const name = path.basename(freeScriptName(scriptDir, base, script)); scriptNames[base] = name; wouldWrite.push(name); return { scriptAfterGo: name, notWrittenYet: 'Not written yet: ' + AFTER_GO }; }
       const file = put(scriptDir, base, script);
-      return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", next to the project. ' + howToApply + (refresh ? refreshAfter : '') };
+      return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", ' + besideSaid(path.dirname(file)) + '. ' + howToApply + (refresh ? refreshAfter : '') };
     };
     const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
     const r = Health.analyze(m.tmsl, m.report);
