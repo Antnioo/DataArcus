@@ -19,7 +19,7 @@
   for byte); `npm test -- report`: the baseline + 1 suite; `-- core`: golden's changes said task by task; full run
   +1 suite.
 - **Got:** glass-default 27 of 38 red on the base -> 41 PASS; theme-generator 910 -> 920; design-engine, pbip equal;
-  report 35 -> 36 suites; core 6 = 6 (golden unchanged); full run 101 suites passed. Tests changed for the default: 4.
+  report 35 -> 36 suites; core 6 = 6 (golden unchanged); full run on ac296cc3: 105 suites passed. Tests changed for the default: 4.
 - **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The plan
@@ -60,6 +60,10 @@ Suites (base 6f106a3 in a separate worktree -> after):
   pins the look, so golden-expected.json is unchanged; mutation 73 killed). `-- twin`: 8 = 8.
 - Full run `npm test -- --keep-going` on 7b7d489: "run-tests: 101 suites passed" (100 + glass-default).
 - The website's whole suite (`scripts/tests/run-all.mjs`) on 7b7d489: "All 21 passed" (the visitor change touches all).
+- After the reviewer's CI findings (27 Oct): integration merged (d91401a), the MCP page's 0.3.1 list at 8 lines
+  (`test-whats-new` 167 PASS), WORK.md within its cap (ac296cc).
+Full run on ac296cc3: "run-tests: 105 suites passed"
+- The website's whole suite on ac296cc3: "All 21 passed".
 - lint clean; check-min PASS (every changed .min.js stamped); csp, ar-pages, site config, changelog-words,
   check-result-lines (101), check-agent-memory (172) PASS.
 
