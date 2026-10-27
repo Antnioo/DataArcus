@@ -18,7 +18,12 @@
   on 44d1f32 and said so). `npm test -- safety` the base's suites + 1; `-- report`, `-- twin` the same counts;
   check-release, release-text, 0.3.0-claims the same counts and PASS; full run the base's 105 + 1 = 106 suites;
   check-result-lines, changelog-words, check-agent-memory PASS; lint exit 0.
-- **Resume:** step 1 (this note) pushed; next the map and the red tests.
+- **Got:** sf1 55 checks (red on 44d1f32 first: 13 of 53; the other 40 new guards, green on both); 3 defects FIXED
+  (R4: consistentText and the redesign's options dropped silently outside a redesign; C1: the Gulf calendar wrote a raw
+  tab in a relationship line; C2: a consistent copy wrote a font face with a tab into the theme); the way back in the
+  CHANGELOG and README; report 37 suites PASS, safety 15 PASS (sf1 included); lint exit 0; changelog-words,
+  release-text, check-result-lines PASS. Full run: below.
+- **Resume:** done; waits for the reviewer. Desktop shows nothing new (nothing is written differently for a valid call).
 
 ## Round 4's finding, reproduced first (before this note)
 `.sf1/repro2.mjs` (a scratch script, not committed) on NC1's custom visuals lab (`lab/custom-visuals-lab.mjs`, made up):
@@ -44,3 +49,85 @@ The tester's own report (36 visuals) is not reachable here; the cause matches "a
    - one block per gap the map finds.
 4. The smallest fixes (`mcp/tools/plan_layout.mjs`, `mcp/tools/create_report.mjs` for R4).
 5. CHANGELOG, this note, the full run.
+
+## The map (rule, path, proving test, status)
+Status: proven (a test today), added (a new guard in sf1, green on 44d1f32 too), FIXED (red on 44d1f32, fixed here),
+gap (no test; why). sf1 = `mcp/test-0.3.1-sf1.mjs` ("PASS  sf1  55 checks"). Every answer passes `capAnswer`
+(`lib/answer.mjs` ANSWER_MAX 40,000: the longest list halved and named), so a D gap is a list never driven large.
+
+| Rule | Path (tool / write) | Proving test | Status |
+|---|---|---|---|
+| a | redesign answers + page (filter, slicer, bookmark, DATATABLE row planted) | test-0.3.0-approval-disclosure.mjs:226, :229 (r6-disclosure) | proven |
+| a | new report plan, write, page (DATATABLE, #table, query rows, saved filter) | test-0.3.0-approval-disclosure.mjs:261 A2-S10 (r6-disclosure) | proven |
+| a | read_model, suggest_fields, check_model_health, plan_layout rows | test-0.2.9d.mjs:155 (v029d) | proven |
+| a | read_report filter value, bookmark state; malformed TopN | test-0.2.9c.mjs:110, :112 (v029c); test-0.3.1-audit-readers.mjs:68-70, :151 (audit-readers) | proven |
+| a | native copy, consistent redesign, EN-AR copy, twin, bilingual report, glass theme, Gulf calendar, sample: plan, write, approval page; read_report, check_report (+ lens arabic) on the EN-AR copy and the bilingual report (filter, slicer, custom slicer, bookmark, M row planted; the lab's and the sample's rows) | sf1:207-211 (A0-A3) | added |
+| a | read_report's drill level with a drill value planted | none (test-0.3.1-sq15a.mjs:82 checks the field only) | gap: not done (time); the reader returns the level's field name only (read-report.mjs) |
+| b | create_report new report: unapproved; failed part way | test-0.2.9.mjs:72 (mcp); test-partial-writes.mjs:124, :140 (b153) | proven |
+| b | separate twin: unapproved; failed | test-0.3.0-twin.mjs:82, :290 (mcp block) | proven |
+| b | answers file; format script; Gulf calendar; theme (failed) | test-0.3.0-answers-safety.mjs:108, :120 (r5-answers); test-0.3.0-write-safety.mjs:286, :293 (r4-write-safety); test-partial-writes.mjs:170, :124 (b153) | proven |
+| b | native copy, consistent redesign, EN-AR copy, twin, bilingual report, glass theme, Gulf calendar, sample: a plan id never approved writes nothing; approved and failed part way leaves nothing; written after the click on DataArcus's page | sf1:186, :191, :194 (B1-B3, 8 paths each) | added |
+| b | the glass pictures of a report: in StaticResources, plain names, rolled back with it | sf1:198 (B4) and B2's bilingual path | added |
+| b | flip cards, status icons, DAX functions, metric switcher scripts | the new report's one tree (report-run.mjs writeTree), b153 P2 | proven through the shared write; no test per option |
+| c | Gulf calendar: an asked date column, or a date table reached through it, named with a tab | sf1:97 (C1, 2 checks) | FIXED (`lib/gulf-calendar.mjs`: refused, nothing written) |
+| c | consistency: a font face with a tab after its first family | sf1:115 (C2) | FIXED (`lib/text-format.mjs` fontOf reads the whole face: kept on its visual, never in the theme) |
+| c | native copy, consistent redesign, EN-AR copy: every JSON parses, no name with a control character | sf1:122 (C3) | added (no control name planted: the lab has none; JSON writes escape) |
+| c | glass picture file names | sf1:198 (B4: `^[\w-]+\.png$`) | added |
+| c | bilingual report with a control character in a field, text or term | none | gap: not done (time); `cleanLabel` (twin-texts.mjs) screens labels and terms |
+| c | scripts of create_report and the twin (format, Arabic month) | test-round22.mjs:63, :68 (round22); test-0.3.0-script-names.mjs:57, :64 (script-names) | proven |
+| d | every tool on the large model, under the cap, cuts named | test-0.3.0-large-model-caps.mjs:46, :47, :58 (large-model-caps) | proven |
+| d | twin texts, notTranslated, redesignPages, bilingual answer, sample | large-model-caps:145, :147, :163; test-0.3.1-bilingual-report.mjs:213; test-0.3.1-sample-project.mjs:175 | proven |
+| d | the consistent redesign's lists and the native copy's replacements on a report of 13 copies of each visual | sf1:231 (D1, 2 checks) | added |
+| d | Arabic lens findings cut; read_report's images (10 per visual); twin terminology rows | arabic-lens:170 (small report only); none; large-model-caps C-1 (size only) | gap: capped in code, cut not driven large |
+
+## Round 4's verdict
+Real, and its cause was ours (not GD2's files): `consistentText` given with `customVisualsFrom` was ignored by
+plan_layout and create_report (they read it only in `redesignPlan` and the redesign branch), with no word in the
+plan, so the native copy kept every visual's own text settings and the EN-AR copy, built from it, copied them to both
+halves. Measured on NC1's lab: 18 of 33 visuals in "Gulf Retail native". Fix: `redesignOnly` (`lib/report-inputs.mjs`)
+refused by plan_layout (a plan problem naming the route) and create_report ("Nothing was written"). The route that works
+(native copy, its redesign with consistentText "report", then the EN-AR copy) gives 0 of 33, then 0 of 76 (sf1 R4-7, R4-8).
+
+## Before -> after
+- A native copy with consistentText (or keepPositions, titles, restyle): a plan id and a write that ignored them ->
+  no plan id, the problem names the way; create_report "Nothing was written".
+- A new report with consistentText: ignored -> refused, said.
+- add_gulf_calendar relating `Sales[Order<tab>Date]`, or through a date table named `Cal<tab>endar`: a relationship
+  line with a raw tab -> refused, nothing written.
+- consistentText "report" where most titles use the face "Arial, Foo<tab>Bar": the theme got that face -> the face
+  is not read (kept on its visual, as any value DataArcus does not read), the theme never holds it.
+- The release text: no way back -> CHANGELOG 0.3.1 "Going back to 0.3.0" (file, place, SHA-256, uninstall then
+  install); README step 10. Tests changed: none. Pins changed: none.
+
+## CHANGELOG line
+"No option dropped without a word" (0.3.1 section) and "Going back to 0.3.0" (its first bullet).
+
+## The way back: the SHA-256
+`aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`: the one the MCP page publishes for
+`dataarcus-0.3.0.mcpb` today and `mcp/research/SKILL-PACKAGING.md` recorded on 25 Oct ("downloaded 25 Oct; matches the
+notes"); sf1 WB-1 reads it there. README's step 10 names the place and points to the release notes and the CHANGELOG
+for the hash (no file name or hash of its own: `scripts/check-release.mjs` reads README's download lines, and on
+release day every one must name 0.3.1; WB-4 applies the RELEASE comment and checks it).
+
+## Decisions I made
+- The redesign's four options are refused outside a redesign, not carried into the native copy (the smallest fix; a
+  native copy with one text set is two approved steps, the plan says which).
+- Uninstall, then install 0.3.0: the README's Update path is for a newer file; a downgrade over 0.3.1 was not measured.
+- The base's full run was stopped (it doubled the load beside mine); the base count is GD1's "105 suites passed" on
+  ac296cc3 (its note), not run here on 44d1f32 itself.
+- Gaps left in the map are written as gaps, with why, not filled with weaker checks.
+
+## For the laptop
+1. Claude Desktop: uninstall 0.3.1, install `dataarcus-0.3.0.mcpb` (its SHA-256 as above); "list your DataArcus
+   tools" shows 11; then install 0.3.1 again (Update or Install). Confirms the CHANGELOG's and README's lines.
+
+## Seen, not in scope
+1. The README's RELEASE comment says "three places"; step 2 holds four "0.3.0" (one line names it twice). Harmless.
+2. check_report's schema messages scrub quoted values (`lib/check-report.mjs:124`): no test plants one (outside 0.3.1's diff).
+
+## Lessons for the reviewer
+- `DATAARCUS_TEST_WRITE_FAIL` counts a server's writes once: a second failing write on the same server succeeds, so
+  one server per failing path (cost a rerun).
+- The redesign plan fits its own lists (`listsCut`, `<list>NotListed`) under 34,000 before the 40,000 answer cap: a
+  cap test must accept either.
+- A tab in a name passes "Table[Column]" parsing where a line break does not: test control characters with a tab.
