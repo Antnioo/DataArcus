@@ -15,9 +15,9 @@ variants (the columns, left to right V0 ... V4):
 | Variant | What it is |
 |---|---|
 | V0 | no marks |
-| V1 | DataArcus's current rule (`isolateLatin`: each Latin run in U+2068 ... U+2069, U+200F beside a run at either end) |
+| V1 | DataArcus's rule before BD2 (`isolateRuns`: each Latin run in U+2068 ... U+2069, U+200F beside a run at either end) |
 | V2 | V1 plus U+200F at the start of the text (the same as V1 for the start row: V1 already opens with it) |
-| V3 | V1 wrapped whole in U+2067 ... U+2069 (RLI ... PDI) |
+| V3 | V1 wrapped whole in U+2067 ... U+2069 (RLI ... PDI): DataArcus's rule since BD2 (`isolateLatin`) |
 | V4 | V1 wrapped whole in U+202B ... U+202C (RLE ... PDF) |
 
 | Page id | Kind |
@@ -86,3 +86,10 @@ with its marks named ([RLM] [FSI] [PDI] [RLI] [RLE] [PDF]); `--pages` the 38 pag
 Then the one question for the owner: which variant (V1, V2, V3 or V4) reads right on every kind; DataArcus's rule
 (`isolateLatin` in `assets/js/text-measure.js`, used by the MCP and the website's Arabic download) changes to it only
 after his go.
+
+## Measured (the laptop, Power BI Desktop 2.159, 27 Oct, Windows text recognition; BD2)
+V0 wrong everywhere; V1 right everywhere except where Desktop cuts a text with "..." (cards: the "..." at the wrong end);
+V3 right on every canvas kind, cut card texts included; V4 draws as V3 (the older embeddings); no variant helps the tab
+strip: page and tooltip page names lay out left to right. The reviewer adopted V3: `isolateLatin` is V3 since BD2 (the
+lab's V1 is `isolateRuns`, unchanged). BD2 also fixed page 4: its buttons drew no text (`show` sat inside the state
+selector with `text`); `show` is now an entry of its own, as DataArcus's writer does.

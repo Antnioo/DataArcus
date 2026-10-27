@@ -85,24 +85,41 @@
   // measure's script; a column in the other script is left out (never English words in an Arabic title, or the other
   // way round). by: the report's word ("by", «حسب»).
   // (0.3.0 R2, the owner's must-fix: an Arabic report from an English-named model said "Web Orders Total Score by Plan
-  // Group") the report's word decides the title's language, not the measure's script: two English names in an Arabic
-  // report are not joined with an English word; the measure's name alone, a field name the plan lists as kept in English
-  // (0.3.1 LR2, the owner, 26 Oct: "Use «حسب»" for the Arabic download's chart titles; the laptop saw "Total Sales
-  // (Region)", the measure alone and a bracket) in an Arabic report two names are always joined with «حسب», whatever
-  // their script: «Total Sales حسب Region»; the writer isolates the Latin runs (pbip-export.js isolateFiles). An English
-  // report is as before
+  // Group") the report's word decides the title's language, not the measure's script.
+  // (0.3.1 TT1, the owner, 27 Oct: "i want the whole title to be either arabic or english"; it replaces LR2's «حسب»
+  // between English names) a title is wholly one language: in an Arabic report two Arabic names take «حسب», two English
+  // names "by" ("Total Sales by Region"), a mixed pair the measure alone (variants names both fields in one language
+  // first); the writer isolates an English title as a whole (text-measure.js isolateWhole). An English report as before
   function join(m, c, by) {
     if (!m || !c) return m || null;
-    if (arabic(by)) return m + ' ' + by + ' ' + c;
     const ar = arabic(m);
     if (ar !== arabic(c)) return m;
+    if (arabic(by)) return m + ' ' + (ar ? by : 'by') + ' ' + c;
     return m + ' ' + (ar ? 'حسب' : (!by ? 'by' : by)) + ' ' + c;
   }
+
+  // (TT1) a field as a title in one language names it: as it is when its name (the display name given, else the model's)
+  // is in that language; else, a display name in the other language set aside, the model's own name when that one is;
+  // else null (it has no text in that language)
+  const inLang = (f, lang, shown) => {
+    if (!f) return null;
+    const is = (g) => arabic(nameOf(g, shown, true)) === (lang === 'ar');
+    if (is(f)) return f;
+    if (!f.name) return null;
+    const g = Object.assign({}, f); delete g.name;
+    return is(g) ? g : null;
+  };
 
   // Every title a visual can take, the full one first, then one per shortening rule that changes it. Each: { text, m, c }.
   // mf, cf: the bound fields (the measure, the category or time axis; cf null for a card); by: the report's word.
   function variants(mf, cf, by, shown) {
     const inAr = arabic(by);
+    // (TT1) an Arabic report names both fields in Arabic when both have an Arabic text (a name the person approved, or
+    // Arabic in the model), else both in English (half approved is English); else the measure alone, in the language it has
+    if (inAr && mf) {
+      const lang = inLang(mf, 'ar', shown) && (!cf || inLang(cf, 'ar', shown)) ? 'ar' : inLang(mf, 'en', shown) && (!cf || inLang(cf, 'en', shown)) ? 'en' : null;
+      if (lang) { mf = inLang(mf, lang, shown); cf = cf ? inLang(cf, lang, shown) : null; } else { mf = inLang(mf, 'ar', shown) || inLang(mf, 'en', shown) || mf; cf = null; }
+    }
     let m = nameOf(mf, shown, inAr), c = cf ? nameOf(cf, shown, inAr) : null;
     const out = [{ text: join(m, c, by), m, c }];
     if (!m) return out;
@@ -130,8 +147,9 @@
   // when the forms run out (the caller keeps its own rule).
   function alternate(m, c, nth, ranked, by) {
     if (!m) return null;
-    // (LR2: an Arabic report's sentences are Arabic, whatever the names' script: «ترتيب Region حسب Total Sales»)
-    const inAr = arabic(by), ar = inAr || arabic(m), withC = !!c && (inAr || ar === arabic(c));
+    // (TT1, the owner's rule of 27 Oct: the sentence in the names' language, "Region ranked by Total Sales" in an Arabic
+    // report too; a mixed pair says the measure alone)
+    const ar = arabic(m), withC = !!c && ar === arabic(c);
     const forms = ar
       ? (withC ? [ranked && `ترتيب ${c} حسب ${m}`, `${m} لكل ${c}`, `توزيع ${m} حسب ${c}`, `${m} عبر ${c}`] : [ranked && `الترتيب حسب ${m}`, `توزيع ${m}`, `نظرة على ${m}`])
       : (withC ? [ranked && `${c} ranked by ${m}`, `${m} per ${c}`, `${m} breakdown by ${c}`, `${m} across ${c}`] : [ranked && `Ranked by ${m}`, `${m} breakdown`, `${m} overview`]);

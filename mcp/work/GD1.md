@@ -107,6 +107,9 @@ Suites (base 6f106a3 in a separate worktree -> after):
    the background picture) stays plain.
 9. **A small cache of glass PNGs** (8, by colours, strength and size, a copy each call): every new report now draws the
    picture in its plan and again in its write.
+10. **The MCP page's 0.3.1 list stays at 8 lines** (the reviewer, 27 Oct: `test-whats-new` wants 6-8; the glass line made
+   9): "One set of right-to-left rules" (l6) is folded into "A better EN-AR copy" (l5), both about the Arabic copy, its
+   words kept, EN and AR alike; the glass line (l9) stays.
 
 ## For the laptop
 On the next batched run (Desktop, harness.ps1, full-size crops):

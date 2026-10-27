@@ -75,8 +75,11 @@ try {
     chk(() => a.every((x) => [...words(x.text)].every((w) => full.has(w))) && v.every((x) => [...words(x.text)].every((w) => words(v[0].text).has(w))), () => 'ST-1g. every shortened title is made of whole words of the full one');
     chk(() => ST.variants({ t: 'S', m: 'Total net sales' }, null, 'by').map((x) => x.text).includes('Net sales'), () => 'ST-1m. a name left after "Total" starts with a capital ("Net sales")');
     chk(() => ST.variants({ t: 'S', m: 'Total Sales', name: 'Total Sales Display' }, { t: 'R', c: 'Region' }, 'by').every((x) => x.m === 'Total Sales Display'), () => 'ST-1h. the user\'s display name is never rewritten');
-    chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة' && ST.join('عدد Order Id', 'Region', 'حسب') === 'عدد Order Id حسب Region' && ST.join('عدد Order Id', 'Region', 'by') === 'عدد Order Id',
-      () => 'ST-1i. "M by C", «M حسب C» (0.3.1 LR2: an Arabic report joins whatever the names\' script), and one script per English title');
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces LR2's
+    // «حسب» between any two names: two English names in an Arabic report take "by", a mixed pair the measure alone)
+    chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة' && ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales by Region'
+      && ST.join('عدد Order Id', 'Region', 'حسب') === 'عدد Order Id' && ST.join('عدد Order Id', 'Region', 'by') === 'عدد Order Id',
+    () => 'ST-1i. "M by C", «M حسب C», each wholly one language (0.3.1 TT1: "Total Sales by Region" in an Arabic report too; a mixed pair: the measure alone)');
     const alts = [2, 3, 4].map((n) => ST.alternate('Total', 'Note', n, true, 'by')), altAr = [2, 3].map((n) => ST.alternate('إجمالي المبيعات', 'المنطقة', n, true, 'حسب'));
     chk(() => JSON.stringify(alts) === JSON.stringify(['Note ranked by Total', 'Total per Note', 'Total breakdown by Note']) && JSON.stringify(altAr) === JSON.stringify(['ترتيب المنطقة حسب إجمالي المبيعات', 'إجمالي المبيعات لكل المنطقة']),
       () => `ST-1j. the alternates: ${JSON.stringify([alts, altAr])}`);

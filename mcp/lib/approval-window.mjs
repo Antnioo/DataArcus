@@ -544,6 +544,7 @@ function summaryOf(kind, data) {
       sections.push({ heading: `Custom visuals replaced (${reps.length})`, rows: (lead ? [['In short', [String(lead.lead)].concat(lead.levels ? ['high', 'medium', 'low'].map((k) => `${k}: ${String(lead.levels[k] || '')}`) : [])]] : [])
         .concat(reps.map((x) => [String(x.line), (x.confidence ? [`confidence: ${String(x.confidence)}${x.evidence ? ` (${String(x.evidence)})` : ''}`] : [])
           .concat((x.lost || []).length ? (x.lost || []).map((l) => 'loses ' + String(l)) : ['loses nothing it shows'])
+          .concat((x.needs || []).map((l) => 'to turn on: ' + String(l)))
           .concat(x.second ? [`second option${x.second.chosen ? ' (chosen; the first is the closer one)' : ''}: ${String(x.second.label || x.second.native)} (${String(x.second.native)}), key "${String(x.second.pick)}": it loses ${(x.second.lost || []).map((l) => String(l).split(/: /)[0]).join('; ')}`] : [])])) }); }
     else if (d.customVisuals) sections.push({ heading: 'Custom visuals replaced', rows: [['Replacements', val(d.customVisuals)]] });
     // (J14, the owner's decision of 19 Oct) what the check before writing could not cover, said before the click

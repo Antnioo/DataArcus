@@ -158,7 +158,10 @@ try {
     const stray = shownTexts(TW).filter((t) => words(t.s).some((x) => !ok.has(x.toLowerCase())));
     chk(() => Object.keys(TW).length && !stray.length, () => `TC-3f. ${stray.length} English texts in the twin that its plan did not list as kept: ${JSON.stringify(uniq(stray.map((t) => `${t.what} "${t.s.slice(0, 60)}" (${t.where.replace(/^.*definition\//, '').slice(0, 50)})`)).slice(0, 16))}`);
     const kept = shownTexts(TW).filter((t) => /[A-Za-z]/.test(t.s));
-    chk(() => kept.length && kept.every((t) => KEEP.includes(t.s.trim())), () => `TC-3g. only the two kept fields' names are English in the twin: ${JSON.stringify(uniq(kept.map((t) => t.s)))}`);
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title the person leaves English is isolated whole in the
+    // twin by the shared rule, text-measure.js isolateWhole: the kept name as written, or isolated whole)
+    const TMw = req0('../assets/js/text-measure.js');
+    chk(() => kept.length && kept.every((t) => KEEP.includes(t.s.trim()) || KEEP.some((k) => t.s === TMw.isolateWhole(k))), () => `TC-3g. only the two kept fields' names are English in the twin: ${JSON.stringify(uniq(kept.map((t) => t.s)))}`);
   }
   // TC-4: the original's title measures the twin's charts no longer use: listed, left byte for byte
   {

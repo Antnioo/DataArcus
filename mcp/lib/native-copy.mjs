@@ -11,7 +11,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
 import { safeName, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, notCopiedOf, inventory, diskSource } from './read-report.mjs';
-import { replacementsOf, replacementLine, typeOfModel, wordsOf, CONFIDENCE_LEVELS } from './visual-meaning.mjs';
+import { replacementsOf, replacementLine, typeOfModel, categoryOfModel, wordsOf, CONFIDENCE_LEVELS, AZURE_NEEDS } from './visual-meaning.mjs';
 import { rulesInput, filledLanguages } from './check-report.mjs';
 import { newPlatform } from './twin-copy.mjs';
 import { writeTree } from './files.mjs';
@@ -61,7 +61,7 @@ function leadOf(replace) {
  *  evidence, losses and second option (plan_layout's customVisualsShown). */
 export function shownOf(answer) {
   const a = answer || {}, reps = Array.isArray(a.replacements) ? a.replacements : [];
-  return (a.confidence && a.confidence.lead ? [{ lead: a.confidence.lead, levels: a.confidence.levels }] : []).concat(reps.map((x) => Object.assign({ line: x.line, lost: x.lost || [], confidence: x.confidence, evidence: x.evidence }, x.second ? { second: x.second } : {})));
+  return (a.confidence && a.confidence.lead ? [{ lead: a.confidence.lead, levels: a.confidence.levels }] : []).concat(reps.map((x) => Object.assign({ line: x.line, lost: x.lost || [], confidence: x.confidence, evidence: x.evidence }, x.needs ? { needs: x.needs } : {}, x.second ? { second: x.second } : {})));
 }
 // what the gate pins and the write compares: each entry's visual, native type and roles (by queryRef)
 // (0.3.0 J19) and its panels, when its values may not share one axis
@@ -77,18 +77,20 @@ export function planNative(reportPath, model, axes, opts) {
   // (0.3.1 SQ2, J19-S1) each page's language, as check_report tells it: an Arabic page's panels say their units in Arabic
   const langs = filledLanguages(inv, rulesInput(inv).R).pages, langOf = (p) => (langs[p.id] === 'ar' ? 'ar' : 'en');
   const second = ((opts && opts.second) || []).map(String);
-  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes, langOf, second, calendarOf: calendarOfModel(model && model.tables) });
+  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts, axes, langOf, second, calendarOf: calendarOfModel(model && model.tables), categoryOf: categoryOfModel(model && model.tables) });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
   const free = nothingAt(loc.outDir) && nothingAt(loc.outPbip);
   const answer = {
     report: pathOut(loc.dir), nativeReport: pathOut(loc.outDir), original: 'only read: never changed',
     ...(replace.length ? { confidence: { lead: leadOf(replace), levels: CONFIDENCE_LEVELS } } : {}),
-    replacements: replace.map((e) => Object.assign({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, evidence: e.evidence, guess: e.guess, lost: e.lost, tell: e.tell }, e.axes ? { axes: e.axes } : {},
+    // (0.3.1 NC3) what the person must turn on before the copy draws (an Azure map), said once
+    ...(replace.some((e) => e.native === 'azureMap') ? { turnOn: AZURE_NEEDS.slice() } : {}),
+    replacements: replace.map((e) => Object.assign({ line: replacementLine(e), page: e.page, place: e.place, from: e.from, native: e.native, confidence: e.confidence, evidence: e.evidence, guess: e.guess, lost: e.lost, tell: e.tell }, e.needs ? { needs: e.needs } : {}, e.axes ? { axes: e.axes } : {},
       e.second ? { second: { pick: e.second.pick, native: e.second.native, label: e.second.label, chosen: e.second.chosen, lost: e.second.lost, how: e.second.chosen ? 'written as the second option (customVisualsSecond); leave its key out to write the first' : `to write this instead: customVisualsSecond ["${e.second.pick}"], the user's own choice` } } : {})),
     notReplaced: keep.map((e) => ({ line: replacementLine(e), why: e.htmlNeeded ? 'no native visual draws it: an HTML/SVG measure (a later step) or a table of its links; it stays the custom visual in the copy' : 'no native visual takes its fields: it stays the custom visual in the copy' })),
     ...notCopiedOf(left),
     ...(isFile(path.join(loc.dir, '.platform')) ? {} : { platform: 'The original has no .platform (Power BI\'s validator calls that a "can break"): the copy gets its own, with its name and a new logical id.' }),
-    sayInPlan: 'Start with confidence.lead; show the user every replacement line, its confidence and evidence, and what it loses (lost), before their go: nothing is replaced silently. Where a replacement has a second option, offer it: customVisualsSecond with its key, only the user\'s own choice. The original report is not changed; the native copy is a new report next to it. A replacement marked a guess was matched by its fields\' kinds only.'
+    sayInPlan: 'Start with confidence.lead; show the user every replacement line, its confidence and evidence, and what it loses (lost), before their go: nothing is replaced silently. Where a replacement has a second option, offer it: customVisualsSecond with its key, only the user\'s own choice. The original report is not changed; the native copy is a new report next to it. A replacement marked a guess was matched by its fields\' kinds only. Where turnOn is given, tell the user what to turn on before they open the copy (and each replacement\'s needs), so a map never arrives empty.'
   };
   const unknown = second.filter((k) => !replace.some((e) => e.second && e.second.pick === k));
   if (unknown.length) answer.secondUnknown = `customVisualsSecond names ${unknown.length} key(s) no replacement offers a second option for (${unknown.slice(0, 5).map((k) => JSON.stringify(k.slice(0, 20))).join(', ')}): use the keys of the plan's second options.`;
@@ -152,5 +154,5 @@ export function writeNative(reportPath, model, plan, axes, art, opts) {
   writeTree(loc.project, art.files);
   return { written: true, report: pathOut(loc.outDir), pbip: pathOut(loc.outPbip), replaced: T.lost.length, lost: T.lost, customVisualsNoLongerDeclared: T.dropped.map(safeName), original: 'only read: not changed',
     exact: { digest: art.digest, files: art.files.length, note: 'These are the files the plan built before the go, written byte for byte (the digest is the plan\'s).' },
-    nextSteps: `Open "${path.basename(loc.outPbip)}" in Power BI Desktop (the original stays as it was), look at each replaced visual, and check the report with check_report. Tell the user what each replacement lost (lost).` };
+    nextSteps: `Open "${path.basename(loc.outPbip)}" in Power BI Desktop (the original stays as it was), look at each replaced visual, and check the report with check_report. Tell the user what each replacement lost (lost).${approved.some((e) => e.native === 'azureMap') ? ` For the Azure map: ${AZURE_NEEDS.join('; ')}.` : ''}` };
 }

@@ -27,6 +27,11 @@ package's manifest; this file says what is in it.
   size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
   already show (or keeps its own). The layout stays yours (`keepPositions` leaves every visual where it is); text boxes,
   shapes, buttons, groups and custom visuals are not touched. The plan lists every setting removed before you approve.
+- **The text set is drawn as planned:** the theme now carries the text set per visual type (titles, axes, labels,
+  table text), where Power BI Desktop applies it, instead of only as text classes, which Desktop left at its own
+  default sizes. A visual's own colour, background, alignment and wrap are never touched; only its font, size, bold
+  and italic go. A report saved by an older Power BI Desktop (its definition.pbir names no schema) can be redesigned;
+  any other file without one is refused with why and how to fix it (open and save once in Desktop).
 - **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
   generate_theme (`chart.look: "glass"`). Power BI has no blur behind a visual, so the look is made of what Power BI
   has: see-through cards (the visual's background with transparency), a thin light border, a soft shadow, and a soft
@@ -110,6 +115,12 @@ package's manifest; this file says what is in it.
   option on the Calendar Generator and in add_gulf_calendar; the UAE and Saudi Arabia quick setups keep each country's
   weekend before its change; the pages say the announced dates are the UAE's, that Oman announced 11 of them a day
   later, that the working-day flag knows no holidays, and that the relative offsets move on with each refresh.
+- **The Gulf calendar never gives a date column a second date table:** when a date column you ask add_gulf_calendar to
+  relate already belongs to your model's date table (Sales[Date] to Calendar[Date]), the script relates the Gulf calendar
+  to that date table instead, so your measures follow its Hijri and Ramadan columns through your own calendar. Where that
+  can't be done, the relationship is added inactive and the plan shows how a measure uses it (USERELATIONSHIP). The plan
+  and the approval page say which and why, in English and Arabic, and the step by hand names your date table, not your
+  sales table, when you relate it yourself.
 - **A write that fails half-way never removes another program's file:** DataArcus checks a file's content against what
   it wrote before it cleans up, even when another program put a file of the same size in the same place.
 - **check_report says what it checked:** it no longer says a report "opens in Power BI Desktop" or "is not broken"; it
@@ -179,9 +190,15 @@ package's manifest; this file says what is in it.
   the report will have, in English and Arabic, and says when one was added to fill the design's slicer places. An
   Arabic name drafted for a field such as "Year Month" now reads «الشهر والسنة», never word for word. The Arabic approval
   page of the sample project shows its details in Arabic, the English under each.
-- **Arabic chart titles with «حسب»:** an Arabic report on a model with English names titles its charts «Total Sales حسب
-  Region» and «ترتيب Region حسب Total Sales», in the website's download and the MCP alike, instead of the English name
-  with its column in brackets. The English words keep their reading order (U+200F and isolates).
+- **Arabic reports get Arabic titles, never half Arabic, half English:** in an Arabic report every chart title is Arabic
+  («إجمالي المبيعات حسب المنطقة»). A field with no Arabic name yet is listed in the plan for an Arabic name to be drafted
+  and approved before anything is written; nothing is translated without your approval. A title stays English only for a
+  field you keep in English on purpose, and then the whole title is English ("Total Sales by Region"), shown as one run in
+  the Arabic page (U+200F and isolates); never an Arabic word between English names, never the column in brackets. This
+  holds in the MCP's reports, the Arabic twin and the EN-AR copy (a title you leave untranslated stays wholly English);
+  the website's Arabic download, which has no step to approve names, writes the English title whole. A report on a model
+  without measures says "Count of Order Id", not «عدد Order Id», and the DAX library's story title is an Arabic sentence
+  only for a measure with an Arabic name (its leader is a value from your data, shown as it is).
 - **Arabic text order, as Desktop draws it:** Arabic story titles from the DAX function library start with a
   right-to-left mark, so an English name at the start keeps the sentence in order. check_report's Arabic lens says an
   English word anywhere in Arabic text can swap the words around it, with the fix. The DAX functions option says Desktop
@@ -192,6 +209,12 @@ package's manifest; this file says what is in it.
   tornado's two sides, a bullet's bands, a word cloud's sizes, a calendar's day squares) and which of its own settings
   were kept. A bullet chart now becomes columns with its target as a marker on each, and a calendar heatmap a matrix of
   months by weekday shaded by the value; the earlier replacement is offered second (`customVisualsSecond`).
+- **Native copies that draw in Desktop:** a map now says, in the plan and after the write, the two Power BI tenant
+  settings Azure Maps needs by their exact names (a tenant outside the United States and the European Union needs the
+  second) and a location column without a geographic data category, and offers a bar chart second that draws without
+  Azure Maps. A text search box becomes a dropdown slicer with its search on in its own box (the input slicer second),
+  a row of chips a dropdown with why (the pills' measured height), never a list cut by its box; a word cloud's bars are
+  sorted by their value, largest first.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

@@ -15,6 +15,7 @@
  * visual becomes one native chart per group in its own box, side by side (one above the other in a box taller than
  * wide), the first keeping its name, the others "<name>_2", "_3" (more: [{ name, json }]); each value axis titled with
  * its unit, and a title typed as text followed by it (0.3.1 SQ2: mapping.panels[].titleTag). A combo is never written with a second axis: mapping.secShowOff writes valueAxis.secShow false.
+ * (0.3.1 NC3) mapping.format: dropdown, search, headerOff, minHeight (a slicer), sortByValue (a word cloud's bars, largest first).
  * dropUnusedCustomVisuals(report.json, used types): the report stops declaring custom visuals no visual uses any more,
  * so Power BI does not ask to sign in for them. Browser and Node (module.exports / window.DAReplace). */
 (function (root) {
@@ -101,7 +102,10 @@
       });
     }
     const keepSort = sort && list(sort.sort).length && list(sort.sort).every((s) => fieldsIn.has(JSON.stringify(s.field)));
-    const visual = Object.assign({ visualType: mapping.native, query: Object.assign({ queryState: qs }, keepSort ? { sortDefinition: clone(sort) } : {}) },
+    // (0.3.1 NC3) a word cloud's bars ranked by their value, largest first, when it kept no sort of its own (the writer's
+    // own bar charts' form, pbip-query.js: Descending by the value, isDefaultSort; with none Desktop drew them A to Z)
+    const fm0 = mapping.format || {}, byValue = !keepSort && fm0.sortByValue && qs.Y && qs.Y.projections[0] ? { sort: [{ field: clone(qs.Y.projections[0].field), direction: 'Descending' }], isDefaultSort: true } : null;
+    const visual = Object.assign({ visualType: mapping.native, query: Object.assign({ queryState: qs }, keepSort ? { sortDefinition: clone(sort) } : byValue ? { sortDefinition: byValue } : {}) },
       v.visualContainerObjects ? { visualContainerObjects: clone(v.visualContainerObjects) } : {}, { drillFilterOtherVisuals: v.drillFilterOtherVisuals !== false });
     // the native visual's own settings for what the custom one showed (mapping.format, from formatFacts and the kind)
     const fm = mapping.format || {}, objects = {}, put = (name, props) => { objects[name] = [{ properties: Object.fromEntries(Object.entries(props).map(([k, x]) => [k, lit(x)])) }]; };
@@ -111,6 +115,13 @@
     if (fm.axisTitles === false) { put('categoryAxis', { showAxisTitle: 'false' }); put('valueAxis', { showAxisTitle: 'false' }); }
     if (fm.legend === false) put('legend', { show: 'false' });
     if (fm.stylePicker === false) put('mapControls', { showStylePicker: 'false' });
+    // (0.3.1 NC3) a text search or a row of chips: the slicer as a dropdown (data.mode, measured on 2.158), its search on
+    // (general.selfFilterEnabled: Microsoft's capabilities, operations.searchEnabled), its header off in a box too low for it
+    if (mapping.native === 'slicer' && fm.dropdown) {
+      put('data', { mode: "'Dropdown'" });
+      if (fm.search) put('general', { selfFilterEnabled: 'true' });
+      if (fm.headerOff) put('header', { show: 'false' });
+    }
     // (0.3.1 NC2) a bullet's target on the combo: its line drawn as long-dash markers only (Microsoft's capabilities of
     // lineClusteredColumnComboChart: lineStyles.strokeShow, showMarker, markerShape longDash, markerSize)
     if (fm.targetMarkers && mapping.native === 'lineClusteredColumnComboChart') put('lineStyles', { strokeShow: 'false', showMarker: 'true', markerShape: "'longDash'", markerSize: '12D' });
@@ -137,6 +148,8 @@
       selector: { data: [{ dataViewWildcard: { matchingOption: 1 } }], metadata: heatOn.queryRef } }];
     }
     const out = clone(json); out.visual = visual;
+    // (0.3.1 NC3) a dropdown never lower than it can be drawn (mapping.format.minHeight: Microsoft's validator's floor)
+    if (fm.minHeight && out.position && !(out.position.height >= fm.minHeight)) out.position = Object.assign({}, out.position, { height: fm.minHeight });
     const objs = Object.keys(v.objects || {}), named = objs.map(plainName).filter(Boolean);
     const lost = [];
     if (objs.length) lost.push(`its own format settings (${objs.length}${named.length ? ': ' + named.slice(0, 8).join(', ') + (named.length > 8 ? ', …' : '') : ''})`);

@@ -7,10 +7,11 @@
 // Every page tests one kind of text Power BI draws; on it, the same Arabic text with a Latin run ("Department") at the
 // start, in the middle and at the end (rows), in five variants (columns):
 //   V0  no marks
-//   V1  DataArcus's current rule (text-measure.js isolateLatin: each Latin run in U+2068 ... U+2069, U+200F beside a run
+//   V1  DataArcus's rule before BD2 (text-measure.js isolateRuns: each Latin run in U+2068 ... U+2069, U+200F beside a run
 //       at either end)
 //   V2  V1 plus U+200F at the text start (the same as V1 when the run starts the text: V1 already opens with it)
-//   V3  V1 wrapped whole in U+2067 ... U+2069 (RLI ... PDI)
+//   V3  V1 wrapped whole in U+2067 ... U+2069 (RLI ... PDI): measured right on every canvas kind (27 Oct), the rule since
+//       BD2 (isolateLatin)
 //   V4  V1 wrapped whole in U+202B ... U+202C (RLE ... PDF)
 // Each tested box has its label ("V2 middle") in plain ASCII in a text box of its own above it, never inside the tested text.
 // Pages (ids, for screenshots by name): p1textbox, p2title, p3cardlabel, p3cardcallout, p4button, p5tableheader,
@@ -44,10 +45,11 @@ const obj = (props) => [{ properties: props }];
 export const TEXTS = { start: 'Department: عدد الأوامر في كل شهر', middle: 'عدد الأوامر حسب Department في كل شهر', end: 'عدد الأوامر في كل شهر حسب Department' };
 export const POSITIONS = ['start', 'middle', 'end'];
 const RLM = '‏', RLI = '⁧', PDI = '⁩', RLE = '‫', PDF = '‬';
-const v1 = (t) => TM.isolateLatin(t);
+// (BD2) V1 is the rule the lab measured: text-measure.js isolateRuns (isolateLatin is V3 since BD2)
+const v1 = (t) => TM.isolateRuns(t);
 export const VARIANTS = [
   ['V0', 'no marks', (t) => t],
-  ['V1', 'DataArcus\'s current rule (isolateLatin)', v1],
+  ['V1', 'DataArcus\'s rule before BD2 (isolateRuns)', v1],
   ['V2', 'V1 plus U+200F at the text start', (t) => (v1(t).startsWith(RLM) ? v1(t) : RLM + v1(t))],
   ['V3', 'V1 wrapped in U+2067 ... U+2069 (RLI ... PDI)', (t) => RLI + v1(t) + PDI],
   ['V4', 'V1 wrapped in U+202B ... U+202C (RLE ... PDF)', (t) => RLE + v1(t) + PDF]];
@@ -84,8 +86,10 @@ export const KINDS = [
     make: (t) => Object.assign(card(mea('Order Count')), { visualContainerObjects: { title: obj({ show: bool(true), text: str(t), alignment: str('right'), titleWrap: bool(true) }) } }) },
   { id: 'cardlabel', page: 'p3cardlabel', name: '3a Card label', what: 'a card\'s category label (the measure\'s display name for the visual)', make: (t) => card(mea('Order Count', t), { categoryLabels: obj({ show: bool(true) }) }) },
   { id: 'cardcallout', page: 'p3cardcallout', name: '3b Card callout', what: 'a card\'s callout value (a text measure that returns the tested text)', make: (t, c) => card(mea(`Callout ${c.id} ${c.pos}`), { categoryLabels: obj({ show: bool(false) }) }) },
+  // (BD2: the laptop saw page 4's buttons draw no text: a "show" inside the state selector is ignored) "show" in an entry
+  // of its own, the text under selector default, as DataArcus's writer does (pbip-page.js def)
   { id: 'button', page: 'p4button', name: '4 Button text', what: 'a blank button\'s text',
-    make: (t) => ({ visualType: 'actionButton', objects: { icon: [{ properties: { shapeType: str('blank') }, selector: { id: 'default' } }], text: [{ properties: { show: bool(true), text: str(t), fontSize: L('12D') }, selector: { id: 'default' } }] }, visualContainerObjects: noTitle() }) },
+    make: (t) => ({ visualType: 'actionButton', objects: { icon: [{ properties: { shapeType: str('blank') }, selector: { id: 'default' } }], text: [{ properties: { show: bool(true) } }, { properties: { text: str(t), fontSize: L('12D') }, selector: { id: 'default' } }] }, visualContainerObjects: noTitle() }) },
   { id: 'tableheader', page: 'p5tableheader', name: '5 Table header', what: 'a table\'s column header (the measure\'s display name)', make: (t) => ({ visualType: 'tableEx', query: q('Values', [mea('Order Count', t)]), visualContainerObjects: noTitle() }) },
   { id: 'slicerheader', page: 'p6slicerheader', name: '6 Slicer header', what: 'a list slicer\'s header (the column\'s display name)', make: (t) => ({ visualType: 'slicer', query: q('Values', [col('Department', t)]), objects: { header: obj({ show: bool(true) }) }, visualContainerObjects: noTitle() }) },
   { id: 'tooltippage', pagePrefix: 'p7tip', name: '7 Tooltip page name', what: 'a tooltip page\'s name (its page tab, judged while it is open)' },

@@ -107,6 +107,8 @@ const MUTANTS = [
   { id: 'V-title', file: 'mcp/lib/redesign.mjs', edits: [['const shown = { visual: safeName(v.id),', 'const shown = { title: JSON.stringify(((v.json.visual || {}).visualContainerObjects || {}).title || null), visual: safeName(v.id),']], guards: ['test-0.3.0-approval-disclosure.mjs', 'test-0.3-redesign.mjs'] },
   // (0.3.1 CS1) the consistent copy removes a visual's own text settings only: one more pointer kind in the allowlist (any visual object) must be refused
   { id: 'CS-allow', file: 'mcp/lib/redesign.mjs', edits: [[String.raw`/^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER],`, String.raw`/^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER, /^\/visual\/objects\//],`]], guards: ['test-0.3.1-cs1.mjs'] },
+  // (0.3.1 CS2) the theme pointers a consistent copy may set are a role's font and size only: any visual style property (a colour, a background) must be refused
+  { id: 'CS-style', file: 'mcp/lib/text-format.mjs', edits: [['/(?:${[r.props.family, r.props.size].join(\'|\')})`).join(\'|\')})$`);', '/[A-Za-z]+`).join(\'|\')})$`);']], guards: ['test-0.3.1-cs2.mjs'] },
 
   // 5. check_report: "can break" versus a note
   { id: 'C-schema', file: CR, edits: [["  if (f.origin === 'schema') return 'canBreak';", "  if (f.origin === 'schema') return 'dataarcusRule';"]], guards: ['test-0.2.9-checks.mjs', 'test-0.2.9-a4.mjs', 'test-0.3.0-check.mjs'] },

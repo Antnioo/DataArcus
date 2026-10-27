@@ -2,8 +2,8 @@
 // tables, columns and measures have English names showed English titles ("Web Orders Total Score by Plan Group").
 // The rule: every text an Arabic report shows is Arabic, or the plan lists it as not translated, with why, before the
 // person approves. Field names the plan lists as kept in English are the only Latin words allowed.
-//   AT-1  the engine: a title's language is the report's (its word, «حسب» or "by"), never the measure's script: two
-//         English names in an Arabic report are not joined with "by"; no "and", "per", "last year", "ranked by"
+//   AT-1  the engine: (0.3.1 TT1, the owner, 27 Oct) a title is wholly Arabic or wholly English: two English names in an
+//         Arabic report give "M by C" (never «حسب» between them), two Arabic names «M حسب C», a mixed pair the measure alone
 //   AT-2  the gallery (combo, waterfall, small multiples) on an English-named model written in Arabic, gallery: true
 //   AT-3  the golden model (English names) through plan_layout + create_report in Arabic, exec and ops layouts with the
 //         tooltip page: the plan pins the glossary's Arabic names and lists every other field as kept in English (why);
@@ -52,27 +52,33 @@ function shownTexts(files) {
 }
 // Latin words of a text that are not words of the allowed names
 const words = (s) => String(s).match(/[A-Za-z]+/g) || [];
-const stray = (texts, allowed) => { const ok = new Set([].concat(...[...allowed].map(words)).map((w) => w.toLowerCase()));
-  return texts.filter((t) => words(t.s).some((w) => !ok.has(w.toLowerCase()))).map((t) => `${t.what} "${t.s.slice(0, 90)}" (${t.where.replace(/^.*definition\//, '').slice(0, 60)})`); };
+// (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title with a field kept in English is wholly English, "Total
+// Sales by Region", "Top 6 of 9: …", ": detail") a text with no Arabic letter may hold the English title words too; an
+// Arabic text still holds no English word but the listed fields' names
+const TITLE_EN = ['by', 'ranked', 'per', 'breakdown', 'across', 'overview', 'Top', 'of', 'detail'];
+const stray = (texts, allowed) => { const ok = new Set([].concat(...[...allowed].map(words)).map((w) => w.toLowerCase())), en = new Set(TITLE_EN.map((w) => w.toLowerCase()));
+  return texts.filter((t) => words(t.s).some((w) => !ok.has(w.toLowerCase()) && (/[\u0600-\u06FF]/.test(t.s) || !en.has(w.toLowerCase())))).map((t) => `${t.what} "${t.s.slice(0, 90)}" (${t.where.replace(/^.*definition\//, '').slice(0, 60)})`); };
 const uniq = (a) => [...new Set(a)];
 
 try {
   // ---------- AT-1: the engine ----------
   {
-    // (0.3.1 LR2, the owner, 26 Oct: "Use «حسب»": the story titles of an Arabic report join two English names with
-    // «حسب», never "by"; the writer isolates the Latin runs. AT-1a, AT-1b's two mixed cases and AT-1c changed on purpose;
-    // the gallery's own joins (Q.byTitle, "and", "per") keep R2's rule)
-    chk(() => ST.join('Web Orders Total Score', 'Plan Group', 'حسب') === 'Web Orders Total Score حسب Plan Group' && Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group') === 'Web Orders Total Score',
-      () => `AT-1a. two English names in an Arabic report are joined with «حسب», never "by" (the gallery's byTitle: the measure's name alone): ${ST.join('Web Orders Total Score', 'Plan Group', 'حسب')} | ${Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group')}`);
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces LR2's
+    // «حسب» between English names: two English names in an Arabic report take "by", the English form, isolated whole by
+    // the writer; a mixed pair the measure alone; the gallery's own joins (Q.byTitle, "and", "per") keep R2's rule.
+    // AT-1a, AT-1b's three mixed cases, AT-1c and AT-1e changed on purpose)
+    chk(() => ST.join('Web Orders Total Score', 'Plan Group', 'حسب') === 'Web Orders Total Score by Plan Group' && Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group') === 'Web Orders Total Score',
+      () => `AT-1a. two English names in an Arabic report: wholly English, "M by C", never «حسب» between them (the gallery's byTitle: the measure's name alone): ${ST.join('Web Orders Total Score', 'Plan Group', 'حسب')} | ${Q.byTitle('Web Orders Total Score', 'حسب', 'Plan Group')}`);
     chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && Q.byTitle('Total Sales', 'by', 'Region') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة'
-      && Q.byTitle('إجمالي المبيعات', 'حسب', 'Region') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'حسب') === 'Total Sales حسب المنطقة' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales',
-      () => 'AT-1b. unchanged: "M by C" in English, «M حسب C» in Arabic (whatever the names\' script), one script per English title');
+      && Q.byTitle('إجمالي المبيعات', 'حسب', 'Region') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'حسب') === 'Total Sales' && ST.join('إجمالي المبيعات', 'Region', 'حسب') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales',
+    () => 'AT-1b. "M by C" in English, «M حسب C» in Arabic, a mixed pair never joined (the measure alone): each title wholly one language');
     const v = ST.variants({ t: 'Sales', m: 'Sales PY' }, { t: 'Sales', c: 'Region' }, 'حسب');
-    chk(() => v.every((x) => words(x.text).every((w) => ['Sales', 'PY', 'Region'].includes(w))), () => `AT-1c. an English measure's time intelligence is not said in English words in an Arabic report: ${JSON.stringify(v.map((x) => x.text))}`);
+    chk(() => v.every((x) => words(x.text).every((w) => ['Sales', 'PY', 'Region', 'by'].includes(w))) && v[0].text === 'Sales PY by Region', () => `AT-1c. an English measure's time intelligence is kept as the model has it in an Arabic report (R2), its title wholly English: ${JSON.stringify(v.map((x) => x.text))}`);
     chk(() => ST.variants({ t: 'Sales', m: 'Sales PY' }, { t: 'Sales', c: 'Region' }, 'by')[0].text === 'Sales last year by Region' && ST.variants({ t: 'S', m: 'المبيعات PY' }, { t: 'S', c: 'المنطقة' }, 'حسب')[0].text === 'المبيعات في العام الماضي حسب المنطقة',
       () => 'AT-1d. unchanged: "Sales last year by Region" in English; an Arabic name\'s abbreviation in Arabic words');
+    // (TT1: the second chart's sentence is in the names' language, wholly English for English names, never Arabic words)
     const alts = [2, 3, 4].map((n) => ST.alternate('Web Orders Total Score', 'Plan Group', n, true, 'حسب'));
-    chk(() => alts.every((a) => a == null || words(a).every((w) => words('Web Orders Total Score Plan Group').includes(w))), () => `AT-1e. a second chart's other title adds no English words in an Arabic report: ${JSON.stringify(alts)}`);
+    chk(() => JSON.stringify(alts) === JSON.stringify(['Plan Group ranked by Web Orders Total Score', 'Web Orders Total Score per Plan Group', 'Web Orders Total Score breakdown by Plan Group']), () => `AT-1e. a second chart's other title on English names in an Arabic report is wholly English: ${JSON.stringify(alts)}`);
     chk(() => ST.alternate('Total', 'Note', 2, true, 'by') === 'Note ranked by Total' && ST.alternate('إجمالي المبيعات', 'المنطقة', 2, true, 'حسب') === 'ترتيب المنطقة حسب إجمالي المبيعات', () => 'AT-1f. unchanged: the alternates of English and Arabic reports');
   }
 

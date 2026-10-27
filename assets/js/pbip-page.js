@@ -19,6 +19,15 @@
   // (0.2.9.1, B-174) each written slot's place in the planned page, { from: its planned kind, nth among them }, as
   // kindChanges name it, so a chart kept to its top N is told against the plan's own slot
   const SLOT_PLAN = new WeakMap();
+  // (0.3.1 TT1, the owner's rule of 27 Oct) a Top-N title measure's English text in an Arabic report, isolated whole by the
+  // shared rule (text-measure.js isolateWhole, never marks of its own here): the marks it puts before the title open the
+  // measure's first text, the marks after it close its last
+  const TM = (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
+  const isoTop = (on, word, rest, plain) => {
+    const w = on && TM && TM.isolateWhole ? TM.isolateWhole(plain) : plain, at = w.indexOf(plain);
+    if (w === plain || at < 0) return [word, rest, plain];
+    return [[w.slice(0, at) + word[0], word[1]], rest + w.slice(at + plain.length), w];
+  };
   // the visual gallery (0.3, J8; visual-gallery.js): optional in the browser. A gallery slot reaches here only when the
   // design's flag is on and its fields fit (pbip-export.js resolves the others to their plain kind first)
   const G = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
@@ -794,14 +803,16 @@
         else if (B && query && isGallery(s.kind)) ttl = G.title(s.kind, Bt, W.by || 'by') || ttl;
         // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
         let topOf = null, topLead = '', tail = '', told = null;
-        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { topLead = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
-        // (0.3.0 R2: an Arabic report's word is Arabic even after an English field name, as its «أعلى» is)
-        if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (AR_LETTERS.test(ttl) || lang === 'ar' ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
+        // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) its «أعلى» / "Top" and its «التفاصيل» /
+        // "detail" are in the title's language, not the report's: "Top 6: Total Sales by Region" in an Arabic report too
+        const arT = AR_LETTERS.test(ttl || '');
+        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { topLead = (arT ? 'أعلى ' : 'Top ') + top + ': '; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
+        if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) tail = ': ' + (arT ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         // (0.3, J4, B-131: a long title was cut at a word, "...حسب قناة البيع المستخدمة في…") the first form whose title
         // fits its box on two lines, with its "Top 999 of 999: " (the report measure's longest lead) and its ": detail";
         // the writer's word cut below is left for a title no rule shortens enough
         if (story && s.kind !== 'kpi' && s.kind !== 'card') {
-          const room = s.w - 2 * Math.round(16 * pg.page.h / 1080), lead = topOf ? (lang === 'ar' ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
+          const room = s.w - 2 * Math.round(16 * pg.page.h / 1080), lead = topOf ? (arT ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
           told = ST.fit(story, (t) => titleFit(lead + t + tail, TITLE, room).mode !== 'shortened'); ttl = told.text;
         }
         if (ttl) ttl = topLead + ttl + tail;
@@ -1415,11 +1426,12 @@
       visuals.forEach((v) => { const f = v.visual && fitted.get(v.visual); if (!f || !f.top || !f.top.cat || f.top.cat.c == null) return;
         // (design round 10, N14/N15: the title counts the bars kept, the same report measure's rank: "Top S of M" only when
         // S < M; fitted with S and M taken as 999)
-        const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + '999' + word[1] + '999: ';
+        // (TT1: the lead in the title's language)
+        const core = (f.final || f.ttl).replace(TOPPED, ''), word = AR_LETTERS.test(core) ? ['أعلى ', ' من '] : ['Top ', ' of '], lead = word[0] + '999' + word[1] + '999: ';
         const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + core, TITLE, f.avail), rest = long.shown.indexOf(lead) === 0 ? long.shown.slice(lead.length) : null;
         if (rest == null) return;
         const set = topSet(f.top.cat, f.top.y, f.top.n, 2); if (!set) return;
-        let m; try { m = set.title('Title: ' + core, word, rest, plain.shown); } catch (e) { return; }   // (a control character: the text title stays)
+        let m; try { m = set.title('Title: ' + core, ...isoTop(lang === 'ar', word, rest, plain.shown)); } catch (e) { return; }   // (a control character: the text title stays)
         const tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         tp.text = { expr: extField(f.top.cat.t, m) };
         if (g && g.properties && g.properties.altText) g.properties.altText = str(f.story ? f.story.alt : core);   // (the alt text promises no cut either; 19 Oct: the full story title)
@@ -1481,8 +1493,9 @@
     const tipTitle = (t) => { const f = titleFit(t, TIP_TITLE, 296 - 16); return f.mode === 'shortened' ? f.shown : t; };
     // (0.3, J4, B-131: the tooltip's bar chart title was cut with "…" too) the story title's first form that fits, with
     // the Top-N lead where its category is cut to its top 6 (the same rules as the page's charts, story-titles.js)
-    const tipStory = (m, c) => { const lead = c && c.c != null && c.agg == null && !isTime(c) ? (lang === 'ar' ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ') : '';
-      return ST.fit(ST.variants(m, c, W.by || 'by', shown), (x) => titleFit(lead + x, TIP_TITLE, 296 - 16).mode !== 'shortened').text; };
+    // (TT1: the lead in each title's language)
+    const tipStory = (m, c) => { const topped = c && c.c != null && c.agg == null && !isTime(c), lead = (x) => (!topped ? '' : AR_LETTERS.test(x) ? 'أعلى 999 من 999: ' : 'Top 999 of 999: ');
+      return ST.fit(ST.variants(m, c, W.by || 'by', shown), (x) => titleFit(lead(x) + x, TIP_TITLE, 296 - 16).mode !== 'shortened').text; };
     const tipFull = (m, c) => ST.variants(m, c, W.by || 'by', shown)[0].text;   // (19 Oct: the alt text, whole)
     const tipFrame = (t, alt) => { const f = frame(t, alt || t); f.title = obj({ show: bool(true), text: str(shown(tipTitle(t))), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
@@ -1500,11 +1513,11 @@
     // TOOLTIP_SCROLL reads it), and its title is the report measure that counts them: "Top S of M" only when it leaves
     // categories out, S the bars shown (7 where two tie); the fixed words only where the DAX can't name the fields
     const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
-      const set = topSet(cat, proj(m).field, 6, 0), word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], lead = word[0] + '999' + word[1] + '999: ';
+      const arT = AR_LETTERS.test(t0), set = topSet(cat, proj(m).field, 6, 0), word = arT ? ['أعلى ', ' من '] : ['Top ', ' of '], lead = word[0] + '999' + word[1] + '999: ';   // (TT1: in the title's language)
       const long = tipTitle(lead + t0), rest = long.indexOf(lead) === 0 ? long.slice(lead.length) : null;
-      let name = null; if (set && rest != null) { try { name = set.title('Title: ' + t0, word, rest, tipTitle(t0)); } catch (e) { name = null; } }
+      let name = null; if (set && rest != null) { try { name = set.title('Title: ' + t0, ...isoTop(lang === 'ar', word, rest, tipTitle(t0))); } catch (e) { name = null; } }
       tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
-      tv.visual.visualContainerObjects.title[0].properties.text = name ? { expr: extField(cat.t, name) } : str(tipTitle((W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0)); return tv; };
+      tv.visual.visualContainerObjects.title[0].properties.text = name ? { expr: extField(cat.t, name) } : str(tipTitle((arT ? (W.top6 && AR_LETTERS.test(W.top6) ? W.top6 : 'أعلى 6') : (W.top6 && !AR_LETTERS.test(W.top6) ? W.top6 : 'Top 6')) + ': ' + t0)); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar', { dateColumns: CONTINUOUS }) : vis);
     // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
@@ -1535,8 +1548,15 @@
     if (!tipPages.some((t) => t.kind === 'cat')) tipFor('cat', tip.card, tip.cat);
     if (trend && !tipPages.some((t) => t.kind === 'trend')) tipFor('trend', tip.card, tip.date);
     // each page's name says what tells it apart from the first of its kind: the measure, the category
-    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind);
-      return [t.kind === 'trend' ? base + ' \u00b7 ' + label(tip.date) : base].concat(f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null]).filter(Boolean).join(' \u00b7 '); };
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the page tab strip, a page name lays out left to right
+    // whatever it holds) an Arabic tooltip page's name keeps no Latin run: the trend's month field kept in English is
+    // «الشهر» (the trend is always by month), and a measure or category kept in English gives way to the page's number
+    // among its kind, so the names stay apart
+    const arTip = /[\u0600-\u06FF]/.test(base), latin = (x) => arTip && /[A-Za-z]/.test(String(x || ''));
+    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind), month = label(tip.date);
+      const parts = f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null].filter(Boolean);
+      const kept = parts.filter((x) => !latin(x)).concat(parts.some(latin) ? [String(tipPages.filter((x) => x.kind === t.kind).indexOf(t) + 1)] : []);
+      return [t.kind === 'trend' ? base + ' \u00b7 ' + (latin(month) ? '\u0627\u0644\u0634\u0647\u0631' : month) : base].concat(kept).join(' \u00b7 '); };
     // the trend: the measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width

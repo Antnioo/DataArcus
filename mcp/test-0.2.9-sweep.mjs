@@ -104,7 +104,9 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
       chk(() => !x.err && linked.length && linked.every((t) => t.barCat !== t.cat), () => `T5 (${label}): a tooltip's bars are never by the hovered chart's own category (one bar): ${linked.map((t) => `${t.chart} by ${name(t.cat)} -> bars by ${name(t.barCat)}`).join('; ')}`);
     }
     const ar = await ask('plan_layout', { layout: 'exec', path: 's-shop', lang: 'ar' }), say = ar.j && ar.j.arabicNames && ar.j.arabicNames.sayFirst;
-    chk(() => /أعلى 6/.test(say || '') && /tooltip/i.test(say || ''), () => `A2: an Arabic plan with English measure names says the tooltip's «أعلى 6» title will mix the two scripts unless Arabic names are given: ${say}`);
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English, so the tooltip's
+    // title on an English measure is "Top 6: …" and never mixes; the plan says so and lists those titles)
+    chk(() => /wholly English/.test(say || '') && /Top 6/.test(say || '') && /titlesInEnglish/.test(say || '') && !/mixes/.test(say || ''), () => `A2: an Arabic plan with English measure names says a title with a field kept in English is wholly English ("Top 6: …"), listed in titlesInEnglish: ${say}`);
   }
 
   // ---------- design round 8 (the laptop's re-score of the rc, RESCORE-1): N2, N3, S7, N6, S6 ----------

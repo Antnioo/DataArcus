@@ -193,7 +193,10 @@ try {
       scripts.forEach((f) => texts.push(...scriptTexts(f)));
       const j = w.pl.j || {}, an = j.arabicNames || {};
       const kept = (an.notTranslated || []).map((x) => x.shownAs).concat(((j.terminology || {}).sheet || []).filter((x) => x.status === 'kept').map((x) => x.en))
-        .concat(((j.terminology || {}).sheet || []).filter((x) => x.status === 'approved' && x.ar).map((x) => x.ar));   // a name the person approved, as written
+        .concat(((j.terminology || {}).sheet || []).filter((x) => x.status === 'approved' && x.ar).map((x) => x.ar))   // a name the person approved, as written
+        // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title with a field kept in English is wholly English, and
+        // the plan lists it, titlesInEnglish; a count or sum of a kept column is named in English with it, "Count of Order Id")
+        .concat(((an.titlesInEnglish || {}).titles || []), ...(an.notTranslated || []).map((x) => ['Count of ' + x.shownAs, 'Sum of ' + x.shownAs]));
       structure(fx, `ar (${wf})`, F, null, j);
       const r = classify(fx, `ar (${wf})`, texts, kept, []);
       // (0.3.0 C1) the calendar's values are data (never in the files): until the Arabic calendar script is applied, every

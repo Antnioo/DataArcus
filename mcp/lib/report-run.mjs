@@ -152,7 +152,10 @@ export function reportRun(a, mode) {
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, a.lang)).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
   // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
-  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null, { lang: a.lang });
+  // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) «عدد X» only for an Arabic column; an English
+  // one is "Count of X" in an Arabic report too (the mixed «عدد Order Id» made mixed titles)
+  const AR_COL = /[\u0600-\u06FF]/, arName = (word, en) => (c) => (AR_COL.test(c) ? word + ' ' + c : en + ' ' + c);
+  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: arName('عدد', 'Count of'), sum: arName('مجموع', 'Sum of') } : null, { lang: a.lang });
   const nValues = usable.length || COUNTS.length;
   // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
   // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
