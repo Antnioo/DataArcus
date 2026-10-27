@@ -2483,8 +2483,8 @@ our header measure (bold text letter by letter + 24 a page of 1080 high, the wri
 
 ## 2026-10-27: Arabic text with a Latin run (the bidi lab, BD2), Power BI Desktop 2.159
 Measured on the laptop (27 Oct, Windows text recognition on the drawn report; the lab and its table:
-`mcp/lab/BIDI-LAB.md`). Each kind of canvas text (titles, card values and labels, axis titles, slicer headers, buttons,
-tooltip page names), at the start, middle and end of an Arabic text, in five variants:
+`mcp/lab/BIDI-LAB.md`). Each kind of canvas text (text boxes, visual titles, card labels and callouts, buttons, table
+and slicer headers, tooltip page names), a Latin run at the start, middle and end of an Arabic text, in five variants:
 - V0 (no marks) wrong everywhere; V1 (each Latin run in FSI ... PDI) right except where Desktop cuts a text with "..."
   (cards: the "..." at the wrong end).
 - **V3 (V1 wrapped whole in U+2067 ... U+2069, RLI ... PDI) right on every canvas kind, cut card texts included**;
