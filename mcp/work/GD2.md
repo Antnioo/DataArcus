@@ -17,7 +17,9 @@
   plain twin byte for byte (no check changed); `report` +1 suite; `look-options`, `glass`, `glass-default` equal;
   `run-all theme-generator design-engine pbip`: + the website's glass preview checks (EN, AR), design-engine and pbip
   equal; `core` 6 = 6 (golden unchanged: no field reads the picture); full run +1 suite.
-- **Resume:** the plan (this commit); then the work.
+- **Got:** glass-twin red on 44d1f32a first (13 of 28) -> 28 PASS; pbip 109 -> 111 (2 red first); theme-generator 920 =
+  920, design-engine 598 = 598; full run on ed206663: 106 suites passed. Tests changed on purpose: 2 (said below).
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The plan
 1. **The twin identical, mirrored** (create_arabic_twin, into "same", create_report languages "en+ar": all three
@@ -41,7 +43,8 @@
    if it does not, the fallback (the picture file and where to set it) is said there.
 
 ## Results
-Commits: plan 2d7fcc6, the work 4727936; this note and the docs (next).
+Commits: plan 2d7fcc6, the work 4727936, the approval window's policy, the changed tests and the docs ed206663 (the last
+code commit); this note.
 
 | Before | After |
 |---|---|
@@ -58,6 +61,9 @@ Suites (red first on 44d1f32a, the base, in a separate worktree):
 - `pbip` (the website's project preview): 109 -> 111, the two new glass checks red on 44d1f32a first.
 - `twin` 9 suites -> 10 (+ glass-twin); `report` 37 passed; `core` 6 = 6 (golden 12 tasks match, unchanged);
   `arabic` 14 = 14; `run-all theme-generator design-engine`: 920 = 920, 598 = 598.
+
+Full run on ed206663: "run-tests: 106 suites passed"
+- The website's whole suite (`scripts/tests/run-all.mjs`) on ed206663: "All 21 passed".
 
 **Tests changed on purpose (each said):**
 1. `mcp/test-0.3.0-language-toggle.mjs` L2c, L9b, L2d: its report is glass (the default since GD1), so its copy in
