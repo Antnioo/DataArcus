@@ -81,11 +81,19 @@ export function planTwin(a) {
   // (0.3.1 X2) the Arabic of a text by the text itself, as the plan shows it (a report built again draws new ids): every
   // text of those words takes it, unless a label was given for its id
   const byText = isObj(a.textLabels) ? a.textLabels : {}, textsUsed = new Set();
-  texts.forEach((t) => { if (t.text != null && labels[t.id] == null && Object.prototype.hasOwnProperty.call(byText, t.text)) { labels[t.id] = cleanLabel(byText[t.text], t.id); textsUsed.add(t.text); } });
+  // (0.3.1 R4A, the laptop's rc.1 run: the approved Arabic of "Reset filters" was not used, the button's text starts with
+  // two spaces) matched trimmed: the exact words first, else the same words without spaces at either end; such a text
+  // says so in the plan (spaces)
+  const trimOf = (x) => String(x).trim(), byTrim = new Map(Object.keys(byText).map((k) => [trimOf(k), k]));
+  const keyOf = (t) => (Object.prototype.hasOwnProperty.call(byText, t.text) ? t.text : byTrim.has(trimOf(t.text)) ? byTrim.get(trimOf(t.text)) : null);
+  // (the spaces kept around the Arabic, as the draft keeps them: they make room for the button's icon)
+  const padOf = (t, ar) => { const m = /^(\s*)[\s\S]*?(\s*)$/.exec(String(t.text)); return String(ar).trim() ? m[1] + String(ar).trim() + m[2] : ar; };
+  texts.forEach((t) => { if (t.text != null && labels[t.id] == null) { const k = keyOf(t); if (k != null) { const v = cleanLabel(byText[k], t.id); labels[t.id] = k === t.text || v == null ? v : padOf(t, v); textsUsed.add(k); } } });
+  texts.forEach((t) => { if (t.text != null && String(t.text) !== trimOf(t.text)) t.spaces = 'its text in the report starts or ends with spaces: its Arabic is matched without them and written with the same spaces (say it in the plan)'; });
   // (SQ4) the labels this call gave that a text takes (by id or by its words): labels.given; the texts that take another's
   // Arabic (a page button, an alt text under its title, a term) are counted in labels.arabic with them
   const givenIds = new Set(Object.keys(labels));
-  const textsUnknown = Object.keys(byText).filter((k) => !textsUsed.has(k) && !texts.some((t) => t.text === k)).map((k) => visible(k).slice(0, 160));
+  const textsUnknown = Object.keys(byText).filter((k) => !textsUsed.has(k) && !texts.some((t) => t.text != null && trimOf(t.text) === trimOf(k))).map((k) => visible(k).slice(0, 160));
   const T = termsOf(R, texts, labels, a, model.m);
   // (rc.22, B-138) a page button with no label of its own takes the approved Arabic name of the page it goes to, shown in
   // the plan (labelFrom) and written with it; a label given for the button wins

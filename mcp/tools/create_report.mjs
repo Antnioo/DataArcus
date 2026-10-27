@@ -55,10 +55,26 @@ export function register(server, ctx) {
     // J14 (0.3, B-168): an approved plan holds the exact report plan_layout built and checked: it is written as approved,
     // never built again (a build draws new random ids). Without one, the build below runs for its refusals, and refuses at
     // the write
+    a = listedSlicers(a);
     const art = a.planId != null ? Plans.artifactOf(a.planId) : null;
     if (art && art.copy) throw new Error(`Nothing was written: plan ${a.planId} is the ${art.copy === 'native' ? 'native copy of a report (customVisualsFrom)' : 'redesign of a report (redesignFrom)'}. Call create_report with ${art.copy === 'native' ? 'customVisualsFrom' : 'redesignFrom'}, path and the approved planId.`);
     return text(art ? writeApproved(a, art) : reportRun(a, 'write'));
   }));
+}
+// (0.3.1 R4A, round 4's problems 3 and 10: the plan and its approval page list the slicer DataArcus adds to fill the
+// design's slots, but the plan pinned the asked ones only, so the listed three were refused) the slicers the approved page
+// showed: the asked ones and exactly the plan's slicersAdded (any order, each once) are read as the asked ones, which the
+// plan pinned; the plan's files are written either way (the same bytes). Any other list goes to the gate as it is, and is
+// refused there with what differs
+const slicerKey = (x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x).trim(); };
+function listedSlicers(a) {
+  if (a.planId == null || !a.fields || !Array.isArray(a.fields.slicers)) return a;
+  const p = Plans.planOf(a.planId), added = p && p.data && Array.isArray(p.data.slicersAdded) ? p.data.slicersAdded.map(slicerKey) : [];
+  const pinnedFields = Plans.pinned(a.planId, 'create_report', 'fields'), asked = pinnedFields && Array.isArray(pinnedFields.slicers) ? pinnedFields.slicers : null;
+  if (!added.length || !asked) return a;
+  const given = a.fields.slicers.map(slicerKey), listed = asked.map(slicerKey).concat(added);
+  const same = given.length === listed.length && new Set(given).size === given.length && listed.every((f) => given.includes(f));
+  return same ? Object.assign({}, a, { fields: Object.assign({}, a.fields, { slicers: asked.slice() }) }) : a;
 }
 // (0.3.1 AF2, the release audit's F08) a copy's kept files (the native copy's, the redesign's), after the gate: the ones
 // the approval recorded (their binding, as writeApproved checks it), or none (the writer then refuses)

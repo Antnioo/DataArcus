@@ -2626,7 +2626,7 @@ if (part('round10-choices')) {
       pageVisuals(x, 'd5-project').filter(isKpi).forEach((v) => {
         // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: an English title in an Arabic report is isolated whole by
         // the writer, U+200F U+2068 ... U+2069 U+200F, zero wide: measured and compared without those marks, each checked there)
-        const own = (x) => (lang === 'ar' ? String(x).replace(/^\u200F\u2068([^\u2066-\u2069]*)\u2069\u200F$/, '$1') : x), t0 = titleOf(v);
+        const W = req(path.join(REPO, 'assets/js/text-measure.js')).isolateWhole, strip = (x) => String(x).replace(/[\u200e\u200f\u2066-\u2069]/g, ''), own = (x) => (lang === 'ar' && String(x) === W(strip(x)) ? strip(x) : x), t0 = titleOf(v);   // (the shared rule's marks, BD2's V3)
         const t = Object.assign({}, t0, { text: own(t0.text) }), full = own(altOf(v)), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
         if (lang === 'ar' && /^[^\u0600-\u06FF]*[A-Za-z][^\u0600-\u06FF]*$/.test(t0.text) && t0.text === t.text) bad.push(`${page} ${lang} ${k}: the English title "${t0.text}" is not isolated whole`);
         const I = N(lookOf(v, 'padding').paddingUniform), V = N(valueOf(v).fontSize), room = v.at.h - N(pad.top) - N(pad.bottom) - 2 * I;

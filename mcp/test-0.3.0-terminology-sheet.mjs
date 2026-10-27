@@ -38,7 +38,7 @@ const short = (x) => (x && x.err ? String(x.t).slice(0, 400) : JSON.stringify(x 
 const uniq = (a) => [...new Set(a)];
 const Memory = req0('../assets/js/confirm-memory.js'), TM = req0('../assets/js/text-measure.js');
 let TL = null; try { TL = await import('./lib/terminology.mjs'); } catch (e) { TL = null; }
-const FSI = '⁨', PDI = '⁩', RLM = '‏';
+const FSI = '⁨', PDI = '⁩', RLM = '‏', RLI = '⁧';   // (BD2) RLI: the whole text's wrap
 
 // ---- a report's files and what a viewer reads in them ----
 const readReport = (dir) => { const out = {}; if (!fs.existsSync(dir)) return out; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (f.endsWith('.json')) { try { out[path.relative(dir, f).split(path.sep).join('/')] = rd(f); } catch (x) { /* not JSON */ } } }); rec(dir); return out; };
@@ -111,9 +111,9 @@ const rowOf = (sheet, k) => (Array.isArray(sheet) ? sheet.find((r) => r && r.fie
 
 try {
   // ---------- TS-4 (engine): isolation and its width ----------
-  chk(() => TL && TL.isolateLatin(KPI) === 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM, () => `TS-4a. "${KPI}" written with its Latin run isolated (and a right-to-left mark after the run that ends it): ${TL ? JSON.stringify(TL.isolateLatin(KPI)) : 'lib/terminology.mjs missing'}`);
-  chk(() => TL && TL.isolateLatin('مؤشر KPI 2024 حسب الشهر') === 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' && TL.isolateLatin('KPI المبيعات') === RLM + FSI + 'KPI' + PDI + ' المبيعات'
-    && TL.isolateLatin('Q1/2024 الربع') === RLM + FSI + 'Q1/2024' + PDI + ' الربع', () => `TS-4b. a run inside, at the start, with a slash: ${TL ? JSON.stringify(['مؤشر KPI 2024 حسب الشهر', 'KPI المبيعات', 'Q1/2024 الربع'].map(TL.isolateLatin)) : 'missing'}`);
+  chk(() => TL && TL.isolateLatin(KPI) === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM + PDI, () => `TS-4a. "${KPI}" written with its Latin run isolated (and a right-to-left mark after the run that ends it): ${TL ? JSON.stringify(TL.isolateLatin(KPI)) : 'lib/terminology.mjs missing'}`);
+  chk(() => TL && TL.isolateLatin('مؤشر KPI 2024 حسب الشهر') === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' + PDI && TL.isolateLatin('KPI المبيعات') === RLI + RLM + FSI + 'KPI' + PDI + ' المبيعات' + PDI
+    && TL.isolateLatin('Q1/2024 الربع') === RLI + RLM + FSI + 'Q1/2024' + PDI + ' الربع' + PDI, () => `TS-4b. a run inside, at the start, with a slash: ${TL ? JSON.stringify(['مؤشر KPI 2024 حسب الشهر', 'KPI المبيعات', 'Q1/2024 الربع'].map(TL.isolateLatin)) : 'missing'}`);
   chk(() => TL && ['المبيعات', 'Total Sales', 'أعلى 6 من 10', 'أعلى {1} من {2}: المبيعات', ''].every((x) => TL.isolateLatin(x) === x) && TL.isolateLatin(TL.isolateLatin(KPI)) === TL.isolateLatin(KPI),
     () => `TS-4c. Arabic only, English only, numbers alone and placeholders unchanged; isolating twice changes nothing`);
   chk(() => TM.textWidth(FSI + PDI + RLM, 10) === 0 && Math.abs(TM.textWidth('مؤشر ' + FSI + 'KPI' + PDI, 10) - TM.textWidth('مؤشر KPI', 10)) < 1e-9, () => `TS-4d. the isolates have no width (text-measure): ${TM.textWidth(FSI + PDI, 10)}`);
@@ -319,7 +319,8 @@ try {
     if (mid) await s.call('approve_plan', { planId: mid });
     const rm = mid ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير مختلط', planId: mid, design: pm.j.design }) : pm;
     const M = readReport(path.join(ROOT, 'large/تقرير مختلط.Report')), tips = shownTexts(M).filter((t) => t.what === 'page name' && (M[t.where] || {}).type === 'Tooltip'), mixM = notIsolated(shownTexts(M));
-    chk(() => !rm.err && tips.some((t) => /Month Short/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · Month Short» and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the tab strip) the trend's tab is «تلميح · الشهر», no Latin run
+    chk(() => !rm.err && tips.some((t) => t.s === 'تلميح · الشهر') && !tips.some((t) => /[A-Za-z]/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · الشهر» (no Latin run in a tab, BD2) and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
     if (!rm.err) { const c = await s.call('check_report', { path: 'large/تقرير مختلط.pbip' }); chk(() => !c.err && c.j.validator.errors === 0 && c.j.impact.kinds.canBreak.count === 0, () => `TS-10b: validator 0, check_report 0 "can break": ${short(c)}`); }
   }
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { nothingAt, writeNew, modelOf, visible, inside } from './model.mjs';
 import { noteWritten } from './files.mjs';
 import { createRequire } from 'node:module';
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 const require = createRequire(import.meta.url);
 const Pbip = require('../../assets/js/pbip-export.js');
 const Fix = require('../../assets/js/model-health-tmdl.js');
@@ -87,7 +88,7 @@ export function formatsAnswer(m, p, keys, maxItems, write = false, afterGo = '',
   // (0.3.1 SQ10, AF2-S4) the same script already there is named as already there: the write writes no copy of it
   else if (s.script && (!write || !put)) { const f = freeScriptName(scriptDir, scriptBase + ' - fix formats', s.script);
     file = nothingAt(f) ? { scriptAfterGo: path.basename(f), notWrittenYet: 'Not written yet: ' + afterGo } : { scriptAfterGo: path.basename(f), alreadyThere: `Already there: "${path.basename(f)}" next to the project holds exactly this script, so it is named again and not written again.` }; }
-  else if (s.script) { try { const f = put(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same kind of script check_model_health writes). ' + FORMAT_HOW }; }
+  else if (s.script) { try { const f = put(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", ' + besideSaid(path.dirname(f)) + '; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same kind of script check_model_health writes). ' + FORMAT_HOW }; }
     catch (e) { file = { scriptNotWritten: notWrittenWhy(scriptDir, e) + ' Set the formats by hand in Power BI Desktop.' }; } }
   return Object.assign({ fields: list }, mine.length > cap ? { more: mine.length - cap } : {}, s.more ? { scriptCovers: `The script covers ${s.count} objects; ${s.more} more need the same fix (a script is kept under 30,000 characters): apply it, then check the model again.` } : {}, file);
 }

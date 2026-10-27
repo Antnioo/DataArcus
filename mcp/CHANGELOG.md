@@ -5,6 +5,18 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **Clearer plans and approval pages:** when DataArcus adds a slicer to fill the design's empty slots, create_report
+  now takes either the slicers you asked for or the full list the plan showed: the same approved report either way. When
+  a write is refused because its inputs differ from the approved plan, the answer names what differs and what to pass.
+  The approval page now starts with one plain line (for example "1 new report: 4 pages, next to your model, in the
+  folder "Sales"", with the folder's full path), the counts of files, visuals, bookmarks and phone layouts folded under
+  it. Plainer words where you decide: why a chart is a bar chart (no pixel widths), the cards that show a message when
+  a chart has no data (meant: no longer listed as "worth a look"), a date column whose type the model's files don't say,
+  a redesign's text changes ("visual titles: size set to 12pt"), a custom visual's own settings, every item worth a look
+  listed in full, and the working folder named by its path.
+- **The app's own approval prompt:** for an Arabic plan it is in Arabic with the English under each line, it names
+  the report by the name it will really get, and each script is counted by its kind. An approved Arabic text now
+  reaches a button whose English text has spaces around it, and the plan says where each language button is written.
 - **A redesign that cleans up evenly:** the rows of a redesigned page now sit exactly 16 apart and 16 from the
   page's edges, so two rows never touch. Text boxes, shapes, images and custom visuals still stay where they are: the
   rows keep 16 from them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy
@@ -15,12 +27,20 @@ package's manifest; this file says what is in it.
   size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
   already show (or keeps its own). The layout stays yours (`keepPositions` leaves every visual where it is); text boxes,
   shapes, buttons, groups and custom visuals are not touched. The plan lists every setting removed before you approve.
+- **The text set is drawn as planned:** the theme now carries the text set per visual type (titles, axes, labels,
+  table text), where Power BI Desktop applies it, instead of only as text classes, which Desktop left at its own
+  default sizes. A visual's own colour, background, alignment and wrap are never touched; only its font, size, bold
+  and italic go. A report saved by an older Power BI Desktop (its definition.pbir names no schema) can be redesigned;
+  any other file without one is refused with why and how to fix it (open and save once in Desktop).
 - **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
   generate_theme (`chart.look: "glass"`). Power BI has no blur behind a visual, so the look is made of what Power BI
   has: see-through cards (the visual's background with transparency), a thin light border, a soft shadow, and a soft
   page picture DataArcus draws from your theme's own colours (no photo), which the report gets behind every page.
   Text stays readable: the cards are made less see-through until text and labels stand 4.5:1 and colour 1 3:1 over the
   picture's darkest and lightest parts, and the numbers are shown. The website's preview draws what Power BI draws.
+  Tables and matrices in the glass look have no fill of their own: no solid rows, headers or totals, the picture
+  shows through every cell, and a banded table's every other row is a faint tint; the grid lines stay as visible as
+  on solid cards. On a dark page the cards' shadow is stronger, so it shows.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click

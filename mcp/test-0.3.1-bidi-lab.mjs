@@ -1,7 +1,7 @@
 // 0.3.1 BD1 item 3 (written red first): the bidi lab for the laptop (mcp/lab/bidi-lab.mjs). It writes one made-up project
 // into an empty folder (and refuses any other), Microsoft's validator finds no error, and every kind x position x variant
 // is in the files exactly as its rule says, read back from the written files (never from the lab's own list):
-//   V0 raw; V1 isolateLatin; V2 V1 with U+200F first; V3 U+2067 V1 U+2069; V4 U+202B V1 U+202C.
+//   V0 raw; V1 isolateRuns (isolateLatin before BD2); V2 V1 with U+200F first; V3 U+2067 V1 U+2069; V4 U+202B V1 U+202C.
 // Each label is plain ASCII, in a text box of its own, never inside a tested text. The model's rows are typed.
 //   node test-0.3.1-bidi-lab.mjs
 import fs from 'node:fs';
@@ -19,7 +19,8 @@ chk(() => Lab && typeof Lab.writeLab === 'function', () => 'B0. mcp/lab/bidi-lab
 
 // the rule, written here on its own (the lab's must agree)
 const TEXTS = { start: 'Department: عدد الأوامر في كل شهر', middle: 'عدد الأوامر حسب Department في كل شهر', end: 'عدد الأوامر في كل شهر حسب Department' };
-const RULE = { V0: (t) => t, V1: (t) => TM.isolateLatin(t), V2: (t) => (TM.isolateLatin(t)[0] === '‏' ? '' : '‏') + TM.isolateLatin(t), V3: (t) => '⁧' + TM.isolateLatin(t) + '⁩', V4: (t) => '‫' + TM.isolateLatin(t) + '‬' };
+// (BD2) V1 is the rule the lab measured, text-measure.js isolateRuns (isolateLatin is V3 since BD2)
+const RULE = { V0: (t) => t, V1: (t) => TM.isolateRuns(t), V2: (t) => (TM.isolateRuns(t)[0] === '‏' ? '' : '‏') + TM.isolateRuns(t), V3: (t) => '⁧' + TM.isolateRuns(t) + '⁩', V4: (t) => '‫' + TM.isolateRuns(t) + '‬' };
 const KINDS = ['textbox', 'title', 'cardlabel', 'cardcallout', 'button', 'tableheader', 'slicerheader', 'tooltippage', 'pagename'];
 const POS = ['start', 'middle', 'end'], VAR = ['V0', 'V1', 'V2', 'V3', 'V4'];
 
@@ -47,14 +48,15 @@ if (Lab) {
     const v = visuals(PAGE[kind]).find((x) => x.name === 'test' + id + pos); if (!v) return null;
     if (kind === 'textbox') return props(v, 'general').paragraphs[0].textRuns[0].value;
     if (kind === 'title') return lit(v.visual.visualContainerObjects.title[0].properties.text);
-    if (kind === 'button') return lit(props(v, 'text').text);
+    // (BD2) a button's text card: "show" in an entry of its own, the text under selector default (as DataArcus's writer)
+    if (kind === 'button') { const e = (v.visual.objects.text || []); return e.length === 2 && !e[0].selector && e[0].properties.show && e[1].selector && e[1].selector.id === 'default' ? lit(e[1].properties.text) : null; }
     if (kind === 'cardcallout') return callout(v.visual.query.queryState.Values.projections[0].field.Measure.Property);
     return v.visual.query.queryState.Values.projections[0].displayName;
   };
   const got = KINDS.flatMap((k) => POS.flatMap((pos) => VAR.map((id) => ({ k, pos, id, t: (() => { try { return read(k, id, pos); } catch (e) { return null; } })() }))));
   const wrong = got.filter((g) => g.t !== RULE[g.id](TEXTS[g.pos]));
   chk(() => got.length === 135 && wrong.length === 0, () => `B4. all 135 tested texts (9 kinds x 3 positions x 5 variants) in the files, each exactly its variant's rule: ${wrong.length} wrong, e.g. ${JSON.stringify(wrong.slice(0, 3))}`);
-  chk(() => RULE.V2(TEXTS.start) === RULE.V1(TEXTS.start) && RULE.V2(TEXTS.middle) !== RULE.V1(TEXTS.middle) && RULE.V2(TEXTS.end) !== RULE.V1(TEXTS.end) && TM.isolateLatin(TEXTS.middle)[0] !== '‏',
+  chk(() => RULE.V2(TEXTS.start) === RULE.V1(TEXTS.start) && RULE.V2(TEXTS.middle) !== RULE.V1(TEXTS.middle) && RULE.V2(TEXTS.end) !== RULE.V1(TEXTS.end) && TM.isolateRuns(TEXTS.middle)[0] !== '‏',
     () => 'B5. V2 adds U+200F where V1 has none at the start (the middle and end runs); for a run at the start V1 already opens with it');
   // the labels: plain ASCII text boxes of their own beside each tested box; no tested text holds a label
   const grid = Object.values(PAGE).concat(['p7tooltips']);

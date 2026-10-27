@@ -396,6 +396,8 @@
       // or slanted); a kept column chart or a bar chart says why (kindWhy, in the plan); outside the measured table the
       // writer's rule as before
       const limits = (o) => (LL ? LL.decide(Object.assign({ width: s.w, pageWidth: pg.page.w, labelPt: LABEL }, o)) : { kind: null });
+      // (0.3.1 R4A) the person's words beside the measured why (kindSaid, kindSaidAr: no pixels or letter widths)
+      const barSaid = (d, n, noun, nounAr) => (d.kind ? { kindSaid: d.said, kindSaidAr: d.saidAr } : { kindSaid: `A bar chart, not columns: ${n} ${noun} would be cut or slanted under columns.`, kindSaidAr: `مخطط شريطي أفقي لا أعمدة: أسماء ${nounAr} (${n}) ستُقص أو تميل تحت الأعمدة.` });
       if (!list) {
         if (!own || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf) return s;
         const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), LABEL, false, font) + 6, fit = Math.max(3, Math.floor(plot / need));
@@ -404,7 +406,7 @@
         const rows = Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2);
         if (rows < 3) return Object.assign({}, s, { topN: fit });
         barCharts.push({ page: pg.name || base, field: label(f) });
-        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows, kindWhy: d.kind ? d.why : `bar: ${n} categories at ${Math.round(s.w * 1920 / pg.page.w)} px, a 12-letter name wider than a column (outside the measured limits: the writer's own widths)` });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows, kindWhy: d.kind ? d.why : `bar: ${n} categories at ${Math.round(s.w * 1920 / pg.page.w)} px, a 12-letter name wider than a column (outside the measured limits: the writer's own widths)` }, barSaid(d, n, 'names', 'الفئات'));
       }
       const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
       // (a month column the model names short, "Month Short", shows Jan to Dec; Arabic and Hijri names have no short form)
@@ -416,7 +418,7 @@
       // fit as well the chart is written without its value axis, each bar's value beside it (rows, below).)
       if (d.kind === 'column' || (!d.kind && widest + 6 <= room) || s.h < (list.length * 23 + 54) * k) return s;
       barCharts.push({ page: pg.name || base, field: label(f) });
-      return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length, kindWhy: d.kind ? d.why : `bar: ${list.length} ${kind === 'day' ? 'weekdays' : 'months'} at ${Math.round(s.w * 1920 / pg.page.w)} px, the widest name wider than a column (outside the measured limits: the writer's own widths)` });
+      return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length, kindWhy: d.kind ? d.why : `bar: ${list.length} ${kind === 'day' ? 'weekdays' : 'months'} at ${Math.round(s.w * 1920 / pg.page.w)} px, the widest name wider than a column (outside the measured limits: the writer's own widths)` }, barSaid(d, list.length, kind === 'day' ? 'weekdays' : 'months', kind === 'day' ? 'الأيام' : 'الأشهر'));
     };
     // (design round 9, the re-score's D11: two bars across a wide slot on four reports) a bar or column chart by a
     // category the picker marks two-valued (true/false, an IF of two words) is a donut: two shares read at a glance.
@@ -426,14 +428,14 @@
     const byField = (s) => {
       const f = B && (s.kind === 'bar' || s.kind === 'column') && (B.cats || {})[s.kind];
       if (!f || f.c == null) return s;
-      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null, kindWhy: 'donut: a category with two values' });
+      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null, kindWhy: 'donut: a category with two values', kindSaid: 'A donut chart: the category has two values.', kindSaidAr: 'مخطط حلقي: للفئة قيمتان.' });
       if (s.kind === 'column' && f.wide && !s.wasColumn) { const rows = Math.max(1, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
-        barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN, kindWhy: 'bar: a category with many values (a lookup table\'s names), names level' }); }
+        barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN, kindWhy: 'bar: a category with many values (a lookup table\'s names), names level', kindSaid: 'A bar chart, not columns: a category with many names reads with its names level.', kindSaidAr: 'مخطط شريطي أفقي لا أعمدة: فئة بأسماء كثيرة تُقرأ وأسماؤها مستقيمة.' }); }
       return s;
     };
     // (rc.22, B-140: the approved column chart was written as a bar chart, and the plan never said so) every kind changed
     // here is recorded, so the plan shows the kind written (plan_layout runs this writer on the plan's page)
-    const changed = (s0) => { const s1 = byField(asBar(s0)), nth = pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0); SLOT_PLAN.set(s1, { pageIndex, from: s0.kind, nth }); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth, from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN, why: s1.kindWhy || null }); return s1; };
+    const changed = (s0) => { const s1 = byField(asBar(s0)), nth = pg.slots.filter((x) => x.kind === s0.kind).indexOf(s0); SLOT_PLAN.set(s1, { pageIndex, from: s0.kind, nth }); if (s1.kind !== s0.kind) kindChanges.push({ page: pg.name || base, pageIndex, role: s0.role || null, nth, from: s0.kind, to: s1.kind, topN: s1.topN == null ? null : s1.topN, why: s1.kindWhy || null, said: s1.kindSaid || null, saidAr: s1.kindSaidAr || null }); return s1; };
     const sorted = pg.slots.map(changed).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
@@ -1546,8 +1548,15 @@
     if (!tipPages.some((t) => t.kind === 'cat')) tipFor('cat', tip.card, tip.cat);
     if (trend && !tipPages.some((t) => t.kind === 'trend')) tipFor('trend', tip.card, tip.date);
     // each page's name says what tells it apart from the first of its kind: the measure, the category
-    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind);
-      return [t.kind === 'trend' ? base + ' \u00b7 ' + label(tip.date) : base].concat(f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null]).filter(Boolean).join(' \u00b7 '); };
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the page tab strip, a page name lays out left to right
+    // whatever it holds) an Arabic tooltip page's name keeps no Latin run: the trend's month field kept in English is
+    // «الشهر» (the trend is always by month), and a measure or category kept in English gives way to the page's number
+    // among its kind, so the names stay apart
+    const arTip = /[\u0600-\u06FF]/.test(base), latin = (x) => arTip && /[A-Za-z]/.test(String(x || ''));
+    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind), month = label(tip.date);
+      const parts = f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null].filter(Boolean);
+      const kept = parts.filter((x) => !latin(x)).concat(parts.some(latin) ? [String(tipPages.filter((x) => x.kind === t.kind).indexOf(t) + 1)] : []);
+      return [t.kind === 'trend' ? base + ' \u00b7 ' + (latin(month) ? '\u0627\u0644\u0634\u0647\u0631' : month) : base].concat(kept).join(' \u00b7 '); };
     // the trend: the measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width

@@ -29,8 +29,21 @@ export const NEVER_APPLIED = 'never applied by DataArcus: you apply it yourself 
 // (SQ3, T1-S6) the same on an Arabic plan's approval page
 export const NEVER_APPLIED_AR = 'لا يطبّقه DataArcus أبدًا: تطبّقه أنت في Power BI Desktop، بالخطوات الثلاث المعروضة مع هذه الخطة';
 
+/** A folder's path relative to the working folder ('.' for the working folder itself), or null (R4A: where a plan's
+ *  outputs are, for the approval page's first line). dir: absolute. */
+export const relOf = (dir) => { if (!ROOT || !dir) return null; const r = path.relative(ROOT, dir).split(path.sep).join('/'); return r.startsWith('..') ? null : r || '.'; };
+/** Where a script sits, beside the project (R4A, T-9): 'next to the project, in the folder "Sales" (C:\\DataArcus\\Sales)';
+ *  dir: absolute (the project's folder, or the script's own); without one, 'next to the project'. */
+export const besideSaid = (dir) => { const r = relOf(dir); return r == null ? 'next to the project' : `next to the project, in ${folderSaid(r)}`; };
+/** A folder inside the working folder, by its name and where it is (R4A, T-9): 'the folder "Sales" (C:\\DataArcus\\Sales)',
+ *  or 'the working folder (C:\\DataArcus)'. rel: relative to the working folder, with / or the OS's separator. */
+export function folderSaid(rel, ar) {
+  const r = String(rel == null ? '' : rel).replace(/[\\/]+$/, ''), abs = ROOT ? path.join(ROOT, shownPath(r)) : shownPath(r);
+  if (!r || r === '.') return ar ? `مجلد العمل (${abs})` : `the working folder (${abs})`;
+  return ar ? `المجلد «${shownPath(r)}» (${abs})` : `the folder "${shownPath(r)}" (${abs})`;
+}
 /** Where a file goes, by the folder's name: 'in the folder "Sales", next to "Sales.pbip"' (the project file of that
- *  folder, base preferred), or 'in the working folder itself' when the folder is the working folder. dir: absolute.
+ *  folder, base preferred), or 'in the working folder (C:\\DataArcus)' when the folder is the working folder. dir: absolute.
  *  ar: the same in Arabic (SQ3: «في المجلد «Sales»، بجانب «Sales.pbip»»), for an Arabic plan's approval page. */
 export function whereSaid(dir, base, ar) {
   if (!dir) return ar ? 'بجانب المشروع' : 'next to the project';
@@ -38,8 +51,9 @@ export function whereSaid(dir, base, ar) {
   let pbips = [];
   try { pbips = fs.readdirSync(dir).filter((n) => /\.pbip$/i.test(n)).sort(); } catch (e) { pbips = []; }
   const pb = (base && pbips.find((n) => n.toLowerCase() === (String(base) + '.pbip').toLowerCase())) || pbips[0];
-  if (ar) return (!rel || rel === '.' ? 'في مجلد العمل نفسه' : rel.startsWith('..') ? 'بجانب المشروع' : `في المجلد «${shownPath(rel)}»`) + (pb ? `، بجانب «${shownPath(pb)}»` : '');
-  const at = !rel || rel === '.' ? 'in the working folder itself' : rel.startsWith('..') ? 'next to the project' : `in the folder "${shownPath(rel)}"`;
+  // (0.3.1 R4A, round 4's T-9: "in the working folder" said where it is not) the working folder by its path
+  if (ar) return (!rel || rel === '.' ? `في مجلد العمل (${dir})` : rel.startsWith('..') ? 'بجانب المشروع' : `في المجلد «${shownPath(rel)}»`) + (pb ? `، بجانب «${shownPath(pb)}»` : '');
+  const at = !rel || rel === '.' ? `in the working folder (${dir})` : rel.startsWith('..') ? 'next to the project' : `in the folder "${shownPath(rel)}"`;
   return at + (pb ? `, next to "${shownPath(pb)}"` : '');
 }
 

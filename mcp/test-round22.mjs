@@ -27,7 +27,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   // (design round 8, N2: a measure title reads as its plain title, the last text of its DAX: "Top N of M: ..." is shown only
   // when the chart leaves categories out)
   // (design round 10: the plain title is the text right after IF ( _s = _n, )
-  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+  // (BD2) the text at run time: inside the expression's whole wrap (UNICHAR ( 8295 ) & ( ... ) & UNICHAR ( 8297 )) when it has one
+  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : [];
+    const w = m && /^UNICHAR \( 8295 \) & \(.* \) & UNICHAR \( 8297 \)$/s.test(m.expression), t = p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; return t != null && w ? '\u2067' + t + '\u2069' : t; };
   const titleOf = (v) => { const t = vco(v, 'title'), e = t && t.properties.text && t.properties.text.expr; return !t ? null : e && e.Measure ? plainOf(v, e.Measure) : lit(t.properties.text); }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
   const subs = (x) => vis(x).filter((v) => vco(v, 'subTitle')).map((v) => [v.visual.visualType, lit(vco(v, 'subTitle').properties.text)]);
   const notes = (x) => JSON.stringify(x.err ? x.t : x.j.reportNotes || []);
@@ -169,7 +171,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     // two charts' titles differ by their column and need no bracket: "عدد Order Id حسب Region")
     // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English: a count of an
     // English column is "Count of Order Id" and its titles "Count of Order Id by Region", isolated whole, still no bracket)
-    const whole = (t) => /^\u200F\u2068[^\u2066-\u2069\u0600-\u06FF]+\u2069\u200F$/.test(String(t || ''));
+    const W = createRequire(import.meta.url)('../assets/js/text-measure.js').isolateWhole, whole = (t) => !/[\u0600-\u06FF]/.test(String(t || '')) && String(t || '') !== bare(t) && String(t || '') === W(bare(t));   // (the shared rule's marks, BD2's V3)
     chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/^Count of Order Id by (Region|Channel)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => whole(titleOf(v)) && !/[()]/.test(titleOf(v))), () => `e. the wide charts read "Count of Order Id by Region" and "… by Channel", no bracket, isolated whole: ${JSON.stringify(wide.map(titleOf))}`);
     const four = narrow.concat(wide);
     chk(() => four.length === 4 && four.every((v) => / by (Region|Channel)$/.test(bare(altOf(v))) && !/[()]/.test(altOf(v)) && whole(altOf(v))), () => `h. each chart's alt text carries its full title, "by" and its column, isolated whole: ${JSON.stringify(four.map(altOf))}`);

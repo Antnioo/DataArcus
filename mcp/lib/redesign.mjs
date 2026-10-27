@@ -19,8 +19,9 @@
 //   7. The plan pins the source's contents (reportPrint, B-154 style); the write reads it again and computes the patches
 //      again, and writes "<name> redesigned" next to the original with exclusive create (files.mjs writeTree).
 //   8. (0.3.1 CS1) consistentText: every listed visual's own font family, size, bold and italic for the theme's text
-//      classes is removed (text-format.mjs ROLES), so the theme governs, and the theme's textClasses get the text set
-//      (fontFace, fontSize); a report with no theme file gets one, registered in report.json (additions only).
+//      classes is removed (text-format.mjs ROLES), so the theme governs, and (CS2) the theme's visual styles get the text
+//      set per visual type (font and size of each role's object, where Desktop draws them; text classes are not written);
+//      a report with no theme file gets one, registered in report.json (additions only).
 //      keepPositions: no place or size changes.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,7 +32,7 @@ import { buildTheme, themeDesign } from './design.mjs';
 import { writeTree } from './files.mjs';
 import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
-import { ROLES, CLASSES, KNOWN_TYPES, TEXT_POINTER, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
+import { ROLES, CLASSES, KNOWN_TYPES, TEXT_POINTER, THEME_STYLE_AT, visualText, countsOf, mixedOf, textSetOf, facesOf, boldItalicOf, shownValue, themeValue, rolesOf } from './text-format.mjs';
 
 export const SUFFIX = ' redesigned';
 // the new report's name: "<name> redesigned" within 30 characters (the writer's name limit, kept from step 1): the
@@ -87,13 +88,20 @@ function modelProblem(dir, model) {
 // may move what the allowlist names, so it is never patched blind)
 const SCHEMAS = { report: 3, page: 2, pagesMetadata: 1, visualContainer: 2, visualContainerMobileState: 2, bookmark: 2, bookmarksMetadata: 1, versionMetadata: 1, reportExtension: 1, definitionProperties: 2, platformProperties: 2 };
 const schemaOf = (j) => { const m = /\/([A-Za-z]+)\/(\d+)\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/.exec(String((j && j.$schema) || '')); return m ? { family: m[1], major: +m[2] } : null; };
-function schemaProblems(dir, files) {
+function schemaProblems(dir, files, notes) {
   const out = [];
+  notes = notes || [];
   files.filter((r) => /^definition\//.test(r) || r === 'definition.pbir' || r === '.platform').forEach((r) => {
     if (!/\.(json|pbir)$/i.test(r) && r !== '.platform') return;
     let j; try { j = readJson(path.join(dir, ...r.split('/'))); } catch (e) { out.push(`${safeName(r)} could not be read as JSON`); return; }
     const s = schemaOf(j);
-    if (!s) out.push(`${safeName(r)} names no schema`);
+    // (0.3.1 CS2, the laptop's Fintech report: an older Desktop save) a definition.pbir with no $schema is read by its
+    // version as Microsoft's docs pair them ("4.0": PBIR, definitionProperties 2.0.0; "1.0": PBIR-Legacy, report.json
+    // only); it is never patched (copied byte for byte), so its version is all the redesign needs. Any other file with no
+    // $schema stays refused: its version can't be told, and the copy may patch it
+    if (!s && r === 'definition.pbir' && j && typeof j === 'object' && !('$schema' in j) && /^4\.\d+$/.test(String(j.version))) { notes.push(`definition.pbir names no $schema (an older Desktop save): its version ${safeName(j.version)} is read as the PBIR format's (definitionProperties 2.0.0, as Microsoft's docs pair them); the file is copied as it is, so Microsoft's validator reports PBIR_JSON_FILE_NO_SCHEMA on the copy as on the original, and saving once in Power BI Desktop writes it`); return; }
+    if (!s && r === 'definition.pbir' && j && typeof j === 'object') out.push(`definition.pbir names no $schema and its version is ${safeName(String(j.version))}, not the PBIR format's 4.0 or higher (version 1.0 is the older single-file format), so DataArcus can't tell which format it is: open the report in Power BI Desktop, save it as a project in the PBIR format (File > Options > Preview features if needed), then plan again`);
+    else if (!s) out.push(`${safeName(r)} names no $schema (an older Desktop save): DataArcus can't tell which version of the format it is, and the copy may change this file, so it is not guessed. Power BI Desktop writes it when it saves`);
     else if (!(s.family in SCHEMAS)) out.push(`${safeName(r)} names the schema "${safeName(s.family)}", which this step does not know`);
     else if (s.major > SCHEMAS[s.family]) out.push(`${safeName(r)} names ${safeName(s.family)} ${s.major}.x, newer than the ${SCHEMAS[s.family]}.x this step knows`);
     if (r === 'definition/version.json' && !/^[12]\./.test(String(j.version || ''))) out.push(`the report's format version is "${safeName(j.version)}", not 1.x or 2.x`);
@@ -104,19 +112,21 @@ function schemaProblems(dir, files) {
 // ---- 3. the allowlist: the only JSON pointers a redesign may change, by kind of file ----
 const TITLE_AT = (i) => `/visual/visualContainerObjects/title/${i}/properties/text/expr/Literal/Value`;
 export const TOKENS = ['dataColors', 'foreground', 'background', 'tableAccent', 'good', 'neutral', 'bad'];
-// (0.3.1 CS1) a visual's own text settings (removed: TEXT_POINTER, text-format.mjs's roles only), the theme's text classes'
-// font and size, and report.json's custom theme and its resource item (additions only: verifyCopy)
-export const TEXT_CLASS_AT = new RegExp(`^/textClasses/(${Object.keys(CLASSES).join('|')})/(fontFace|fontSize)$`);
+// (0.3.1 CS1) a visual's own text settings (removed: TEXT_POINTER, text-format.mjs's roles only), and report.json's custom
+// theme and its resource item (additions only: verifyCopy); (CS2) the text set in the theme's visual styles, a role's font
+// and size per known type (THEME_STYLE_AT), no longer its text classes (Desktop 2.159 did not draw them: mcp/work/CS2.md)
 const ALLOW = {
   visual: [/^\/position\/(x|y|width|height)$/, /^\/visual\/visualContainerObjects\/title\/\d+\/properties\/text\/expr\/Literal\/Value$/, TEXT_POINTER],
   platform: [/^\/metadata\/displayName$/, /^\/config\/logicalId$/],
-  theme: [new RegExp(`^/(${TOKENS.join('|')})(/\\d+)?$`), TEXT_CLASS_AT],
+  theme: [new RegExp(`^/(${TOKENS.join('|')})(/\\d+)?$`), THEME_STYLE_AT],
   report: [/^\/themeCollection\/customTheme\/(name|reportVersionAtImport|type)$/, /^\/resourcePackages\/\d+\/(name|type)$/, /^\/resourcePackages\/\d+\/items\/\d+\/(name|path|type)$/]
 };
 const kindOf = (rel, themeRel) => (/^definition\/pages\/[^/]+\/visuals\/[^/]+\/visual\.json$/.test(rel) ? 'visual' : rel === '.platform' ? 'platform' : themeRel && rel === themeRel ? 'theme' : rel === 'definition/report.json' ? 'report' : null);
 // (CS1) the theme file a consistent copy adds when the report has none, in the report's registered resources
 export const ADDED_THEME = 'DataArcusText.json';
 const allowed = (kind, ptr) => !!kind && ALLOW[kind].some((re) => re.test(ptr));
+const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
+export { THEME_STYLE_AT };
 
 // what a redesign never moves, with why
 const KEEP = {
@@ -311,40 +321,55 @@ function textPlan(inv, files, themeRel, mode, dir) {
     t.kept.forEach((k) => kept.push({ page: p.name, visual: safeName(v.id), class: k.cls, property: k.property, why: k.why }));
     if (list.length) perVisual.set(v, list);
   });
-  // the theme: the set's font and size per class in its textClasses (a class whose set is the theme's is not written)
-  const tc = {};
-  Object.entries(set).forEach(([cls, x]) => { if (x.face != null || x.size != null) tc[cls] = Object.assign({}, x.face != null ? { fontFace: x.face } : {}, x.size != null ? { fontSize: x.size } : {}); });
+  // (CS2) the theme: the set's font and size as visual styles, per listed type and role object ("*" preset), where
+  // Desktop draws them (Microsoft's base theme sets titles there, DataArcus's themes every text size); a class whose set
+  // is the theme's is not written; nothing else of a style entry changes (its colour stays)
+  const want = new Map();   // type -> object -> { property: value }
+  items.forEach(({ v }) => rolesOf(v.type).forEach((r) => { const x = set[r.cls]; if (!x) return;
+    const props = Object.assign({}, x.face != null ? { [r.props.family]: x.face } : {}, x.size != null ? { [r.props.size]: x.size } : {});
+    if (!Object.keys(props).length) return;
+    const m = want.get(v.type) || new Map(); want.set(v.type, m); m.set(r.object, Object.assign(m.get(r.object) || {}, props)); }));
+  const ptr = (t, o) => `/visualStyles/${t}/*/${o}`, styleSet = [];
   let themeSaid = 'not changed: the theme\'s own text settings govern every listed visual';
-  if (Object.keys(tc).length) {
+  if (want.size) {
     if (themeRel) {
-      const th = inv.themeJson || {};
-      Object.entries(tc).forEach(([cls, x]) => Object.entries(x).forEach(([k, val]) => { const from = ((th.textClasses || {})[cls] || {})[k]; if (from !== val) patches.push({ file: themeRel, pointer: `/textClasses/${cls}/${k}`, from: from === undefined ? null : from, to: val, create: true }); }));
-      themeSaid = `${path.basename(themeRel)}: its text classes get the text set (font and size); everything else in it is copied as it is`;
+      const vs = (obj(inv.themeJson) && obj(inv.themeJson.visualStyles)) || {};
+      want.forEach((m, t) => m.forEach((props, o) => {
+        const arr = ((obj(vs[t]) || {})['*'] || {})[o];
+        if (arr === undefined) { patches.push({ file: themeRel, pointer: ptr(t, o), from: null, to: [props], create: true }); return; }
+        if (!Array.isArray(arr)) { problems.push(`consistentText: the theme's visual style for ${safeName(t)} ${safeName(o)} is not a list, so the text set can't be written there: fix the theme file (or apply it again in Power BI Desktop), then plan again.`); return; }
+        const i = arr.findIndex((e) => obj(e) && (e.$id === undefined || e.$id === 'default'));
+        if (i < 0) { patches.push({ file: themeRel, pointer: `${ptr(t, o)}/${arr.length}`, from: null, to: props }); return; }
+        Object.entries(props).forEach(([k, val]) => { if (arr[i][k] !== val) { patches.push({ file: themeRel, pointer: `${ptr(t, o)}/${i}/${k}`, from: arr[i][k] === undefined ? null : arr[i][k], to: val });
+          if (arr[i][k] !== undefined) styleSet.push(`${t} ${o} ${k} ${typeof arr[i][k] === 'string' || typeof arr[i][k] === 'number' ? arr[i][k] : 'set'} -> ${val}`); } });
+      }));
+      themeSaid = `${path.basename(themeRel)}: the text set is written as its visual styles (per visual type: titles, axes, labels, table text), where Power BI Desktop draws them; its text classes, colours and everything else are copied as they are`;
     } else {
       let rep = null; try { rep = readJson(path.join(dir, 'definition', 'report.json')); } catch (e) { rep = null; }
       const tcol = (rep && rep.themeCollection && typeof rep.themeCollection === 'object') ? rep.themeCollection : {};
-      if (tcol.customTheme) problems.push('consistentText: the report\'s theme is one of Power BI\'s own (not a theme file in the report), so its text classes can\'t be written: in Power BI Desktop, View > Themes > Customize current theme > Apply (the theme becomes a file in the report), save, then plan again. Or use consistentText "theme".');
+      if (tcol.customTheme) problems.push('consistentText: the report\'s theme is one of Power BI\'s own (not a theme file in the report), so its text settings can\'t be written: in Power BI Desktop, View > Themes > Customize current theme > Apply (the theme becomes a file in the report), save, then plan again. Or use consistentText "theme".');
       else if (files.includes(`StaticResources/RegisteredResources/${ADDED_THEME}`)) problems.push(`consistentText: the report already holds a file ${ADDED_THEME} that is not its theme: rename it in the report's folder, then plan again.`);
       else {
         const rel = `StaticResources/RegisteredResources/${ADDED_THEME}`, pk = Array.isArray(rep && rep.resourcePackages) ? rep.resourcePackages : null, item = { name: ADDED_THEME, path: ADDED_THEME, type: 'CustomTheme' };
         const ver = (tcol.baseTheme && typeof tcol.baseTheme.reportVersionAtImport === 'string') ? tcol.baseTheme.reportVersionAtImport : '5.61';
-        patches.push({ op: 'add', file: rel, to: { name: ADDED_THEME, textClasses: tc } });   // (its name is its file's, as Desktop writes it: PBIR_THEME_FILE_NAME_MISMATCH)
+        const visualStyles = {}; want.forEach((m, t) => { visualStyles[t] = { '*': Object.fromEntries([...m].map(([o, props]) => [o, [props]])) }; });
+        patches.push({ op: 'add', file: rel, to: { name: ADDED_THEME, visualStyles } });   // (its name is its file's, as Desktop writes it: PBIR_THEME_FILE_NAME_MISMATCH)
         patches.push({ file: 'definition/report.json', pointer: '/themeCollection/customTheme', from: null, to: { name: ADDED_THEME, reportVersionAtImport: ver, type: 'RegisteredResources' }, create: true });
         const i = pk ? pk.findIndex((x) => x && x.type === 'RegisteredResources' && Array.isArray(x.items)) : -1;
         if (i >= 0) patches.push({ file: 'definition/report.json', pointer: `/resourcePackages/${i}/items/${pk[i].items.length}`, from: null, to: item });
         else if (pk) patches.push({ file: 'definition/report.json', pointer: `/resourcePackages/${pk.length}`, from: null, to: { name: 'RegisteredResources', type: 'RegisteredResources', items: [item] } });
         else patches.push({ file: 'definition/report.json', pointer: '/resourcePackages', from: null, to: [{ name: 'RegisteredResources', type: 'RegisteredResources', items: [item] }] });
-        themeSaid = `the report has no theme file (only Power BI's base theme): the copy adds ${ADDED_THEME} with the text set alone (nothing else: colours and the rest stay the base theme's) and names it in report.json`;
+        themeSaid = `the report has no theme file (only Power BI's base theme): the copy adds ${ADDED_THEME} with the text set alone, as visual styles per visual type (titles, axes, labels, table text), where Power BI Desktop draws them; no text class and no colour (colours and the rest stay the base theme's), and names it in report.json`;
       }
     }
   }
-  // a theme's own visual style for a type wins over its text class: said, never changed
+  // a theme's own visual style for a type wins over its text class: said; (CS2) its font and size are set to the text set
   const styles = []; items.forEach(({ v }) => rolesOf(v.type).forEach((r) => ['family', 'size'].forEach((prop) => { const tv = themeValue(theme, r.cls, prop, v.type, r.object, r.props); if (tv.style && !styles.includes(`${tv.style} ${r.props[prop]}`)) styles.push(`${tv.style} ${r.props[prop]}`); })));
   Object.assign(out, {
     mode, set: Object.entries(set).map(([cls, x]) => ({ class: cls, what: CLASSES[cls], font: shownValue('family', x.family), size: shownValue('size', x.size), ...(x.shownBy.family || x.shownBy.size ? { alreadyShownBy: x.shownBy } : {}) })),
     boldItalic: 'a theme\'s text class holds no bold or italic (Microsoft\'s theme schema): each visual\'s own bold and italic is removed, so the theme\'s default governs',
     theme: themeSaid, removed: removed.length, removedHow: 'each visual\'s removals are listed with its changes (pages[].changes[].text: class, property, from -> to)', ...(kept.length ? { kept } : {}), ...(untouched.length ? { untouched } : {}),
-    ...(styles.length ? { themeStyles: `the theme sets these for a visual type itself, which governs over its text class (kept as they are): ${styles.map(safeName).join(', ')}` } : {})
+    ...(styles.length ? { themeStyles: `the theme sets these for a visual type itself, which governs over its text class: ${styles.map(safeName).join(', ')}${styleSet.length ? `; set to the text set: ${styleSet.map(safeName).join(', ')}` : '; kept as they are'}` } : {})
   });
   return { out, patches, perVisual, problems };
 }
@@ -356,7 +381,8 @@ export function planRedesign(reportPath, model, opts) {
   const o = opts || {}, loc = locate(reportPath), problems = [];
   real(loc.dir);
   const files = strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.' });
-  schemaProblems(loc.dir, files).forEach((x) => problems.push(`redesignFrom: ${x}. Open the original in Power BI Desktop and save it, then plan again.`));
+  const schemaNotes = [];
+  schemaProblems(loc.dir, files, schemaNotes).forEach((x) => problems.push(`redesignFrom: ${x}${/plan again$/.test(x) ? '.' : '. Open the original in Power BI Desktop and save it, then plan again.'}`));
   const mp = modelProblem(loc.dir, model); if (mp) problems.push(`redesignFrom: ${mp}.`);
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), loc.base);
   if (inv.unreadable) problems.push(`redesignFrom: ${inv.unreadable} file(s) of the original could not be read: open it in Power BI Desktop and save it, then plan again.`);
@@ -477,6 +503,7 @@ export function planRedesign(reportPath, model, opts) {
     method: 'copy-and-patch', original: `${safeName(loc.base)}: only read, never changed`, newReport: `${safeName(loc.name)}.Report`, ...(loc.cut ? { nameCut: `the original's name is longer than a redesign's name allows (${NAME_MAX} characters with "${SUFFIX.trim()}"): its words are cut, never DataArcus's own suffixes (${KEEP_SUFFIXES.map((x) => `"${x.trim()}"`).join(', ')}), and a number is added when the name is another report's: the new report is "${safeName(loc.name)}"` } : {}), folder: 'next to the original (the same model: definition.pbir is copied as it is)',
     counts, pages, ...(theme ? { theme } : {}), ...(TX.out.mixed.length || TX.out.mode || TX.out.boldOrItalic ? { text: TX.out } : {}), keptAsIs, ...(checks ? { checks } : {}),
     ...(files.includes('.platform') ? {} : { platform: 'The original has no .platform (Power BI\'s validator calls that a "can break"): the copy gets its own, with its name and a new logical id.' }),
+    ...(schemaNotes.length ? { schemaNotes } : {}),
     // (CS1) a removed text setting is listed with its visual (pages[].changes[].text), not again here: counted
     ...(patches.some((x) => x.op === 'remove') ? { textRemovals: `${patches.filter((x) => x.op === 'remove').length} file edits remove a visual's own text setting, each listed with its visual (pages[].changes[].text)` } : {}),
     patches: patches.filter((x) => x.op !== 'remove').map((x) => Object.assign({}, x.page ? { page: safeName(x.page), visual: safeName(x.visual) } : {}, x.op ? { op: x.op } : {}, { file: safeName(x.file) }, x.pointer ? { pointer: x.pointer } : {}, x.op === 'remove' ? {} : { to: typeof x.to === 'string' ? safeText(x.to) : x.to })),
@@ -585,6 +612,8 @@ export function verifyCopy(src, out, patches, themeRel) {
   const adds = new Map(patches.filter((x) => x.op === 'add').map((x) => [x.file, x]));
   const extra = added.filter((r) => !adds.has(r) || !/^StaticResources\/RegisteredResources\/[^/]+\.json$/.test(r) || !Buffer.from(out[r]).equals(json2(adds.get(r).to)));
   if (extra.length) fail(`${extra.length} file(s) not in the original (e.g. ${safeName(extra[0])})`);
+  // (CS2) an added theme holds its name and allowlisted theme pointers only (the text set's visual styles)
+  adds.forEach((x, r) => { const off = diffs(undefined, x.to).filter((p) => p !== '/name' && !allowed('theme', p)); if (off.length) fail(`${safeName(r)} adds ${safeName(off[0])}, outside the allowlist`); });
   const tr = themeRel || [...adds.keys()][0] || (() => { try { const ct = (parse(src['definition/report.json']).themeCollection || {}).customTheme; return ct && ct.name ? `StaticResources/RegisteredResources/${path.basename(String(ct.name))}` : null; } catch (e) { return null; } })();
   const want = new Map(); patches.filter((x) => x.op !== 'add').forEach((x) => want.set(x.file + '#' + x.pointer, x));
   let changedFiles = 0;

@@ -103,7 +103,7 @@ export function planLint(a) {
   // (0.2.9.1, B-174) and the category charts the writer kept to their top N, by their planned slot (from, nth, as kinds),
   // with the most categories each still shows all of (allUpTo): the plan says what is written, not the slot's N alone
   return Object.defineProperties(Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out), {
-    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why }) => ({ nth, from, to, topN, why })), enumerable: false },
+    kinds: { value: (b.r.kindChanges || []).filter((k) => k.pageIndex === 0).map(({ nth, from, to, topN, why, said, saidAr }) => ({ nth, from, to, topN, why, said, saidAr })), enumerable: false },
     tops: { value: (b.r.topCharts || []).filter((t) => t.pageIndex === 0).map(({ from, nth, top, allUpTo }) => ({ from, nth, top, allUpTo })), enumerable: false },
     aggregation: { value: aggregation, enumerable: false },
     titles: { value: titles, enumerable: false },
@@ -157,7 +157,8 @@ export function checkSummary(c, cap) {
   // (0.3.1 SQ5, T1-S7) the visual by its place in plain words ("the bar chart, top left of the page"), never its box
   const plain = (f) => `${f.page && f.page.n ? `Page ${f.page.n}: ` : ''}${f.place || f.visual ? `${f.place || f.visual}: ` : ''}${String(f.what || '').replace(/\.\s*$/, '')}. ${!f.fix ? 'No action needed.' : /^none\b,?\s*/i.test(String(f.fix)) ? String(f.fix).replace(/^none\b,?\s*/i, 'No action needed ').replace(/\.?\s*$/, '.') : String(f.fix).replace(/\.?\s*$/, '.')}${f.guess ? ' (A guess from names and types: check it in Power BI Desktop.)' : ''}`;
   return Object.assign({ summary: c.summary, desktop: c.desktop, problems: c.problems.slice(0, n).map(one) }, c.problems.length > n ? { more: c.problems.length - n } : {},
-    c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.slice(0, 12).map(plain) } : {}, c.worthALook.length > 12 ? { worthALookMore: c.worthALook.length - 12 } : {});
+    // (0.3.1 R4A, round 4's T-3: "14 more worth a look" and 12 listed) every item: the summary's N is the list's N
+    c.worth ? { worthALook: worthByRule, worthALookItems: c.worthALook.map(plain) } : {});
 }
 
 // (B-146) plan_layout's `aggregation`, in the plan's language: what is not additive and where, and one question per

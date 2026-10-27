@@ -103,7 +103,7 @@
         }
       },
       "datePublished": "2026-10-25",
-      "dateModified": "2026-10-26",
+      "dateModified": "2026-10-27",
       "image": "https://dataarcus.com/assets/img/og/report-ready-for-arabic.jpg"
     },
     {
@@ -205,7 +205,7 @@
               <ul>
                 <li data-i18n-html="content.s2_1"><strong>Visual titles aligned left.</strong> Left is Power BI's default. DataArcus: the twin aligns every title right (centred ones stay centred). In Desktop: <strong>Format &gt; General &gt; Title &gt; Horizontal alignment: Right</strong> (<a href='https://learn.microsoft.com/power-bi/visuals/power-bi-visualization-customize-title-background-and-legend#customize-visualization-titles-in-reports' target='_blank' rel='noopener noreferrer' class='text-accent'>Microsoft Learn</a>).</li>
                 <li data-i18n-html="content.s2_2"><strong>Arabic text boxes aligned left.</strong> DataArcus: the twin aligns text boxes right. In Desktop: select the text box and align its paragraphs right.</li>
-                <li data-i18n-html="content.s2_3"><strong>Arabic and English in one text.</strong> A title like <bdi>«المبيعات حسب Region»</bdi> mixes two directions. We measured in Desktop that Power BI draws a title as a left-to-right paragraph: an ellipsis after Arabic words landed at the wrong end until a right-to-left mark followed it. Measured again on 26 Oct 2026 (Desktop 2.159): an English word anywhere in an Arabic text, at either end or between Arabic words, can swap the Arabic around it. DataArcus: the twin writes each English run inside a direction isolate (U+2068 and U+2069, from <a href='https://www.unicode.org/reports/tr9/' target='_blank' rel='noopener noreferrer' class='text-accent'>Unicode's bidirectional rules</a>). Power BI has no setting for it: retype the text with the isolate and a right-to-left mark (U+200F) at its start.</li>
+                <li data-i18n-html="content.s2_3"><strong>Arabic and English in one text.</strong> A title like <bdi>«المبيعات حسب Region»</bdi> mixes two directions. We measured in Desktop that Power BI draws a title as a left-to-right paragraph: an ellipsis after Arabic words landed at the wrong end until a right-to-left mark followed it. Measured again on 26 Oct 2026 (Desktop 2.159): an English word anywhere in an Arabic text, at either end or between Arabic words, can swap the Arabic around it. And on 27 Oct 2026: each English run inside a direction isolate (U+2068 and U+2069, from <a href='https://www.unicode.org/reports/tr9/' target='_blank' rel='noopener noreferrer' class='text-accent'>Unicode's bidirectional rules</a>) drew right, except where Power BI cut a card's text with an ellipsis; with the whole text also wrapped in a right-to-left isolate (U+2067 ... U+2069), every kind of text on the canvas drew right, cut card texts included. DataArcus writes each mixed text that way (the twin, the Arabic reports and the Theme Generator's Arabic download). Power BI has no setting for it: retype the text with the isolates and the whole text wrapped in U+2067 ... U+2069. Page names are the exception: no mark helped, Power BI lays the page tabs out left to right, so keep English out of an Arabic page name.</li>
                 <li data-i18n-html="content.s2_4"><strong>English titles, text boxes, buttons and page names.</strong> DataArcus: the twin writes each in the Arabic you approve. It drafts them from a fixed glossary and lists every text in its plan; a text without an approved Arabic stays as it is. In Desktop: write each in Arabic.</li>
                 <li data-i18n-html="content.s2_5"><strong>English field names</strong> on axis titles, table headers, legends and slicer headers. DataArcus: the twin gives each field an Arabic name in that visual only; your model is not renamed. In Desktop: right-click the field in the visual's field well, <strong>Rename for this visual</strong>. We measured that Power BI then shows that name everywhere the visual shows the field.</li>
               </ul>
@@ -374,7 +374,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
-  <script src="../assets/js/translations/article-power-bi-report-ready-for-arabic.min.js?v=20261026bd1" defer></script>
+  <script src="../assets/js/translations/article-power-bi-report-ready-for-arabic.min.js?v=20261027bd2" defer></script>
   <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

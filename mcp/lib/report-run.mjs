@@ -504,11 +504,11 @@ export function reportRun(a, mode) {
   // (0.3.0 L2) the slicers' style asked, and what each slicer was written as with why; the gridlines asked
   const looks = Object.assign(r.slicerStyle ? { slicerStyle: r.slicerStyle } : {}, r.grid ? { grid: r.grid } : {});
   // (L4) the flip cards: which cards, their bookmarks, the script and how to apply it first
-  if (flip) looks.flipCards = Object.assign(flipAnswer(flip), flip.scriptFile ? { scriptFile: flip.scriptFile, howToApply: flipHow(flip.scriptFile) } : {});
+  if (flip) looks.flipCards = Object.assign(flipAnswer(flip), flip.scriptFile ? { scriptFile: flip.scriptFile, howToApply: flipHow(flip.scriptFile, m.projectDir) } : {});
   // (L5) the status icons: each column, its way and rule, the script and how to apply it first
-  if (icons) looks.statusIcons = Object.assign(iconsSaid(icons), icons.scriptFile ? { scriptFile: icons.scriptFile, howToApply: iconsHow(icons.scriptFile) } : {});
+  if (icons) looks.statusIcons = Object.assign(iconsSaid(icons), icons.scriptFile ? { scriptFile: icons.scriptFile, howToApply: iconsHow(icons.scriptFile, m.projectDir) } : {});
   // (L6) the DAX function library: said FIRST in the answer (its compatibility step), with the script and how to apply it
-  const daxFirst = daxR ? { daxFunctions: Object.assign(daxSaid(daxR), { scriptFile: daxR.scriptFile, howToApply: daxHow(daxR.scriptFile, daxR.compat) }) } : {};
+  const daxFirst = daxR ? { daxFunctions: Object.assign(daxSaid(daxR), { scriptFile: daxR.scriptFile, howToApply: daxHow(daxR.scriptFile, daxR.compat, m.projectDir) }) } : {};
   // (D1) a right-to-left report's waterfalls: what each was written as (the plan says it too, waterfallRtl)
   (r.waterfallRtl || []).forEach((x) => reportNotes.push(`The waterfall${x.title ? ` "${visible(x.title)}"` : ''} on "${visible(x.page)}": ${x.written === 'columnChart' ? x.what : x.what + (x.why ? ` (${x.why})` : '')}.`));
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);

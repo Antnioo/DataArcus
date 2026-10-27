@@ -31,7 +31,8 @@ const AR = /[؀-ۿ]/, bare = (s) => String(s == null ? '' : s).replace(/[‎‏�
 // a mixed title: Arabic letters and Latin letters in one text (the marks aside)
 const mixed = (s) => AR.test(bare(s)) && /[A-Za-z]/.test(bare(s));
 // an English title isolated whole, as the writer places it in an Arabic report
-const wholeIso = (s) => new RegExp('^' + RLM + FSI + '[^⁦-⁩]+' + PDI + RLM + '$').test(String(s));
+// (the marks are the shared rule's, text-measure.js isolateWhole: BD2's V3 since 27 Oct; never spelled out here)
+const wholeIso = (s) => String(s) !== bare(s) && String(s) === TM.isolateWhole(bare(s));
 const lit = (p) => (p && p.expr && p.expr.Literal && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'") : null);
 const props = (vco, k) => Object.assign({}, ...(((vco || {})[k] || []).map((e) => (e && e.properties) || {})));
 // every written title (a visual's title text, and its alt text when it repeats the title), from visual.json and mobile.json
@@ -96,8 +97,8 @@ try {
     () => `E7. the second chart's sentence in the names' language: ${cut([ST.alternate('Total Sales', 'Region', 2, true, 'حسب'), ST.alternate('إجمالي المبيعات', 'المنطقة', 2, true, 'حسب')])}`);
   chk(() => [2, 3, 4].map((n) => ST.alternate('إجمالي المبيعات', 'Region', n, true, 'حسب')).concat([2, 3].map((n) => ST.alternate('Total Sales', 'المنطقة', n, true, 'by'))).every((x) => x == null || !mixed(x)),
     () => 'E8. a mixed pair\'s second-chart sentences never mix the languages');
-  chk(() => typeof TM.isolateWhole === 'function' && TM.isolateWhole('Total Sales by Region') === RLM + FSI + 'Total Sales by Region' + PDI + RLM && ['إجمالي المبيعات', '2024', '', TM.isolateWhole('Total Sales')].every((x) => TM.isolateWhole(x) === x),
-    () => `E9. text-measure.js isolateWhole: an English text isolated whole (U+200F, U+2068 ... U+2069, U+200F); Arabic, numbers, an isolated text unchanged: ${typeof TM.isolateWhole}`);
+  chk(() => typeof TM.isolateWhole === 'function' && TM.isolateWhole('Total Sales by Region').includes(RLM + FSI + 'Total Sales by Region' + PDI + RLM) && (!TM.wrapped || TM.wrapped(TM.isolateWhole('Total Sales by Region'))) && ['إجمالي المبيعات', '2024', '', TM.isolateWhole('Total Sales')].every((x) => TM.isolateWhole(x) === x),
+    () => `E9. text-measure.js isolateWhole: an English text isolated whole by the shared rule (an end run's marks round the whole title, inside BD2's wrap); Arabic, numbers, an isolated text unchanged: ${typeof TM.isolateWhole}`);
 
   // ---------- S: the website's Arabic download ----------
   const M = (m, name) => ({ t: 'Sales', m, name: name || m }), C = (c, name, extra) => Object.assign({ t: 'Sales', c, name: name || c }, extra || {});

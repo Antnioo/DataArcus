@@ -11,7 +11,8 @@
 //   T4  the write: the overrides gone, nothing else of them; the theme added (no theme file) and registered; every
 //       other file byte-identical; the original byte-identical
 //   T5  positions: the grid by default; keepPositions: no position changes at all
-//   T6  a report with its own theme: only /textClasses/<class>/(fontFace|fontSize) of it change, no file added
+//   T6  a report with its own theme: only its visual styles' role font and size change (CS2; textClasses before), no
+//       file added
 //   T7  consistentText "theme": no theme write; the removals the same
 //   T8  a visual type CS1 does not know: untouched (byte-identical) and listed
 //   T9  verifyCopy refuses: a removal outside the allowlist, one not in the plan, report.json changed (not added), an
@@ -123,7 +124,8 @@ try {
       chk(() => off.length === 0, () => `T4. nothing else in the visuals changed: ${JSON.stringify(off)}`);
       chk(() => rd(vfile(OUT, P1, 'lineMonth')).visual.objects.labels[0].properties.show && rd(vfile(OUT, P1, 'colBranch')).visual.visualContainerObjects.title[0].properties.text, () => 'T4. a removed font leaves its object\'s other settings (labels shown, the title\'s text)');
       const th = path.join(OUT, 'StaticResources/RegisteredResources/DataArcusText.json'), rj = rd(path.join(OUT, 'definition/report.json'));
-      chk(() => fs.existsSync(th) && JSON.stringify(rd(th).textClasses.largeTitle) === '{"fontSize":14}' && JSON.stringify(rd(th).textClasses.label) === '{"fontSize":10}' && Object.keys(rd(th)).join() === 'name,textClasses',
+      // (CS2: the text set is written as visual styles, where Desktop draws it; no text classes: test-0.3.1-cs2.mjs)
+      chk(() => fs.existsSync(th) && JSON.stringify(rd(th).visualStyles.card['*'].title) === '[{"fontSize":14}]' && JSON.stringify(rd(th).visualStyles.tableEx['*'].values) === '[{"fontSize":10}]' && Object.keys(rd(th)).join() === 'name,visualStyles',
         () => `T4. the added theme holds the text set alone: ${fs.existsSync(th) ? fs.readFileSync(th, 'utf8') : 'missing'}`);
       chk(() => rj.themeCollection.customTheme.name === 'DataArcusText.json' && rj.themeCollection.customTheme.type === 'RegisteredResources' && rj.resourcePackages.some((p) => p.type === 'RegisteredResources' && p.items.some((i) => i.name === 'DataArcusText.json' && i.type === 'CustomTheme')),
         () => `T4. report.json names it: ${JSON.stringify(rj)}`);
@@ -180,8 +182,8 @@ try {
       const w6 = await call(s5, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p6.j.plan.planId, consistentText: 'report' });
       const TR = 'StaticResources/RegisteredResources/store-ops-theme.json', A = path.join(L4.root, 'Store Ops.Report'), B = path.join(L4.root, 'Store Ops redesigned.Report');
       const d6 = fs.existsSync(path.join(B, TR)) ? diff(rd(path.join(A, TR)), rd(path.join(B, TR))) : ['missing'];
-      chk(() => !w6.err && d6.length && d6.every((p) => lib.TEXT_CLASS_AT.test(p)) && d6.includes('/textClasses/largeTitle/fontSize'), () => `T6. the report's theme: only its text classes' font and size: ${JSON.stringify(d6)} ${short(w6)}`);
-      chk(() => fs.readFileSync(path.join(A, 'definition/report.json')).equals(fs.readFileSync(path.join(B, 'definition/report.json'))) && !fs.existsSync(path.join(B, 'StaticResources/RegisteredResources/DataArcusText.json')) && /store-ops-theme\.json: its text classes/.test(p6.j.redesign.text.theme),
+      chk(() => !w6.err && d6.length && d6.every((p) => lib.THEME_STYLE_AT.test(p)) && d6.includes('/visualStyles/card/*/title/0/fontSize'), () => `T6. the report's theme: only its visual styles' font and size (CS2): ${JSON.stringify(d6)} ${short(w6)}`);
+      chk(() => fs.readFileSync(path.join(A, 'definition/report.json')).equals(fs.readFileSync(path.join(B, 'definition/report.json'))) && !fs.existsSync(path.join(B, 'StaticResources/RegisteredResources/DataArcusText.json')) && /store-ops-theme\.json: the text set is written as its visual styles/.test(p6.j.redesign.text.theme),
         () => 'T6. report.json byte-identical, no file added');
     } finally { await s5.close(); }
 
@@ -194,7 +196,7 @@ try {
       let link = ''; for (let k = 0; k < 100 && !link; k++) { await sleep(50); link = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean)[0] || '' : ''; }
       const page = await get(link); answers.push(page);
       chk(() => /Text set/.test(page) && /visual titles/.test(page) && /14pt/.test(page) && /Settings removed/.test(page) && /37/.test(page), () => `T10. the approval page shows the text set and the count removed: ${page.slice(0, 600)}`);
-      chk(() => /its own text settings removed/.test(page) && /largeTitle fontSize 11pt -&gt; 14pt|largeTitle fontSize 11pt -> 14pt/.test(page) && /DataArcusText\.json/.test(page), () => 'T10. each removal listed with its visual (largeTitle fontSize 11pt -> 14pt), and the theme added');
+      chk(() => /its text, from the theme/.test(page) && /visual titles: size set to 14pt \(was 11pt\)/.test(page) && /DataArcusText\.json/.test(page), () => 'T10. each removal listed with its visual (visual titles: size set to 14pt (was 11pt); R4A: in plain words), and the theme added');
     } finally { await wsrv.close(); }
   } finally { await s.close(); }
 

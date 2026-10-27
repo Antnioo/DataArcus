@@ -561,7 +561,15 @@
       walkVisual(v, change, whole, k);
     }
   }
-  const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
+  // (0.3.1 BD2) a Text measure's literals take the isolates (V1) and, where one did, the whole text is wrapped at run time
+  // in U+2067 ... U+2069 (the measured rule, text-measure.js isolateLatin), once: a text joined from parts at run time
+  // is wrapped whole, never each part
+  const WRAP_OPEN = 'UNICHAR ( 8295 ) & ( ', WRAP_CLOSE = ' ) & UNICHAR ( 8297 )';
+  const daxTexts = (expr, change) => {
+    let hit = false;
+    const out = String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), o = change(raw); if (o === raw) return m; hit = true; return '"' + o.replace(/"/g, '""') + '"'; });
+    return hit && !(out.startsWith(WRAP_OPEN) && out.endsWith(WRAP_CLOSE)) ? WRAP_OPEN + out + WRAP_CLOSE : out;
+  };
   function isolateFiles(files, names, o) {
     // names: the approved Arabic names with a Latin run (the others need nothing), longest first
     const list = [...new Set((names || []).map(String).filter((x) => Measure.ARABIC.test(x) && /[A-Za-z]/.test(x) && !Measure.ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
@@ -570,6 +578,8 @@
     let n = 0; const change = (s) => { const out = all ? Measure.isolateLatin(s) : Measure.isolateNames(s, list); if (out !== s) n++; return out; };
     // (0.3.1 TT1, the owner's rule of 27 Oct) an Arabic build (all): an English title or alt text isolated as a whole
     const whole = all ? (s) => { const out = Measure.isolateWhole(s); if (out !== s) n++; return out; } : null;
+    // a DAX literal is a part of its measure's text: its isolates only, the wrap goes round the whole expression (daxTexts)
+    const part = (s) => { let out = all ? Measure.isolateRuns(s) : Measure.isolateNames(s, list); if (out !== s && !all && Measure.wrapped(out)) out = out.slice(1, -1); if (out !== s) n++; return out; };
     for (const f of files || []) {
       if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
       const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
@@ -577,7 +587,7 @@
       const before = n;
       if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change, whole); }
       else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
-      else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, change); }));
+      else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, part); }));
       if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');
     }
     return n;

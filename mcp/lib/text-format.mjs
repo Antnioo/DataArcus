@@ -40,6 +40,11 @@ export const PROPS = ['family', 'size', 'bold', 'italic'];
 // the pointers a consistent copy may remove: one per role's object and property (redesign.mjs's allowlist)
 export const TEXT_POINTER = new RegExp(`^/visual/(?:${[...new Set(ROLES.map((r) => `${r.at}/${r.object}`))].map((x) => x.replace('/', '\\/')).join('|')})/\\d+/properties/(?:${[...new Set(ROLES.flatMap((r) => Object.values(r.props)))].join('|')})$`);
 export const rolesOf = (type) => ROLES.filter((r) => r.types.includes(type));
+// (0.3.1 CS2) the theme pointers a consistent copy may set: a role's font and size in the theme's visual style for a known
+// type ("*" preset), where Microsoft's base theme sets titles and axes and DataArcus's themes set every text size
+// (design-engine.js textSizes, drawn in Desktop since 0.2.x); never a colour or any other property (redesign.mjs's allowlist)
+const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const THEME_STYLE_AT = new RegExp(`^/visualStyles/(?:${ROLES.map((r) => `(?:${r.types.map(esc).join('|')})/\\*/${esc(r.object)}/\\d+/(?:${[r.props.family, r.props.size].join('|')})`).join('|')})$`);
 
 // ---- a Literal's value: a font's first family, a size in points, true or false ----
 const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : null);
@@ -84,8 +89,10 @@ export function visualText(json) {
 // theme: the report's custom theme JSON or null; a visual style of the theme for that type and object comes first
 export function themeValue(theme, cls, prop, type, object, props) {
   const th = obj(theme) || {};
-  const vs = ((obj((obj(th.visualStyles) || {})[type]) || {})['*'] || {})[object], e = Array.isArray(vs) ? obj(vs[0]) : null, own = e && props ? e[props[prop]] : undefined;
-  if (own !== undefined && (typeof own === 'string' || typeof own === 'number' || typeof own === 'boolean')) return { value: prop === 'family' ? String(own).split(',')[0].replace(/['"]/g, '').trim() : own, style: `${type} ${object}` };
+  // (CS2) the type's own style first, then the theme's style for every visual ("*", as Microsoft's base theme sets titles)
+  const styleOf = (t) => { const a = ((obj((obj(th.visualStyles) || {})[t]) || {})['*'] || {})[object], e = Array.isArray(a) ? obj(a[0]) : null, v = e && props ? e[props[prop]] : undefined; return v !== undefined && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') ? v : undefined; };
+  const mine = styleOf(type), own = mine !== undefined ? mine : styleOf('*');
+  if (own !== undefined) return { value: prop === 'family' ? String(own).split(',')[0].replace(/['"]/g, '').trim() : own, style: `${mine !== undefined ? type : '*'} ${object}` };
   const tc = obj((obj(th.textClasses) || {})[cls]) || {};
   if (prop === 'family' && typeof tc.fontFace === 'string') return { value: tc.fontFace.split(',')[0].replace(/['"]/g, '').trim() };
   if (prop === 'size' && typeof tc.fontSize === 'number') return { value: tc.fontSize };
