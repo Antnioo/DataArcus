@@ -44,6 +44,8 @@ const pale = (() => { const d = design('Corporate', 'glass'); d.data[0] = PALE; 
 chk(() => { const f = E.glassFit(pale); return !f.fits && f.failed.some((c) => c.id === 'color1OnGlass' && c.ratio < 3); }, () => `D3. a pale brand colour does not fit glass (colour 1 under 3:1 on the see-through cards): ${cut(get(() => E.glassFit(pale)))}`);
 chk(() => { const d = design('Corporate', 'glass'); d.ui.text = '#757575'; const f = E.glassFit(d), g = E.glassLook(d); return f.fits && g.strength === 0 && !g.checks.find((c) => c.id === 'textOnPicture').pass; },
   () => 'D4. the page\'s own text failing on its own colour (the picture already plain) is not glass\'s failure: the plain look fails it the same way');
+chk(() => { const g = E.glassPng(design('Corporate', 'glass'), 64, 36); return E.isGlassPng(g) && !E.isGlassPng(BLANK_PNG_BYTES) && !E.isGlassPng(E.encodePng(4, 4, new Uint8Array(48))); },
+  () => 'D6. the glass picture carries its mark (a tEXt chunk), so the twin knows it from a picture with panels; the blank pixel and other PNGs do not');
 chk(() => { const d = design('DataArcus', 'glass'); Object.assign(d.ui, { text: '#757575', card: '#ffffff', background: '#ffffff' }); const f = E.glassFit(d); return !f.fits && f.t === 0; }, () => 'D5. cards that would have to be solid (transparency 0) are not glass');
 
 // ---------- L: the design of a new report, and the redesign's ----------
@@ -134,6 +136,13 @@ try {
     const tb = twin ? get(() => BG(path.join(ROOT, 'shop', twin))) : null;
     chk(() => !w.err && tb && JSON.stringify(tb.theme) === JSON.stringify(made[nm].theme) && glassTheme(tb.theme) === (nm === 'default'),
       () => `T1-${nm}. the Arabic twin keeps the original report's theme (${nm === 'default' ? 'glass' : 'plain'}), no default of its own: ${cut(w.err ? w.t : [twin, tb && glassTheme(tb.theme)])}`);
+    // the glass picture has no panels: the twin mirrors its pages (never "kept left to right: drawn on a background picture"),
+    // its KPI cards' values right-aligned
+    const P = twin ? path.join(ROOT, 'shop', twin, 'definition/pages') : null, cards = P ? fs.readdirSync(P).filter((x) => fs.existsSync(path.join(P, x, 'visuals'))).flatMap((x) => fs.readdirSync(path.join(P, x, 'visuals')).map((y) => rd(path.join(P, x, 'visuals', y, 'visual.json'))))
+      .filter((v) => v.visual && v.visual.visualType === 'cardVisual' && ((v.visual.query || {}).queryState || {}).Data) : [];
+    const al = cards.map((v) => ((v.visual.objects || {}).value || []).filter((e) => e.selector && e.selector.id === 'default').map((e) => String(((e.properties.horizontalAlignment || {}).expr || {}).Literal ? e.properties.horizontalAlignment.expr.Literal.Value : '')));
+    chk(() => !/background picture/.test(cut(p1.t) + (p1.t || '')) && cards.length >= 2 && al.every((a) => a.length && !a.some((x) => /left/.test(x))),
+      () => `T2-${nm}. the twin mirrors the pages (no page kept left to right for its picture; KPI values not left): ${cut([al, (p1.t || '').match(/.{0,80}background picture.{0,80}/)])}`);
   }
 
   // ---------- S: the sample project ----------

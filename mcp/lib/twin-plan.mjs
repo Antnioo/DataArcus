@@ -20,6 +20,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
+const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
@@ -73,7 +74,9 @@ export function planTwin(a) {
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
   // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
   const blankBytes = Buffer.from(Mirror.BLANK_PNG, 'base64');
-  const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { return bytesAt(loc, rel).equals(blankBytes); } catch (e) { return false; } };
+  // (0.3.1 GD1: glass is the default of a new report) DataArcus's own glass picture (the engine's mark in the PNG) has
+  // soft colour fields and no panels, so its page is mirrored as a page without a picture
+  const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { const b = bytesAt(loc, rel); return b.equals(blankBytes) || isGlassPng(b); } catch (e) { return false; } };
   const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank })).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
   const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];

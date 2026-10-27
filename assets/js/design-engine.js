@@ -815,7 +815,8 @@
     put(LC[256], LL[256]); if (nb) put(0, 8 - nb);
     return out.subarray(0, o);
   };
-  const encodePng = (w, h, rgb) => {
+  // text: an optional tEXt chunk (keyword Comment) right after the header, as glassPng marks its picture
+  const encodePng = (w, h, rgb, text) => {
     const row = w * 3, raw = new Uint8Array(h * (row + 1)), line = new Uint8Array(row);
     const pred = (f, p, x, y) => { const a = x >= 3 ? rgb[p + x - 3] : 0, b = y ? rgb[p + x - row] : 0, c = x >= 3 && y ? rgb[p + x - row - 3] : 0;
       if (f === 1) return a; if (f === 2) return b; if (f === 3) return (a + b) >> 1;
@@ -832,16 +833,23 @@
     const ad = ((b << 16) | a) >>> 0; idat.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
     const u32 = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
     const chunk = (type, body) => { const c = new Uint8Array(12 + body.length); c.set(u32(body.length)); c.set([...type].map((ch) => ch.charCodeAt(0)), 4); c.set(body, 8); c.set(u32(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
-    const parts = [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Uint8Array.from(u32(w).concat(u32(h), [8, 2, 0, 0, 0]))), chunk('IDAT', idat), chunk('IEND', new Uint8Array(0))];
+    const parts = [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Uint8Array.from(u32(w).concat(u32(h), [8, 2, 0, 0, 0])))]
+      .concat(text ? [chunk('tEXt', Uint8Array.from([...('Comment\0' + text)].map((ch) => ch.charCodeAt(0) & 255)))] : [], [chunk('IDAT', idat), chunk('IEND', new Uint8Array(0))]);
     const png = new Uint8Array(parts.reduce((x, pt) => x + pt.length, 0)); let at = 0; parts.forEach((pt) => { png.set(pt, at); at += pt.length; });
     return png;
   };
   // The page's background picture of the glass look, a PNG at w x h (the page's own size: 1280 x 720, 1920 x 1080...)
+  // (GD1) the glass picture says what it is in a tEXt chunk right after its header, so the Arabic twin knows a page
+  // background that is DataArcus's soft picture (colour fields, no panels) from a picture with panels a mirrored page
+  // would leave (twin-plan's pictures): the twin mirrors a glass page as it mirrors a page without a picture
+  const GLASS_MARK = 'DataArcus glass look';
+  const MARK_AT = 33, MARK = [...'tEXtComment\0' + GLASS_MARK].map((ch) => ch.charCodeAt(0));
+  const isGlassPng = (b) => !!b && b.length > MARK_AT + 4 + MARK.length && MARK.every((c, i) => b[MARK_AT + 4 + i] === c) && ((b[MARK_AT] << 24) | (b[MARK_AT + 1] << 16) | (b[MARK_AT + 2] << 8) | b[MARK_AT + 3]) === MARK.length - 4;
   // (GD1: glass is the default, so every new report draws it, in its plan and again in its write: the last few pictures
   // are kept, by their colours, strength and size; each call gets its own copy)
   const pngCache = new Map();
   const glassPng = (d, w, h, opt) => { const W = Math.max(1, Math.round(+w)), H = Math.max(1, Math.round(+h)), cc = colours(d), key = JSON.stringify([cc.ui, cc.data, glassLook(d, opt).strength, W, H]);
-    if (!pngCache.has(key)) { if (pngCache.size >= 8) pngCache.delete(pngCache.keys().next().value); pngCache.set(key, encodePng(W, H, glassPixels(d, W, H, opt))); }
+    if (!pngCache.has(key)) { if (pngCache.size >= 8) pngCache.delete(pngCache.keys().next().value); pngCache.set(key, encodePng(W, H, glassPixels(d, W, H, opt), GLASS_MARK)); }
     return pngCache.get(key).slice(); };
   // the look's cards in the theme: background, border, shadow (see GLASS); t: the visual type
   const glassCards = (u, l, g, t) => ({
@@ -1230,7 +1238,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    GLASS, DEFAULT_LOOK, glassFit, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
