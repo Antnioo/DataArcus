@@ -105,11 +105,15 @@ refused by plan_layout (a plan problem naming the route) and create_report ("Not
 "No option dropped without a word" (0.3.1 section) and "Going back to 0.3.0" (its first bullet).
 
 ## The way back: the SHA-256
-`aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`: the one the MCP page publishes for
-`dataarcus-0.3.0.mcpb` today and `mcp/research/SKILL-PACKAGING.md` recorded on 25 Oct ("downloaded 25 Oct; matches the
-notes"); sf1 WB-1 reads it there. README's step 10 names the place and points to the release notes and the CHANGELOG
-for the hash (no file name or hash of its own: `scripts/check-release.mjs` reads README's download lines, and on
-release day every one must name 0.3.1; WB-4 applies the RELEASE comment and checks it).
+`aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. Its primary source, the release v0.3.0's asset and
+notes on `Antnioo/dataarcus-releases` (or the .mcpb itself), is **not reachable from this session**: the API answers
+"GitHub access to this repository is not enabled for this session", and attaching the repository was refused. What
+this session saw are secondary records: `mcp/research/SKILL-PACKAGING.md` (25 Oct: the file downloaded from that
+release, its SHA-256 computed, "matches the notes"), and the MCP page's 0.3.0 download line (`power-bi-mcp/index.html`,
+its Arabic copy); sf1 WB-1 reads it from the first. Before the release, check it on the primary source (For the
+laptop 1, or the reviewer with access). README's step 10 names the place and points to the release notes and the
+CHANGELOG for the hash (no file name or hash of its own: `scripts/check-release.mjs` reads README's download lines, and
+on release day every one must name 0.3.1; WB-4 applies the RELEASE comment and checks it).
 
 ## Decisions I made
 - The redesign's four options are refused outside a redesign, not carried into the native copy (the smallest fix; a
@@ -120,8 +124,17 @@ release day every one must name 0.3.1; WB-4 applies the RELEASE comment and chec
 - Gaps left in the map are written as gaps, with why, not filled with weaker checks.
 
 ## For the laptop
-1. Claude Desktop: uninstall 0.3.1, install `dataarcus-0.3.0.mcpb` (its SHA-256 as above); "list your DataArcus
+1. Download `dataarcus-0.3.0.mcpb` from the release v0.3.0 and run `certutil -hashfile dataarcus-0.3.0.mcpb SHA256`: it
+   must print the CHANGELOG's hash (the primary check this session could not make). Claude Desktop: uninstall 0.3.1,
+   install it; "list your DataArcus
    tools" shows 11; then install 0.3.1 again (Update or Install). Confirms the CHANGELOG's and README's lines.
+
+## For the owner
+1. The 0.3.0 SHA-256 in the release text: confirm it on the release's own .mcpb (above) before 0.3.1 ships.
+2. The gaps left in the map are work for 0.3.2, not decisions: the drill-level value test, a control character in the
+   bilingual report, the Arabic lens and image caps driven large, a test per option for the flip cards, status icons,
+   DAX functions and metric switcher scripts (today proven through the one shared write). None needs his choice, unless
+   he wants any of them in 0.3.1.
 
 ## Seen, not in scope
 1. The README's RELEASE comment says "three places"; step 2 holds four "0.3.0" (one line names it twice). Harmless.
