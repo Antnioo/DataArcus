@@ -392,7 +392,7 @@ const INPUT_WORDS = {
   announced: ['Ramadan and Eid dates', (v, val, all) => (!v ? 'the Umm al-Qura calendar only' : `the UAE's announced dates (later ones are Umm al-Qura estimates)${all && all.country && all.country !== 'uae' ? `: DataArcus holds no announced dates of ${COUNTRY[all.country] || 'this country'}'s own, so where ${COUNTRY[all.country] || 'it'} announced another day, the table has the UAE's` : ''}`)],
   weekend: ['Weekend', (v) => ({ country: 'the country\'s official weekend', 'sat-sun': 'Saturday and Sunday', 'fri-sat': 'Friday and Saturday', fri: 'Friday', sun: 'Sunday' })[v] || String(v)],
   lang: ['Language of the names', (v) => (v === 'ar' ? 'Arabic' : 'English')], arabicNames: ['Arabic name columns too', (v) => (v ? 'yes' : 'no')], fiscalStart: ['Fiscal year starts in month', (v) => String(v)],
-  relateTo: ['Related to the new table\'s Date', (v) => [].concat(v).join(', ')], arabicColumnsOnly: ['What is written', (v) => (v ? 'only the Arabic calendar columns, for your own date table' : 'a new calendar table')],
+  relateTo: ['Asked to relate to the new table\'s Date', (v) => [].concat(v).join(', ')], arabicColumnsOnly: ['What is written', (v) => (v ? 'only the Arabic calendar columns, for your own date table' : 'a new calendar table')],
   brand: ['Brand colour', (v) => String(v)], mode: ['Mode', (v) => String(v)]
 };
 /** The plan as the window shows it: every input the plan pins, by name, as plain text (A-01: the person sees what the
