@@ -65,10 +65,13 @@ export function v029w({ check }) {
     for (const lang of ['en', 'ar']) {
       const r = get(() => build(bind, { lang })), vs = r.files ? visuals(r) : [];
       const shownText = vs.flatMap((v) => [titleOf(v), altOf(v)].concat(Object.values((v.visual.query || { queryState: {} }).queryState).flatMap((st) => st.projections.map((p) => p.displayName)))).filter((x) => x != null);
+      // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: an English title or alt text in an Arabic report is isolated
+      // whole by the writer, text-measure.js isolateWhole; a display name never is)
+      const titled = new Set(vs.flatMap((v) => [titleOf(v), altOf(v)]).filter((x) => x != null));
       // (SQ15b, J18-S2: an Arabic build is isolated by the writer itself, J18's rule) the writer's own marks (FSI, PDI, RLM
       // where text-measure.js isolateLatin puts them) are allowed in Arabic; a name's direction controls never are
       const TM = req('../assets/js/text-measure.js'), own = (x) => (lang === 'ar' ? x.replace(/[\u2068\u2069\u200F]/g, '') : x);
-      chk(() => vs.length && shownText.length > 5 && !shownText.some((x) => BIDI.test(own(x))) && shownText.every((x) => x === (lang === 'ar' ? TM.isolateLatin(own(x)) : x)) && shownText.some((x) => /Sales Net/.test(x)),
+      chk(() => vs.length && shownText.length > 5 && !shownText.some((x) => BIDI.test(own(x))) && shownText.every((x) => x === (lang === 'ar' ? TM.isolateLatin(own(x)) : x) || (lang === 'ar' && titled.has(x) && x === TM.isolateWhole(own(x)))) && shownText.some((x) => /Sales Net/.test(x)),
         () => `A3-11 (${lang}): titles, alt text and display names carry no direction control: ${r.threw || JSON.stringify(shownText.filter((x) => BIDI.test(x)).slice(0, 4))}`);
       const ms = measures(r);
       chk(() => ms.length && ms.every((m) => !BIDI.test(m.name)) && ms.some((m) => /^No data: Sales Net$/.test(m.name) && m.expression.includes('[Sales' + RLO + ' Net]')),

@@ -6,8 +6,9 @@
 //   L   L3-S2: the metric switcher leaves out a measure its charts' axes are not related to (the model's relationships
 //       and the measure's DAX names: metadata only), and the plan says which and why
 //   S   0.2.9-reader-S8: plan-lint's binding is report-run's one page-and-binding function, not a copy
-//   T   0.3.1 LR2 (the laptop's run of 26 Oct, the owner's "Use «حسب»"; mcp/work/LR2.md): the website's Arabic download,
-//       built with the page's own input (chartAxes 'mirrored'), titles its charts «Total Sales حسب Region» (story-titles.js,
+//   T   0.3.1 LR2 (the laptop's run of 26 Oct; mcp/work/LR2.md), moved to TT1's rule (the owner, 27 Oct: a title is wholly
+//       Arabic or wholly English; mcp/work/TT1.md): the website's Arabic download, built with the page's own input
+//       (chartAxes 'mirrored'), titles its charts on English names "Total Sales by Region", isolated whole (story-titles.js,
 //       one engine with the MCP), the ranked and second-chart forms too, never a bracket; the English download unchanged
 //   node test-0.3.1-sq15b.mjs
 import './test-env.mjs';
@@ -74,20 +75,23 @@ try {
     const ext = JSON.parse(((r.files || []).find((f) => /reportExtensions\.json$/.test(f.path)) || { data: '{}' }).data), m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
     const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); return x ? x[1].replace(/""/g, '"') : null; };
   const titled = (r, re) => (r.files || []).filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(f.data).visual).filter((v) => v && re.test(v.visualType)).map((v) => ({ type: v.visualType, t: titleOf(r, v), alt: ((((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText || { expr: { Literal: { Value: '' } } }).expr.Literal.Value }));
-  const CH = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/, arT = titled(ar, CH), enT = titled(en, CH), I = TM.isolateLatin || ((x) => x);
-  chk(() => ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales حسب Region' && ST.join('إجمالي المبيعات', 'Region', 'حسب') === 'إجمالي المبيعات حسب Region' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales' && ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region'
-    && ST.alternate('Total Sales', 'Region', 2, true, 'حسب') === 'ترتيب Region حسب Total Sales' && ST.alternate('Total Sales', 'Region', 2, false, 'حسب') === 'Total Sales لكل Region',
-  () => `T1. story-titles.js: an Arabic report joins any two names with «حسب» and says its second-chart sentences in Arabic; an English report as before: ${cut([ST.join('Total Sales', 'Region', 'حسب'), ST.alternate('Total Sales', 'Region', 2, true, 'حسب')])}`);
-  chk(() => arT.some((x) => x.type === 'lineChart' && x.t === I('Total Sales حسب Month')) && I('Total Sales حسب Month').startsWith('‏⁨'), () => `T2. the Arabic download's line chart: «Total Sales حسب Month», isolated, U+200F first: ${cut(arT.filter((x) => x.type === 'lineChart'))}`);
-  chk(() => ['clusteredBarChart', 'clusteredColumnChart'].every((k) => arT.some((x) => x.type === k && x.t === I('Total Sales حسب Region'))) && arT.some((x) => x.type === 'clusteredBarChart' && x.t === I('ترتيب Region حسب Total Sales')),
-    () => `T3. the Arabic bar and column charts: «Total Sales حسب Region», the ranked second bar «ترتيب Region حسب Total Sales»: ${cut(arT.filter((x) => x.type !== 'lineChart'))}`);
+  const CH = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/, arT = titled(ar, CH), enT = titled(en, CH);
+  // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces LR2's
+  // «حسب» between English names: T1, T2, T3 and T6 expect the English title, isolated whole, U+200F first; T4, T5 as LR2)
+  const W = TM.isolateWhole || ((x) => x);
+  chk(() => ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'Region', 'حسب') === 'إجمالي المبيعات' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales' && ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region'
+    && ST.alternate('Total Sales', 'Region', 2, true, 'حسب') === 'Region ranked by Total Sales' && ST.alternate('Total Sales', 'Region', 2, false, 'حسب') === 'Total Sales per Region',
+  () => `T1. story-titles.js: an Arabic report joins two English names with "by" and says its second-chart sentences in English, a mixed pair never joined; an English report as before: ${cut([ST.join('Total Sales', 'Region', 'حسب'), ST.alternate('Total Sales', 'Region', 2, true, 'حسب')])}`);
+  chk(() => arT.some((x) => x.type === 'lineChart' && x.t === W('Total Sales by Month')) && W('Total Sales by Month').startsWith('\u200F\u2068'), () => `T2. the Arabic download's line chart: "Total Sales by Month", isolated whole, U+200F first: ${cut(arT.filter((x) => x.type === 'lineChart'))}`);
+  chk(() => ['clusteredBarChart', 'clusteredColumnChart'].every((k) => arT.some((x) => x.type === k && x.t === W('Total Sales by Region'))) && arT.some((x) => x.type === 'clusteredBarChart' && x.t === W('Region ranked by Total Sales')),
+    () => `T3. the Arabic bar and column charts: "Total Sales by Region", the ranked second bar "Region ranked by Total Sales", each isolated whole: ${cut(arT.filter((x) => x.type !== 'lineChart'))}`);
   chk(() => arT.length >= 4 && arT.concat(titled(ar, /^tableEx$/)).every((x) => x.t && !/[()]/.test(x.t) && !/[()]/.test(x.alt)), () => `T4. no bracket in an Arabic chart or table title or alt text: ${cut(arT.concat(titled(ar, /^tableEx$/)).filter((x) => !x.t || /[()]/.test(x.t + x.alt)))}`);
   chk(() => enT.map((x) => x.t).sort().join('|') === ['Region ranked by Total Sales', 'Region ranked by Total Sales', 'Total Sales by Month', 'Total Sales by Region', 'Total Sales by Region'].join('|'), () => `T5. the English download's chart titles unchanged: ${cut(enT.map((x) => x.t))}`);
   // the MCP's Arabic report: built isolated by the writer, report-run's own pass after its additions changes nothing more
   const { reportRun } = await import('./lib/report-run.mjs'), { withLookDefaults } = await import('./lib/report-inputs.mjs'), { planLayout } = await import('./lib/design.mjs');
   const mcpAr = get(() => reportRun(withLookDefaults({ path: 'sw/M.SemanticModel', name: 'Own AR', lang: 'ar', design: planLayout({ layout: 'exec', lang: 'ar' }).design, secondPage: false }), 'build'));
   chk(() => mcpAr.files && Terms.isolateFiles(copy(mcpAr), [], { all: true }) === 0 && isoTexts(mcpAr).length > 0, () => `J8. the MCP's Arabic report: every mixed text isolated (pin): ${cut(mcpAr.threw || isoTexts(mcpAr))}`);
-  chk(() => mcpAr.files && titled(mcpAr, /^lineChart$/).some((x) => x.t === I('Total Sales حسب Month')), () => `T6. the MCP's Arabic report on the same names: the same engine, «Total Sales حسب Month»: ${cut(mcpAr.threw || titled(mcpAr, CH))}`);
+  chk(() => mcpAr.files && titled(mcpAr, /^lineChart$/).some((x) => x.t === W('Total Sales by Month')), () => `T6. the MCP's Arabic report on the same names: the same engine, "Total Sales by Month" isolated whole: ${cut(mcpAr.threw || titled(mcpAr, CH))}`);
 
   // ---------- L3-S2: the switch measures the charts' axes are related to ----------
   const S = await import('./lib/metric-switcher.mjs');

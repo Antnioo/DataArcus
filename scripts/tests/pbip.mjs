@@ -478,8 +478,10 @@ export default async function ({ browser, url }) {
 
   // 0.3.1 LR2 (the laptop's run of 26 Oct, the owner's "Use «حسب»"): the Theme Generator's own download on a made-up model
   // with English names, Arabic and English, through the page (the picker's suggestions, the page's own steps):
-  //  a. the Arabic chart titles say «Total Sales حسب Region» (the English "M by C" family in Arabic, the Latin runs
-  //     isolated by the writer, a U+200F where the text starts with one), never a bracket; the English ones unchanged
+  //  a. (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces
+  //     LR2's «حسب» between English names) the Arabic chart titles on English names are the English download's own
+  //     sentences ("Total Sales by Region"), each isolated whole by the writer (U+200F U+2068 ... U+2069 U+200F), never
+  //     a bracket; the English ones unchanged
   //  b, c, d (pins: the laptop saw them on a harness that skipped the page's steps): the Arabic charts are mirrored, a KPI
   //     card has its measure's format, every KPI slot has a measure when the model has enough
   {
@@ -519,13 +521,13 @@ export default async function ({ browser, url }) {
       const fmt = orders && ((orders.j.visual.objects || {}).value || []).find((e) => e.selector && e.selector.metadata === 'Sales.Orders');
       check(fmt && fmt.properties.customFormatString.expr.Literal.Value === "'#,0'" && fmt.properties.labelDisplayUnits.expr.Literal.Value === '-1D', `LR2-c (${lang}): the Orders card's format: ${JSON.stringify(fmt)}`);
     }
-    const en = got.en, ar = got.ar, iso = (x) => TM.isolateLatin(x);
-    // a: each English title in its Arabic form: "M by C" -> «M حسب C», "C ranked by M" -> «ترتيب C حسب M»
-    const toAr = (t) => { let x; if ((x = /^(.+) ranked by (.+)$/.exec(t))) return iso(`ترتيب ${x[1]} حسب ${x[2]}`); if ((x = /^(.+?) by (.+)$/.exec(t))) return iso(`${x[1]} حسب ${x[2]}`); return t; };
+    const en = got.en, ar = got.ar;
+    // a: each English title as the Arabic download writes it: the same sentence, isolated whole (TT1)
+    const toAr = (t) => TM.isolateWhole(t);
     const sorted = (a) => a.slice().sort().join(' | ');
-    check(en.titles.length >= 4 && sorted(ar.titles) === sorted(en.titles.map(toAr)), `LR2-a1: the Arabic chart titles in the «حسب» form, the English download's sentences: ${sorted(ar.titles)} (want ${sorted(en.titles.map(toAr))})`);
+    check(en.titles.length >= 4 && sorted(ar.titles) === sorted(en.titles.map(toAr)), `LR2-a1: the Arabic chart titles on English names: the English download's sentences, wholly English, isolated whole: ${sorted(ar.titles)} (want ${sorted(en.titles.map(toAr))})`);
     check(ar.titles.concat(ar.tables, ar.alts).every((t) => t && !/[()]/.test(t)), `LR2-a2: no bracket in an Arabic chart or table title or alt text: ${ar.titles.concat(ar.tables, ar.alts).filter((t) => !t || /[()]/.test(t)).slice(0, 4).join(' | ')}`);
-    check(ar.titles.filter((t) => /^‏⁨Total Sales⁩ حسب /.test(t)).length >= 3, `LR2-a3: a title that starts with a Latin run starts with U+200F and the isolate: ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
+    check(ar.titles.filter((t) => /^\u200F\u2068Total Sales by [^\u2066-\u2069]+\u2069\u200F$/.test(t)).length >= 3, `LR2-a3: an English title starts with U+200F and the isolate and ends with them, one run: ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
     check(sorted(en.titles) === 'Total Sales by Customer | Total Sales by Customer | Total Sales by Month | Total Sales by Month | Total Sales by Region | Total Sales by Region | Total Sales by Region', `LR2-a4: the English download's titles unchanged: ${sorted(en.titles)}`);
     // b: the Arabic charts mirrored, the line chart's months from the right (its month order reversed)
     const arCharts = mirrorOf(ar.files), line = ar.vs.find((x) => x.j.visual.visualType === 'lineChart');
