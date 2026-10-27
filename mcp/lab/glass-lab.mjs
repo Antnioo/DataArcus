@@ -29,7 +29,7 @@ const E = createRequire(import.meta.url)('../../assets/js/design-engine.js');
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const REGIONS = ['North', 'South', 'East', 'West', 'Central'], CATEGORIES = ['Home', 'Fashion', 'Electronics', 'Beauty'], CHANNELS = ['Store', 'Online'];
 // the rows: every month of 2026, each region and category (made up, deterministic)
-function writeModel(dir) {
+export function writeModel(dir) {
   const rows = []; let k = 0;
   for (let mo = 1; mo <= 12; mo++) REGIONS.forEach((r, ri) => CATEGORIES.forEach((c, ci) => {
     const amount = 4000 + 900 * (5 - ri) + 700 * ci + 300 * mo + ((k++ * 37) % 23) * 40;

@@ -70,6 +70,8 @@ try {
 } finally { await w.close(); }
 
 // ---------- 0.2.9-writer-S10: the gap beside a shortened rail, as measured (not changed here) ----------
+// (0.3.1 TS1, on purpose: the owner's yes to SQ13's option (a), REFLOW_KEEP 0.5 -> 0.45: the second page's 197 closes to
+// one row gap, 18; the column chart beside the rail keeps 168 of 347; the other four gaps stay, rows beside the rail)
 {
   const gapOf = (preset, n, k) => {
     const l0 = { preset, kpis: E.LAYOUTS[preset].kpis, filters: true, fpos: 'start', header: true, page: '1920x1080' }, pages = E.projectPages(l0, 'en', { second: true });
@@ -80,7 +82,7 @@ try {
     return Math.round((under.length ? Math.min(...under) : 1080) - B);
   };
   const got = [gapOf('exec', 2, 0), gapOf('exec', 3, 0), gapOf('ops', 2, 0), gapOf('ops', 3, 0), gapOf('exec', 3, 1)];
-  chk(() => JSON.stringify(got) === JSON.stringify([392, 308, 329, 245, 197]), () => `S10. the gaps under a shortened rail beside a row, as measured in SQ13.md (exec 2 and 3 slicers, ops 2 and 3, a second page): ${JSON.stringify(got)}`);
+  chk(() => JSON.stringify(got) === JSON.stringify([392, 308, 329, 245, 18]), () => `S10. the gaps under a shortened rail beside a row, as measured in SQ13.md (exec 2 and 3 slicers, ops 2 and 3, a second page): ${JSON.stringify(got)}`);
 }
 
 // ---------- R1-see-the-result-S3 (OBSOLETE, verified): the approval page and the website draw the writer's files ----------

@@ -100,5 +100,15 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   chk(() => col0 && under.every((s) => { const o = before.find((q) => q.kind === s.kind && q.x <= s.x + 1 && q.y > s.y); return !o || (o.y + o.h === s.y + s.h); }), () => 'T5d. the rows under keep their bottoms (they grow by as much as they move up)');
 }
 
+// ---------- T6: the laptop's lab (lab/text-sizes-lab.mjs): its x 1.5 copy is the 0.3.0 size of every text ----------
+{
+  const Lab = await import('./lab/text-sizes-lab.mjs').catch((e) => ({ threw: String(e && e.message || e) }));
+  const T = { label: 12.5, title: 15, callout: 35 }, lv = (v) => ({ expr: { Literal: { Value: v + 'D' } } }), at = (v, bag, k, p) => parseFloat(v.visual[bag][k][0].properties[p].expr.Literal.Value);
+  const card = { visual: { visualType: 'cardVisual', objects: { value: [{ properties: { fontSize: lv(30) } }] } } }, table = { visual: { visualType: 'tableEx' } };
+  const c = get(() => Lab.grown(card, T, Lab.OLD)), t = get(() => Lab.grown(table, T, Lab.OLD));
+  chk(() => Math.abs(Lab.OLD - 1.2) < 1e-9 && at(c, 'objects', 'value', 'fontSize') === 36 && at(c, 'visualContainerObjects', 'title', 'fontSize') === 18 && at(t, 'objects', 'values', 'fontSize') === 15 && at(t, 'objects', 'columnHeaders', 'fontSize') === 15 && card.visual.objects.value[0].properties.fontSize.expr.Literal.Value === '30D',
+    () => `T6. the lab's x 1.5 copy: a card's own 30 -> 36, its title 15 -> 18, a table's theme 12.5 -> 15; the visual given unchanged: ${Lab.threw || JSON.stringify(c).slice(0, 300)}`);
+}
+
 if (problems.length) { console.log(`FAIL script=test-0.3.1-ts1.mjs cause=${problems.length} of ${checks} checks`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  ts1  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  ts1  ${checks} checks`);
