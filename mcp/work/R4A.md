@@ -45,14 +45,42 @@
 3. The fixes at the cause (above), `npm run build:min`, the `?v=` stamps, csp/ar-pages/sitemap-lastmod `--write`.
 4. Suites, the full run once, the checks (result lines, changelog words, agent memory); this note's Got; push.
 
-## Pins changed (only because the words were made plain)
-(filled in as they happen)
+## Pins changed (only because the words were made plain or moved where round 4 asked)
+- `test-0.3.1-cs1.mjs` T10: "largeTitle fontSize 11pt -> 14pt" -> "visual titles: size set to 14pt (was 11pt)" (problem 9).
+- `test-0.3.0-testers.mjs` T1-1, T1-6, C1-2: the counts by kind were the files part's first line; round 4's problem 2
+  puts a plain line first ("1 new report: 4 pages, next to your model, in the folder ...") with the counts folded under
+  it, so the three checks read the page's head (the plain line, the counts inside a `<details>`). Their counts unchanged.
+- `test-0.3.1-r4a.mjs` A5 (my own, before the fix): a fourth slicer is refused by the schema's limit of 3 first.
+- Not changed: rc24 B-140's pattern ("Comparison: Bar chart (planned as a column chart") still holds: the row keeps its
+  head and gives the plain words after it.
 
 ## CHANGELOG line
-(after the work)
+- **Clearer plans and approval pages:** create_report takes the slicers you asked for or the full list the plan showed
+  (the same approved report); a refused write names what differs and what to pass; the approval page starts with one
+  plain line (what is new and where, the folder's full path), the counts folded under it; plainer words where you
+  decide (why a chart is a bar chart, the "no data" cards, a date column without a type, a redesign's text changes, a
+  custom visual's own settings, every item worth a look, the working folder by its path).
 
 ## Decisions I made
-(after the work)
+1. Item 1 in create_report (`listedSlicers`), not in the gate: the asked list plus exactly the plan's `slicersAdded`, in
+   any order, each once, is read as the asked list the plan pinned; the gate then compares as before and the plan's
+   kept files are written byte for byte. Any other list reaches the gate unchanged and is refused.
+2. Item 2: each difference keeps its input's name first ("fields (slicers: ...)", "displayNames (...)", "name: ...") so
+   the existing patterns and the G-inputs mutant hold; `files` keeps its own message (a file changed). Values shown are
+   the agent's inputs and the plan's pins, cut at 200 characters, never data.
+3. label-limits keeps `why` (the measured numbers, pinned by J11 and read by the agent) and adds `said`/`saidAr`; the
+   approval page and the plan's `kindChanges` show `said`; the slots themselves gain nothing (the answer's length is
+   problem 4, not this job).
+4. The "no data" cards: both: said as meant, and left out of "worth a look" in `checkProject` (DataArcus's own built
+   report, the plan's check and the website's download); `check_report` on a person's report still notes them.
+5. T-3: every item worth a look is listed (no cap of 12), so the summary's N is always the list's N.
+6. T-9: `folderSaid` (the folder's name and its full path) and `besideSaid` (scripts: "next to the project, in the
+   folder ... (path)"); `whereSaid` names the working folder by its path. A plan's outputs carry `outputsAt` (their
+   folder, relative to the working folder) for the page's first line; without it the line names no folder rather than
+   a wrong one.
+7. Arabic: the approval page's new first line, its fold, the kinds row (`saidAr`), the plan's slicer sentence and
+   whereSaid have their Arabic. Not given Arabic: the layout check's findings (the check has no Arabic findings today:
+   every item worth a look is English on an Arabic page too) and the redesign's page (English only today): see Seen.
 
 ## Seen, not in scope
 (after the work)
