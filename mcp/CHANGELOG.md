@@ -109,6 +109,12 @@ package's manifest; this file says what is in it.
   option on the Calendar Generator and in add_gulf_calendar; the UAE and Saudi Arabia quick setups keep each country's
   weekend before its change; the pages say the announced dates are the UAE's, that Oman announced 11 of them a day
   later, that the working-day flag knows no holidays, and that the relative offsets move on with each refresh.
+- **The Gulf calendar never gives a date column a second date table:** when a date column you ask add_gulf_calendar to
+  relate already belongs to your model's date table (Sales[Date] to Calendar[Date]), the script relates the Gulf calendar
+  to that date table instead, so your measures follow its Hijri and Ramadan columns through your own calendar. Where that
+  can't be done, the relationship is added inactive and the plan shows how a measure uses it (USERELATIONSHIP). The plan
+  and the approval page say which and why, in English and Arabic, and the step by hand names your date table, not your
+  sales table, when you relate it yourself.
 - **A write that fails half-way never removes another program's file:** DataArcus checks a file's content against what
   it wrote before it cleans up, even when another program put a file of the same size in the same place.
 - **check_report says what it checked:** it no longer says a report "opens in Power BI Desktop" or "is not broken"; it

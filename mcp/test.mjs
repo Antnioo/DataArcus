@@ -1794,7 +1794,9 @@ if (part('gulf-calendar')) {
   // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
   check(!g.err && path.basename(file) === 'Health Test - add Gulf calendar.tmdl' && path.dirname(path.join(ROOT, file)) === path.join(ROOT, 'bim-project'), `add_gulf_calendar file: ${short(g)}`);
   check((sc.match(/^createOrReplace$/gm) || []).length === 1 && (sc.match(/^\ttable /gm) || []).length === 1 && /^\ttable 'Gulf Calendar'$/m.test(sc), `add_gulf_calendar script: one createOrReplace and one table 'Gulf Calendar': ${sc.slice(0, 200)}`);
-  check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
+  // (0.3.1 GC3, the laptop's tour step 3: Sales[Date] already relates to the fixture's Calendar[Date], so the Gulf calendar
+  // is related to Calendar[Date] instead: never a second active relationship from Sales[Date]; it was fromColumn: Sales.Date)
+  check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Calendar\.Date$/m.test(sc) && !/isActive/.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
   // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
   check(!g.err && g.j.rows === 4748 && g.j.columns.length === 51 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins */

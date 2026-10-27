@@ -52,7 +52,8 @@ function scriptOf(Fix, table, columns, body, rels, more) {
   const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''], sortBy = new Map(SORTS.concat(more || []).filter(([n, by]) => columns.includes(n) && columns.includes(by)));
   columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ...(sortBy.has(c) ? [`\t\t\tsortByColumn: ${Fix.name(sortBy.get(c))}`] : []), ''));
   out.push(`\t\tpartition ${Fix.name(table)} = calculated`, '\t\t\tmode: import', '\t\t\tsource =', ...body.split('\n').map((l) => '\t\t\t\t\t' + l), '');
-  rels.forEach((r) => out.push(`\trelationship ${Fix.name(r.name)}`, `\t\tfromColumn: ${Fix.name(r.table)}.${Fix.name(r.column)}`, `\t\ttoColumn: ${Fix.name(table)}.Date`, ''));
+  // (0.3.1 GC3) isActive: false where the fact column already has its date table (Microsoft Learn, TMDL relationships)
+  rels.forEach((r) => out.push(`\trelationship ${Fix.name(r.name)}`, ...(r.inactive ? ['\t\tisActive: false'] : []), `\t\tfromColumn: ${Fix.name(r.table)}.${Fix.name(r.column)}`, `\t\ttoColumn: ${Fix.name(table)}.Date`, ''));
   return out.join('\n').replace(/\n+$/, '\n');
 }
 
@@ -86,15 +87,30 @@ export function addGulfCalendar(m, a, env) {
   const start = `${String(fy).padStart(4, '0')}-01-01`, end = `${String(ly).padStart(4, '0')}-12-31`;
   if (fy < 1000 || Cal.parse(start) < Cal.MIN_DATE || ly > 9999 || Cal.parse(end) > Cal.MAX_DATE) refuse(`Power BI dates run from 1 March 1900 to 31 December 9999, so ${fy} to ${ly} can't be a calendar: the first year is at least 1901.`);
 
-  // relationships, only for the date columns the user names
+  // relationships, only for the date columns the user names. (0.3.1 GC3, the laptop's tour step 3: Sales[Date] already
+  // related to the sample's Calendar[Date]) Never a second active relationship from a column that already has an active one
+  // to a date table: the new table is related to that date table's Date instead (Gulf Calendar filters the facts through
+  // the model's own calendar, so its time intelligence keeps working), in the shape Desktop applied (many to one, single
+  // direction); where that date table's Date is itself already related onward, the relationship is added inactive, for
+  // USERELATIONSHIP. Power BI's automatic date tables (LocalDateTable_) are not a date table here.
   const relateTo = a.relateTo || [];
   if (relateTo.length > 5) refuse('relateTo takes at most 5 columns.');
-  const relNames = new Set((modelOf(m.tmsl).relationships || []).map((r) => key(r.name)));
-  const rels = [], seen = new Set(), untyped = [];
+  const modelRels = modelOf(m.tmsl).relationships || [];
+  const relNames = new Set(modelRels.map((r) => key(r.name)));
+  const AUTO = /^(LocalDateTable_|DateTableTemplate_)/;
+  const activeFrom = (tn, cn) => modelRels.find((r) => r && r.isActive !== false && key(r.fromTable) === key(tn) && key(r.fromColumn) === key(cn) && !AUTO.test(String(r.toTable)));
+  const rels = [], asked = new Set(), untyped = [];
+  const add = (tn, cn, extra) => {
+    const k = key(tn) + '|' + key(cn), had = rels.find((r) => r.k === k);
+    if (had) { if (extra.via) had.via = (had.via || []).concat(extra.via); return; }
+    let n = rels.length + 1, name; do { name = `DataArcus ${table} ${n++}`; } while (relNames.has(key(name)));
+    relNames.add(key(name));
+    rels.push(Object.assign({ k, table: String(tn), column: String(cn), name }, extra));
+  };
   relateTo.forEach((x, i) => {
     const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/);
     if (!mk) refuse(`relateTo[${i}] ${JSON.stringify(String(x))} is not written as Table[Column].`);
-    const t = raw.find((y) => key(y.name) === key(mk[1]) && !/^(LocalDateTable_|DateTableTemplate_)/.test(String(y.name)));
+    const t = raw.find((y) => key(y.name) === key(mk[1]) && !AUTO.test(String(y.name)));
     const c = t && (t.columns || []).find((y) => y.type !== 'rowNumber' && key(y.name) === key(mk[2]));
     if (!t || !c) refuse(`relateTo[${i}] ${JSON.stringify(String(x))} is not a column of the model.`);
     const type = String(c.dataType || '').toLowerCase();
@@ -103,11 +119,25 @@ export function addGulfCalendar(m, a, env) {
     if (type && type !== 'datetime' && type !== 'unknown') refuse(`relateTo[${i}] ${JSON.stringify(`${t.name}[${c.name}]`)} is not a date column (its type is ${type}).`);
     if (!type || type === 'unknown') untyped.push(`${t.name}[${c.name}]`);
     const k = key(t.name) + '|' + key(c.name);
-    if (seen.has(k)) refuse(`relateTo names ${JSON.stringify(`${t.name}[${c.name}]`)} twice.`);
-    seen.add(k);
-    let n = rels.length + 1, name; do { name = `DataArcus ${table} ${n++}`; } while (relNames.has(key(name)));
-    relNames.add(key(name));
-    rels.push({ table: String(t.name), column: String(c.name), name });
+    if (asked.has(k)) refuse(`relateTo names ${JSON.stringify(`${t.name}[${c.name}]`)} twice.`);
+    asked.add(k);
+    const held = activeFrom(t.name, c.name), self = `${t.name}[${c.name}]`;
+    if (!held) return add(t.name, c.name, {});
+    const dt = raw.find((y) => key(y.name) === key(held.toTable)), dc = dt && (dt.columns || []).find((y) => y.type !== 'rowNumber' && key(y.name) === key(held.toColumn));
+    const dType = dc ? String(dc.dataType || '').toLowerCase() : '', heldSaid = `${held.toTable}[${held.toColumn}]`;
+    if (dc && (!dType || dType === 'datetime' || dType === 'unknown') && !activeFrom(dt.name, dc.name)) return add(dt.name, dc.name, { via: [{ asked: self, held: heldSaid, fact: String(t.name), dateTable: String(dt.name) }] });
+    add(t.name, c.name, { inactive: { held: heldSaid } });
+  });
+  // what the plan and the approval page say about each relationship that is not the one asked for as it is (EN and AR)
+  const q2 = (s) => JSON.stringify(s), relWhy = [];
+  rels.forEach((r) => {
+    const to = `${table}[Date]`, from = `${r.table}[${r.column}]`;
+    if (r.via) r.via.forEach((v) => relWhy.push({
+      en: `${v.asked} already relates to the date table ${q2(v.dateTable)} (${v.held}), so the script relates ${q2(table)} to ${from} instead: ${q2(table)} filters ${q2(v.fact)} through ${q2(v.dateTable)}, and no second relationship is added to ${v.asked}`,
+      ar: `العمود ${v.asked} مرتبط من قبل بجدول التاريخ «${v.dateTable}» (${v.held})، لذا يربط السكربت «${table}» بالعمود ${from} بدلًا منه: يصفّي «${table}» بيانات «${v.fact}» عبر «${v.dateTable}»، ولا تُضاف علاقة ثانية إلى ${v.asked}` }));
+    if (r.inactive) relWhy.push({
+      en: `${from} already relates to ${r.inactive.held}, so its relationship to ${to} is added inactive (Model view shows it dashed): a measure uses it with USERELATIONSHIP, for example CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )`,
+      ar: `العمود ${from} مرتبط من قبل بـ ${r.inactive.held}، لذا تُضاف علاقته بـ ${to} غير نشطة (تظهر متقطعة في Model view): يستعملها المقياس بـ USERELATIONSHIP، مثلًا CALCULATE ( [Your measure], USERELATIONSHIP ( ${from}, ${to} ) )` });
   });
 
   // the generator's own table for these settings (the website's defaults for what isn't asked: fiscal and relative
@@ -147,13 +177,21 @@ export function addGulfCalendar(m, a, env) {
   const q = JSON.stringify(table);
   // (round 12: the sort-by columns are in the script now, so marking the date table is the one step by hand)
   const byHand = [`Mark ${q} as the date table: in Data view select it, then Table tools > Mark as date table > Date.`];
-  if (!rels.length) byHand.push(`Relate your fact tables' date columns to ${q}[Date] (Model view: drag each date column onto Date; many to one, single direction).`);
+  if (rels.some((r) => r.inactive)) byHand.push(`For each measure that should follow ${q}'s dates, write a measure with USERELATIONSHIP, as the notes say: the inactive relationship filters nothing until a measure turns it on.`);
+  // (GC3) with no relateTo, the step by hand follows the same rule: a model whose date columns already have a date table
+  // relates that table's Date, never its facts' date columns a second time
+  const dateTables = [...new Set(modelRels.filter((r) => r && r.isActive !== false && !AUTO.test(String(r.toTable)) && raw.some((t) => key(t.name) === key(r.fromTable) && (t.columns || []).some((c) => key(c.name) === key(r.fromColumn) && ['datetime', 'unknown', ''].includes(String(c.dataType || '').toLowerCase()))))
+    .map((r) => `${r.toTable}[${r.toColumn}]`))];
+  if (!rels.length) byHand.push(dateTables.length
+    ? `Relate ${dateTables.join(' or ')} to ${q}[Date] (Model view: drag it onto Date; many to one, single direction): your fact tables' date columns already relate to ${dateTables.length === 1 ? 'it' : 'them'}, so never drag those onto ${q} too (or ask again with relateTo).`
+    : `Relate your fact tables' date columns to ${q}[Date] (Model view: drag each date column onto Date; many to one, single direction).`);
   return {
     scriptFile: file, table, rows: built.rows, columns: built.columns, range: { from: start, to: end },
     country: { code: country, name: C.name }, weekend: COUNTRY_CODES.includes(weekend) ? Gulf.COUNTRIES[weekend].weekendOption : RULES.includes(weekend) ? Gulf.WEEKEND_RULES[weekend].weekendOption : FIXED[weekend], weekStart: a.weekStart || 'sunday',
     announced: st.observed ? { on: true, checkedTo: GD.checked, estimatesFrom: later, why: 'Ramadan, Shawwal and Dhu al-Hijjah start on the UAE\'s announced dates up to ' + GD.checked + '; later ones are Umm al-Qura estimates, flagged in Is Estimated Date. Sources: scripts/gulf-calendar/DATES-SOURCES.md.' }
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
-    relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction)`),
+    relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction${r.inactive ? ', inactive' : ''})`),
+    ...(relWhy.length ? { relationshipsWhy: relWhy.map((w) => w.en), relationshipsWhyAr: relWhy.map((w) => w.ar) } : {}),
     byHand,
     howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", ${besideSaid(path.isAbsolute(String(file)) ? path.dirname(String(file)) : null)}. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
     selfCheck,
