@@ -334,7 +334,9 @@ check(DESIGNS.length === 54, `design fixtures: ${DESIGNS.length}`);
 
 // generate_theme: every fixture's saved design, given through the tool's own inputs, writes the website's theme JSON
 // byte for byte, under the website's file name (the PNG's name without -background-<layout>.png, plus .json)
-const themeInput = (c) => { const s = c.state, l = s.layout; return { name: s.name, palette: { data: s.data, ui: s.ui }, font: s.font, ...(s.chart ? { chart: s.chart } : {}),
+// (0.3.1 GD1: the tools' default look is glass; a design saved without a look is plain, as the website opens it, so its
+// look is given as saved: "auto" when it has none)
+const themeInput = (c) => { const s = c.state, l = s.layout; return { name: s.name, palette: { data: s.data, ui: s.ui }, font: s.font, chart: Object.assign({ look: 'auto' }, s.chart),
   layout: { page: l.page === 'custom' ? { w: l.pageW, h: l.pageH } : l.page, radius: l.radius, shadow: l.shadow, transparent: l.transparent, ...(l.dir ? { dir: l.dir } : {}) },
   lang: c.lang, folder: `themes/${c.id}` }; };
 let themeOk = 0; const themeBad = [];

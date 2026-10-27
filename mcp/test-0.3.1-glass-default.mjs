@@ -111,6 +111,8 @@ try {
     const html = await approve(id);
     chk(() => /Card look/.test(html) && (nm === 'default' ? /Glass look \(default\)/.test(html) && /chart\.look &quot;auto&quot;|chart\.look "auto"/.test(html) : nm === 'plain' ? /Plain, as asked/.test(html) : /glass can(&#39;|&#x27;|')t keep everything readable/.test(html)),
       () => `R2-${nm}. the approval page's "Card look" row: ${cut((html.match(/Card look.{0,300}/) || [''])[0])}`);
+    chk(() => (want === 'glass' ? /Page backgrounds \(the glass look(&#39;|&#x27;|')s soft picture/ : /Page backgrounds \(blank, see-through/).test(html),
+      () => `R2b-${nm}. the approval page lists the page backgrounds as what they are (${want === 'glass' ? 'the glass look\'s soft picture' : 'blank, see-through'}): ${cut((html.match(/Page backgrounds.{0,120}/) || [''])[0])}`);
     const r = await s.call('create_report', Object.assign({ planId: id, design: pj.design, fields: FIELDS }, args)), rj = r.j || {};
     chk(() => !r.err && rj.look && rj.look.look === want, () => `R3-${nm}. create_report writes the look the plan said: ${cut(r.err ? r.t : rj.look)}`);
     if (r.err) continue;

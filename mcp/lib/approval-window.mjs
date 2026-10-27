@@ -170,9 +170,11 @@ const WORDS = {
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'المرئيات', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم المرئيات المخصصة',
   'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Gulf calendar script': 'سكربت تقويم الخليج', Script: 'سكربت', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
-  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
+  'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)', [GLASS_LABEL()]: 'خلفيات الصفحات (الصورة الناعمة للشكل الزجاجي، مصنوعة من ألوان السمة: ليست صورة فوتوغرافية)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
+// (0.3.1 GD1) the glass look's page picture, listed as what it is
+function GLASS_LABEL() { return 'Page backgrounds (the glass look\'s soft picture, made from the theme\'s colours: no photo)'; }
 const kindLabel = (label, ar) => (ar && KIND_AR[label] ? `${KIND_AR[label]} · ${label}` : label);
 const iso = (t) => `<bdi dir="ltr">${esc(t)}</bdi>`;
 // (0.3.0 T1, T-1: "102 files:" then every visual.json path; finance and HR approved "on the summary line") the files by
@@ -424,7 +426,8 @@ function summaryOf(kind, data) {
   // (0.3.0 T1, T-6: "There is no background image." under a list holding the background PNG) a page background the writer
   // writes blank (a see-through pixel, so the page shows the theme's colour) is listed as what it is
   const blank = new Set(Array.isArray(d.blankImages) ? d.blankImages.map(String) : []);
-  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
+  const glassPics = new Set(Array.isArray(d.glassImages) ? d.glassImages.map(String) : []);
+  const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], [GLASS_LABEL(), { test: (f) => glassPics.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
     // (0.3.1 R4A, the laptop's rc.1 run: the prompt named the taken "Gulf Retail Sales" while the write went to the free
