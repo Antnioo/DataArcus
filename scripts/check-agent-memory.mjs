@@ -142,6 +142,17 @@ export function check(root = ROOT) {
   const docs = path.join(root, 'mcp/docs');
   const linked = (fs.existsSync(docs) ? fs.readdirSync(docs).filter((x) => x.endsWith('.md')).sort().map((x) => 'mcp/docs/' + x) : []).concat(fs.existsSync(path.join(root, 'mcp/TOOLS.md')) ? ['mcp/TOOLS.md'] : []);
   for (const f of linked) { const md = read(root, f); checks += links(md).length; problems.push(...linkProblems(root, f, md)); }
+  // (ST1, SQ12-S4) a cite "rule N in `mcp/CLAUDE.md`" names the rule its sentence is about: the rule's quoted words, or
+  // one of its longer words, in the 200 characters before the cite
+  const rules = Object.fromEntries([...read(root, 'mcp/CLAUDE.md').matchAll(/(\d+)\. \*\*([^*]+)\*\*/g)].map((m) => [m[1], m[2]]));
+  for (const f of ['CLAUDE.md', ...linked]) {
+    const md = read(root, f).replace(/\s+/g, ' ');
+    for (const m of md.matchAll(/rule (\d+) in `mcp\/CLAUDE\.md`/g)) {
+      checks++;
+      const ctx = md.slice(Math.max(0, m.index - 200), m.index).toLowerCase(), r = rules[m[1]] || '', quoted = (r.match(/"([^"]+)"/) || [])[1];
+      if (!r || !(quoted ? ctx.includes(quoted.toLowerCase()) : r.toLowerCase().split(/[^a-z']+/).some((w) => w.length >= 6 && ctx.includes(w)))) problems.push(`${f}: "rule ${m[1]} in mcp/CLAUDE.md" does not name the rule its sentence is about (rule ${m[1]}: ${r || 'none'})`);
+    }
+  }
   const work = path.join(root, 'mcp/work'), summaries = {};
   for (const f of fs.readdirSync(work).filter((x) => x.endsWith('.md')).sort()) {
     const md = read(root, 'mcp/work/' + f), s = summaryOf(md), required = !BEFORE_A1.includes(f);
