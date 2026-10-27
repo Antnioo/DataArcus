@@ -7,6 +7,8 @@ import './test-env.mjs';
 //   C  plain words where the person decides: a chart's kind, the cards over a chart, a date column with no type, CS1's
 //      text lines, a custom visual's own settings, every item worth a look listed, the working folder by its path
 //   D  the approval page starts with one plain line: what is written and where; the counts folded under it
+//   E  the laptop's rc.1 run (27 Oct, section 6): the app's prompt in Arabic for an Arabic plan and with the name the write
+//      uses; each script by its own kind; an approved Arabic matched to a label with spaces; the language button's side
 //   node test-0.3.1-r4a.mjs
 import fs from 'node:fs';
 import os from 'node:os';
@@ -90,6 +92,27 @@ const S = await import('./lib/sample-project.mjs');
   chk(() => said && !/\(1: needle\)/.test(said) && /1 setting/.test(said) && /"needle"/.test(said) && /not carried over/.test(said), () => `C8. a custom visual's own settings in plain words: ${said || 'no ownSettingsSaid'}`);
 }
 
+// ---------- E: the app's own approval prompt and the twin's texts (in process) ----------
+{
+  const plan = { id: 'plan-0000000e1', kind: 'report', writes: ['the report "<name>.Report" and its "<name>.pbip" in the folder "Gulf Retail Sample", next to the model, with the theme inside it (create_report)'] };
+  const data = (lang) => ({ pins: { create_report: { name: 'Gulf Retail Sales', lang } }, writesAr: ['التقرير «<name>.Report» وملف «<name>.pbip» في المجلد «Gulf Retail Sample»، بجانب النموذج، ومعه السمة (create_report)'],
+    outputs: ['Gulf Retail Sales - New design.pbip', 'Gulf Retail Sales - New design.Report/definition/report.json'] });
+  const ar = Approval.promptText ? Approval.promptText(plan, data('ar')) : '', en = Approval.promptText ? Approval.promptText(plan, data('en')) : '';
+  const box = Approval.promptBox ? Approval.promptBox(plan, data('ar')) : {};
+  chk(() => AR.test(ar.split('\n')[0]) && /التقرير «Gulf Retail Sales - New design\.Report»/.test(ar) && /the report "Gulf Retail Sales - New design\.Report"/.test(ar) && AR.test(box.title || '') && !AR.test(en),
+    () => `E1 (a). an Arabic plan's app prompt: Arabic first, the English line under it; an English plan's: English: ${ar.slice(0, 400)} | ${J(box)}`);
+  chk(() => /"Gulf Retail Sales - New design\.pbip"/.test(en) && !/"Gulf Retail Sales\.(Report|pbip)"/.test(en) && /Gulf Retail Sales - New design/.test(Approval.summary('report', data('en')).title),
+    () => `E2 (b). the prompt and the page name the report the write uses, not the taken name: ${en.slice(0, 400)}`);
+  const cal = Approval.promptSummary('calendar', { pins: { add_gulf_calendar: { path: 'x' } }, outputs: ['Gulf Retail - add Gulf calendar.tmdl'] });
+  const kinds = Approval.groupFiles(['R - fix formats.tmdl', 'R - Arabic calendar.tmdl', 'R - something.tmdl']).map((g) => g.label);
+  chk(() => /Gulf calendar script \(1\)/.test(cal) && !/Format script/.test(cal) && J(kinds) === J(['Format script', 'Arabic calendar script', 'Script']), () => `E3 (c). each script by its own kind: ${cal} | ${J(kinds)}`);
+  // (e) the language button's side: where it is written, not where its language would put it (the right end taken)
+  const Copy = await import('./lib/twin-copy.mjs');
+  const wall = { name: 'v1', position: { x: 600, y: 0, z: 0, width: 680, height: 25 }, visual: { visualType: 'textbox', objects: {} } };
+  const b = Copy.langButton({ width: 1280, height: 720 }, [wall], [null], 'en', 'p2', 'btn1', {});
+  chk(() => b.json && b.json.position.x + b.json.position.width <= 600 && /left/.test(b.at) && !/right/.test(b.at), () => `E5 (e). the button said where it is written: ${J({ at: b.at, pos: b.json && b.json.position })}`);
+}
+
 // ---------- B: a refusal names what differs and the input to pass ----------
 {
   const D = Plans.inputDifferences;
@@ -162,6 +185,10 @@ try {
   const pa = await plan('R4A Ar2', 'ar'), htmlAr = pa.id ? (await (async () => { const n = links().length; await w.call('approve_plan', { planId: pa.id }); const url = await linkAt(n); return url ? req(url, 'GET') : ''; })()) : '';
   const bAr = String(htmlAr).split('<body')[1] || '', firstAr = bAr.slice(bAr.indexOf('</h1>'), bAr.indexOf('class="lead"'));
   chk(() => /تقرير جديد/.test(text(firstAr)) && text(firstAr).includes(path.join(ROOT, S.SAMPLE_FOLDER)), () => `D3. the Arabic page's first line in Arabic: ${text(firstAr).slice(0, 400)}`);
+  // E4 (d): the approved Arabic of "Reset filters" reaches the button whose text is "  Reset filters"; the plan says so
+  const t2 = S.tour(S.SAMPLE_FOLDER, 'en')[1].call.args, bi = await w.call('plan_layout', Object.assign({}, t2, { name: 'R4A Bi', arabicTexts: { 'Reset filters': 'إعادة ضبط الفلاتر' } }));
+  const rt = ((bi.j && bi.j.bilingual && bi.j.bilingual.texts) || []).find((t) => /^\s+Reset filters$/.test(t.text || ''));
+  chk(() => rt && rt.arabic && rt.arabic.trim() === 'إعادة ضبط الفلاتر' && /spaces/.test(rt.spaces || ''), () => `E4 (d). a label with spaces takes the approved Arabic, and the plan says so: ${J(rt || null)} ${short(bi)}`);
 } finally {
   await w.close();
   fs.rmSync(ROOT, { recursive: true, force: true }); fs.rmSync(LOGS, { recursive: true, force: true });

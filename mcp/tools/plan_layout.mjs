@@ -81,7 +81,7 @@ function bilingualOf(built, ab) {
 // they show, the fixed list's draft and the approved Arabic), the fields through the terminology sheet
 function bilingualSaid(bi) {
   const A = bi.P.answer, L = A.languages || {}, by = new Map();
-  bi.P.texts.forEach((t) => { if (t.text == null) return; const k = t.text; if (!by.has(k)) by.set(k, { text: k, where: {}, draftArabic: t.draftArabic || null, arabic: bi.P.labels[t.id] != null ? bi.P.labels[t.id] : null, field: t.kind === 'field' || undefined });
+  bi.P.texts.forEach((t) => { if (t.text == null) return; const k = t.text; if (!by.has(k)) by.set(k, { text: k, where: {}, draftArabic: t.draftArabic || null, arabic: bi.P.labels[t.id] != null ? bi.P.labels[t.id] : null, field: t.kind === 'field' || undefined, spaces: t.spaces || undefined });   // (R4A: spaces said)
     const x = by.get(k), w = (t.phone ? 'phone layout: ' : '') + t.kind; x.where[w] = (x.where[w] || 0) + 1; if (x.arabic == null && bi.P.labels[t.id] != null) x.arabic = bi.P.labels[t.id]; if (!x.draftArabic && t.draftArabic) x.draftArabic = t.draftArabic; });
   const texts = [...by.values()].map((x) => Object.assign(x, { where: Object.entries(x.where).map(([k, n]) => (n > 1 ? `${k} (${n})` : k)).join(', ') }));
   return { report: bi.base + '.Report', how: L.how, pairs: L.pairs, buttons: L.buttons, syncGroups: L.syncGroups, tabs: L.tabs, activePage: L.activePage, bookmarks: L.bookmarks, ...(L.measures ? { measures: L.measures } : {}), ...(L.notes ? { notes: L.notes } : {}),

@@ -14,6 +14,9 @@ package's manifest; this file says what is in it.
   a chart has no data (meant: no longer listed as "worth a look"), a date column whose type the model's files don't say,
   a redesign's text changes ("visual titles: size set to 12pt"), a custom visual's own settings, every item worth a look
   listed in full, and the working folder named by its path.
+- **The app's own approval prompt:** for an Arabic plan it is in Arabic with the English under each line, it names
+  the report by the name it will really get, and each script is counted by its kind. An approved Arabic text now
+  reaches a button whose English text has spaces around it, and the plan says where each language button is written.
 - **A redesign that cleans up evenly:** the rows of a redesigned page now sit exactly 16 apart and 16 from the
   page's edges, so two rows never touch. Text boxes, shapes, images and custom visuals still stay where they are: the
   rows keep 16 from them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy

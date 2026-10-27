@@ -90,8 +90,10 @@ const rows = (list, ar) => `<div class="card"><table>${list.map(([k, v]) => `<tr
 // groups, the redesign's copied theme and the count in words
 const THEME_FILE = /(?:RegisteredResources\/[^/]+|SharedResources\/BaseThemes\/[^/]+)\.json$/i;
 const GROUPS = [['Bookmarks', /(^|\/)bookmarks\//], ['Pages', /\/page\.json$/], ['Visuals', /\/visual\.json$/], ['Phone layouts', /\/mobile\.json$/], ['Theme', THEME_FILE],
-  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Flip cards script', / - flip cards(?: \d+)?\.tmdl$/i], ['Format script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
-// (0.3.0 A2: the flip cards' script was listed as a "Format script", L4)
+  ['Images', /\.(png|jpe?g|gif|svg)$/i], ['Custom visual packages', /(^|\/)CustomVisuals\//], ['Flip cards script', / - flip cards(?: \d+)?\.tmdl$/i], ['Format script', / - fix formats(?: \d+)?\.tmdl$/i], ['Gulf calendar script', / - add Gulf calendar(?: \d+)?\.tmdl$/i],
+  ['Arabic calendar script', / - Arabic calendar(?: \d+)?\.tmdl$/i], ['Metric switcher script', / - metric switcher(?: \d+)?\.tmdl$/i], ['Status icons script', / - status icons(?: \d+)?\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i], ['Script', /\.tmdl$/i], ['Project file', /\.pbip$/i], ['Report settings', /./]];
+// (0.3.0 A2: the flip cards' script was listed as a "Format script", L4; 0.3.1 R4A, the laptop's rc.1 run: the Gulf
+// calendar's script too: every script by its own kind, an unknown one a "Script", never a format script)
 // own: a plan kind's groups, tried first (D6: the twin's month script, the theme file)
 export function groupFiles(paths, own) {
   const G = (own || []).concat(GROUPS), out = G.map(([label]) => ({ label, paths: [] }));
@@ -107,7 +109,7 @@ const NOT_CHECKED = { validator: 'Microsoft\'s validator', references: 'fields a
 // (0.3.1 V1) the most pages a plan's preview draws on its approval page (for the EN-AR copy: page pairs); the rest are
 // counted under the pictures. Chosen, not measured: 12 pairs keep the page well under its 2 MB (C-3)
 export const PREVIEW_PAGES_MAX = 12;
-export function promptSummary(kind, data) {
+export function promptSummary(kind, data, ar) {
   const d = data || {}, groups = summary(kind, d).files || [], lines = [];
   // (0.3.1 L6) the compatibility step first in the app's prompt too
   if (kind === 'report' && d.daxFunctions && d.daxFunctions.compatibility && d.daxFunctions.compatibility.raises) lines.push('First: applying the DAX functions script raises the model\'s compatibility level to 1702; it cannot be undone.');
@@ -116,10 +118,10 @@ export function promptSummary(kind, data) {
   const nc = kind === 'report' && d.exact && Array.isArray(d.exact.notChecked) ? d.exact.notChecked : [];
   if (nc.length) lines.push(cut(`Not checked before writing: ${nc.map((x) => `${NOT_CHECKED[x.check] || 'a check'} (not run: ${String(x.why || '')})`).join('; ')}`, PROMPT_SUMMARY_CAP / 4 - 1) + '.');
   if (groups.length) {
-    const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${g.label} (${g.paths.length})`);
-    let line = `${n} file${n === 1 ? '' : 's'}: `, k = 0;
-    while (k < parts.length && line.length + parts[k].length + 40 <= PROMPT_SUMMARY_CAP / 2) { line += (k ? ', ' : '') + parts[k]; k++; }
-    if (k < parts.length) line += `${k ? ', ' : ''}and ${parts.length - k} more group${parts.length - k === 1 ? '' : 's'}`;
+    const n = groups.reduce((a, g) => a + g.paths.length, 0), parts = groups.map((g) => `${ar && KIND_AR[g.label] ? KIND_AR[g.label] : g.label} (${g.paths.length})`);
+    let line = ar ? `الملفات (${n}): ` : `${n} file${n === 1 ? '' : 's'}: `, k = 0;
+    while (k < parts.length && line.length + parts[k].length + 40 <= PROMPT_SUMMARY_CAP / 2) { line += (k ? (ar ? '، ' : ', ') : '') + parts[k]; k++; }
+    if (k < parts.length) line += ar ? `${k ? '، ' : ''}ومجموعات أخرى (${parts.length - k})` : `${k ? ', ' : ''}and ${parts.length - k} more group${parts.length - k === 1 ? '' : 's'}`;
     lines.push(line + '.');
   }
   const cc = kind === 'report' && d.colours && Array.isArray(d.colours.changed) ? d.colours.changed.filter((c) => HEX.test(String(c.from)) && HEX.test(String(c.to))) : [];
@@ -128,6 +130,24 @@ export function promptSummary(kind, data) {
     // (0.3.0 A2: the contrast said after the written colour was the approved one's)
     const l = `Colour: approved colour ${c.from} -> written colour ${c.to} (the approved colour's contrast ${Number(c.contrast) || '?'}:1${card}, needs 3:1${own}).`; if (lines.join('\n').length + l.length + 1 <= PROMPT_SUMMARY_CAP) lines.push(l); });
   return lines.join('\n');
+}
+// (0.3.1 R4A, the laptop's rc.1 run, section 6: an app with its own approval prompt showed an Arabic plan in English
+// only) the app's prompt (MCP elicitation), in the plan's language as its page is: on an Arabic plan each write in
+// Arabic with its English line under it, the files counted in Arabic, then the English prompt; writes name the report
+// by the name the write uses (summary's name). plan: { id, kind, writes }; data: the plan's data
+export function promptText(plan, data) {
+  const s = summary(plan.kind, data), nm = s.name, named = (x) => (nm ? String(x).split('<name>').join(nm) : String(x));
+  const en = plan.writes.map(named), WA = s.lang === 'ar' && Array.isArray(s.writesAr) && s.writesAr.length === en.length ? s.writesAr.map(named) : null;
+  const inShort = promptSummary(plan.kind, data), english = `DataArcus asks before it writes anything. Approve this plan (${plan.kind}, ${plan.id})? It will write:\n- ${en.join('\n- ')}\n${inShort ? inShort + '\n' : ''}${writesNote(plan.writes)}`;
+  if (!WA) return english;
+  const inShortAr = promptSummary(plan.kind, data, true);
+  return `يطلب DataArcus موافقتك قبل أن يكتب أي شيء. هل توافق على هذه الخطة (${plan.id})؟ سيُكتب:\n${WA.map((x, i) => `- ${x}\n  ${en[i]}`).join('\n')}\n${inShortAr ? inShortAr + '\n' : ''}${writesNoteAr(plan.writes)}\n\n${english}`;
+}
+/** The prompt's yes box, in the plan's language (R4A): { title, description }. */
+export function promptBox(plan, data) {
+  const ar = summary(plan.kind, data).lang === 'ar';
+  return ar ? { title: 'اكتب هذه الملفات · Write these files', description: 'نعم: يكتب DataArcus ما في القائمة أعلاه. لا: لا يُكتب شيء. · Yes: DataArcus may write what is listed above. No: nothing is written.' }
+    : { title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.' };
 }
 // (0.3.0 T1, the simulated beta testers' T-5) the page's own words, in Arabic for an Arabic plan (a report in Arabic,
 // a twin, the EN-AR copy); file paths, field names and plan ids stay as they are, isolated left to right (J18)
@@ -149,7 +169,7 @@ const WORDS = {
 };
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
 const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الصفحات', Visuals: 'المرئيات', 'Phone layouts': 'تخطيطات الهاتف', Theme: 'السمة', Images: 'الصور', 'Custom visual packages': 'حزم المرئيات المخصصة',
-  'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
+  'Flip cards script': 'سكربت البطاقات القابلة للقلب', 'Gulf calendar script': 'سكربت تقويم الخليج', Script: 'سكربت', 'Format script': 'سكربت التنسيقات', 'Project file': 'ملف المشروع', 'Report settings': 'إعدادات التقرير', 'Arabic calendar script': 'سكربت أعمدة التقويم العربية', 'Theme file': 'ملف السمة',
   'Metric switcher script': 'سكربت مبدّل المقاييس', 'Model (TMDL)': 'النموذج (TMDL)', 'Empty report': 'تقرير فارغ', 'Status icons script': 'سكربت أيقونات الحالة', 'DAX functions script': 'سكربت دوال DAX', [BLANK_LABEL()]: 'خلفيات الصفحات (فارغة وشفافة: تظهر الصفحة بلون السمة)',
   "Theme (the original's, copied)": 'السمة (سمة التقرير الأصلي، منسوخة كما هي)', "Images (the original's, copied)": 'الصور (صور التقرير الأصلي، منسوخة كما هي)' };
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
@@ -407,14 +427,17 @@ function summaryOf(kind, data) {
   const files = Array.isArray(d.outputs) ? groupFiles(d.outputs, [[BLANK_LABEL(), { test: (f) => blank.has(f) }], ['Metric switcher script', / - metric switcher\.tmdl$/i], ['Status icons script', / - status icons\.tmdl$/i], ['DAX functions script', / - DAX functions(?: \d+)?\.tmdl$/i]]) : null;   // (L3: the switch's own script; 0.3.1 L6: the DAX functions')
   if (kind === 'report') {
     const p = pins.create_report || {}, L = (p.design && p.design.layout) || {};
-    const T = { title: (d.bilingual ? 'English and Arabic in one report' : 'Report') + (p.name ? ` "${cut(p.name, 80)}"` : ''), name: p.name || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files, kind, lang: p.lang === 'ar' ? 'ar' : 'en', scriptWhat: 'the changes listed with the plan', titleKey: d.bilingual ? 'same' : 'report' };
+    // (0.3.1 R4A, the laptop's rc.1 run: the prompt named the taken "Gulf Retail Sales" while the write went to the free
+    // "Gulf Retail Sales - New design") the name the write uses: the plan's own .pbip, else the name asked
+    const pbipOf = Array.isArray(d.outputs) ? d.outputs.map(String).find((f) => /\.pbip$/i.test(f)) : null, wName = pbipOf ? pbipOf.replace(/^.*\//, '').replace(/\.pbip$/i, '') : null, nm0 = wName || p.name;
+    const T = { title: (d.bilingual ? 'English and Arabic in one report' : 'Report') + (nm0 ? ` "${cut(nm0, 80)}"` : ''), name: nm0 || null, previews: d.preview && Array.isArray(d.preview.pages) ? d.preview : null, files, kind, lang: p.lang === 'ar' ? 'ar' : 'en', scriptWhat: 'the changes listed with the plan', titleKey: d.bilingual ? 'same' : 'report' };
     // (0.3.1 L6) the DAX function library's compatibility step, the FIRST thing on the page, in the plan's language: applying
     // its script raises the model's compatibility level to 1702, which cannot be undone (or the model is already there)
     const DF = d.daxFunctions && d.daxFunctions.compatibility ? d.daxFunctions : null;
     if (DF) { const C = DF.compatibility, ar = T.lang === 'ar' && C.sayFirstAr;
       T.first = { heading: (ar ? (C.raises ? 'أولًا: هذا يرفع مستوى التوافق في نموذجك (لا يمكن التراجع عنه) · ' : 'أولًا: مستوى التوافق في نموذجك · ') : '') + (C.raises ? 'First: this raises your model\'s compatibility level (cannot be undone)' : 'First: your model\'s compatibility level'),
         text: ar ? [String(C.sayFirstAr), String(C.sayFirst || '')] : [String(C.sayFirst || '')] }; }
-    sections.push({ heading: 'Report', rows: [['Name', p.name], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
+    sections.push({ heading: 'Report', rows: [['Name', wName && p.name && wName !== p.name ? `${wName} ("${p.name}" is already taken in that folder: the new report gets this free name)` : nm0], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
       ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)

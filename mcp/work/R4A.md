@@ -25,7 +25,21 @@
 - **Got:** r4a 27 checks (26 red on e2236be); report 33 -> 34 suites PASS, arabic 12 = 12, core 6 = 6 (mutation 73
   killed); pins changed only for the plain words (below); run-all 21 PASS; lint clean; full run "run-tests: 99 suites
   passed"; result-lines, changelog-words, agent-memory, site config PASS.
-- **Resume:** done; waits for the reviewer. Desktop shows nothing new (no file written differently).
+- **Resume:** done with the follow-up (a)-(e) below; waits for the reviewer. Desktop shows nothing new (no file written differently).
+
+## Follow-up (the reviewer, 27 Oct 06:48: the owner's laptop run of rc.1, section 6's chat test)
+Tests: r4a E1-E5, red on 2c124753 (5 of 32), green after. Before -> after:
+- (a) An Arabic plan's app prompt (MCP elicitation) was English only -> `Approval.promptText`: each write in Arabic, its
+  English line under it, the files counted in Arabic, then the English prompt; the yes box in both (`promptBox`).
+- (b) The prompt named the taken "Gulf Retail Sales.Report" while the write used "Gulf Retail Sales - New design" -> the
+  prompt, the page's title and its Name row use the plan's own .pbip name (the Name row says the asked one is taken).
+- (c) The Gulf calendar's script was counted as "Format script (1)" -> every script by its own kind (format, Gulf
+  calendar, Arabic calendar, metric switcher, status icons, DAX functions); an unknown .tmdl is a "Script".
+- (d) The approved Arabic of "Reset filters" missed the button "  Reset filters" -> texts matched exact, else trimmed;
+  the Arabic is written with the same spaces; the plan's text says so (`spaces`).
+- (e) The plan could say a side the button was not written on (its side came from the language) -> the side from the
+  button's own written place (`twin-copy.mjs` langButton). On the current sample the English pages say "right end"
+  (as X2 measured); the rc.1 wording was not reproduced here (engine branch `lab/rc031-proof` not reachable).
 
 ## Plan
 1. This note, pushed first. Base suites in a separate worktree on e2236be.

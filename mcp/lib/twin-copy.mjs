@@ -80,7 +80,10 @@ export function langButton(page, visuals, mobiles, lang, target, name, theme) {
   const zs = visuals.filter((v) => posOf(v)).map((v) => posOf(v)), top = (k) => Math.max(0, ...zs.map((p) => (Number.isFinite(p[k]) ? p[k] : 0)));
   btn.position = { x, y, z: top('z') + 1000, height: h, width: w, tabOrder: top('tabOrder') + 1000 };
   if (g) btn.parentGroupName = g.name;
-  const at = g ? `the ${lang === 'ar' ? 'left' : 'right'} end of the header, beside the page tabs` : `the top ${lang === 'ar' ? 'left' : 'right'} of the page`;
+  // (0.3.1 R4A, the laptop's rc.1 run: the plan said "at the left of the header" for a button X2 measured at the right
+  // end) where it is written: its side from its own place (its middle in the header or on the page), never from the language
+  const side = (x + w / 2) > room / 2 ? 'right' : 'left';
+  const at = g ? `the ${side} end of the header, beside the page tabs` : `the top ${side} of the page`;
   // the phone
   if (!mobiles.some(Boolean)) return { json: btn, mobile: null, phone: false, at, why: 'the page has no phone layout' };
   const ptabs = tabs.map((v) => mobiles[visuals.indexOf(v)]).filter((m) => m && posOf(m)), mt = (tpl && mobiles[visuals.indexOf(tpl)] && posOf(mobiles[visuals.indexOf(tpl)])) ? mobiles[visuals.indexOf(tpl)] : ptabs[0];

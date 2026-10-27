@@ -4,7 +4,6 @@ import { z } from 'zod';
 import * as Plans from '../lib/plans.mjs';
 import * as Approval from '../lib/approval-window.mjs';
 import { planSources, REPORT_UNTRUSTED } from '../lib/agent-text.mjs';
-import { writesNote } from '../lib/answers.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
 
 // (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
@@ -28,12 +27,12 @@ export function register(server, ctx) {
     const caps = server.server.getClientCapabilities() || {};
     if (caps.elicitation && (caps.elicitation.form || !caps.elicitation.url)) {
       // (0.3.0 S1, B-183) what the approval page shows, in short: the files per group, a colour written other than approved
-      let r; const data = (Plans.planOf(P.id) || {}).data, inShort = Approval.promptSummary(P.kind, data), nm = Approval.summary(P.kind, data).name;
-      const writes = P.writes.map((x) => (nm ? String(x).split('<name>').join(nm) : x));   // (the report's name, as the page shows it)
+      // (0.3.1 R4A) in the plan's language, the report by the name the write uses (Approval.promptText)
+      let r; const data = (Plans.planOf(P.id) || {}).data, box = Approval.promptBox(P, data);
       try {
         r = await server.server.elicitInput({ mode: 'form',
-          message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${writes.join('\n- ')}\n${inShort ? inShort + '\n' : ''}${writesNote(P.writes)}`,
-          requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
+          message: Approval.promptText(P, data),
+          requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: box.title, description: box.description, default: false } }, required: ['approve'] } },
         { timeout: 10 * 60 * 1000 });
       } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
       // (rc.23, F7b) a no in the app's prompt (declined, or the box left unticked) refuses the plan, as "Not now" in the
