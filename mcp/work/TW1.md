@@ -45,7 +45,7 @@
 | SQ1-S2 | 60 x 80 stacked: second slicer at y 88 | Reset, then slicers from the last, left out and told (`short`: "too short"); the first stays as high as the slot gives | tw1 S1-S3 |
 | SQ15a-S2 | notUsed named only the "Target/Goal/Budget" rule | adds "<t>[<m>]: its KPI in the model has a target, but it is an expression..." (at most 10) | tw1 K1 |
 
-Full run: see the line below (after the last code commit).
+Full run on 0749d08: "run-tests: 108 suites passed"
 
 ## CHANGELOG line
 "The Arabic twin matches the English report more closely" (mcp/CHANGELOG.md [Unreleased]); no number in it.
