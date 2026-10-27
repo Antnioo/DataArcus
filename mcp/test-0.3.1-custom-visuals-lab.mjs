@@ -21,6 +21,12 @@
 //         calendar heatmap a matrix (year and month by weekday) shaded by conditional formatting; customVisualsSecond
 //         gives the second option; the written files carry the markers and the shading
 //   NC2-4 the approval page's rows: each replacement's confidence, evidence, losses and second option
+//   NC3-1 (NC3) a made-up copy of the lab with a map: what the person must turn on (the tenant settings' exact names), its
+//         location column's missing data category, a bar chart second; written, the next steps say it again
+//   NC3-2 a text search (a textFilter-like custom visual): a dropdown slicer with its search on, in its own box, its
+//         header off when the box is too low; the input slicer second; validator 0 errors
+//   NC3-3 the word cloud's bars sorted by their value, largest first
+//   NC3-4 the chip slicer: a dropdown in its box, with why (the pills' measured height and their values' widths)
 //   CL-8  the laptop's driver (lab/custom-visuals-run.mjs) runs the same chain on its own and fills the result table
 // The laptop's run (mcp/lab/CUSTOM-VISUALS-LAB.md) is this chain, then Desktop.
 //   node test-0.3.1-custom-visuals-lab.mjs
@@ -178,6 +184,63 @@ try {
     chk(() => hm.visualType === 'pivotTable' && q.Rows.projections.map((p) => p.queryRef).join() === 'Calendar.Year,Calendar.Month' && q.Columns.projections.map((p) => p.queryRef).join() === 'Calendar.Weekday'
       && q.Values.projections.map((p) => p.queryRef).join() === 'Sales.Total Sales' && bc.properties.backColor.solid.color.expr.FillRule.FillRule.linearGradient2 && bc.selector.metadata === 'Sales.Total Sales',
       () => `NC2-3f. the calendar heatmap written as a matrix, year and month by weekday, the value shaded: ${JSON.stringify(hm).slice(0, 1200)}`); }
+  // (NC3-3) the word cloud's bars sorted by their value, largest first (Desktop drew them A to Z with no sort written)
+  { const wc = nvs.find((x) => x.name === 'cvWordCloud').visual, sd = wc.query.sortDefinition || {}, s0 = (sd.sort || [])[0] || {};
+    chk(() => wc.visualType === 'clusteredBarChart' && (sd.sort || []).length === 1 && s0.direction === 'Descending' && JSON.stringify(s0.field) === JSON.stringify(wc.query.queryState.Y.projections[0].field) && sd.isDefaultSort === true,
+      () => `NC3-3. the word cloud's bar chart sorted by its value, largest first: ${JSON.stringify(wc.query).slice(0, 700)}`); }
+  // (NC3-4) the chip slicer: a dropdown in its own box (the pills need more height and their values' widths), never a cut row
+  { const cs = nvs.find((x) => x.name === 'cvChipSlicer'), d = (((cs.visual.objects || {}).data || [])[0] || {}).properties || {}, hd = (((cs.visual.objects || {}).header || [])[0] || {}).properties || {};
+    const L = (B.reps.find((r) => r.from.startsWith('chipSlicer')) || {}).lost || [];
+    chk(() => cs.visual.visualType === 'slicer' && d.mode && d.mode.expr.Literal.Value === "'Dropdown'" && !(hd.show && hd.show.expr.Literal.Value === 'false') && JSON.stringify(cs.position) === JSON.stringify(byName.cvChipSlicer.position),
+      () => `NC3-4a. the chip slicer written as a dropdown in its own 64-high box, its header kept (56 needed at 10pt): ${JSON.stringify(cs.visual).slice(0, 700)}`);
+    chk(() => L.some((x) => /chips/.test(x) && /79/.test(x) && /dropdown/.test(x) && /64/.test(x) && !FIELDS.test(x)),
+      () => `NC3-4b. its losses say why a dropdown: the pills need 79 high at 10pt and their values' widths: ${JSON.stringify(L)}`); }
+  { const { nativeFor } = await import('./lib/visual-meaning.mjs');
+    const v = { type: 'pillButtons1600000000098', h: 40, w: 300, fields: { Category: [{ kind: 'column', table: 'D', name: 'Region', queryRef: 'D.Region' }] } };
+    const r = nativeFor(v, { declared: new Set([v.type]) });
+    chk(() => r.native === 'slicer' && r.format && r.format.dropdown === true && r.format.headerOff === true && r.format.minHeight === 48, () => `NC3-4c. a chip row in a 40-high box: a dropdown with its header off, grown to 48: ${JSON.stringify([r.native, r.format])}`); }
+
+  // ---- NC3-1, NC3-2 a made-up copy of the lab with a map and a text search added (page 5) ----
+  { const LAB2 = path.join(ROOT, 'lab2'), RD2 = path.join(LAB2, Lab.NAME + '.Report'), NAT2 = path.join(LAB2, Lab.NAME + ' native.Report');
+    fs.cpSync(LAB, LAB2, { recursive: true, filter: (f) => !/ native/.test(path.basename(f)) && !/ redesigned/.test(f) });
+    const MAP = 'geoMapVisual1600000000053', SEARCH = 'textFilter1600000000054', P5 = path.join(RD2, 'definition', 'pages', Lab.PAGES[4].id, 'visuals');
+    const C = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: `${t}.${c}`, nativeQueryRef: c });
+    const M = (m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: m } }, queryRef: `Sales.${m}`, nativeQueryRef: m });
+    const vj = (name, type, roles, [x, y, w, h], z) => ({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name, position: { x, y, z, height: h, width: w, tabOrder: z },
+      visual: { visualType: type, query: { queryState: Object.fromEntries(Object.entries(roles).map(([r, p]) => [r, { projections: p }])) }, drillFilterOtherVisuals: true } });
+    const put = (n, o) => { fs.mkdirSync(path.join(P5, n), { recursive: true }); fs.writeFileSync(path.join(P5, n, 'visual.json'), JSON.stringify(o, null, 2) + '\n'); };
+    put('cvMap', vj('cvMap', MAP, { Location: [C('Branches', 'City')], Size: [M('Total Sales')] }, [940, 480, 316, 216], 9000));
+    put('cvSearch', vj('cvSearch', SEARCH, { field: [C('Products', 'Product')] }, [1100, 16, 156, 40], 9100));
+    const rj2f = path.join(RD2, 'definition', 'report.json'), rj2 = J(rj2f); rj2.publicCustomVisuals.push(MAP, SEARCH); fs.writeFileSync(rj2f, JSON.stringify(rj2, null, 2) + '\n');
+    const pl2 = await call('plan_layout', { path: 'lab2', customVisualsFrom: 'lab2/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE });
+    const cv2 = (pl2.j && pl2.j.customVisuals) || {}, reps2 = cv2.replacements || [], mp = reps2.find((r) => r.from.startsWith('geoMapVisual')) || {}, se = reps2.find((r) => r.from.startsWith('textFilter')) || {};
+    const SET1 = /"Users can use the Azure Maps visual"/, SET2 = /"Data sent to Azure Maps can be processed outside your tenant's geographic region, compliance boundary, or national cloud instance"/;
+    chk(() => !pl2.err && reps2.length === 13 && mp.native === 'azureMap' && SET1.test((mp.needs || []).join(' ')) && SET2.test((mp.needs || []).join(' ')) && /May 2025/.test((mp.needs || []).join(' ')),
+      () => `NC3-1a. the map: azureMap, and what the person must turn on, by the settings' exact names: ${JSON.stringify(mp).slice(0, 900)}`);
+    chk(() => Array.isArray(cv2.turnOn) && cv2.turnOn.length >= 1 && SET1.test(cv2.turnOn.join(' ')) && SET2.test(cv2.turnOn.join(' ')) && /no map tiles/.test(cv2.turnOn.join(' ')) && /turnOn/.test(cv2.sayInPlan),
+      () => `NC3-1b. the plan lists them once (turnOn), and says to show them: ${JSON.stringify([cv2.turnOn, cv2.sayInPlan]).slice(0, 900)}`);
+    chk(() => (mp.needs || []).concat(mp.lost || []).some((x) => /data category/i.test(x) && /Column tools > Data category/.test(x)) && !FIELDS.test(JSON.stringify([mp.needs, mp.lost, mp.line, mp.tell])),
+      () => `NC3-1c. its location column has no geographic data category: said, with the step to set it, no field name: ${JSON.stringify([mp.needs, mp.lost])}`);
+    chk(() => mp.second && mp.second.native === 'clusteredBarChart' && mp.second.pick === '5:940,480', () => `NC3-1d. a second option that draws without Azure Maps: a bar chart of the value by the place: ${JSON.stringify(mp.second || null)}`);
+    { const { shownOf } = await import('./lib/native-copy.mjs'), { summary } = await import('./lib/approval-window.mjs');
+      const sm = summary('report', { customVisualsShown: shownOf(cv2) }), flat = JSON.stringify(sm);
+      chk(() => SET1.test(flat.replace(/\\"/g, '"')) && /turn on/i.test(flat), () => `NC3-1e. the approval page shows what to turn on: ${flat.slice(0, 900)}`); }
+    chk(() => se.native === 'slicer' && /dropdown/.test(se.tell || '') && /search/.test(se.tell || '') && se.second && se.second.native === 'textSlicer' && (se.lost || []).some((x) => /search box/.test(x)),
+      () => `NC3-2a. the text search: a dropdown slicer with its search on, said; the input slicer second: ${JSON.stringify(se).slice(0, 900)}`);
+    const id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
+    await call('approve_plan', { planId: id2 });
+    const made2 = await call('create_report', { path: 'lab2', planId: id2, customVisualsFrom: 'lab2/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE });
+    const n2 = fs.existsSync(NAT2) ? visualsOf(NAT2) : [], sv = (n2.find((x) => x.name === 'cvSearch') || {}).visual || {}, ob = sv.objects || {}, P = (o) => ((ob[o] || [])[0] || {}).properties || {};
+    chk(() => !made2.err && made2.j.replaced === 13 && SET1.test(made2.j.nextSteps) && SET2.test(made2.j.nextSteps), () => `NC3-1f. written: 13 replaced, and the next steps say what to turn on for the map: ${short(made2)}`);
+    chk(() => sv.visualType === 'slicer' && P('data').mode.expr.Literal.Value === "'Dropdown'" && P('general').selfFilterEnabled.expr.Literal.Value === 'true' && P('header').show.expr.Literal.Value === 'false'
+      && JSON.stringify((n2.find((x) => x.name === 'cvSearch') || {}).position) === JSON.stringify({ x: 1100, y: 16, z: 9100, height: 48, width: 156, tabOrder: 9100 }) && (se.lost || []).some((x) => /grows to 48/.test(x)),
+      () => `NC3-2b. written: a dropdown with its search on, its header off, the 40-high box grown to the 48 a dropdown takes (said), in the original's place: ${JSON.stringify(sv).slice(0, 900)}`);
+    const v2 = fs.existsSync(NAT2) ? Lab.validate(NAT2) : { json: null, text: 'no native copy' };
+    chk(() => errorsOf(v2) === 0, () => `NC3-2c. the validator on the made-up copy's native copy: 0 errors: ${v2.text.slice(0, 900)}`);
+    { const { nativeFor } = await import('./lib/visual-meaning.mjs');
+      const v = { type: SEARCH, h: 40, w: 156, fields: { field: [{ kind: 'column', table: 'Products', name: 'Product', queryRef: 'Products.Product' }] } };
+      const r = nativeFor(v, { declared: new Set([v.type]), second: true });
+      chk(() => r.native === 'textSlicer' && r.second && r.second.native === 'slicer' && r.lost.some((x) => /types/.test(x)), () => `NC3-2d. customVisualsSecond: the input slicer written, the dropdown offered back: ${JSON.stringify([r.native, r.second && r.second.native, r.lost])}`); } }
 
   // ---- CL-7 the redesign of the native copy (the clutter) ----
   const rd = await call('plan_layout', { path: 'lab', redesignFrom: 'lab/' + Lab.NAME + ' native.Report' });

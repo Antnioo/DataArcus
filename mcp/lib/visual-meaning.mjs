@@ -27,6 +27,11 @@ import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
 // (0.3.0 J19, B-172) which measures may share one value axis: the one rule, shared with the gallery's combo
 const AX = createRequire(import.meta.url)('../../assets/js/axis-units.js');
+// (0.3.1 NC3) the measured slicer heights (a dropdown slicer with its header: slicerH; the button slicer's pills: pillH)
+const SZ = createRequire(import.meta.url)('../../assets/js/pbip-sizing.js').make({ font: 'Segoe UI', LABEL: 10 });
+// and the least a dropdown slicer takes with no header: Microsoft's validator (validateDropdownSlicerSizing,
+// PBIR_SLICER_HEIGHT_BELOW_FLOOR, an error): the selector 32 + its padding 8 above and below
+const DROPDOWN_FLOOR = 32 + 8 + 8;
 // Microsoft's validator's own table of required roles and maxima per visual type (its metadata provider): the referee
 // of every native visual this module chooses (the laptop proof of 11 Oct: a donut written with no value, a map with no
 // location: PBIR_ROLE_REQUIRED_MISSING; two categories in a donut: PBIR_ROLE_MAX_EXCEEDED)
@@ -466,8 +471,21 @@ const objName = (s) => (typeof s === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.
 // (0.3.1 NC2, NC1 "Seen" 1-5, 9) a custom visual's form, by its id's words: what the reader no longer sees in the
 // native one, in words, and the closer native Power BI has for it (the bullet, the calendar heatmap). The words only
 // name the form; the fields still decide what can be written.
-export const FORMS = { tornado: ['tornado', 'butterfly'], bullet: ['bullet'], cloud: ['cloud', 'wordcloud', 'tagcloud'], calendar: ['heatmap', 'calendar'] };
-const formOf = (type) => { const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, '')); const e = Object.entries(FORMS).find(([, l]) => w.some((x) => l.includes(x))); return e ? e[0] : null; };
+// (0.3.1 NC3) a text search box (one line to type in) and a row of chips: slicers whose native look must be chosen
+export const FORMS = { tornado: ['tornado', 'butterfly'], bullet: ['bullet'], cloud: ['cloud', 'wordcloud', 'tagcloud'], calendar: ['heatmap', 'calendar'],
+  search: ['search', 'searchbox', 'textfilter', 'textsearch'], chips: ['chip', 'chips', 'pill', 'pills', 'button', 'buttons', 'tag', 'tags'] };
+// a form's word is one of the id's words, or (a long one, 8 letters or more) inside them joined: "textFilter" -> textfilter
+const formOf = (type) => { const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, '')), j = w.join(''); const e = Object.entries(FORMS).find(([, l]) => l.some((x) => w.includes(x) || (x.length >= 8 && j.includes(x)))); return e ? e[0] : null; };
+// (0.3.1 NC3, the laptop's run on 27 Oct: a map drawn as an empty panel) what an Azure map needs before it draws, from
+// Microsoft Learn ("Manage Azure Maps Power BI visual within your organization", "Integration tenant settings", "Get
+// started with Azure Maps Power BI visual"): the settings by their exact names; said in the plan and after the write
+export const AZURE_NEEDS = [
+  'Azure Maps draws only where it is turned on: in the Power BI admin portal (Tenant settings, Integration settings), "Users can use the Azure Maps visual"; and for a tenant outside the United States and the European Union also "Data sent to Azure Maps can be processed outside your tenant\'s geographic region, compliance boundary, or national cloud instance" (Microsoft: without it the visual won\'t function there)',
+  'Power BI Desktop of May 2025 or later, signed in to that tenant (an older Desktop says "Tenant switch not enabled" even with the setting on)',
+  'if the map shows no map tiles at all, it is these settings; if it shows the map with no bubbles, Azure Maps found none of the places (see the location column\'s data category)'
+];
+// the model's geographic data categories (Desktop's Column tools > Data category)
+const GEO_CATEGORY = /^(address|place|city|county|stateorprovince|postalcode|country|continent|latitude|longitude)$/i;
 function formLost(form, kind, calendarNote, rows) {
   if (form === 'tornado') return ['its two-sided layout (its two values drawn left and right of one centre line, per category): the native chart draws both bars side by side from the same axis'];
   if (form === 'bullet') return kind === 'combo'
@@ -525,7 +543,18 @@ export function nativeFor(visual, opts) {
       if (fitsCapabilities(c.native, c.roles).ok) closer = c;
     } else if (typeof o.calendarOf === 'function') calendarNote = 'a matrix of weekdays by month, shaded by the value, would be closer: it needs a weekday and a month column in the date\'s own table that the model sorts, and none was found';
   }
-  let best = closer || best0, other = closer ? best0 : null;
+  // (NC3) a second option where the first may not draw or may not be what the person wants: a map's bar chart (it draws
+  // without Azure Maps), a text search's input slicer (Learn: generally available since February 2026, "the input slicer")
+  let alt = null;
+  if (!closer && best0 && best0.native === 'azureMap') {
+    const R = best0.roles, byName = (R.Category || []).length && !(R.Y || []).some((f) => (R.Category || []).some((c) => c.table === f.table && c.name === f.name));
+    const bar = byName && (R.Size || []).length ? { kind: 'bar', native: NATIVE.bar, roles: Object.assign({ Category: R.Category.map(copy), Y: R.Size.map(copy) }, R.Tooltips ? { Tooltips: R.Tooltips } : {}), noMap: true } : null;
+    alt = bar && fitsCapabilities(bar.native, bar.roles).ok ? bar : (() => { const t = ranked.find((c) => c.fits && c.native === 'tableEx'); return t ? Object.assign({}, t, { noMap: true }) : null; })();
+  } else if (!closer && best0 && best0.native === 'slicer' && form === 'search' && (best0.roles.Values || []).length) {
+    const t = { kind: 'slicer', native: 'textSlicer', roles: { Values: best0.roles.Values.slice(0, 1).map(copy) } };
+    if (fitsCapabilities(t.native, t.roles).ok) alt = t;
+  }
+  let best = closer || best0, other = closer ? best0 : alt;
   if (o.second && other) { const x = best; best = other; other = x; }
 
   // what the reader no longer sees with one option, and the native visual's own settings for what the custom one showed
@@ -541,6 +570,17 @@ export function nativeFor(visual, opts) {
       if (f.trend && bobj.trend) format.trend = true;
       if (best.targetMarkers) format.targetMarkers = true;
       if (best.heat) format.heat = true;
+      // (NC3) a text search or a row of chips: the native slicer as a dropdown in its own box (a list or a row of pills
+      // squeezed into it cut its rows), the search on for a text search; its header off where the box is lower than a
+      // dropdown and its header need (slicerH at 10pt, measured)
+      if (best.native === 'slicer' && (form === 'search' || form === 'chips')) {
+        format.dropdown = true;
+        if (form === 'search') format.search = true;
+        if (visual.h > 0 && visual.h < SZ.slicerH(10)) format.headerOff = true;
+        if (visual.h > 0 && visual.h < DROPDOWN_FLOOR) format.minHeight = DROPDOWN_FLOOR;
+      }
+      // (NC3) the word cloud's bars ranked by their value, largest first (Desktop drew them A to Z with no sort written)
+      if (form === 'cloud' && ['bar', 'column'].includes(best.kind) && !(visual.sort || []).length && (best.roles.Y || []).length) format.sortByValue = true;
     }
     // (NC2, NC1 "Seen" 9) which of its own settings the native one keeps, and as what; the rest named as not carried over
     if (objs.length) {
@@ -575,18 +615,35 @@ export function nativeFor(visual, opts) {
       }
       // a picture that becomes another kind of visual says so first, in plain words (rc.2b: a map written as a table)
       const PIC = ['map', 'scatter', 'gauge', 'kpi', 'pie', 'donut', 'waterfall'];
-      if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
+      if (best.noMap) lost.unshift(`the Azure map itself: written as a ${LABEL[best.kind] || best.native} of the same fields by place, which draws without Azure Maps (no tenant setting needed)`);
+      else if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
       // a sort by a field no role carries (a helper): kept through the tooltips, said
       const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
       if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
     }
     lost.push(...formLost(form, best ? best.kind : null, best && best.kind !== 'matrix' ? calendarNote : null, best && best.roles && best.roles.Rows ? best.roles.Rows.length : 0));
-    return { lost, format, expand, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') };
+    // (NC3) the slicers' forms: what the native one is, in words
+    const h = visual.h > 0 ? Math.round(visual.h) : null, box = h ? `its ${h}-high box` : 'its box';
+    if (best && best.native === 'slicer' && form === 'search') lost.push(`its search box (a line to type in): the native slicer is a dropdown with its search on, in ${box}: open it, type to find the values, then pick them`);
+    if (best && best.native === 'textSlicer') lost.push('its list of the values found: the input slicer filters by the text a person types, with no list to pick from');
+    if (best && best.native === 'slicer' && form === 'chips') lost.push(`its row of chips: the native button slicer's pills need ${SZ.pillH(10)} high at 10pt (measured on Desktop 2.159) and each value's width, and a copy that reads metadata only does not know the values: a dropdown in ${box}`);
+    if (format.headerOff) lost.push(`its header: ${box} is lower than the ${SZ.slicerH(10)} a dropdown slicer and its header need at 10pt, so the header is off (the box shows the dropdown only)`);
+    if (format.minHeight) lost.push(`its height: ${box} is lower than the ${format.minHeight} a dropdown takes at least (Microsoft's validator: the selector 32 and its padding), so the box grows to ${format.minHeight} high, downward; check nothing below it is covered`);
+    // (NC3) what an Azure map needs before it draws, and its location column's data category (metadata, from the model)
+    const needs = [];
+    if (best && best.native === 'azureMap') {
+      needs.push(...AZURE_NEEDS);
+      const loc = (best.roles.Category || [])[0], keyed = loc && (best.roles.Y || []).some((f) => f.table === loc.table && f.name === loc.name);
+      const cat = loc && !keyed && typeof o.categoryOf === 'function' ? (() => { try { return o.categoryOf(loc); } catch (e) { return undefined; } })() : undefined;
+      if (typeof cat === 'string' && !GEO_CATEGORY.test(cat.replace(/\s+/g, ''))) needs.push(`its location column has no geographic data category, so Azure Maps guesses what each name is (and may place none): in Desktop select that column, Column tools > Data category, and pick what it holds (City, Country, Address, ...)`);
+    }
+    return { lost, format, expand, needs, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') };
   };
   const D = detailsOf(best), lost = D.lost;
   const keeps = best ? Object.entries(best.roles).filter(([, l]) => l.length).map(([r, l]) => `${roleLabel(best.native, r)} (${n(l.length, 'field', 'fields')})`).join(', ') : '';
   const short = lost.map(headOf).join('; ');
-  const tell = best ? `This custom visual becomes a native ${LABEL[best.kind] || best.native}${best.native === 'multiRowCard' ? ' (multi-row card)' : ''}${guess ? ' (a guess from its fields\' kinds: the custom visual\'s own role definitions are not in the report)' : ''}. It keeps ${keeps}. It loses ${short}.`
+  const said = best && best.native === 'slicer' && D.format.dropdown ? (D.format.search ? ' (a dropdown with its search on)' : ' (a dropdown)') : best && best.native === 'textSlicer' ? ' (the input slicer: it filters by the text typed)' : '';
+  const tell = best ? `This custom visual becomes a native ${best.native === 'textSlicer' ? 'input slicer' : LABEL[best.kind] || best.native}${said}${best.native === 'multiRowCard' ? ' (multi-row card)' : ''}${guess ? ' (a guess from its fields\' kinds: the custom visual\'s own role definitions are not in the report)' : ''}. It keeps ${keeps}. It loses ${short}.${D.needs.length ? ' It draws only where Azure Maps is turned on: tell the user what to turn on (needs) before they open the copy.' : ''}`
     : m.kind === 'network' ? `No native Power BI visual draws this custom visual's network: an HTML/SVG measure in an image-capable visual can (you approve it in the plan), or a table of its links. It loses ${short}.`
     : `No native Power BI visual can show this custom visual's fields as they are: it can be kept as it is or left out. Nothing is decided without you.`;
   // (NC2, NC1 "Seen" 5) confidence from what was read: high = its package's roles AND an id that names the kind written;
@@ -595,8 +652,8 @@ export function nativeFor(visual, opts) {
   const confidence = !best ? (guess && m.confidence === 'high' ? 'medium' : m.confidence) : !guess && idKnown ? 'high' : idKnown || rolesRead ? 'medium' : 'low';
   const idSaid = idKnown ? `its id's words name a ${LABEL[best.kind] || best.native}` : hintsOf(type).length ? 'its id\'s words name no kind its fields could be written as here' : 'its id names no kind DataArcus knows';
   const evidence = `${guess ? 'no package in the report: its own role definitions are not read' : `its package's role definitions read${rolesRead ? ', every role named' : ''}`}; ${idSaid}; ${idKnown && !guess ? 'both agree' : 'matched by its fields\' kinds and its role names'}`;
-  const extras = best ? Object.assign({ format: D.format, tooltips: D.tooltips }, D.expand ? { expand: D.expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}, best.added ? { added: best.added } : {}) : {};
-  const sec = other ? (() => { const d = detailsOf(other); return Object.assign({ kind: other.kind, native: other.native, roles: other.roles, label: LABEL[other.kind] || other.native, lost: d.lost, format: d.format }, other.added ? { added: other.added } : {}); })() : null;
+  const extras = best ? Object.assign({ format: D.format, tooltips: D.tooltips }, D.needs.length ? { needs: D.needs } : {}, D.expand ? { expand: D.expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}, best.added ? { added: best.added } : {}) : {};
+  const sec = other ? (() => { const d = detailsOf(other); return Object.assign({ kind: other.kind, native: other.native, roles: other.roles, label: other.native === 'textSlicer' ? 'input slicer' : LABEL[other.kind] || other.native, lost: d.lost, format: d.format }, d.needs.length ? { needs: d.needs } : {}, other.added ? { added: other.added } : {}); })() : null;
   return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null, aggregate: undefined }, extras,
     { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network', confidence, evidence }, sec ? { second: sec, secondChosen: !!o.second } : {},
     best && best === closer ? { why: m.why + (best.targetMarkers ? '; written as columns with its target as a long-dash marker on each (the closer native for a bullet)' : '; written as a matrix of months by weekday, each cell shaded by the value (the closer native for a calendar heatmap)') } : {});
@@ -614,6 +671,12 @@ export function meaningInReport(visual, report, opts) {
 
 // ---- step C: the plan's entries (plan_layout lists them; the owner approves each before anything is written) ----
 // the model's data types, for typeOf: tables as read_model / model.bim gives them ([{ name, columns: [{ name, dataType }] }])
+// (0.3.1 NC3) the model's data category of a column ('' when it has none; undefined when the column is not known)
+export function categoryOfModel(tables) {
+  const map = new Map();
+  (Array.isArray(tables) ? tables : []).forEach((t) => (t && Array.isArray(t.columns) ? t.columns : []).forEach((c) => { if (c && c.name != null) map.set(`${t.name}[${c.name}]`, String(c.dataCategory || '')); }));
+  return (f) => (f ? map.get(`${f.table}[${f.name}]`) : undefined);
+}
 export function typeOfModel(tables) {
   const map = new Map();
   (Array.isArray(tables) ? tables : []).forEach((t) => (t && Array.isArray(t.columns) ? t.columns : []).forEach((c) => { if (c && c.name != null) map.set(`${t.name}[${c.name}]`, c.dataType); }));
@@ -669,11 +732,11 @@ export function replacementsOf(inv, opts) {
       label: r.native ? LABEL[panels ? kindOf(panels[0].native) : r.kind] || r.native : null,
       ...(ax ? { axes: Object.assign({ share: ax.share, why: ax.why }, panels ? { panels: panels.length } : {}) } : {}), ...(panels ? { panels } : {}), ...(ax && ax.ask && ax.ask.length ? { ask: ax.ask } : {}),
       roles: r.native ? Object.fromEntries(Object.entries(r.roles).map(([k, l]) => [k, l.map((f) => f.queryRef).filter(Boolean)])) : {},
-      format: r.format || {}, tooltips: !!r.tooltips, ...(r.expand ? { expand: r.expand } : {}), ...(r.aggregate ? { aggregate: r.aggregate } : {}),
+      format: r.format || {}, tooltips: !!r.tooltips, ...(r.needs ? { needs: r.needs } : {}), ...(r.expand ? { expand: r.expand } : {}), ...(r.aggregate ? { aggregate: r.aggregate } : {}),
       ...(r.added && r.native ? { add: Object.fromEntries(r.added.map((f) => [f.queryRef, { table: f.table, column: f.name }])) } : {}),
       why: r.why, tell: panels ? r.tell.replace(/^This custom visual becomes a native [^.(]+/, `This custom visual becomes ${panels.length} separate native ${LABEL[kindOf(panels[0].native)] || panels[0].native}s in its box, one axis each (${ax.why.en})`) : r.tell,
       lost: ax && ax.bars ? r.lost.filter((l) => !/horizontal bars/.test(l)) : r.lost, guess: r.guess, confidence: r.confidence, evidence: r.evidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })),
-      ...(r.second ? { second: { pick, native: r.second.native, label: r.second.label, chosen: r.secondChosen, lost: r.second.lost } } : {}) });
+      ...(r.second ? { second: Object.assign({ pick, native: r.second.native, label: r.second.label, chosen: r.secondChosen, lost: r.second.lost }, r.second.needs ? { needs: r.second.needs } : {}) } : {}) });
   }));
   return out;
 }
