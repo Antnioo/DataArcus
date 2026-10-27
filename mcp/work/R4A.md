@@ -28,7 +28,7 @@
 - **Resume:** done with the follow-up (a)-(e) below; waits for the reviewer. Desktop shows nothing new (no file written differently).
 
 ## Follow-up (the reviewer, 27 Oct 06:48: the owner's laptop run of rc.1, section 6's chat test)
-Tests: r4a E1-E5, red on 2c124753 (5 of 32), green after. Before -> after:
+Tests: r4a E1-E5, red on 2c124753 (5 of 32), green after. Full run after it (97acedac): "run-tests: 99 suites passed". Before -> after:
 - (a) An Arabic plan's app prompt (MCP elicitation) was English only -> `Approval.promptText`: each write in Arabic, its
   English line under it, the files counted in Arabic, then the English prompt; the yes box in both (`promptBox`).
 - (b) The prompt named the taken "Gulf Retail Sales.Report" while the write used "Gulf Retail Sales - New design" -> the
