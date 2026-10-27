@@ -50,6 +50,9 @@ Full run on 0749d08: "run-tests: 108 suites passed"
 After merging origin/integration/0.3.1 (TT2, a69fffc5; theme-generator.js both kept, its .min.js rebuilt, ?v= 20261027tw1m):
 Full run on 6ea6820b: "run-tests: 109 suites passed"
 
+After merging origin/integration/0.3.1 (TS1, 75652532; theme-generator.min.js rebuilt, ?v= 20261027tw1t):
+Full run on 43286d77: "run-tests: 110 suites passed"
+
 ## CHANGELOG line
 "The Arabic twin matches the English report more closely" (mcp/CHANGELOG.md [Unreleased]); no number in it.
 
@@ -107,6 +110,14 @@ Part 3 of 0.3.1, one sitting: one glass report and its twin side by side, EN and
    bottom right stays there on the Arabic page.
 3. The twin's row-label header can be listed "may be cut" (rc24: 171 needed, 161 given): the same as the text column's
    before; a shorter Arabic name fixes it.
+
+4. **Not this branch's, found on the TS1 merge:** the website suite arabic-names W7 ("the English download ... byte for
+   byte the base's") fails on origin/integration/0.3.1 itself (75652532, a clean worktree): it gets
+   87b232bf86c981363fdd65d8ef54a6cd65073b6444d9979bd75fd7a85c653933, its fixture
+   (scripts/tests/fixtures/tt2-english-download.json) wants 2dd8f1099e981032bc713dac920c3e290fb1231011ee2a787144c13207d61d12;
+   the same on this branch. TS1's text sizes (x 1.25) change the English download TT2 pinned before TS1. Left as it is:
+   it is TT2's expected number, and whether TS1's change is meant there is the reviewer's call (the fix would be the
+   fixture re-captured on the merged integration).
 
 ## Lessons for the reviewer
 - `git stash push -- <file>` after a commit compares with HEAD, not the base: to prove red on the base, stash before the
