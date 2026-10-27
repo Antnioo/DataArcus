@@ -54,7 +54,8 @@ const lit = (p) => (p && p.expr && p.expr.Literal && typeof p.expr.Literal.Value
 export function fontOf(raw) {
   const m = /^'([\s\S]*)'$/.exec(String(raw).trim()); if (!m) return null;
   const face = m[1].replace(/''/g, "'"), name = face.split(',')[0].trim().replace(/^['"]|['"]$/g, '').trim();
-  return name && name.length <= 80 && !/[\p{Cc}\p{Cf}]/u.test(name) ? { face, name } : null;
+  // (0.3.1 SF1, AUD-032) the whole face, not only its first family: the face is what a consistent copy writes into the theme
+  return name && name.length <= 80 && !/[\p{Cc}\p{Cf}]/u.test(face) ? { face, name } : null;
 }
 export function sizeOf(raw) { const m = /^(\d{1,3}(?:\.\d{1,2})?)[DLM]?$/.exec(String(raw).trim()); const n = m ? +m[1] : NaN; return n > 0 && n <= 400 ? n : null; }
 const boolOf = (raw) => (raw === 'true' ? true : raw === 'false' ? false : null);

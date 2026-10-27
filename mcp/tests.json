@@ -130,6 +130,7 @@
     { "file": "test-0.3.1-tt1.mjs", "name": "tt1", "area": "arabic", "purpose": "every generated title wholly Arabic or wholly English (TT1): the engine, the website's Arabic download, create_report, DA.StoryTitle, the twin and the EN-AR copy; an English title in an Arabic report isolated whole" },
     { "file": "test-0.3.1-cs2.mjs", "name": "cs2", "area": "report", "purpose": "the text set where Desktop draws it (CS2): the theme's visual styles per type, never its text classes; a visual's own colour kept; a definition.pbir with no $schema read by its version or refused" },
     { "file": "test-0.3.1-rd1.mjs", "name": "rd1", "area": "report", "purpose": "the redesign's name keeps DataArcus's suffixes (a native copy's redesign is told apart from the original's) and the grid's rows sit 16 apart and 16 from the page's edges, working around what stays (RD1, on NC1's lab)" },
+    { "file": "test-0.3.1-sf1.mjs", "name": "sf1", "area": "safety", "purpose": "the hard rules proven on 0.3.1's paths (SF1): a redesign's options refused outside a redesign (round 4: a native copy with consistent text), the way back to 0.3.0 in the release text" },
     { "file": "test-0.3.1-mutation.mjs", "name": "mutation", "area": "core", "purpose": "T1 (0.3.1): each critical invariant broken on a copy of the code must make an existing suite fail" }
   ],
   "pending": [],

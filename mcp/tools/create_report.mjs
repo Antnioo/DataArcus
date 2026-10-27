@@ -13,7 +13,7 @@ import { text, safe } from '../lib/tool-answer.mjs';
 import { ADDS } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
 import { axesOf } from '../lib/report-fields.mjs';
-import { CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin } from '../lib/report-inputs.mjs';
+import { CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly } from '../lib/report-inputs.mjs';
 import { reportRun } from '../lib/report-run.mjs';
 
 export function register(server, ctx) {
@@ -45,6 +45,8 @@ export function register(server, ctx) {
       const art = keptCopy(a.planId);
       return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle, consistentText: a.consistentText, keepPositions: a.keepPositions }, art); }));
     }
+    // (0.3.1 SF1) a redesign's option outside a redesign: refused, never dropped (plan_layout refuses it at the plan too)
+    { const only = redesignOnly(a); if (only.length) throw new Error(`Nothing was written: ${only.join(', ')} ${only.length === 1 ? 'works' : 'work'} on a redesign only (redesignFrom)${a.customVisualsFrom != null ? '; for a native copy with one text set, write the native copy first, then plan its redesign with ' + only.join(', ') : ''}. Call create_report without ${only.length === 1 ? 'it' : 'them'} and the approved planId.`); }
     // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
     if (a.customVisualsFrom != null) {
       if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');

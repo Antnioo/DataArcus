@@ -128,6 +128,9 @@ export function addGulfCalendar(m, a, env) {
     if (dc && (!dType || dType === 'datetime' || dType === 'unknown') && !activeFrom(dt.name, dc.name)) return add(dt.name, dc.name, { via: [{ asked: self, held: heldSaid, fact: String(t.name), dateTable: String(dt.name) }] });
     add(t.name, c.name, { inactive: { held: heldSaid } });
   });
+  // (0.3.1 SF1, AUD-032) a relationship line never names a table or column with a control character (a tab, a line
+  // break): refused, the asked column or the date table reached through it
+  rels.forEach((r) => { if (/\p{Cc}/u.test(r.table + r.column)) refuse(`${JSON.stringify(`${r.table}[${r.column}]`)} holds a control character (a tab or a line break) in its name, which no script DataArcus writes may name: rename it in the model, or leave it out of relateTo.`); });
   // what the plan and the approval page say about each relationship that is not the one asked for as it is (EN and AR)
   const q2 = (s) => JSON.stringify(s), relWhy = [];
   rels.forEach((r) => {

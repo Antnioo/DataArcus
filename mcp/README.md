@@ -15,7 +15,7 @@ For testers on Windows: download the file, check it with one command, then insta
 1. **Power BI Desktop 2.159.883.0 (October 2026) or later**, the lowest version the 0.3.0 laptop proofs ran on
    (Help > About shows yours; the Microsoft Store version updates itself), and save your reports as Power BI projects
    (File > Save as > `.pbip`).
-<!-- RELEASE 0.3.1: when dataarcus-0.3.1.mcpb is released, change 0.3.0 to 0.3.1 in step 2 (three places). -->
+<!-- RELEASE 0.3.1: when dataarcus-0.3.1.mcpb is released, change 0.3.0 to 0.3.1 in step 2 (three places). Step 10, the way back, stays on 0.3.0. -->
 2. **Get the extension:** download the latest `.mcpb` file (for 0.3.0, `dataarcus-0.3.0.mcpb`) from
    https://github.com/Antnioo/dataarcus-releases/releases into your Downloads folder. **Check it** against the SHA-256
    in that release's notes: open a Command Prompt in the Downloads folder and run
@@ -40,6 +40,10 @@ For testers on Windows: download the file, check it with one command, then insta
 8. **Where reports go:** a new report is written next to its model, inside the working folder, as `<name>.pbip` plus
    `<name>.Report`; it never writes over an existing report. Open the `.pbip` in Power BI Desktop.
 9. **Remove it:** Settings > Extensions > DataArcus for Power BI > Uninstall. Your reports stay where they were written.
+10. **Go back to 0.3.0** (if a newer version does not suit you): remove it (step 9), download the 0.3.0 `.mcpb` from its
+   release (v0.3.0) on https://github.com/Antnioo/dataarcus-releases/releases, check it as in step 2 against the SHA-256
+   in that release's notes (also in [CHANGELOG.md](CHANGELOG.md), 0.3.1, "Going back to 0.3.0"), then double-click it
+   and choose Install. Your reports stay where they were written.
 
 ## What each tool does
 
