@@ -19,9 +19,15 @@
   // (0.2.9.1, B-174) each written slot's place in the planned page, { from: its planned kind, nth among them }, as
   // kindChanges name it, so a chart kept to its top N is told against the plan's own slot
   const SLOT_PLAN = new WeakMap();
-  // (0.3.1 TT1, the owner's rule of 27 Oct) a Top-N title measure's English text in an Arabic report, isolated whole as
-  // text-measure.js isolateWhole isolates a title: U+200F U+2068 open its first text, U+2069 U+200F close its last
-  const isoTop = (on, word, rest, plain) => (on && !AR_LETTERS.test(plain) && /[A-Za-z]/.test(plain) ? [['\u200F\u2068' + word[0], word[1]], rest + '\u2069\u200F', '\u200F\u2068' + plain + '\u2069\u200F'] : [word, rest, plain]);
+  // (0.3.1 TT1, the owner's rule of 27 Oct) a Top-N title measure's English text in an Arabic report, isolated whole by the
+  // shared rule (text-measure.js isolateWhole, never marks of its own here): the marks it puts before the title open the
+  // measure's first text, the marks after it close its last
+  const TM = (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
+  const isoTop = (on, word, rest, plain) => {
+    const w = on && TM && TM.isolateWhole ? TM.isolateWhole(plain) : plain, at = w.indexOf(plain);
+    if (w === plain || at < 0) return [word, rest, plain];
+    return [[w.slice(0, at) + word[0], word[1]], rest + w.slice(at + plain.length), w];
+  };
   // the visual gallery (0.3, J8; visual-gallery.js): optional in the browser. A gallery slot reaches here only when the
   // design's flag is on and its fields fit (pbip-export.js resolves the others to their plain kind first)
   const G = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);

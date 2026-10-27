@@ -7,7 +7,9 @@
 //   S  the website's Arabic download (pbip-export.js, as the Theme Generator builds it): English names give English titles,
 //      each isolated whole (U+200F, U+2068 ... U+2069); Arabic display names give Arabic titles
 //   R  the MCP's Arabic create_report (report-run.mjs build): English names, approved Arabic names, half approved; a model
-//      without measures ("Count of Order Id", never «عدد Order Id»); the plan lists the titles that stay English
+//      without measures ("Count of Order Id", never «عدد Order Id»); the plan lists the titles that would stay English and
+//      the fields to draft (the owner, 27 Oct: "don't keep english titles in arabic reports"); drafted and approved, every
+//      title is Arabic and the approval page lists the names; a name kept English on purpose: its titles wholly English
 //   D  DA.StoryTitle's measure (dax-functions.mjs storyDax): the Arabic sentence only for an Arabic noun
 //   T  the Arabic twin and the EN-AR copy: a title the person leaves English is isolated whole; no title is mixed
 //   node test-0.3.1-tt1.mjs
@@ -139,6 +141,28 @@ try {
     () => `R6. an Arabic plan lists the titles that stay English (titlesInEnglish) and how to make them Arabic: ${cut(pl.err ? pl.t : te)}`);
   chk(() => /wholly English|all English/i.test(String(pl.j.arabicNames.sayInPlan)) && !/never joined/.test(JSON.stringify(pl.j.arabicNames.notTranslated || [])),
     () => `R7. the plan says a title with a field kept in English is wholly English: ${cut(pl.j && pl.j.arabicNames && pl.j.arabicNames.sayInPlan)}`);
+  chk(() => te && Array.isArray(te.fields) && te.fields.includes('Web Orders[Plan Group]') && /Draft an Arabic name/.test(String(te.how)),
+    () => `R8. (the owner, 27 Oct: "don't keep english titles in arabic reports") the plan names each field that would keep a title English, for a draft: ${cut(te)}`);
+  // the assistant drafts every listed name (made-up Arabic here), the person approves them: the plan again with them, then the report
+  const an = (pl.j && pl.j.arabicNames) || {}, drafts = {};
+  [...new Set([].concat(an.proposeYourself || [], (te && te.fields) || [], (an.notTranslated || []).map((x) => x.field)))].forEach((k, i) => { drafts[k] = 'حقل ' + ['أول', 'ثان', 'ثالث', 'رابع', 'خامس', 'سادس', 'سابع', 'ثامن'][i % 8]; });
+  const readAll = (dir) => { const out = []; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (/\.json$/.test(f)) out.push({ path: path.relative(dir, f).split(path.sep).join('/'), data: fs.readFileSync(f, 'utf8') }); }); if (fs.existsSync(dir)) rec(dir); return out; };
+  const write = async (name, displayNames) => {
+    const p2 = await s.call('plan_layout', { path: 'od/M.SemanticModel', lang: 'ar', layout: 'exec', name, secondPage: true, displayNames });
+    const id = p2.j && p2.j.plan && p2.j.plan.planId; if (!id) return { p2, files: [], err: p2.t };
+    await s.call('approve_plan', { planId: id });
+    const r = await s.call('create_report', { path: 'od/M.SemanticModel', lang: 'ar', name, planId: id, design: p2.j.design, displayNames });
+    return { p2, r, files: readAll(path.join(ROOT, 'od', name + '.Report')) };
+  };
+  const w1 = await write('TT drafted', drafts), t1 = titlesOf(w1.files);
+  chk(() => Object.keys(drafts).length >= 2 && t1.length > 8 && t1.every((x) => AR.test(x.s) && !/[A-Za-z]/.test(bare(x.s))) && !((w1.p2.j || {}).arabicNames || {}).titlesInEnglish,
+    () => `R9. every drafted name approved: every written title (chart, card, tooltip, table, Top-N) is wholly Arabic, none listed as English: ${cut(w1.err || t1.filter((x) => !AR.test(x.s) || /[A-Za-z]/.test(bare(x.s))).map((x) => x.s))}`);
+  const { summary } = await import('./lib/approval-window.mjs');
+  const pinned = Object.assign({}, ((w1.p2.j || {}).arabicNames || {}).inThePlan || {}, drafts), sec = JSON.stringify(summary('report', { pins: { create_report: { lang: 'ar', name: 'TT drafted', displayNames: pinned } }, notTranslated: [] }).sections || []);
+  chk(() => Object.values(drafts).every((v) => sec.includes(v)), () => `R10. the approval page lists every drafted name the person approves: ${cut(sec)}`);
+  const kept = Object.assign({}, drafts, { 'Web Orders[Plan Group]': 'Plan Group' }), w2 = await write('TT kept', kept), t2 = titlesOf(w2.files), te2 = ((w2.p2.j || {}).arabicNames || {}).titlesInEnglish;
+  chk(() => t2.length > 8 && t2.every((x) => !mixed(x.s)) && t2.filter((x) => /Plan Group/.test(x.s)).length > 0 && t2.filter((x) => /Plan Group/.test(x.s)).every((x) => wholeIso(x.s)) && te2 && !te2.fields,
+    () => `R11. a name the person keeps in English on purpose: the titles naming it wholly English, isolated whole; the others Arabic; none mixed; no draft asked: ${cut(w2.err || [te2, t2.map((x) => x.s)])}`);
   await s.close();
 
   // ---------- D: DA.StoryTitle ----------
