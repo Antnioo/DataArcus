@@ -47,6 +47,9 @@
 
 Full run on 0749d08: "run-tests: 108 suites passed"
 
+After merging origin/integration/0.3.1 (TT2, a69fffc5; theme-generator.js both kept, its .min.js rebuilt, ?v= 20261027tw1m):
+Full run on 6ea6820b: "run-tests: 109 suites passed"
+
 ## CHANGELOG line
 "The Arabic twin matches the English report more closely" (mcp/CHANGELOG.md [Unreleased]); no number in it.
 
