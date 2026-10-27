@@ -129,6 +129,9 @@ try {
     chk(() => !r.err && Object.keys(r.j)[0] === 'unreadable' && MESSAGE.test(u.message) && u.skipped.length === 1 && u.skipped[0].file === DATES && v.why.test(u.skipped[0].why), () => `M1-${k}. read_model: unreadable first, the file and why: ${short(r)}`);
     chk(() => !h.err && Object.keys(h.j)[0] === 'unreadable' && MESSAGE.test(hu.message) && hu.skipped[0].file === DATES && v.why.test(hu.skipped[0].why), () => `M2-${k}. check_model_health: unreadable first: ${short(h)}`);
     chk(() => h.j.score === undefined && /^No score/.test(h.j.scoreWithheld) && Array.isArray(h.j.findings) && /partial/i.test(h.j.findingsPartial) && !h.j.plan && !h.j.fixes, () => `M3-${k}. check_model_health: no score, why, the findings marked partial, no script plan: ${short(h)}`);
+    // (ST1, AU47-S2) suggest_fields reads the model too: it says the file first, as read_model does (it only reads, no refusal)
+    { const sf = await s.call('suggest_fields', { path: k }), su = sf.j && sf.j.unreadable;
+      chk(() => !sf.err && Object.keys(sf.j)[0] === 'unreadable' && MESSAGE.test(su.message) && su.skipped[0].file === DATES && !LEAK.test(sf.t), () => `M5-${k}. suggest_fields: unreadable first: ${short(sf)}`); }
     chk(() => !LEAK.test(r.t) && !LEAK.test(h.t), () => `M4-${k}. no text of the file in either answer: ${(r.t.match(LEAK) || h.t.match(LEAK) || [''])[0]}`);
     const p = await s.call('plan_layout', { path: k, layout: 'exec', lang: 'en' }), c = await s.call('create_report', { path: k, name: 'R ' + k, design: D }), g = await s.call('add_gulf_calendar', { path: k, country: 'uae', firstYear: 2026, lastYear: 2026 });
     for (const [tool, x] of [['plan_layout', p], ['create_report', c], ['add_gulf_calendar', g]]) {
