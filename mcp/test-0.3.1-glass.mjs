@@ -4,7 +4,7 @@
 // working folder: no employer or client data.
 //   O   the choice: chart.look 'auto' | 'glass' (the design engine's chart styles), kept by the repair, off by default
 //   T   the theme: every visual type's background (the card colour, transparency), border (1, the rim, the corners in
-//       page units; none on cardVisual), shadow; tables' cells left see-through; light and dark; 'auto' byte for byte
+//       page units; none on cardVisual), shadow; tables' cells see-through (clear back colours, GL2); light and dark; 'auto' byte for byte
 //   P   the picture: a PNG at the page's size, read back by pngjs to the engine's own pixels, the same bytes every time
 //       from the same theme, other bytes from another, small; light and dark
 //   C   the contrast: the card over the darkest and the lightest pixel keeps text 4.5:1, labels 4.5:1, colour 1 3:1 (the
@@ -54,7 +54,9 @@ for (const [nm, th, d, g] of [['light', TL, LIGHT, GL], ['dark', TD, DARK, GD]])
   const sh = E.VISUAL_TYPES.concat('*').map((t) => ((vs(th, t, 'dropShadow') || [])[0] || {}));
   chk(() => sh.every((s) => s.show === true && s.color.solid.color === '#000000' && s.position === 'Outer' && s.preset === 'Bottom' && s.transparency === g.shadow.transparency && s.shadowBlur === g.shadow.blur && s.shadowDistance === g.shadow.distance && s.shadowSpread === 0),
     () => `T3-${nm}. every visual type's shadow (the design's shadow on): outer, bottom, black at ${g && cut(g.shadow)}: ${cut(sh[0])}`);
-  chk(() => ['tableEx', 'pivotTable'].every((t) => { const v = (vs(th, t, 'values') || [])[0] || {}; return !('backColorPrimary' in v) && !('backColorSecondary' in v); }), () => `T4-${nm}. tables keep their cells see-through (no back colours)`);
+  // (GL2, the owner, 27 Oct: without back colours Power BI's default style filled the cells solid) the cells see-through:
+  // every back colour the card's at alpha 00; in full: test-0.3.1-glass-tables.mjs
+  chk(() => ['tableEx', 'pivotTable'].every((t) => { const v = (vs(th, t, 'values') || [])[0] || {}; return [v.backColorPrimary, v.backColorSecondary].every((f) => f && f.solid.color === d.ui.card + '00'); }), () => `T4-${nm}. tables keep their cells see-through (every back colour clear: the card at alpha 00)`);
 }
 chk(() => { const d = design('Corporate', 'glass', { shadow: false }), th = E.buildTheme(d, 'en'); return E.VISUAL_TYPES.every((t) => JSON.stringify(vs(th, t, 'dropShadow')) === '[{"show":false}]'); }, () => 'T5. the design\'s shadow off: no shadow on any visual');
 chk(() => { const d = design('Corporate', 'glass', { transparent: true }), th = E.buildTheme(d, 'en'); return vs(th, '*', 'background')[0].show === true; }, () => 'T6. glass wins over transparent visuals: the cards keep their see-through colour');
