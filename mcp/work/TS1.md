@@ -80,7 +80,9 @@ Full run on 55d997c: "run-tests: 108 suites passed"
    - test-0.3-story-titles.mjs ST-6b: the Arabic ops report on the dense variant (6 KPIs, filters at the start), where
      a title is still shortened; 94 = 94 checks.
    - test-0.3.1-glass-tables.mjs N1/N2: the base engine's (cba24a5) sizes mapped by x 1.25 on 1080 (15 -> 12.5,
-     18 -> 15, 27 -> 22.5, 42 -> 35), the rest byte for byte as before.
+     18 -> 15, 27 -> 22.5, 42 -> 35), the rest byte for byte as before. Not loosened: every size is still compared, by
+     the owner's exact map. The base stays cba24a5 on purpose: N proves GL2 changed nothing outside glass tables, and a
+     new base taken from this branch would compare the engine with itself.
    - test-0.3.1-sq1.mjs B: its theme made for 2560 x 1440 (= the old 15pt text): every number as it was.
    - test-0.3.1-twin-preview.mjs V1-5: the fixture's filters at the start (narrower charts), so the 200-character
      planted title is again too long for two lines at 15pt.
