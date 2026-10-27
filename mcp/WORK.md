@@ -7,16 +7,11 @@ first. Finished entries: [work/archive/](work/archive/README.md).
 ## Where it stands (0.3.1, 27 Oct)
 - `integration/0.3.1` (from main d501c78): builders branch from it and push only their branch; the reviewer merges;
   one PR integration -> main at the end, the owner merges (the owner: max 4 builders for three rounds, then 2-3).
-- Merged: waves 1-6 (to A2, K2, GC2, RB, Q1); the release audit [AF1](work/AF1.md), [AF2](work/AF2.md),
-  [DS1](work/DS1.md), [AU47](work/AU47.md); the Seen batches [SQ1](work/SQ1.md), [SQ2](work/SQ2.md),
-  [SQ3](work/SQ3.md), [SQ4](work/SQ4.md), [SQ5](work/SQ5.md), [SQ6](work/SQ6.md), [SQ7](work/SQ7.md),
-  [SQ8](work/SQ8.md), [SQ9](work/SQ9.md), [SQ10](work/SQ10.md), [SQ11](work/SQ11.md), [SQ13](work/SQ13.md).
-  Wave 6 notes: [A2](work/A2.md), [K2](work/K2.md), [GC2](work/GC2.md), [RB](work/RB.md), [Q1](work/Q1.md).
-- Merged 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md), [NC1](work/NC1.md), [CS1](work/CS1.md),
-  [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md).
-- 27 Oct merged: [R4A](work/R4A.md), [GL2](work/GL2.md), [BD2](work/BD2.md), [CS2](work/CS2.md), [NC3](work/NC3.md),
-  [TT1](work/TT1.md), [GC3](work/GC3.md), [GD1](work/GD1.md) (glass the default), [GD2](work/GD2.md) (the twin
-  identical in glass; glass previews).
+- Merged: waves 1-6 (A2, K2, GC2, RB, Q1); the release audit AF1, AF2, DS1, AU47; the Seen batches SQ1-SQ11, SQ13
+  (each note in `mcp/work/<ID>.md`).
+- Merged 26 Oct: LR1, LR2, BD1, NC1, CS1, GL1, NC2, RD1.
+- 27 Oct merged: R4A, GL2, BD2, CS2, NC3, TT1, GC3, GD1 (glass the default), GD2 (the twin identical in glass; glass
+  previews).
 - Done, merging next: ST1 (the Seen sweep on [SEEN-QUEUE.md](work/SEEN-QUEUE.md)), SF1 (the hard rules proven; the way
   back to 0.3.0). Next builders: TS1 (FHD text x 1.25), then TW1 (the rest of the twin identical), TT2 (Arabic names
   on the website's download), then LC1 (the layout preview after the fit).
