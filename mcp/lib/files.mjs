@@ -116,6 +116,25 @@ export function planWrites(planId, tool) {
   const mark = writtenSince(); let failed = false, left = false, unknown = false;
   return {
     step(write) { try { return write(); } catch (e) { failed = true; if (!e || !e.left) unknown = true; else if (e.left.ours.length) left = true; throw e; } },
+    /**
+     * (0.3.1 CX1, Codex's F08: of two approved scripts one could stay on disk) several files written all or none: each
+     * write gets made, the list of what this batch created (write(made) pushes each file's record), and on any failure
+     * everything in it is removed (rollBack: only while it is still what this batch wrote, never a file that was there
+     * before), then one error, write-io's, says what is left; done() reads it as for one write. what: 'the fix scripts'.
+     */
+    batch(writes, what) {
+      const made = [], m0 = WRITTEN.length;
+      try { return writes.map((w) => w(made)); } catch (e) {
+        failed = true;
+        const back = rollBack(made), still = new Set(back.ours.concat(back.foreign));
+        const gone = new Set(made.map((r) => String(r.path)).filter((f) => !still.has(f)));
+        for (let i = WRITTEN.length - 1; i >= m0; i--) if (gone.has(WRITTEN[i])) WRITTEN.splice(i, 1);   // (removed again: not written)
+        if (!e || !e.left) unknown = true;
+        const ours = ((e && e.left && e.left.ours) || []).concat(back.ours), foreign = ((e && e.left && e.left.foreign) || []).concat(back.foreign);
+        if (ours.length) left = true;
+        throw writeFailed((e && e.first) || e, what, [...new Set(ours)].sort(), [...new Set(foreign)].sort());
+      }
+    },
     done() {
       const wrote = writtenSince(mark);
       if (failed && !left && !unknown && !wrote.length) return `The plan ${planId} was not used: once the cause is fixed (for a full disk: free some space), call this tool again with the same planId.`;

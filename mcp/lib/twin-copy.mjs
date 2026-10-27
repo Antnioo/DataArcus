@@ -130,7 +130,8 @@ export function languageCopy(P, built, labels) {
   const arOf = new Map(R.pages.map((pg) => [String(pg.id), newId('page\u0000' + pg.id)])), names = new Map();
   R.pages.forEach((pg) => names.set(String(pg.id), new Map(pg.visuals.map((v) => [String(v.json.name), newId('visual\u0000' + arOf.get(String(pg.id)) + '\u0000' + v.json.name)]))));
   const bmOf = new Map(R.bookmarks.map((b) => [String(b.json.name), newId('bookmark\u0000' + b.json.name)]));
-  const changed = new Map(), added = [], pairs = [], buttons = [], syncGroups = [];
+  const changed = new Map(), added = [], pairs = [], buttons = [], syncGroups = [], bothShown = new Map();
+  const BOTH_SHOWN = 'both pages of this pair stay in the tabs (neither hidden), so a reader reaches each from the tabs';
   const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   // an Arabic visual's names and links: its own name and group, its page links, tooltip pages, drillthrough and bookmarks
   // (Microsoft's validator, PBIR_FILTER_NAME_DUPLICATE_GLOBAL: a filter's name is unique across the report) each filter of
@@ -200,9 +201,18 @@ export function languageCopy(P, built, labels) {
     if (!tooltip && !drill) {
       const en = langButton(enPage, enV, enM, 'en', arId, newId('button\u0000' + id), R.theme);
       if (en.json) { tabInOrder(enV, en.json, 'ltr'); enV.push(en.json); enM.push(en.mobile); added.push({ rel: folder + 'visuals/' + en.json.name + '/visual.json', data: json(en.json) }); if (en.mobile) added.push({ rel: folder + 'visuals/' + en.json.name + '/mobile.json', data: json(en.mobile) }); }
-      say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
       const ar = langButton(arPage, arV, arM, 'ar', id, newId('button\u0000' + arId), R.theme);
       if (ar.json) { tabInOrder(arV, ar.json, P.keepLtr(pg) ? 'ltr' : 'rtl'); arV.push(ar.json); arM.push(ar.mobile); added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/visual.json', data: json(ar.json) }); if (ar.mobile) added.push({ rel: arFolder + 'visuals/' + ar.json.name + '/mobile.json', data: json(ar.mobile) }); }
+      // (0.3.1 CX1, Codex's F02: a page with no free place for its button, its counterpart hidden in the tabs, stranded a
+      // reader) a pair with a button not placed keeps both its pages in the tabs (as each was in the original and the
+      // twin), so a reader reaches each from the tabs; the button's why and the pair say it
+      if (!en.json || !ar.json) {
+        if (isObj(enPage) && tabsShown === 'ar') { if (isObj(pg.page) && pg.page.visibility != null) enPage.visibility = pg.page.visibility; else delete enPage.visibility; }
+        if (isObj(arPage) && tabsShown === 'en') { if (isObj(page) && page.visibility != null) arPage.visibility = page.visibility; else delete arPage.visibility; }
+        bothShown.set(id, BOTH_SHOWN);
+        [en, ar].forEach((r) => { if (!r.json) r.why = String(r.why || '').replace(/: the page is written without it; add the button by hand$/, '') + ': the page is written without it, and ' + BOTH_SHOWN + ' (add the button by hand to hide one again)'; });
+      }
+      say('en', en, typeof P0.displayName === 'string' ? P0.displayName : id, arId);
       say('ar', ar, isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : arId, id);
     }
     // the English files that changed (the slicers' sync group, a group's phone box grown, the page hidden)
@@ -221,7 +231,7 @@ export function languageCopy(P, built, labels) {
     });
     const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
     pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
-      arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}));
+      arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}, bothShown.has(id) ? { bothShown: bothShown.get(id) } : {}));
   });
   // the bookmarks: an Arabic copy of each (its pages and visuals the Arabic ones, its name as approved), listed after the English
   const BM = 'definition/bookmarks/bookmarks.json';
@@ -280,5 +290,6 @@ export function languageCopy(P, built, labels) {
       service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per English page; the Arabic pages are not in the page list and are reached by the «${EN}» button, and "English" brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` }
     : { shown: 'the Arabic pages (the report opens on the first Arabic page)', hidden: `the English pages (hidden in the tabs): each Arabic page's "English" button opens its English page, whose «${EN}» button goes back`, tooltipPages: 'stay hidden in both languages',
       service: `In the Power BI service (and Desktop's reading view) a reader sees one tab per Arabic page; the English pages are not in the page list and are reached by the "English" button, and «${EN}» brings the reader back. In Desktop's editing view every page is listed, the hidden ones marked hidden.` };
+  if (bothShown.size) tabs.bothShown = `${bothShown.size} page pair${bothShown.size === 1 ? '' : 's'} with no free place for a language button: ${BOTH_SHOWN} (pairs: bothShown)`;
   return { files, pairs, buttons, syncGroups, bookmarks: R.bookmarks.length, activePage, tabs, notes, tabsShown };
 }

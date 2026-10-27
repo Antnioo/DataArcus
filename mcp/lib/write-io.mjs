@@ -79,6 +79,7 @@ export function writeFailed(e, what, ours, foreign) {
   else if (!ours.length) err.message += ' Nothing else was touched.';
   err.code = ours.length ? 'PARTIAL_WRITE' : e && e.code;
   err.left = { ours: ours.slice(), foreign: foreign.slice() };
+  err.first = (e && e.first) || e;   // (CX1: the first cause, for a batch that words its own error from it)
   return err;
 }
 
@@ -168,11 +169,14 @@ export function writeFileNew(f, data, opts) {
   const create = (p) => { const e = { path: p, via: dirs }; made.push(e); try { createFile(e, data); } catch (x) { if (x && x.code === 'EEXIST') made.pop(); throw x; } return e; };   // (taken: not ours)
   try {
     const t = create(tmp);
-    let linked = false;
+    let linked = false, placed = null;
     try { io.linkSync(tmp, f); linked = true; } catch (x) { if (!NO_LINKS.has(x && x.code)) throw x; }
-    if (linked) { made.push({ path: f, id: t.id, size: t.size, hash: t.hash, via: dirs }); io.unlinkSync(tmp); }
-    else { if (removeOurs(t) !== 'changed') made.splice(made.indexOf(t), 1); create(f); }
+    if (linked) { made.push(placed = { path: f, id: t.id, size: t.size, hash: t.hash, via: dirs }); io.unlinkSync(tmp); }
+    else { if (removeOurs(t) !== 'changed') made.splice(made.indexOf(t), 1); placed = create(f); }
     dirs.forEach((d) => DIRS.delete(d.path));
+    // (0.3.1 CX1) the record of the file placed (its identity and hash), for a batch that removes it again on a later
+    // failure (files.mjs planWrites.batch: only while it is still this file)
+    return placed;
   } catch (e) {
     const { ours, foreign } = rollBack(made);
     dirs.forEach((d) => DIRS.delete(d.path));

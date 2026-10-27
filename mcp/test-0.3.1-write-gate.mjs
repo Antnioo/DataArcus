@@ -96,7 +96,7 @@ const LIST = {
   'lib/files.mjs': {
     'createFile()': { n: 1, why: `writeTree's files: ${PLAN}` },
     'makeDir()': { n: 2, why: `writeTree's and folderFor's folders (freeFile's, AF2), one level at a time: ${PLAN}` },
-    'rollBack()': { n: 2, why: `the clean-up of a failed writeTree or folderFor: ${PLAN}` },
+    'rollBack()': { n: 3, why: `the clean-up of a failed writeTree or folderFor, and of a failed planWrites.batch (CX1: only the files the batch created, while still its own): ${PLAN}` },
     'folderFor()': { n: 1, why: `freeFile's folders (the same code, split out by AF2): ${PLAN}` }
   },
   'lib/answers.mjs': {
@@ -134,9 +134,9 @@ const LIST = {
     'addGulfCalendar()': { n: 2, why: `the write is inside add_gulf_calendar's withPlan; the call without a plan gets scriptNameNow, which writes nothing: ${PLAN}` }
   },
   'tools/check_model_health.mjs': {
-    'writePlannedScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.step), after the model is read again and every name the plan showed is checked (AF2): ${PLAN}` },
+    'writePlannedScript()': { n: 1, why: `check_model_health's scripts, inside its approved planWrites (pw.batch, CX1: all or none), after the model is read again and every name the plan showed is checked (AF2): ${PLAN}` },
     'formatsAnswer()': { n: 1, why: `with write = true its put only queues the script for the write above (AF2): ${PLAN}` },
-    'writeAnswers()': { n: 1, why: `check_model_health's answers file, inside planWrites after Plans.gate: ${PLAN}` }
+    'writeAnswers()': { n: 2, why: `check_model_health's answers file, inside planWrites after Plans.gate (CX1: last in the scripts' batch when there are scripts, else on its own): ${PLAN}` }
   },
   'tools/create_arabic_twin.mjs': {
     'writeTwin()': { n: 1, why: `create_arabic_twin's write, inside withPlan after Plans.gate: ${PLAN}` }

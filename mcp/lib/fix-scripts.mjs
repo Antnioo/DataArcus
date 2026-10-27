@@ -33,12 +33,13 @@ export function plannedTaken(dir, name, script) {
   return nothingAt(f) || sameFile(f, script) ? null : new Error(`Nothing was written: "${path.basename(String(name))}" is already there, and it is not the file the plan named (DataArcus never writes over a file, nor under another name than the plan showed). Make the plan again (call the tool without planId), show it to the user and wait for their go.`);
 }
 /** (AF2) Writes the script to the file the plan named, as a new file; the same script already there is named again and
- *  nothing is written; anything else at that name: nothing is written (plannedTaken's refusal). Returns the file. */
-export function writePlannedScript(dir, name, script) {
+ *  nothing is written; anything else at that name: nothing is written (plannedTaken's refusal). Returns the file.
+ *  (CX1) made: a batch's list, given the record of the file this call created (never of one that was already there). */
+export function writePlannedScript(dir, name, script, made) {
   const f = path.join(dir, path.basename(String(name))), taken = plannedTaken(dir, name, script);
   if (taken) throw taken;
   if (sameFile(f, script)) return f;
-  writeNew(f, script); noteWritten(f); return f;
+  const placed = writeNew(f, script); noteWritten(f); if (made && placed) made.push(placed); return f;
 }
 // The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
 // same rule everywhere) written by check_model_health, plan_layout and create_report, each with its own keys, next to the
