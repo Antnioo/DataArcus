@@ -15,6 +15,11 @@ package's manifest; this file says what is in it.
   size, bold and italic is removed so the theme governs, and the theme gets the font and size most of your visuals
   already show (or keeps its own). The layout stays yours (`keepPositions` leaves every visual where it is); text boxes,
   shapes, buttons, groups and custom visuals are not touched. The plan lists every setting removed before you approve.
+- **The text set is drawn as planned:** the theme now carries the text set per visual type (titles, axes, labels,
+  table text), where Power BI Desktop applies it, instead of only as text classes, which Desktop left at its own
+  default sizes. A visual's own colour, background, alignment and wrap are never touched; only its font, size, bold
+  and italic go. A report saved by an older Power BI Desktop (its definition.pbir names no schema) can be redesigned;
+  any other file without one is refused with why and how to fix it (open and save once in Desktop).
 - **A glass look for your reports:** a new card look, "Glass", in the Theme Generator (Chart style, Card look) and in
   generate_theme (`chart.look: "glass"`). Power BI has no blur behind a visual, so the look is made of what Power BI
   has: see-through cards (the visual's background with transparency), a thin light border, a soft shadow, and a soft
