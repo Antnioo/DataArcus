@@ -249,7 +249,8 @@ jobs:
   # required check needs it, and a failing suite here is reported by the mcp check, not this job.
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # (0.3.1 GD2: every mcp/tests.json suite under c8 ran past 60 minutes once glass-twin was added; run 40537118200)
+    timeout-minutes: 120
     defaults:
       run:
         shell: bash
