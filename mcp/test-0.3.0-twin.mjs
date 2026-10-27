@@ -154,9 +154,12 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => objProp(bar, 'valueAxis', 'invertAxis') === 'true' && objProp(bar, 'categoryAxis', 'switchAxisPosition') === 'true' && objProp(bar, 'valueAxis', 'switchAxisPosition') === undefined && objProp(bar, 'categoryAxis', 'invertAxis') === undefined, () => `T6. bar chart: bars from the right, names at the right, nothing else: ${JSON.stringify(bar.visual.objects)}`);
     chk(() => JSON.stringify(bar.visual.query.sortDefinition) === JSON.stringify(o2.barProduct.visual.query.sortDefinition), () => 'T6. bar chart: its top-to-bottom order (its sort) kept');
     const tbl = p2.tblProducts, refs = tbl.visual.query.queryState.Values.projections.map((p) => p.queryRef);
-    chk(() => JSON.stringify(refs) === JSON.stringify(['Sales.Total Sales', 'Sum(Sales.Amount)', 'Sales.Product']), () => `T6. table: columns reversed (the first at the right): ${JSON.stringify(refs)}`);
+    // (0.3.1 TW1, M1-S2, on purpose: the reversed columns put a number first and lost Power BI's total word; the twin now
+    // writes create_report's right-to-left table: the text column first and hidden, the numbers reversed, the row label
+    // at the right, so the first column read from the right is still Product)
+    chk(() => JSON.stringify(refs) === JSON.stringify(['Sales.Product', 'Sales.Total Sales', 'Sum(Sales.Amount)', 'Sales.Row label: Product']), () => `T6. table: right to left as create_report's (the name column hidden first, the numbers reversed, the row label at the right): ${JSON.stringify(refs)}`);
     chk(() => { const e = tbl.visual.objects.columnFormatting.find((x) => x.selector.metadata === 'Sales.Product'); return lit(e.properties.alignment) === "'Right'" && lit(e.properties.styleHeader) === 'true'; }, () => `T6. table: the text column right-aligned with its header: ${JSON.stringify(tbl.visual.objects.columnFormatting)}`);
-    chk(() => !tbl.visual.objects.columnFormatting.some((x) => x.selector.metadata !== 'Sales.Product'), () => 'T6. table: the number columns keep their alignment (nothing written)');
+    chk(() => !tbl.visual.objects.columnFormatting.some((x) => !['Sales.Product', 'Sales.Row label: Product'].includes(x.selector.metadata)), () => 'T6. table: the number columns keep their alignment (nothing written; the row label right-aligned, as the writer\'s)');
     const tb = (v) => v.visual.objects.general[0].properties.paragraphs;
     chk(() => tb(p1.title)[0].horizontalTextAlignment === 'right' && tb(p1.title)[0].textRuns[0].value === 'نظرة على المبيعات', () => `T6. text box right-aligned, with the approved label: ${JSON.stringify(tb(p1.title))}`);
     chk(() => tb(p2.note2)[0].horizontalTextAlignment === 'center' && tb(p2.note2)[0].textRuns[0].value === 'Product details', () => `T6. a centred text box stays centred; an unlabelled text is kept: ${JSON.stringify(tb(p2.note2))}`);

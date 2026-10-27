@@ -19,7 +19,7 @@ import { createRequire } from 'node:module';
 import { modelOf, shownName } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF } from './model-script.mjs';
 import { calendarFor, frontValue, UNITS_AR } from './flip-cards.mjs';
-import { targetOf } from './status-icons.mjs';
+import { targetOf, kpiSaid } from './status-icons.mjs';
 import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
@@ -238,6 +238,7 @@ export function applyDax(files, o) {
 
   // 1. tables: a sparkline column (the table's first measure by month, only with a related date table) and a bullet bar
   //    for each measure the model names a target for
+  const exprTarget = [];   // (TW1, SQ15a-S2) the tables' measures whose KPI target is an expression
   visuals.filter((v) => v.j.visual.visualType === 'tableEx').forEach((v) => {
     const ms = measuresIn(v.j, 'Values');
     if (!ms.length) return;
@@ -252,6 +253,7 @@ export function applyDax(files, o) {
     if (uses.includes('bulletBar')) ms.forEach((x) => {
       if (!okName(x.t, x.m)) return;
       const target = targetOf(raw, x.t, x.m);
+      if (!target && kpiSaid(raw, x.t, x.m) && !exprTarget.some((y) => y.t === x.t && y.m === x.m)) exprTarget.push(x);
       if (!target || !okName(target.t, target.m)) return;
       cols.push({ use: 'bulletBar', t: x.t, want: x.m + SUFFIX.bulletBar, key: `${x.t}\u0000${x.m}`, expression: bulletDax(x.t, x.m, target, c), extra: { of: `${x.t}[${x.m}]`, target: `${target.t}[${target.m}]` }, shown: lang === 'ar' ? 'مقابل الهدف' : 'vs target',
         said: { page: v.page, measure: `${x.t}[${x.m}]`, target: `${target.t}[${target.m}]` } });
@@ -266,7 +268,9 @@ export function applyDax(files, o) {
     cols.forEach((x) => used[x.use].push(Object.assign({}, x.said, { column: `${x.t}[${x.name}]`, picture: `${sz.w} x ${sz.h}` })));
     put(v.path, v.j);
   });
-  if (uses.includes('bulletBar') && !used.bulletBar.length) notUsed.push({ use: 'bulletBar', why: 'no measure in the report\'s tables has a target the model\'s metadata names (a measure "<name> Target", "<name> Goal" or "<name> Budget")' });
+  // (0.3.1 TW1, SQ15a-S2) a measure whose KPI target is an expression is said so (status-icons.mjs kpiSaid), at most 10
+  if (uses.includes('bulletBar') && !used.bulletBar.length) notUsed.push({ use: 'bulletBar', why: 'no measure in the report\'s tables has a target the model\'s metadata names (a measure "<name> Target", "<name> Goal" or "<name> Budget")'
+    + exprTarget.slice(0, 10).map((x) => `; ${x.t}[${x.m}]: ${kpiSaid(raw, x.t, x.m).replace(/^; /, '')}`).join('') });
 
   // 2. KPI cards: each card of the KPI row becomes an Image visual of its DA.KpiCard measure (the card's box, name, tab
   //    stop, group and alt text kept)

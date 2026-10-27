@@ -139,6 +139,11 @@ try {
     chk(() => line && line.timeDir === want, () => `V1-S4d ${lang}. the written line chart over time reads ${want}: ${JSON.stringify(line && { cat: line.category, t: line.timeDir })}`);
     chk(() => !files0.some((f) => /"timeDir"|data-time/.test(typeof f.data === 'string' ? f.data : new TextDecoder().decode(f.data))), () => `V1-S4e ${lang}. nothing of the cue is in the written files`);
   }
+  // (TW1, SQ13-S1, red first) plan-lint's own build (the preview of a plan without exact files) turns the Arabic charts over
+  // time as create_report does (chartAxes, its default "mirrored")
+  { const m = loadModel('cal/M.SemanticModel', { root: ROOT }), design = planLayout({ layout: 'exec', lang: 'ar' }).design, b = get(() => PL.plannedReport({ m, tables: m.tables, design, lang: 'ar' }, { second: false }));
+    const f1 = b && b.files ? b.files.filter((f) => /^[^/]+\.Report\//.test(f.path)).map((f) => ({ path: f.path.replace(/^[^/]+\.Report\//, ''), data: f.data })) : [], pg = P.fromFiles(f1, { rtl: true })[0], line = pg ? pg.visuals.find((v) => v.type === 'lineChart') : null;
+    chk(() => line && line.timeDir === 'rtl', () => `SQ13-S1. plan-lint's Arabic page draws its line chart over time right to left, as create_report writes it: ${JSON.stringify(line ? { cat: line.category, t: line.timeDir } : b && (b.skipped || b.threw))}`); }
 }
 
 // ---------- L2-S1: a SWITCH's results, not its compared texts ----------

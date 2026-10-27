@@ -50,6 +50,12 @@ function dateTableShapes(m) {
 // the date tables (by shape) and every date column of the model, "Table.Column" (a continuous axis: T-2)
 export const dateTablesOf = (m) => dateTableShapes(m).map((t) => t.name);
 export const dateColumnsOf = (m) => (m ? [...new Set([].concat(...(m.tables || []).map((t) => (t.columns || []).filter(isDateCol).map((c) => t.name + '.' + c.name)), ...dateTableShapes(m).map((t) => t.dates.map((c) => t.name + '.' + c))))] : []);
+// (0.3.1 TW1, M1-S3: the twin kept a whole-number axis left to right while create_report reverses it) the columns a chart's
+// axis is continuous on, "Table.Column": the date columns above and every column the model types as a number, as the
+// writer's (pbip-export.js CONTINUOUS); the mirror reverses such an axis by categoryAxis.invertAxis. (The waterfall reads
+// a column's type from the model first, so a number here is never read as a date.)
+const NUMBER = /^(int64|double|decimal)$/i;
+export const continuousColumnsOf = (m) => (m ? [...new Set(dateColumnsOf(m).concat(...(m.tables || []).map((t) => (t.columns || []).filter((c) => NUMBER.test(String(c.dataType || ''))).map((c) => t.name + '.' + c.name))))] : []);
 
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");

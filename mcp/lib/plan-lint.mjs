@@ -67,7 +67,9 @@ function build(a, o) {
   });
   const r = Pbip.build({ name: 'Plan', title: o.title || 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
     theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
-    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages, gallery: !!a.gallery });
+    logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages, gallery: !!a.gallery,
+    // (0.3.1 TW1, SQ13-S1) a right-to-left page's charts turned as create_report turns them (its default, report-run.mjs)
+    chartAxes: a.chartAxes || 'mirrored' });
   return { r, pages, design };
 }
 /** The writer's report of a plan, in memory (0.3.0 step 2: the check's tests read it): { files, pages } or { skipped }. */

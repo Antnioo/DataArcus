@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { z } from 'zod';
 import { loadModel, visible, inside, nothingAt } from '../lib/model.mjs';
 import { folderSaid } from '../lib/plain-words.mjs';   // (0.3.1 R4A, T-9: the working folder by its path)
-import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook, lookFor, askedLook, withGlassPicture } from '../lib/design.mjs';
+import { clampHex, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, themeDesign, pageOf, contrastReport, lum, fileBase, buildTheme, isGlass, glassLook, lookFor, askedLook, withGlassPicture, lookWords } from '../lib/design.mjs';
 import { withPlan, freeName, folderFor } from '../lib/files.mjs';
 import { existingTheme } from '../lib/read-report.mjs';
 import * as Plans from '../lib/plans.mjs';
@@ -52,6 +52,7 @@ export function register(server, ctx) {
     const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme }));
     // (0.3.1 GD1) no look asked: the glass look, where it keeps everything readable (else plain, and why)
     const look = lookFor(design, askedLook(a.chart), 'theme');
+    lookWords(fromReport, Object.assign({ what: 'theme' }, look));   // (TW1, GL1-S2: the colours' words follow the look)
     const ref = m ? themeRef(m, a.path, reportTheme) : null;   // (R6, F07: null only for a theme made without a model)
     const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
     if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
