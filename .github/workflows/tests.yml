@@ -249,7 +249,7 @@ jobs:
   # required check needs it, and a failing suite here is reported by the mcp check, not this job.
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 90   # npm test under c8 in one job: 37-43 min on 27 Oct, over 60 with GD2's glass-twin suite (not a gate)
+    timeout-minutes: 180   # npm test under c8 in one job: 37-43 min before GD2; over 90 on 13afb3ab (cut at 91 min, run 40549772379); 180 so the next run measures it (not a gate)
     defaults:
       run:
         shell: bash
