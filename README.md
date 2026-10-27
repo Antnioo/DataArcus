@@ -24,8 +24,11 @@ them is uploaded), articles in English and Arabic, and the Power BI Desktop meas
 - **Automated tests on every change:** every website test suite (the list is `ALL` in `scripts/tests/run-all.mjs`)
   and the MCP's tests run on each pull request and push to main.
 - **Microsoft's own validator:** our test runs check the reports the tools write, on our sample models, with
-  Microsoft's report validator. The website's tools don't run it on the reports you make in your browser; the
-  DataArcus MCP runs it on your machine on each report before it is written, and in `check_report`.
+  Microsoft's report validator. The website's tools don't run it on the reports you make in your browser. The
+  DataArcus MCP runs it on your machine on each new report it plans with `plan_layout` (in English, Arabic or both)
+  before `create_report` writes it, and in `check_report`. A redesign, the Arabic twin, the English-Arabic copy and
+  the sample project are copies or fixed files and are not run through it before they are written: `check_report`
+  runs it on them afterwards.
 - **Measured in Power BI Desktop:** sizes, layouts and numbers are measured in Power BI Desktop, never estimated, and
   recorded with the version used.
 - **Sourced facts:** prices, dates and Microsoft claims are linked to their source and re-checked. The Gulf calendar's

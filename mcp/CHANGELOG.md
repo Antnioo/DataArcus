@@ -14,7 +14,8 @@ package's manifest; this file says what is in it.
   pages. A table that starts with a text column keeps its total row word: it is written as create_report writes its
   Arabic tables, «الإجمالي» on the total row through a report measure the plan names. A chart on a whole-number axis
   runs right to left as create_report's does, and a phone card title wraps its Arabic text by the same rule as
-  create_report. Also: the website's glass preview draws its table clear with banded rows, a plan from a theme with
+  create_report. A visual's shadow cast to one side (bottom right, say) is cast to the other side on the Arabic page;
+  a shadow at the bottom, top or centre stays. Also: the website's glass preview draws its table clear with banded rows, a plan from a theme with
   see-through visuals now says the new report is glass, the preview of an Arabic plan turns its time charts, a filter
   slot higher than wide never puts a slicer below its bottom (what does not fit is named), and the bullet bar says
   when a measure's target in the model is an expression.
@@ -42,9 +43,10 @@ package's manifest; this file says what is in it.
 - **The app's own approval prompt:** for an Arabic plan it is in Arabic with the English under each line, it names
   the report by the name it will really get, and each script is counted by its kind. An approved Arabic text now
   reaches a button whose English text has spaces around it, and the plan says where each language button is written.
-- **A redesign that cleans up evenly:** the rows of a redesigned page now sit exactly 16 apart and 16 from the
-  page's edges, so two rows never touch. Text boxes, shapes, images and custom visuals still stay where they are: the
-  rows keep 16 from them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy
+- **A redesign that cleans up evenly:** the rows of a redesigned page now sit 16 apart and 16 from the page's edges
+  on a 1280 x 720 page, a spacing that grows with the page's height (24 on a 1920 x 1080 page), so two rows never
+  touch. Text boxes, shapes, images and custom visuals still stay where they are: the rows keep the same spacing from
+  them, and the plan says when one of them keeps a row from the page's margin. A redesign of a copy
   keeps the copy's own name: "Gulf Retail Review native" becomes "Gulf Retail native redesigned", never the name the
   original's redesign gets; a long name that is already another report's gets a number.
 - **One text set for a report you built by hand:** check_report now says where visuals mix fonts or sizes ("visual
@@ -67,8 +69,9 @@ package's manifest; this file says what is in it.
   shows through every cell, and a banded table's every other row is a faint tint; the grid lines stay as visible as
   on solid cards. On a dark page the cards' shadow is stronger, so it shows.
 - **Glass by default:** new reports and themes now start in the glass look: the Theme Generator opens on it,
-  generate_theme gives it, and every new report create_report writes has it, with the soft page picture behind every
-  page. It is used only where every text stays readable: with colours where it can't (a pale brand colour, say), the
+  generate_theme gives it, and every new report planned with plan_layout and written by create_report has it, with
+  the soft page picture behind every page. Pages you place yourself (create_report's `pages`) take the theme you give,
+  see-through cards included, but no DataArcus page picture (your own picture if you give one). It is used only where every text stays readable: with colours where it can't (a pale brand colour, say), the
   report or theme is plain and the plan says why. The plain look is one choice away ("Plain" in the Theme Generator,
   `chart.look: "auto"` or `"plain"` for the tools). A report you already have keeps its own look: a redesign, the
   Arabic twin and the copy in English and Arabic don't change it.
@@ -76,7 +79,8 @@ package's manifest; this file says what is in it.
   the bilingual report, each Arabic page sits on its English page's soft picture mirrored left to right, with the same
   see-through cards, tables and colours. The approval page and the Theme Generator's preview now draw a glass report as
   it is written: the soft picture behind each page and the see-through cards. A glass theme made on its own carries
-  its soft picture as the page background, for reports DataArcus does not write.
+  its soft picture as the page background, for reports DataArcus does not write; whether Power BI Desktop draws a
+  theme's page picture is still to be measured.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
@@ -91,9 +95,11 @@ package's manifest; this file says what is in it.
   (off by default) and write one report with the English pages and, after them, each page's Arabic page, built the same
   way as the English-Arabic copy of a report: mirrored, language buttons on every page, slicer pairs kept in sync, the
   other language's pages hidden in the tabs. You approve the Arabic texts and field names in the plan.
-- **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws each Arabic page as
-  it will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
-  English page beside its Arabic page, with the language buttons. A title that won't fit its box is marked to check.
+- **See the Arabic pages before you approve them:** the approval page of an Arabic twin now draws its Arabic pages as
+  they will be written (mirrored, with the Arabic titles you approved), and for one report with both languages each
+  English page beside its Arabic page, with the language buttons: up to 12 pages (or 12 page pairs; the rest are
+  counted), tooltip pages not drawn. A title that won't fit its box is marked to check. When the pages can't be
+  drawn, the approval page says so; every page is still listed in the plan.
 - **The English-Arabic copy (one report with a language button):** the language buttons now always show their text, in
   the theme's text colour, even with a theme that draws every visual as a white card; the Arabic pages move through the
   keyboard right to left; an Arabic title that needs more room is widened into free space, and what can't fit is said;
@@ -114,9 +120,11 @@ package's manifest; this file says what is in it.
 - **Fixes only through approval:** the assistant is told never to edit a report's or a model's files itself; for a
   DataArcus report the checker names, for each finding, the DataArcus request that fixes it through a plan you approve.
   A test lists every place DataArcus writes a file and fails if a new one appears.
-- **Safety:** names in a model or a folder that ask the AI to call a tool, claim you already approved, point outside
-  your working folder or ask for your data's values are now flagged as instructions and never followed, including
-  ones written with look-alike letters. Ordinary names such as "Execute Time" are no longer hidden from the assistant.
+- **Safety:** DataArcus screens the names in a model or a folder for instructions by patterns: a name that asks the AI
+  to call a tool, claims you already approved, points outside your working folder or asks for your data's values is
+  now flagged, look-alike letters included. The screen is a heuristic and can miss an instruction worded another way;
+  DataArcus itself treats every name as data, and whatever an AI app does with a name, nothing is written before you
+  approve the plan. Ordinary names such as "Execute Time" are no longer hidden from the assistant.
 - A page filter on a column whose type a hand-edited model gives as an internal name is refused with the right reason.
 - **Working folders as people name them:** folders with Arabic names, spaces or long paths, and a working folder
   reached through a link, now work; the tests run on macOS too. Setup notes for Claude Code, VS Code and Cursor on

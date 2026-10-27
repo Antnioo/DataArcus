@@ -182,6 +182,17 @@
   // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
   // opts: { timeRightToLeft (default true), dateTables: [names], waterfallRtl ('native' | 'mirror', D7), waterfall, matrixRtl
   // (MATRIX_RTL: the lab's switch, M1) }. Returns { json (a new object), kind, changes }
+  // (0.3.1 CX2, TW1 Seen 2; the owner, D-1027-12 "twin identical") a container's shadow cast to one side is cast to the
+  // other: its preset's Left and Right swap (BottomRight -> BottomLeft); Top, Bottom and Center stay. A Custom angle is
+  // kept as it is (which way Desktop measures the angle is not measured yet). Any visual's container, custom ones too.
+  // Returns whether a preset turned
+  const SHADOW_SIDE = { Left: 'Right', Right: 'Left', TopLeft: 'TopRight', TopRight: 'TopLeft', BottomLeft: 'BottomRight', BottomRight: 'BottomLeft' };
+  function mirrorShadow(bag) {
+    let n = 0;
+    (entries(bag, 'dropShadow') || []).forEach((e) => { const p = isObj(e) ? strOf((e.properties || {}).preset) : null;
+      if (p != null && SHADOW_SIDE[p]) { e.properties.preset = str(SHADOW_SIDE[p]); n++; } });
+    return n > 0;
+  }
   function mirrorVisual(json0, W, opts) {
     const o = opts || {};
     if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
@@ -190,6 +201,7 @@
     const p = isObj(json.position) ? json.position : {};
     if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
     const v = json.visual;
+    if (isObj(v) && mirrorShadow(v.visualContainerObjects)) changes.push('shadow');
     if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
     // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
     const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
@@ -550,6 +562,7 @@
     if (!isObj(mobile0)) return mobile0;
     const mobile = clone(mobile0), p = mobile.position;
     if (isObj(p) && Number.isFinite(p.x) && Number.isFinite(p.width)) p.x = Math.max(0, round(PHONE_W - p.x - p.width));
+    mirrorShadow(mobile.visualContainerObjects);
     if (isObj(json) && kindOf(json) === 'textbox') paragraphsOf(mobile).forEach((para) => { if (para.horizontalTextAlignment !== 'center') para.horizontalTextAlignment = 'right'; });
     return mobile;
   }

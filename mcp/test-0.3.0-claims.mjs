@@ -82,7 +82,9 @@ check(/Report files checked with Microsoft's format validator/.test(home.en) && 
 const rootReadme = flat('../README.md');
 check(!/\(findings\/\)/.test(rootReadme), 'W2-2. README.md links findings/, a folder that does not exist');
 check(!/\b\d+ website test suites\b/.test(rootReadme), 'W2-2. README.md gives a website suite count that goes stale');
-check(/DataArcus MCP runs it on your machine on each report before it is written/.test(rootReadme), 'W2-2. README.md keeps the wave\'s validator sentence');
+// (changed on purpose, 0.3.1 CX2, Codex's F13: the twin and the EN-AR copy are not run through the validator before
+// they are written) the sentence names the route it runs on and the ones it does not
+check(/runs it on your machine on each new report it plans with `plan_layout`/.test(rootReadme) && /the Arabic twin, the English-Arabic copy/.test(rootReadme) && /not run through it before/.test(rootReadme), 'W2-2. README.md keeps the wave\'s validator sentence, naming where it runs before the write and where not (CX2 F13)');
 const spec = flat('./PRODUCT_SPEC.md');
 check(/## The 11 tools/.test(spec) && !/The 6 tools/.test(spec), 'W2-3. PRODUCT_SPEC.md says 6 tools (0.3.0 has 11)');
 for (const t of ['approve_plan', 'add_gulf_calendar', 'read_report', 'check_report', 'create_arabic_twin']) check(new RegExp('\\| `' + t + '` \\|').test(spec), `W2-3. PRODUCT_SPEC.md's tool table has no ${t} row`);
@@ -180,7 +182,8 @@ check(/`mcp\/skills-packaging\/`/.test(mreadme) && /[Nn]ot published yet/.test(m
 check(/`lens: "arabic"`/.test(row('check_report')) && /writes nothing/.test(row('check_report')), 'D5-P1. PRIVACY.md\'s check_report row does not say what the Arabic lens returns and that it writes nothing');
 check(/`languages: "en\+ar"`/.test(pl) && /`bilingual`/.test(pl) && /`sample`/.test(pl), 'D5-P2. PRIVACY.md\'s plan_layout row does not name languages "en+ar" (bilingual) and the sample');
 check(/`sample: true`/.test(cr) && /made-up/.test(cr) && /never a row/.test(cr) && /`languages: "en\+ar"`/.test(cr), 'D5-P3. PRIVACY.md\'s create_report row does not say the sample writes a made-up project (never a row in the answer) and what languages "en+ar" returns');
-check(/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
+// (changed on purpose, 0.3.1 CX2, Codex's F06: the approval page draws at most 12 pages or pairs)
+check(/draws up to 12 Arabic pages/.test(pv) && !/draws each Arabic page/.test(pv) && /the same `\.mcpb`/.test(pv), 'D5-P4. PRIVACY.md does not say the approval page draws the twin\'s Arabic pages on your computer, nor that the plugin installs the same .mcpb');
 check(/Checked against 0\.3\.1/.test(pv.slice(0, 600)), 'D5-P5. PRIVACY.md\'s header is not checked against 0.3.1');
 // D5-S PRODUCT_SPEC.md: 0.3.1's three options said, and the platforms as the release says them
 check(/0\.3\.1/.test(spec) && /`lens: "arabic"`/.test(spec) && /`languages: "en\+ar"`/.test(spec) && /`sample: true`/.test(spec), 'D5-S1. PRODUCT_SPEC.md says nothing of 0.3.1 (the Arabic lens, languages "en+ar", the sample)');
@@ -446,6 +449,36 @@ for (const [k, t] of [['articleAr', GC.articleAr], ['articleTr', arHalf(GC.artic
   // A2-S7 the package's description names no list of tools (it had four of eleven)
   const desc = JSON.parse(read('./package.json')).description;
   check(!/suggest fields|create a report project/.test(desc) && !/:/.test(desc) && !/\b(first|only|official|free)\b/i.test(desc), `SQ9 A2-S7. mcp/package.json's description lists tools (or says first/only/official/free): "${desc}"`);
+}
+
+// (0.3.1 CX2, Codex's release review of 27 Oct: each public sentence it found too strong, said as it is, EN and AR;
+// written red first on 2e912e2) the release notes and both public lists (power-bi-mcp, one source: beta-page.js)
+{
+  const box = { window: {} }; (await import('node:vm')).runInNewContext(read('../assets/js/translations/beta-page.js'), box);
+  const N = (l) => (((box.window.betaPageTranslations || {})[l] || {}).beta || {}).new31 || {}, en = N('en'), ar = N('ar');
+  const cl = flat('./CHANGELOG.md'), un = cl.slice(cl.indexOf('## [Unreleased]'), cl.indexOf('## [', cl.indexOf('## [Unreleased]') + 5));
+  const pages = [EN.html, AR.html];
+  // F05: glass for reports DataArcus plans; hand-placed pages and a theme used alone said as they are
+  check(!/every new report create_report writes has it/.test(un) && /planned with plan_layout/.test(un) && /Pages you place yourself/.test(un) && /still to be measured/.test(un), 'CX2-F05. CHANGELOG: glass on "every new report"; hand-placed pages and a theme used alone not said');
+  check(/New reports DataArcus plans/.test(en.l9) && /Pages you place yourself/.test(en.l9) && /still to be measured/.test(en.l9), `CX2-F05. beta-page en new31.l9: "${String(en.l9).slice(0, 160)}"`);
+  check(/التقارير الجديدة التي يخطط لها DataArcus/.test(ar.l9) && /الصفحات التي تضعها بنفسك/.test(ar.l9) && /لم نقس بعد/.test(ar.l9), 'CX2-F05. beta-page ar new31.l9 says the same as the English');
+  // F06: up to 12 pages or pairs, tooltip pages not drawn, a failure said
+  check(!/draws each Arabic page/.test(un) && /up to 12 pages/.test(un) && /tooltip pages not drawn/.test(un) && /can't be drawn, the approval page says so/.test(un), 'CX2-F06. CHANGELOG: "each Arabic page" (at most 12 drawn; tooltips not; a failure said)');
+  check(!/draws each Arabic page/.test(en.l4) && /up to 12 pages or page pairs/.test(en.l4) && /tooltip pages are not drawn/.test(en.l4) && /can't be drawn, the approval page says so/.test(en.l4), `CX2-F06. beta-page en new31.l4: "${String(en.l4).slice(0, 200)}"`);
+  check(/حتى 12 صفحة/.test(ar.l4) && /صفحات التلميح/.test(ar.l4) && /تعذّر رسم الصفحات/.test(ar.l4), 'CX2-F06. beta-page ar new31.l4 says the same as the English');
+  // F07: 16 on a 1280 x 720 page, scaled with the page
+  check(!/exactly 16/.test(un) && /16 from the page's edges on a 1280 x 720 page/.test(un) && /24 on a 1920 x 1080 page/.test(un), 'CX2-F07. CHANGELOG: "exactly 16" (the grid scales with the page: redesign.mjs gridPage)');
+  // F09: a pattern screen, a heuristic; names are data; nothing written before the person approves
+  check(!/flagged as instructions and never followed/.test(un) && /by patterns/.test(un) && /heuristic/.test(un) && /nothing is written before you approve/.test(un), 'CX2-F09. CHANGELOG: names "flagged and never followed" (a pattern screen that misses paraphrases)');
+  check(!/never followed/.test(en.l8) && /by patterns/.test(en.l8) && /heuristic/.test(en.l8) && /nothing is written before you approve/.test(en.l8), `CX2-F09. beta-page en new31.l8: "${String(en.l8).slice(0, 200)}"`);
+  check(!/لا تُتّبع أبدًا/.test(ar.l8) && /بأنماط/.test(ar.l8) && /تقديري/.test(ar.l8) && /لا يُكتب شيء قبل موافقتك/.test(ar.l8), 'CX2-F09. beta-page ar new31.l8 says the same as the English');
+  // the two pages carry the source's sentences
+  check(pages[0].includes('Names screened for instructions') && pages[0].includes('up to 12 pages or page pairs') && pages[0].includes('Pages you place yourself') && !pages[0].includes('is flagged and never followed'), 'CX2. power-bi-mcp/index.html does not carry the new sentences of new31 (l4, l8, l9)');
+  check(pages[1].includes('فحص الأسماء بحثًا عن التعليمات') && pages[1].includes('حتى 12 صفحة') && pages[1].includes('الصفحات التي تضعها بنفسك') && !pages[1].includes('يُعلَّم ولا يُتّبع أبدًا'), 'CX2. ar/power-bi-mcp/index.html does not carry the new sentences of new31 (l4, l8, l9)');
+  // the headline rules: no "first", "only", "official", "free", "blur" in a changed headline
+  check(['l4', 'l8', 'l9'].every((k) => !/\b(first|only|official|free|blur)\b/i.test((String(en[k]).match(/<strong>(.*?)<\/strong>/) || [])[1] || '')), 'CX2. a changed new31 headline says first, only, official, free or blur');
+  // the shadow (TW1 Seen 2) in the twin's release line
+  check(/shadow cast to one side/.test(un), 'CX2. CHANGELOG: the twin\'s mirrored shadow is not said');
 }
 
 if (problems.length) { console.log(`FAIL  0.3.0-claims  ${checks} checks, ${problems.length} failed`); problems.forEach((p) => console.log('      - ' + p)); process.exit(1); }
