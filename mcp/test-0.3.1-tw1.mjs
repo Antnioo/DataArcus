@@ -54,13 +54,13 @@ try {
     chk(() => m && m.dataType === 'Text' && /ISINSCOPE \( 'Sales'\[Product\] \)/.test(m.expression) && m.expression.includes('"الإجمالي"') && /NOT ISBLANK \( 'Sales'\[Total Sales\] \) \|\| NOT ISBLANK \( SUM \( 'Sales'\[Amount\] \) \)/.test(m.expression),
       () => `T3. the twin's reportExtensions.json holds the row label, the writer's DAX (rowLabelDax: «الإجمالي» on the total row, blank where the numbers are): ${JSON.stringify(m || ext).slice(0, 500)}`);
     chk(() => !fs.existsSync(path.join(D, DEF, 'reportExtensions.json')), () => 'T4. the original report is not changed (no reportExtensions.json written there)');
-    const said = (p.j && p.j.tables) || {};
-    chk(() => (said.rowLabels || []).length === 1 && said.rowLabels[0].measure === 'Sales[Row label: Product]' && /الإجمالي/.test(said.how) && /Say it in the plan/.test(said.sayInPlan), () => `T5. the plan says the table's total row word and the measure: ${JSON.stringify(said).slice(0, 400)}`);
+    const said = ((p.j && p.j.mirrors) || []).find((x) => x.kind === 'table') || {};
+    chk(() => /«الإجمالي» on its total row/.test(said.what) && /Row label/.test(said.what), () => `T5. the plan says the table's total row word and the measure (mirrors): ${JSON.stringify(said).slice(0, 400)}`);
     // a guard: a table whose first column is a number of the model (Year, int64) keeps the mirrored columns, no row label
     const D2 = fresh('t2'), f = path.join(D2, DEF, 'pages/p2details/visuals/tblProducts/visual.json'), j = rd(f);
     j.visual.query.queryState.Values.projections[0] = { field: { Column: { Expression: { SourceRef: { Entity: 'Calendar' } }, Property: 'Year' } }, queryRef: 'Calendar.Year', nativeQueryRef: 'Year' }; wr(f, j);
     const P2 = planTwin({ path: 't2/Twin Sales.pbip', arabicMonth: false }), r2 = get(() => builtVisual(P2, 'p2details', 'tblProducts').visual.query.queryState.Values.projections.map((x) => x.queryRef));
-    chk(() => JSON.stringify(r2) === JSON.stringify(['Sales.Total Sales', 'Sum(Sales.Amount)', 'Calendar.Year']) && !P2.answer.tables, () => `T6. guard: a number first keeps the mirrored columns and no row label: ${JSON.stringify(r2)}`);
+    chk(() => JSON.stringify(r2) === JSON.stringify(['Sales.Total Sales', 'Sum(Sales.Amount)', 'Calendar.Year']) && !P2.built.tables.length, () => `T6. guard: a number first keeps the mirrored columns and no row label: ${JSON.stringify(r2)}`);
   }
 
   // ---------- A: M1-S3, a whole-number continuous axis ----------

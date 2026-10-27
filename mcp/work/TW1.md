@@ -36,7 +36,7 @@
 | Item | Before | After | Test |
 |---|---|---|---|
 | M1-S1 | the twin's Arabic text boxes had background, border, shadow off; the English kept the theme's panel | the same panel both sides (mirrored like every visual); parity compares panels too | en-ar-copy X1, parity W textbox |
-| M1-S2 | columns reversed, a number first: no total word | the text column first and hidden, numbers mirrored, `Row label: <Column>` at the right (the writer's DAX, «الإجمالي»), in the twin's own reportExtensions.json; the plan says it (`tables`; the bilingual answer one line, `totalRows`); fitHeaders treats the row label as the text column; the Arabic lens does not flag the shape | tw1 T1-T6, parity W table order, rc24 T-4, arabic-lens C1 |
+| M1-S2 | columns reversed, a number first: no total word | the text column first and hidden, numbers mirrored, `Row label: <Column>` at the right (the writer's DAX, «الإجمالي»), in the twin's own reportExtensions.json; the plan says it in `mirrors` (`KIND_WHAT.table`; the bilingual answer one line, `totalRows`); fitHeaders treats the row label as the text column; the Arabic lens does not flag the shape | tw1 T1-T6, parity W table order, rc24 T-4, arabic-lens C1 |
 | M1-S3 | Calendar[Year] (int64) axis left to right in the twin | `categoryAxis.invertAxis` as create_report (continuous columns: dates and numbers) | tw1 A1-A2 |
 | SQ4-S2 | the English phone title's wrap kept | the writer's rule (`phoneCardFit`): two lines with titleWrap and the two-line fit, else one line; the approved text never cut | tw1 P0-P3 |
 | GL2-S2 | header filled with the accent, no band | header clear in the text colour, odd rows `gl.table.band` | theme-generator (EN, AR) |
@@ -58,21 +58,26 @@ Full run: see the line below (after the last code commit).
   one line and Power BI ends it with "…"; the approved Arabic is never cut by DataArcus. Only a card whose name changed.
 - Item 4's rule moved into `pbip-sizing.js` (`phoneCardFit`); `pbip-page.js` calls it: golden unchanged.
 - Item 8 keeps the first slicer even when the slot is shorter than a dropdown needs (as the strip keeps one 24 wide).
-- The bilingual (EN-AR) answer gets one line (`totalRows`), not the full `tables` entry: the full one pushed that
-  answer over its cap and dropped its `cannot` list (bilingual-report B5f went red); see Seen 1.
+- The plan says the table shape in `mirrors` (`Mirror.KIND_WHAT.table`, one clause), not in a field of its own: a
+  `tables` field (307 characters) took room from the twin's answer, so `twinFit` paged one more text out and which
+  title landed on the second page followed the random visual ids (terminology-sheet TS-2b failed 2 runs in 4; with
+  the clause, 5 of 5 pass). The bilingual (EN-AR) answer gets one line (`totalRows`); the full entry there dropped its
+  `cannot` list (bilingual-report B5f); see Seen 1.
 
 ## For the owner
 none
 
 ## Risky changes
-- What an answer returns: the twin's plan gains `tables` (the row labels, at most 60); the bilingual answer `totalRows`;
+- What an answer returns: the twin's `mirrors` line for tables says the total row word; the bilingual answer `totalRows`;
   plan_layout and generate_theme give `glassVisuals` instead of `solidVisuals` under glass; create_report's
   `leftOutVisuals` can say "too short"; the bullet bar's notUsed can name a measure. The twin's plan loses `textBoxes`.
 - File writing: the twin's own reportExtensions.json can now hold `Row label: ...` measures (it already held title,
   text and waterfall measures); built at plan time, so the approved plan's files are exactly what is written
   (twin-artifact passes). The original report and the model are never changed (tw1 T4).
 - Tests that lose checks: none lose a check; rc24 T-4 no longer counts a hidden (width 0) column (no header to fit);
-  en-ar-copy X1 now asserts the opposite of R1's item 4 (the owner's "identical").
+  en-ar-copy X1 now asserts the opposite of R1's item 4 (the owner's "identical"); test.mjs T6 (test-0.3.0-twin.mjs,
+  the reviewer's CI find on 843dd3c): the twin's table is now create_report's right-to-left table, not plain reversed
+  columns (on purpose, item 2), and the row label's right alignment is allowed.
 
 ## For the laptop
 Part 3 of 0.3.1, one sitting: one glass report and its twin side by side, EN and AR, every page.
@@ -97,5 +102,6 @@ Part 3 of 0.3.1, one sitting: one glass report and its twin side by side, EN and
 ## Lessons for the reviewer
 - `git stash push -- <file>` after a commit compares with HEAD, not the base: to prove red on the base, stash before the
   code commit or check out the base file.
-- A new field in a capped answer can drop another field silently (Seen 1): run the bilingual suite after any twin
-  answer change.
+- A new field in a capped answer can drop another field silently (Seen 1) or page a list sooner (TS-2b, flaky by the
+  random ids): after any twin answer change, run terminology-sheet and bilingual-report several times.
+- My first full run went to the background and stopped with the idle session: run it in the foreground.

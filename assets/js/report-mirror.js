@@ -77,7 +77,7 @@
     waterfallTime: 'waterfall charts over time, kept left to right as asked (timeRightToLeft false): still waterfalls, their order as it is, the value axis at the right',
     waterfallKept: 'waterfall charts the running total can\'t follow (a breakdown, a sort by the value, a text category with no order): A waterfall reads left to right in Power BI: its order is not mirrored (kept a waterfall, left to right, the value axis at the right)',
     bar: 'bar charts: names at the right, bars growing from the right',
-    table: 'tables: columns in reverse order (the first at the right), text columns right-aligned',
+    table: 'tables: columns in reverse order (the first at the right), text columns right-aligned; one led by a text column says «الإجمالي» on its total row, as create_report\'s (a "Row label" measure)',
     matrix: 'matrices: values in reverse order (rows keep their order)',
     newCard: 'new cards: values in reverse order, right-aligned (one value too), their inner margins swapped',
     textbox: 'text boxes: right-aligned (centred kept)',
