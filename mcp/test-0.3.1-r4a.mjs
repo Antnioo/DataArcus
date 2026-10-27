@@ -66,11 +66,6 @@ const S = await import('./lib/sample-project.mjs');
   const worth = Array.from({ length: 14 }, (_, i) => ({ origin: 'lint', rule: 'BAR_FIT', severity: 'note', guess: true, page: { n: 1 }, place: `the bar chart ${i + 1}`, what: `item ${i + 1}`, fix: 'none' }));
   const cs = PlanLint.checkSummary({ summary: '0 problems Power BI Desktop would show, 14 more worth a look', desktop: 0, worth: 14, problems: [], worthALook: worth }, 8);
   chk(() => (cs.worthALookItems || []).length === 14 && !cs.worthALookMore, () => `C5. 14 worth a look: 14 items listed: ${(cs.worthALookItems || []).length} ${cs.worthALookMore}`);
-  // C5b the planned report's check leaves DataArcus's own "no data" cards out of "worth a look"
-  const own = { origin: 'lint', rule: 'COVER_CARDS', severity: 'note', guess: false, page: { n: 1 }, what: 'x', fix: 'none' };
-  const cs2 = PlanLint.checkSummary({ summary: 's', desktop: 0, worth: 1, problems: [], worthALook: [own] }, 8);
-  chk(() => !(cs2.worthALookItems || []).length && !/worth a look/.test(cs2.summary || ''), () => `C5b. the cards over a chart are not "worth a look" on DataArcus's own page: ${J(cs2)}`);
-
   // C6-C7 CS1's text lines on the redesign's page: no "X -> X", plain class names, "set to" / "removed"
   const shown = { original: 'Sales', newReport: 'Sales redesign', pages: [{ page: 'Overview', changes: [{ visual: 'v1', type: 'clusteredBarChart', text: [
     { class: 'largeTitle', property: 'fontFamily', from: 'Segoe UI', to: 'Segoe UI' }, { class: 'largeTitle', property: 'fontSize', from: '14pt', to: '12pt' }, { class: 'largeTitle', property: 'bold', from: 'bold', to: 'the theme\'s' }] }] }],
@@ -142,13 +137,17 @@ try {
   chk(() => !w2.err && w2.j.exact && w2.j.exact.digest === p2.pl.j.exactCheck.digest, () => `A3. the listed slicers (asked + added) write the approved files: ${short(w2)}`);
   const s1 = slicersOf(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A One.Report')), s2 = slicersOf(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A Two.Report'));
   chk(() => s1.length === 3 && J(s1) === J(s2) && J(s1) === J(listed.slice().sort()), () => `A4. both reports bind the same 3 slicers, the plan's list: ${J(s1)} ${J(s2)} ${J(listed)}`);
-  // A5 any other list is refused, nothing written
+  // A5 any other list is refused, nothing written (a fourth slicer: the schema's limit of 3 refuses it first)
   const p3 = await plan('R4A Three'); if (p3.id) await approve(p3.id);
   const other = await write(p3, asked.concat(['Products[Category]'])), four = await write(p3, listed.concat(['Products[Category]'])), alone = await write(p3, added);
-  chk(() => [other, four, alone].every((x) => x.err && /Nothing was written/.test(x.t)) && !fs.existsSync(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A Three.pbip')),
+  chk(() => [other, alone].every((x) => x.err && /Nothing was written/.test(x.t)) && four.err && /Nothing was written|at most 3|<=3 items/.test(four.t) && !fs.existsSync(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A Three.pbip')),
     () => `A5. another slicer, a fourth, the added one alone: refused, nothing written: ${short(other)} | ${short(four)} | ${short(alone)}`);
   chk(() => /Products\[Category\]/.test(other.t) && /pass fields\.slicers/.test(other.t), () => `B4. the refusal names the slicer the plan doesn't hold and the list to pass: ${short(other)}`);
 
+  // C5b the check of DataArcus's own report (as before a write) counts its "no data" cards and never lists them as worth a look
+  const repFiles = []; { const top = path.join(ROOT, S.SAMPLE_FOLDER); const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else repFiles.push({ path: path.relative(top, f).split(path.sep).join('/'), data: fs.readFileSync(f, 'utf8') }); }); if (fs.existsSync(path.join(top, 'R4A One.Report'))) rec(path.join(top, 'R4A One.Report')); }
+  const own = repFiles.length ? LC.checkProject(repFiles, {}) : { counts: {}, worthALook: [{ rule: 'none read' }] };
+  chk(() => own.counts.COVER_CARDS > 0 && !own.worthALook.some((f) => f.rule === 'COVER_CARDS') && !/no data/.test(JSON.stringify(own.worthALook)), () => `C5b. the "no data" cards are counted, not listed as worth a look: ${J({ counts: own.counts, worth: own.worthALook })}`);
   // C2b the plan answer's kind changes carry the plain words beside the measured why
   const ph = await w.call('plan_layout', { path: 'health', name: 'J11', layout: 'exec', secondPage: false }), ks = (ph.j && ph.j.kindChanges && ph.j.kindChanges.slots) || [];
   chk(() => ks.length && ks.every((x) => typeof x.said === 'string' && !NUMBERS.test(x.said) && typeof x.why === 'string'), () => `C2b. the plan's kind changes: said (plain) and why (measured): ${J(ks)}`);

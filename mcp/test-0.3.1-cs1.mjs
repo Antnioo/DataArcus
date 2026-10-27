@@ -194,7 +194,7 @@ try {
       let link = ''; for (let k = 0; k < 100 && !link; k++) { await sleep(50); link = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean)[0] || '' : ''; }
       const page = await get(link); answers.push(page);
       chk(() => /Text set/.test(page) && /visual titles/.test(page) && /14pt/.test(page) && /Settings removed/.test(page) && /37/.test(page), () => `T10. the approval page shows the text set and the count removed: ${page.slice(0, 600)}`);
-      chk(() => /its own text settings removed/.test(page) && /largeTitle fontSize 11pt -&gt; 14pt|largeTitle fontSize 11pt -> 14pt/.test(page) && /DataArcusText\.json/.test(page), () => 'T10. each removal listed with its visual (largeTitle fontSize 11pt -> 14pt), and the theme added');
+      chk(() => /its text, from the theme/.test(page) && /visual titles: size set to 14pt \(was 11pt\)/.test(page) && /DataArcusText\.json/.test(page), () => 'T10. each removal listed with its visual (visual titles: size set to 14pt (was 11pt); R4A: in plain words), and the theme added');
     } finally { await wsrv.close(); }
   } finally { await s.close(); }
 

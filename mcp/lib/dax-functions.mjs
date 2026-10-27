@@ -20,6 +20,7 @@ import { modelOf, shownName } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf, functionLines, compatOf, COMPAT_UDF } from './model-script.mjs';
 import { calendarFor, frontValue, UNITS_AR } from './flip-cards.mjs';
 import { targetOf } from './status-icons.mjs';
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
@@ -329,7 +330,7 @@ export function compatSaidAr(compat) {
 }
 
 /** How the user applies the script, for the answer. */
-export const daxHow = (file, compat) => `${compatSaid(compat)} Then apply the script: it is in the file "${file}", next to the project. Open it in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (the DA.* functions and new measures only, in the folder "${FOLDER}"; nothing changed or replaced), then Apply${compat != null && compat >= COMPAT_UDF ? '' : '. Power BI Desktop asks for the compatibility upgrade at Preview and again at Apply: accept it both times (its prompt names only the first function, "... needed for [function DA.Sparkline]", but the upgrade is for the whole script)'}. The model is not changed by DataArcus. Each KPI card, story title and table picture column shows an error until you apply the script.`;
+export const daxHow = (file, compat, dir) => `${compatSaid(compat)} Then apply the script: it is in the file "${file}", ${besideSaid(dir)}. Open it in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (the DA.* functions and new measures only, in the folder "${FOLDER}"; nothing changed or replaced), then Apply${compat != null && compat >= COMPAT_UDF ? '' : '. Power BI Desktop asks for the compatibility upgrade at Preview and again at Apply: accept it both times (its prompt names only the first function, "... needed for [function DA.Sparkline]", but the upgrade is for the whole script)'}. The model is not changed by DataArcus. Each KPI card, story title and table picture column shows an error until you apply the script.`;
 
 // (AF1, the release audit's F11) the model's and the report's names in what daxSaid returns (Table[Measure], the source
 // columns, the pages, a chart's own title): through the one screen, withheld when one reads like an instruction; the

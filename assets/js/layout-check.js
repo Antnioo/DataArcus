@@ -108,7 +108,7 @@
             add('AXIS_TEXT_TIME_UNSORTED', many(f.name) ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is sorted by this text itself)' : ''}${many(f.name) ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
               'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', true);   // (R7: a time field known by the words of its name: a guess)
           else if (m && m.type === 'unknown' && !m.sortBy)
-            add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `${refOf(f)} has no type in the model's files (a column of a DAX table) and no sort-by column: if it holds text, the axis runs in alphabetical order`, 'check its type; order the chart by the earliest date of each label, or give the column a sort-by column in the model', true);
+            add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `If ${refOf(f)} holds text, the chart shows it in alphabetical order (April, August, December...), not in time order`, 'in Power BI Desktop, check that the chart runs in time order; if not, select the column and choose Column tools > Sort by column, then its date or month number', true);   // (R4A, round 4: a column of a DAX table has no type in the model's files; said plainly)
           else if (!m && !hasModel) add('AXIS_TIME_UNKNOWN', 'note', p, x, `${refOf(f)} is named like a time field, and without the model its type and sort-by column cannot be known`, 'make sure it is a date, or a text column with a sort-by column', true);
         }
         // (a2) a blank on the axis (O-3): only when the blank count is known (facts), never guessed
@@ -158,7 +158,8 @@
         const share = ox * oy / Math.max(1, Math.min(A.w * A.h, B.w * B.h));
         if (share > V('OVERLAP_SHARE')) add('OVERLAP', share > V('OVERLAP_HIGH') ? 'high' : 'medium', p, A, `covers ${Math.round(share * 100)}% of the smaller of it and ${where(B)}`, 'move one of the two, or show them one at a time with bookmarks when they are alternatives', false);
       }
-      if (covers) add('COVER_CARDS', 'note', p, null, `${covers} card(s) sit on another visual at the same place (the "no data" message pattern), not counted as overlaps`, 'none, when that is meant', false);
+      // (0.3.1 R4A, round 4's problem 8: "the 'no data' message pattern" read as a fault) said as what it is: meant
+      if (covers) add('COVER_CARDS', 'note', p, null, covers === 1 ? 'a card laid over a chart shows a message when the chart has no data: this is meant' : `${covers} cards laid over charts each show a message when their chart has no data: this is meant`, 'nothing to do', false);
     }
     const rank = { high: 0, medium: 1, note: 2 };
     findings.sort((a, b) => rank[a.severity] - rank[b.severity]);
@@ -324,7 +325,9 @@
       visual: f.visual ? `${f.visual.type} at ${Math.round(f.visual.x)},${Math.round(f.visual.y)} ${Math.round(f.visual.w)}x${Math.round(f.visual.h)}` : null, what: f.what, fix: f.fix },
       f.visual ? { place: placeOf(f.visual, f.page && pageOf.get(f.page.id)) } : {}));
     const lints = L.findings.map((f) => Object.assign({ origin: 'lint', rule: f.rule, severity: f.severity, guess: f.guess, page: f.page, visual: f.visual, what: f.why, fix: f.fix }, f.place ? { place: f.place } : {}));
-    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f));
+    // (0.3.1 R4A, round 4's problem 8) a generated project's cards over its charts are DataArcus's own "no data" pattern:
+    // counted, never listed as worth a look
+    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f) && f.rule !== 'COVER_CARDS');
     const counts = {}; all.forEach((f) => { counts[f.rule] = (counts[f.rule] || 0) + 1; });
     const r = { pages: inv.pages.length, visuals: inv.pages.reduce((n, p) => n + p.visuals.length, 0), desktop: problems.length, worth: worthALook.length, problems, worthALook, counts, ran: ruled.ran.concat(Object.keys(LINT_RULES)), failed: ruled.failed, modelRead: L.modelRead };
     r.summary = summaryOf(r, lang);

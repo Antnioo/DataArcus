@@ -11,6 +11,7 @@
 import { createRequire } from 'node:module';
 import { readsLikeInstruction, modelOf } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L3)
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js');
@@ -227,4 +228,4 @@ export function flipScript(measures, seed) {
 /** How the user applies the script, for the answer and the plan. */
 // (0.3.0 F1, the laptop proof on Desktop 2.159) what each card shows before the script is applied: Power BI's own message
 export const BEFORE_APPLIED = 'each card shows Power BI\'s own message "Data shapes must contain at least one group or calculation that outputs data" (its measures are not in the model yet)';
-export const flipHow = (file) => `Apply the script first: the flip cards show their pictures only once the model has the measures. The script is in the file "${file}", next to the project. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Then click a card to turn it (Ctrl+click while editing; a plain click in reading view and in the service). Until the script is applied ${BEFORE_APPLIED}.`;
+export const flipHow = (file, dir) => `Apply the script first: the flip cards show their pictures only once the model has the measures. The script is in the file "${file}", ${besideSaid(dir)}. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Then click a card to turn it (Ctrl+click while editing; a plain click in reading view and in the service). Until the script is applied ${BEFORE_APPLIED}.`;

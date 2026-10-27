@@ -14,7 +14,8 @@ import { createRequire } from 'node:module';
 import { writesNote, writesNoteAr } from './answers.mjs';   // (R5, F04: the answers file DataArcus wrote is replaced, and said)
 import { E } from './design.mjs';             // (D6: the written colour's own contrast, by the engine's rule)
 import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
-import { scriptIs, APPLY_STEPS, SCRIPT_IS_AR, APPLY_STEPS_AR } from './plain-words.mjs';   // (0.3.0 T1, T-4)
+import { scriptIs, APPLY_STEPS, SCRIPT_IS_AR, APPLY_STEPS_AR, folderSaid } from './plain-words.mjs';   // (0.3.0 T1, T-4)
+import { CLASSES as TEXT_CLASSES } from './text-format.mjs';   // (0.3.1 R4A: a text class in words, never its key)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
@@ -134,13 +135,13 @@ const WORDS = {
   en: { ask: 'Approve: ', lead: 'DataArcus asks before it writes anything. Nothing has been written yet. Check the plan, then approve it or not.', approve: 'Approve', notNow: 'Not now',
     preview: 'What the report will look like', previewNote: 'A preview drawn from the plan: where each visual goes, its type and its title. The grey shapes are placeholders, not your data: DataArcus reads the files on your computer to check them, and never returns data values to Claude.',
     page: 'Page', enPage: 'English page', arPage: 'Arabic page', toCheck: 'to check', notDrawn: (n, pairs) => `${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan above lists every page.`, checked: 'Checked before writing', worth: 'Worth a look', checkNote: 'The measured rules of what Power BI Desktop draws and the layout check, run on the planned pages (structure only, never data). The report is checked again when it is written.',
-    files: 'Files that will be written', yours: 'The files you asked for:', all: (n) => `All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'About the script',
+    files: 'Files that will be written', counts: 'The files, counted by kind', yours: 'The files you asked for:', all: (n) => `All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'About the script',
     roles: { report: 'the report: open it in Power BI Desktop', script: 'the script: see "About the script" below', theme: 'the theme file: in Power BI Desktop, View > Themes > Browse for themes' },
     plan: (id) => `Plan ${id}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.` },
   ar: { ask: 'موافقة: ', lead: 'يطلب DataArcus موافقتك قبل أن يكتب أي شيء. لم يُكتب أي شيء بعد. راجع الخطة، ثم وافق عليها أو لا.', approve: 'موافقة', notNow: 'ليس الآن',
     preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
     page: 'الصفحة', enPage: 'الصفحة الإنجليزية', arPage: 'الصفحة العربية', toCheck: 'للفحص', notDrawn: (n, pairs) => `لم تُرسم هنا ${n} ${pairs ? 'من أزواج الصفحات' : 'من الصفحات'} أخرى (ترسم المعاينة ${PREVIEW_PAGES_MAX} على الأكثر) · ${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan lists every page.`, checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
-    files: 'الملفات التي ستُكتب', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
+    files: 'الملفات التي ستُكتب', counts: 'الملفات معدودة حسب النوع', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
     // (T2: the page's title stayed English on an Arabic page) the titles per plan kind
     titles: { report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات مختلَقة)', columns: 'سكربت أعمدة التقويم العربية' },
@@ -170,6 +171,25 @@ export function kindsLine(paths, kind, ar) {
   if (scripts) parts.push(ar ? `السكربتات: ${scripts}` : en(scripts, 'script', 'scripts'));
   return parts.join(ar ? '؛ ' : '; ');
 }
+// (0.3.1 R4A, round 4's problem 2: the page opened on counts of files, visuals, bookmarks and phone layouts) the page's
+// first line, in plain words: what is new and where ("1 new report: 4 pages, next to your model, in the folder "Sales"
+// (C:\\DataArcus\\Sales)"); the counts are folded under it (kindsLine). paths: the plan's outputs, relative to the
+// working folder; kind: the plan's
+const dirOf = (f) => { const i = String(f).lastIndexOf('/'); return i < 0 ? '.' : String(f).slice(0, i); };
+export function plainLine(paths, kind, ar, at) {
+  const P = (paths || []).map(String), pbip = P.filter((f) => /\.pbip$/i.test(f)), scripts = P.filter(isScript), pages = P.filter((f) => /\/page\.json$/.test(f)).length;
+  const where = (f) => (at == null ? '' : folderSaid(at === '.' ? dirOf(f) : dirOf(f) === '.' ? at : `${at}/${dirOf(f)}`, ar)), near = { report: [', next to your model', '، بجانب نموذجك'], redesign: [', next to the original', '، بجانب التقرير الأصلي'], twin: [', next to the original', '، بجانب التقرير الأصلي'] }[kind];
+  const sc = (n) => (ar ? `، ومعه سكربت${n === 1 ? '' : 'ات'} (${n}) في المجلد نفسه` : `, and ${n === 1 ? '1 script' : `${n} scripts`} beside it`);
+  const inEn = (f) => (where(f) ? `, in ${where(f)}` : ''), inAr = (f) => (where(f) ? `، في ${where(f)}` : '');
+  if (kind === 'sample' && pbip.length) return ar ? `مشروع مثال جديد (بيانات مختلَقة)${inAr(pbip[0])}` : `1 new sample project (made-up data)${inEn(pbip[0])}`;
+  if (pbip.length) {
+    const n = pbip.length, pg = ar ? ` (الصفحات: ${pages})` : `: ${pages} page${pages === 1 ? '' : 's'}`;
+    return (ar ? `${n === 1 ? 'تقرير جديد واحد' : `تقارير جديدة (${n})`}${pages ? pg : ''}${near ? near[1] : ''}${inAr(pbip[0])}` : `${n === 1 ? '1 new report' : `${n} new reports`}${pages ? pg : ''}${near ? near[0] : ''}${inEn(pbip[0])}`) + (scripts.length ? sc(scripts.length) : '');
+  }
+  if (kind === 'theme') { const t = P.find((f) => /\.json$/i.test(f)); return t ? (ar ? `ملف سمة جديد واحد${inAr(t)}` : `1 new theme file${inEn(t)}`) : ''; }
+  if (scripts.length) return ar ? `سكربت${scripts.length === 1 ? ' جديد واحد' : `ات جديدة (${scripts.length})`}${inAr(scripts[0])}` : `${scripts.length === 1 ? '1 new script' : `${scripts.length} new scripts`}${inEn(scripts[0])}`;
+  return P.length ? (ar ? `ملفات جديدة (${P.length})${inAr(P[0])}` : `${P.length === 1 ? '1 new file' : `${P.length} new files`}${inEn(P[0])}`) : '';
+}
 // the files the person asked for, named on top: the project file (the report), each script, the theme file
 // (0.3.1 C: a .tmdl inside a .SemanticModel folder is the model itself, as the sample project writes it, not a script)
 const isScript = (f) => /\.tmdl$/i.test(String(f)) && !/\.SemanticModel\//i.test(String(f));
@@ -177,8 +197,8 @@ const mainFiles = (paths, kind) => (paths || []).map(String).filter((f) => /\.pb
   .map((f) => [f, /\.pbip$/i.test(f) ? 'report' : isScript(f) ? 'script' : 'theme']);
 const filesHtml = (groups, kind, ar) => {
   if (!groups || !groups.length) return '';
-  const W = WORDS[ar ? 'ar' : 'en'], all = [].concat(...groups.map((g) => g.paths)), n = all.length, line = kindsLine(all, kind, ar), main = mainFiles(all, kind);
-  return `${line ? `<p><strong>${esc(line)}</strong></p>` : ''}${main.length ? `<p>${esc(W.yours)}</p><ul>${main.map(([f, r]) => `<li>${iso(f.split('/').pop())}: ${esc(W.roles[r])}</li>`).join('')}</ul>` : ''}`
+  const W = WORDS[ar ? 'ar' : 'en'], all = [].concat(...groups.map((g) => g.paths)), n = all.length, main = mainFiles(all, kind);
+  return `${main.length ? `<p>${esc(W.yours)}</p><ul>${main.map(([f, r]) => `<li>${iso(f.split('/').pop())}: ${esc(W.roles[r])}</li>`).join('')}</ul>` : ''}`
     + `<details><summary>${esc(W.all(n))}</summary><ul>${groups.map((g) => `<li><details><summary>${esc(kindLabel(g.label, ar))} (${g.paths.length})</summary><ul>${g.paths.map((f) => `<li>${iso(f)}</li>`).join('')}</ul></details></li>`).join('')}</ul></details>`;
 };
 // (T-4) what a script is and the 3 steps, where the person decides
@@ -237,8 +257,11 @@ function askPage(w) {
   const named = (x) => (s.name ? String(x).split('<name>').join(s.name) : String(x));
   const WA = ar && Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ? s.writesAr : null;
   const writesHtml = w.plan.writes.map((x, i) => (WA ? `<li dir="auto">${isoText(named(WA[i]), true)}<br><span class="note" dir="ltr">${esc(named(x))}</span></li>` : `<li dir="auto">${esc(named(x))}</li>`)).join('');
+  // (0.3.1 R4A) the first line: what is new and where; the counts by kind folded under it
+  const allPaths = [].concat(...(s.files || []).map((g) => g.paths || [])), first0 = plainLine(allPaths, s.kind, ar, s.outputsAt), counts0 = kindsLine(allPaths, s.kind, ar);
+  const firstHtml = first0 ? `<p class="first" dir="auto"><strong>${esc(first0)}</strong></p>${counts0 ? `<details><summary>${esc(W.counts)}</summary><p dir="auto">${esc(counts0)}</p></details>` : ''}` : '';
   const h1 = arTitle ? `${esc(arTitle)}${s.name ? ` «<bdi>${esc(cut(s.name, 80))}</bdi>»` : ''}` : esc(s.title);
-  return page(W.ask + (arTitle ? `${arTitle}${s.name ? ` «${cut(s.name, 80)}»` : ''}` : s.title), `<h1 dir="auto">${h1}</h1>${s.first ? `<h2>${esc(s.first.heading)}</h2><div class="card">${s.first.text.map((t) => `<p class="warn" dir="auto"><strong>${esc(t)}</strong></p>`).join('')}</div>` : ''}<p class="lead">${esc(W.lead)}</p>
+  return page(W.ask + (arTitle ? `${arTitle}${s.name ? ` «${cut(s.name, 80)}»` : ''}` : s.title), `<h1 dir="auto">${h1}</h1>${firstHtml}${s.first ? `<h2>${esc(s.first.heading)}</h2><div class="card">${s.first.text.map((t) => `<p class="warn" dir="auto"><strong>${esc(t)}</strong></p>`).join('')}</div>` : ''}<p class="lead">${esc(W.lead)}</p>
 ${pv}${ckHtml}<h2 id="files">${esc(W.files)}</h2><div class="card"><ul>${writesHtml}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files, s.kind, ar)}<p class="note">${esc(ar ? writesNoteAr(w.plan.writes) : writesNote(w.plan.writes))}</p></div>
 ${scriptHtml(s, w.plan.writes, ar)}${sections}
 <div class="actions"><form method="post"><input type="hidden" name="decision" value="approve"><button class="go" type="submit">${esc(W.approve)}</button></form>
@@ -368,6 +391,8 @@ export function summary(kind, data) {
   const s = summaryOf(kind, data), wa = data && data.writesAr;
   // (SQ3, T1-S6) the writes in Arabic, as the plan's tool said them (shown on an Arabic page only, line for line)
   if (Array.isArray(wa)) s.writesAr = wa.map(String);
+  // (R4A) where the outputs are, relative to the working folder (the page's first line names the folder)
+  if (data && typeof data.outputsAt === 'string') s.outputsAt = data.outputsAt;
   return s;
 }
 /** The approval page of a plan as its window serves it before the click (plan: { id, kind, writes }; show: summary()). */
@@ -395,9 +420,13 @@ function summaryOf(kind, data) {
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);
     // (R6, F09 d) the lint's own measured why when the plan holds it (#64), else the general reason
-    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
+    // (0.3.1 R4A, round 4's problem 1: "42 px a category" where the person decides) the plan's said first: the person's
+    // words, no pixels or letter widths (why, the measured numbers, is the agent's); its Arabic on an Arabic page
+    const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.said ? String(k.said) : k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
+    const two = (en, ar) => (p.lang === 'ar' && ar ? { en, ar } : en);
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)])
-      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`)]] : []) });
+      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => (k.said ? two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (planned as ${KIND_A[k.from] || 'another kind'}): ${String(k.said)}`, k.saidAr ? `${k.role || 'A chart'}: ${String(k.saidAr)}` : null)
+        : `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`))]] : []) });
     // category is the bar chart's field, category2 the column chart's
     const F = p.fields || {}, FL = { kpis: 'KPI cards', measure: 'Charts\' measure', timeAxis: 'Trend axis', category: 'Bar chart by', category2: 'Column chart by', table: 'Table', slicers: 'Slicers' }, PLANNED = { category: 'bar', category2: 'column' };
     // (0.3.1 LR1) the slicers the plan adds to fill the design's slots, named after the ones asked
@@ -416,9 +445,10 @@ function summaryOf(kind, data) {
     if (Array.isArray(d.waterfallRtl) && d.waterfallRtl.length) sections.push({ heading: `Waterfalls, right to left (${d.waterfallRtl.length})`, rows: d.waterfallRtl.map((x) => [`${cut(String(x.page || ''), 60)}${x.title ? `: ${cut(String(x.title), 80)}` : ''}`, `${String(x.written || '')}: ${String(x.what || '')}${x.why ? ` (${String(x.why)})` : ''}`]) });
     // (0.3.0 L4) the flip cards: which cards, what their back says, the bookmarks, the model change, before the click
     const FC = d.flipCards && Array.isArray(d.flipCards.cards) ? d.flipCards : null;
+    const pbipOut = Array.isArray(d.outputs) ? d.outputs.map(String).find((f) => /\.pbip$/i.test(f)) : null, pbipDir = pbipOut ? dirOf(pbipOut) : null;   // (R4A, T-9)
     if (FC && FC.cards.length) sections.push({ heading: `Flip cards (${FC.cards.length})`, rows: FC.cards.map((c) => [`${cut(String(c.page || ''), 60)}: card ${c.card}`, `${cut(String(c.title || ''), 80)}: the front shows its title and value; the back shows the measure's name and one line: ${String((c.back || {}).description || '')}; ${String((c.back || {}).value || '')}; year on year: ${String((c.back || {}).yearOnYear || '')}`])
       .concat([['Bookmarks', `${FC.bookmarks} display-only bookmarks (two a card: one shows the back, one the front); they touch no slicer or filter`],
-        ['Model change', `${FC.newMeasures} new measures (the pictures) in the script "${String(FC.scriptAfterGo || '')}" next to the project. The model is not changed by DataArcus: apply the script first, in TMDL view (Preview, then Apply); until then ${FLIP_BEFORE}`],
+        ['Model change', `${FC.newMeasures} new measures (the pictures) in the script "${String(FC.scriptAfterGo || '')}" next to the report, in ${pbipDir ? folderSaid(pbipDir) : 'the report\'s folder'}. The model is not changed by DataArcus: apply the script first, in TMDL view (Preview, then Apply); until then ${FLIP_BEFORE}`],
         ['How it turns', 'a click turns the card (Ctrl+click while editing in Desktop), in 0.3 s; the backdrop in the card colour stays behind both faces']],
       (FC.notFlipped || []).map((x) => [`Card ${x.card}`, `not flipped: ${String(x.why || '')}`])) });
     // (0.3.0 L5) the status icons: which columns, how each is decided (the user's thresholds as given, or the target the
@@ -507,7 +537,17 @@ function summaryOf(kind, data) {
     // (0.3.0 D4) a unit on one line: the visuals laid on it, each by its kind and fields, and where it goes with it
     const overlaid = (c) => (Array.isArray(c.overlays) && c.overlays.length ? `with what lies on it, ${c.from || c.overlays.some((o) => o.from) ? 'moved' : 'kept'} with it: ${c.overlays.map((o) => `${cut(o.visual, 60)} (${of(Object.assign({}, o, { place: null }))})${o.from ? ` to ${at(o.to)}` : ''}`).join('; ')}` : null);
     // (0.3.1 CS1) a visual's own text settings removed, each: class, property, from -> the text set's value
-    const textOf = (c) => (Array.isArray(c.text) && c.text.length ? `its own text settings removed (the theme governs): ${c.text.map((t) => `${cut(t.class, 20)} ${cut(t.property, 20)} ${cut(t.from, 40)} -> ${cut(t.to, 40)}`).join(', ')}` : null);
+    // (0.3.1 R4A, round 4's problem 9: "largeTitle fontFamily Segoe UI -> Segoe UI") in the person's words: the class by
+    // what it formats, "set to" for a value the text set changes, "removed" only where the theme's own takes over, and the
+    // settings that already show the set's value counted once (their removal changes nothing visible)
+    const textOf = (c) => {
+      if (!Array.isArray(c.text) || !c.text.length) return null;
+      const what = (t) => cut(TEXT_CLASSES[t.class] || 'text', 80), prop = (t) => (/family/i.test(t.property) ? 'font' : /size/i.test(t.property) ? 'size' : /bold/i.test(t.property) ? 'bold' : /italic/i.test(t.property) ? 'italic' : 'setting');
+      const theirs = (t) => /^the theme's$/.test(String(t.to)), same = c.text.filter((t) => !theirs(t) && String(t.from) === String(t.to));
+      const lines = c.text.filter((t) => !same.includes(t)).map((t) => (theirs(t) ? `${what(t)}: its own ${prop(t)} (${cut(t.from, 40)}) removed, the theme's own shows` : `${what(t)}: ${prop(t)} set to ${cut(t.to, 40)} (was ${cut(t.from, 40)})`));
+      if (same.length) lines.push(`${same.length} of its own setting${same.length === 1 ? '' : 's'} already the text set's (${[...new Set(same.map((t) => `${what(t)} ${prop(t)}`))].join(', ')}): now from the theme, nothing changes on screen`);
+      return `its text, from the theme: ${lines.join('; ')}`;
+    };
     const changes = pages.flatMap((p) => (p.changes || []).map((c) => [`${cut(p.page, 60)}: ${cut(c.visual, 60)} (${of(c)})`,
       [c.from ? moved(c.from, c.to) : null, c.narrower ? cut(c.narrower, 200) : null, c.title && typeof c.title === 'object' ? `its title becomes "${String(c.title.to)}"` : null, textOf(c), overlaid(c)].filter(Boolean).join('; ')]));
     if (S.theme && S.theme.tokens) Object.entries(S.theme.tokens).forEach(([k, v]) => changes.push([`Theme ${cut(S.theme.file, 60)}: ${k}`, Array.isArray(v) ? { swatches: v.map((c) => ['', String(c)]) } : /^#[0-9a-f]{6}$/i.test(String(v)) ? { swatches: [['', String(v)]] } : val(v)]));
@@ -515,7 +555,7 @@ function summaryOf(kind, data) {
     const n = (k, one, many) => (K[k] ? [[many[0].toUpperCase() + many.slice(1), `${K[k]} ${K[k] === 1 ? one : many}`]] : []);
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
     // (0.3.1 CS1) the one text set, before the changes
-    if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [`${cut(x.what, 80)} (${cut(x.class, 20)})`, `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
+    if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [cut(x.what || TEXT_CLASSES[x.class] || 'text', 80), `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
       .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(k.property, 30)}`, cut(k.why, 120)]),
         (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(k.type, 40)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
@@ -539,7 +579,7 @@ function summaryOf(kind, data) {
     const SA = own.lang === 'ar' && d.sampleAr && typeof d.sampleAr === 'object' ? d.sampleAr : null, TA = SA && Array.isArray(SA.tables) && SA.tables.length === T.length ? SA.tables : null;
     const two = (en, ar) => (SA && typeof ar === 'string' ? { en, ar } : en);
     sections.push({ heading: 'Sample project (made-up data)', rows: [['What it is', S.what, SA && SA.what], ['Made up', S.madeUp, SA && SA.madeUp],
-      ['Folder', S.folder ? `"${String(S.folder)}": a new folder in the working folder` : null, S.folder ? `«${String(S.folder)}»: مجلد جديد في مجلد العمل` : null],
+      ['Folder', S.folder ? `${folderSaid(String(S.folder))}: a new folder in ${folderSaid('.')}` : null, S.folder ? `${folderSaid(String(S.folder), true)}: مجلد جديد في ${folderSaid('.', true)}` : null],   // (R4A, T-9: the folder by its name and where it is)
       ['To open', S.project, SA && SA.project], ['Date table', S.dateTable, SA && SA.dateTable], ['Report', S.report, SA && SA.report], ['Relationships', S.relationships != null ? String(S.relationships) : null, SA && SA.relationships], ['The rows', S.rows, SA && SA.rows]]
       .filter((r) => r[1] != null).map(([k, v, ar]) => [two(k, SAMPLE_AR[k]), two(val(v), ar == null ? ar : String(ar))]) });
     sections.push({ heading: `Tables (${T.length})`, rows: T.map((t, i) => [String(t.table), two(`${Number(t.rows)} made-up rows, ${Number(t.columns)} columns${t.measures ? `, ${Number(t.measures)} measures` : ''}`, TA ? String(TA[i]) : null)]) });
