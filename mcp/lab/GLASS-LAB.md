@@ -23,7 +23,9 @@ with Chart style table "banded": every other row a faint tint; GL2, [mcp/work/GL
   matrix, the look written on each visual):
   - **Variants: transparency**: 20%, 35% (shipped), 50% (a value the contrast floor lowers says so in its label);
   - **Variants: corners**: 0, 8 (shipped), 16 on the 720 grid (0, 12, 24 on this 1920 x 1080 page);
-  - **Variants: shadow**: none, soft (shipped), strong.
+  - **Variants: shadow**: none, soft (shipped), strong;
+  - **Variants: shadow on dark** (the dark reports only, GL2): GL1's soft shadow (55 / 18 / 4, which the laptop found
+    barely shows on dark), the shipped dark shadow (30 / 24 / 6), a light halo (white, preset Center, distance 0).
 
 Microsoft's validator and `check_report` run on each report; the cloud run of 26 Oct: 0 errors and 0 "can break" on
 all four. Open each in Desktop, click Refresh once (the rows load), then screenshot every page unattended with the
@@ -35,7 +37,8 @@ lab-tools harness (`harness.ps1`, the laptop's builder scripts), at full size.
 2. Which transparency reads best (20 / 35 / 50): the picture shows through, the numbers stay calm.
 3. Which corners read best (0 / 8 / 16), and that every visual is rounded (the KPI card visual has no radius of its
    own in a theme: see whether its corners follow).
-4. Which shadow reads best (none / soft / strong); on a dark page whether the soft one shows at all.
+4. Which shadow reads best (none / soft / strong); on a dark page (GL2) which of GL1's soft, the shipped dark and the
+   light halo reads.
 5. Whether the rim reads (white on light; the card lightened 25% on dark).
 6. The KPI card visual, the table and the matrix: are their cells see-through, or does an inner fill of their own
    cover the look (a card visual's own background, a table's value background)? (GL2) The table and the matrix: no

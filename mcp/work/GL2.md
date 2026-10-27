@@ -17,7 +17,14 @@
   design-engine`: the baseline's counts (910, 598) unchanged; every non-glass theme byte for byte (checked on every
   preset x light/dark x chart.table auto/minimal/banded against the base's engine); `npm test -- report`: 30 -> 31
   suites; `-- core` 6 = 6; full run 93 -> 94 suites.
-- **Resume:** the plan is pushed; next: the red suite, then the engine.
+- **Added 27 Oct (the reviewer's scheduled task, from the laptop's run of GL1's lab, Desktop 2.159: the shipped values
+  hold: 35%, corners 8, soft shadow):** (a) `glass-lab.mjs` failed on Windows: create_report answers `open` with the
+  platform's separators (`glass\Glass EN light.pbip`), the lab split it on `/` only, so the report folder lost
+  `glass`; now `reportDirOf`/`pbipOf` split on both, tested with `path.win32` and a drive letter. (b) On dark pages the
+  soft shadow barely shows: the dark shadow made stronger (GLASS.shadow.dark 55/18/4 -> 30/24/6 at 1080), and the dark
+  reports of the lab get a fourth page "Variants: shadow on dark" (GL1's soft, the shipped dark, a light halo) to be
+  measured on the next laptop run. Expected: `glass-tables` + D1-D3, L1-L2, N4; `glass` 50 = 50.
+- **Resume:** done; waits for the reviewer, then the laptop run (GLASS-LAB.md items 4 and 6).
 
 ## Each property and its source
 Microsoft's capabilities (`@microsoft/powerbi-core-visual-schema` 0.1.3, the version `mcp/package.json` pins,
@@ -65,13 +72,16 @@ Microsoft's capabilities (`@microsoft/powerbi-core-visual-schema` 0.1.3, the ver
 4. build:min, the stamps, csp, ar-pages, sitemap-lastmod; the suites; the full run once.
 
 ## Results
-Commits: plan cba24a5, red first 110aa41 (69 of 107 checks failed), the fix 01a898b8, this note (the next commit).
+Commits: plan cba24a5, red first 110aa41 (69 of 107 checks failed), the fix 01a898b8, notes 0cc64276, the lab on
+Windows and the dark shadow (the next commit), this note's final numbers (after the full run).
 
 | Before | After |
 |---|---|
 | A glass table or matrix: no back colours written, so Power BI's default style filled every cell solid (the theme's `background`, alternate rows `backgroundLight`), headers and totals too | every back colour clear (the card at alpha 00): the picture shows through every cell |
 | Chart style table "banded" with glass: no band | every other row the accent at 8% alpha, lowered until text and grid lines stand on it (Corporate 4%, DataArcus 6%) |
 | The grid lines: Power BI's pale default on the glass (1.02-1.08:1 worst case) | the look's own colour, at least what the line stands on the solid card (Corporate #bcbfc2 1.42:1, DataArcus #5d616c 1.80:1) |
+| The lab on Windows: failed (the report folder without `glass\`) | the folder from `open` split on `\` and `/` |
+| The dark look's shadow: 55% transparent, blur 18, distance 4 (barely shows) | 30%, blur 24, distance 6 (at 1080); the lab's dark page compares it with GL1's and a light halo |
 | generate_theme's glass line: cards, rim, shadow, picture | + "Tables and matrices have no fill of their own ..." and `glass.tables` |
 
 **Every property set (glass only), and its source** (capabilities 0.1.3 `tableEx`/`pivotTable` objects; the theme
@@ -82,11 +92,13 @@ schema 2.159 `visual-tableEx`/`visual-pivotTable`): `values.backColor`, `values.
 sets none). The checks `gridOnGlass` and (banded) `textOnBand`, `gridOnBand` join `glassLook(...).checks`.
 
 The lab (cloud run, 27 Oct): four reports, Microsoft's validator 0 errors and check_report 0 "can break" on each;
-EN light / AR dark clear cells, EN dark band #00d4ff0f (6%), AR light band #1f4e790a (4%).
+EN light / AR dark clear cells, EN dark band #00d4ff0f (6%), AR light band #1f4e790a (4%); variant rows 9 (light)
+and 12 (dark: + "Variants: shadow on dark").
 
 Suites (baseline on cba24a5 in a separate worktree -> after):
 - `run-all theme-generator design-engine`: 910 = 910, 598 = 598.
-- `glass-tables`: 69 of 107 failed -> 107 PASS; `glass` 50 = 50 (T4 now asserts the clear fills).
+- `glass-tables`: 69 of 107 failed -> 107 PASS; with the scheduled task's items 113 PASS (L1 fails on the old split:
+  `C:\DataArcus\tests\glass-lab\Glass EN light.Report`); `glass` 50 = 50 (T4 now asserts the clear fills).
 - `npm test -- report`: 33 -> 34 suites passed (the base registers 33, not the 30 my plan took from GL1).
 - `npm test -- core`: CORE_RESULT.
 - lint clean; check-min PASS (every changed .min.js a new stamp against main); changelog-words PASS; check-result-lines
@@ -113,12 +125,19 @@ Suites (baseline on cba24a5 in a separate worktree -> after):
 6. `blankRows.blankRowColor` (a matrix's blank rows, off by default) and `columnFormatting.backColor` (per column, set by
    a person) are not written.
 7. The lab already had a table and a matrix on every variant page; two of its reports now ask banded tables.
+8. The dark shadow is changed now (30/24/6), a first guess like GL1's: black stays the shadow's colour (a shadow, as
+   the schema's name says); a light halo (white, preset Center, distance 0, 80% transparent) is only a lab row, since a
+   light glow on every visual would change the look more than "a shadow that reads". The laptop picks among the three.
+9. The lab's path fix is tested as a function with `path.win32` (the cloud has no Windows); the Windows CI job does not
+   run the lab (it is not a suite), so the next laptop run is its real test.
 
 ## For the laptop
 `node lab/glass-lab.mjs <empty folder>` (mcp/lab/GLASS-LAB.md, item 6), Refresh, full-size screenshots of every page:
 the tables and matrices (report pages and every variant row) in EN and AR, light and dark: no solid row, header or
 total anywhere; the text readable; the grid lines visible; on "Glass EN dark" and "Glass AR light" every other row a
-faint tint, not a solid colour. If Desktop draws alpha 00 as solid or black: report it with a crop; the fallback is
+faint tint, not a solid colour. On the dark reports' page "Variants: shadow on dark": which of GL1's soft, the
+shipped dark (30/24/6) and the light halo reads on the dark page (GLASS-LAB.md item 4). The lab itself: run on Windows
+from `mcp/` with a drive-letter folder (`node lab/glass-lab.mjs C:\DataArcus\tests\glass-lab-2`). If Desktop draws alpha 00 as solid or black: report it with a crop; the fallback is
 the card's colour without alpha (solid, as before) and the decision goes to the owner.
 
 ## Seen, not in scope

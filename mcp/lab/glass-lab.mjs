@@ -58,8 +58,16 @@ const L = (v) => ({ expr: { Literal: { Value: v } } }), colr = (h) => ({ solid: 
 const lookOn = (ui, g, o) => ({
   background: [{ properties: { show: L('true'), color: colr(ui.card), transparency: L(o.t + 'D') } }],
   border: [{ properties: { show: L('true'), color: colr(g.rim), radius: L(o.radius + 'D'), width: L('1D') } }],
-  dropShadow: [{ properties: o.shadow ? { show: L('true'), color: colr('#000000'), position: L("'Outer'"), preset: L("'Bottom'"), transparency: L(o.shadow.transparency + 'D'), shadowBlur: L(o.shadow.blur + 'D'), shadowDistance: L(o.shadow.distance + 'D'), shadowSpread: L('0D') } : { show: L('false') } }]
+  dropShadow: [{ properties: o.shadow ? { show: L('true'), color: colr(o.shadow.color || '#000000'), position: L("'Outer'"), preset: L(`'${o.shadow.preset || 'Bottom'}'`), transparency: L(o.shadow.transparency + 'D'), shadowBlur: L(o.shadow.blur + 'D'), shadowDistance: L(o.shadow.distance + 'D'), shadowSpread: L((o.shadow.spread || 0) + 'D') } : { show: L('false') } }]
 });
+
+// (GL2, the laptop of 27 Oct: the lab failed on Windows) the report's folder from create_report's answer: its "open" is
+// relative to the working folder with the platform's separators ("glass\\Glass EN light.pbip" on Windows), so it is
+// split on both. p: path (path.win32 in the test, as the Windows job would see it)
+export const reportDirOf = (root, open, name, p = path) => p.join(root, ...String(open).split(/[\\/]/).slice(0, -1), name + '.Report');
+export const pbipOf = (root, open, p = path) => p.join(root, ...String(open).split(/[\\/]/));
+// (GL2) GL1's dark shadow, which the laptop found barely shows on a dark page, at 1080 high: one row of the dark page
+const GL1_DARK_SHADOW = { transparency: 55, blur: 18, distance: 4 };
 
 export async function writeLab(out) {
   fs.mkdirSync(out, { recursive: true });
@@ -92,9 +100,9 @@ export async function writeLab(out) {
       const send = Object.assign({}, args, { planId: id, design: pl.j.design, fields: FIELDS }); delete send.planFields;
       const r = await s.call('create_report', send);
       if (r.err) throw new Error('not written: ' + r.t.slice(0, 400));
-      const design = pl.j.design, g = E.glassLook(design), variants = addVariants(path.join(ROOT, ...r.j.open.split('/').slice(0, -1), name + '.Report'), design, g, lang);
+      const design = pl.j.design, g = E.glassLook(design), variants = addVariants(reportDirOf(ROOT, r.j.open, name), design, g, lang);
       const c = await s.call('check_report', { path: r.j.open }), cj = c.j || {};
-      made.push({ name, pbip: path.join(ROOT, ...r.j.open.split('/')), look: { transparency: g.t, asked: g.asked, rim: g.rim, shadow: g.shadow, tables: g.table, checks: g.checks.map((x) => `${x.id} ${x.ratio.toFixed(2)}:1`) }, variants,
+      made.push({ name, pbip: pbipOf(ROOT, r.j.open), look: { transparency: g.t, asked: g.asked, rim: g.rim, shadow: g.shadow, tables: g.table, checks: g.checks.map((x) => `${x.id} ${x.ratio.toFixed(2)}:1`) }, variants,
         validator: c.err ? c.t.slice(0, 200) : cj.validator && cj.validator.errors, canBreak: cj.impact && cj.impact.kinds.canBreak.count, gt: gt.j.glass && gt.j.glass.sayInPlan });
     }
   } finally { await s.close(); }
@@ -120,6 +128,11 @@ function addVariants(RD, design, g, lang) {
     ['Variants: transparency', 'المتغيرات: الشفافية', [20, 35, 50].map((t) => [`Transparency ${t}%${tOf(t) !== t ? ` (written ${tOf(t)}%: the contrast floor)` : ''}${t === g.asked ? ' (shipped)' : ''}`, Object.assign({}, ship, { t: tOf(t) })])],
     ['Variants: corners', 'المتغيرات: الزوايا', [0, 8, 16].map((r) => [`Corners ${r} (${Math.round(r * k)} on this page)${r === +design.layout.radius ? ' (shipped)' : ''}`, Object.assign({}, ship, { radius: Math.round(r * k) })])],
     ['Variants: shadow', 'المتغيرات: الظل', [['none', null], ['soft (shipped)', g.shadow], ['strong', strong]].map(([w, sh]) => [`Shadow ${w}${sh ? `: transparency ${sh.transparency}, blur ${sh.blur}, distance ${sh.distance}` : ''}`, Object.assign({}, ship, { shadow: sh })])]];
+  // (GL2) on a dark page only: GL1's soft shadow (barely seen on dark, the laptop of 27 Oct), the shipped dark one, and a
+  // light halo instead (white, preset Center, no distance: the schema's dropShadow options), to be measured
+  const sayShadow = (sh) => `transparency ${sh.transparency}, blur ${sh.blur}, distance ${sh.distance}${sh.color ? `, ${sh.color}, ${sh.preset}` : ''}`;
+  if (g.mode === 'dark') PAGES.push(['Variants: shadow on dark', 'المتغيرات: الظل على الصفحة الداكنة', [['GL1 soft', GL1_DARK_SHADOW], ['dark (shipped)', g.shadow], ['light halo', { transparency: 80, blur: 24, distance: 0, spread: 0, color: '#ffffff', preset: 'Center' }]]
+    .map(([w, sh]) => [`Shadow ${w}: ${sayShadow(sh)}`, Object.assign({}, ship, { shadow: sh })])]);
   const out = [];
   PAGES.forEach(([en, ar, rows], pi) => {
     const id = crypto.createHash('sha256').update(RD + en).digest('hex').slice(0, 20), PD = path.join(P, id);

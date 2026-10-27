@@ -11,6 +11,8 @@
 //   S   Microsoft's colour pattern for every colour in the theme
 //   N   the non-glass looks byte for byte the base engine's (every preset, light and dark, table auto/minimal/banded,
 //       EN and AR); the glass theme unchanged outside tables and matrices
+//   D   (the laptop of 27 Oct) the dark look's shadow stronger than GL1's, which barely showed on a dark page; light unchanged
+//   L   the lab's report folder from create_report's answer on Windows (backslashes, a drive letter) and on Linux
 //   W   through the tools (EN banded, AR dark): the report's theme carries the fills; Microsoft's validator 0 errors,
 //       check_report 0 "can break"
 //   node test-0.3.1-glass-tables.mjs
@@ -99,12 +101,31 @@ if (typeof base.buildTheme === 'function') {
     if (JSON.stringify(E.buildTheme(design(preset, look, table, layout), lang)) !== JSON.stringify(base.buildTheme(bdesign(preset, look, table, layout), lang))) differ.push([preset, look, table, JSON.stringify(layout), lang].join(' '));
   }
   chk(() => !differ.length, () => `N1. every non-glass theme byte for byte the base's (presets x look none/auto x table x layouts x EN/AR): differ on ${differ.slice(0, 4).join('; ')}`);
-  const strip = (th) => { const c = JSON.parse(JSON.stringify(th)); delete c.visualStyles.tableEx; delete c.visualStyles.pivotTable; return JSON.stringify(c); };
+  // (the dark shadow is D's, below: every dropShadow left out of this comparison)
+  const strip = (th) => { const c = JSON.parse(JSON.stringify(th)); delete c.visualStyles.tableEx; delete c.visualStyles.pivotTable; Object.values(c.visualStyles).forEach((v) => Object.values(v).forEach((x) => { delete x.dropShadow; })); return JSON.stringify(c); };
   const glassDiffer = Object.keys(E.PRESETS).flatMap((preset) => ['auto', 'banded'].filter((table) => strip(E.buildTheme(design(preset, 'glass', table), 'en')) !== strip(base.buildTheme(bdesign(preset, 'glass', table), 'en'))).map((t) => preset + ' ' + t));
   chk(() => !glassDiffer.length, () => `N2. the glass theme unchanged outside tables and matrices: differs on ${glassDiffer.join(', ')}`);
   const keep = Object.keys(E.PRESETS).filter((preset) => { const a = E.glassLook(design(preset, 'glass')), b = base.glassLook(bdesign(preset, 'glass')); return a.t !== b.t || a.rim !== b.rim || a.labels !== b.labels || a.strength !== b.strength; });
   chk(() => !keep.length, () => `N3. the look's cards, rim, labels and picture unchanged: differ on ${keep.join(', ')}`);
+  const shadows = (th) => JSON.stringify(Object.entries(th.visualStyles).map(([t, v]) => [t, (v['*'] || {}).dropShadow]));
+  const lightDiffer = Object.keys(E.PRESETS).filter((preset) => E.glassLook(design(preset, 'glass')).mode === 'light' && shadows(E.buildTheme(design(preset, 'glass'), 'en')) !== shadows(base.buildTheme(bdesign(preset, 'glass'), 'en')));
+  chk(() => !lightDiffer.length, () => `N4. a light glass theme's shadows unchanged: differ on ${lightDiffer.join(', ')}`);
 }
+
+// ---------- D: the dark shadow ----------
+{ const g = E.glassLook(design('DataArcus', 'glass')), gl = E.glassLook(design('Corporate', 'glass')), th = E.buildTheme(design('DataArcus', 'glass'), 'en'), sh = card(th, 'barChart', 'dropShadow');
+  chk(() => g.mode === 'dark' && g.shadow.transparency < 55 && g.shadow.blur >= 18 && g.shadow.distance >= 4 && (g.shadow.transparency < 55 && (g.shadow.blur > 18 || g.shadow.distance > 4)),
+    () => `D1. the dark look's shadow stronger than GL1's 55 / 18 / 4 (less transparent, wider or further): ${cut(g.shadow)}`);
+  chk(() => sh.show === true && sh.transparency === g.shadow.transparency && sh.shadowBlur === g.shadow.blur && sh.shadowDistance === g.shadow.distance, () => `D2. the dark theme writes it on every visual: ${cut(sh)}`);
+  chk(() => JSON.stringify(gl.shadow) === '{"transparency":85,"blur":18,"distance":4}', () => `D3. the light look's shadow as GL1 shipped it: ${cut(gl.shadow)}`); }
+
+// ---------- L: the lab's paths on Windows and Linux ----------
+const Lab = await import('./lab/glass-lab.mjs').catch((e) => ({ threw: String(e && e.message || e) }));
+chk(() => Lab.reportDirOf('C:\\DataArcus\\tests\\glass-lab', 'glass\\Glass EN light.pbip', 'Glass EN light', path.win32) === 'C:\\DataArcus\\tests\\glass-lab\\glass\\Glass EN light.Report'
+  && Lab.pbipOf('C:\\DataArcus\\tests\\glass-lab', 'glass\\Glass EN light.pbip', path.win32) === 'C:\\DataArcus\\tests\\glass-lab\\glass\\Glass EN light.pbip',
+  () => `L1. on Windows (create_report answers "glass\\Glass EN light.pbip"): the report folder keeps "glass": ${cut(Lab.threw || Lab.reportDirOf('C:\\DataArcus\\tests\\glass-lab', 'glass\\Glass EN light.pbip', 'Glass EN light', path.win32))}`);
+chk(() => Lab.reportDirOf('/tmp/lab', 'glass/Glass AR dark.pbip', 'Glass AR dark', path.posix) === '/tmp/lab/glass/Glass AR dark.Report' && Lab.pbipOf('/tmp/lab', 'glass/Glass AR dark.pbip', path.posix) === '/tmp/lab/glass/Glass AR dark.pbip',
+  () => 'L2. on Linux and macOS the same folder');
 
 // ---------- W: through the tools ----------
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-gl2-')));

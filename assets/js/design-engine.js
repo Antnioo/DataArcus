@@ -659,7 +659,9 @@
   // laptop's lab (mcp/lab/GLASS-LAB.md): t, the rim, the shadow. band: the alpha (%) of a banded table's alternate rows
   // (GL2: the solid look's 8% of the accent), raised in transparency until the text and the grid lines stand on it.
   const GLASS = { t: 35, max: 60, band: 8, strength: { light: 0.42, dark: 0.55 }, fields: [[0.1, 0.15, 0.55, 0], [0.9, 0.22, 0.6, 1], [0.6, 1, 0.65, 2], [0.02, 0.98, 0.45, 'accent']],
-    shadow: { light: { transparency: 85, blur: 18, distance: 4 }, dark: { transparency: 55, blur: 18, distance: 4 } }, grid: [192, 108], margin: 0.02 };
+    // (GL2: the laptop of 27 Oct, Desktop 2.159: GL1's dark shadow, 55 / 18 / 4, barely shows on a dark page) the dark
+    // shadow stronger: less transparent, wider, further; GL1's and a light halo are rows of the lab's dark page
+    shadow: { light: { transparency: 85, blur: 18, distance: 4 }, dark: { transparency: 30, blur: 24, distance: 6 } }, grid: [192, 108], margin: 0.02 };
   const isGlass = (d) => !!(d && d.chart && d.chart.look === 'glass');
   // the picture's pixels (RGB, 8 bits, rows top to bottom) at w x h for colours cc ({ ui, data }) at strength s: each
   // field's weight is s * exp(-2 d^2 / r^2), taken as a row factor times a column factor (the same number, made once).

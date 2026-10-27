@@ -23,7 +23,7 @@ package's manifest; this file says what is in it.
   picture's darkest and lightest parts, and the numbers are shown. The website's preview draws what Power BI draws.
   Tables and matrices in the glass look have no fill of their own: no solid rows, headers or totals, the picture
   shows through every cell, and a banded table's every other row is a faint tint; the grid lines stay as visible as
-  on solid cards.
+  on solid cards. On a dark page the cards' shadow is stronger, so it shows.
 - **Try DataArcus without a model of your own:** ask "show me what DataArcus can do" and DataArcus offers a made-up
   Gulf retail project (a model with 18 months of made-up sales, a date table and an empty report). After you approve it,
   it is written to a new folder in your working folder, never over anything; open it in Power BI Desktop and click
