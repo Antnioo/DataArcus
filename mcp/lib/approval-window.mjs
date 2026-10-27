@@ -556,6 +556,9 @@ function summaryOf(kind, data) {
   // dropped) a redesign's page lists every change (page, visual, from, to), every visual not changed with why, and what
   // is copied as it is
   if (kind === 'redesign') {
+    // (ST1, R4A-S4) a text setting in plain words: "font", "text size", "title font" (the visual's own property names
+    // are text-format.mjs's: fontFamily, fontSize, textSize, titleFontFamily, titleFontSize, bold, italic...)
+    const plainProp = (p) => { const s = String(p || ''), w = /family/i.test(s) ? 'font' : /size/i.test(s) ? 'text size' : /bold/i.test(s) ? 'bold' : /italic/i.test(s) ? 'italic' : s; return /^title/.test(s) && w !== s ? 'title ' + w : w; };
     const S = d.shown || {}, pages = Array.isArray(S.pages) ? S.pages : [], K = S.keptAsIs || {};
     const at = (b) => (b ? `${b.x}, ${b.y}, ${b.w} x ${b.h}` : '');
     // (0.3.0 T1, T-7: "moves from 40, 40, 700 x 640 to 40, 40, 704 x 640") a change of place or size, in words
@@ -587,7 +590,7 @@ function summaryOf(kind, data) {
     sections.push({ heading: 'Report', rows: [['Original', S.original || ''], ['New report', S.newReport || ''], ['Method', 'a copy of the original, file for file, with only the changes below']].map(([k, v]) => [k, val(v)]) });
     // (0.3.1 CS1) the one text set, before the changes
     if (S.text && Array.isArray(S.text.set)) sections.push({ heading: `Text set (${S.text.mode === 'theme' ? 'the theme\'s own' : 'what most visuals already show'})`, rows: S.text.set.map((x) => [cut(x.what || TEXT_CLASSES[x.class] || 'text', 80), `${cut(x.font, 60)}, ${cut(x.size, 20)}`])
-      .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(k.property, 30)}`, cut(k.why, 120)]),
+      .concat([['Bold and italic', cut(S.text.boldItalic, 200)], ['Theme', cut(S.text.theme, 300)], ['Settings removed', `${S.text.removed} (each listed under Changes, with its visual)`]], (S.text.kept || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} ${cut(plainProp(k.property), 30)}`, cut(k.why, 120)]),
         (S.text.untouched || []).map((k) => [`${cut(k.page, 60)}: ${cut(k.visual, 60)} (${cut(k.type, 40)})`, `text untouched: ${cut(k.why, 160)}`]), S.text.themeStyles ? [['The theme\'s own visual styles', cut(S.text.themeStyles, 300)]] : []).map(([k, v]) => [k, val(v)]) });
     sections.push({ heading: `Changes (${changes.length})`, rows: changes });
     sections.push({ heading: `Not changed (${notChanged.length})`, rows: notChanged });
