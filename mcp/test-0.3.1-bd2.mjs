@@ -83,9 +83,9 @@ function texts(r) {
     { path: 'H.Report/definition/pages/p1/visuals/t/visual.json', data: JSON.stringify({ name: 't', visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: T.middle }] }] } }] } } }) },
     { path: 'H.Report/definition/pages/p1/visuals/h/visual.json', data: JSON.stringify({ name: 'h', visual: { visualType: 'tableEx', query: { queryState: { Values: { projections: [{ field: {}, queryRef: 'Sales.Region', displayName: 'المنطقة Region' }] } } }, visualContainerObjects: { visualTooltip: [{ properties: { text: lit(T.middle) } }] } } }) },
     { path: 'H.Report/definition/bookmarks/x.bookmark.json', data: JSON.stringify({ name: 'x', displayName: T.middle }) }];
-  const n = Pbip.isolateFiles(hand, [], { all: true }), handTexts = hand.map((f) => JSON.parse(f.data)).flatMap((j) => [j.displayName, JSON.stringify(j.visual || {})]).filter(Boolean);
+  const n = Pbip.isolateFiles(hand, [], { all: true });
   const got = hand.flatMap((f) => texts({ files: [f] })).concat(hand.filter((f) => /bookmark/.test(f.path)).map((f) => ({ where: 'bookmark', s: JSON.parse(f.data).displayName })));
-  chk(() => n === 6 && got.filter((t) => TM.ARABIC.test(t.s)).length === 6 && got.filter((t) => TM.ARABIC.test(t.s)).every((t) => V3(t.s)), () => `K5. a page name, a button's text, a text box run, a table header, a tooltip text and a bookmark: each V3 (${n} changed): ${cut(got.map((t) => t.where + ' ' + cps(t.s).slice(0, 40)))}${handTexts.length ? '' : ''}`);
+  chk(() => n === 6 && got.filter((t) => TM.ARABIC.test(t.s)).length === 6 && got.filter((t) => TM.ARABIC.test(t.s)).every((t) => V3(t.s)), () => `K5. a page name, a button's text, a text box run, a table header, a tooltip text and a bookmark: each V3 (${n} changed): ${cut(got.map((t) => t.where + ' ' + cps(t.s).slice(0, 40)))}`);
   chk(() => en.files && !texts(en).some((t) => MARKS.test(t.s)), () => `K4. an English download: no mark at all: ${cut(en.threw || texts(en).filter((t) => /[‎‏⁦-⁩]/.test(t.s)).slice(0, 3))}`);
 }
 

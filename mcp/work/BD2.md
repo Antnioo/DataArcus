@@ -17,7 +17,7 @@
   same counts, the golden reports byte for byte; the website the same counts; full run +1 suite.
 - **Got:** bd2 33 checks (22 of 31 red first on e2236be; P7 and K5 added while working); arabic 12 -> 13 suites; report
   33 = 33, every count the same; core 6 suites, test.mjs 1591 = 1591, golden 12 tasks match (byte for byte); website
-  theme-generator 910 = 910, pbip 109 = 109; lint clean; full run: "Results".
+  theme-generator 910 = 910, pbip 109 = 109; lint clean; full run "run-tests: 99 suites passed", exit 0.
 - **Invariants:** metadata only; the marks come from the writer only (a person's name with one stays refused).
 - **TT1:** `isolateLatin(s)` keeps its signature (its output is now V3); new `isolateRuns(s)` (V1) and `wrapped(t)`.
 - **Resume:** done; waits for the reviewer. Desktop: "For the laptop" 1-3 (the batched run).
@@ -30,8 +30,8 @@
 3. The work at the cause. Then the suites, build:min, stamps, csp, ar-pages, sitemap-lastmod, the note.
 
 ## Results
-Commits: plan fb01a6e, red first 88735d9, the work 08ced1e, the article 3a71764, the pins of core's test.mjs and this
-note (next commits), sitemap dates last.
+Commits: plan fb01a6e, red first 88735d9, the work 08ced1e, the article 3a71764, test.mjs's pins and the note 4445c2a,
+the full run's line (this commit), sitemap dates last.
 
 | Item | Before | After | Test |
 |---|---|---|---|
@@ -56,11 +56,11 @@ pbip.mjs LR2-a3 (U+2067 first, U+2069 last) and its title reader; test.mjs: roun
 - `npm test -- arabic`: 12 suites passed -> 13 (bd2 33; terminology-sheet 48, bd1 18, bidi-lab 11: the same counts).
 - `npm test -- report`: 33 -> 33, every count the same (sq15b 25, dax-functions 92, story-titles 94 ...).
 - `npm test -- core`: 6 -> 6; test.mjs 1591 = 1591 (two pins by the wrap, shard 3 re-run: 634 PASS); golden 12 tasks
-  match (no golden report changed); mutation: see the full run.
+  match (no golden report changed); mutation 189 = 189 (73 mutants, all killed).
 - Website `run-all.mjs theme-generator pbip`: 910 and 109 -> 910 and 109.
 - lint clean (exit 0); check-result-lines PASS (99), changelog-words PASS (166), check-agent-memory PASS (168),
   ar-pages PASS, test-site-config PASS, arabic-terms 85 = 85.
-- Full run `npm test -- --keep-going`: (below, filled at the end).
+- Full run `npm test -- --keep-going` on 4445c2a: "run-tests: 99 suites passed", exit 0 (bd2 the new one).
 
 ## CHANGELOG line
 - Arabic text with an English word in it is written the way Power BI Desktop was measured to draw it right everywhere,
