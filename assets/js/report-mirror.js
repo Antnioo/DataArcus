@@ -510,7 +510,27 @@
   // (pbip-sizing.js phoneTitleSize), never larger than it was; a paragraph of several runs keeps its sizes
   const Sizing = () => (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null);
   const MARKS = /[\u200e\u200f\u2066-\u2069]/g;
-  function labelMobile(pageId, json, mobile, labels) {
+  // (0.3.1 TW1, SQ4-S2: the twin kept the English phone card title's wrap for a longer Arabic one) a new card on the
+  // phone as the writer lays it (its value and title sizes in mobile.json) takes the writer's rule for its Arabic title
+  // (pbip-sizing.js phoneCardFit): its full name (the alt text, else the title, as the writer reads it) on one line, or
+  // on two (titleWrap) with the two-line card fit; one too long for two lines stays on one line, which Power BI ends
+  // with "…" (the approved text is never shortened here). Only where that name is not the original's (was). o: { font, was }
+  const textAt = (v, bag, key) => { const e = (entries(isObj(v) && isObj(v.visual) ? v.visual.visualContainerObjects : null, bag) || []).find((x) => isObj(x.properties) && !x.selector); return e ? strOf(e.properties[key]) : null; };
+  const fullName = (v) => { const a = textAt(v, 'general', 'altText'); return a != null && a.trim() ? a : textAt(v, 'title', 'text'); };
+  function phoneCard(json, mobile, o) {
+    const Z = Sizing(), p = mobile.position, vco = isObj(mobile.visualContainerObjects) ? mobile.visualContainerObjects : null;
+    const tl = vco && Array.isArray(vco.title) && isObj(vco.title[0]) && isObj(vco.title[0].properties) ? vco.title[0].properties : null;
+    const val = (entries(mobile.objects, 'value') || []).find((e) => isObj(e.properties) && e.properties.fontSize !== undefined);
+    if (!Z || !Z.make || json.visual.visualType !== 'cardVisual' || !tl || !val || !isObj(p) || !Number.isFinite(p.width) || !Number.isFinite(p.height)) return;
+    const full = fullName(json); if (full == null || !full.trim() || (o.was && full === fullName(o.was))) return;
+    const size = parseFloat(lit(tl.fontSize)) || 10, value = parseFloat(lit(val.properties.fontSize)) || 20;
+    const f = Z.make({ font: o.font || 'Segoe UI', LABEL: 10 }).phoneCardFit(full.replace(MARKS, ''), p.width, p.height, size, Math.max(20, value));
+    if (f.mode === 'wrap') { tl.text = str(full); tl.titleWrap = mk('true'); } else delete tl.titleWrap;
+    val.properties.fontSize = mk(f.c.V + 'D');
+    (entries(mobile.objects, 'padding') || []).forEach((e) => { if (isObj(e.properties) && e.properties.paddingUniform !== undefined) e.properties.paddingUniform = mk(f.c.I + 'D'); });
+    (entries(vco, 'padding') || []).forEach((e) => { if (isObj(e.properties)) ['top', 'bottom', 'left', 'right'].forEach((k) => { if (e.properties[k] !== undefined) e.properties[k] = mk(f.c.P + 'D'); }); });
+  }
+  function labelMobile(pageId, json, mobile, labels, o) {
     if (!isObj(json) || !isObj(json.visual) || !isObj(mobile) || !labels) return 0;
     const sub = {}; Object.keys(labels).forEach((k) => { if (k.startsWith('phone:')) sub[k.slice(6)] = labels[k]; });
     const view = phoneView(json, mobile), was = new Map();
@@ -521,6 +541,7 @@
       const st = rs[0].textStyle, m = isObj(st) && /^(\d+(?:\.\d+)?)pt$/.exec(String(st.fontSize || '')); if (!m) return;
       const size = Z.phoneTitleSize(String(rs[0].value).replace(MARKS, ''), w, +m[1]); if (size < +m[1]) st.fontSize = size + 'pt';
     }));
+    phoneCard(json, mobile, o || {});
     return n;
   }
   // the phone box mirrored on the 323-wide canvas, a text box's paragraphs to the right (centred kept), as on the page.

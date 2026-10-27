@@ -100,7 +100,7 @@ const INTENDED = {
   emptyText: 'an empty text box (the writer\'s panel behind a row): the twin right-aligns its empty paragraph; nothing is drawn',
   hiddenTitle: 'a hidden title (show false): the twin right-aligns it too; not drawn, so it reads the same',
   textSize: 'text sizes, column widths and the title\'s heading: the writer fits them to its Arabic font (Tahoma, measured); the twins keep the original\'s (R1: never a size)',
-  table: 'tables: the writer builds its right-to-left table from the fields (the first text column first so the total row says "Total", round 10; a hidden name column, round 23); the twins reverse the original\'s columns. Same columns, a different order',
+  table: 'tables: the writer builds its right-to-left table from the fields (the first text column first so the total row says "Total", round 10; a hidden name column, round 23); the twins give a table that starts with a text column the same shape (TW1, M1-S2), each with its own "Row label: ..." measure. Same columns, the same order',
   matrix: 'matrices: no new matrix behaviour reaches users before the laptop proves a variant (M1); create_report keeps its measures in order, the twins reverse them (today\'s, R1\'s sentence). When the variant is chosen it is one engine value for every path',
   slicerBar: 'the slicer row and its Reset button: the writer lays them out for the Arabic texts\' widths (the Reset icon only with room); the twins mirror the English row; the Reset\'s icon follows the room each path gives it (the twin switches it off where its Arabic text and the icon do not fit side by side, SQ4 X2-S1, as the writer does in a narrow place)',
   copyFit: 'the copy keeps the language button\'s box free (R1); its Arabic pages are otherwise the twin\'s',
@@ -277,7 +277,9 @@ const mobileW = (v) => { const f = AR.files && AR.files.find((g) => g.path.endsW
 {
   const t = PT.filter((x) => x.kind === 'table').map((a) => ({ a, b: PWr.find((b) => b.kind === 'table' && Math.abs(b.x - a.x) <= 1 && Math.abs(b.y - a.y) <= 1) })).find((p) => p.b), m = pair(PT.filter((x) => x.kind === 'matrix'), PWr, 1).find((p) => p.b);
   const refs = (v, r) => v.visual.query.queryState[r].projections.map((p) => p.queryRef);
-  chk(() => t && refs(t.b.v, 'Values')[0] === T + '.Technician' && refs(t.a.v, 'Values').slice(-1)[0] === T + '.Technician', () => `W table order: the writer keeps the name column first (INTENDED.table), the twin reverses: ${t && JSON.stringify([refs(t.b.v, 'Values'), refs(t.a.v, 'Values')])}`);
+  // (TW1, M1-S2: before, the twin reversed the columns and lost "Total"; now the writer's order, its row label last)
+  chk(() => t && refs(t.b.v, 'Values')[0] === T + '.Technician' && JSON.stringify(refs(t.a.v, 'Values')) === JSON.stringify(refs(t.b.v, 'Values')) && /^Row label: /.test(t.a.v.visual.query.queryState.Values.projections.slice(-1)[0].field.Measure.Property),
+    () => `W table order: the twin's table is the writer's, the name column first and hidden, the row label last (INTENDED.table): ${t && JSON.stringify([refs(t.b.v, 'Values'), refs(t.a.v, 'Values')])}`);
   chk(() => m && JSON.stringify(refs(m.b.v, 'Values')) === JSON.stringify(refs(m.a.v, 'Values').slice().reverse()), () => `W matrix order: the twin reverses the measures, the writer keeps them (INTENDED.matrix): ${m && JSON.stringify([refs(m.b.v, 'Values'), refs(m.a.v, 'Values')])}`);
 }
 

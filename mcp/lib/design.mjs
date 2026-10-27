@@ -206,6 +206,16 @@ export function themeDesign(a) {
   return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
 }
 
+// (0.3.1 TW1, GL1-S2: a model whose theme has see-through visuals gets the glass look by default, yet the plan said "the
+// new visuals are solid") the colours' words follow the look: under glass the theme's transparent visuals are said as the
+// glass look's; plain keeps solidVisuals. info: themeColours' info (changed in place); look: lookFor's answer
+export function lookWords(info, look) {
+  if (!info || !info.solidVisuals || !look || look.look !== 'glass') return info;
+  const pct = /(\d+)% transparent/.exec(info.solidVisuals);
+  info.glassVisuals = `The theme's visuals are ${pct ? pct[1] + '% ' : ''}transparent, made to sit on a page picture: the new ${look.what || 'report'} has the glass look too, see-through visuals over its own soft page picture (look). Say it in the plan.`;
+  delete info.solidVisuals;
+  return info;
+}
 // ---- the look of a new design (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") ----
 // The plain look's name is what the engine has, chart.look "auto" (Power BI's own cards); "plain" is taken as the same.
 const LOOK_WORDS = { plain: 'auto' };
@@ -300,6 +310,7 @@ export function planLayout(a) {
   E.repairState(design, fix);
   // (GD1) a new report's look: the one asked, else glass where it keeps everything readable, else plain (said)
   const look = lookFor(design, lookAsked);
+  lookWords(colours, look);   // (TW1, GL1-S2)
   const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
   const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields, noTime: a.noTime }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout), s.topN ? { topN: s.topN } : {}));   // (D16: a.noTime; S5: each category chart's topN)
