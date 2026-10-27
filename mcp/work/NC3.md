@@ -14,7 +14,11 @@
   unchanged in count (11 replaced, 0 high, 7 medium, 4 low, 2 second options); a made-up copy of the lab with a map and a
   text search added: 13 replaced, validator 0 errors on its native copy; `npm test -- report` 30 suites, `-- core`
   golden byte for byte, the full run 95 suites; check-result-lines, changelog-words, check-agent-memory PASS.
-- **Resume:** the plan is pushed; then the tests (red), the code, the suites, the results below.
+- **Got:** custom-visuals-lab 56 -> 70 PASS (13 red on 77c2876 first); the lab's plan unchanged in count; the made-up
+  copy 13 replaced, validator 0 errors; report "run-tests: 34 suites passed (report)" and the full run "run-tests: 99
+  suites passed" (the registry is 34 report and 99 suites at this base, not the 30 and 95 of NC2's); core "6 suites
+  passed" (golden with it); lint exit 0; check-result-lines 99, changelog-words 184, check-agent-memory PASS.
+- **Resume:** done (code cf3e6eb); waits for the reviewer, then the laptop ("For the laptop").
 
 ## The evidence (Microsoft Learn and the schema; nothing of the owner's reports)
 1. **The map.** DataArcus writes `azureMap` (Microsoft's validator calls `map` and `filledMap` deprecated, "Legacy Bing
@@ -94,6 +98,8 @@
   measured 56 for a dropdown and its header at 10pt (2.157): for the laptop (below).
 - `npm test -- report`: "run-tests: 34 suites passed (report)" (the registry has 34 report suites at this base).
 - test.mjs shard 4 (v029visuals with it): "PASS  mcp  339 checks (shard 4/4: 13 parts)".
+- `npm test -- core`: "run-tests: 6 suites passed (core)" (golden, mutation 73 of 73 killed); `npm run lint` exit 0.
+- The full run, once, on the last code commit cf3e6eb: `npm test -- --keep-going` "run-tests: 99 suites passed".
 - build:min "All 74 .min.js files match their sources" (`visual-replace.js` has no .min.js and no page loads it: no
   ?v=, csp, ar-pages or sitemap change); test-site-config, changelog-words 184, check-result-lines 99, check-agent-memory
   PASS.
