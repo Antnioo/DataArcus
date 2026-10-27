@@ -311,7 +311,7 @@
 
   /** The check of a generated project: files [{ path, data }] (the writer's). opts: { model (the model's tables, for
    *  the column types and sort-by columns; none: those findings are notes), lang ('en' | 'ar'), names, clean (how
-   *  the MCP shows names), titles }. Returns { pages, visuals (what was read), desktop, worth, summary, problems, worthALook, counts, ran }:
+   *  the MCP shows names), titles }. Returns { pages, visuals (what was read), desktop, worth, summary, problems, worthALook, meant (R4A: DataArcus's own "no data" cards), counts, ran }:
    *  findings as { origin: rule | lint, rule, severity, guess, page, visual, place, what, fix }. Nothing is written. */
   function checkProject(files, opts) {
     const o = opts || {}, lang = o.lang === 'ar' ? 'ar' : 'en', inv = inventoryOf(files, o);
@@ -327,9 +327,9 @@
     const lints = L.findings.map((f) => Object.assign({ origin: 'lint', rule: f.rule, severity: f.severity, guess: f.guess, page: f.page, visual: f.visual, what: f.why, fix: f.fix }, f.place ? { place: f.place } : {}));
     // (0.3.1 R4A, round 4's problem 8) a generated project's cards over its charts are DataArcus's own "no data" pattern:
     // counted, never listed as worth a look
-    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f) && f.rule !== 'COVER_CARDS');
+    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f) && f.rule !== 'COVER_CARDS'), meant = all.filter((f) => !isDesktopProblem(f) && f.rule === 'COVER_CARDS');
     const counts = {}; all.forEach((f) => { counts[f.rule] = (counts[f.rule] || 0) + 1; });
-    const r = { pages: inv.pages.length, visuals: inv.pages.reduce((n, p) => n + p.visuals.length, 0), desktop: problems.length, worth: worthALook.length, problems, worthALook, counts, ran: ruled.ran.concat(Object.keys(LINT_RULES)), failed: ruled.failed, modelRead: L.modelRead };
+    const r = { pages: inv.pages.length, visuals: inv.pages.reduce((n, p) => n + p.visuals.length, 0), desktop: problems.length, worth: worthALook.length, problems, worthALook, meant, counts, ran: ruled.ran.concat(Object.keys(LINT_RULES)), failed: ruled.failed, modelRead: L.modelRead };
     r.summary = summaryOf(r, lang);
     return r;
   }

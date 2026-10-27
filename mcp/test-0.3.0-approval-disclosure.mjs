@@ -189,8 +189,10 @@ try {
       () => `T09-2. the files are grouped and counted (visuals ${count(/\/visual\.json$/)}, phone layouts ${count(/\/mobile\.json$/)}, pages ${count(/\/page\.json$/)}): ${PAGE.slice(PAGE.indexOf('Files that will be written'), PAGE.indexOf('Files that will be written') + 600)}`);
     const script = reportPlan.j.formats && reportPlan.j.formats.scriptAfterGo;
     chk(() => script && new RegExp(`Format script \\(1\\)`).test(PAGE) && PAGE.includes(script), () => `T09-3. the format script is named in the file list: ${script}`);
-    const why = reportPlan.j.kindChanges && reportPlan.j.kindChanges.slots[0].why;
-    chk(() => why && PAGE.includes(why), () => `T09-4. a kind change shows the lint's measured why, not a rebuilt reason: ${why}`);
+    // (0.3.1 R4A, round 4's problem 1: the person's page holds no pixels) the lint's own reason in plain words (said); its
+    // measured why stays in the plan answer, for the agent
+    const why = reportPlan.j.kindChanges && reportPlan.j.kindChanges.slots[0].said;
+    chk(() => why && PAGE.includes(why) && !PAGE.includes(reportPlan.j.kindChanges.slots[0].why), () => `T09-4. a kind change shows the lint's own reason (in plain words), not a rebuilt one: ${why}`);
     chk(() => !/Nothing is overwritten or deleted\./.test(PAGE) && /nothing is overwritten/i.test(PAGE) && /removes what this call created/.test(PAGE), () => `T09-5. the report page's overwrite sentence is true (new files only; a failed write removes what this call created): ${(PAGE.match(/<p class="note">[^<]*overwrit[^<]*/) || [''])[0]}`);
     chk(() => !/DataArcus never reads the model's rows/.test(PAGE) && /never returns data values/.test(PAGE), () => 'T09-6. the preview note says what the code does: the files are read on this machine, no data value is returned');
     // (SQ11, A2-S10) and it is true: hp's made-up data values are in its files on disk, and nowhere on the page

@@ -50,6 +50,10 @@
 - `test-0.3.0-testers.mjs` T1-1, T1-6, C1-2: the counts by kind were the files part's first line; round 4's problem 2
   puts a plain line first ("1 new report: 4 pages, next to your model, in the folder ...") with the counts folded under
   it, so the three checks read the page's head (the plain line, the counts inside a `<details>`). Their counts unchanged.
+- `test-0.3.0-approval-disclosure.mjs` T09-4: the page shows the lint's own reason, now its plain `said` (and not the
+  px `why`, which stays in the plan answer) (problem 1).
+- `test-0.3.0-check.mjs` C-02: the lab's findings are `problems + worthALook + meant` (the "no data" cards moved to
+  `meant`, round 4's problem 8); the counts compared are the same.
 - `test-0.3.1-r4a.mjs` A5 (my own, before the fix): a fourth slicer is refused by the schema's limit of 3 first.
 - Not changed: rc24 B-140's pattern ("Comparison: Bar chart (planned as a column chart") still holds: the row keeps its
   head and gives the plain words after it.
