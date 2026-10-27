@@ -18,7 +18,9 @@
   explicitly (said each); design-engine and pbip unchanged (CHART_DEFAULTS unchanged: every saved design's theme byte
   for byte); `npm test -- report`: the baseline + 1 suite; `-- core`: golden's changes said task by task; full run
   +1 suite.
-- **Resume:** the plan (this commit); then the work.
+- **Got:** glass-default 27 of 38 red on the base -> 41 PASS; theme-generator 910 -> 920; design-engine, pbip equal;
+  report 35 -> 36 suites; core 6 = 6 (golden unchanged); full run 101 suites passed. Tests changed for the default: 4.
+- **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The plan
 1. **One default, one gate, in the engine** (`design-engine.js`): `DEFAULT_LOOK = 'glass'`; `glassFit(d)`: glass fits
@@ -41,7 +43,38 @@
 7. **Tests:** every test that fails only because the default changed is said below with its plain case kept.
 
 ## Results
-(numbers: below, filled after the full run)
+Commits: plan d0abe37, the default 902726e, the twin b251678, the approval page and pinned tests 4081a23, the website
+suites and AR pages 0e4120c (the last code commit), sitemap 7b7d489; this note.
+
+| Before | After |
+|---|---|
+| Theme Generator's first visit: Card look "Power BI default" | "Glass (default)", "Plain" one click away; colours where glass can't pass: Plain, said |
+| generate_theme without chart.look: plain | glass where it fits (look, sayInPlan), else plain and why |
+| plan_layout / create_report without a look: solid cards, a blank pixel behind each page | glass and the soft picture; the plan's `look`, the approval page's "Card look" row and its picture named under Files |
+| The twin of a page with any picture: kept left to right | DataArcus's glass picture (marked in its PNG) mirrored as no picture |
+
+Suites (base 6f106a3 in a separate worktree -> after):
+- New `glass-default`: red first on the base, 27 of 38 failed; now 41 PASS (+3 for the approval page's file label).
+- `run-all theme-generator design-engine pbip`: 910 -> 920 (GD1's section, 5 checks x EN, AR), 598 = 598, 109 = 109.
+- `npm test -- report`: 35 -> 36 suites passed. `-- core`: 6 = 6 (mcp 1591, golden 12 tasks match: no golden field
+  pins the look, so golden-expected.json is unchanged; mutation 73 killed). `-- twin`: 8 = 8.
+- Full run `npm test -- --keep-going` on 7b7d489: "run-tests: 101 suites passed" (100 + glass-default).
+- The website's whole suite (`scripts/tests/run-all.mjs`) on 7b7d489: "All 21 passed" (the visitor change touches all).
+- lint clean; check-min PASS (every changed .min.js stamped); csp, ar-pages, site config, changelog-words,
+  check-result-lines (101), check-agent-memory (172) PASS.
+
+**Tests changed only because the default changed (each keeps its plain case):**
+1. `mcp/test-0.3.1-glass.mjs` G2 ("without the look nothing of glass"): now asks `chart.look: "auto"`; the default's
+   glass in glass-default G1.
+2. `mcp/test.mjs` generate_theme parity (the website's 54 saved designs): each given its look as saved ("auto" when
+   it has none), the website's own rule for a saved design; the glass designs among them unchanged.
+3. `mcp/test-0.3.0-testers.mjs` T6-1 (the page background listed as what it is): the default plan's background is
+   now the glass picture; the plain case's "blank, see-through" in glass-default R2b-plain.
+4. The website's suites (`scripts/tests/lib.mjs` visitor): a visitor starts with the design the generator saved on a
+   first visit before GD1 (no look: plain), so theme-generator, design-engine and pbip keep their paths and fixtures
+   byte for byte; the true first visit (glass) in theme-generator's GD1 section (`plainDesign: false`).
+5. rc24 T-3, look-options TW1, flip-cards TW1, theme-icons TW1 failed (the twin stopped mirroring glass pages): no
+   test changed, the cause fixed (decision 4).
 
 ## CHANGELOG line
 - **Glass by default:** new reports and themes now start in the glass look: the Theme Generator opens on it,
