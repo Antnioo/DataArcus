@@ -247,10 +247,10 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     model('i-ar-en', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
       measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
     const dEn = await designed('I ar en', null, 'i-ar-en'), hEn = await hand('I ar hand en', null, 'i-ar-en');
-    // (0.3.1 LR2, changed on purpose: the owner's «حسب» joins English names in an Arabic report, so the hand page's bar and
-    // table no longer share a title and its table takes no «التفاصيل» tail; the tail is the writer's own word, as "detail")
+    // (0.3.1 LR2 allowed «التفاصيل» here for its «حسب» joins; changed back 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a
+    // title on English names is wholly English on both paths, "by" and ": detail", so the round-14 condition holds again)
     const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();
-    chk(() => !dEn.err && !hEn.err && words(titles(dEn, 'i-ar-en')) && words(titles(dEn, 'i-ar-en')).split(',').every((w) => words(titles(hEn, 'i-ar-en')).split(',').includes(w) || w === 'detail' || w === 'التفاصيل'),
+    chk(() => !dEn.err && !hEn.err && words(titles(dEn, 'i-ar-en')) && words(titles(dEn, 'i-ar-en')).split(',').every((w) => words(titles(hEn, 'i-ar-en')).split(',').includes(w) || w === 'detail') && !/حسب|التفاصيل/.test(words(titles(dEn, 'i-ar-en')) + words(titles(hEn, 'i-ar-en'))),
       () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn, 'i-ar-en')), words(titles(hEn, 'i-ar-en'))])}`);
     // the source: texts(lang) holds by and newDesign; the server passes it as it is on both paths. "detail" is the writer's
     // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
