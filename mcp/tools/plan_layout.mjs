@@ -29,7 +29,7 @@ import { READS, focusInput, tablesInput, modelPath, pageInput, langInput } from 
 import { modelRef } from '../lib/plan-keys.mjs';
 import { formatsAnswer } from '../lib/fix-scripts.mjs';
 import { relsOf, fieldsAndProblems, axesProblems, axesOf } from '../lib/report-fields.mjs';
-import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin } from '../lib/report-inputs.mjs';
+import { unknownKeys, CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly } from '../lib/report-inputs.mjs';
 import { topSaid, phoneAnswer, calendarSaid } from '../lib/report-said.mjs';
 import { BLANK_PNG_BYTES, reportRun } from '../lib/report-run.mjs';
 import { createRequire } from 'node:module';
@@ -298,6 +298,9 @@ export function register(server, ctx) {
     // (0.3.1 X2) the Arabic pages of a bilingual report are built from its English pages
     if (a.languages === 'en+ar' && a.lang === 'ar') planProblems.push('languages "en+ar": the Arabic pages are built from the English pages, so plan the report in English (lang "en", or leave lang out); the Arabic texts and field names are approved in this plan (bilingual: arabicTexts, arabicTerms)');
     if ((a.tabsShown != null || a.arabicTexts != null || a.arabicTerms != null) && a.languages !== 'en+ar') planProblems.push('tabsShown, arabicTexts and arabicTerms are for a report in English and Arabic: add languages "en+ar", or leave them out');
+    // (0.3.1 SF1, round 4: a tester's "native copy with consistent text" kept 18 of 36 visuals' own fonts) the redesign's
+    // options change nothing outside a redesign: said, never dropped silently
+    { const only = redesignOnly(a); if (only.length) planProblems.push(`${only.join(', ')} ${only.length === 1 ? 'works' : 'work'} on a redesign of an existing report only (redesignFrom)${a.customVisualsFrom != null ? ': a native copy writes the replacements alone. For a native copy with one text set, write the native copy first, then plan its redesign: redesignFrom "<the native copy>" with ' + only.join(', ') : ': a new report has one text set and its own layout already'}. Leave ${only.length === 1 ? 'it' : 'them'} out here.`); }
     if (a.languages === 'en+ar' && a.customVisualsFrom != null) planProblems.push('languages "en+ar" is for a new report; for a copy of a report in both languages, use create_arabic_twin with into "same" on it');
     if ((pf.slicers || []).length && !r.design.layout.filters) planProblems.push(`slicers (planFields.slicers): this layout has no filter area, so the slicers have no place. Call plan_layout again with filters "top", because a strip of slicers above the charts keeps this layout as it is (every chart keeps its width; the strip takes one row above them); filters "start" or "end" adds a side panel instead, which narrows the charts. Or leave the slicers out.`);
     let model = null, planned = null;

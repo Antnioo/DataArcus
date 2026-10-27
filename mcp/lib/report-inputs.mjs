@@ -125,6 +125,9 @@ export const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartCo
 const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid', flipCards: false, waterfallRtl: Gallery.WATERFALL_RTL_DEFAULT, statusIcons: false, daxFunctions: false };
 export const withLookDefaults = (a) => Object.assign({}, a, Object.fromEntries(Object.entries(LOOK_DEFAULTS).filter(([k]) => a[k] === undefined)));
 // (B-01: focus and tables decide which fields are picked when the plan names none, so they are pinned too)
+// (0.3.1 SF1) the options only a redesign uses (redesignFrom), given with something to change: plan_layout refuses them
+// elsewhere and create_report writes nothing with them, never drops them silently
+export const redesignOnly = (a) => ['consistentText', 'keepPositions', 'titles', 'restyle'].filter((k) => a[k] != null && a[k] !== false && !(typeof a[k] === 'object' && !Object.keys(a[k]).length));
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
 // (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
 // its pin differ from create_report's)
