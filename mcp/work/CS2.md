@@ -16,7 +16,8 @@
 - **Got:** cs2 29 checks, red first on e2236be (FAIL 18 of 28; T4's "title hidden" check added after the mutant first
   survived: it is the check that kills CS-style). cs1 44 = 44. report 33 -> 34 suites PASS (every other count the
   same), checker 5 = 5, core 6 = 6, mutation 73 -> 74 mutants, all killed (189 -> 192 checks). lint clean.
-  changelog-words, check-result-lines, check-agent-memory PASS. Full run: see "Full run" below.
+  changelog-words, check-result-lines, check-agent-memory PASS. Full run on 480386a's code (a3c89c0 + docs):
+  "run-tests: 99 suites passed" (the base's 98 + cs2).
 - **Resume:** done; waits for the reviewer, then the laptop ("For the laptop").
 
 ## The evidence (each property's source)
