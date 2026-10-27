@@ -8,6 +8,11 @@
 // one. Every name and number is made up. Microsoft's validator runs on the original.
 //   node lab/consistency-lab.mjs <empty folder>          (from mcp/; prints the .pbip to open and the next calls)
 //   node lab/consistency-lab.mjs <empty folder> --theme  (the report with a theme file of its own)
+// (0.3.1 CS2) What Desktop must draw in "Store Ops redesigned" (the run sheet: mcp/work/CS2.md "For the laptop"): every
+// visual title 14pt in the theme's font, not bold or italic; table and matrix headers, values and row headers 10pt; the
+// copy's theme (DataArcusText.json, or store-ops-theme.json with --theme) sets them as visual styles per visual type,
+// where Desktop draws them (CS1's text classes alone were not drawn: Desktop 2.159, 27 Oct). Read the size in the
+// format pane of each visual (Title > Text size; Column headers / Values > Text size) and compare with the plan's text.set.
 import '../test-env.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -99,7 +104,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     try {
       const ck = await s.call('check_report', { path: `${LAB_NAME}.pbip`, checks: ['validator', 'theme'] });
       console.log(JSON.stringify({ open: r.pbip, validator: ck.j ? ck.j.validator : ck.t, formatMixed: ck.j ? ck.j.findings.filter((f) => f.rule === 'FORMAT_MIXED').map((f) => f.what) : null,
-        next: `In this folder (DATAARCUS_ROOT): plan_layout { path: "${r.model}", redesignFrom: "${LAB_NAME}.pbip", consistentText: "report" }, approve_plan, then create_report with the same and the planId; open "${LAB_NAME} redesigned.pbip" beside "${LAB_NAME}.pbip".` }, null, 2));
+        next: `In this folder (DATAARCUS_ROOT): plan_layout { path: "${r.model}", redesignFrom: "${LAB_NAME}.pbip", consistentText: "report" }, approve_plan, then create_report with the same and the planId; open "${LAB_NAME} redesigned.pbip" beside "${LAB_NAME}.pbip".`,
+        drawn: 'In the copy, Power BI Desktop must show (format pane): every visual title 14pt, table and matrix text 10pt (headers, values, row headers), the theme\'s font; each visual\'s own title colour as in the original. Any other size: stop and report it with the visual and the pane\'s value.' }, null, 2));
     } finally { await s.close(); }
   }).catch((e) => { console.error(String(e && e.stack || e)); process.exit(1); });
 }
