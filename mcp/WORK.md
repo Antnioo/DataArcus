@@ -16,6 +16,7 @@ section of `WORK-2026-10-25.md`).
 - Merged 26 Oct: [LR1](work/LR1.md), [LR2](work/LR2.md), [BD1](work/BD1.md), [NC1](work/NC1.md), [CS1](work/CS1.md),
   [GL1](work/GL1.md), [NC2](work/NC2.md), [RD1](work/RD1.md).
 - 27 Oct: [GL2](work/GL2.md) (the glass look's tables: no solid fill) on `fix/0.3.1-gl2`, waits for the reviewer.
+- 27 Oct: [GC3](work/GC3.md) (the Gulf calendar: no second active relationship) on `fix/0.3.1-gc3`, waits for the reviewer.
 
 ## Next step
 1. The reviewer merges SQ12, SQ14, SQ15; every batch and item status: [work/SEEN-QUEUE.md](work/SEEN-QUEUE.md).

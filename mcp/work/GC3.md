@@ -20,8 +20,9 @@
   every other count unchanged; `-- core` unchanged counts (`mcp` part gulf-calendar: one check's expectation changed,
   said below; golden byte for byte: no golden holds a Gulf calendar script); lint, check-result-lines,
   changelog-words, check-agent-memory PASS; `--keep-going` once at the end.
-- **Got:** see "Results".
-- **Resume:** the laptop: "For the laptop" (tour step 3 in TMDL view). Then the reviewer.
+- **Got:** gc3 red 15/22 failed on the base, then 22 PASS; model 13 -> 14 suites; core 6 suites, counts unchanged
+  (mcp 1591, golden 12); `--keep-going` on 62f31e0: `run-tests: 103 suites passed`; every check PASS ("Results").
+- **Resume:** done (62f31e0); waits for the reviewer, then the laptop's "For the laptop" (tour step 3 in TMDL view).
 
 ## Evidence (Microsoft Learn, read 27 Oct)
 - "Model relationships in Power BI Desktop", Make this relationship active: "There can only be one active filter
@@ -51,8 +52,14 @@
    `fromColumn: Sales.Date` becomes `fromColumn: Calendar.Date` (the bug's own expectation; no count changes).
 5. Suites, lint, checks; `--keep-going` once on the last code commit.
 
-## Results
-(filled after the runs)
+## Results (before on the base 88ee4df -> after on 62f31e0)
+- `node test-0.3.1-gc3.mjs`: on the base `FAIL  gc3  22 checks, 15 failed` -> `PASS  gc3  22 checks`.
+- `npm test -- model`: 13 suites passed -> 14 suites passed (every count as before; gc3 the new one).
+- `npm test -- core`: 6 suites passed -> 6 (mcp 1591 -> 1591, golden 12 tasks match, rc22 26, sweep-s1 30,
+  test-0.3.0-testers 74, mutation 192: 74 mutants all killed). Goldens byte for byte.
+- `npm test -- --keep-going` on 62f31e0: `run-tests: 103 suites passed`.
+- `npm run lint` clean; check-result-lines 103, changelog-words 192, check-agent-memory 173: PASS.
+- Website: no file touched (no build:min, stamps, csp, ar-pages, sitemap-lastmod needed).
 
 ## CHANGELOG line
 - **The Gulf calendar never gives a date column a second date table:** when a date column you ask add_gulf_calendar to
