@@ -106,6 +106,9 @@ try {
       () => `G1-4. the plan's write line says it: ${JSON.stringify(g.plan.j.plan && g.plan.j.plan.writesAfterGo)}`);
     chk(() => /Sales\[Date\] already relates to the date table "Calendar"/.test(g.page) && /no second relationship is added to Sales\[Date\]/.test(g.page),
       () => `G1-5. the approval page says it (EN): ${g.page.slice(0, 600)}`);
+    // (ST1, GC3-S2) the input row is what was asked, not a claim the columns are related as given
+    chk(() => /Asked to relate to the new table's Date/.test(g.page) && !/>Related to the new table's Date</.test(g.page) && !/Related to the new table's Date: /.test(g.page),
+      () => `G1-5b. the input row says "asked to relate", the write line says what is related: ${g.page.slice(0, 600)}`);
     chk(() => noSecondActive(SM, g.script) && readsBack(g.script) && shapeOk(g.script), () => `G1-6. no second active relationship; reads back; the proven shape: ${g.script.slice(g.script.indexOf('\trelationship'))}`);
     chk(() => g.out.j.byHand.length === 1 && /Mark as date table/.test(g.out.j.byHand[0]), () => `G1-7. one step by hand, as before: ${short(g.out)}`);
     // the Arabic page

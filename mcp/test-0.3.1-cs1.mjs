@@ -197,6 +197,10 @@ try {
       const page = await get(link); answers.push(page);
       chk(() => /Text set/.test(page) && /visual titles/.test(page) && /14pt/.test(page) && /Settings removed/.test(page) && /37/.test(page), () => `T10. the approval page shows the text set and the count removed: ${page.slice(0, 600)}`);
       chk(() => /its text, from the theme/.test(page) && /visual titles: size set to 14pt \(was 11pt\)/.test(page) && /DataArcusText\.json/.test(page), () => 'T10. each removal listed with its visual (visual titles: size set to 14pt (was 11pt); R4A: in plain words), and the theme added');
+      // (ST1, R4A-S4) a kept setting is named in plain words ("font", "text size"), never by its property ("fontFamily")
+      const { summary } = await import('./lib/approval-window.mjs');
+      const keptRows = JSON.stringify(summary('redesign', { shown: { text: { set: [], removed: 0, kept: ['fontFamily', 'titleFontSize', 'textSize'].map((property) => ({ page: 'Sales', visual: 'Card', property, why: 'set for one series or field (a selector): kept' })) } } }));
+      chk(() => !/\b(?:fontFamily|fontSize|textSize|titleFont\w*|titleBold|titleItalic)\b/.test(keptRows) && /Card font/.test(keptRows) && /Card title text size/.test(keptRows) && /Card text size/.test(keptRows), () => `T10. the kept settings in plain words: ${keptRows.slice(0, 900)}`);
     } finally { await wsrv.close(); }
   } finally { await s.close(); }
 

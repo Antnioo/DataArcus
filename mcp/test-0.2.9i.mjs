@@ -165,7 +165,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
     const twin = twinSource(), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
-    chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');
+    chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin writes no list of its own');
+    // (ST1, S9-S1: the line above passed on a dead declaration, MONTHS_AR read nowhere) the twin keeps no month list of its own
+    chk(() => !/MONTHS_AR\s*=/.test(twin), () => 'one Arabic month list: the twin declares no MONTHS_AR of its own (its months come from arabic-calendar.js)');
     // (Q1 T-5, 0.3.1: the check above passes on the name alone; the twin declares AR_MONTHS and writes its month column
     // from arabic-calendar.js's MONTHS) the months the twin writes are the writer's, word for word
     chk(() => { const C = req('../assets/js/arabic-calendar.js'); return C.MONTHS.length === 12 && C.MONTHS.join() === Px.AR_MONTHS.join() && /ArabicCal\.columnsFor/.test(twin); }, () => `one Arabic month list: the twin's month column (arabic-calendar.js MONTHS) names the months as the writer's AR_MONTHS: ${req('../assets/js/arabic-calendar.js').MONTHS.join()} / ${Px.AR_MONTHS.join()}`);

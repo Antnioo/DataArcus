@@ -3,7 +3,7 @@ window.toolsHubTranslations = {
   "en": {
     "hub": {
       "badge": "Free · No sign-up · Runs in your browser",
-      "title": "Free Power BI & Fabric Tools",
+      "title": "Power BI & Fabric Tools",
       "subtitle": "Small tools that save Power BI and Fabric developers hours, built from real client work. Nothing you enter leaves your browser.",
       "cards": {
         "theme": {
@@ -101,13 +101,13 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "Free Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, Hijri DAX calendar, measure builder, model health check, licensing calculator, exam practice."
+      "title": "Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, Hijri DAX calendar, measure builder, model health check, licensing calculator, exam practice."
     }
   },
   "ar": {
     "hub": {
       "badge": "مجانية · بدون تسجيل · تعمل في متصفحك",
-      "title": "أدوات Power BI و Fabric مجانية",
+      "title": "أدوات Power BI و Fabric",
       "subtitle": "أدوات صغيرة توفر على مطوري Power BI و Fabric ساعات من العمل، مبنية من مشاريع حقيقية مع العملاء. لا شيء مما تدخله يغادر متصفحك.",
       "cards": {
         "theme": {
@@ -205,7 +205,7 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "أدوات Power BI و Fabric مجانية - DataArcus", "keywords": "داتا أركوس, DataArcus, Power BI", "description": "أدوات Power BI و Fabric مجانية: مولّد السمات والتخطيطات، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات تجريبية."
+      "title": "أدوات Power BI و Fabric - DataArcus", "keywords": "داتا أركوس, DataArcus, Power BI", "description": "أدوات Power BI و Fabric: مولّد السمات والتخطيطات، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات تجريبية."
     }
   }
 };

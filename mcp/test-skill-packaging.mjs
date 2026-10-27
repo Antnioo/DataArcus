@@ -26,10 +26,13 @@ const TOOLS = [...SERVER.matchAll(/server\.registerTool\('([a-z_]+)'/g)].map((m)
 const FILES = ['.claude-plugin/marketplace.json', '.github/plugin/marketplace.json', 'LICENSE', 'README.md',
   'plugins/dataarcus/.claude-plugin/plugin.json', 'plugins/dataarcus/.github/plugin/plugin.json',
   'plugins/dataarcus/skills/dataarcus/SKILL.md', 'plugins/dataarcus/skills/report-design/SKILL.md'].sort();
-const walk = (dir, base = '') => (fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }) : []).flatMap((e) =>
+const walk = (dir, base = '') => (fs.existsSync(dir) ? fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.name !== '.mcpb-cache') : []).flatMap((e) =>
   e.isDirectory() ? walk(path.join(dir, e.name), base + e.name + '/') : [base + e.name]);
 const have = walk(SRC).sort();
 check(JSON.stringify(have) === JSON.stringify(FILES), `mcp/skills-packaging/ must hold exactly ${FILES.join(', ')}; it holds ${have.join(', ') || 'nothing'}`);
+// (ST1, K1-S2) a marketplace added from this local folder writes .mcpb-cache/ inside it: git ignores it (the root
+// .gitignore: the folder keeps its 8 files) and the count above never sees it
+check(/^\.mcpb-cache\/$/m.test(readText(path.join(HERE, '..', '.gitignore'))), 'the root .gitignore must list .mcpb-cache/ (a local marketplace writes it inside mcp/skills-packaging/)');
 
 // 2-5: the four manifests parse
 const files = {

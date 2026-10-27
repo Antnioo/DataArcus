@@ -367,10 +367,10 @@ export function meaningOf(visual, opts) {
       kind = want;
       if (hint !== objHint) idFit = kind;
       if (kind === 'combo' && idHints.includes('bar')) lost.push('its horizontal bars: Power BI\'s line and column combo is vertical, so the bars become columns');
-      why += `; the ${hint === objHint ? 'format objects' : 'id\'s words'} hint at a ${hint === 'time' ? 'timeline' : hint}, which the fields can show`;
+      why += `; the ${hint === objHint ? 'format objects' : 'id\'s words'} hint at ${aOr(hint === 'time' ? 'timeline' : hint)}, which the fields can show`;
     } else {
       conf = down(conf);
-      why += `; the id's words hint at a ${hint === 'time' ? 'timeline' : hint}, set aside: the fields can't be shown as one`;
+      why += `; the id's words hint at ${aOr(hint === 'time' ? 'timeline' : hint)}, set aside: the fields can't be shown as one`;
     }
   }
   if (kind === 'network') lost.push('no native visual draws a network: an HTML/SVG measure in an image-capable visual is needed (the owner approves it in the plan)');
@@ -432,6 +432,8 @@ export function fitsCapabilities(type, roles) {
 
 // the native visual's own name of a role (its display name in Desktop's field wells)
 const roleLabel = (type, r) => { const c = capsOf(type), d = c && (c.dataRoles || []).find((x) => x.name === r); return d && d.displayName ? d.displayName : r; };
+// (ST1, NC3-S2) the article before a kind's name: "an Azure map", "an area chart"
+const aOr = (w) => (/^[aeio]/i.test(String(w)) ? 'an ' : 'a ') + w;
 const LABEL = { combo: 'line and clustered column chart', column: 'clustered column chart', bar: 'clustered bar chart', line: 'line chart', area: 'area chart', pie: 'pie chart',
   donut: 'donut chart', waterfall: 'waterfall chart', scatter: 'scatter chart', map: 'Azure map', gauge: 'gauge', kpi: 'KPI', table: 'table', matrix: 'matrix', card: 'card', slicer: 'slicer', multiRowCard: 'multi-row card' };
 const CHARTS = ['bar', 'column', 'line', 'area', 'combo', 'pie', 'donut', 'waterfall'];
@@ -615,8 +617,8 @@ export function nativeFor(visual, opts) {
       }
       // a picture that becomes another kind of visual says so first, in plain words (rc.2b: a map written as a table)
       const PIC = ['map', 'scatter', 'gauge', 'kpi', 'pie', 'donut', 'waterfall'];
-      if (best.noMap) lost.unshift(`the Azure map itself: written as a ${LABEL[best.kind] || best.native} of the same fields by place, which draws without Azure Maps (no tenant setting needed)`);
-      else if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
+      if (best.noMap) lost.unshift(`the Azure map itself: written as ${aOr(LABEL[best.kind] || best.native)} of the same fields by place, which draws without Azure Maps (no tenant setting needed)`);
+      else if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as ${aOr(LABEL[best.kind] || best.native)}`);
       // a sort by a field no role carries (a helper): kept through the tooltips, said
       const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
       if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
@@ -650,7 +652,7 @@ export function nativeFor(visual, opts) {
   // medium = one of the two; low = inferred from the fields' kinds. Never high without the package.
   const idKnown = !!(best && m.idFit && best.kind === m.idFit), rolesRead = !guess && !!m.named;
   const confidence = !best ? (guess && m.confidence === 'high' ? 'medium' : m.confidence) : !guess && idKnown ? 'high' : idKnown || rolesRead ? 'medium' : 'low';
-  const idSaid = idKnown ? `its id's words name a ${LABEL[best.kind] || best.native}` : hintsOf(type).length ? 'its id\'s words name no kind its fields could be written as here' : 'its id names no kind DataArcus knows';
+  const idSaid = idKnown ? `its id's words name ${aOr(LABEL[best.kind] || best.native)}` : hintsOf(type).length ? 'its id\'s words name no kind its fields could be written as here' : 'its id names no kind DataArcus knows';
   const evidence = `${guess ? 'no package in the report: its own role definitions are not read' : `its package's role definitions read${rolesRead ? ', every role named' : ''}`}; ${idSaid}; ${idKnown && !guess ? 'both agree' : 'matched by its fields\' kinds and its role names'}`;
   const extras = best ? Object.assign({ format: D.format, tooltips: D.tooltips }, D.needs.length ? { needs: D.needs } : {}, D.expand ? { expand: D.expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}, best.added ? { added: best.added } : {}) : {};
   const sec = other ? (() => { const d = detailsOf(other); return Object.assign({ kind: other.kind, native: other.native, roles: other.roles, label: other.native === 'textSlicer' ? 'input slicer' : LABEL[other.kind] || other.native, lost: d.lost, format: d.format }, d.needs.length ? { needs: d.needs } : {}, other.added ? { added: other.added } : {}); })() : null;

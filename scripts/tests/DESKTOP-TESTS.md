@@ -2481,6 +2481,17 @@ our header measure (bold text letter by letter + 24 a page of 1080 high, the wri
   texts' drawn widths at 10 and 15pt (crop), the header's font in the format pane, and whether a header wraps.
 - check_report said nothing about the cut header (0.2.9.1 adds TABLE_HEADER_CUT; report-rules.js `headerNeed`).
 
+## 2026-10-27: Arabic text with a Latin run (the bidi lab, BD2), Power BI Desktop 2.159
+Measured on the laptop (27 Oct, Windows text recognition on the drawn report; the lab and its table:
+`mcp/lab/BIDI-LAB.md`). Each kind of canvas text (text boxes, visual titles, card labels and callouts, buttons, table
+and slicer headers, tooltip page names), a Latin run at the start, middle and end of an Arabic text, in five variants:
+- V0 (no marks) wrong everywhere; V1 (each Latin run in FSI ... PDI) right except where Desktop cuts a text with "..."
+  (cards: the "..." at the wrong end).
+- **V3 (V1 wrapped whole in U+2067 ... U+2069, RLI ... PDI) right on every canvas kind, cut card texts included**;
+  V4 draws as V3.
+- No variant helps the page tab strip: page and tooltip page names lay out left to right.
+- So DataArcus's rule is V3: `isolateLatin` (`assets/js/text-measure.js`) since BD2; `isolateRuns` is V1.
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.

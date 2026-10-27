@@ -5,6 +5,16 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **Going back to 0.3.0:** if 0.3.1 does not suit you, download `dataarcus-0.3.0.mcpb` from its release (v0.3.0)
+  on https://github.com/Antnioo/dataarcus-releases/releases and check its SHA-256 before you install it: it must be
+  `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
+  Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
+  stay where they were written.
+- **No option dropped without a word:** `consistentText`, `keepPositions`, `titles` and `restyle` work on a redesign
+  only. Given with a native copy of custom visuals or a new report, they were ignored, so a native copy asked "with
+  consistent text" kept each visual's own fonts. Now the plan says so and names the way: write the native copy, then
+  redesign it with `consistentText`. The Gulf calendar's script never relates a column or date table whose name holds
+  a tab or a line break (it says to rename it), and a consistent copy never writes a font name holding one.
 - **Clearer plans and approval pages:** when DataArcus adds a slicer to fill the design's empty slots, create_report
   now takes either the slicers you asked for or the full list the plan showed: the same approved report either way. When
   a write is refused because its inputs differ from the approved plan, the answer names what differs and what to pass.

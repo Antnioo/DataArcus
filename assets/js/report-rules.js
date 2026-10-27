@@ -340,7 +340,7 @@
       about: 'a theme inside a project has its own "name" equal to the file name report.json references (with .json), and the report folder has a .platform file',
       run(R, out) {
         if (!R.hasPlatform) out(null, 'the report folder has no .platform file', 'Add the .platform file (Power BI Desktop writes it when it saves the project).', { file: '.platform' });
-        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
+        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator and Fabric reject it (Power BI Desktop opens it: measured 2026-10-10, DESKTOP-TESTS.md).', { file: R.theme.file });
       } }
   ];
   // (0.3, J7) Power BI's accessibility basics, the family "a11y": report-a11y.js, sourced to Microsoft's guidance (not
