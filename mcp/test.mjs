@@ -4583,7 +4583,7 @@ if (part('round20')) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
       // (changed 19 Oct 2026, 0.3.0 R2: the Arabic plan pins the fixed list's names of the columns, «المنطقة», «المنتج»,
-      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs keeps the brackets' case)
+      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs pins the titles wholly in one language, no bracket: LR2, TT1)
       chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && !pages.flat().some((t) => / \([^)]+\)$/.test(t)),
         () => `${lang}: every chart title of a page must be its own, a repeated one with its grouping column in brackets: ${JSON.stringify(pages)}`);
     }

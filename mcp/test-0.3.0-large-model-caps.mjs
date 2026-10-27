@@ -96,7 +96,7 @@ try {
     chk(() => !rest.err && rest.j.tables.length + (rest.j.notShown || []).length === rt.j.notShown.length, () => `C-2 read_model notShown: the rest is given when asked: ${short(rest)}`); }
   await call('suggest_fields focus ar', 'suggest_fields', { path: MP, focus: FOCUS, kpis: 6, lang: 'ar' });
   await call('suggest_fields no focus', 'suggest_fields', { path: MP, kpis: 6 });
-  await call('suggest_fields tables (60, the most it takes)', 'suggest_fields', { path: MP, kpis: 6, tables: names.slice(0, 60) });
+  await call('suggest_fields tables (60 of the 100 it takes)', 'suggest_fields', { path: MP, kpis: 6, tables: names.slice(0, 60) });
   const hp = await call('check_model_health maxItems 200, country', 'check_model_health', { path: MP, maxItems: 200, country: 'uae', asOf: '2026-10-20' });
   const hid = await approve('check_model_health (fix scripts)', hp);
   const ids = (hp.j && hp.j.findings || []).map((f) => f.id);
