@@ -59,6 +59,12 @@ for (const w of ['auto', 'plain']) {
 const L3 = get(() => D.planLayout({ design: { chart: { look: 'glass', labels: 'on' } } })), L4 = get(() => D.planLayout({ design: { chart: { labels: 'on' } } }));
 chk(() => L3.design.chart.look === 'glass' && L3.look.chosenBy === 'asked' && L4.design.chart.look === 'glass' && L4.look.chosenBy === 'default' && L4.design.chart.labels === 'on',
   () => `L3. glass asked is glass; a chart style without a look takes the default and keeps its other choices: ${cut([L3.look, L4.look, L4.design && L4.design.chart])}`);
+// (TW1, GL1-S2, red first) a model whose theme has see-through visuals: glass by default, and the plan's colours say glass,
+// not "the new visuals are solid"; plain asked keeps the solid words
+{ const rt = { report: 'Sales', theme: { name: 'Seen through', themeColours: ['#2563EB', '#0F766E', '#D97706'], background: '#F4F6F9', text: '#1F2937', cardTransparent: 40 } };
+  const Lg = get(() => D.planLayout({ reportTheme: rt })), Lp = get(() => D.planLayout({ reportTheme: rt, design: { chart: { look: 'plain' } } }));
+  chk(() => Lg.design.chart.look === 'glass' && Lg.colours && !Lg.colours.solidVisuals && /glass look too/.test(Lg.colours.glassVisuals) && /40% transparent/.test(Lg.colours.glassVisuals), () => `L7. a theme with see-through visuals under glass: the plan's colours say glass, never "solid": ${cut(Lg.threw || [Lg.design.chart.look, Lg.colours])}`);
+  chk(() => Lp.design.chart.look !== 'glass' && Lp.colours && /the new visuals are solid/.test(Lp.colours.solidVisuals) && !Lp.colours.glassVisuals, () => `L8. guard: plain asked keeps "the new visuals are solid": ${cut(Lp.threw || [Lp.design.chart.look, Lp.colours])}`); }
 const L5 = get(() => D.planLayout({ colors: { accent: PALE } })), L6 = get(() => D.planLayout({ colors: { accent: PALE }, design: { chart: { look: 'glass' } } }));
 chk(() => L5.design.chart.look === 'auto' && L5.look.chosenBy === 'default' && L5.look.glassFailed.some((c) => /colour 1/.test(c.check)) && /can't keep everything readable/.test(L5.look.sayInPlan) && !E.isGlass(L5.design),
   () => `L4. a pale accent: the plain look, and why (glass can't keep colour 1 readable): ${cut(L5.look)}`);

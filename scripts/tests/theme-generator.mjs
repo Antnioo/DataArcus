@@ -453,6 +453,15 @@ export default async function ({ browser, url, page = PAGE }) {
       note: (document.querySelector('#preview .tg-glassnote') || {}).textContent || '', lay: !!document.querySelector('#layCanvas svg image'), vis: document.getElementById('dlVis').textContent }));
     check(/url\("?data:image\/png;base64,/.test(pv.bg) && /rgba\(/.test(pv.card) && /border:1px solid/.test(pv.card) && pv.lay, `${lang} glass: the preview draws the picture under see-through cards: ${JSON.stringify(pv).slice(0, 300)}`);
     check(lang === 'en' ? /no blur/.test(pv.note) && !/\b(first|only|official|free)\b/i.test(pv.note) : /ضبابية/.test(pv.note), `${lang} glass: the preview says Power BI has no blur: "${pv.note}"`);
+    // (0.3.1 TW1, GL2-S2) the preview's table as Power BI draws a glass table (design-engine.js glassTables): the header
+    // row clear (no accent fill), its text the text colour; banded, the second row the engine's band (gl.table.band)
+    await v.pg.selectOption('#csTable', 'banded');
+    const tb = await v.pg.evaluate(() => { const rows = [...document.querySelectorAll('#preview .tg-table tr')], c = (e) => getComputedStyle(e).backgroundColor; return { head: c(rows[0]), th: getComputedStyle(rows[0].querySelector('th')).color, r1: c(rows[1]), r2: c(rows[2]) }; });
+    const st2 = await v.pg.evaluate((k) => JSON.parse(localStorage.getItem(k)), STORE), band = E.glassLook(st2).table.band, rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const textCss = `rgb(${rgb(st2.ui.text).join(', ')})`, bandRgb = band ? `rgba(${rgb(band).join(', ')}, ` : null;
+    check(tb.head === 'rgba(0, 0, 0, 0)' && tb.th === textCss && tb.r1 === 'rgba(0, 0, 0, 0)' && band && tb.r2.startsWith(bandRgb) && Math.abs(parseFloat(tb.r2.slice(bandRgb.length)) - parseInt(band.slice(7, 9), 16) / 255) < 0.01,
+      `${lang} glass: the preview's table header is clear in the text colour, the banded row the engine's band (${band}): ${JSON.stringify(tb)}`);
+    await v.pg.selectOption('#csTable', 'auto');
     const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pngBtn')]);
     const bytes = fs.readFileSync(await d.path()), pg = E.page(st.layout);
     // (0.3.1 LC1: Node deflates by node:zlib, the browser in JavaScript: the same pixels and mark, other bytes)

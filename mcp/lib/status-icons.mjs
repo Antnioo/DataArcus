@@ -36,7 +36,7 @@ export function iconsOption(v) { if (v === true) return true; if (Array.isArray(
 
 const keyOf = (s) => { const mk = String(s).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? { t: mk[1], m: mk[2] } : null; };
 // (SQ15a) a KPI whose target is not one measure: said so, never quoted
-const kpiSaid = (raw, t, m) => { const k = kpiTarget(raw, t, m); return k && k.expression ? '; its KPI in the model has a target, but it is an expression, not a measure DataArcus can name' : ''; };
+export const kpiSaid = (raw, t, m) => { const k = kpiTarget(raw, t, m); return k && k.expression ? '; its KPI in the model has a target, but it is an expression, not a measure DataArcus can name' : ''; };
 const shownName = (s) => JSON.stringify(Pbip.shown ? Pbip.shown(String(s)).slice(0, 160) : String(s).replace(/[\p{Cc}\p{Cf}]/gu, ' ').slice(0, 160));
 
 /** The target measure the model's metadata names for t[m] (raw: the model's tables), or null: the measure's own KPI

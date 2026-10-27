@@ -10,6 +10,14 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **The Arabic twin matches the English report more closely:** text boxes keep the panel they have on the English
+  pages. A table that starts with a text column keeps its total row word: it is written as create_report writes its
+  Arabic tables, «الإجمالي» on the total row through a report measure the plan names. A chart on a whole-number axis
+  runs right to left as create_report's does, and a phone card title wraps its Arabic text by the same rule as
+  create_report. Also: the website's glass preview draws its table clear with banded rows, a plan from a theme with
+  see-through visuals now says the new report is glass, the preview of an Arabic plan turns its time charts, a filter
+  slot higher than wide never puts a slicer below its bottom (what does not fit is named), and the bullet bar says
+  when a measure's target in the model is an expression.
 - **Calmer text on 1920 x 1080 pages:** the theme's text now grows x 1.25 from the 1280 x 720 sizes, not x 1.5: body
   text 12.5 (was 15), visual titles 15 (was 18), KPI values 35 (was 42); 1280 x 720 pages are unchanged. This holds for
   every new theme from the Theme Generator, generate_theme, plan_layout and create_report, and for a design you saved
