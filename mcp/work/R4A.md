@@ -15,15 +15,17 @@
   first line. A new suite `mcp/test-0.3.1-r4a.mjs` (one line in `tests.json`); CHANGELOG.
 - **Base:** `fix/0.3.1-r4a` from `origin/integration/0.3.1` e2236be. Push only this branch; never merge, never a PR.
 - **Not in this job:** the length of plan_layout's and check_report's answers (problems 4, 6: the reviewer's proposal).
-- **Expected checks** (before the work): r4a about 30 checks, about 26 red on e2236be (A 6, B 4, C 14, D 3; the
+- **Expected checks:** (written before the work) r4a about 30 checks, about 26 red on e2236be (A 6, B 4, C 14, D 3; the
   guards green); `npm test -- report` one more suite than the base, the rest the same counts except the pins named
   under "Pins changed"; `-- arabic`, `-- core` the same counts; run-all (label-limits, layout-check, pbip-page touched)
   the same; full run the base registry + 1.
 - **Invariants:** nothing unapproved is written (the added slicers are the ones the approved page listed; the files are
   the plan's, byte for byte); metadata only (a refusal names inputs the agent passed and the plan pinned, never a
   value read from data); every path inside the working folder.
-- **Got:** (after the run)
-- **Resume:** the plan pushed; next: the red suite, then the fixes.
+- **Got:** r4a 27 checks (26 red on e2236be); report 33 -> 34 suites PASS, arabic 12 = 12, core 6 = 6 (mutation 73
+  killed); pins changed only for the plain words (below); run-all 21 PASS; lint clean; full run "run-tests: 99 suites
+  passed"; result-lines, changelog-words, agent-memory, site config PASS.
+- **Resume:** done; waits for the reviewer. Desktop shows nothing new (no file written differently).
 
 ## Plan
 1. This note, pushed first. Base suites in a separate worktree on e2236be.
@@ -87,4 +89,11 @@
    every item worth a look is English on an Arabic page too) and the redesign's page (English only today): see Seen.
 
 ## Seen, not in scope
-(after the work)
+1. The layout check's findings have no Arabic: every item "worth a look" is English on an Arabic approval page.
+2. The redesign's approval page is English only (CS1's text lines included).
+3. Still "next to the project" without the folder: the metric switcher's howToApply (`switchSaid` has no folder),
+   check_report's fixes for the flip cards, status icons and DAX scripts ("<model> - flip cards.tmdl"), the answers
+   file's note (`answers.mjs` writesNote), the twin model's script (`twin-model.mjs`).
+4. CS1's `text.kept` rows on the redesign page still name raw properties ("fontFamily").
+5. The engine repo (`evals/e1-harness`) was not reachable from this session: the brief's quotes were used.
+6. Not in this job (the reviewer's proposal): the length of plan_layout's and check_report's answers (problems 4, 6).
