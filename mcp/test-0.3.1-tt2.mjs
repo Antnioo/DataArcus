@@ -86,7 +86,7 @@ try {
     () => `N6. the README after the report's own text: every approved name, and Region kept English by the person's choice (both languages): ${cut(readme(rKeep))}`);
   const local = get(() => site('ar', N.withNames(en, aKeep.names, Bind.mapFields), { namesNote: N.note(aKeep), model: { byPath: 'Shop.SemanticModel', taken: [] } }));
   const lf = local.files ? local.files.map((f) => f.path) : [];
-  chk(() => !lf.includes('README.md') && lf.some((p) => /^Shop - [^/]+\.README\.md$/.test(p)) && /Region/.test(local.files.find((f) => /\.README\.md$/.test(f.path)).data),
+  chk(() => !lf.includes('README.md') && lf.includes(local.base + '.README.md') && lf.includes(local.base + '.pbip') && /Region/.test(local.files.find((f) => /\.README\.md$/.test(f.path)).data),
     () => `N6b. next to the person's project: its own <report>.README.md, never their README.md: ${cut(local.threw || lf.filter((p) => !p.includes('/')))}`);
   // the writer's random names (a visual's or a filter's 20 to 32 hex name, a .platform GUID) numbered in order of appearance; then byte for byte
   const RANDOM = /\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?<![0-9a-f])[0-9a-f]{20,32}(?![0-9a-f])/g;

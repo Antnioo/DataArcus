@@ -173,8 +173,9 @@ export default async function ({ browser, url }) {
       return { dir: getComputedStyle(b).direction, left: r.left, right: r.right, vw: document.documentElement.clientWidth, sw: document.documentElement.scrollWidth,
         inside: [...b.querySelectorAll('input, button, [data-name-en]')].every((x) => { const q = x.getBoundingClientRect(); return q.left >= -0.5 && q.right <= document.documentElement.clientWidth + 0.5; }),
         en: en.every((x) => getComputedStyle(x).direction === 'ltr' && /isolate/.test(getComputedStyle(x).unicodeBidi)) && en.length > 0 }; });
-    fs.mkdirSync(path.join(HERE, 'shots'), { recursive: true });
-    if (lay) await pg.locator('#pbipNames').screenshot({ path: path.join(HERE, 'shots', 'tt2-names-ar-390.png') }).catch(() => {});
+    // the rendered list (in the temp folder: the run leaves the repo as it was; the copy for the review is
+    // scripts/tests/shots/tt2-names-ar-390.png, taken by this check)
+    if (lay) await pg.locator('#pbipNames').screenshot({ path: path.join(tmp, 'tt2-names-ar-390.png') }).catch(() => {});
     check(lay && lay.dir === 'rtl' && lay.inside && lay.sw <= lay.vw + 1 && lay.en, `W9: right to left at 390 wide: the list inside the screen, each English name isolated left to right: ${JSON.stringify(lay)}`);
     // W10: Tab from the first box reaches every box, every "keep English" and the approve button, in that order; Enter approves
     const order = [];
