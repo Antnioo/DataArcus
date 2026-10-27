@@ -754,7 +754,7 @@
   };
   // the picture's pixels at w x h (RGB), as glassLook's strength makes them
   const glassPixels = (d, w, h, opt) => glassRgb(colours(d), glassLook(d, opt).strength, Math.max(1, Math.round(+w)), Math.max(1, Math.round(+h)));
-  // ---- a PNG in plain JavaScript, so the website and the MCP write the same bytes (no canvas, no zlib) ----
+  // ---- a PNG without a canvas, so the website and the MCP write the same pixels (the browser deflates in JavaScript, Node by node:zlib, LC1) ----
   // RGB, 8 bits; each row filtered with the PNG filter of the smallest sum (None, Sub, Up, Average, Paeth: PNG's own
   // advice); LZ77 matches in one deflate block with its own Huffman codes (RFC 1951), in a zlib stream (RFC 1950)
   const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -828,7 +828,11 @@
     return out.subarray(0, o);
   };
   // text: an optional tEXt chunk (keyword Comment) right after the header, as glassPng marks its picture
-  const encodePng = (w, h, rgb, text) => {
+  // (0.3.1 LC1, PF1's Seen 1: the JavaScript deflate took 0.6 s a picture, 8.5 s under coverage) in Node the rows are
+  // deflated by node:zlib (the same filtered rows, the same chunks, the mark right after IHDR: the same pixels, other
+  // bytes); the browser keeps the JavaScript deflate. opt.deflate 'js': the JavaScript one in Node too (its test)
+  const ZLIB = (() => { try { return typeof module !== 'undefined' && module.exports && typeof require === 'function' ? require('zlib') : null; } catch (e) { return null; } })();
+  const encodePng = (w, h, rgb, text, opt) => {
     const row = w * 3, raw = new Uint8Array(h * (row + 1)), line = new Uint8Array(row);
     const pred = (f, p, x, y) => { const a = x >= 3 ? rgb[p + x - 3] : 0, b = y ? rgb[p + x - row] : 0, c = x >= 3 && y ? rgb[p + x - row - 3] : 0;
       if (f === 1) return a; if (f === 2) return b; if (f === 3) return (a + b) >> 1;
@@ -840,9 +844,11 @@
       for (let x = 0; x < row; x++) line[x] = (rgb[p + x] - pred(best, p, x, y)) & 255;
       raw[q] = best; raw.set(line, q + 1);
     }
-    let a = 1, b = 0; for (let i = 0; i < raw.length; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
-    const z = deflate(raw), idat = new Uint8Array(z.length + 6); idat.set([0x78, 0x01]); idat.set(z, 2);
-    const ad = ((b << 16) | a) >>> 0; idat.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
+    const idat = ZLIB && !(opt && opt.deflate === 'js') ? new Uint8Array(ZLIB.deflateSync(raw)) : (() => {
+      let a = 1, b = 0; for (let i = 0; i < raw.length; i++) { a = (a + raw[i]) % 65521; b = (b + a) % 65521; }
+      const z = deflate(raw), out = new Uint8Array(z.length + 6); out.set([0x78, 0x01]); out.set(z, 2);
+      const ad = ((b << 16) | a) >>> 0; out.set([ad >>> 24, (ad >>> 16) & 255, (ad >>> 8) & 255, ad & 255], z.length + 2);
+      return out; })();
     const u32 = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255];
     const chunk = (type, body) => { const c = new Uint8Array(12 + body.length); c.set(u32(body.length)); c.set([...type].map((ch) => ch.charCodeAt(0)), 4); c.set(body, 8); c.set(u32(crc32(c.subarray(4, 8 + body.length))), 8 + body.length); return c; };
     const parts = [Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', Uint8Array.from(u32(w).concat(u32(h), [8, 2, 0, 0, 0])))]

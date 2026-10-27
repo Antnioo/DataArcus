@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         g += `<text x="${lx}" y="${p.y + 22}" ${font} font-size="12" font-weight="700" fill="${sec}" text-anchor="${right ? 'end' : 'start'}">${nm(p.role)}</text>`
           + `<text x="${right ? p.x + 12 : p.x + p.w - 12}" y="${p.y + 22}" font-family="Consolas, monospace" font-size="10" fill="${sec}" opacity=".75" text-anchor="${right ? 'start' : 'end'}">${((b) => `${b.w}×${b.h}`)(boxOf(p, c))}</text>`;   // the slot table's size (boxOf), for the layout drawn
       }
-      s += `<g data-s="${i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
+      s += `<g data-s="${p.s != null ? p.s : i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
     });
     return s;
   };
@@ -396,13 +396,25 @@ document.addEventListener('DOMContentLoaded', () => {
       ${out.join('')}</div></details>`;
   }
   const pngSize = (c) => E.pngSize(c || lay());
+  // (0.3.1 LC1) the canvas's slots: page 1 as the project download writes it (canvasFit, page units) on the 720 grid,
+  // each with its row in the slot table (s: the same kind and name, in order), or the layout's slots
+  const canvasSlots = (c, slots) => {
+    const fit = canvasFit && canvasFit(); if (!fit) return null;
+    const own = computeSlots(fit.layout), k = page(fit.layout).s, seen = {};
+    const drawn = fit.slots.map((f) => { const key = f.kind + '|' + nm(own[f.i].role), n = seen[key] = (seen[key] || 0) + 1;
+      const row = slots.map((x, j) => [x, j]).filter(([x]) => x.kind + '|' + nm(x.role) === key)[n - 1];
+      return Object.assign({}, own[f.i], { x: f.x / k, y: f.y / k, w: f.w / k, h: f.h / k, s: row ? row[1] : null }, f.stack ? { stack: true } : {}); });
+    computeSlots(c);   // (the page's size back to the layout's)
+    return { drawn, moved: drawn.length !== slots.length || drawn.some((d) => { const b = boxOf(d, c), r = d.s != null ? boxOf(slots[d.s], c) : null; return !r || b.x !== r.x || b.y !== r.y || b.w !== r.w || b.h !== r.h; }) };
+  };
   function renderLayoutPreview() {
-    const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c);
-    $('layCanvas').innerHTML = bgSvg(slots, Object.assign({ preview: true }, E.isGlass(state) ? { glass: Object.assign({ url: glassUrl() }, E.glassLook(state)) } : {}));
+    const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c), fit = canvasSlots(c, slots);
+    $('layCanvas').innerHTML = bgSvg(fit ? fit.drawn : slots, Object.assign({ preview: true }, E.isGlass(state) ? { glass: Object.assign({ url: glassUrl() }, E.glassLook(state)) } : {}));
+    if (fit) $('layCanvas').querySelector('svg').setAttribute('data-fit', fit.moved ? 'moved' : 'same');
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
     updateStatus();
-    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`);
+    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`) + (fit && fit.moved ? ' ' + L('The preview shows page 1 as the Power BI project download writes it (the filter panel as high as its slicers). The table, PNG and CSV keep the layout\'s slots, for placing visuals yourself.', 'تعرض المعاينة الصفحة 1 كما يكتبها تنزيل مشروع Power BI (لوحة الفلاتر بارتفاع مقسماتها). يبقى الجدول وصورة PNG وملف CSV بمواضع التخطيط، لتضع العناصر بنفسك.') : '');
   }
   function renderLayout() {
     const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
@@ -541,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only on pages that have the project card (the lab page for now). The builder loads on first use.
   const pbipBtn = $('pbipBtn');
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
+  let canvasFit = null;   // (0.3.1 LC1) set below on pages with the project card: page 1 as the download writes it
   if (pbipBtn) {
     let logo = null;
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
@@ -713,16 +726,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
     // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
-    const withProject = (then) => {
+    // (0.3.1 LC1) the same input for the layout canvas (quiet: nothing said, undefined when something is missing)
+    const projectOf = (quiet) => {
       const c = lay(), m = mode(), sample = m === 'sample';
       // your own model: where it is, and the fields picked for each visual
       let model = null;
       if (m === 'local') {
-        if (!own.local || !own.local.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
+        if (!own.local || !own.local.folder) { if (!quiet) toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
         model = { byPath: own.local.folder, taken: own.local.reports };
       } else if (m === 'service') {
         const ws = $('pbipWs').value.trim(), mn = $('pbipModelName').value.trim();
-        if (!ws || !mn) { toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
+        if (!ws || !mn) { if (!quiet) toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
         model = { ws, mn };   // the connection string is written once the helper has loaded, below
       }
       // the picker always shows the model of the current choice (see showPicker)
@@ -741,26 +755,55 @@ document.addEventListener('DOMContentLoaded', () => {
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
       const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined, noTime: !!(model && bind && !bind.date) });   // (D16: a model with no time axis gets the layout made for it, as the MCP's)
+      return { c, m, sample, model, bind, bindL, theme, specs };
+    };
+    // the project's pages and the writer's input, from projectOf's q and the model as the writer takes it
+    const inputOf = (q, model) => {
+      const { c, m, sample, bindL, theme, specs } = q;
+      // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
+      const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
+      const input = {
+        name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
+        lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
+        // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
+        ...(rtl() ? { chartAxes: 'mirrored' } : {}),
+        // the report's labels come from the design engine (the MCP uses the same); the readme stays here
+        texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
+          readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
+            '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
+            '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
+        })
+      };
+      return { pages, input };
+    };
+    const withProject = (then) => {
+      const q = projectOf(false); if (!q) return;
+      const { c, m, sample, bind, specs } = q; let model = q.model;
       return Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
-        // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
-        const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
-        const input = {
-          name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
-          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
-          // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
-          ...(rtl() ? { chartAxes: 'mirrored' } : {}),
-          // the report's labels come from the design engine (the MCP uses the same); the readme stays here
-          texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
-            readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
-              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
-              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
-          })
-        };
+        const { pages, input } = inputOf(q, model);
         // (0.3.1 TT2) an Arabic download on English names: with the names the person approved, or the list to approve
         return namesFor(P, DB, input, m).then((names) => then(P, names.input, { c, m, sample, bind, specs, pages, names }));
       });
     };
+    // (0.3.1 LC1, the owner's D-1027-19 "Both A", SQ13-S2) the layout canvas draws page 1 as this download writes it:
+    // the same input, the writer's measures (Pbip.fitOptions) and the design engine's fitSlots on the page's own slots,
+    // in page units, as pbip-page.js places them (one rule, never a copy). The writer loads once, after the first draw
+    // (until then, and when the writer can not load, the canvas shows the layout's slots). { layout, slots } or null;
+    // each slot keeps i, its index in the page's slots
+    let fitLoading = null;
+    canvasFit = () => {
+      const q = projectOf(true); if (!q) return null;
+      const P = window.DAPbip, DB = window.DABind;
+      if (!P || (q.model && !DB)) {
+        if (!fitLoading) fitLoading = Promise.all([loadBuilder(), q.model ? loadBind() : null]).then(() => { renderLayoutPreview(); }, () => {});
+        return null;
+      }
+      const model = q.model && q.model.ws ? { byConnection: DB.connection(q.model.ws, q.model.mn) } : q.model, sp = q.specs[0];
+      return { layout: sp.layout, slots: E.fitSlots(sp.slots.map((x, i) => Object.assign({}, x, { i })), P.fitOptions(inputOf(q, model).input)[0]).slots };
+    };
+    // what the canvas depends on in this card: the pages, the panel, the data, the fields picked, the logo
+    ['pbipPages', 'pbipPanel', 'pbipData', 'pbipMap', 'pbipLogo', 'pbipWs', 'pbipModelName'].forEach((id) => { if ($(id)) $(id).addEventListener('change', () => renderLayoutPreview()); });
     pbipBtn.addEventListener('click', () => {
       const run = withProject((P, input, { c, m, sample, bind, specs, pages, names }) => (names.pending ? askNames(names.pending) : loadCheck().catch(() => null).then((Ck) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
