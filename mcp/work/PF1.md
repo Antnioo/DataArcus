@@ -18,7 +18,7 @@
   glass-twin 28 = 28, twin-preview 23 = 23; no other test changed. twin-preview 39.3 s -> 11.3 s plain, 347 s (RED,
   timed out) -> 21.5 s under NODE_V8_COVERAGE. Full run 108 -> 109 suites (+ glass-speed).
 - Full run on d42befe: "run-tests: 109 suites passed"
-- **Resume:** done; CI started on the branch (run 40592747988); waits for the reviewer, then the laptop.
+- **Resume:** done; CI on the branch green (run 40592747988 on 88a64f2: Linux, Windows, macOS); waits for the reviewer, then the laptop.
 
 ## The plan
 1. **Decode once.** glassPixels keeps the last few decoded pictures (an LRU of 4, keyed by the bytes' SHA-1 and
