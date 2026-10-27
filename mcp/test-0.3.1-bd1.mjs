@@ -20,7 +20,7 @@ process.env.DATAARCUS_ROOT = ROOT;
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const cps = (s) => Array.from(String(s)).map((c) => (c.codePointAt(0) > 0x7e ? 'U+' + c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0') : c)).join('');
-const RLM = '‏', FSI = '⁨', PDI = '⁩', MARKS = /[‎‏⁦-⁩‪-‮]/g;
+const RLM = '‏', FSI = '⁨', PDI = '⁩', RLI = '⁧', MARKS = /[‎‏⁦-⁩‪-‮]/g;
 
 const DF = await import('./lib/dax-functions.mjs');
 const fnOf = (n) => DF.LIBRARY.find((f) => f.name === n);
@@ -44,10 +44,10 @@ function evalDax(f, args) {
   const st = fnOf('DA.StoryTitle'), body = st.body.join('\n');
   chk(() => /UNICHAR \( 8207 \)/.test(body), () => 'D1. DA.StoryTitle builds U+200F (UNICHAR ( 8207 )): ' + body.slice(-300));
   const ar = evalDax(st, ['North', '1.2M', 'Sales', 0.094, 'العام الماضي', 'ar']);
-  chk(() => ar.startsWith(RLM + FSI + 'North' + PDI), () => `D2. the Arabic title (a Latin leader) starts with U+200F, then the isolated leader: ${cps(ar)}`);
+  chk(() => ar.startsWith(RLI + RLM + FSI + 'North' + PDI), () => `D2. the Arabic title (a Latin leader) starts with U+200F, then the isolated leader (inside BD2's wrap, U+2067 first): ${cps(ar)}`);
   chk(() => ar.replace(MARKS, '') === 'North في الصدارة بـ 1.2M Sales، بارتفاع 9% عن العام الماضي', () => `D3. the marks taken off, the plain sentence: ${cps(ar)}`);
   const noDelta = evalDax(st, ['North', '1.2M', 'Sales', null, 'العام الماضي', 'ar']);
-  chk(() => noDelta.startsWith(RLM + FSI) && noDelta.endsWith(PDI + RLM), () => `D4. with no change (it ends with the isolated noun): U+200F at both ends, as isolateLatin's rule: ${cps(noDelta)}`);
+  chk(() => noDelta.startsWith(RLI + RLM + FSI) && noDelta.endsWith(PDI + RLM + PDI), () => `D4. with no change (it ends with the isolated noun): U+200F at both ends inside BD2's wrap (U+2067 ... U+2069), as isolateLatin's rule: ${cps(noDelta)}`);
   const en = evalDax(st, ['North', '1.2M', 'Sales', -0.05, 'last year', 'en']);
   chk(() => en === 'North leads with 1.2M Sales, down 5% on last year' && evalDax(st, ['', '1', 'x', null, 'p', 'ar']) == null, () => `D5. English unchanged, no mark; a blank leader a blank title: ${cps(en)}`);
   // every other text a library function builds at run time: DA.KpiCard's is HTML in an SVG picture (a browser paragraph
@@ -80,7 +80,7 @@ function evalDax(f, args) {
   const words = f ? f.what + ' ' + f.fix.how : '';
   chk(() => !/reword/i.test(words) && !/sits between Arabic words/i.test(words), () => `X2. no longer offers "reword it so the run sits between Arabic words" (Desktop swapped one there): ${words}`);
   chk(() => /anywhere/i.test(f.what) && /swap/i.test(f.what) && /Desktop 2\.159, 26 Oct/.test(f.what), () => `X3. says a Latin run anywhere can swap the Arabic around it, measured in Desktop 2.159, 26 Oct: ${f && f.what}`);
-  chk(() => /U\+2068/.test(f.fix.how) && /U\+2069/.test(f.fix.how) && /U\+200F at the start of the text/.test(f.fix.how), () => `X4. the fix: the isolates plus U+200F at the start of the text: ${f && f.fix.how}`);
+  chk(() => /U\+2068/.test(f.fix.how) && /U\+2069/.test(f.fix.how) && /U\+200F beside a run that starts or ends the text/.test(f.fix.how), () => `X4. the fix: the isolates and U+200F beside an end run (BD2: and the whole text in U+2067 ... U+2069, bd2 L2): ${f && f.fix.how}`);
   chk(() => f.fix.kind === 'desktop' && !/a run at an end, or one with signs inside it, reads in the wrong place/.test(f.what), () => `X5. a hand page's fix stays a Desktop step; the old "only at an end" claim is gone: ${JSON.stringify(f).slice(0, 400)}`);
 }
 

@@ -1533,8 +1533,15 @@
     if (!tipPages.some((t) => t.kind === 'cat')) tipFor('cat', tip.card, tip.cat);
     if (trend && !tipPages.some((t) => t.kind === 'trend')) tipFor('trend', tip.card, tip.date);
     // each page's name says what tells it apart from the first of its kind: the measure, the category
-    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind);
-      return [t.kind === 'trend' ? base + ' \u00b7 ' + label(tip.date) : base].concat(f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null]).filter(Boolean).join(' \u00b7 '); };
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the page tab strip, a page name lays out left to right
+    // whatever it holds) an Arabic tooltip page's name keeps no Latin run: the trend's month field kept in English is
+    // «الشهر» (the trend is always by month), and a measure or category kept in English gives way to the page's number
+    // among its kind, so the names stay apart
+    const arTip = /[\u0600-\u06FF]/.test(base), latin = (x) => arTip && /[A-Za-z]/.test(String(x || ''));
+    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind), month = label(tip.date);
+      const parts = f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null].filter(Boolean);
+      const kept = parts.filter((x) => !latin(x)).concat(parts.some(latin) ? [String(tipPages.filter((x) => x.kind === t.kind).indexOf(t) + 1)] : []);
+      return [t.kind === 'trend' ? base + ' \u00b7 ' + (latin(month) ? '\u0627\u0644\u0634\u0647\u0631' : month) : base].concat(kept).join(' \u00b7 '); };
     // the trend: the measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width

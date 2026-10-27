@@ -100,7 +100,7 @@ export const LIBRARY = [
       `VAR sz = "width='" & ${n1('w')} & "' height='" & ${n1('h')} & "'"`,
       'RETURN "data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' " & sz & " viewBox=\'0 0 " & ' + n1('w') + ' & " " & ' + n1('h') + ' & "\'><foreignObject x=\'0\' y=\'0\' " & sz & "><div xmlns=\'http://www.w3.org/1999/xhtml\' dir=\'" & IF ( ar, "rtl", "ltr" ) & "\' style=\'box-sizing:border-box;width:" & ' + n1('w') + ' & "px;height:" & ' + n1('h') + ' & "px;padding:12px 16px;border-radius:12px;background:" & bg & ";color:" & fg & ";font-family:Segoe UI,Tahoma,sans-serif;display:flex;flex-direction:column;justify-content:space-between\'><div style=\'display:flex;justify-content:space-between;align-items:center;gap:8px\'><span style=\'font-size:" & ft & "px;opacity:0.75\'>" & t & "</span>" & d & "</div><div style=\'font-size:" & fv & "px;font-weight:700\'>" & v & "</div></div></foreignObject></svg>"'] },
   { name: 'DA.StoryTitle',
-    description: 'Plain text for a dynamic title. delta is a ratio; blank says no change. period: what the delta compares with ("last year", "العام الماضي"). lang: "en" or "ar"; in Arabic the leader, the value and the noun are isolated (U+2068 / U+2069) and the text opens and closes with U+200F, so a Latin name keeps the sentence in order.',
+    description: 'Plain text for a dynamic title. delta is a ratio; blank says no change. period: what the delta compares with ("last year", "العام الماضي"). lang: "en" or "ar"; in Arabic the leader, the value and the noun are isolated (U+2068 / U+2069), the text opens and closes with U+200F, and the whole text is wrapped in U+2067 ... U+2069, so a Latin name keeps the sentence in order.',
     params: 'leader : STRING, valueText : STRING, noun : STRING, delta : NUMERIC, period : STRING, lang : STRING',
     body: [
       'VAR pct = FORMAT ( ABS ( delta ) * 100, "0", "en-US" ) & "%"',
@@ -109,9 +109,12 @@ export const LIBRARY = [
       // (BD1, measured in Desktop 2.159, 26 Oct: a title starting with an isolate read out of order; with U+200F first it
       // read in order) the Arabic opens and closes with a right-to-left mark, as isolateLatin's rule puts one beside an end run
       'VAR r = UNICHAR ( 8207 )',
+      // (0.3.1 BD2, the bidi lab measured in Desktop 2.159, 27 Oct: the isolates wrapped whole in U+2067 ... U+2069 drew
+      // right on every canvas kind, cut texts included) the Arabic is wrapped whole, as text-measure.js isolateLatin
+      'VAR w = UNICHAR ( 8295 )',
       'VAR en = leader & " leads with " & valueText & " " & noun & IF ( ISBLANK ( delta ), "", ", " & IF ( delta >= 0, "up ", "down " ) & pct & " on " & period )',
       'VAR ar = i & leader & o & " في الصدارة بـ " & i & valueText & o & " " & i & noun & o & IF ( ISBLANK ( delta ), "", "، " & IF ( delta >= 0, "بارتفاع ", "بانخفاض " ) & i & pct & o & " عن " & period )',
-      'RETURN IF ( ISBLANK ( leader ) || leader = "", BLANK (), IF ( lang = "ar", r & ar & r, en ) )'] }
+      'RETURN IF ( ISBLANK ( leader ) || leader = "", BLANK (), IF ( lang = "ar", w & r & ar & r & o, en ) )'] }
 ];
 export const FUNCTION_NAMES = LIBRARY.map((f) => f.name);
 export const exprOf = (f) => [`(${f.params}) =>`].concat(f.body.map((l) => '\t' + l)).join('\n');

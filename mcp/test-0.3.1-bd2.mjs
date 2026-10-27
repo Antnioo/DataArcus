@@ -133,6 +133,12 @@ function texts(r) {
     chk(() => pn && Array.isArray(pn.latin) && pn.latin.length === 0 && /left to right/.test(pn.note || ''), () => `P5. plan_layout (lang "ar"): pageNames says every page name is Arabic only, and why (tabs lay out left to right): ${cut(pn || (r.j ? Object.keys(r.j) : r.t))}`);
     const e = await w.call('plan_layout', { path: 'm/M.SemanticModel', name: 'Own EN', layout: 'exec', lang: 'en' });
     chk(() => e.j && !('pageNames' in e.j), () => 'P6. an English plan: no pageNames');
+    // the twin: a page name the person gives in Arabic with a Latin run is named in the plan
+    fs.cpSync(path.join(HERE, 'fixtures/twin-project'), path.join(ROOT, 'tw'), { recursive: true });
+    const t0 = await w.call('create_arabic_twin', { path: 'tw/Twin Sales.pbip' }), pageText = ((t0.j && t0.j.texts) || []).find((x) => /page/i.test(String(x.kind || x.what || x.id)));
+    const t1 = pageText ? await w.call('create_arabic_twin', { path: 'tw/Twin Sales.pbip', labels: { [pageText.id]: 'تحليل Region' } }) : t0;
+    const tn = t1.j && t1.j.pageNames;
+    chk(() => tn && tn.latin.some((x) => x.page === 'تحليل Region') && /left to right/.test(tn.sayInPlan), () => `P7. the twin's plan names an Arabic page name with a Latin run (tabs lay out left to right): ${cut(tn || (t1.j ? Object.keys(t1.j) : t1.t))} (page text ${cut(pageText)})`);
   } finally { await w.close(); }
 }
 
@@ -155,7 +161,7 @@ function texts(r) {
   chk(() => f && f.count === 2, () => `L1. TEXT_MIXED counts the raw text and the V1-only text (cut card texts draw wrong), not the V3 or the Arabic one: ${cut(f || Lr)}`);
   const how = f ? f.fix.how : '';
   chk(() => /U\+2068/.test(how) && /U\+2069/.test(how) && /U\+2067/.test(how) && /whole text/i.test(how) && /Desktop 2\.159, 27 Oct/.test(f.what + ' ' + how), () => `L2. the fix: the isolates, and the whole text wrapped in U+2067 ... U+2069 (measured in Desktop 2.159, 27 Oct): ${how}`);
-  chk(() => /page name/i.test(how) && /left to right/i.test(how) && /The twin writes .*U\+2067/.test(f.fix.twin || f.fix.how + JSON.stringify(f.fix)), () => `L3. page names: keep English out (Power BI lays tabs out left to right); the twin's sentence names the wrap: ${cut(f && f.fix)}`);
+  chk(() => /page name/i.test(how) && /left to right/i.test(how) && /The twin writes [^']*U\+2067 \.\.\. U\+2069/.test(src('lib/arabic-lens.mjs')), () => `L3. page names: keep English out (Power BI lays tabs out left to right); the twin's sentence names the wrap: ${cut(f && f.fix)}`);
 }
 
 // ---------- A: the article ----------

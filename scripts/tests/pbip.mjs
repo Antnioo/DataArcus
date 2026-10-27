@@ -501,7 +501,8 @@ export default async function ({ browser, url }) {
       if (!e || !e.Measure) return null;
       const ext = JSON.parse((Object.entries(files).find(([n]) => /reportExtensions\.json$/.test(n)) || [0, '{}'])[1].toString('utf8'));
       const m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
-      const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); return x ? x[1].replace(/""/g, '"') : null;
+      // (BD2) the text at run time: the literal, inside the expression's whole wrap (UNICHAR ( 8295 ) & ( ... ) & UNICHAR ( 8297 ))
+      const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression), w = m && /^UNICHAR \( 8295 \) & \(.* \) & UNICHAR \( 8297 \)$/s.test(m.expression); return x ? (w ? '⁧' : '') + x[1].replace(/""/g, '"') + (w ? '⁩' : '') : null;
     };
     const altOf = (v) => { const a = (((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText; return a && a.expr && a.expr.Literal ? String(a.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
     const CHART = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/;
@@ -525,7 +526,7 @@ export default async function ({ browser, url }) {
     const sorted = (a) => a.slice().sort().join(' | ');
     check(en.titles.length >= 4 && sorted(ar.titles) === sorted(en.titles.map(toAr)), `LR2-a1: the Arabic chart titles in the «حسب» form, the English download's sentences: ${sorted(ar.titles)} (want ${sorted(en.titles.map(toAr))})`);
     check(ar.titles.concat(ar.tables, ar.alts).every((t) => t && !/[()]/.test(t)), `LR2-a2: no bracket in an Arabic chart or table title or alt text: ${ar.titles.concat(ar.tables, ar.alts).filter((t) => !t || /[()]/.test(t)).slice(0, 4).join(' | ')}`);
-    check(ar.titles.filter((t) => /^‏⁨Total Sales⁩ حسب /.test(t)).length >= 3, `LR2-a3: a title that starts with a Latin run starts with U+200F and the isolate: ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
+    check(ar.titles.filter((t) => /^⁧‏⁨Total Sales⁩ حسب .*⁩$/.test(t)).length >= 3, `LR2-a3: a title that starts with a Latin run starts with U+200F and the isolate, inside BD2's wrap (U+2067 ... U+2069): ${ar.titles.map((t) => JSON.stringify(t)).slice(0, 4).join(' | ')}`);
     check(sorted(en.titles) === 'Total Sales by Customer | Total Sales by Customer | Total Sales by Month | Total Sales by Month | Total Sales by Region | Total Sales by Region | Total Sales by Region', `LR2-a4: the English download's titles unchanged: ${sorted(en.titles)}`);
     // b: the Arabic charts mirrored, the line chart's months from the right (its month order reversed)
     const arCharts = mirrorOf(ar.files), line = ar.vs.find((x) => x.j.visual.visualType === 'lineChart');

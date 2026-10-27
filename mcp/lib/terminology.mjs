@@ -20,10 +20,25 @@ export { CONCEPTS, termHits } from './arabic-terms.mjs';
 // report: isolateLatin and isolateNames in assets/js/text-measure.js, isolateFiles (a report's visible texts) in
 // assets/js/pbip-export.js, which isolates an Arabic build itself. Re-exported here for the MCP's callers.
 const TextMeasure = require('../../assets/js/text-measure.js'), Pbip = require('../../assets/js/pbip-export.js');
-export const { isolateLatin, isolateNames } = TextMeasure;
+// (0.3.1 BD2) isolateLatin is the measured rule (the isolates, the whole text in U+2067 ... U+2069); isolateRuns its inside
+export const { isolateLatin, isolateNames, isolateRuns } = TextMeasure;
 export const { isolateFiles } = Pbip;
 // the text without the marks the writer adds (to compare a written text with the name a person approved)
 export const plain = (s) => String(s == null ? '' : s).replace(/[⁦-⁩‎‏]/g, '');
+// (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the page tab strip) an Arabic report's page and tooltip page
+// names that keep a Latin run, from its files ({ path, data }), with what the plan says about them
+export const TABS_LTR = 'Power BI lays page tabs out left to right whatever marks a name holds (measured in Desktop 2.159, 27 Oct)';
+export function pageNamesOf(files) {
+  const latin = [];
+  for (const f of files || []) {
+    if (typeof f.data !== 'string' || !/\.Report\/.+\/page\.json$/.test(String(f.path))) continue;
+    let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
+    const name = plain(j && j.displayName);
+    if (TextMeasure.ARABIC.test(name) && /[A-Za-z]/.test(name)) latin.push({ page: name, tooltip: j.type === 'Tooltip' });
+  }
+  return latin.length ? { latin, sayInPlan: `Say in the plan: ${latin.length === 1 ? 'this Arabic page name keeps' : 'these Arabic page names keep'} an English word (latin). ${TABS_LTR}, so on the tab the English word can read first; an Arabic word in its place reads right.` }
+    : { latin, note: `Every Arabic page and tooltip page name is in Arabic only: ${TABS_LTR}, so DataArcus keeps English words out of them.` };
+}
 
 // ---- where each field shows (B-171 item 1) ----
 // a projection's field as "Table[Field]" (a model's column, measure or aggregated column); a report measure is not a field

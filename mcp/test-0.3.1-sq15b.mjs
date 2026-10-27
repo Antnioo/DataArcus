@@ -41,9 +41,9 @@ modelAt('swn', [sales(), calendar(), targets(), kpis()], []);
 
 try {
   // ---------- J18-S2: the isolate rule in the shared engine; the writer isolates an Arabic build ----------
-  const FSI = '⁨', PDI = '⁩', RLM = '‏', KPI = 'مؤشر KPI 2024';
-  chk(() => typeof TM.isolateLatin === 'function' && TM.isolateLatin(KPI) === 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM
-    && TM.isolateLatin('مؤشر KPI 2024 حسب الشهر') === 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' && TM.isolateLatin('Q1/2024 الربع') === RLM + FSI + 'Q1/2024' + PDI + ' الربع',
+  const FSI = '⁨', PDI = '⁩', RLM = '‏', RLI = '⁧', KPI = 'مؤشر KPI 2024';   // (BD2) RLI ... PDI: the whole text's wrap
+  chk(() => typeof TM.isolateLatin === 'function' && TM.isolateLatin(KPI) === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM + PDI
+    && TM.isolateLatin('مؤشر KPI 2024 حسب الشهر') === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' + PDI && TM.isolateLatin('Q1/2024 الربع') === RLI + RLM + FSI + 'Q1/2024' + PDI + ' الربع' + PDI,
   () => `J1. the shared text engine (text-measure.js) has J18's isolate rule: ${typeof TM.isolateLatin === 'function' ? cut([KPI, 'Q1/2024 الربع'].map(TM.isolateLatin)) : 'no isolateLatin there'}`);
   chk(() => typeof TM.isolateLatin === 'function' && ['المبيعات', 'Total Sales', 'أعلى 6 من 10', ''].every((x) => TM.isolateLatin(x) === x) && TM.isolateLatin(TM.isolateLatin(KPI)) === TM.isolateLatin(KPI),
     () => 'J2. pure Arabic, pure English, numbers alone and an isolated text are unchanged by the engine\'s rule');
@@ -72,13 +72,14 @@ try {
     if (e && e.Literal) return String(e.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'");
     if (!e || !e.Measure) return null;
     const ext = JSON.parse(((r.files || []).find((f) => /reportExtensions\.json$/.test(f.path)) || { data: '{}' }).data), m = (ext.entities || []).flatMap((x) => x.measures || []).find((x) => x.name === e.Measure.Property);
-    const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression); return x ? x[1].replace(/""/g, '"') : null; };
+    // (BD2) the text at run time: the literal, inside the expression's whole wrap (UNICHAR ( 8295 ) & ( ... ) & UNICHAR ( 8297 ))
+    const x = m && /_s = _n, "((?:[^"]|"")*)"/.exec(m.expression), w = m && /^UNICHAR \( 8295 \) & \(.* \) & UNICHAR \( 8297 \)$/s.test(m.expression); return x ? (w ? '⁧' : '') + x[1].replace(/""/g, '"') + (w ? '⁩' : '') : null; };
   const titled = (r, re) => (r.files || []).filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(f.data).visual).filter((v) => v && re.test(v.visualType)).map((v) => ({ type: v.visualType, t: titleOf(r, v), alt: ((((v.visualContainerObjects || {}).general || [])[0] || { properties: {} }).properties.altText || { expr: { Literal: { Value: '' } } }).expr.Literal.Value }));
   const CH = /^(clusteredBarChart|clusteredColumnChart|lineChart)$/, arT = titled(ar, CH), enT = titled(en, CH), I = TM.isolateLatin || ((x) => x);
   chk(() => ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales حسب Region' && ST.join('إجمالي المبيعات', 'Region', 'حسب') === 'إجمالي المبيعات حسب Region' && ST.join('Total Sales', 'المنطقة', 'by') === 'Total Sales' && ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region'
     && ST.alternate('Total Sales', 'Region', 2, true, 'حسب') === 'ترتيب Region حسب Total Sales' && ST.alternate('Total Sales', 'Region', 2, false, 'حسب') === 'Total Sales لكل Region',
   () => `T1. story-titles.js: an Arabic report joins any two names with «حسب» and says its second-chart sentences in Arabic; an English report as before: ${cut([ST.join('Total Sales', 'Region', 'حسب'), ST.alternate('Total Sales', 'Region', 2, true, 'حسب')])}`);
-  chk(() => arT.some((x) => x.type === 'lineChart' && x.t === I('Total Sales حسب Month')) && I('Total Sales حسب Month').startsWith('‏⁨'), () => `T2. the Arabic download's line chart: «Total Sales حسب Month», isolated, U+200F first: ${cut(arT.filter((x) => x.type === 'lineChart'))}`);
+  chk(() => arT.some((x) => x.type === 'lineChart' && x.t === I('Total Sales حسب Month')) && I('Total Sales حسب Month').startsWith('⁧‏⁨'), () => `T2. the Arabic download's line chart: «Total Sales حسب Month», isolated, U+200F first inside BD2's U+2067 wrap: ${cut(arT.filter((x) => x.type === 'lineChart'))}`);
   chk(() => ['clusteredBarChart', 'clusteredColumnChart'].every((k) => arT.some((x) => x.type === k && x.t === I('Total Sales حسب Region'))) && arT.some((x) => x.type === 'clusteredBarChart' && x.t === I('ترتيب Region حسب Total Sales')),
     () => `T3. the Arabic bar and column charts: «Total Sales حسب Region», the ranked second bar «ترتيب Region حسب Total Sales»: ${cut(arT.filter((x) => x.type !== 'lineChart'))}`);
   chk(() => arT.length >= 4 && arT.concat(titled(ar, /^tableEx$/)).every((x) => x.t && !/[()]/.test(x.t) && !/[()]/.test(x.alt)), () => `T4. no bracket in an Arabic chart or table title or alt text: ${cut(arT.concat(titled(ar, /^tableEx$/)).filter((x) => !x.t || /[()]/.test(x.t + x.alt)))}`);
