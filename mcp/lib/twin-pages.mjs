@@ -136,7 +136,9 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
     // a text column: a column of the model left-aligned in the original (DataArcus aligns its numbers right)
     const ov = origByName[v.name], oAlign = (ref) => { const cf = ov && isObj(ov.visual) && isObj(ov.visual.objects) && Array.isArray(ov.visual.objects.columnFormatting) ? ov.visual.objects.columnFormatting : [], e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === ref && isObj(y.properties));
       return e && e.properties.alignment && e.properties.alignment.expr ? String(e.properties.alignment.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
-    const isText = (x) => isObj(x.field) && !!x.field.Column && !/^(Right|Center)$/i.test(String(oAlign(x.queryRef) || ''));
+    // (TW1, M1-S2: the row label stands for the text column it shows, right-aligned as the writer writes it)
+    const rowLabel = (x) => isObj(x.field) && isObj(x.field.Measure) && typeof x.field.Measure.Property === 'string' && x.field.Measure.Property.startsWith(Q.ROW_LABEL);
+    const isText = (x) => rowLabel(x) || (isObj(x.field) && !!x.field.Column && !/^(Right|Center)$/i.test(String(oAlign(x.queryRef) || '')));
     const cols = H.cols.map((c) => c.p);
     const ownNeed = (x) => Math.max(need(x), Math.ceil(12 * 0.55 * T * 4 / 3 + 24 * sc));
     let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
