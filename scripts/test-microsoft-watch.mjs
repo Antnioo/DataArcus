@@ -62,7 +62,8 @@ function world({ tree = folders(), themes = THEMES(), cli = '0.5.0', catalog = '
       const m = url.match(/\/repos\/o\/r\/(.*)$/);
       const p = m ? m[1] : '';
       if (method === 'GET' && p.startsWith('issues?')) return res(issues);
-      if (method === 'GET' && /^issues\/\d+\/comments/.test(p)) return res(comments[p.match(/\d+/)[0]] || []);
+      // (CX1, F10) as GitHub pages them: per_page (30 by default, 100 at most), page (from 1)
+      if (method === 'GET' && /^issues\/\d+\/comments/.test(p)) { const q = new URLSearchParams(p.split('?')[1] || ''), per = Math.min(100, +q.get('per_page') || 30), pg = Math.max(1, +q.get('page') || 1); return res((comments[p.match(/\d+/)[0]] || []).slice((pg - 1) * per, pg * per)); }
       if (method === 'POST' && p === 'labels') return res({ message: 'Validation Failed' }, 422);
       if (method === 'POST' && p === 'issues') return res({ number: 9, html_url: 'https://github.com/o/r/issues/9' }, 201);
       if (method === 'POST' && /^issues\/\d+\/comments$/.test(p)) return res({ html_url: 'https://github.com/o/r/issues/5#c' }, 201);
@@ -194,6 +195,14 @@ for (const src of ['schemas', 'theme', 'npm', 'feed']) {
   const w3b = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: [{ body: 'Thanks! ' + com.body.body, user: { login: 'someone' } }, { body: com.body.body }] } });
   const r3b = await run(w3b);
   ok(r3b.posts.some((p) => /issues\/5\/comments$/.test(p.url) && /2\.160/.test(p.body.body)), 'W9 AUD-044: keys only from the issue and the workflow\'s own comments, never a stranger\'s');
+
+  // (CX1, F10) 150 comments: the workflow's own key line on the second page is read (every page, the bot filter kept)
+  const many = Array.from({ length: 149 }, (_, i) => ({ body: 'Comment ' + i, user: { login: 'someone' } }));
+  const w3c = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: many.concat([{ body: com.body.body, user: BOT }]) } });
+  const r3c = await run(w3c);
+  eq([r3c.code, r3c.posts.length], [0, 0], 'W12 150 comments: the key on the second page is read, nothing written again');
+  const w3d = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: many.concat([{ body: com.body.body, user: { login: 'someone' } }]) } });
+  ok((await run(w3d)).posts.some((p) => /issues\/5\/comments$/.test(p.url)), 'W12 on the second page too, a stranger\'s key line silences nothing');
 
   // a pull request in the issues list is not the issue
   const w4 = world({ cli: '0.6.0', issues: [{ number: 7, title: 'pr', body: '', pull_request: {} }] });
