@@ -87,6 +87,9 @@ const spec = flat('./PRODUCT_SPEC.md');
 check(/## The 11 tools/.test(spec) && !/The 6 tools/.test(spec), 'W2-3. PRODUCT_SPEC.md says 6 tools (0.3.0 has 11)');
 for (const t of ['approve_plan', 'add_gulf_calendar', 'read_report', 'check_report', 'create_arabic_twin']) check(new RegExp('\\| `' + t + '` \\|').test(spec), `W2-3. PRODUCT_SPEC.md's tool table has no ${t} row`);
 check(!/Not yet \(planned\):\*\* the Gulf calendar pack/.test(spec) && /Arabic calendar/.test(spec), 'W2-3. PRODUCT_SPEC.md says the Gulf calendar is planned, or says nothing of the Arabic calendar columns (C1)');
+// (ST1, SQ9-S2) plan_layout's row takes what its schema takes: KPI cards 0-6 (the layouts made for 3-6), a model path and planFields
+{ const pl = (spec.match(/\| `plan_layout` \|([^|]*)\|/) || [])[1] || '', src = read('./tools/plan_layout.mjs'), [, lo, hi] = src.match(/kpis: z\.number\(\)\.int\(\)\.min\((\d+)\)\.max\((\d+)\)/) || [];
+  check(new RegExp(`KPI cards \\(${lo}-${hi}\\b`).test(pl) && /`path`/.test(pl) && /`planFields`/.test(pl), `PRODUCT_SPEC.md's plan_layout row: KPI cards ${lo}-${hi} as the schema takes, a model path and planFields: ${pl.slice(0, 200)}`); }
 check(!/It doesn't translate\./.test(spec) && /never translates silently/.test(spec) && /approves/.test(spec), 'W2-3. PRODUCT_SPEC.md says the translation truth (Claude drafts, the person approves, never silent)');
 const mreadme = flat('./README.md');
 // (G1, 0.3.1: the tool table moved from mcp/README.md to mcp/TOOLS.md, text unchanged; the checks of its rows moved with it)
