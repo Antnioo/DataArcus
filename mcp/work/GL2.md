@@ -100,10 +100,13 @@ Suites (baseline on cba24a5 in a separate worktree -> after):
 - `glass-tables`: 69 of 107 failed -> 107 PASS; with the scheduled task's items 113 PASS (L1 fails on the old split:
   `C:\DataArcus\tests\glass-lab\Glass EN light.Report`); `glass` 50 = 50 (T4 now asserts the clear fills).
 - `npm test -- report`: 33 -> 34 suites passed (the base registers 33, not the 30 my plan took from GL1).
-- `npm test -- core`: CORE_RESULT.
+- `npm test -- core`: its suites inside the full run on d8fd6a5e: mcp 1591, golden 12 tasks match, mutation 73 mutants all
+  killed (a separate core run was stopped: the tree changed under it with the scheduled task's items).
 - lint clean; check-min PASS (every changed .min.js a new stamp against main); changelog-words PASS; check-result-lines
   PASS (99); check-agent-memory PASS (169); test-site-config PASS.
-- Full run: FULL_RESULT.
+- Full run `npm test -- --keep-going` on d8fd6a5e: "run-tests: 99 suites passed" (the base registers 98, not the 93 my
+  plan took from GL1; + glass-tables).
+- `run-all theme-generator design-engine` again on d8fd6a5e (the dark shadow): 910, 598.
 
 ## CHANGELOG line
 - (added to the glass look's entry) Tables and matrices in the glass look have no fill of their own: no solid rows,
