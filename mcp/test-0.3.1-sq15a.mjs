@@ -127,6 +127,10 @@ try {
         () => `L5-8. a KPI on a column, on itself or on a missing measure is no target; the names still find one (pin): ${cut([M.kpiTarget(odd, 'T', 'A'), M.kpiTarget(odd, 'T', 'B'), SI.targetOf(odd, 'T', 'D')])}`);
     }
   }
+  // (ST1, SQ15a-S1) TOOLS.md says what the answers now carry: read_model's kpis, read_report's drill level, images and decoration
+  { const tools = fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8'), row = (t) => (tools.match(new RegExp('\\| `' + t + '` \\|([^\\n]*)')) || [])[1] || '';
+    chk(() => /`kpis`/.test(row('read_model')) && /`drillLevel`/.test(row('read_report')) && /`images`/.test(row('read_report')) && /decoration/.test(row('read_report')),
+      () => `SQ15a-S1. TOOLS.md names read_model's kpis and read_report's drillLevel, images and decoration: ${cut([row('read_model').slice(-200), row('read_report').slice(-300)])}`); }
 } finally {
   try { fs.rmSync(ROOT, { recursive: true, force: true }); } catch (e) { /* the OS cleans its temp folder */ }
 }
