@@ -169,7 +169,7 @@ jobs:
 
   mcp-parts:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40   # as the Windows and macOS shards: shard 0 runs every mcp/tests.json suite (12.7 min on 27 Oct)
     strategy:
       fail-fast: false
       matrix:
