@@ -23,7 +23,11 @@ export function withPlans(call) {
         .filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
       // (F1, STRICT: a seasonal page's answers, gulfDates, are plan_layout's input only: given to the plan, not the write)
       const { gulfDates, ...writeArgs } = args;
-      let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}, gulfDates ? { gulfDates } : {}));
+      const planOf = (p) => call('plan_layout', Object.assign({ path: args.path }, p, args.fields ? { planFields: args.fields } : {}, gulfDates ? { gulfDates } : {}));
+      let pl = await planOf(pin), kept = keptEnglish(pl, pin.displayNames);
+      // (0.3.1 CX1, F01) an Arabic plan whose titles would be English gets no plan id: the person keeps those fields
+      // English on purpose here (the titles these checks were written for), and the write takes the same names
+      if (kept) { pin.displayNames = kept; writeArgs.displayNames = kept; pl = await planOf(pin); }
       if (!(pl.j && pl.j.plan && pl.j.plan.planId)) pl = await call('plan_layout', { path: args.path });
       const id = pl.j && pl.j.plan && pl.j.plan.planId ? await approve(pl.j.plan.planId) : null;
       return call(name, Object.assign({}, writeArgs, id ? { planId: id } : {}));
@@ -34,5 +38,34 @@ export function withPlans(call) {
     if (!id) return first;
     await approve(id);
     return call(name, Object.assign({}, args, { planId: id }));
+  };
+}
+
+/**
+ * (0.3.1 CX1, Codex's F01) An Arabic plan_layout answer with no plan id because titles would be written English for fields
+ * with no Arabic name (arabicNames.titlesInEnglish.fields): the displayNames a person gives to keep each of those fields
+ * English on purpose (its model name), added to the ones given; null when the answer has no such fields. The older checks
+ * use it for the titles they were written for (the English names, as before CX1).
+ */
+export function keptEnglish(answer, displayNames) {
+  const f = answer && answer.j && answer.j.arabicNames && answer.j.arabicNames.titlesInEnglish && answer.j.arabicNames.titlesInEnglish.fields;
+  if (!Array.isArray(f) || !f.length || (answer.j.plan && answer.j.plan.planId)) return null;
+  return Object.assign({}, displayNames || {}, Object.fromEntries(f.map((k) => [k, String(k).replace(/^.*?\[(.*)\]$/, '$1')])));
+}
+/**
+ * (0.3.1 CX1) call wrapped for the older Arabic checks: a plan_layout answer refused for English titles only is asked
+ * again with those fields kept English on purpose (keptEnglish), and a later create_report of the same path and name
+ * without displayNames is given the same names (the plan pins them).
+ */
+export function keepingEnglish(call) {
+  const names = new Map(), key = (a) => JSON.stringify([a && a.path, a && a.name]);
+  return async (name, args) => {
+    if (name === 'create_report' && args && args.displayNames === undefined && names.has(key(args))) return call(name, Object.assign({}, args, { displayNames: names.get(key(args)) }));
+    const r = await call(name, args);
+    if (name !== 'plan_layout' || !args) return r;
+    const kept = keptEnglish(r, args.displayNames);
+    if (!kept) return r;
+    names.set(key(args), kept);
+    return call(name, Object.assign({}, args, { displayNames: kept }));
   };
 }

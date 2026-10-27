@@ -17,6 +17,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 import { LIMIT } from './lib/scope.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,7 @@ const MP = 'large', FOCUS = 'Web Orders';
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const linkAt = async (i) => { for (let k = 0; k < 200 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 
 // every answer measured: { label, tool, chars }; every approval page: { label, bytes, planChars }
 const answers = [], pages = [];

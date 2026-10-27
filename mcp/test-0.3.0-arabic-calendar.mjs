@@ -19,6 +19,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -41,6 +42,8 @@ const WANT = { 'Month Name (Arabic)': 'Month Number', 'Month Short (Arabic)': 'M
   'Fiscal Year (Arabic)': null, 'Fiscal Quarter (Arabic)': null, 'Is Weekend (Arabic)': null, 'Is Ramadan (Arabic)': null };
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, {}), w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
+w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 // a column block of the script, by its name
 const block = (script, name) => { const m = String(script).split(/\n(?=\t\tcolumn )/).find((b) => b.startsWith(`\t\tcolumn '${name.replace(/'/g, "''")}'`) || b.startsWith(`\t\tcolumn ${name}`)); return m || ''; };
 // the bound fields of a written report: "Table[Column]" of every projection on its pages

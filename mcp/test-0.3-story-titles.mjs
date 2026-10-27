@@ -15,6 +15,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -44,6 +45,7 @@ const pagesOf = (dir) => { const d = path.join(dir, 'definition/pages');
   return rd(path.join(d, 'pages.json')).pageOrder.map((id) => ({ page: rd(path.join(d, id, 'page.json')), visuals: fs.existsSync(path.join(d, id, 'visuals')) ? fs.readdirSync(path.join(d, id, 'visuals')).map((v) => rd(path.join(d, id, 'visuals', v, 'visual.json'))).filter((v) => v.visual) : [] })); };
 
 const s = await serverClient(ROOT, {});
+s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 const report = async (args, plan) => {
   const pl = await s.call('plan_layout', Object.assign({}, plan || {}, { path: args.path, name: args.name, secondPage: true }, args.lang ? { lang: args.lang } : {}, args.focus ? { focus: args.focus } : {}, args.pages ? { pages: args.pages } : {}, args.fields ? { planFields: args.fields } : {}));
   if (!pl.j || !pl.j.plan || !pl.j.plan.planId) return { pl, r: pl };

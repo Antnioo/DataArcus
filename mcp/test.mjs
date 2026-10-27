@@ -711,8 +711,12 @@ const cardProblems = (dir, rtl) => {
     // plan and pinned with it: a displayName here is only that, the field's own name made readable)
     // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic plan pins the fixed list's Arabic names too, named in
     // the plan and approved with it: «إجمالي المبيعات» for Total Sales here; before, an Arabic report wrote none without input)
-    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)); };
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (changed 27 Oct 2026, 0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id, so the
+    // plan step (test-plan.mjs withPlans) keeps those fields English on purpose, their model names as displayNames: such a
+    // field shows its model name, given, not missing)
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && (p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)) || (rtl && p.displayName === f.Property)); };
+    const keptMonth = projections(files).some((p) => p.queryRef === 'Calendar.Month Short' && p.displayName === 'Month Short');
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth) : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -731,8 +735,11 @@ const cardProblems = (dir, rtl) => {
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && an.missing.includes('Sales[Total Sales vs Last Ramadan %]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
-          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 6, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
+        // (changed 27 Oct 2026, CX1, F01: the fields of English titles kept English on purpose by the plan step, so
+        // "vs Last Ramadan %" shows its model name, given, and 2 more names are used: 8, was 6)
+        const keptPct = ps.some((p) => p.queryRef === 'Sales.Total Sales vs Last Ramadan %' && p.displayName === 'Total Sales vs Last Ramadan %');
+        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && (an.missing.includes('Sales[Total Sales vs Last Ramadan %]') || keptPct) && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
+          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === (keptPct ? 8 : 6), `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
       }

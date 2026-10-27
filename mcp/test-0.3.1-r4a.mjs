@@ -17,6 +17,7 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), require = createRequire(import.meta.url);
 const LL = require('../assets/js/label-limits.js'), LC = require('../assets/js/layout-check.js');
@@ -134,6 +135,7 @@ const req = (url, method, body) => new Promise((resolve) => {
   r.on('error', () => resolve('')); if (body) r.write(body); r.end();
 });
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 async function approve(pid) {
   const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); const html = url ? await req(url, 'GET') : '';
   if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); }

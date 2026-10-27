@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 import * as Approval from './lib/approval-window.mjs';
 import { proposeArabic, draftText } from './lib/arabic-names.mjs';
 
@@ -67,6 +68,7 @@ process.env.DATAARCUS_ROOT = ROOT;
 const S = await import('./lib/sample-project.mjs');
 S.sampleFiles(S.SAMPLE_FOLDER).forEach((f) => { const p = path.join(ROOT, f.path); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, f.data); });
 const w = await serverClient(ROOT, {});
+w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 try {
   const first = S.tour(S.SAMPLE_FOLDER, 'en')[0].call.args, asked = first.planFields.slicers;
   for (const lang of ['en', 'ar']) {
