@@ -74,7 +74,7 @@ try {
   // ---------- N5: the titles ----------
   const titles = (r) => r.files.filter((f) => /\/visual\.json$/.test(f.path)).map((f) => { const j = JSON.parse(f.data), t = (((((j.visual || {}).visualContainerObjects || {}).title || [])[0] || {}).properties || {}).text; return t && t.expr && t.expr.Literal ? t.expr.Literal.Value.replace(/^'|'$/g, '') : null; }).filter(Boolean);
   const rAll = get(() => site('ar', N.withNames(en, aAll.names, Bind.mapFields), { namesNote: N.note(aAll) })), tAll = rAll.files ? titles(rAll) : [];
-  chk(() => tAll.length > 5 && tAll.every((t) => AR.test(t) && !/[A-Za-z]/.test(bare(t))) && tAll.includes('إجمالي المبيعات حسب المنطقة'),
+  chk(() => tAll.length > 5 && tAll.every((t) => AR.test(t) && !/[A-Za-z]/.test(bare(t))) && tAll.includes('إجمالي المبيعات حسب الشهر'),
     () => `N5. approved Arabic names: every title wholly Arabic: ${cut(rAll.threw || tAll)}`);
   const rKeep = get(() => site('ar', N.withNames(en, aKeep.names, Bind.mapFields), { namesNote: N.note(aKeep) })), tKeep = rKeep.files ? titles(rKeep) : [];
   chk(() => tKeep.length > 5 && tKeep.every((t) => !mixed(t)) && tKeep.filter((t) => /Region/.test(t)).length >= 2 && tKeep.filter((t) => /Region/.test(t)).every((t) => !AR.test(bare(t))) && tKeep.some((t) => t === 'إجمالي المبيعات حسب الشهر'),
@@ -88,7 +88,11 @@ try {
   const lf = local.files ? local.files.map((f) => f.path) : [];
   chk(() => !lf.includes('README.md') && lf.some((p) => /^Shop - [^/]+\.README\.md$/.test(p)) && /Region/.test(local.files.find((f) => /\.README\.md$/.test(f.path)).data),
     () => `N6b. next to the person's project: its own <report>.README.md, never their README.md: ${cut(local.threw || lf.filter((p) => !p.includes('/')))}`);
-  const same = (a, b) => a.files && b.files && a.files.length === b.files.length && a.files.every((f, i) => f.path === b.files[i].path && Buffer.compare(Buffer.from(f.data), Buffer.from(b.files[i].data)) === 0);
+  // the writer's random names (a visual's or a filter's 20 to 32 hex name, a .platform GUID) numbered in order of appearance; then byte for byte
+  const RANDOM = /\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?<![0-9a-f])[0-9a-f]{20,32}(?![0-9a-f])/g;
+  const flat = (r) => { const ids = new Map(), at = (x) => { if (!ids.has(x)) ids.set(x, '#' + ids.size); return ids.get(x); };
+    return r.files.map((f) => (f.path + '\n' + (typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('base64'))).replace(RANDOM, at)).join('\n'); };
+  const same = (a, b) => a.files && b.files && flat(a) === flat(b);
   const e1 = get(() => site('en', en)), e2 = get(() => site('en', en, { namesNote: undefined }));
   chk(() => same(e1, e2) && same(get(() => site('ar', en)), r0), () => 'N6c. without the step (no namesNote), the files are byte for byte the same');
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }

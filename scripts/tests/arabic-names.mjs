@@ -11,7 +11,7 @@
 //      the README says it was kept English by choice
 //   W6 the drafts come from the words file: the same page with a copy of the file without "customer" drafts nothing
 //      for Customer
-//   W7 the English download: no step, its files (the pictures aside) byte for byte the base's (13afb3a)
+//   W7 the English download: no step, its files (the pictures aside, the random names numbered) byte for byte the base's (13afb3a)
 //   W8 a model already named in Arabic: no step, the download at once
 //   W9 right to left at phone width (390): the list inside the screen, each English name isolated left to right
 //   W10 the keyboard: every box, choice and the approve button reached by Tab; Enter approves
@@ -48,8 +48,13 @@ function titlesOf(files) {
     return x ? x[1].replace(/""/g, '"') : null;
   }).filter(Boolean);
 }
-// the download's files, the pictures aside (drawn by the browser's canvas: its pixels are not this job's), as one digest
-const digest = (files) => crypto.createHash('sha256').update(Object.keys(files).filter((n) => !/\.png$/i.test(n)).sort().map((n) => n + '\n' + files[n].toString('base64')).join('\n')).digest('hex');
+// the download's files, the pictures aside (drawn by the browser's canvas: its pixels are not this job's), as one digest;
+// the writer's random names (a visual's or a filter's 20 to 32 hex name, a .platform GUID) numbered in order of appearance, so two builds of
+// the same input compare byte for byte
+const RANDOM = /\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?<![0-9a-f])[0-9a-f]{20,32}(?![0-9a-f])/g;
+const flatOf = (files) => { const ids = new Map(), at = (x) => { if (!ids.has(x)) ids.set(x, '#' + ids.size); return ids.get(x); };
+  return Object.keys(files).filter((n) => !/\.png$/i.test(n)).map((n) => (n + '\n' + files[n].toString('utf8')).replace(RANDOM, at)).join('\n'); };
+const digest = (files) => crypto.createHash('sha256').update(flatOf(files)).digest('hex');
 
 function model(dir, name, tables, relationships) {
   fs.mkdirSync(path.join(dir, name, name + '.SemanticModel'), { recursive: true });
@@ -148,7 +153,7 @@ export default async function ({ browser, url }) {
     const v = await open('en', OWN), pg = v.pg;
     const files = await download(pg, () => pg.click('#pbipBtn'));
     const pin = fs.existsSync(PIN) ? JSON.parse(fs.readFileSync(PIN, 'utf8')) : {};
-    if (process.env.TT2_PIN && files) fs.writeFileSync(PIN, JSON.stringify({ _note: 'TT2 W7: the English download of the made-up "Own" model, its files the pictures aside, as one SHA-256 (scripts/tests/arabic-names.mjs digest); written on 13afb3a, before TT2', base: '13afb3a', sha256: digest(files) }, null, 2) + '\n');
+    if (process.env.TT2_PIN && files) fs.writeFileSync(PIN, JSON.stringify({ _note: 'TT2 W7: the English download of the made-up "Own" model, its files the pictures aside, the random names of the writer numbered in order, as one SHA-256 (scripts/tests/arabic-names.mjs digest); written on 13afb3a, before TT2', base: '13afb3a', sha256: digest(files) }, null, 2) + '\n');
     check(files && !(await shown(pg)) && digest(files) === pin.sha256, `W7: the English download: no step, its files byte for byte the base's: ${files ? digest(files) : 'no download'} (want ${pin.sha256})`);
     await v.ctx.close();
   }
