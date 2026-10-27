@@ -109,12 +109,6 @@ const INTENDED = {
   zOrder: 'z: each path numbers the layers; compared as an order',
   bilingual: 'the bilingual report (B) against the copy (C) of the same English report: the report\'s own name (its .platform\'s displayName, and a new logicalId as every report gets; the folder and the .pbip named without " (EN-AR)": it is a new report, not a copy). Nothing else: the same engine builds both'
 };
-// a difference found, not meant: two decisions of the owner meet; taken out here, said in M1.md for the owner to decide
-// eslint-disable-next-line no-unused-vars -- the record of the known difference, said in M1.md: the comparison's comments cite it
-const KNOWN = {
-  textPanel: 'a text box with text on a theme that draws panels: create_report writes its text slot as a panel on purpose (round 13: a panel with a title), the twins switch the panel off on the Arabic pages (R1, item 4: a text box with text is a heading). The owner decides which one both follow'
-};
-
 // ---------- the comparison ----------
 const KIND = (v) => {
   if (v.visualGroup) return 'group';
@@ -241,8 +235,6 @@ W_KINDS.forEach((kind) => {
     if (!p.b) return [p.a.v.name + ': the writer has no ' + kind + ' at the same place (' + [p.a.x, p.a.y, p.a.w, p.a.h].join(',') + ')'];
     const a = shape(p.a.v, { sizes: true }), b = shape(p.b.v, { sizes: true });
     if (kind === 'pills' || kind === 'slicer' || kind === 'table') { delete a.position; delete b.position; }
-    // (KNOWN.textPanel) the twins' panel switched off on a text box with text
-    if (kind === 'textbox') [a, b].forEach((x) => { const c = x.visual.visualContainerObjects || {}; ['background', 'border', 'dropShadow'].forEach((k) => delete c[k]); });
     // (INTENDED.table, INTENDED.matrix: the same projections, in another order; a table's alignment follows its columns)
     if (kind === 'table' || kind === 'matrix') [a, b].forEach((x) => { x.visual.query.queryState.Values.projections.sort((m, n) => JSON.stringify(m).localeCompare(JSON.stringify(n))); if (x.visual.objects) delete x.visual.objects.columnFormatting; });
     if (kind === 'table') [a, b].forEach((x) => { x.visual.query.queryState.Values.projections = x.visual.query.queryState.Values.projections.filter((q) => !/Row label: /.test(JSON.stringify(q))); });
