@@ -294,8 +294,9 @@
       // count of categories is known (the chart's Top N, a day, month or quarter axis, a field of two or a few known texts,
       // a calendar's rows; the fewer of the two), a bar or column is never thicker than the measured maximum (pbip-sizing.js barBand): the gaps
       // grow, inner and outer padding alike, so the bars stay centred; the value axis is never touched (equal values stay
-      // equal). Count not known: nothing written, Desktop's default as before. (small multiples share the width by panel)
-      const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query)) || Infinity) : 0;
+      // equal). Count not known: nothing written, Desktop's default as before. (small multiples share the width by panel;
+      // the gallery's waterfall, a column chart of steps, keeps its own look)
+      const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' && s.kind !== 'waterfall' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query)) || Infinity) : 0;
       const box = visual.position || {}, horizontal = BAR_TYPES.test(visual.visualType);
       const band = nCat < Infinity ? barBand(nCat, barSpan(horizontal, +box.width || s.w, +box.height || s.h, pg.page.h), pg.page.h) : null;
       if (band) { put('categoryAxis', { innerPadding: lit(band.pct + 'L'), outerPadding: lit(band.pct + 'L') }); BANDS.set(visual, nCat); }

@@ -57,8 +57,9 @@
 - The count is the fewer of the Top N and the field's known count (a 3-value field under a Top 8 is 3 bars). The
   Top N is an upper bound: with fewer real categories the bars are thicker than the maximum, but never thicker than
   today. The model gives no row count for a plain text column (metadata only), so such a chart keeps Desktop's look.
-- Small multiples (their panels share the width), the waterfall and the ribbon chart are not padded: their bars do not
-  follow one category count. Combo charts are padded; the preview still draws them as a line (its shape for them).
+- Small multiples (their panels share the width), the waterfall (the gallery's, a `columnChart` of steps, too: its
+  suites waterfall-rtl W3 and waterfall-rtl2 A8 say it has no categoryAxis, and that stays) and the ribbon chart are not
+  padded: their bars do not follow one category count. Combo charts are padded; the preview still draws them as a line (its shape for them).
 - The plan's answer does not list the padding: its words live in create_report and report-run.mjs (FX2's files).
 - Desktop's own default gap is taken as 20% inner and 0 outer (Power BI's visuals utilities' 0.2) to decide when the
   default is already thin enough; the laptop's capture confirms.
