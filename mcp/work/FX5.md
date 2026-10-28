@@ -27,8 +27,14 @@
   count unknown unchanged, the value axis untouched); Microsoft's validator 0 errors on the written charts. Other
   suites: no number changed unless a golden's chart has a known count; each such change said per test below. Website:
   `pbip`, `theme-generator` the same counts unless said. Full run: base + 1 (fx5).
-- **Got:** (to fill)
-- **Resume:** the plan pushed; next the red test, then the rule.
+- **Got:** every planned number (fx5 R2, R3, W1-W4, P1). fx5 27 checks, red on 84596b9 first (21 of 27; the 6 green
+  there are guards: 12 months and an unknown count unchanged, the phone's bar chart, the preview's own bars, the
+  validator's 0 on the old charts) -> 27 PASS; Microsoft's validator 0 errors at 1280 x 720 and 1920 x 1080. No other
+  suite's number changed: waterfall-rtl W3 and waterfall-rtl2 A8 went red on the gallery's waterfall and stay as they
+  were (the waterfall left out, a decision below). Website: pbip 111, theme-generator 922, tools 399, layout 512,
+  layout-canvas 31 PASS; site config PASS; the Theme Generator in Chromium (EN, AR): columns 35.5, no console error.
+- Full run on efaed59: "run-tests: 117 suites passed"
+- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
 1. **The writer (`pbip-page.js` fixVisual).** A bar or column chart (clustered, stacked, 100%, the combo charts) whose
