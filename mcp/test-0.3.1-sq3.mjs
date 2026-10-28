@@ -53,7 +53,9 @@ const pageHtml = (p, sh) => { try { return Approval.approvalHtml(p, sh); } catch
   chk(() => M.length === 2 && !M.some((x) => x.includes('سطر عربي واحد فقط')) && unesc(M[0]).includes('the new report "Sales AR.Report"') && unesc(M[1]).includes('the TMDL script "x.tmdl"'),
     () => `T1-S6b. a writesAr that does not match the writes line for line is not shown (the English lines only): ${M.map(unesc).join(' | ')}`);
   const X = pageHtml(plan, show({ writesAr: ['<img src=x onerror="alert(1)"> «<b>bold</b>»', 'سكربت'] }));
-  chk(() => !/<img|<b>bold/.test(X) && /&lt;img src=x/.test(X) && /&lt;b&gt;bold/.test(X), () => `T1-S6c. every Arabic writes line is escaped: ${writesList(X).slice(0, 400)}`);
+  // (FX1: each Latin run isolated on an Arabic page; the escaping read with the isolates taken out)
+  const X0 = X.replace(/<\/?bdi[^>]*>/g, '');
+  chk(() => !/<img|<b>bold/.test(X) && /&lt;img src=x/.test(X0) && /&lt;b&gt;bold/.test(X0), () => `T1-S6c. every Arabic writes line is escaped: ${writesList(X).slice(0, 400)}`);
   const E = pageHtml({ id: 'plan-0123456789ab', kind: 'report', writes: ['the report "<name>.Report"'] }, Object.assign(Approval.summary('report', { pins: { create_report: { name: 'R', lang: 'en' } } }), { writesAr: ['التقرير'] }));
   chk(() => !items(E).some((x) => AR.test(x)), () => `T1-S6d. an English page shows no Arabic writes line: ${items(E).join(' | ')}`);
 

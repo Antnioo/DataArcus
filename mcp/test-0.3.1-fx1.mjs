@@ -58,10 +58,14 @@ const AR_RE = /[؀-ۿ]/;
 const PRODUCT = ['Power BI Desktop', 'Power BI', 'DataArcus', 'Claude', 'TMDL view', 'TMDL', 'DAX', 'Notepad', 'Preview', 'Apply', 'View', 'Themes', 'Browse for themes', 'Ctrl'];
 function latinLeft(H) {
   let b = String(H).replace(/<style[\s\S]*?<\/style>/g, '').replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<title>[\s\S]*?<\/title>/g, '');
-  // (the check's items: the shared rule engines' own sentences, English for now: mcp/work/FX1.md)
-  b = b.replace(/<p>للمراجعة:<\/p><ul>[\s\S]*?<\/ul>/g, '');
-  for (let i = 0; i < 3; i++) b = b.replace(/<bdi[^>]*>(?:(?!<bdi)[\s\S])*?<\/bdi>/g, ' ');
-  b = b.replace(/«[^»]*»/g, ' ').replace(/<[^>]+>/g, '\n').replace(/&[a-z#0-9]+;/g, ' ').replace(/#[0-9a-f]{6}\b/gi, ' ');
+  // (the check's items: the shared rule engines' own sentences, English for now: mcp/work/FX1.md; the raw inputs: code)
+  b = b.replace(/<p>للمراجعة:<\/p><ul>[\s\S]*?<\/ul>/g, '').replace(/<details><summary>كل المدخلات كما أُعطيت<\/summary>[\s\S]*?<\/details>/g, '');
+  // (a file's or folder's path, listed as it is: isolated left to right)
+  b = b.replace(/<bdi dir="ltr">([^<]*)<\/bdi>/g, (q, x) => (/[\/\\]|\.[A-Za-z]{2,5}$/.test(x) ? ' ' : q));
+  b = b.replace(/<[^>]+>/g, '\n').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&[a-z#0-9]+;/g, ' ');
+  // the names («...»), the folders' full paths, the plan's id, the colours' hex, the file kinds' paths listed as they are
+  b = b.replace(/«[^»]*»/g, ' ').replace(/\((?:[A-Za-z]:\\|\/)[^()]*\)/g, ' ').replace(/plan-[0-9a-f]{12}/g, ' ').replace(/#[0-9a-f]{6}\b/gi, ' ')
+    .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, ' ');   // (a tool's name, as code: create_report)
   PRODUCT.forEach((p) => { b = b.split(p).join(' '); });
   return b.split('\n').map((l) => l.trim()).filter((l) => /[A-Za-z]{2,}/.test(l));
 }

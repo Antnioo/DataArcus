@@ -10,6 +10,17 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **The Arabic Reset button keeps its icon:** in the Arabic twin and the English and Arabic copy, a Reset filters
+  button whose Arabic text is longer now takes the width it needs from the dropdown slicers beside it (or, with no
+  slicer beside it, its text takes the largest size at which the text and the icon both fit), so it looks like the
+  English one. Only where nothing gives room is the icon left out, and the plan says so.
+- **The Health Check works offline once the page has loaded:** the analysis is loaded with the page, so a file
+  dropped after the connection is gone still gets its score. Nothing is sent anywhere, as before.
+- **An Arabic plan's approval page is all Arabic:** the theme's, the Gulf calendar's (its inputs too), the twin's, the
+  copy's and the report's approval pages show their headings, rows, values and file lines in Arabic only; names of
+  models, tables, fields and files stay as they are, inside «». Still in English: the measured rules' findings under
+  "Worth a look", and the explanations of the optional parts (flip cards, status icons, the DAX functions, the metric
+  switcher, the gallery, replaced custom visuals).
 - **No English titles slip into an Arabic report:** when a title of an Arabic report would be written in English
   because a field in it has no Arabic name yet, the plan now gets no approval number until each such field has an
   Arabic name you approved, or you chose to keep it in English on purpose. The plan names the fields and both choices.

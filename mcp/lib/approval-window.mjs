@@ -80,8 +80,10 @@ const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, 
 // (0.3.0 T2, the laptop's final run: on the Arabic page `"Overview" (page name)` drew `Overview" (page name)"`) every
 // cell takes its direction from its own first letter (dir="auto"), and each quoted name ("..." or «...») is isolated, so
 // it keeps its order and the words around it decide the cell's direction
-// (FX1) and a folder's full path in brackets, "(C:\\DataArcus\\Sales)", is isolated left to right
-const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(/&quot;[^&<]+?&quot;|«[^»<]+»/g, (q) => `<bdi>${q}</bdi>`).replace(/\(((?:[A-Za-z]:\\|\/)[^()<]*)\)/g, (q, x) => `(<bdi dir="ltr">${x}</bdi>)`).replace(/\b[a-z]+(?:_[a-z]+)+\b/g, (q) => `<bdi dir="ltr">${q}</bdi>`));
+// (FX1) and on an Arabic page every other Latin run (a product's name, a folder's full path in brackets, a tool's name)
+// is isolated left to right, so it never takes the Arabic words around it with it (the rule: each Latin run isolated)
+const ISO_AR = /(&quot;[^&<]+?&quot;|«[^»<]+»)|((?:[A-Za-z]|\/(?=[A-Za-z]))[\w.:/\\-]*(?: +[A-Za-z0-9#][\w.:/\\-]*)*)/g;
+const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(ISO_AR, (q, name, latin) => (name ? `<bdi>${name}</bdi>` : /^(?:quot|amp|lt|gt|#39)$/.test(latin) ? q : `<bdi dir="ltr">${latin}</bdi>`)));
 // (0.3.1 LR1) a cell { en, ar }: on an Arabic page its Arabic; else the English. (FX1, the laptop's part 3: an Arabic
 // page wholly Arabic: no English line under it; a text the page composes takes its Arabic from approval-ar.mjs)
 const cell = (x, ar) => { const en = x && typeof x === 'object' && typeof x.en === 'string' ? x.en : x, a = ar ? arOf(x) : null; return a != null ? isoText(a, true) : isoText(en, ar); };

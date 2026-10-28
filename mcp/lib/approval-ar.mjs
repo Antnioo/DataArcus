@@ -58,7 +58,12 @@ const EXACT = {
   'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)': 'اسم حقل دون اسم عربي: يعرضه Power BI كما يسميه النموذج (أبقيته كما هو؛ ولا يُعاد تسمية النموذج أبدًا)',
   'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic': 'يبدو كتعليمات موجّهة إلى مساعد ذكاء اصطناعي: يبقى كما هو، إلا إذا أعطيت نصه العربي',
   // the sample, the dates
-  'not run': 'لم يُشغَّل', true: 'نعم', false: 'لا', 'In short': 'باختصار'
+  'not run': 'لم يُشغَّل', true: 'نعم', false: 'لا', 'In short': 'باختصار',
+  // the optional sections' row names (flip cards, status icons, DAX functions, metric switcher, gallery, custom visuals)
+  'Model change': 'التغيير في النموذج', 'How it turns': 'كيف تنقلب', Icons: 'الأيقونات', Placement: 'المكان', Theme: 'السمة', 'No icon': 'دون أيقونة', 'User-defined functions': 'الدوال المعرّفة من المستخدم',
+  'Charts that switch': 'الرسوم التي تتبدّل', 'Not on the page': 'ليست في الصفحة', 'Measures left out': 'المقاييس المتروكة', 'Title with nothing chosen': 'العنوان عندما لا يُختار شيء', 'Script file': 'ملف السكربت',
+  'Before the script is applied': 'قبل تطبيق السكربت', 'Saved selection': 'الاختيار المحفوظ', Preview: 'المعاينة', Replacements: 'البدائل',
+  'none: the model is not changed (rules need no measure)': 'لا يوجد: لا يتغيّر النموذج (القواعد لا تحتاج إلى مقياس)'
 };
 // where a text is (twin-texts.mjs KIND_SAID), in Arabic
 const WHERE_AR = { 'page name': 'اسم صفحة', button: 'زر', text: 'نص', 'field name': 'اسم حقل', title: 'عنوان', 'text box': 'مربع نص', bookmark: 'إشارة مرجعية', 'bookmark group': 'مجموعة إشارات مرجعية',
