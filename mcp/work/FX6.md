@@ -17,8 +17,8 @@
 - **Got:** tw1 18 -> 21, cx2 16 -> 20, microsoft-watch 65 -> 67, new fx6 8 checks (W1, W3, C1, C2, N1 red on 1356a16
   first; W2, C3, N2 guards green there). All red on 1356a16 first (tests committed red: f9d913f), green on 92bbb45 and 9b780e1.
   golden task 10 suggestChars 6604 -> 6022 on purpose (below); no other suite's number changed. Suites: base + 1 (fx6).
-- Full run on 9b780e1: (pending, written when it ends)
-- **Resume:** CI on the branch (tests.yml), then the reviewer.
+Full run on 9b780e1: "run-tests: 119 suites passed"
+- **Resume:** done; CI on the branch (tests.yml, started after the full run), then the reviewer.
 
 ## Before -> after
 | Item | Before (1356a16) | After (92bbb45) | Test |
