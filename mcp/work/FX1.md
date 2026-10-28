@@ -17,8 +17,8 @@
   Website model-health 254 -> 255 (the offline check red on 5690ea8's model-health.js first). sq4 20 = 20, sq3 31 = 31,
   cx2 16 = 16, approval-complete 25 = 25, twin-artifact 21 = 21, testers 74 = 74 (assertions changed on purpose, below);
   r4a 32, lr1 18, tt1 28, cs1 45, arabic-titles 27: unchanged. Suites: base + 1 (fx1).
-- FULL-RUN-LINE
-- **Resume:** done; CI on the branch, then the reviewer.
+- Full run on 6715112: "run-tests: 116 suites passed"
+- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
 1. **The Reset icon (D-1028-02).** The sample's report, then its twin and its EN-AR copy with the drafted Arabic: the
