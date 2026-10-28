@@ -19,6 +19,13 @@ package's manifest; this file says what is in it.
 - **No page out of reach in the English and Arabic report:** when a page has no free place at the top for its language
   button, both that page and its other-language page now stay in the page tabs, so a reader can always reach each; the
   plan and the approval page say which pages.
+- **One verdict on the same report:** a text box or dropdown slicer a little lower than Microsoft's validator likes is
+  no longer called something that "can break the report": Power BI Desktop was measured to draw them, so the check
+  now says the part may not look as meant and to look at it in Desktop. The check that runs when a report is written
+  now says the same, in the same words, so it never says "0 problems" while the report check says otherwise.
+- **A dark mode with a light palette is said, not dropped:** when a theme gets a full palette with a light page and
+  mode "dark" (or the other way round), the palette's colours are kept as given and the plan, the answer and the
+  approval page now say that the mode was not used, and how to get it.
 - **Long answers capped:** a plain text answer longer than 40,000 characters is now cut like every other answer, and
   says it was cut.
 - **The weekly Microsoft watch reads every comment:** on an issue with more than 100 comments it now reads them all
