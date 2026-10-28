@@ -33,7 +33,8 @@
   suite's number changed: waterfall-rtl W3 and waterfall-rtl2 A8 went red on the gallery's waterfall and stay as they
   were (the waterfall left out, a decision below). Website: pbip 111, theme-generator 922, tools 399, layout 512,
   layout-canvas 31 PASS; site config PASS; the Theme Generator in Chromium (EN, AR): columns 35.5, no console error.
-- Full run on efaed59: "run-tests: 117 suites passed" (before CI's two website fixtures, below; run again after)
+- Full run on 0ab1131: "run-tests: 117 suites passed" (CI run 40691367731 on 0ab1131: every job green, Linux,
+  Windows, macOS; the first CI run found the two website fixtures below)
 - **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
