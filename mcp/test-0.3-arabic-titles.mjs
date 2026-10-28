@@ -17,7 +17,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
-import { keptEnglish } from './test-plan.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -119,17 +119,18 @@ try {
   const MP = 'large/Large Synthetic.SemanticModel';
   const s = await serverClient(ROOT, {});
   const readReport = (dir) => { const out = {}; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (f.endsWith('.json')) { try { out[path.relative(dir, f)] = rd(f); } catch (x) { /* not JSON */ } } }); rec(dir); return out; };
-  const keptSoFar = {};   // (CX1) the names kept English on purpose so far: the next plan of this model reuses them (the terms)
+  const KEPT = keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]',
+    'Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]', 'Coupon[Coupon Status]', 'Coupon[Coupon Group]');
   const write = async (lang, layout, name) => {
-    const args = { path: MP, focus: 'Web Orders', lang, layout, name, secondPage: true }, first = await s.call('plan_layout', args);
-    // (0.3.1 CX1, F01) an Arabic plan whose titles would be English gets no plan id: the fields of those titles are kept
-    // English on purpose here (the titles these checks were written for); the first plan's lists are the ones checked
-    const kept = keptEnglish(first), pl = kept ? await s.call('plan_layout', Object.assign({}, args, { displayNames: kept })) : first;
+    // (0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id) the first plan lists the
+    // fields kept in English (its lists are the ones checked); the person then keeps them English on purpose (KEPT, their
+    // model names) and the report is written with them
+    const args = { path: MP, focus: 'Web Orders', lang, layout, name, secondPage: true }, dn = lang === 'ar' ? { displayNames: KEPT } : {};
+    const first = await s.call('plan_layout', args), pl = lang === 'ar' ? await s.call('plan_layout', Object.assign({}, args, dn)) : first;
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (!id) return { pl, first, err: 'no plan: ' + String(pl.t).slice(0, 300) };
     const ap = await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, kept ? { displayNames: kept } : {}));
+    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, dn));
     const dir = path.join(ROOT, 'large', name + '.Report');
-    Object.assign(keptSoFar, kept || {});
     return { pl, first, ap, r, files: fs.existsSync(dir) ? readReport(dir) : {} };
   };
   for (const layout of ['exec', 'ops']) {
@@ -153,7 +154,7 @@ try {
     const sec = (sum('report', pinsAll).sections || []).find((x) => /English/.test(x.heading));
     chk(() => sec && keep.every((k) => sec.rows.some((row) => row[0] === k.field)), () => `AT-3e ${layout}: the approval window lists the fields kept in English: ${JSON.stringify(sum('report', pinsAll).sections.map((x) => x.heading))} ${win.slice(0, 0)}`);
     // no Latin word anywhere a viewer looks, except the words of the listed fields' names
-    const allowed = keep.map((k) => String(k.field).replace(/^.*?\[(.*)\]$/, '$1')).concat(Object.values(keptSoFar));
+    const allowed = keep.map((k) => String(k.field).replace(/^.*?\[(.*)\]$/, '$1')).concat(Object.values(KEPT));   // (CX1: and the names kept English on purpose)
     const texts = shownTexts(w.files), bad = stray(texts, allowed);
     chk(() => texts.length > 20 && !bad.length, () => `AT-3f ${layout}: ${uniq(bad).length} texts with English words that are not a listed field's name: ${JSON.stringify(uniq(bad).slice(0, 14))}`);
     chk(() => Object.values(w.files).some((j) => j.pageBinding && j.pageBinding.type === 'Tooltip') || Object.keys(w.files).filter((f) => /page\.json$/.test(f)).length >= 2, () => `AT-3g ${layout}: a tooltip page was written (secondPage)`);

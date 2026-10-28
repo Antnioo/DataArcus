@@ -35,7 +35,7 @@ import { rgate } from './test-r.mjs';
 import { approvalWindow } from './test-approval.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v029sweep } from './test-0.2.9-sweep.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
 import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
@@ -454,7 +454,7 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
 };
 const gs = await tryCall('generate_theme', { name: 'Gulf Sales', brand: '#0F4C5C', harmony: 'analogous', lang: 'ar', font: 'Tahoma', folder: 'themes/cr' });
 const gp = gs.err ? gs : await tryCall('plan_layout', { design: gs.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
-r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar' });
+r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar', displayNames: keepEnglish('_Measures[Total]', 'Sales[Note]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
 if (!r.err) {
   // (round 4, owner 2026-10-03: this model has 2 measures a card can show, so every page has 2 KPI cards, not the
   // design's 3 and 4 with the extra ones empty)
@@ -576,7 +576,7 @@ if (part('quality')) {
 {
   const t1 = await tryCall('generate_theme', { name: 'Quality AR', brand: '#0F4C5C', folder: 'themes/q' });
   const en = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table EN', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'en' });
-  const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
+  const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
   const tables = (res) => res.err ? [] : readReport(path.join(ROOT, 'dax-project', res.j.report)).flatMap((p) => p.visuals).filter((v) => v.type === 'tableEx').map((v) => JSON.parse(v.text).visual);
   // (round 12, #17: a day or month name without a sort-by column is followed by a helper column, the minimum of its
   //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
@@ -711,16 +711,13 @@ const cardProblems = (dir, rtl) => {
     // plan and pinned with it: a displayName here is only that, the field's own name made readable)
     // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic plan pins the fixed list's Arabic names too, named in
     // the plan and approved with it: «إجمالي المبيعات» for Total Sales here; before, an Arabic report wrote none without input)
-    // (changed 27 Oct 2026, 0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id, so the
-    // plan step (test-plan.mjs withPlans) keeps those fields English on purpose, their model names as displayNames: such a
-    // field shows its model name, given, not missing)
-    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && (p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)) || (rtl && p.displayName === f.Property)); };
-    const keptMonth = projections(files).some((p) => p.queryRef === 'Calendar.Month Short' && p.displayName === 'Month Short');
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth) : !res.j.arabicNames),
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)); };
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
-      const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: given });
+      // (0.3.1 CX1, F01: the two fields given no Arabic name here are kept English on purpose, as a person says it)
+      const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: Object.assign({}, given, keepEnglish('Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]')) });
       if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
       else {
         const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
@@ -735,7 +732,7 @@ const cardProblems = (dir, rtl) => {
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        // (changed 27 Oct 2026, CX1, F01: the fields of English titles kept English on purpose by the plan step, so
+        // (changed 27 Oct 2026, CX1, F01: the fields of English titles kept English on purpose (keepEnglish), so
         // "vs Last Ramadan %" shows its model name, given, and 2 more names are used: 8, was 6)
         const keptPct = ps.some((p) => p.queryRef === 'Sales.Total Sales vs Last Ramadan %' && p.displayName === 'Total Sales vs Last Ramadan %');
         check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && (an.missing.includes('Sales[Total Sales vs Last Ramadan %]') || keptPct) && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
@@ -1387,7 +1384,7 @@ if (part('round6')) {
 
   // 5c. a long report name is cut at a space, never in the middle of a word
   {
-    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar' });
+    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar', displayNames: keepEnglish('Sales[Sales YoY %]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
     chk(() => !x.err && x.j.report === 'التقرير التنفيذي للمبيعات.Report', () => `a long Arabic name must end at a whole word: ${x.err ? x.t.slice(0, 200) : x.j.report}`);
     const en = await ask('create_report', { path: 'tmdl-project', name: 'Quarterly Executive Sales Overview Northern Region', design });
     chk(() => !en.err && en.j.report === 'Quarterly Executive Sales.Report', () => `a long English name must end at a whole word: ${en.err ? en.t.slice(0, 200) : en.j.report}`);
@@ -1784,7 +1781,8 @@ if (part('round9')) {
     }
     // 8. Microsoft's validator: 0 errors with two SVG columns, also in an Arabic right-to-left report; the expression is the Designer's own DAX without its comment lines
     {
-      const ar = await ask('create_report', { path: 'dax-project', name: 'R9 SVG AR', design: exec, lang: 'ar', svgColumns: [{ label: 'التقدم', design: bar('Total Sales Last Ramadan') }, { label: 'اليوم', design: day('Calendar[Day Name]') }] });
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+      const ar = await ask('create_report', { path: 'dax-project', name: 'R9 SVG AR', design: exec, lang: 'ar', displayNames: keepEnglish('Sales[Total Sales vs Last Ramadan % (old)]'), svgColumns: [{ label: 'التقدم', design: bar('Total Sales Last Ramadan') }, { label: 'اليوم', design: day('Calendar[Day Name]') }] });
       const adir = ar.err ? null : path.join(ROOT, 'dax-project', ar.j.report), d0 = bar('Total Sales Last Ramadan');
       const own = Svg.toDax(d0).dax.split('\n').slice(1).filter((l) => !/^--/.test(l)).join('\n');
       chk(() => dir && errors(dir) === '0' && adir && errors(adir) === '0' && extOf(adir).entities[0].measures[0].name === 'التقدم'
@@ -2182,7 +2180,8 @@ if (part('round10')) {
     const fits = async (mode) => { const bad = []; let n = 0;
       for (const page of ['1920x1080', '1280x720', '960x720']) for (const lang of ['en', 'ar']) for (const k of [3, 4, 5, 6]) {
         const design = await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang });
-        const r = await ask('create_report', { path: 'r10-project', name: `R10 fit ${mode} ${page} ${lang} ${k}`, design, lang, secondPage: false, fields: { kpis: SIX.slice(0, k) }, ...(mode === 'full' ? { kpiValues: 'full' } : {}) });
+        // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+        const r = await ask('create_report', { path: 'r10-project', name: `R10 fit ${mode} ${page} ${lang} ${k}`, design, lang, secondPage: false, fields: { kpis: SIX.slice(0, k) }, ...(mode === 'full' ? { kpiValues: 'full' } : {}), ...(lang === 'ar' ? { displayNames: keepEnglish('Sales[No Format]') } : {}) });
         if (r.err) { bad.push(`${page} ${lang} ${k}: ${r.t.slice(0, 120)}`); continue; }
         report(path.join(ROOT, 'r10-project', r.j.report)).filter((p) => !p.tooltip).flatMap(cards).forEach((v) => { n++;
           const V = N(v.visual.objects.value[0].properties.fontSize), I = N(v.visual.objects.padding[0].properties.paddingUniform), pad = (v.visual.visualContainerObjects.padding || [{ properties: {} }])[0].properties;
@@ -2628,7 +2627,8 @@ if (part('round10-choices')) {
     const lines = (text, size, avail, font) => { const out = []; let cur = ''; for (const w of text.split(' ')) { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } } out.push(cur); return out; };
     const SIX = ['Total Sales', LONG, 'Orders', LONGER, 'Margin %', 'Avg Price'].map((m) => `Sales[${m}]`);
     for (const page of ['1920x1080', '1280x720', '960x720']) for (const lang of ['en', 'ar']) for (const k of [3, 4, 6]) {
-      const x = await ask('create_report', { path: 'd5-project', name: `D5 titles ${page} ${lang} ${k}`, lang, secondPage: false, design: await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang }), fields: { kpis: SIX.slice(0, k) } });
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+      const x = await ask('create_report', { path: 'd5-project', name: `D5 titles ${page} ${lang} ${k}`, lang, secondPage: false, design: await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang }), fields: { kpis: SIX.slice(0, k) }, ...(lang === 'ar' ? { displayNames: keepEnglish('Sales[Total Sales vs Last Ramadan (same days)]', 'Sales[Total Sales of the Same Ramadan Days Last Year in All Regions and Channels]') } : {}) });
       if (x.err) { bad.push(`${page} ${lang} ${k}: ${x.t.slice(0, 160)}`); continue; }
       told.wrapped += ((x.j.kpiTitles || {}).wrapped || []).length; told.shortened += ((x.j.kpiTitles || {}).shortened || []).length;
       const font = 'Segoe UI';
@@ -3194,7 +3194,8 @@ if (part('round13')) {
       const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') (fs.readFileSync(p, 'utf8').match(/'[^'\n]*\u2026[^'\n]*'/g) || []).forEach((s) => out.push(s.slice(1, -1))); }); walk(dir); return out; };
     // (round 14: the charts are given the Arabic columns; a title of the Arabic measure by the English column is the
     // measure's name alone since round 14's item 2, which fits, so fewer Arabic titles were shortened)
-    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design, fields: { category: `Sales[${C1}]`, category2: `Sales[${C2}]` } });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', displayNames: keepEnglish('Sales[Total net sales after discounts, returns and all the taxes that are due]'), design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design, fields: { category: `Sales[${C1}]`, category2: `Sales[${C2}]` } });
     const en = await ask('create_report', { path: 'r13-long', name: 'R13 Long en', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { kpis: ['Sales[Total net sales after discounts, returns and all the taxes that are due]'], measure: 'Sales[Total net sales after discounts, returns and all the taxes that are due]', category: 'Sales[Region with a very long English name that cannot fit]', category2: 'Sales[Region with a very long English name that cannot fit]' } });
     const isAr = (s) => /[\u0600-\u06FF]/.test(s);
     chk(() => { const a = texts(ar).filter(isAr); return a.length >= 2 && a.every((s) => /\u2026\u200f$/.test(s)); }, () => `every shortened Arabic text must end with "…" and a right-to-left mark: ${ar.err ? short(ar) : JSON.stringify(texts(ar).map((s) => s.slice(-12).split('').map((ch) => ch.charCodeAt(0).toString(16)).slice(-3)))}`);
@@ -3373,7 +3374,8 @@ if (part('round12')) {
   //      aligned at the left end) never sit against the first number; text stays right-aligned. English unchanged.
   const enD = await planOf({ layout: 'exec', kpis: 4, filters: 'end' });
   const en = await ask('create_report', { path: 'r12-project', name: 'R12 EN', design: enD, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
-  const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
+  // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+  const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]'), design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
   {
     const fmt = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
     chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right | Sales.Row label: Region=Right') /* (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf); the row label right-aligned as its column */ /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */ && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
@@ -3477,7 +3479,8 @@ if (part('round12')) {
   const kpiRow = (vs) => vs.filter(isKpi);
   const LTR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720' }), secondPage: false,
     fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
-  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
+  // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', displayNames: keepEnglish('Sales[Conversion Rate]'), design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
     fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
   // #15: a chart and the table beside it never carry the same title
   {
@@ -3957,7 +3960,8 @@ if (part('round14')) {
     const src = path.join(REPO, 'scripts/tests/fixtures/model-health/tmdl-ramadan/definition'), dst = path.join(ROOT, 'r14-sample/Ramadan Test.SemanticModel');
     fs.mkdirSync(dst, { recursive: true }); fs.cpSync(src, path.join(dst, 'definition'), { recursive: true }); fs.writeFileSync(path.join(dst, 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
     const dz = (await ask('plan_layout', { layout: 'exec', kpis: 3, lang: 'ar' })).j.design;
-    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample', lang: 'ar', design: dz, secondPage: false,
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]'), design: dz, secondPage: false,
       fields: { kpis: ['Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales vs Last Ramadan %]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] } });
     const vs = x.err ? [] : (() => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r14-sample', x.j.report, 'definition', 'pages')); return out; })();
     const tableFmt = vs.filter((v) => v.visual && v.visual.visualType === 'tableEx').flatMap((v) => v.visual.query.queryState.Values.projections.filter((p) => p.queryRef === 'Sales.Total Sales').map((p) => p.format || null));
@@ -4415,7 +4419,8 @@ if (part('round18')) {
       const all = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
         const vs = fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')));
         return vs.map((v) => { const g = v.parentGroupName && vs.find((q) => q.name === v.parentGroupName); return { t: v.visual ? v.visual.visualType : 'group', x: Math.round(v.position.x + (g ? g.position.x : 0)), w: Math.round(v.position.width), y: Math.round(v.position.y + (g ? g.position.y : 0)), ext: JSON.stringify(v.visual && v.visual.query || '').includes('"Schema":"extension"'), v }; }); };
-      const rep = async (dir, lang, page, kpis, extra) => { const plan = await ask('plan_layout', { layout: 'exec', kpis, filters: 'none', page, lang }); const x = await ask('create_report', Object.assign({ path: dir, name: `N1 ${dir} ${lang} ${page} ${kpis}`, lang, secondPage: false, design: plan.j.design }, extra || {})); return { x, vs: all(dir, x) }; };
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose in the Arabic reports: the check is not about names)
+      const rep = async (dir, lang, page, kpis, extra) => { const plan = await ask('plan_layout', { layout: 'exec', kpis, filters: 'none', page, lang }); const x = await ask('create_report', Object.assign({ path: dir, name: `N1 ${dir} ${lang} ${page} ${kpis}`, lang, secondPage: false, design: plan.j.design }, lang === 'ar' ? { displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]') } : {}, extra || {})); return { x, vs: all(dir, x) }; };
       for (const lang of ['en', 'ar']) {
         const one = await rep('n1-one', lang, '1920x1080', 4), cards = one.vs.filter((v) => v.t === 'cardVisual' && !v.ext), line = one.vs.find((v) => v.t === 'lineChart'), others = one.vs.filter((v) => /Chart$/.test(v.t) && line && v.y === line.y);
         const x0 = Math.min(...others.map((v) => v.x)), x1 = Math.max(...others.map((v) => v.x + v.w)), gap = others.length === 2 ? Math.max(...others.map((v) => v.x)) - Math.min(...others.map((v) => v.x + v.w)) : 0;

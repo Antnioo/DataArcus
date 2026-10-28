@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 import { tableProblems, sortProblems, rowLabelProblems } from '../scripts/tests/report-check.mjs';
 import { checkReportClean } from './test-validator.mjs';
 import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { keepEnglish } from './test-plan.mjs';
 
 export async function round23({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -72,7 +73,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   // 4. Names that need escaping: the DAX quotes the table and closes the column's bracket, as the "No data" measures do
   {
     model('r23-esc', [{ name: "Sa'les", partitions: mp("Sa'les"), columns: [col('Amount', 'double'), col('Re]gion', 'string')], measures: [{ name: 'Total', expression: "SUM ( 'Sa''les'[Amount] )", formatString: '#,0' }] }]);
-    const x = await ask('create_report', { path: 'r23-esc', name: 'R23 esc', lang: 'ar', rtl: true, noDataMessage: false, fields: { kpis: ["Sa'les[Total]"], measure: "Sa'les[Total]", table: ["Sa'les[Re]gion]", "Sa'les[Total]"] }, pages: page([tableSlot]) });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r23-esc', name: 'R23 esc', lang: 'ar', rtl: true, noDataMessage: false, displayNames: keepEnglish("Sa'les[Total]", "Sa'les[Re]gion]"), fields: { kpis: ["Sa'les[Total]"], measure: "Sa'les[Total]", table: ["Sa'les[Re]gion]", "Sa'les[Total]"] }, pages: page([tableSlot]) });
     const m = ext(x, 'r23-esc').find((e) => /^Row label: /.test(e.name));
     chk(() => m && m.expression === "IF ( NOT ISBLANK ( 'Sa''les'[Total] ), IF ( ISINSCOPE ( 'Sa''les'[Re]]gion] ), SELECTEDVALUE ( 'Sa''les'[Re]]gion] ), \"الإجمالي\" ) )", () => `4. escaped DAX: ${JSON.stringify(m || ext(x, 'r23-esc'))} ${short(x)}`);
   }
@@ -80,7 +82,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   //    last, no hidden column), told in the notes
   {
     model('r23-cc', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Re\tgion', 'string')], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
-    const x = await ask('create_report', { path: 'r23-cc', name: 'R23 cc', lang: 'ar', rtl: true, noDataMessage: false, fields: { kpis: ['Sales[Total]'], measure: 'Sales[Total]', table: ['Sales[Re\tgion]', 'Sales[Total]'] }, pages: page([tableSlot]) });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r23-cc', name: 'R23 cc', lang: 'ar', rtl: true, noDataMessage: false, displayNames: keepEnglish('Sales[Total]'), fields: { kpis: ['Sales[Total]'], measure: 'Sales[Total]', table: ['Sales[Re\tgion]', 'Sales[Total]'] }, pages: page([tableSlot]) });
     const t = tables(x, 'r23-cc')[0];
     chk(() => t && JSON.stringify(refs(t)) === JSON.stringify(['Sales.Total', 'Sales.Re\tgion']) && !width0(t).length && !ext(x, 'r23-cc').some((e) => /^Row label/.test(e.name)) && /control character/.test(notes(x)) && /الإجمالي|Total/.test(notes(x)),
       () => `5. a control character keeps today's table, told: ${t ? JSON.stringify(refs(t)) : 'no table'} ${notes(x).slice(0, 800)} ${short(x)}`);

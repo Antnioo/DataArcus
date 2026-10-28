@@ -17,7 +17,7 @@ import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { keepingEnglish } from './test-plan.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), require = createRequire(import.meta.url);
 const LL = require('../assets/js/label-limits.js'), LC = require('../assets/js/layout-check.js');
@@ -135,7 +135,6 @@ const req = (url, method, body) => new Promise((resolve) => {
   r.on('error', () => resolve('')); if (body) r.write(body); r.end();
 });
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
-w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 async function approve(pid) {
   const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); const html = url ? await req(url, 'GET') : '';
   if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); }
@@ -144,7 +143,10 @@ async function approve(pid) {
 const slicersOf = (dir) => { const out = []; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (e.name === 'visual.json') { const v = JSON.parse(fs.readFileSync(f, 'utf8')); if (v.visual && v.visual.visualType === 'slicer') { const q = JSON.stringify(v.visual.query || {}); const m = /"Entity":"([^"]+)"\}\},"Property":"([^"]+)"/.exec(q); if (m) out.push(`${m[1]}[${m[2]}]`); } } }); if (fs.existsSync(dir)) rec(dir); return [...new Set(out)].sort(); };
 try {
   const first = S.tour(S.SAMPLE_FOLDER, 'en')[0].call.args, asked = first.planFields.slicers;
-  const plan = async (name, lang) => { const a = Object.assign({}, first, { name, lang: lang || 'en' }); const pl = await w.call('plan_layout', a); return { a, pl, id: pl.j && pl.j.plan && pl.j.plan.planId, sl: (pl.j && pl.j.slicers) || {} }; };
+  // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the sample's two fields with no Arabic
+  // name are kept English on purpose: these checks are about the slicers and the approval page, not the names
+  const KEPT = keepEnglish('Sales[Units Sold]', 'Sales[Average Basket]');
+  const plan = async (name, lang) => { const a = Object.assign({}, first, { name, lang: lang || 'en' }, lang === 'ar' ? { displayNames: KEPT } : {}); const pl = await w.call('plan_layout', a); return { a, pl, id: pl.j && pl.j.plan && pl.j.plan.planId, sl: (pl.j && pl.j.slicers) || {} }; };
   const write = (p, slicers) => { const send = Object.assign({}, p.a, { planId: p.id, design: p.pl.j && p.pl.j.design, fields: Object.assign({}, p.a.planFields, { slicers }) }); delete send.planFields; return w.call('create_report', send); };
 
   // A1 the plan's text says which list create_report takes (English and Arabic)

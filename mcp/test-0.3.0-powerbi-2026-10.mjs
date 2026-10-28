@@ -18,7 +18,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
-import { keepingEnglish } from './test-plan.mjs';
+import { keepEnglish } from './test-plan.mjs';
 import { validatorCounts } from './test-validator.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req = createRequire(import.meta.url);
@@ -103,12 +103,13 @@ try {
   const MP = 'large/Large Synthetic.SemanticModel', log = path.join(ROOT, 'links.txt');
   const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
   const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '300' });
-  s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
   try {
     const cases = [{ id: 'en', lang: 'en', layout: 'exec' }, { id: 'ar', lang: 'ar', layout: 'ops' }];
     const dirs = [];
     for (const c of cases) {
-      const base = { path: MP, focus: 'Web Orders', lang: c.lang, layout: c.layout, name: 'U1 ' + c.id, secondPage: true };
+      // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the Arabic case keeps these fields
+      // English on purpose, as the person says it: the checks are about Power BI's October build, not the names
+      const base = Object.assign({ path: MP, focus: 'Web Orders', lang: c.lang, layout: c.layout, name: 'U1 ' + c.id, secondPage: true }, c.lang === 'ar' ? { displayNames: keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]', 'Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]', 'Coupon[Coupon Status]', 'Coupon[Coupon Group]') } : {});
       const pl = await s.call('plan_layout', base), id = pl.j && pl.j.plan && pl.j.plan.planId;
       chk(() => /^plan-/.test(id), () => `${c.id} setup: plan_layout gives a plan id: ${String(pl.t).slice(0, 300)}`);
       if (!id) continue;

@@ -19,7 +19,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
-import { keepingEnglish } from './test-plan.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -38,12 +38,15 @@ fs.cpSync(SRC, path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursi
 fs.cpSync(SRC, path.join(ROOT, 'after/Large Synthetic.SemanticModel'), { recursive: true });
 const MP = 'large/Large Synthetic.SemanticModel', AP = 'after/Large Synthetic.SemanticModel';
 const DES = { focus: 'Web Orders', layout: 'exec', filters: 'top', secondPage: false, planFields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] }, slicerStyle: 'pills' };
+// (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the person keeps the fields of these
+// titles English on purpose: the checks are about the calendar's columns, not the names (AR: before the script; AR2: after
+// it, with its Arabic columns)
+const KEPT = ['Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]', 'Calendar[Is Weekend]'];
+const AR = Object.assign({}, DES, { displayNames: keepEnglish(...KEPT) }), AR2 = Object.assign({}, DES, { displayNames: keepEnglish(...KEPT.filter((k) => k !== 'Calendar[Month Short]'), 'Calendar[Month Short (Arabic)]', 'Calendar[Is Weekend (Arabic)]') });
 const WANT = { 'Month Name (Arabic)': 'Month Number', 'Month Short (Arabic)': 'Month Number', 'Day Name (Arabic)': 'Weekday Number', 'Quarter (Arabic)': null, 'Year Quarter (Arabic)': null,
   'Fiscal Year (Arabic)': null, 'Fiscal Quarter (Arabic)': null, 'Is Weekend (Arabic)': null, 'Is Ramadan (Arabic)': null };
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, {}), w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
-s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
-w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 // a column block of the script, by its name
 const block = (script, name) => { const m = String(script).split(/\n(?=\t\tcolumn )/).find((b) => b.startsWith(`\t\tcolumn '${name.replace(/'/g, "''")}'`) || b.startsWith(`\t\tcolumn ${name}`)); return m || ''; };
 // the bound fields of a written report: "Table[Column]" of every projection on its pages
@@ -64,14 +67,14 @@ const write = async (args) => {
 try {
   // ---------- AC-1: the builder ----------
   chk(() => AC && typeof AC.columnsFor === 'function', () => 'AC-1a. the shared builder assets/js/arabic-calendar.js exists (columnsFor)');
-  const pa = await s.call('plan_layout', Object.assign({ path: MP, lang: 'ar', name: 'تقويم' }, DES));
+  const pa = await s.call('plan_layout', Object.assign({ path: MP, lang: 'ar', name: 'تقويم' }, AR));
   const CA = (pa.j && pa.j.calendarArabic) || {};
   chk(() => CA.offered === true && CA.table === 'Calendar' && /Arabic calendar\.tmdl$/.test(CA.scriptAfterGo || ''), () => `AC-2a. plan_layout lang "ar" offers the Arabic calendar columns as a script after the go: ${JSON.stringify(CA).slice(0, 400)} ${pa.err ? pa.t.slice(0, 300) : ''}`);
   {
     const names = (CA.columns || []).map((c) => c.name).sort(), want = Object.keys(WANT).sort();
     chk(() => JSON.stringify(names) === JSON.stringify(want), () => `AC-1b. the twins of what large-synthetic's Calendar has: ${JSON.stringify(names)} (want ${JSON.stringify(want)})`);
     chk(() => !('script' in CA), () => 'AC-2a2. the plan answer carries no DAX (the script is written after the go)');
-    const w0 = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم ج' }, DES)), f0 = path.join(ROOT, 'large/تقويم ج - Arabic calendar.tmdl');
+    const w0 = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم ج' }, AR)), f0 = path.join(ROOT, 'large/تقويم ج - Arabic calendar.tmdl');
     const sc = fs.existsSync(f0) ? fs.readFileSync(f0, 'utf8') : ''; CA.script = sc;
     chk(() => !w0.err && sc, () => `set-up: the script written with a report: ${w0.err || 'no file'}`);
     const bad = Object.entries(WANT).filter(([n, by]) => { const b = block(sc, n); return !b || !/dataType: string/.test(b) || !/lineageTag: [0-9a-f-]{36}/.test(b) || (by ? !b.includes(`sortByColumn: ${/ /.test(by) ? `'${by}'` : by}`) : /sortByColumn/.test(b)); });
@@ -86,7 +89,7 @@ try {
       () => `AC-1f. the flags' labels: ${block(sc, 'Is Weekend (Arabic)').slice(0, 200)} | ${block(sc, 'Is Ramadan (Arabic)').slice(0, 200)}`);
     chk(() => /'Calendar'\[Fiscal Month Number\]/.test(block(sc, 'Fiscal Quarter (Arabic)')) && /"السنة المالية "/.test(block(sc, 'Fiscal Year (Arabic)')) && !/[A-Za-z]{2,}"\s*[,)]/.test(block(sc, 'Fiscal Year (Arabic)').replace(/"FY"|"fy"/g, '')),
       () => `AC-1g. the fiscal year and quarter in Arabic (the quarter from the fiscal month number): ${block(sc, 'Fiscal Year (Arabic)').slice(0, 260)}`);
-    const w1 = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم د' }, DES)), f1 = path.join(ROOT, 'large/تقويم د - Arabic calendar.tmdl');
+    const w1 = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم د' }, AR)), f1 = path.join(ROOT, 'large/تقويم د - Arabic calendar.tmdl');
     chk(() => !w1.err && fs.existsSync(f1) && fs.readFileSync(f1, 'utf8') === sc, () => 'AC-1h. the same model gives the same script (lineage tags by a seed, not random)');
     chk(() => (CA.englishData || []).some((x) => /Is Weekend|Month/.test(x)) && /English data/.test(CA.englishDataWhy || '') && /apply the script/i.test(CA.howToSwitch || '') && /plan/i.test(CA.howToSwitch || ''),
       () => `AC-3a. the plan says which calendar fields show English data until the script is applied, and how to switch: ${JSON.stringify({ e: CA.englishData, h: CA.howToSwitch }).slice(0, 500)}`);
@@ -109,7 +112,7 @@ try {
   { const pe = await s.call('plan_layout', Object.assign({ path: MP, lang: 'en', name: 'Cal EN' }, DES)); chk(() => pe.j && !pe.j.calendarArabic, () => `AC-2b. an English plan offers no Arabic calendar: ${JSON.stringify(pe.j && pe.j.calendarArabic)}`); }
 
   // ---------- AC-2/AC-3: written after the go; the Arabic report before the script ----------
-  const before = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم' }, DES));
+  const before = await write(Object.assign({ path: MP, lang: 'ar', name: 'تقويم' }, AR));
   const RD = path.join(ROOT, 'large/تقويم.Report'), scriptFile = path.join(ROOT, 'large/تقويم - Arabic calendar.tmdl');
   chk(() => !before.err && fs.existsSync(RD) && fs.existsSync(scriptFile) && before.r.j.calendarArabic && /TMDL view/.test(before.r.j.calendarArabic.howToApply || ''), () => `AC-2c. create_report writes the script next to the project after the go: ${before.err || JSON.stringify(before.r.j.calendarArabic).slice(0, 300)}`);
   chk(() => !fs.readFileSync(path.join(ROOT, MP, 'definition/tables/Calendar.tmdl'), 'utf8').includes('(Arabic)'), () => 'AC-2d. the model is never changed');
@@ -119,7 +122,7 @@ try {
     chk(() => j.validator && j.validator.errors === 0 && j.impact.kinds.canBreak.count === 0, () => `AC-3c. the report before the script works: ${short(c)}`); }
   // the approval page lists the script
   {
-    const pl = await w.call('plan_layout', Object.assign({ path: MP, lang: 'ar', name: 'تقويم ب' }, DES)), id = pl.j && pl.j.plan && pl.j.plan.planId, n = links().length;
+    const pl = await w.call('plan_layout', Object.assign({ path: MP, lang: 'ar', name: 'تقويم ب' }, AR)), id = pl.j && pl.j.plan && pl.j.plan.planId, n = links().length;
     await w.call('approve_plan', { planId: id }); let url = ''; for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50); url = links()[n] || '';
     const html = url ? unesc(await get(url)) : '';
     chk(() => /Arabic calendar\.tmdl/.test(html), () => `AC-2e. the approval page lists the Arabic calendar script: ${html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 200)}`);
@@ -142,9 +145,9 @@ try {
     const sc = String(CA.script || ''), cf = path.join(ROOT, AP, 'definition/tables/Calendar.tmdl');
     const cols = sc.split('\n').slice(sc.split('\n').findIndex((l) => /^\tref table /.test(l)) + 1).map((l) => l.replace(/^\t/, '')).join('\n').replace(/^\n+|\s+$/g, '');
     const t0 = fs.readFileSync(cf, 'utf8'); fs.writeFileSync(cf, t0.replace(/\n\tpartition /, '\n' + cols + '\n\n\tpartition '));
-    const pa2 = await s.call('plan_layout', Object.assign({ path: AP, lang: 'ar', name: 'تقويم' }, DES));
+    const pa2 = await s.call('plan_layout', Object.assign({ path: AP, lang: 'ar', name: 'تقويم' }, AR2));
     chk(() => pa2.j && (!pa2.j.calendarArabic || pa2.j.calendarArabic.offered === false), () => `AC-4a. after the script nothing is offered: ${JSON.stringify(pa2.j && pa2.j.calendarArabic).slice(0, 300)} ${pa2.err ? pa2.t.slice(0, 300) : ''}`);
-    const after = await write(Object.assign({ path: AP, lang: 'ar', name: 'تقويم' }, DES)), AD = path.join(ROOT, 'after/تقويم.Report');
+    const after = await write(Object.assign({ path: AP, lang: 'ar', name: 'تقويم' }, AR2)), AD = path.join(ROOT, 'after/تقويم.Report');
     const B1 = fs.existsSync(AD) ? boundOf(AD) : new Set(), englishCal = [...B1].filter((f) => /^Calendar\[/.test(f) && Object.keys(WANT).some((n) => f === `Calendar[${n.replace(' (Arabic)', '')}]`));
     chk(() => !after.err && B1.has('Calendar[Is Weekend (Arabic)]') && !englishCal.length, () => `AC-4b. after the script the Arabic twins are bound, the flag too: ${after.err || JSON.stringify([...B1].filter((f) => /^Calendar/.test(f)))}`);
     const sl = fs.existsSync(AD) ? slicerOf(AD, 'Is Weekend (Arabic)') : null;

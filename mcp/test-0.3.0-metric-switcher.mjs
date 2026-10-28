@@ -24,7 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { keepingEnglish } from './test-plan.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -45,6 +45,9 @@ const hashDir = (d) => { const h = crypto.createHash('sha256'); const walk = (x)
 const MP = 'large/Large Synthetic.SemanticModel', HP = 'hostile/Hostile.SemanticModel', modelHash0 = hashDir(path.join(ROOT, MP));
 const W3 = ['Web Orders[Web Orders Count]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Score Share %]'];
 const AR_NAMES = { 'Web Orders[Web Orders Count]': 'عدد الطلبات', 'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Score Share %]': 'حصة النقاط' };
+// (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the other fields of the titles are kept
+// English on purpose, as the person says it: these checks are about the switcher, not the names
+const AR_DN = Object.assign({}, AR_NAMES, keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]'));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const httpReq = (url, body) => new Promise((resolve) => {
@@ -54,7 +57,6 @@ const httpReq = (url, body) => new Promise((resolve) => {
 const log = path.join(ROOT, 'links.txt');
 const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '300' });
-s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 const ask = async (name, args) => { try { return await s.call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
 const short = (x) => (x.err ? String(x.t).slice(0, 500) : JSON.stringify(x.j).slice(0, 500));
 const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -160,7 +162,7 @@ try {
   chk(() => cr && cr.j.fieldParameters && cr.j.fieldParameters.parameters.some((p) => p.table === 'Metric') && /Until the script is applied|not in the model/.test(cr.j.fieldParameters.note), () => `V1: check_report knows the field parameter and says the page needs the script: ${JSON.stringify(cr && cr.j.fieldParameters).slice(0, 400)}`);
 
   // ---------- A: Arabic, and the twin ----------
-  const ar = Object.assign({}, base, { name: 'L3 AR', lang: 'ar', metricSwitcher: W3, displayNames: AR_NAMES });
+  const ar = Object.assign({}, base, { name: 'L3 AR', lang: 'ar', metricSwitcher: W3, displayNames: AR_DN });
   const B = await planAndWrite(ar);
   const okA = B.id ? await ask('create_report', Object.assign({}, ar, { planId: B.id, design: B.pl.j.design })) : B.pl;
   const dirA = path.join(ROOT, 'large', 'L3 AR.Report'), sA = path.join(ROOT, 'large', 'L3 AR - metric switcher.tmdl'), mA = metricPage(dirA);
@@ -233,7 +235,7 @@ try {
   }
   // ---------- F3: the Metric page's background is the report's own (0.3.0 A1: it had none); English and Arabic ----------
   for (const lang of ['en', 'ar']) {
-    const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_NAMES } : {});
+    const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_DN } : {});
     const B = await planAndWrite(ba), okB = B.id ? await ask('create_report', Object.assign({}, ba, { planId: B.id, design: B.pl.j.design })) : B.pl;
     const bdir = path.join(ROOT, 'large', `L3 Background ${lang}.Report`), mpB = metricPage(bdir), first = pagesOf(bdir).find((p) => p.json.type !== 'Tooltip' && (!mpB || p.id !== mpB.id) && p.json.objects);
     const bg = (p) => p && p.json.objects && p.json.objects.background && p.json.objects.background[0].properties, os = (p) => p && p.json.objects && JSON.stringify(p.json.objects.outspace);
