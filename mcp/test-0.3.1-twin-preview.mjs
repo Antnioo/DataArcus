@@ -148,7 +148,8 @@ try {
       const p = await w.call('create_arabic_twin', Object.assign({ path: 'large/Many.Report' }, into === 'same' ? { into } : {})), pid = p.j && p.j.plan && p.j.plan.planId;
       const A = pid ? await pageOf(pid) : { raw: '' }, F = figures(A.raw), txt = unesc(A.raw).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
       const want = into === 'same' ? 24 : 12, left = shown - 12;
-      chk(() => F.length === want && new RegExp(`${left} more (pages|page pairs) (are )?not drawn`).test(txt), () => `V1-8 ${into}: at most 12 ${into === 'same' ? 'pairs' : 'pages'} drawn (${want} figures) and the ${left} left out said: ${F.length} figures; ${(txt.match(/.{0,80}not drawn.{0,80}/) || ['(no line)'])[0]}`);
+      // (FX1, the laptop's part 3: the twin's page wholly Arabic: the pages not drawn said in Arabic; changed on purpose)
+      chk(() => F.length === want && new RegExp(`لم تُرسم هنا ${left} (من الصفحات|من أزواج الصفحات) أخرى`).test(txt), () => `V1-8 ${into}: at most 12 ${into === 'same' ? 'pairs' : 'pages'} drawn (${want} figures) and the ${left} left out said: ${F.length} figures; ${(txt.match(/.{0,80}not drawn.{0,80}/) || ['(no line)'])[0]}`);
       chk(() => A.raw.length > 1000 && Buffer.byteLength(A.raw, 'utf8') < 2 * 1024 * 1024 && !p.err && p.t.length < 40000, () => `V1-8 ${into}: the approval page under 2 MB and the answer under 40,000 characters: ${Buffer.byteLength(A.raw, 'utf8')} bytes, ${String(p.t || '').length} characters ${p.err ? p.t.slice(0, 200) : ''}`);
       console.log(`  V1-8 ${into}: approval page ${Buffer.byteLength(A.raw, 'utf8')} bytes, answer ${String(p.t || '').length} characters, ${F.length} figures`);
     }

@@ -114,7 +114,8 @@ try {
     chk(() => N && /^Not fully Arabic: /.test(N.en) && /from the model/.test(N.en) && /custom visual/.test(N.en) && !/matri/.test(N.en) && !/DAX/.test(N.en) && !/switcher|field parameter/.test(N.en), () => `K2-6a. the plan's line names what this report has (model texts, a custom visual), nothing else: ${JSON.stringify(N)}`);
     chk(() => /^ليست عربية بالكامل: /.test(N.ar), () => `K2-6b. and in Arabic: ${JSON.stringify(N)}`);
     const S = summary('twin', Plans.planOf(id).data), sec = (S.sections || []).find((x) => /Not fully Arabic/.test(x.heading));
-    chk(() => sec && sec.rows.some((r) => r[1] === N.ar) && sec.rows.some((r) => r[1] === N.en), () => `K2-6c. the approval page says it: ${JSON.stringify(sec)}`);
+    // (FX1: one row, its Arabic for the Arabic page and its English kept; changed on purpose from two rows)
+    chk(() => sec && sec.rows.some((r) => r[1] && r[1].ar === N.ar && r[1].en === N.en), () => `K2-6c. the approval page says it: ${JSON.stringify(sec)}`);
     approve(id);
     const w = await call({ path: 'f/Twin Sales.pbip', planId: id });
     chk(() => w.j && w.j.notFullyArabic && w.j.notFullyArabic.en === N.en, () => `K2-6d. the write's answer says it too: ${short(w)}`);

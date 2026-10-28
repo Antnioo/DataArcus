@@ -67,7 +67,8 @@ const turned = (p) => { const v = (presetOf(mirrored('card', p)) || {}).expr; re
   const page = (kind, data) => { try { const s = Approval.summary(kind, data); return Approval.approvalHtml({ id: 'plan-0123456789ab', kind, writes: ['the files'] }, s); } catch (e) { return 'threw ' + e.message; } };
   const twin = (preview) => page('twin', { labels: {}, outputs: ['Sales AR.Report/definition/report.json'], preview });
   const tf = twin(null), tok = twin({ lang: 'ar', pages: [] });
-  chk(() => /could not be drawn/.test(tf) && /تعذّر رسم الصفحات/.test(tf), () => `A1. the twin's approval page says its pages could not be drawn (EN and AR): ${tf.slice(0, 300)}`);
+  // (FX1, the laptop's part 3: an Arabic page wholly Arabic; changed on purpose from "EN and AR")
+  chk(() => !/could not be drawn/.test(tf) && /تعذّر رسم الصفحات/.test(tf), () => `A1. the twin's (Arabic) approval page says its pages could not be drawn, in Arabic: ${tf.slice(0, 300)}`);
   chk(() => !/could not be drawn/.test(tok), () => 'A2. a twin plan whose preview ran says nothing of a failure');
   const rep = (preview) => page('report', { bilingual: true, outputs: ['Sales.Report/definition/report.json'], preview });
   const rf = rep({ lang: 'en', pages: [] }), rok = rep({ lang: 'en', pages: [], pairs: [] });

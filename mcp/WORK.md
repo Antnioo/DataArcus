@@ -16,16 +16,15 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   website's download), [TS1](work/TS1.md) (FHD text x 1.25; S10's gap), [PF1](work/PF1.md) (glass pictures fast),
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
   (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
-- 28 Oct (laptop part 3 running): [SPD](work/SPD.md) (faster tests: CI 32 -> 12 min, same checks), [P3A](work/P3A.md) (one check verdict).
-- Running: FX1, FX2 (the laptop's finds).
+- 28 Oct (laptop part 3 running): [SPD](work/SPD.md) (faster tests: CI 32 -> 12 min, same checks), [P3A](work/P3A.md) (one check verdict), [FX1](work/FX1.md) (part 3 fixes).
+- Running: FX2, then FX3, FX4 (the laptop's finds).
 
 ## Next step
-1. Merge FX1, FX2 (laptop part 3's fixes); a new rc build; the laptop re-checks what changed.
+1. Merge FX2, FX3, FX4 (laptop part 3's fixes); a new rc build; the laptop re-checks what changed.
 2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
 3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
 ## Open decisions (the owner's; no work before his go)
-- The matrix variant, then `MATRIX_RTL_DEFAULT` (M1 "Seen" 1-2, panels and "Total": decided, the owner's "twin identical", TW1).
 - L6 "Seen" 1: Arabic DA measures for the twin and the bilingual report's Arabic half.
 - C: the beta task list's line.
 - Every other item for him: the queue's [decisions](work/SEEN-QUEUE.md#decisions) and laptop list.

@@ -107,7 +107,8 @@ try {
   chk(() => !p1.err && p1.j.labels.given === Object.keys(labels).length && !(p1.j.labels.problems || []).length, () => `T-1. every label is taken: ${short(p1)}`);
   const page = await pageOf(w, p1.j.plan.planId);
   // (0.3.0 T2, changed on purpose: on the Arabic twin's page a quoted name is isolated, <bdi>"..."</bdi>)
-  chk(() => /Chart title \(from a title measure\) (?:<bdi>)?&quot;Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region&quot;/.test(page) && /أعلى \{1\} من \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/Arabic texts[\s\S]{0,800}/.exec(page) || [''])[0]}`);
+  // (FX1: the twin's page wholly Arabic; changed on purpose from "Chart title (from a title measure)")
+  chk(() => /عنوان مخطط \(من مقياس عنوان\) (?:<bdi>)?«Top \{1\} of \{2\}: Web Orders Total Score by Coupon Region»/.test(page) && /أعلى \{1\} من \{2\}: النقاط حسب منطقة القسيمة/.test(page), () => `T-1. the approval page names the title measure's text: ${(/النصوص العربية[\s\S]{0,800}/.exec(page) || [''])[0]}`);
   // a label that drops a number the report counts is refused, never written half
   {
     const bad = Object.assign({}, labels); const k = (tm.find((t) => /\{2\}/.test(t.text)) || { id: 'titleText:none' }).id; bad[k] = 'أعلى {1}: النقاط';

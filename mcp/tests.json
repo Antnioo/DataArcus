@@ -110,6 +110,7 @@
     { "file": "test-skill-packaging.mjs", "name": "skill-packaging", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "name": "dax-functions", "area": "report", "purpose": "the DAX function library as one TMDL script" },
     { "file": "test-0.3.1-p3a.mjs", "name": "p3a", "area": "checker", "purpose": "create_report and check_report give one verdict on the same files; generate_theme says a mode it does not use" },
+    { "file": "test-0.3.1-fx1.mjs", "name": "fx1", "area": "twin", "purpose": "the laptop's part 3 (FX1): the twin's and the copy's Arabic Reset button keeps its icon (the slicers beside it give the width, or a smaller text); an Arabic plan's approval page is wholly Arabic (theme, calendar, twin, copy, report)" },
     { "file": "test-0.3.1-validator-gap.mjs", "name": "validator-gap", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
     { "file": "test-0.3.1-sq5.mjs", "name": "sq5", "area": "checker", "purpose": "check_report's rules from SEEN-QUEUE SQ5: a tooltip bar chart's measured rows, the writer's reading order never a Tab-order finding, a plain place in each worth-a-look line" },
     { "file": "test-0.3.1-sq3.mjs", "name": "sq3", "area": "safety", "purpose": "the approval page in English and Arabic: the writes said in Arabic, the twin's options and counts, the base theme, the prompt's unchecked parts, the pair's preview tags (SQ3)" },

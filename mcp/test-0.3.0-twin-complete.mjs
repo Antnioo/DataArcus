@@ -153,7 +153,8 @@ try {
   // TC-4: the approval page lists it
   const pid = J2.plan && J2.plan.planId;
   let html = ''; { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? unesc(await req(url, 'GET')) : '';
-    chk(() => /Shown in English \(2/.test(html) && KEEP.every((x) => html.includes(`"${x}"`)), () => `TC-4a. the approval page says what stays English: ${html.length ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300) : 'no page'}`);
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /تظهر بالإنجليزية \(2/.test(html) && KEEP.every((x) => html.includes(`«${x}»`)), () => `TC-4a. the approval page says what stays English: ${html.length ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300) : 'no page'}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
   const wr = await w.call('create_arabic_twin', { path: 'large/Orders EN.pbip', planId: pid });
   chk(() => !wr.err && wr.j.written === true && fs.existsSync(TWIN), () => `TC-3e. the twin is written: ${short(wr)}`);

@@ -126,7 +126,8 @@ try {
     const top = unesc(beforeFold(twinHtml)), H = unesc(twinHtml);
     const script = written.find((r) => /\.tmdl$/.test(r));
     chk(() => /^\s*تقرير جديد واحد \(الصفحات: \d+\)، بجانب التقرير الأصلي/.test(unesc(headPart(twinHtml)).replace(/<[^>]+>/g, '')) && foldedIn(headPart(twinHtml), 'التقارير: 1 (الصفحات:') && /السكربتات: 1/.test(unesc(headPart(twinHtml))) && script && top.includes(script), () => `T1-6. the twin's summary in words (the twin's page is Arabic, T-5), its script named on top: ${script} | ${top.slice(0, 400)}`);
-    chk(() => new RegExp(`All ${written.length} files`).test(unesc(filesPart(twinHtml))), () => `T1-7. the twin's count is what the write wrote (${written.length})`);
+    // (FX1: the twin's page wholly Arabic; changed on purpose from "All N files")
+    chk(() => new RegExp(`جميع الملفات \\(${written.length}\\)`).test(unesc(filesPart(twinHtml))), () => `T1-7. the twin's count is what the write wrote (${written.length})`);
     chk(() => /السكربت ملف نصي صغير/.test(H) && /لا يغيّر DataArcus نموذجك بنفسه أبدًا/.test(H) && STEPS(H), () => `T4-3. the twin's (Arabic) page says what the script is and the 3 steps: ${H.slice(H.indexOf('script'), H.indexOf('script') + 300)}`);
     chk(() => /a small text file/i.test(twinPlan.j.plan.scriptIs || '') && (twinPlan.j.plan.howToApplyScript || []).length === 3, () => `T4-4. the twin's plan answer carries scriptIs and the 3 steps: ${JSON.stringify(twinPlan.j.plan).slice(0, 400)}`);
     chk(() => !/the user applies it in TMDL view/.test(twinPlan.j.plan.writesAfterGo.join(' ')), () => `T4-5. the plan's writes no longer say "the user applies it in TMDL view": ${twinPlan.j.plan.writesAfterGo.join(' | ')}`);

@@ -46,26 +46,30 @@ const pageHtml = (p, sh) => { try { return Approval.approvalHtml(p, sh); } catch
   const show = (extra) => Object.assign(Approval.summary('twin', { labels: {} }), { name: 'Sales' }, extra);
   const H = pageHtml(plan, show({ writesAr: ['التقرير الجديد «<name> AR.Report» بجانب الأصل', 'سكربت TMDL «x.tmdl» بجانب المشروع'] }));
   const L = items(H);
-  chk(() => L.length === 2 && AR.test(unesc(L[0])) && unesc(L[0]).includes('«Sales AR.Report»') && unesc(L[0]).includes('the new report "Sales AR.Report" next to the original') && unesc(L[1]).includes('سكربت TMDL') && unesc(L[1]).includes('the TMDL script "x.tmdl"'),
-    () => `T1-S6a. on an Arabic page each write is said in Arabic, the English line under it, the report's name in both: ${L.map(unesc).join(' | ')}`);
+  // (FX1, the laptop's part 3: an Arabic page wholly Arabic; changed on purpose from "the English line under it")
+  chk(() => L.length === 2 && AR.test(unesc(L[0])) && unesc(L[0]).includes('«Sales AR.Report»') && !unesc(L[0]).includes('the new report') && unesc(L[1]).includes('سكربت TMDL') && !unesc(L[1]).includes('the TMDL script'),
+    () => `T1-S6a. on an Arabic page each write is said in Arabic alone (no English line under it), the report's name in it: ${L.map(unesc).join(' | ')}`);
   const M = items(pageHtml(plan, show({ writesAr: ['سطر عربي واحد فقط'] })));
   chk(() => M.length === 2 && !M.some((x) => x.includes('سطر عربي واحد فقط')) && unesc(M[0]).includes('the new report "Sales AR.Report"') && unesc(M[1]).includes('the TMDL script "x.tmdl"'),
     () => `T1-S6b. a writesAr that does not match the writes line for line is not shown (the English lines only): ${M.map(unesc).join(' | ')}`);
   const X = pageHtml(plan, show({ writesAr: ['<img src=x onerror="alert(1)"> «<b>bold</b>»', 'سكربت'] }));
-  chk(() => !/<img|<b>bold/.test(X) && /&lt;img src=x/.test(X) && /&lt;b&gt;bold/.test(X), () => `T1-S6c. every Arabic writes line is escaped: ${writesList(X).slice(0, 400)}`);
+  // (FX1: each Latin run isolated on an Arabic page; the escaping read with the isolates taken out)
+  const X0 = X.replace(/<\/?bdi[^>]*>/g, '');
+  chk(() => !/<img|<b>bold/.test(X) && /&lt;img src=x/.test(X0) && /&lt;b&gt;bold/.test(X0), () => `T1-S6c. every Arabic writes line is escaped: ${writesList(X).slice(0, 400)}`);
   const E = pageHtml({ id: 'plan-0123456789ab', kind: 'report', writes: ['the report "<name>.Report"'] }, Object.assign(Approval.summary('report', { pins: { create_report: { name: 'R', lang: 'en' } } }), { writesAr: ['التقرير'] }));
   chk(() => !items(E).some((x) => AR.test(x)), () => `T1-S6d. an English page shows no Arabic writes line: ${items(E).join(' | ')}`);
 
   // T1-S9: the count words in Arabic too, beside the English heading
   const heads = (H2) => [...H2.matchAll(/<(?:h2|summary)>([\s\S]*?)<\/(?:h2|summary)>/g)].map((m) => unesc(m[1]).trim());
   const tw = heads(pageHtml(plan, Approval.summary('twin', { labels: {}, notTranslated: [{ field: '"Sales" (page name)', why: 'kept' }, { field: '"Note" (title)', why: 'kept' }] })));
-  chk(() => tw.includes('تظهر بالإنجليزية (2، دون نص عربي) · Shown in English (2, no Arabic text)'), () => `T1-S9a. the twin's "Shown in English" heading with its count words in Arabic: ${tw.join(' | ')}`);
+  // (FX1: the Arabic heading alone; changed on purpose from "the English beside it")
+  chk(() => tw.includes('تظهر بالإنجليزية (2، دون نص عربي)'), () => `T1-S9a. the twin's "Shown in English" heading with its count words in Arabic: ${tw.join(' | ')}`);
   const rp = heads(pageHtml({ id: 'plan-0123456789ab', kind: 'report', writes: ['x'] }, Approval.summary('report', { pins: { create_report: { name: 'R', lang: 'ar' } }, notTranslated: [{ field: 'Sales[Note]', why: 'none' }],
     daxFunctions: { compatibility: { raises: false, sayFirst: 'at 1702' }, functions: [{ name: 'DA.Spark', params: 'm' }, { name: 'DA.Bar', params: 'm' }], measures: [{ measure: 'M', use: 'sparkline', of: 'Sales' }] },
     flipCards: { cards: [{ page: 'P', card: 1, title: 'T', back: {} }], bookmarks: 2, newMeasures: 1 }, statusIcons: { columns: [{ page: 'P', measure: 'M', way: 'rules', thresholds: {} }] }, waterfallRtl: [{ page: 'P', written: 'mirror', what: 'x' }], metricSwitcher: { page: 'P', measures: [], charts: [] } })));
-  chk(() => rp.includes('تظهر بالإنجليزية (1، دون اسم عربي) · Shown in English (1, no Arabic name)') && rp.includes('مكتبة دوال DAX (الدوال: 2، المقاييس: 1) · DAX function library (2 functions, 1 measures)'),
+  chk(() => rp.includes('تظهر بالإنجليزية (1، دون اسم عربي)') && rp.includes('مكتبة دوال DAX (الدوال: 2، المقاييس: 1)'),
     () => `T1-S9b. an Arabic report's counted headings with their words in Arabic: ${rp.join(' | ')}`);
-  chk(() => ['البطاقات القابلة للقلب · Flip cards (1)', 'أيقونات الحالة · Status icons (1)', 'الشلالات من اليمين إلى اليسار · Waterfalls, right to left (1)', 'مبدّل المقاييس · Metric switcher'].every((h) => rp.includes(h)),
+  chk(() => ['البطاقات القابلة للقلب (1)', 'أيقونات الحالة (1)', 'الشلالات من اليمين إلى اليسار (1)', 'مبدّل المقاييس'].every((h) => rp.includes(h)),
     () => `T1-S9c. an Arabic report's other headings in Arabic: ${rp.join(' | ')}`);
 
   // D6-S3: a base theme is a theme, grouped and counted
@@ -112,12 +116,14 @@ try {
   const t1 = await w.call('create_arabic_twin', { path: 'tw/Sales/Twin Sales.pbip', labels: L }), w1 = (t1.j && t1.j.plan && t1.j.plan.writesAfterGo) || [];
   chk(() => new RegExp(`${Object.keys(L).length} Arabic texts as approved`).test(w1[0] || ''), () => `T1-S8c. with texts approved, their count as before: ${w1[0] || short(t1)}`);
   const H1 = idOf(t1) ? await pageOf(idOf(t1)) : '', I1 = items(H1);
-  chk(() => I1.length === w1.length && w1.length >= 2 && /التقرير الجديد/.test(unesc(I1[0])) && unesc(I1[0]).includes(w1[0]) && /سكربت TMDL/.test(unesc(I1[1])) && /لا يطبّقه DataArcus/.test(unesc(I1[1])) && unesc(I1[1]).includes(w1[1]),
-    () => `T1-S6e. the twin's page says each write in Arabic, the English under it: ${I1.map(unesc).join(' | ')} / ${w1.join(' | ')}`);
-  const opts = (() => { const i = H1.indexOf('Options</h2>'); return i < 0 ? '' : H1.slice(i, H1.indexOf('</table>', i)); })();
+  // (FX1: the Arabic line alone; changed on purpose from "the English under it")
+  chk(() => I1.length === w1.length && w1.length >= 2 && /التقرير الجديد/.test(unesc(I1[0])) && !unesc(I1[0]).includes(w1[0]) && /سكربت TMDL/.test(unesc(I1[1])) && /لا يطبّقه DataArcus/.test(unesc(I1[1])) && !unesc(I1[1]).includes(w1[1]),
+    () => `T1-S6e. the twin's page says each write in Arabic alone: ${I1.map(unesc).join(' | ')} / ${w1.join(' | ')}`);
+  const opts = (() => { const i = H1.indexOf('الخيارات</h2>'); return i < 0 ? '' : H1.slice(i, H1.indexOf('</table>', i)); })();
   const optRows = [...opts.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map((m) => [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((c) => unesc(c[1]).trim()));
-  chk(() => optRows.length >= 2 && optRows.every(([k, v]) => /^[؀-ۿ]/.test(k) && / · [A-Z]/.test(k) && /^[؀-ۿ]/.test(v)),
-    () => `T1-S13a. the twin's Options rows start in Arabic, the English beside: ${JSON.stringify(optRows)}`);
+  // (FX1: the Arabic alone; changed on purpose from "the English beside")
+  chk(() => optRows.length >= 2 && optRows.every(([k, v]) => /^[؀-ۿ]/.test(k) && !/[A-Za-z]{3,}/.test(k) && /^[؀-ۿ]/.test(v)),
+    () => `T1-S13a. the twin's Options rows in Arabic alone: ${JSON.stringify(optRows)}`);
   chk(() => optRows.some(([k, v]) => /التقويم/.test(k) && /انظر «عن السكربت»/.test(v)), () => `T1-S13b. the calendar row points to «عن السكربت» in Arabic: ${JSON.stringify(optRows)}`);
   const tg1 = tags(H1);
   chk(() => tg1.length && tg1.every((x) => x === 'معاينة'), () => `V1-S3a. the separate twin's pages keep the Arabic preview tag: ${JSON.stringify(tg1)}`);
@@ -125,15 +131,16 @@ try {
   // ---------- the EN-AR copy (T1-S6, V1-S3) ----------
   const c1 = await w.call('create_arabic_twin', { path: 'tw/Sales/Twin Sales.pbip', into: 'same', labels: L }), wc = (c1.j && c1.j.plan && c1.j.plan.writesAfterGo) || [];
   const HC = idOf(c1) ? await pageOf(idOf(c1)) : '', IC = items(HC);
-  chk(() => IC.length === wc.length && /أزرار اللغة: \d+/.test(unesc(IC[0] || '')) && unesc(IC[0] || '').includes(wc[0]), () => `T1-S6f. the EN-AR copy's page says its write in Arabic (pairs, buttons, slicers), the English under it: ${IC.map(unesc).join(' | ')}`);
+  // (FX1: the Arabic line alone; changed on purpose from "the English under it")
+  chk(() => IC.length === wc.length && /أزرار اللغة: \d+/.test(unesc(IC[0] || '')) && !unesc(IC[0] || '').includes(wc[0]), () => `T1-S6f. the EN-AR copy's page says its write in Arabic alone (pairs, buttons, slicers): ${IC.map(unesc).join(' | ')}`);
   const pairs = [...HC.matchAll(/<div class="pair">([\s\S]*?)<\/div>(?=<div class="pair">|<p class="note">)/g)].map((m) => tags(m[1]));
   chk(() => pairs.length && pairs.every((p) => p.length === 2 && p[0] === 'preview' && p[1] === 'معاينة'), () => `V1-S3b. each pair: the English page's tag in English, the Arabic page's in Arabic: ${JSON.stringify(pairs)}`);
 
   // ---------- an Arabic report and an English one (T1-S6) ----------
   const r1 = await w.call('plan_layout', { path: 'ar/Sales', name: 'Arabic SQ3', layout: 'exec', lang: 'ar' }), wr = (r1.j && r1.j.plan && r1.j.plan.writesAfterGo) || [];
   const HR = idOf(r1) ? await pageOf(idOf(r1)) : '', IR = items(HR);
-  chk(() => IR.length === wr.length && /^التقرير «Arabic SQ3\.Report» وملف «Arabic SQ3\.pbip»/.test(unesc(IR[0] || '').trim()) && unesc(IR[0] || '').includes(wr[0].split('<name>').join('Arabic SQ3')),
-    () => `T1-S6g. an Arabic report's page says its write in Arabic, the English under it: ${IR.map(unesc).join(' | ')}`);
+  chk(() => IR.length === wr.length && /^التقرير «Arabic SQ3\.Report» وملف «Arabic SQ3\.pbip»/.test(unesc(IR[0] || '').trim()) && !unesc(IR[0] || '').includes(wr[0].split('<name>').join('Arabic SQ3')),
+    () => `T1-S6g. an Arabic report's page says its write in Arabic alone: ${IR.map(unesc).join(' | ')}`);
   const r2 = await w.call('plan_layout', { path: 'ar/Sales', name: 'English SQ3', layout: 'exec', lang: 'en' });
   const HE = idOf(r2) ? await pageOf(idOf(r2)) : '';
   chk(() => HE && items(HE).length && !items(HE).some((x) => AR.test(x)), () => `T1-S6h. an English report's page is as before (no Arabic line): ${items(HE).map(unesc).join(' | ')}`);
@@ -151,12 +158,13 @@ try {
 
   // ---------- LR1 item 4 (the laptop run of 26 Oct): the Arabic sample page's own rows in Arabic, the English under each ----------
   const secRows = (H, head) => { const i = H.indexOf(head), j = i < 0 ? -1 : H.indexOf('</table>', i); return i < 0 || j < 0 ? [] : [...H.slice(i, j).matchAll(/<tr><td class="k"[^>]*>([\s\S]*?)<\/td><td[^>]*>([\s\S]*?)<\/td><\/tr>/g)].map((m) => [m[1], m[2]]); };
-  const both = (c) => AR.test(c.split('<br>')[0]) && /<br><span class="note" dir="ltr">[^<]+<\/span>$/.test(c);
-  const SR = secRows(HS, 'Sample project (made-up data)'), keysEn = SR.map(([k]) => unesc(k.split('<br>')[1] || ''));
-  chk(() => SR.length >= 7 && SR.every(([k, v]) => both(k) && both(v)) && ['What it is', 'Made up', 'Folder'].every((k) => keysEn.some((x) => x.trim() === k)),
-    () => `LR1-4a. the Arabic sample page: each row's name and value in Arabic, the English line under each: ${SR.map(([k, v]) => `${unesc(k)} = ${unesc(v).slice(0, 80)}`).join(' | ') || HS.slice(0, 200)}`);
-  const TR = secRows(HS, 'Tables (');
-  chk(() => TR.length === 4 && TR.every(([, v]) => both(v)), () => `LR1-4b. the Arabic sample page's Tables rows in Arabic, the English under each: ${TR.map(([k, v]) => `${unesc(k)} = ${unesc(v)}`).join(' | ')}`);
+  // (FX1, the laptop's part 3: an Arabic page wholly Arabic; changed on purpose from "the English line under each")
+  const both = (c) => AR.test(c) && !/<br>|class="note"/.test(c);
+  const SR = secRows(HS, 'مشروع المثال (بيانات مختلَقة)'), keysAr = SR.map(([k]) => unesc(k));
+  chk(() => SR.length >= 7 && SR.every(([k, v]) => both(k) && both(v)) && ['ما هو', 'بيانات مختلَقة', 'المجلد'].every((k) => keysAr.some((x) => x.trim() === k)),
+    () => `LR1-4a. the Arabic sample page: each row's name and value in Arabic alone: ${SR.map(([k, v]) => `${unesc(k)} = ${unesc(v).slice(0, 80)}`).join(' | ') || HS.slice(0, 200)}`);
+  const TR = secRows(HS, 'الجداول (');
+  chk(() => TR.length === 4 && TR.every(([, v]) => both(v)), () => `LR1-4b. the Arabic sample page's Tables rows in Arabic alone: ${TR.map(([k, v]) => `${unesc(k)} = ${unesc(v)}`).join(' | ')}`);
   const s2 = await w.call('plan_layout', { sample: true, lang: 'en' }), HSE = idOf(s2) ? await pageOf(idOf(s2)) : '', ER = secRows(HSE, 'Sample project (made-up data)');
   chk(() => ER.length >= 7 && ER.every(([k, v]) => !AR.test(k) && !AR.test(v) && !/<br>/.test(k)) && unesc(ER[0][0]).trim() === 'What it is', () => `LR1-4c. guard: the English sample page keeps its English rows, one line each: ${ER.map(([k]) => unesc(k)).join(' | ')}`);
 

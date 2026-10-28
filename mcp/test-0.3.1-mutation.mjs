@@ -126,7 +126,7 @@ const MUTANTS = [
   // 6. the approval page says what the click writes (SQ3): the writes in Arabic line for line and escaped, what was not
   // checked in the app's prompt, a pair's English page drawn in English
   { id: 'A-writesAr-match', file: AW, edits: [['Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ?', 'Array.isArray(s.writesAr) ?']], guards: ['test-0.3.1-sq3.mjs'] },
-  { id: 'A-writesAr-esc', file: AW, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}<br>', '<li dir="auto">${named(WA[i])}<br>']], guards: ['test-0.3.1-sq3.mjs'] },
+  { id: 'A-writesAr-esc', file: AW, edits: [['<li dir="auto">${isoText(named(WA[i]), true)}</li>', '<li dir="auto">${named(WA[i])}</li>']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'A-prompt-notChecked', file: AW, edits: [['  if (nc.length) lines.push(cut(`Not checked before writing:', '  if (false) lines.push(cut(`Not checked before writing:']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'A-pair-lang', file: AW, edits: [["fig(PP[e], `${W.enPage} ${i + 1}`, 'en')", 'fig(PP[e], `${W.enPage} ${i + 1}`)']], guards: ['test-0.3.1-sq3.mjs'] },
   { id: 'C-fieldparam', file: CR, edits: [["rule: 'FIELD_PARAMETER_TITLE', severity: 'warning'", "rule: 'FIELD_PARAMETER_TITLE', severity: 'error'"]], guards: ['test-0.3.0-metric-switcher.mjs', 'test-0.3.0-check.mjs', 'test-0.3.1-checker.mjs'] }

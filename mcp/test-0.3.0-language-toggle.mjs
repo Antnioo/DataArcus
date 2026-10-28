@@ -96,9 +96,10 @@ try {
   const pid = J.plan && J.plan.planId;
   let html = ''; { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? unesc(await req(url, 'GET')) : '';
     const txt = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    chk(() => /Orders EN \(EN-AR\)\.Report/.test(txt) && /Page pairs \(4\)/.test(txt) && /Language buttons \(4\)/.test(txt) && /Slicers kept in sync \(3\)/.test(txt), () => `L9a. the approval page shows the copy, the pairs, the buttons and the sync groups: ${txt.slice(0, 400)}`);
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /Orders EN \(EN-AR\)\.Report/.test(txt) && /أزواج الصفحات \(4\)/.test(txt) && /أزرار اللغة \(4\)/.test(txt) && /المقسمات المتزامنة \(3\)/.test(txt), () => `L9a. the approval page shows the copy, the pairs, the buttons and the sync groups: ${txt.slice(0, 400)}`);
     // (0.3.1 GD2: the report is glass, the default since GD1; its Arabic pages get their own flipped pictures, 2 more files)
-    chk(() => /184 files:/.test(txt) && /Pages \(8\)/.test(txt) && /Project file \(1\)/.test(txt), () => `L9b. every file, grouped and counted (184: 182 report files, the .pbip and the month script, as the twin): ${(txt.match(/\d+ files:.{0,200}/) || [''])[0]}`);
+    chk(() => /جميع الملفات \(184\)/.test(txt) && /الصفحات \(8\)/.test(txt) && /ملف المشروع \(1\)/.test(txt), () => `L9b. every file, grouped and counted (184: 182 report files, the .pbip and the month script, as the twin): ${(txt.match(/\d+ files:.{0,200}/) || [''])[0]}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
   const wr = await w.call('create_arabic_twin', { path: 'large/Orders EN.pbip', into: 'same', planId: pid });
   chk(() => !wr.err && wr.j.written === true && fs.existsSync(COPY) && fs.existsSync(path.join(ROOT, 'large/Orders EN (EN-AR).pbip')), () => `L2a. the copy is written: ${short(wr)}`);
