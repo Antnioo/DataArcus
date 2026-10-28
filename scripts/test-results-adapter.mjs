@@ -335,6 +335,20 @@ try {
     assert.ok(all.stdout.trim().split('\n').length >= 3 || !all.stdout.trim(), 'the SPD commits are found');
   });
 
+  // (SPD, Codex #7) the push workflow keeps the merge gate's five job names and runs mutation; coverage is nightly and by hand
+  t('workflows: tests.yml keeps website-checks, website, mcp, mcp-windows, mcp-macos and no coverage job; coverage.yml is nightly and manual', () => {
+    const jobsOf = (f) => { const y = fs.readFileSync(path.join(REPO, '.github/workflows', f), 'utf8'); return { y, jobs: [...y.slice(y.indexOf('\njobs:')).matchAll(/^ {2}([\w-]+):\s*$/gm)].map((m) => m[1]) }; };
+    const T = jobsOf('tests.yml'), C = jobsOf('coverage.yml');
+    for (const j of ['website-checks', 'website', 'mcp', 'mcp-windows', 'mcp-macos']) assert.ok(T.jobs.includes(j), `tests.yml: ${j}`);
+    assert.deepEqual(T.jobs.filter((j) => /coverage/.test(j)), []);
+    assert.deepEqual(C.jobs, ['coverage', 'coverage-web']);
+    assert.match(C.y, /^on:\n {2}schedule:\n {4}- cron: '[\d*, /-]+'.*\n {2}workflow_dispatch:\n/m);
+    assert.doesNotMatch(C.y, /^ {2}(push|pull_request):/m);
+    assert.match(T.y, /^ {2}push:\n {4}branches: \[main\]\n {2}pull_request:\n {2}workflow_dispatch:/m);
+    assert.ok(JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/tests.json'), 'utf8')).suites.some((x) => x.file === 'test-0.3.1-mutation.mjs'), 'mutation is a tests.json suite: every push');
+    assert.equal((T.y.match(/npm test -- --keep-going/g) || []).length, 3, 'the three MCP shard jobs run every planned suite');
+  });
+
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
   t('mutation: a guard whose baseline timed out fails the run, never counted as a pass', () => {
     const r = node([path.join(REPO, 'mcp/test-0.3.1-mutation.mjs')], { DA_MUTATION_ONLY: 'G-used', DA_MUTATION_GUARD_TIMEOUT: '0.01' }, path.join(REPO, 'mcp'));

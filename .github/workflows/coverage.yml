@@ -1,0 +1,107 @@
+name: Coverage
+
+# (SPD, Codex #7) The two coverage reports, moved out of Tests: they were never gates (no threshold, no required check
+# needs them, a failing suite is reported by Tests), and on every push they were the longest jobs of a run (coverage
+# 31.9 min, coverage-web 19.7 min on 0d34277, run 40629588425). Nightly on the default branch, and by hand on any branch
+# (Actions > Coverage > Run workflow, or gh workflow run coverage.yml --ref <branch>). Mutation stays in Tests, on every
+# push (an mcp/tests.json suite). The jobs below are as they were in tests.yml.
+on:
+  schedule:
+    - cron: '23 1 * * *'   # 01:23 UTC every night
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # (Q1, 0.3.1; the owner 25 Oct, after an outside review: "coverage reporting to identify untested branches") the MCP's
+  # npm test once under c8 (pinned in the root package.json; .c8rc.json: mcp/server.mjs, lib, tools and the engines in
+  # assets/js), per file lines and branches % in the job summary and an artifact. Not a gate in 0.3.1: no threshold, no
+  # required check needs it, and a failing suite here is reported by the mcp check, not this job.
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180   # npm test under c8 in one job: 37-43 min before GD2; over 90 on 13afb3ab (cut at 91 min, run 40549772379); 180 so the next run measures it (not a gate)
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # suites read old versions of files from git history (glass-tables: the base engine)
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mcp/package-lock.json
+
+      - name: Install
+        run: npm ci && (cd mcp && npm ci)
+
+      - name: The MCP's npm test under c8
+        run: |
+          mkdir -p ci-logs
+          npm run coverage:mcp > ci-logs/coverage-run.log 2>&1 || echo "npm test exit $? under c8 (the mcp check reports the failure)" | tee -a ci-logs/coverage-run.log
+          tail -5 ci-logs/coverage-run.log
+
+      - name: Lines and branches per file (job summary)
+        if: always()
+        run: |
+          node scripts/coverage-summary.mjs > ci-logs/coverage-summary.md
+          cat ci-logs/coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+          cp coverage/coverage-summary.json ci-logs/
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 14
+
+  # (SQ15c, Q1-S5; the owner 26 Oct, "Yes, fix now") the website suites' coverage of the engines (assets/js/*.js, their
+  # source): every suite once in Chromium with page.coverage (scripts/tests/lib.mjs, DA_WEB_COVERAGE), c8 reports it
+  # (scripts/coverage-web.mjs). A report like the coverage job above, never a gate: continue-on-error, no required check
+  # needs it, and a failing suite here is reported by the website-suites jobs, not this one. One line in the log; the
+  # per-file table in the job summary; coverage/web/ as the artifact.
+  coverage-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # as the website-suites jobs: the suites see the same checkout
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps chromium
+
+      - name: The website suites with Chromium's coverage
+        run: |
+          npm run coverage:web
+          cat coverage/web/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-web
+          path: coverage/web/
+          if-no-files-found: error
+          retention-days: 14
