@@ -101,18 +101,29 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onerror = () => showError('READ');
     reader.readAsArrayBuffer(file);
   }
-  let worker = null;
+  // (0.3.1 FX1, the laptop's part 3, G4-1: a visitor who loaded the page and then went offline got no score: the worker
+  // was fetched only when a file was dropped) the worker is started when the page loads (its importScripts load the
+  // engine and the TMDL reader then) and kept ready between runs: it holds nothing between messages. A run still going
+  // when another file is dropped is stopped and a new worker started for the new file. Nothing is sent anywhere.
+  const WORKER_URL = '/assets/js/model-health-worker.min.js?v=20261026a';
+  let worker = null, ready = null, busy = false;
+  const warm = () => { try { ready = new Worker(WORKER_URL); ready.onerror = () => { ready = null; }; } catch (e) { ready = null; } };
+  warm();
   function run(buffer, fileName) {
-    if (worker) worker.terminate();
-    try { worker = new Worker('/assets/js/model-health-worker.min.js?v=20261026a'); } catch (e) { return showError('WORKER'); }
+    if (worker && busy) { worker.terminate(); worker = null; }
+    if (!worker) { if (!ready) warm(); worker = ready; ready = null; }
+    if (!worker) return showError('WORKER');
+    busy = true;
+    // (the worker is kept, not stopped, when it is done: the next file runs on it, also offline)
+    const done = () => { busy = false; };
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
-      else if (d.type === 'error') { showError(d.code, d.message); worker.terminate(); worker = null; }
+      else if (d.type === 'error') { done(); showError(d.code, d.message); }
       else if (d.type === 'done') {
         R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
         // (AU47, AUD-047) a model file that could not be read: no score, so none is kept in the history either
-        if (R.unreadable) { worker.terminate(); worker = null; render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
+        if (R.unreadable) { done(); render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport }); return; }
         qRehash();   // (B-148, R5) answers whose measure or relationship changed are kept, not applied: their questions are asked again
         const hist = store.get('dataarcus-mh-history', {});
         const key = String(fileName).toLowerCase();
@@ -122,14 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
         delete hist[key]; hist[key] = runs;
         const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
         store.set('dataarcus-mh-history', hist);
-        worker.terminate(); worker = null;
+        done();
         render();
         root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
         // (17 Oct, the outside audit: nothing about the user's model is sent, not even its size, counts or score)
         track('mh_analyze', { file_type: R.meta.source, has_report: R.meta.hasReport, sample: fileName === 'Contoso-Sales-Demo.pbit' });
       }
     };
-    worker.onerror = () => showError('PARSE');
+    // (a worker that fails is not kept)
+    worker.onerror = () => { busy = false; if (worker) worker.terminate(); worker = null; showError('PARSE'); };
     worker.postMessage({ buffer, fileName }, [buffer]);
   }
   function loading(name) {

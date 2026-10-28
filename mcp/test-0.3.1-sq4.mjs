@@ -6,7 +6,8 @@
 //   D3-S1   the phone header text box with a longer Arabic title gets the writer's phone title size (never larger)
 //   J18-S4  (OBSOLETE: the twin never swaps a column) the twin's terminology sheet names only fields its pages bind
 //   Q1-S7   an alt text that repeats its visual's title is listed under that title in the plan, and takes its Arabic
-//   X2-S1   a button with no room for its icon and its Arabic text: its icon switched off, as the writer does (resetFit)
+//   X2-S1   a button with no room for its icon and its Arabic text: its icon kept, its text at the largest size both fit at (FX1,
+//           D-1028-02; was: its icon switched off)
 // In process: the tool's own handler (tools/create_arabic_twin.mjs) and the gate (lib/plans.mjs), the approval given as
 // the window's click gives it. Fixture: mcp/fixtures/twin-project (made up), changed in each copy as each check says.
 //   node test-0.3.1-sq4.mjs
@@ -147,10 +148,13 @@ try {
     const { p, w } = await writeOf({ path: 'x2s1/Twin Sales.pbip', arabicMonth: false, labels: { 'button:p1overview/btnReset': AR } });
     let v = null; try { v = rd(path.join(D, 'Twin Sales AR.Report/definition/pages/p1overview/visuals/btnReset/visual.json')); } catch (e) { v = null; }
     const icon = v ? (v.visual.objects.icon || []) : [];
-    chk(() => !w.err && v && icon.every((e) => !e.properties.shapeType || lit(e.properties.shapeType) === 'blank') && v.position.width <= 240 && !need(v).icon && need(v).needW <= v.position.width,
-      () => `X2-S1b. the Arabic Reset button's icon is switched off and its text fits one line: ${w.err ? w.t.slice(0, 200) : JSON.stringify({ icon, pos: v && v.position, need: v && need(v) })}`);
+    // (FX1, D-1028-02 "fix it correctly": the twin is identical, so the icon stays; changed on purpose from "the icon
+    // switched off") alone in its rail, no room beside it: its icon kept, its text at the largest size both fit at
+    const fs0 = v ? ((v.visual.objects.text || []).find((e) => e.properties && e.properties.fontSize) || { properties: {} }).properties.fontSize : null;
+    chk(() => !w.err && v && icon.some((e) => lit(e.properties.shapeType) === 'rightArrow') && v.position.width <= 240 && need(v).icon && need(v).needW <= v.position.width && lit(fs0) === '13D',
+      () => `X2-S1b. the Arabic Reset button keeps its icon, its text at 13pt fits one line beside it: ${w.err ? w.t.slice(0, 200) : JSON.stringify({ icon, pos: v && v.position, need: v && need(v), fs0 })}`);
     const F = (p.j && p.j.fitted) || {};
-    chk(() => (F.buttons || []).some((x) => x.visual === 'btnReset' && x.iconOff) && !(F.buttonsCut || []).some((x) => x.visual === 'btnReset'), () => `X2-S1c. the plan says it (fitted.buttons iconOff), not as cut: ${JSON.stringify(F).slice(0, 400)}`);
+    chk(() => (F.buttons || []).some((x) => x.visual === 'btnReset' && x.iconKept && x.textSize && x.textSize.to === 13 && !x.iconOff) && !(F.buttonsCut || []).some((x) => x.visual === 'btnReset'), () => `X2-S1c. the plan says it (fitted.buttons iconKept, textSize 15 -> 13), not as cut: ${JSON.stringify(F).slice(0, 400)}`);
     const en = rd(visualAt(D, 'p1overview', 'btnReset'));
     chk(() => lit(en.visual.objects.icon[0].properties.shapeType) === 'rightArrow', () => 'X2-S1d. the original\'s button is not changed');
   }

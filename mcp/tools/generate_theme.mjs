@@ -76,7 +76,9 @@ export function register(server, ctx) {
       return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, look, ...(glass ? { glass } : {}), design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
         plan: Plans.proposal(Plans.propose('theme', ref, [`the theme file "${base}" ${a.folder ? `in the folder "${visible(String(a.folder).replace(/[\\/]+$/, ''))}"` : `in ${folderSaid('.')}`} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) },
           // (D6: the theme's page showed only its inputs) its file, the colours it writes and the report they come from
-          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], outputsAt: '.', file: base, colours, ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
+          outputs: [(a.folder ? String(a.folder).replace(/[\\/]+$/, '') + '/' : '') + base], outputsAt: '.', file: base, colours,
+          // (0.3.1 FX1, P3A's Seen 2: an Arabic theme plan's page stayed English) its write in Arabic, for its Arabic page
+          ...(a.lang === 'ar' ? { writesAr: [`ملف السمة «${base}» ${a.folder ? `في المجلد «${visible(String(a.folder).replace(/[\\/]+$/, ''))}»` : `في ${folderSaid('.', true)}`} (ملف جديد، لا يُكتب فوق ملف آخر)`] } : {}), ...(fromReport ? { source: { from: fromReport.source, report: fromReport.report, theme: fromReport.theme } } : {}) }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
     }
     const P = Plans.gate('generate_theme', a.planId, ref, inputsPin(a)), name = P.data && P.data.file;
     // (0.3, B-153: a temporary name, then into place; on a failure the folders freeFile made are removed too)

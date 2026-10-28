@@ -1094,5 +1094,19 @@ export default async function ({ browser, url }) {
     check(pills.length === 6 && pills.every((t) => t && !/[A-Za-z]/.test(t)), `B-149: the Arabic stats row has English labels: ${JSON.stringify(pills)}`);
     await v.ctx.close();
   }
+  // (0.3.1 FX1, the laptop's part 3, G4-1: "Health Check offline: no result (the page stays on "Drop a .pbit and get a
+  // health score")") the page loaded, then the network gone: a dropped .pbit still gets its score (the worker and the
+  // scripts it needs are loaded with the page; nothing is sent anywhere either way)
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.ctx.setOffline(true);
+    await v.pg.setInputFiles('#mhFile', { name: 'model-health-sample.pbit', mimeType: 'application/octet-stream', buffer: fs.readFileSync(path.join(ROOT, 'assets/data/model-health-sample.pbit')) });
+    const score = await v.pg.waitForSelector('.mh-scorecard .mh-ring b', { timeout: 30000 }).then((e) => e.textContent()).catch(() => null);
+    const shown = score ? '' : await v.pg.evaluate(() => document.getElementById('mhRoot') ? document.getElementById('mhRoot').innerText.slice(0, 200) : document.body.innerText.slice(0, 200));
+    check(score != null && +score > 0, `offline (G4-1): the page loaded, then offline, the dropped sample gets no score: ${JSON.stringify(shown)}`);
+    await v.ctx.setOffline(false);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

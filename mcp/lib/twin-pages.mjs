@@ -60,11 +60,58 @@ function fitButtons(page, visuals, ctx, at) {
     left.forEach((x) => shift(x, -dl)); right.forEach((x) => shift(x, dr));
     p.x = Mirror.round(p.x - dl); p.width = Mirror.round(p.width + dl + dr);
     lines.forEach((s) => { const q = posOf(s); q.x = Mirror.round(q.x - dl); q.width = Mirror.round(q.width + dl + dr); });
-    const what = { page: safeName(at), visual: safeName(String(v.name)), kind: b.page ? 'page button' : 'button', needs: b.needW, width: p.width };
+    // (0.3.1 FX1, D-1028-02: the twin is identical, so the Reset keeps its icon; the laptop's part 3: the sample's Reset,
+    // 159 wide beside three dropdown slicers in the top strip, got 20 of free room and lost its icon) still too narrow:
+    // (a) as the writer lays a strip out (pbip-page.js: the Reset as wide as its text and icon need, the dropdown slicers
+    // sharing the rest), the slicers beside it in its row give the width, equally, each kept at least 160 x k (the
+    // writer's strip minimum, k = the page's height / 1080), the visuals between them moving with them
+    let narrowed = 0, sized = null;
+    const kk = isObj(page) && Number.isFinite(page.height) && page.height > 0 ? page.height / 1080 : 1;
+    if (!b.page && p.width + 0.5 < b.needW) {
+      const slack = (x) => (typeOf(x) === 'slicer' ? Math.max(0, Math.floor(posOf(x).width - 160 * kk)) : 0);
+      const sides = (firstL ? [left, right] : [right, left]).map((list) => ({ list, toLeft: list === left }));
+      for (const S of sides) {
+        let want = Math.ceil(b.needW - p.width);
+        const sl = S.list.filter((x) => slack(x) > 0); if (want <= 0 || !sl.length) continue;
+        const share = new Map(sl.map((x) => [x, 0]));
+        // (each takes an equal share, up to what it can give; what one can't give, the others share)
+        while (want > 0) { const open = sl.filter((x) => share.get(x) < slack(x)); if (!open.length) break; const each = Math.max(1, Math.floor(want / open.length));
+          for (const x of open) { if (want <= 0) break; const d = Math.min(each, slack(x) - share.get(x), want); share.set(x, share.get(x) + d); want -= d; } }
+        const take = [...share.values()].reduce((a, d) => a + d, 0); if (!take) continue;
+        let off = take;
+        // the near side first: each visual moves by what is still to give, a slicer then gives its share
+        S.list.slice().sort((a, c) => (S.toLeft ? posOf(c).x - posOf(a).x : posOf(a).x - posOf(c).x)).forEach((x) => {
+          const d = share.get(x) || 0; shift(x, S.toLeft ? -off : off);
+          if (d) { const q = posOf(x); if (S.toLeft) q.x = Mirror.round(q.x + d); q.width = Mirror.round(q.width - d); off -= d; } });
+        if (S.toLeft) p.x = Mirror.round(p.x - take);
+        p.width = Mirror.round(p.width + take);
+        lines.forEach((s) => { const q = posOf(s); if (S.toLeft) q.x = Mirror.round(q.x - take); q.width = Mirror.round(q.width + take); });
+        narrowed += sl.filter((x) => share.get(x)).length;
+      }
+    }
+    // (b) else its text at the largest size, down to 8pt, at which its Arabic and its icon fit side by side (the writer's
+    // rule for a slicer's header and a KPI card's title: the largest size, down to 8, at which it is whole)
+    if (!b.page && b.icon && p.width + 0.5 < b.needW && Array.isArray(v.visual.objects.text)) {
+      const te = v.visual.objects.text.find((e) => isObj(e) && isObj(e.properties) && e.properties.text), tx = te ? litStr(te.properties.text) : '', font = b.font;
+      let t = Math.floor(b.t) - 1; while (t >= 8 && Math.ceil(Rules.MEASURED.BTN_ICON_TW(tx, t, font) + p.height) > p.width + 0.5) t--;
+      if (t >= 8) { v.visual.objects.text.forEach((e) => { if (isObj(e) && isObj(e.properties) && 'fontSize' in e.properties) e.properties.fontSize = { expr: { Literal: { Value: t + 'D' } } }; }); sized = { from: b.t, to: t }; }
+    }
+    if (narrowed || sized) {
+      const b3 = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text);
+      if (b3 && p.width + 0.5 >= b3.needW) {
+        const moved0 = (dl ? left.length : 0) + (dr ? right.length : 0);
+        out.buttons.push(Object.assign({ page: safeName(at), visual: safeName(String(v.name)), kind: 'button', needs: b3.needW, width: p.width }, moved0 ? { moved: moved0 } : {},
+          narrowed ? { slicersNarrowed: narrowed } : {}, sized ? { textSize: sized } : {},
+          { iconKept: `its icon and its Arabic text side by side, on one line: ${[narrowed ? `the ${narrowed === 1 ? 'slicer' : `${narrowed} slicers`} beside it in its row gave the width (as the writer lays out a strip)` : '', sized ? `its text at ${sized.to}pt (was ${sized.from}pt), the largest size at which both fit` : ''].filter(Boolean).join('; ')}` }));
+        return;
+      }
+    }
+    const what = Object.assign({ page: safeName(at), visual: safeName(String(v.name)), kind: b.page ? 'page button' : 'button', needs: b.needW, width: p.width }, narrowed ? { slicersNarrowed: narrowed } : {});
     const moved = (dl ? left.length : 0) + (dr ? right.length : 0);
     // (SQ4, X2-S1: the bilingual demo's Arabic Reset button, 201 wide in its 201-wide rail, was cut) still too narrow with
     // its icon, but wide enough for its text alone: its icon is switched off, as the writer does where the icon and the
-    // text don't fit side by side (pbip-sizing.js resetFit: shapeType blank, no icon size)
+    // text don't fit side by side (pbip-sizing.js resetFit: shapeType blank, no icon size). (FX1: only where neither the
+    // slicers beside it nor a smaller text, down to 8pt, give it room)
     const icons = isObj(v.visual.objects) && Array.isArray(v.visual.objects.icon) ? v.visual.objects.icon.filter((e) => isObj(e) && isObj(e.properties) && 'shapeType' in e.properties) : [];
     if (!b.page && b.icon && icons.length && p.width + 0.5 < b.needW && p.width + 0.5 >= Math.ceil(Rules.MEASURED.BTN_TW(b.t, b.n))) {
       icons.forEach((e) => { e.properties.shapeType = Ls('blank'); delete e.properties.iconSize; });
@@ -72,7 +119,7 @@ function fitButtons(page, visuals, ctx, at) {
       out.buttons.push(Object.assign({}, what, { needs: b2 ? b2.needW : what.needs, iconOff: 'its icon and its Arabic text do not fit side by side here: the icon is switched off (as the writer does in a narrow place), the text on one line' }, moved ? { moved } : {}));
       return;
     }
-    if (dl + dr > 0) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
+    if (dl + dr > 0 || narrowed) out.buttons.push(Object.assign({}, what, moved ? { moved } : {}));
     if (p.width + 0.5 < b.needW) out.buttonsCut.push(Object.assign({}, what, { room: p.width, why: `its Arabic text needs ${b.needW} wide; its ${v.parentGroupName != null ? 'group' : 'page'} and the visuals beside it leave ${p.width}: give a shorter Arabic text, or Power BI cuts it` }));
   });
   return out;

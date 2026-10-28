@@ -16,11 +16,13 @@ import { E } from './design.mjs';             // (D6: the written colour's own c
 import { BEFORE_APPLIED as FLIP_BEFORE } from './flip-cards.mjs';   // (F1: what a flip card shows before its script)
 import { scriptIs, APPLY_STEPS, SCRIPT_IS_AR, APPLY_STEPS_AR, folderSaid } from './plain-words.mjs';   // (0.3.0 T1, T-4)
 import { CLASSES as TEXT_CLASSES } from './text-format.mjs';   // (0.3.1 R4A: a text class in words, never its key)
+import { arOf, INPUT_AR } from './approval-ar.mjs';   // (0.3.1 FX1: an Arabic plan's page wholly Arabic)
 
 // (0.3.0 step 1, "Preview before Approve": the planned pages drawn by the shared renderer, the lab page's too)
 const Preview = createRequire(import.meta.url)('../../assets/js/page-preview.js');
 // (D7) a right-to-left waterfall's switch, in the person's words
 const Gallery = createRequire(import.meta.url)('../../assets/js/visual-gallery.js');
+const wfRtlSaidAr = (v) => (Gallery.waterfallRtlOf(v) === 'native' ? 'أصلي: شلال Power BI نفسه، يُقرأ من اليسار إلى اليمين كما يرسمه Power BI' : 'معكوس: مخطط أعمدة مكدسة مرسوم كشلال، يُقرأ من اليمين؛ دون عمود للإجمالي ودون وسيلة إيضاح، والقاعدة في التلميح');
 const wfRtlSaid = (v) => (Gallery.waterfallRtlOf(v) === 'native' ? `native: ${Gallery.WF_WHAT.native} (Power BI's own waterfall, as in English)` : 'mirror: a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend, the base shown in the tooltip');
 
 const windows = new Map();          // planId -> { secret, plan, show, decided: null | 'approve' | 'decline', waiters, opened, seen }
@@ -78,10 +80,14 @@ const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, 
 // (0.3.0 T2, the laptop's final run: on the Arabic page `"Overview" (page name)` drew `Overview" (page name)"`) every
 // cell takes its direction from its own first letter (dir="auto"), and each quoted name ("..." or «...») is isolated, so
 // it keeps its order and the words around it decide the cell's direction
-const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(/&quot;[^&<]+?&quot;|«[^»<]+»/g, (q) => `<bdi>${q}</bdi>`));
-// (0.3.1 LR1) a cell { en, ar }: on an Arabic page its Arabic, the English line under it (as the writes are); else the English
-const cell = (x, ar) => (x && typeof x === 'object' && typeof x.en === 'string' ? (ar && typeof x.ar === 'string' ? `${isoText(x.ar, true)}<br><span class="note" dir="ltr">${esc(x.en)}</span>` : isoText(x.en, ar)) : isoText(x, ar));
-const rows = (list, ar) => `<div class="card"><table>${list.map(([k, v]) => `<tr><td class="k" dir="auto">${cell(k, ar)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${cell(x, ar)}</li>`).join('')}</ul>` : cell(v, ar)}</td></tr>`).join('')}</table></div>`;
+// (FX1) and a folder's full path in brackets, "(C:\\DataArcus\\Sales)", is isolated left to right
+const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(/&quot;[^&<]+?&quot;|«[^»<]+»/g, (q) => `<bdi>${q}</bdi>`).replace(/\(((?:[A-Za-z]:\\|\/)[^()<]*)\)/g, (q, x) => `(<bdi dir="ltr">${x}</bdi>)`).replace(/\b[a-z]+(?:_[a-z]+)+\b/g, (q) => `<bdi dir="ltr">${q}</bdi>`));
+// (0.3.1 LR1) a cell { en, ar }: on an Arabic page its Arabic; else the English. (FX1, the laptop's part 3: an Arabic
+// page wholly Arabic: no English line under it; a text the page composes takes its Arabic from approval-ar.mjs)
+const cell = (x, ar) => { const en = x && typeof x === 'object' && typeof x.en === 'string' ? x.en : x, a = ar ? arOf(x) : null; return a != null ? isoText(a, true) : isoText(en, ar); };
+// (FX1) the raw inputs as given: code, left to right
+const code = (x) => `<bdi dir="ltr">${esc(x)}</bdi>`;
+const rows = (list, ar, raw) => `<div class="card"><table>${list.map(([k, v]) => raw ? `<tr><td class="k">${code(k)}</td><td>${code(v)}</td></tr>` : `<tr><td class="k" dir="auto">${cell(k, ar)}</td><td dir="auto">${v && v.swatches ? swatches(v.swatches) : Array.isArray(v) ? `<ul>${v.map((x) => `<li dir="auto">${cell(x, ar)}</li>`).join('')}</ul>` : cell(v, ar)}</td></tr>`).join('')}</table></div>`;
 
 // (R6, the outside audit of 19 Oct, F09 c: the page named the report, not every file) every file a plan writes, by kind,
 // counted, each path folded under its group (no script: <details> opens without one)
@@ -160,11 +166,11 @@ const WORDS = {
     plan: (id) => `Plan ${id}. Only a click here approves it: what is typed in the chat does not. Approve only a plan you asked for.` },
   ar: { ask: 'موافقة: ', lead: 'يطلب DataArcus موافقتك قبل أن يكتب أي شيء. لم يُكتب أي شيء بعد. راجع الخطة، ثم وافق عليها أو لا.', approve: 'موافقة', notNow: 'ليس الآن',
     preview: 'كيف سيبدو التقرير', previewNote: 'معاينة مرسومة من الخطة: مكان كل مرئي ونوعه وعنوانه. الأشكال الرمادية عناصر نائبة وليست بياناتك: يقرأ DataArcus الملفات على جهازك ليفحصها، ولا يرسل أي قيمة من بياناتك إلى Claude أبدًا.',
-    page: 'الصفحة', enPage: 'الصفحة الإنجليزية', arPage: 'الصفحة العربية', toCheck: 'للفحص', previewFailed: { all: 'تعذّر رسم الصفحات هنا: فشلت المعاينة في هذه الخطة. كل الصفحات مذكورة في الخطة أعلاه، وما سيُكتب لا يتوقف على المعاينة. · The pages could not be drawn here: the preview failed on this plan. Every page is listed in the plan above, and what is written does not depend on the preview.', arabic: 'تعذّر رسم الصفحات العربية هنا: فشلت المعاينة فيها، فرُسمت الصفحات الإنجليزية وحدها. كل الصفحات مذكورة في الخطة أعلاه، وما سيُكتب لا يتوقف على المعاينة. · The Arabic pages could not be drawn here: the preview failed on them, so only the English pages are drawn. Every page is listed in the plan above, and what is written does not depend on the preview.' }, notDrawn: (n, pairs) => `لم تُرسم هنا ${n} ${pairs ? 'من أزواج الصفحات' : 'من الصفحات'} أخرى (ترسم المعاينة ${PREVIEW_PAGES_MAX} على الأكثر) · ${n} more ${pairs ? 'page pairs' : 'pages'} not drawn here (the preview draws at most ${PREVIEW_PAGES_MAX}); the plan lists every page.`, checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
-    files: 'الملفات التي ستُكتب', counts: 'الملفات معدودة حسب النوع', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}) · All ${n} file${n === 1 ? '' : 's'}: the full list, by kind`, about: 'عن السكربت',
+    page: 'الصفحة', enPage: 'الصفحة الإنجليزية', arPage: 'الصفحة العربية', toCheck: 'للفحص', previewFailed: { all: 'تعذّر رسم الصفحات هنا: فشلت المعاينة في هذه الخطة. كل الصفحات مذكورة في الخطة أعلاه، وما سيُكتب لا يتوقف على المعاينة.', arabic: 'تعذّر رسم الصفحات العربية هنا: فشلت المعاينة فيها، فرُسمت الصفحات الإنجليزية وحدها. كل الصفحات مذكورة في الخطة أعلاه، وما سيُكتب لا يتوقف على المعاينة.' }, notDrawn: (n, pairs) => `لم تُرسم هنا ${n} ${pairs ? 'من أزواج الصفحات' : 'من الصفحات'} أخرى (ترسم المعاينة ${PREVIEW_PAGES_MAX} على الأكثر)؛ الخطة تذكر كل الصفحات.`, checked: 'فُحص قبل الكتابة', worth: 'للمراجعة', checkNote: 'القواعد المقيسة لما يرسمه Power BI Desktop وفحص التخطيط، على الصفحات المخطط لها (البنية فقط، دون أي بيانات). ويُفحص التقرير مرة أخرى عند كتابته.',
+    files: 'الملفات التي ستُكتب', counts: 'الملفات معدودة حسب النوع', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}): القائمة كاملة، حسب النوع`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
     // (T2: the page's title stayed English on an Arabic page) the titles per plan kind
-    titles: { report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات مختلَقة)', columns: 'سكربت أعمدة التقويم العربية' },
+    titles: { theme: 'ملف سمة', report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات مختلَقة)', columns: 'سكربت أعمدة التقويم العربية' },
     plan: (id) => `الخطة <bdi dir="ltr">${esc(id)}</bdi>. لا يوافق عليها إلا نقرة هنا: ما يُكتب في المحادثة لا يوافق عليها. لا توافق إلا على خطة طلبتها.` }
 };
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
@@ -175,7 +181,8 @@ const KIND_AR = { Bookmarks: 'الإشارات المرجعية', Pages: 'الص
 function BLANK_LABEL() { return 'Page backgrounds (blank, see-through: the page shows the theme\'s colour)'; }
 // (0.3.1 GD1) the glass look's page picture, listed as what it is
 function GLASS_LABEL() { return 'Page backgrounds (the glass look\'s soft picture, made from the theme\'s colours: no photo)'; }
-const kindLabel = (label, ar) => (ar && KIND_AR[label] ? `${KIND_AR[label]} · ${label}` : label);
+// (FX1: an Arabic page wholly Arabic) the kind's Arabic only
+const kindLabel = (label, ar) => (ar && KIND_AR[label] ? KIND_AR[label] : label);
 const iso = (t) => `<bdi dir="ltr">${esc(t)}</bdi>`;
 // (0.3.0 T1, T-1: "102 files:" then every visual.json path; finance and HR approved "on the summary line") the files by
 // kind, in words ("1 report: 4 pages, 40 visuals, 2 bookmarks, 26 phone layouts; 1 theme; 1 script"), counted from the
@@ -235,36 +242,38 @@ const scriptHtml = (s, writes, ar) => {
 // (T-5) a section's heading in Arabic, where the page knows it (the rest of the heading, a count, stays)
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
-  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة (Slicers)'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
-  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت (raw)'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
+  ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
+  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
   // (SQ3, T1-S9) the report's other headings an Arabic page shows
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Visual gallery', 'معرض المرئيات'],
-  ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة']];
+  ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
+  // (FX1) the rest an Arabic page shows
+  ['Not fully Arabic', 'ليست عربية بالكامل'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
 // (0.3.1 LR1) the sample section's row names in Arabic
 const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات مختلَقة', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
 // with words takes its Arabic words in the Arabic half; a bare count, or words not listed here, stays in the English half
 const COUNT_AR = [[/^(\d+), no Arabic text$/, (n) => `${n}، دون نص عربي`], [/^(\d+), no Arabic name$/, (n) => `${n}، دون اسم عربي`],
   [/^(\d+) functions?, (\d+) measures?$/, (f, m) => `الدوال: ${f}، المقاييس: ${m}`]];
-// (the English heading stays beside it, as the file kinds do: the person can match it with the chat's words)
+// (FX1, the laptop's part 3: an Arabic page wholly Arabic) the Arabic heading alone, its count with it
 const headingOf = (h, ar) => {
   if (!ar) return h;
   const x = HEAD_AR.find(([en]) => h === en || h.startsWith(en + ' (')); if (!x) return h;
   const rest = h.length > x[0].length ? h.slice(x[0].length + 2, -1) : '', c = rest && COUNT_AR.map(([re, f]) => { const m = re.exec(rest); return m ? f(...m.slice(1)) : null; }).find(Boolean);
-  return `${x[1]}${c ? ` (${c})` : ''} · ${h}`;
+  return `${x[1]}${c ? ` (${c})` : rest && /^\d+$/.test(rest) ? ` (${rest})` : ''}`;
 };
 
 function askPage(w) {
   const s = w.show, ar = s.lang === 'ar', W = WORDS[ar ? 'ar' : 'en'];
   // (T-7: the raw inputs folded) a section with fold is shown closed
-  const sections = s.sections.filter((x) => x.rows.length).map((x) => (x.fold ? `<details><summary>${esc(headingOf(x.heading, ar))}</summary>${rows(x.rows, ar)}</details>` : `<h2>${esc(headingOf(x.heading, ar))}</h2>${rows(x.rows, ar)}`)).join('');
+  const sections = s.sections.filter((x) => x.rows.length).map((x) => (x.fold ? `<details><summary>${esc(headingOf(x.heading, ar))}</summary>${rows(x.rows, ar, x.raw)}</details>` : `<h2>${esc(headingOf(x.heading, ar))}</h2>${rows(x.rows, ar, x.raw)}`)).join('');
   // (the pictures: SVG markup from the shared renderer, which escapes every name in it; drawn from the plan, never a value)
   // (0.3.1 V1) the twin's pages too, and the copy's as pairs (its English page beside its Arabic page, one above the other
   // on a narrow window); at most PREVIEW_PAGES_MAX pages (pairs) drawn, the rest counted
   // (SQ3, V1-S3: the "معاينة" tag on the copy's English pages) a pair's English page is drawn in English
   const fig = (p, label, lang) => {
     const fl = Preview.check(p).concat(p.flags || []).filter((f, k, all) => all.findIndex((g) => g.i === f.i && g.kind === f.kind) === k);
-    return `<figure>${Preview.render(p, { lang: lang || s.previews.lang, width: 800 })}<figcaption dir="auto">${esc(label)}: ${esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} ${esc(W.toCheck)}: ${esc([...new Set(fl.map((f) => (Preview.WORDS[ar && Preview.WORDS.ar ? 'ar' : 'en'] || Preview.WORDS.en)[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; };
+    return `<figure>${Preview.render(p, { lang: lang || s.previews.lang, width: 800 })}<figcaption dir="auto">${esc(label)}: ${ar ? `«<bdi>${esc(cut(p.name, 80))}</bdi>»` : esc(cut(p.name, 80))}${fl.length ? ` <span class="warn">(${fl.length} ${esc(W.toCheck)}: ${esc([...new Set(fl.map((f) => (Preview.WORDS[ar && Preview.WORDS.ar ? 'ar' : 'en'] || Preview.WORDS.en)[f.kind]))].join(', '))})</span>` : ''}</figcaption></figure>`; };
   const PP = s.previews && Array.isArray(s.previews.pages) ? s.previews.pages : [], PR = s.previews && Array.isArray(s.previews.pairs) ? s.previews.pairs.filter((x) => Array.isArray(x) && PP[x[0]] && PP[x[1]]) : null;
   const drawn = PR ? PR.slice(0, PREVIEW_PAGES_MAX).map(([e, a], i) => `<div class="pair">${fig(PP[e], `${W.enPage} ${i + 1}`, 'en')}${fig(PP[a], `${W.arPage} ${i + 1}`)}</div>`).join('')
     : PP.slice(0, PREVIEW_PAGES_MAX).map((p, i) => fig(p, `${W.page} ${i + 1}`)).join(''), left = (PR || PP).length - PREVIEW_PAGES_MAX;
@@ -281,10 +290,11 @@ function askPage(w) {
   // from the same facts), the plan's English line under it; a writesAr that is not one line per write is not shown
   const named = (x) => (s.name ? String(x).split('<name>').join(s.name) : String(x));
   const WA = ar && Array.isArray(s.writesAr) && s.writesAr.length === w.plan.writes.length ? s.writesAr : null;
-  const writesHtml = w.plan.writes.map((x, i) => (WA ? `<li dir="auto">${isoText(named(WA[i]), true)}<br><span class="note" dir="ltr">${esc(named(x))}</span></li>` : `<li dir="auto">${esc(named(x))}</li>`)).join('');
+  // (FX1, the laptop's part 3: "each Arabic file line is followed by its English copy") the Arabic line alone
+  const writesHtml = w.plan.writes.map((x, i) => (WA ? `<li dir="auto">${isoText(named(WA[i]), true)}</li>` : `<li dir="auto">${esc(named(x))}</li>`)).join('');
   // (0.3.1 R4A) the first line: what is new and where; the counts by kind folded under it
   const allPaths = [].concat(...(s.files || []).map((g) => g.paths || [])), first0 = plainLine(allPaths, s.kind, ar, s.outputsAt), counts0 = kindsLine(allPaths, s.kind, ar);
-  const firstHtml = first0 ? `<p class="first" dir="auto"><strong>${esc(first0)}</strong></p>${counts0 ? `<details><summary>${esc(W.counts)}</summary><p dir="auto">${esc(counts0)}</p></details>` : ''}` : '';
+  const firstHtml = first0 ? `<p class="first" dir="auto"><strong>${isoText(first0, ar)}</strong></p>${counts0 ? `<details><summary>${esc(W.counts)}</summary><p dir="auto">${esc(counts0)}</p></details>` : ''}` : '';
   const h1 = arTitle ? `${esc(arTitle)}${s.name ? ` «<bdi>${esc(cut(s.name, 80))}</bdi>»` : ''}` : esc(s.title);
   return page(W.ask + (arTitle ? `${arTitle}${s.name ? ` «${cut(s.name, 80)}»` : ''}` : s.title), `<h1 dir="auto">${h1}</h1>${firstHtml}${s.first ? `<h2>${esc(s.first.heading)}</h2><div class="card">${s.first.text.map((t) => `<p class="warn" dir="auto"><strong>${esc(t)}</strong></p>`).join('')}</div>` : ''}<p class="lead">${esc(W.lead)}</p>
 ${pv}${ckHtml}<h2 id="files">${esc(W.files)}</h2><div class="card"><ul>${writesHtml}</ul>${s.lostNote ? `<p><strong>${esc(s.lostNote)}</strong></p>` : ''}${filesHtml(s.files, s.kind, ar)}<p class="note">${esc(ar ? writesNoteAr(w.plan.writes) : writesNote(w.plan.writes))}</p></div>
@@ -384,6 +394,9 @@ const TERM_STATUS = (r) => (r.status === 'approved' ? `approved${r.earlier ? ' (
 const termSheet = (rows) => ({ heading: `Terminology sheet: English | Arabic (${rows.length})`, rows: rows.map((r) => [`${String(r.en)} (${String(r.field)})`, `${r.ar != null ? String(r.ar) : String(r.en)}: ${TERM_STATUS(r)}${r.places ? `; shown in ${r.places} place${r.places === 1 ? '' : 's'}` : ''}`]) });
 const KIND_NAME = { bar: 'Bar chart', column: 'Column chart', line: 'Line chart', donut: 'Donut chart', table: 'Table' };
 const KIND_A = { bar: 'a bar chart', column: 'a column chart', line: 'a line chart', donut: 'a donut chart', table: 'a table' };
+// (FX1) the same in Arabic, for an Arabic page
+const KIND_NAME_AR = { bar: 'مخطط شريطي', column: 'مخطط عمودي', line: 'مخطط خطي', donut: 'مخطط دائري مجوف', table: 'جدول' };
+const KIND_A_AR = { bar: 'مخطط شريطي', column: 'مخطط عمودي', line: 'مخطط خطي', donut: 'مخطط دائري مجوف', table: 'جدول' };
 // (0.3.0 T1, T-7) the tools' inputs in the person's words: [label, (value, val) => text]
 const DAY = (v) => String(v).charAt(0).toUpperCase() + String(v).slice(1);
 const COUNTRY = { uae: 'United Arab Emirates', ksa: 'Saudi Arabia', qat: 'Qatar', kwt: 'Kuwait', bhr: 'Bahrain', omn: 'Oman' };
@@ -407,7 +420,7 @@ const INPUT_WORDS = {
 function languagesSections(LG, sections, at) {
   const pairs = Array.isArray(LG.pairs) ? LG.pairs : [], btns = Array.isArray(LG.buttons) ? LG.buttons : [], sg = Array.isArray(LG.syncGroups) ? LG.syncGroups : [], T = LG.tabs || {};
   const pg = (x) => `"${String((x && x.name) || '')}"${x && x.hidden ? ' (hidden in the tabs)' : ''}`;
-  sections.splice(at, 0, { heading: 'One report, English and Arabic', rows: [['New report', String((LG.copy || {}).report || '')], ['Project file', String((LG.copy || {}).pbip || '')], ['The original', at ? 'none: a new report' : 'only read: not changed'],
+  sections.splice(at, 0, { heading: 'One report, English and Arabic', rows: [['New report', { en: String((LG.copy || {}).report || ''), ar: `«${String((LG.copy || {}).report || '')}»` }], ['Project file', { en: String((LG.copy || {}).pbip || ''), ar: `«${String((LG.copy || {}).pbip || '')}»` }], ['The original', at ? 'none: a new report' : 'only read: not changed'],
     ['Tabs shown', String(T.shown || '')], ['Hidden in the tabs', String(T.hidden || '')], ['Tooltip pages', String(T.tooltipPages || '')], ['What a reader sees', String(T.service || '')], ['Bookmarks', String(LG.bookmarks || 'none')]]
     .concat((Array.isArray(LG.measures) ? LG.measures : []).map((m) => ['Report measure', `${String(m.arabic)} for the Arabic pages; ${String(m.measure)} stays for the English pages`])) },
   { heading: `Page pairs (${pairs.length})`, rows: pairs.map((x, i) => [`${i + 1}. English ${pg(x.english)}`, `Arabic ${pg(x.arabic)}${x.tooltip ? ' (tooltip pages)' : x.drillthrough ? ' (drillthrough pages)' : ''}`]) },
@@ -444,11 +457,14 @@ function summaryOf(kind, data) {
     // (0.3.1 L6) the DAX function library's compatibility step, the FIRST thing on the page, in the plan's language: applying
     // its script raises the model's compatibility level to 1702, which cannot be undone (or the model is already there)
     const DF = d.daxFunctions && d.daxFunctions.compatibility ? d.daxFunctions : null;
-    if (DF) { const C = DF.compatibility, ar = T.lang === 'ar' && C.sayFirstAr;
-      T.first = { heading: (ar ? (C.raises ? 'أولًا: هذا يرفع مستوى التوافق في نموذجك (لا يمكن التراجع عنه) · ' : 'أولًا: مستوى التوافق في نموذجك · ') : '') + (C.raises ? 'First: this raises your model\'s compatibility level (cannot be undone)' : 'First: your model\'s compatibility level'),
-        text: ar ? [String(C.sayFirstAr), String(C.sayFirst || '')] : [String(C.sayFirst || '')] }; }
-    sections.push({ heading: 'Report', rows: [['Name', wName && p.name && wName !== p.name ? `${wName} ("${p.name}" is already taken in that folder: the new report gets this free name)` : nm0], ['Title', p.title || (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
-      ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', p.customVisualsFrom] : null].filter((r) => r && r[1] !== undefined && r[1] !== '').map(([k, v]) => [k, val(v)]) });
+    if (DF) { const C = DF.compatibility, ar = T.lang === 'ar';
+      T.first = { heading: ar ? (C.raises ? 'أولًا: هذا يرفع مستوى التوافق في نموذجك (لا يمكن التراجع عنه)' : 'أولًا: مستوى التوافق في نموذجك') : (C.raises ? 'First: this raises your model\'s compatibility level (cannot be undone)' : 'First: your model\'s compatibility level'),
+        text: [String(ar && C.sayFirstAr ? C.sayFirstAr : C.sayFirst || '')] }; }
+    // (FX1) on an Arabic page each name inside «» (aq)
+    const aq = (en, ar) => ({ en, ar });
+    sections.push({ heading: 'Report', rows: [['Name', wName && p.name && wName !== p.name ? aq(`${wName} ("${p.name}" is already taken in that folder: the new report gets this free name)`, `«${wName}» (الاسم «${p.name}» مستخدم في هذا المجلد: يأخذ التقرير الجديد هذا الاسم المتاح)`) : nm0 == null ? nm0 : aq(String(nm0), `«${nm0}»`)],
+      ['Title', p.title ? aq(String(p.title), `«${p.title}»`) : (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
+      ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', aq(String(p.customVisualsFrom), `«${p.customVisualsFrom}»`)] : null].filter((r) => r && r[1] !== undefined && r[1] !== '' && r[1] !== null).map(([k, v]) => [k, v && typeof v === 'object' ? v : val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);
@@ -457,15 +473,18 @@ function summaryOf(kind, data) {
     // words, no pixels or letter widths (why, the measured numbers, is the agent's); its Arabic on an Arabic page
     const why = (k) => `planned as ${KIND_A[k.from] || 'another kind'}: ${k.said ? String(k.said) : k.why ? String(k.why) : k.to === 'donut' ? 'its category has two values' : 'the names would slant or be cut'}`;
     const two = (en, ar) => (p.lang === 'ar' && ar ? { en, ar } : en);
+    // (FX1) the Arabic of a kind changed: the role, the kind written, the kind planned, the reason in the person's words
+    const whyAr = (k) => `بدلًا من ${KIND_A_AR[k.from] || 'نوع آخر'}: ${(k.saidAr || arOf(String(k.said || ''))) || (k.to === 'donut' ? 'لفئته قيمتان' : 'ستميل الأسماء أو تُقص')}`;
     if (p.design) sections.push({ heading: 'Layout', rows: [['Layout', { exec: 'Executive summary', analysis: 'Analysis', ops: 'Operations monitor', focus: 'Single focus' }[L.preset] || L.preset], ['KPI cards', L.kpis], ['Filters', L.filters ? String(L.filters) : 'none'], ['Header', L.header === false ? 'no' : 'yes'], ['Second page', p.secondPage === false ? 'no' : 'yes, with page buttons']].filter((r) => r[1] !== undefined).map(([k, v]) => [k, val(v)])
-      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => (k.said ? two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (planned as ${KIND_A[k.from] || 'another kind'}): ${String(k.said)}`, k.saidAr ? `${k.role || 'A chart'}: ${String(k.saidAr)}` : null)
-        : `${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`))]] : []) });
+      .concat(kinds.length ? [['Written as another kind', kinds.map((k) => (k.said ? two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (planned as ${KIND_A[k.from] || 'another kind'}): ${String(k.said)}`, `${k.role || 'مخطط'}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)
+        : two(`${k.role || 'A chart'}: ${KIND_NAME[k.to] || 'another kind'} (${why(k)})`, `${k.role || 'مخطط'}: ${KIND_NAME_AR[k.to] || 'نوع آخر'} (${whyAr(k)})`)))]] : []) });
     // category is the bar chart's field, category2 the column chart's
     const F = p.fields || {}, FL = { kpis: 'KPI cards', measure: 'Charts\' measure', timeAxis: 'Trend axis', category: 'Bar chart by', category2: 'Column chart by', table: 'Table', slicers: 'Slicers' }, PLANNED = { category: 'bar', category2: 'column' };
     // (0.3.1 LR1) the slicers the plan adds to fill the design's slots, named after the ones asked
-    const added = (k0) => (k0 === 'slicers' && Array.isArray(d.slicersAdded) ? d.slicersAdded.map((f) => ({ en: `${String(f)} (added by DataArcus to fill the design's slicer slots)`, ar: `${String(f)} (أضافه DataArcus لملء خانات المقسمات في التصميم)` })) : []);
-    const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => { const v = Array.isArray(F[k]) ? F[k].map(String).concat(added(k)) : String(F[k]), c = PLANNED[k] && changeOf(PLANNED[k]);
-      return c ? [`${KIND_NAME[c.to] || 'Chart'} by`, `${v} (${why(c)})`] : [FL[k], v]; });
+    const added = (k0) => (k0 === 'slicers' && Array.isArray(d.slicersAdded) ? d.slicersAdded.map((f) => ({ en: `${String(f)} (added by DataArcus to fill the design's slicer slots)`, ar: `«${String(f)}» (أضافه DataArcus لملء خانات المقسمات في التصميم)` })) : []);
+    const fq = (x) => ({ en: String(x), ar: `«${String(x)}»` });
+    const fr = Object.keys(FL).filter((k) => F[k] !== undefined).map((k) => { const v = Array.isArray(F[k]) ? F[k].map(fq).concat(added(k)) : fq(F[k]), c = PLANNED[k] && changeOf(PLANNED[k]);
+      return c ? [{ en: `${KIND_NAME[c.to] || 'Chart'} by`, ar: `${KIND_NAME_AR[c.to] || 'المخطط'} حسب` }, { en: `${v.en} (${why(c)})`, ar: `${v.ar} (${whyAr(c)})` }] : [FL[k], v]; });
     sections.push({ heading: 'Fields', rows: fr.length ? fr.concat(Object.keys(F).length < Object.keys(FL).length ? [['Other visuals', 'chosen by DataArcus from the model']] : []) : [['All visuals', 'chosen by DataArcus from the model' + (p.focus ? ` (focus: ${val(p.focus)})` : '') + (p.tables ? ` (tables: ${val(p.tables)})` : '')]] });
     if (p.pages) sections.push({ heading: 'Pages', rows: p.pages.map((pg, i) => [`Page ${i + 1}: ${cut(pg.name, 80)}`, (pg.slots || []).map((s) => `${s.kind}${s.title ? `: ${s.title}` : ''}${s.text ? ` "${cut(s.text, 120)}"` : ''}`).concat(pg.background ? [`background: ${pg.background}`] : [])]) });
     if (p.displayNames && Object.keys(p.displayNames).length) sections.push({ heading: 'Names shown in the report', rows: Object.entries(p.displayNames).map(([k, v]) => [k, String(v)]) });
@@ -502,7 +521,7 @@ function summaryOf(kind, data) {
     // (the options by their names in the report's words; a bar colour left out is the default the plan says)
     const LK = { gallery: 'Visual gallery', theme: 'Theme file', logo: 'Logo', colors: 'Colours', chartColors: 'Bar colours', chartAxes: 'Chart axes', kpiValues: 'KPI values', noDataMessage: 'Message when there is no data', slidePanel: 'Filters in a slide-in panel', smoothLines: 'Smooth lines', slicerStyle: 'Slicer style', grid: 'Gridlines', flipCards: 'Flip cards', waterfallRtl: 'Waterfall, right to left', statusIcons: 'Status icons', daxFunctions: 'DAX function library', sharedAxes: 'Shared axes (the user\'s answers)', font: 'Font', rtl: 'Right to left', dir: 'Reading direction' };
     const bars = p.chartColors !== undefined && p.chartColors !== null ? p.chartColors : p.pages ? 'solid' : p.design ? 'gradient' : null;
-    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || ((p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true) && (!Array.isArray(d.waterfallRtl) || d.waterfallRtl.length) && (d.waterfalls == null || d.waterfalls > 0)))).map((k) => [LK[k], k === 'waterfallRtl' ? wfRtlSaid(p[k]) : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
+    const look = Object.keys(LK).filter((k) => k !== 'chartColors' && p[k] !== undefined && p[k] !== null && (k !== 'waterfallRtl' || ((p.lang === 'ar' || p.dir === 'rtl' || p.rtl === true) && (!Array.isArray(d.waterfallRtl) || d.waterfallRtl.length) && (d.waterfalls == null || d.waterfalls > 0)))).map((k) => [LK[k], k === 'waterfallRtl' ? { en: wfRtlSaid(p[k]), ar: wfRtlSaidAr(p[k]) } : k === 'font' ? { en: val(p[k]), ar: `«${val(p[k])}»` } : k === 'kpiValues' && p[k] === 'auto' ? 'auto (short, like 28.01M, when the number is long)' : k === 'smoothLines' ? (p[k] === false ? 'no: straight lines, no dots' : 'yes: smooth curves that never swing past the data, a dot on each point') : k === 'gallery' ? (p[k] === true ? 'yes: every kind whose fields fit' : p[k] === false ? 'no' : `yes: ${[].concat(p[k]).join(', ')}`) : k === 'slicerStyle' ? (p[k] === 'pills' ? 'pills: rounded buttons for a field of 2-6 values known from the model; a rounded dropdown for the others' : 'dropdown, rounded') : k === 'grid' ? ({ solid: 'solid, quiet', dotted: 'dotted, light grey', none: 'none' })[p[k]] || val(p[k]) : k === 'flipCards' ? (p[k] === true ? 'yes: every KPI card' : Array.isArray(p[k]) ? `yes: card${p[k].length === 1 ? '' : 's'} ${p[k].join(', ')}` : 'no') : k === 'statusIcons' ? (p[k] === true ? 'yes: the rates whose target the model names' : Array.isArray(p[k]) ? `yes: ${p[k].length} measure${p[k].length === 1 ? '' : 's'} (listed under Status icons)` : 'no') : k === 'sharedAxes' && Array.isArray(p[k]) ? p[k].map((x) => `${(x.measures || []).join(' and ')}: ${x.answer === 'comparable' ? 'comparable, one axis may be shared' : 'separate visuals'}`).join('; ') : k === 'colors' && typeof p[k] === 'object' ? { swatches: Object.entries(p[k]).map(([n, c]) => [n, String(c)]) } : val(p[k])]);
     // the report's real data colours, as the theme will have them (the plan's design)
     // (R6, F13: the accessibility step changed a colour after the go, and said so only after the write) the colour the
     // report is written with, from the plan's own build, and why, before the click
@@ -541,7 +560,7 @@ function summaryOf(kind, data) {
     if (d.bilingual && typeof d.bilingual === 'object') languagesSections(d.bilingual, sections, 1);
     // (0.3.1 SQ10, K2-S1) what stays English or unmirrored in its Arabic half, in one line, as the twin's page says it
     const NFb = d.bilingual && d.bilingual.notFullyArabic && typeof d.bilingual.notFullyArabic === 'object' ? d.bilingual.notFullyArabic : null;
-    if (NFb && NFb.en) sections.push({ heading: 'ليست عربية بالكامل · Not fully Arabic', rows: [['العربية', String(NFb.ar || '')], ['English', String(NFb.en)]] });
+    if (NFb && NFb.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NFb.en), ar: String(NFb.ar || NFb.en) }]] });
     // (0.3.1 SQ10, AF2-S4) a script the plan names that is already there with exactly its content: not among the files written
     if (Array.isArray(d.alreadyThere) && d.alreadyThere.length) sections.push({ heading: `Already there, not written again (${d.alreadyThere.length})`, rows: d.alreadyThere.map((f) => [String(f), 'next to the project, holding exactly this script: named again, not written again']) });
     // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
@@ -632,20 +651,20 @@ function summaryOf(kind, data) {
     // use is left out (the plan's data says how many waterfalls and picture pages it has; an older plan shows them all)
     const uses = (k) => d[k] == null || d[k] > 0;
     // (SQ3, T1-S13: the twin's page is Arabic, its options were English, with (see "About the script")) each option in
-    // Arabic, the English beside it
-    const two = (a, e) => `${a} · ${e}`;
+    // Arabic (FX1: the Arabic alone on the page, wholly Arabic; the English kept for an English reader of the plan)
+    const two = (a, e) => ({ en: e, ar: a });
     sections.push({ heading: 'Options', rows: [[two('الرسوم عبر الزمن', 'Charts over time'), d.timeRightToLeft === false ? two('من اليسار إلى اليمين، كما في الإنجليزية', 'left to right, as in English') : two('من اليمين إلى اليسار، مثل بقية الصفحة', 'right to left, like the rest of the page')],
       [two('أعمدة التقويم العربية', 'Arabic calendar columns'), d.arabicMonth ? two('نعم: يضيفها سكربت إلى جدول التاريخ لديك (انظر «عن السكربت»)', 'yes: a script adds them to your date table (see "About the script")') : two('لا', 'no')]]
       .concat(uses('picturePages') ? [[two('الصفحات المرسومة على صورة خلفية', 'Pages drawn on a background picture'), d.mirrorPicturePages ? two('معكوسة رغم ذلك (صورتها لا تُعكس)', 'mirrored anyway (their picture is not)') : two('تبقى من اليسار إلى اليمين (لا يمكن عكس الصورة)', 'kept left to right (the picture can\'t be mirrored)')]] : [],
-        uses('waterfalls') ? [[two('الشلال من اليمين إلى اليسار', 'Waterfall, right to left'), two(Gallery.waterfallRtlOf(d.waterfallRtl) === 'native' ? 'أصلي: شلال Power BI نفسه، يُقرأ من اليسار إلى اليمين كما يرسمه Power BI' : 'معكوس: مخطط أعمدة مكدسة مرسوم كشلال، يُقرأ من اليمين؛ دون عمود للإجمالي ودون وسيلة إيضاح، والقاعدة في التلميح', wfRtlSaid(d.waterfallRtl))]] : [],
+        uses('waterfalls') ? [[two('الشلال من اليمين إلى اليسار', 'Waterfall, right to left'), two(wfRtlSaidAr(d.waterfallRtl), wfRtlSaid(d.waterfallRtl))]] : [],
         d.matrices ? [[two('المصفوفات', 'Matrices'), two('لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار: تبقى رؤوس صفوفها على اليسار وأعمدتها من اليسار إلى اليمين', String(d.matrices))]] : []) });
-    sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [(d.names && d.names[k]) || 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
+    sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [d.names && d.names[k] ? (d.namesAr && d.namesAr[k] ? { en: d.names[k], ar: d.namesAr[k] } : d.names[k]) : 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
     // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
     const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
-    if (NF && NF.en) sections.push({ heading: 'ليست عربية بالكامل · Not fully Arabic', rows: [['العربية', String(NF.ar || '')], ['English', String(NF.en)]] });
+    if (NF && NF.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NF.en), ar: String(NF.ar || NF.en) }]] });
     // (0.3.0 X1) one report holding both languages: the copy, every page pair, the language buttons, the slicers in sync
     const LG = d.languages && typeof d.languages === 'object' ? d.languages : null;
     if (LG) languagesSections(LG, sections, 0);
@@ -667,11 +686,15 @@ function summaryOf(kind, data) {
   const given = Object.entries(own).filter(([k, v]) => v !== undefined && v !== null && !(k === 'answers' && shownAnswers));
   // (T2: arabicColumnsOnly listed the calendar table's name, fiscal year and Ramadan inputs it does not use)
   const used = own.arabicColumnsOnly ? ['path', 'arabicColumnsOnly'] : null;
-  sections.push({ heading: 'Inputs', rows: given.filter(([k]) => INPUT_WORDS[k] && (!used || used.includes(k))).map(([k, v]) => [INPUT_WORDS[k][0], INPUT_WORDS[k][1](v, val, own)]) });
-  if (given.length) sections.push({ heading: 'All inputs, as given (raw)', fold: true, rows: given.map(([k, v]) => [k, val(v)]) });
+  // (FX1, the laptop's part 3: the calendar's INPUTS table stayed English on its Arabic page) each input's Arabic beside
+  // its English (approval-ar.mjs INPUT_AR, the same keys): an Arabic page shows the Arabic
+  const inAr = (k, v) => (INPUT_AR[k] ? { en: INPUT_WORDS[k][1](v, val, own), ar: INPUT_AR[k][1](v, own) } : INPUT_WORDS[k][1](v, val, own));
+  sections.push({ heading: 'Inputs', rows: given.filter(([k]) => INPUT_WORDS[k] && (!used || used.includes(k))).map(([k, v]) => [INPUT_AR[k] ? { en: INPUT_WORDS[k][0], ar: INPUT_AR[k][0] } : INPUT_WORDS[k][0], inAr(k, v)]) });
+  if (given.length) sections.push({ heading: 'All inputs, as given (raw)', fold: true, raw: true, rows: given.map(([k, v]) => [k, val(v)]) });
   // (R6, F09 f: a long answers list was cut at 600 characters, as hashes) every question with the answer recorded for it
   if (shownAnswers && shownAnswers.length) sections.push({ heading: `Answers to record (${shownAnswers.length})`, rows: shownAnswers.map((x) => [String(x.object || ''), `${x.answer === 'mistake' ? 'a mistake' : 'intended'} (the question: ${String(x.question || '')})`]) });
-  const calAr = kind === 'calendar' && own.lang === 'ar';
+  // (FX1, P3A's Seen 2: the theme's page stayed English on an Arabic theme plan) a theme plan in Arabic is shown in Arabic
+  const calAr = (kind === 'calendar' || kind === 'theme') && own.lang === 'ar';
   return { title: titles[kind] || 'Plan', sections, files: kind === 'theme' && Array.isArray(d.outputs) ? groupFiles(d.outputs, [['Theme file', /\.json$/i]]) : files, kind, lang: calAr ? 'ar' : 'en',
-    scriptWhat: kind === 'calendar' ? (own.arabicColumnsOnly ? 'the Arabic calendar columns' : 'the calendar table') : kind === 'scripts' ? 'the fixes listed' : null, titleKey: kind === 'calendar' ? (own.arabicColumnsOnly ? 'columns' : 'calendar') : null };
+    scriptWhat: kind === 'calendar' ? (own.arabicColumnsOnly ? 'the Arabic calendar columns' : 'the calendar table') : kind === 'scripts' ? 'the fixes listed' : null, titleKey: kind === 'calendar' ? (own.arabicColumnsOnly ? 'columns' : 'calendar') : kind === 'theme' ? 'theme' : null };
 }
