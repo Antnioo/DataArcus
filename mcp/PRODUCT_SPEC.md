@@ -59,7 +59,8 @@ server, so an AI app such as Claude can use it on your own computer, next to Mic
   finding with its fix; it only reads); one report in English and Arabic straight from the plan (`plan_layout` and
   `create_report` with `languages: "en+ar"`, off by default, built as the EN-AR copy is); a made-up Gulf retail project
   to try DataArcus without a model (`plan_layout` and `create_report` with `sample: true`, written after your approval
-  to a new folder); the approval page draws each Arabic page of a twin or a copy before you approve it.
+  to a new folder); the approval page draws the Arabic pages of a twin or a copy (up to 12 pages or page pairs)
+  before you approve it.
   Off unless asked: a DAX function library (`daxFunctions: true`: four user-defined functions and their measures in a
   TMDL script you apply; it raises the model's compatibility level to 1702, which cannot be undone).
 - **Not yet (planned):** background images drawn by the engine, a drag-and-drop layout editor.

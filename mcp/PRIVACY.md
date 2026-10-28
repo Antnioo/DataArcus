@@ -142,9 +142,10 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   same model asks again only what changed: each record holds hashes of the model, the field and its metadata, and in
   plain text the approved Arabic name or answer, its date and time, and "user". They are never written to a file, and they are gone when
   the app closes.
-- **0.3.1: the approval page draws each Arabic page.** For the Arabic twin, the EN-AR copy and one report in English
-  and Arabic, DataArcus's approval window draws each Arabic page (and each English page beside it) from the plan's own
-  build, on your computer only, like the report's preview: no picture is sent to the AI app or anywhere else. A chart
+- **0.3.1: the approval page draws the Arabic pages.** For the Arabic twin, the EN-AR copy and one report in English
+  and Arabic, DataArcus's approval window draws up to 12 Arabic pages (or page pairs, each English page beside its
+  Arabic page) from the plan's own build, on your computer only, like the report's preview: no picture is sent to the
+  AI app or anywhere else. A chart
   whose title is a DataArcus "Top N" title measure (named "Title: ...") is drawn there with the text that measure's DAX
   shows when every category is shown, read from the plan's own `reportExtensions.json`; it is drawn on the page only,
   never put in an answer.

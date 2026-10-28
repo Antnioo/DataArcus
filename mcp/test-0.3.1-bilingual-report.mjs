@@ -189,6 +189,12 @@ try {
     const tm0 = new Set(fs.readdirSync(path.join(ROOT, 'large')).filter((f) => f.endsWith('.tmdl')));
     const q = await planBilingual(s, Object.assign({ name: 'Orders All', languages: 'en+ar' }, base, opt)), J = (q.pl.j || {}).bilingual || {}, id = q.pl.j && q.pl.j.plan && q.pl.j.plan.planId;
     chk(() => id, () => `B5a. every option on: a plan id: ${JSON.stringify((q.pl.j || {}).planProblems || (q.pl.j || {}).gulfDates || q.pl.t).slice(0, 500)}`);
+    // (0.3.1 CX2, TW1 Seen 1) B5i: an answer past its size keeps the `cannot` list whole (the person's limits, cut last);
+    // long approved Arabic texts push it past 40,000 characters (written red first on 2e912e2: cut 7 -> 3, the flip faces gone)
+    { const at = q.args.arabicTexts || {}, longer = Object.fromEntries(Object.entries(at).map(([k, v]) => [k, (String(v) + ' ' + 'تقرير المبيعات الشهري للفروع '.repeat(6)).slice(0, 200)]));
+      const big = await s.call('plan_layout', Object.assign({}, q.args, { arabicTexts: longer })), BJ = (big.j || {}).bilingual || {}, tr = (big.j || {}).truncated;
+      chk(() => tr && (J.cannot || []).length > 1 && JSON.stringify(BJ.cannot) === JSON.stringify(J.cannot) && !(tr.cut || {})['bilingual.cannot'],
+        () => `B5i. cut to fit (${String(big.t).length} characters, cut: ${JSON.stringify(tr && tr.cut)}), the cannot list stays whole: ${(BJ.cannot || []).length} of ${(J.cannot || []).length}`); }
     if (id) {
       await s.call('approve_plan', { planId: id });
       const send = withoutDesign(q.args); send.fields = q.args.planFields;

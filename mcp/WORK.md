@@ -15,11 +15,11 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0), [TT2](work/TT2.md) (Arabic names approved on the
   website's download), [TS1](work/TS1.md) (FHD text x 1.25; S10's gap), [PF1](work/PF1.md) (glass pictures fast),
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
-  (the layout preview after the fit).
-- Running: CX1 (Codex's safety findings), CX2 (Codex's wording findings).
+  (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings).
+- Running: CX1 (Codex's safety findings).
 
 ## Next step
-1. The reviewer merges CX1, CX2; then the final full run and two identical dry builds.
+1. The reviewer merges CX1; then the final full run and two identical dry builds.
 2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
 3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
