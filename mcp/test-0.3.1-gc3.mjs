@@ -113,7 +113,9 @@ try {
     chk(() => g.out.j.byHand.length === 1 && /Mark as date table/.test(g.out.j.byHand[0]), () => `G1-7. one step by hand, as before: ${short(g.out)}`);
     // the Arabic page
     const a = await run({ path: SM, firstYear: 2025, lastYear: 2026, relateTo: ['Sales[Date]'], lang: 'ar', name: 'Gulf Calendar AR' });
-    chk(() => /العمود Sales\[Date\] مرتبط من قبل بجدول التاريخ «Calendar»/.test(a.page) && /ولا تُضاف علاقة ثانية إلى Sales\[Date\]/.test(a.page),
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    const aPage = String(a.page).replace(/<\/?bdi[^>]*>/g, '');
+    chk(() => /العمود Sales\[Date\] مرتبط من قبل بجدول التاريخ «Calendar»/.test(aPage) && /ولا تُضاف علاقة ثانية إلى Sales\[Date\]/.test(aPage),
       () => `G1-8. the Arabic approval page says it: ${a.page.slice(0, 600)}`);
     // naming Calendar[Date] too: still one relationship
     const b = await run({ path: SM, firstYear: 2025, lastYear: 2026, relateTo: ['Calendar[Date]', 'Sales[Date]'], name: 'Gulf Calendar B' });

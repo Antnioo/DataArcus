@@ -288,7 +288,8 @@ try {
     chk(() => clean(c) && noBreak(c), () => `AR5. validator 0 errors, 0 "can break" on the Arabic report: ${valErr(c)}`);
     // AR-F: the compatibility step first, in Arabic: the page's first section (before its lead) and the script's header
     const ah = unesc(A.html || ''), h2a = (ah.match(/<h2>[^<]*<\/h2>/g) || []).map((x) => x.replace(/<\/?h2>/g, ''));
-    chk(() => /^أولًا: /.test(h2a[0] || '') && /مستوى التوافق/.test(h2a[0]) && /First:/.test(h2a[0]) && ah.indexOf('<h2>') < ah.indexOf('class="lead"') && /1702/.test(ah) && /لا يمكن التراجع عنه/.test(ah),
+    // (FX1, the laptop's part 3: an Arabic page wholly Arabic: no English heading beside; changed on purpose)
+    chk(() => /^أولًا: /.test(h2a[0] || '') && /مستوى التوافق/.test(h2a[0]) && !/First:/.test(h2a[0]) && ah.indexOf('<h2>') < ah.indexOf('class="lead"') && /1702/.test(ah) && /لا يمكن التراجع عنه/.test(ah),
       () => `ARF1. the Arabic approval page opens with the compatibility step in Arabic, before its lead: ${h2a.slice(0, 2)}`);
     const hd = (sa.text || '').split('\n').slice(0, 5).join('\n');
     chk(() => /\t\/\/\/ أولًا: [^\n]*مستوى التوافق[^\n]*1702[^\n]*لا يمكن التراجع عنه/.test(hd) && hd.indexOf('أولًا') < hd.indexOf('FIRST:'), () => `ARF2. the Arabic report's script says the compatibility step first in Arabic, then in English: ${hd}`);

@@ -82,7 +82,7 @@ const swatches = (list) => list.filter(([, c]) => HEX.test(String(c))).map(([n, 
 // it keeps its order and the words around it decide the cell's direction
 // (FX1) and on an Arabic page every other Latin run (a product's name, a folder's full path in brackets, a tool's name)
 // is isolated left to right, so it never takes the Arabic words around it with it (the rule: each Latin run isolated)
-const ISO_AR = /(&quot;[^&<]+?&quot;|«[^»<]+»)|((?:[A-Za-z]|\/(?=[A-Za-z]))[\w.:/\\-]*(?: +[A-Za-z0-9#][\w.:/\\-]*)*)/g;
+const ISO_AR = /(&quot;[^&<]+?&quot;|«[^»<]+»)|((?:[A-Za-z]|\/(?=[A-Za-z]))[\w.:/\\[\]-]*(?: +[A-Za-z0-9#][\w.:/\\[\]-]*)*)/g;
 const isoText = (t, ar) => (!ar ? esc(t) : esc(t).replace(ISO_AR, (q, name, latin) => (name ? `<bdi>${name}</bdi>` : /^(?:quot|amp|lt|gt|#39)$/.test(latin) ? q : `<bdi dir="ltr">${latin}</bdi>`)));
 // (0.3.1 LR1) a cell { en, ar }: on an Arabic page its Arabic; else the English. (FX1, the laptop's part 3: an Arabic
 // page wholly Arabic: no English line under it; a text the page composes takes its Arabic from approval-ar.mjs)
@@ -562,7 +562,9 @@ function summaryOf(kind, data) {
     if (d.bilingual && typeof d.bilingual === 'object') languagesSections(d.bilingual, sections, 1);
     // (0.3.1 SQ10, K2-S1) what stays English or unmirrored in its Arabic half, in one line, as the twin's page says it
     const NFb = d.bilingual && d.bilingual.notFullyArabic && typeof d.bilingual.notFullyArabic === 'object' ? d.bilingual.notFullyArabic : null;
-    if (NFb && NFb.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NFb.en), ar: String(NFb.ar || NFb.en) }]] });
+    // (FX1) an Arabic page: its Arabic line alone; an English page keeps both lines, as before
+    if (NFb && NFb.en) sections.push(T.lang === 'ar' ? { heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NFb.en), ar: String(NFb.ar || NFb.en) }]] }
+      : { heading: 'ليست عربية بالكامل · Not fully Arabic', rows: [['العربية', String(NFb.ar || '')], ['English', String(NFb.en)]] });
     // (0.3.1 SQ10, AF2-S4) a script the plan names that is already there with exactly its content: not among the files written
     if (Array.isArray(d.alreadyThere) && d.alreadyThere.length) sections.push({ heading: `Already there, not written again (${d.alreadyThere.length})`, rows: d.alreadyThere.map((f) => [String(f), 'next to the project, holding exactly this script: named again, not written again']) });
     // (R6, F09 a: the replacements were shown as JSON cut at 600 characters) each replacement and everything it loses
@@ -659,7 +661,7 @@ function summaryOf(kind, data) {
       [two('أعمدة التقويم العربية', 'Arabic calendar columns'), d.arabicMonth ? two('نعم: يضيفها سكربت إلى جدول التاريخ لديك (انظر «عن السكربت»)', 'yes: a script adds them to your date table (see "About the script")') : two('لا', 'no')]]
       .concat(uses('picturePages') ? [[two('الصفحات المرسومة على صورة خلفية', 'Pages drawn on a background picture'), d.mirrorPicturePages ? two('معكوسة رغم ذلك (صورتها لا تُعكس)', 'mirrored anyway (their picture is not)') : two('تبقى من اليسار إلى اليمين (لا يمكن عكس الصورة)', 'kept left to right (the picture can\'t be mirrored)')]] : [],
         uses('waterfalls') ? [[two('الشلال من اليمين إلى اليسار', 'Waterfall, right to left'), two(wfRtlSaidAr(d.waterfallRtl), wfRtlSaid(d.waterfallRtl))]] : [],
-        d.matrices ? [[two('المصفوفات', 'Matrices'), two('لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار: تبقى رؤوس صفوفها على اليسار وأعمدتها من اليسار إلى اليمين', String(d.matrices))]] : []) });
+        d.matrices ? [[two('المصفوفات', 'Matrices'), two('لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار: تبقى رؤوس صفوفها على اليسار وأعمدتها (مثل الأشهر) من اليسار إلى اليمين. تنقلها النسخة العربية إلى مكانها المعكوس وتعكس ترتيب مقاييسها فقط، دون أي تزييف. لقراءتها من اليمين، اعرض الأرقام نفسها في جدول أو مخطط، فتعكسه النسخة العربية؛ أو أبقها كما هي.', String(d.matrices))]] : []) });
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [d.names && d.names[k] ? (d.namesAr && d.namesAr[k] ? { en: d.names[k], ar: d.namesAr[k] } : d.names[k]) : 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click

@@ -85,7 +85,9 @@ try {
   const mline = (x) => ((x && x.cannot) || []).find((c) => MX.test(String(c.why || '') + ' ' + String(c.what || '')));
   chk(() => mline(J) && MXDO.test(mline(J).why), () => `M1a. the plan's cannot says the matrix has no right-to-left setting, and what to do: ${JSON.stringify((J.cannot || []).filter((c) => /matri/i.test(c.what)))}`);
   const page = await approve(J.plan && J.plan.planId);
-  chk(() => MX.test(page) && MXDO.test(page), () => `M2. the approval page says it: ${(page.match(/.{0,80}atri.{0,200}/) || [page.slice(0, 200)])[0]}`);
+  // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+  const pageAr = String(page).replace(/<\/?bdi[^>]*>/g, '');
+  chk(() => /لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار/.test(pageAr) && /جدول أو مخطط/.test(pageAr), () => `M2. the approval page says it: ${(page.match(/.{0,80}atri.{0,200}/) || [page.slice(0, 200)])[0]}`);
   const wr = await w.call('create_arabic_twin', { path: PBIP, into: 'same', planId: J.plan && J.plan.planId });
   chk(() => !wr.err && wr.j.written === true && fs.existsSync(COPY), () => `S0b. the copy is written: ${short(wr)}`);
   chk(() => mline(wr.j) && MXDO.test(mline(wr.j).why), () => `M1b. the write's cannot says it too: ${JSON.stringify(((wr.j || {}).cannot || []).filter((c) => /matri/i.test(c.what)))}`);

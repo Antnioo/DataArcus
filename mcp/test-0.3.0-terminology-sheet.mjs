@@ -292,10 +292,11 @@ try {
     const pid = p.j && p.j.plan && p.j.plan.planId; let html = '';
     if (pid) { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? await req(url, 'GET') : ''; if (url) await req(url, 'POST', 'decision=decline'); }
     const text = unesc(html.replace(/<[^>]+>/g, ' '));
-    chk(() => /Terminology/.test(html) && text.includes(BAD_COL) && text.includes(alias) && text.includes(BAD_M),
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /ورقة المصطلحات/.test(html) && text.includes(BAD_COL) && text.includes(alias) && text.includes(BAD_M),
       () => `TS-8a. the approval page shows the sheet (EN | AR): ${pid ? text.replace(/\s+/g, ' ').slice(0, 300) : short(p)}`);
     chk(() => html && !html.includes('<img src=x') && !html.includes('<script>alert(2)') && !html.includes('<b>عريضة'), () => `TS-8b. hostile names and aliases escaped on the page`);
-    chk(() => /approved/.test(text) && /kept in English|draft/.test(text), () => `TS-8c. each term's status on the page: ${text.replace(/\s+/g, ' ').slice(0, 200)}`);
+    chk(() => /معتمد/.test(text) && /يبقى بالإنجليزية|مسودة/.test(text), () => `TS-8c. each term's status on the page: ${text.replace(/\s+/g, ' ').slice(0, 200)}`);
   }
 
   // ---------- TS-5 (server): reuse, and a changed description or DAX drops it ----------
