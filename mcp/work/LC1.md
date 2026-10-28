@@ -22,9 +22,11 @@
   Website: theme-generator 920, theme-generator-lab 920, design-engine 598, pbip 111, arabic-names 14: all PASS.
   A new 1920 x 1080 glass picture (lc1 T, one call in a fresh process): 0.5 s plain, 0.8 s under coverage (PF1's
   before: 0.6 s, 8.5 s). Full run 111 suites (the base's + lc1); end runs arabic-names, pbip, theme-generator PASS.
-- **Resume:** done once the full run's line is written; then CI on the branch, then the reviewer.
+- **Resume:** done; integration (TW1, dc3a2c3e) merged in (7b5ad7aa), its suites and the full run again green; CI on
+  the branch, then the reviewer.
 
-Full run on f88792d: "run-tests: 111 suites passed"
+Full run on 7b5ad7aa: "run-tests: 112 suites passed"
+(after the merge of integration with TW1 in, dc3a2c3e; before it: 111 suites passed on f88792d)
 
 ## The plan
 1. The canvas (lab page, where the project download is): page 1 of the project as the writer places it: the same
