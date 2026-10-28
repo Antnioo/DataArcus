@@ -11,7 +11,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { E } from './lib/design.mjs';
 import { serverClient } from './test-0.2.9.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
 
 // call: the helper that gets approved plans (test-plan.mjs)
 export async function v029b({ call, check, ROOT, fs = fs0 }) {
@@ -51,7 +51,8 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
   const filtersOf = (v) => ((v && v.filterConfig || {}).filters || []);
   const get = (fn) => { try { return fn(); } catch (e) { return undefined; } };
 
-  const en = await build('B29 en', 'en'), ar = await build('B29 ar', 'ar'), E1 = read(en), A1 = read(ar);
+  // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+  const en = await build('B29 en', 'en'), ar = await build('B29 ar', 'ar', { displayNames: keepEnglish('Calendar[Month-Year]', 'Sales[Issue]') }), E1 = read(en), A1 = read(ar);
   chk(() => !en.err && !ar.err, () => `the two reports must be written: ${short(en)} ${short(ar)}`);
   const main = (r) => (r.pages.find((p) => p.page.type !== 'Tooltip') || { visuals: [] }).visuals;
 

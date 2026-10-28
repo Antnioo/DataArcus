@@ -8,6 +8,7 @@ import './test-env.mjs';
 //   S6-S7  F03: with no hard links, nothing is renamed over a name; a tree's folder that appears mid-write is never replaced
 //   S8     F01 for writeFileNew's madeDirs: a folder made by freeFile and replaced before the rollback survives
 //   H1-H3  F06: check_model_health's scripts: the plan is used only when the disk is not as approved; leftovers named exactly
+//          (0.3.1 CX1, Codex's F08: the scripts all or none, a failed batch an error: H1-H3 changed on purpose)
 //   C1-C2  F06: create_report's format script is written inside the plan's write; its leftovers named exactly
 //   node test-0.3.0-write-safety.mjs
 import fs from 'node:fs';
@@ -231,13 +232,14 @@ const USED = /The plan plan-[0-9a-f]{12} is now used: part of this write is stil
 const health = async (s, dir) => { const p = await s.call('check_model_health', { path: dir }), id = p.j && p.j.plan && p.j.plan.planId; await s.call('approve_plan', { planId: id }); return id; };
 const fx = (x) => (x.j && x.j.fixes) || {};
 
-// H1. check_model_health, one script, its write fails cleanly: nothing on disk, the plan NOT used; the same plan writes it
+// H1. check_model_health, one script, its write fails cleanly: nothing on disk, the answer an error, the plan NOT used; the
+// same plan writes it
 {
   model('h1', '#,0');
   const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'ENOSPC:open:1' });
   const id = await health(s, 'h1'), before = tree(path.join(ROOT, 'h1'));
   const x = await s.call('check_model_health', { path: 'h1', planId: id });
-  chk(() => !x.err && fx(x).FORMATS && /Nothing was written/.test(fx(x).FORMATS.scriptNotWritten) && NOT_USED.test(x.j.planUse), () => `H1. a script whose write failed cleanly: said, and the plan not used: ${short(x)}`);
+  chk(() => x.err && /Nothing was written/.test(x.t) && NOT_USED.test(x.t), () => `H1. a script whose write failed cleanly: an error that says so, and the plan not used: ${short(x)}`);
   chk(() => JSON.stringify(tree(path.join(ROOT, 'h1'))) === JSON.stringify(before), () => `H1. nothing is left: ${tree(path.join(ROOT, 'h1')).filter((f) => !before.includes(f))}`);
   const y = await s.call('check_model_health', { path: 'h1', planId: id });
   chk(() => !y.err && fx(y).FORMATS && fx(y).FORMATS.fixScriptFile && fs.existsSync(path.resolve(ROOT, fx(y).FORMATS.fixScriptFile)) && !y.j.planUse, () => `H1. the same plan writes the script on a retry: ${short(y)}`);
@@ -245,28 +247,31 @@ const fx = (x) => (x.j && x.j.fixes) || {};
   chk(() => z.err && /already used for check_model_health/.test(z.t), () => `H1. and is then used: ${short(z)}`);
   await s.close();
 }
-// H2. one script, its half file can't be removed: exactly that file is named, the plan is used
+// H2. one script, its half file can't be removed: an error naming exactly that file, the plan is used
 {
   model('h2', '#,0');
   const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'ENOSPC:partial:1+stuck' });
   const id = await health(s, 'h2'), before = tree(path.join(ROOT, 'h2'));
   const x = await s.call('check_model_health', { path: 'h2', planId: id });
   const added = tree(path.join(ROOT, 'h2')).filter((f) => !before.includes(f));
-  chk(() => !x.err && added.length === 1 && /^\.dataarcus-tmp-[0-9a-f]{10}$/.test(added[0]) && fx(x).FORMATS.scriptNotWritten.includes('"h2/' + added[0] + '"'), () => `H2. the half script left on disk is named exactly: ${JSON.stringify(added)} ${short(x)}`);
-  chk(() => USED.test(x.j.planUse), () => `H2. the plan is used, and the answer says so: ${short(x)}`);
+  chk(() => x.err && added.length === 1 && /^\.dataarcus-tmp-[0-9a-f]{10}$/.test(added[0]) && x.t.includes('"h2/' + added[0] + '"'), () => `H2. the half script left on disk is named exactly: ${JSON.stringify(added)} ${short(x)}`);
+  chk(() => USED.test(x.t), () => `H2. the plan is used, and the answer says so: ${short(x)}`);
   const y = await s.call('check_model_health', { path: 'h2', planId: id });
   chk(() => y.err && /already used for check_model_health/.test(y.t), () => `H2. the same plan is refused on a retry: ${short(y)}`);
   await s.close();
 }
-// H3. two scripts, the first fails cleanly and the second is written: the disk holds part of the write, the plan is used
+// H3. two scripts, the first fails cleanly: the second is not written either (CX1: all or none), the answer an error, the
+// plan NOT used; the same plan writes both once the cause is gone
 {
   model('h3');
   const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'ENOSPC:open:1' });
   const id = await health(s, 'h3'), before = tree(path.join(ROOT, 'h3'));
   const x = await s.call('check_model_health', { path: 'h3', planId: id });
   const added = tree(path.join(ROOT, 'h3')).filter((f) => !before.includes(f));
-  chk(() => !x.err && /Nothing was written/.test(fx(x).THOUSANDS.scriptNotWritten) && fx(x).FORMATS.fixScriptFile && JSON.stringify(added) === JSON.stringify(['M - fix formats.tmdl']), () => `H3. one script failed, the other written, nothing else on disk: ${JSON.stringify(added)} ${short(x)}`);
-  chk(() => /is now used/.test(x.j.planUse) && /M - fix formats\.tmdl/.test(x.j.planUse), () => `H3. the plan is used (part of the write is on disk), and the answer names what was written: ${short(x)}`);
+  chk(() => x.err && /Nothing was written/.test(x.t) && added.length === 0, () => `H3. one script failed: neither is on disk, an error says nothing was written: ${JSON.stringify(added)} ${short(x)}`);
+  chk(() => NOT_USED.test(x.t), () => `H3. the plan is not used (the disk is as approved), and said: ${short(x)}`);
+  const y = await s.call('check_model_health', { path: 'h3', planId: id });
+  chk(() => !y.err && fx(y).THOUSANDS.fixScriptFile && fx(y).FORMATS.fixScriptFile && tree(path.join(ROOT, 'h3')).filter((f) => !before.includes(f)).length === 2, () => `H3. the same plan writes both scripts on a retry: ${short(y)}`);
   await s.close();
 }
 // C1/C2. create_report: the format script is written in the plan's write; its leftovers named exactly. (0.3.1 AF2: the

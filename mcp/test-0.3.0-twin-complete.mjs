@@ -22,6 +22,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -77,11 +78,15 @@ const s = await serverClient(ROOT, {});
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
 
 try {
+  // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the Arabic report keeps these fields
+  // English on purpose: TC-2d checks the fixed texts the writer writes, not the field names
+  const KEPT = keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]');
   const write = async (lang, name) => {
-    const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang, layout: 'exec', name, secondPage: true });
+    const dn = lang === 'ar' ? { displayNames: KEPT } : {};
+    const pl = await s.call('plan_layout', Object.assign({ path: MP, focus: 'Web Orders', lang, layout: 'exec', name, secondPage: true }, dn));
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (!id) return { err: 'no plan: ' + String(pl.t).slice(0, 300) };
     await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', { path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design });
+    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, dn));
     return r.err ? { err: String(r.t).slice(0, 300) } : { r };
   };
   const en = await write('en', 'Orders EN');

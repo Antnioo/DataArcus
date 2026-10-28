@@ -239,7 +239,12 @@ export async function syncIssue({ changes, gh, dryRun, runUrl, log }) {
     // the keys already reported: the issue's own (only the workflow and the owner label it) and the workflow's
     // comments; anyone can comment on a public issue, so a key line in another comment is ignored (AUD-044)
     const known = keysIn(open.body);
-    for (const c of await gh('GET', `issues/${open.number}/comments?per_page=100`) || []) if (c.user && c.user.login === BOT_LOGIN) for (const k of keysIn(c.body)) known.add(k);
+    // (CX1, Codex's F10: only the first 100 comments were read) every page, until a page that is not full
+    for (let page = 1; page <= 100; page++) {
+      const list = (await gh('GET', `issues/${open.number}/comments?per_page=100&page=${page}`)) || [];
+      for (const c of list) if (c.user && c.user.login === BOT_LOGIN) for (const k of keysIn(c.body)) known.add(k);
+      if (list.length < 100) break;
+    }
     const fresh = changes.filter((c) => !known.has(c.key));
     if (!fresh.length) { log(`Already reported in issue #${open.number}: nothing to add.`); return { action: 'already' }; }
     const body = commentBody(fresh, { runUrl });

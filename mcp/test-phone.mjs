@@ -19,7 +19,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
 import { validatorCounts } from './test-validator.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -38,6 +38,13 @@ const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
 // the same Latin square as test-0.2.9-layouts.mjs
 const LAYOUTS = ['exec', 'analysis', 'ops', 'focus'], PAGES = ['1920x1080', '1280x720', '960x720', '640x360'], KPIS = [0, 3, 4, 6], FILTERS = ['none', 'start', 'end', 'top'];
 const MODELS = [{ path: 'ramadan' }, { path: 'arabic' }, { path: 'plain' }, { path: 'large', focus: 'logistics' }];
+// (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) each right-to-left report keeps the fields of
+// its English titles English on purpose, as the person says it: these checks are about the phone layout, not the names
+const KEPT = {
+  ramadan: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]'),
+  large: keepEnglish('Calendar[Month Short]', 'Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Returns[Returns Total Amount]', 'Hub[Hub Region]', 'Shipments[Shipments Total Discount]',
+    'Shipment Legs[Shipment Legs Total Hours]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Lane[Lane Region]', 'Hub[Hub Group]', 'Hub[Hub Category]')
+};
 const combos = [];
 LAYOUTS.forEach((layout, li) => [0, 1, 2, 3].forEach((i) => combos.push({ layout, page: PAGES[i], kpis: KPIS[(i + li) % 4], filters: FILTERS[(i + 2 * li + li % 2) % 4], model: MODELS[(i + li) % 4] })));
 const label = (c, dir) => `${c.layout} ${c.page} kpis ${c.kpis} filters ${c.filters} ${dir} (${c.model.path})`;
@@ -71,7 +78,7 @@ for (const c of combos) for (const dir of ['ltr', 'rtl']) {
   const args = Object.assign({ path: c.model.path, layout: c.layout, page: pageArg, kpis: c.kpis, filters: c.filters, lang: rtl ? 'ar' : 'en', dir }, c.model.focus ? { focus: c.model.focus } : {});
   const pl = await call('plan_layout', args);
   if (pl.err || !pl.j.design) { check(false, `${tag}: plan_layout refused: ${(pl.t || '').slice(0, 200)}`); continue; }
-  const r = await call('create_report', Object.assign({ path: c.model.path, name, design: pl.j.design, lang: rtl ? 'ar' : 'en', dir }, c.model.focus ? { focus: c.model.focus } : {}));
+  const r = await call('create_report', Object.assign({ path: c.model.path, name, design: pl.j.design, lang: rtl ? 'ar' : 'en', dir }, c.model.focus ? { focus: c.model.focus } : {}, rtl && KEPT[c.model.path] ? { displayNames: KEPT[c.model.path] } : {}));
   if (r.err) { check(false, `${tag}: create_report refused: ${r.t.slice(0, 200)}`); continue; }
   const dir0 = path.join(ROOT, c.model.path, r.j.report), pages = readReport(dir0);
   // P7

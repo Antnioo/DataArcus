@@ -15,6 +15,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -93,7 +94,10 @@ try {
   // (0.3.1 TS1: the Arabic ops report on the dense variant, six KPI cards and the filter rail, ~508 slots: at the theme's
   // 15pt titles (x 1.25, was 18pt) its long titles fit the wider slots whole, so ST-6b's shortened title is drawn here)
   for (const [m, lang, layout, focus, more] of runs) {
-    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}) }, Object.assign({ layout }, more || {}));
+    // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the Arabic Ramadan report keeps these
+    // fields English on purpose, as the person says it: ST checks the story titles' shape, not the names
+    const kept = m === 'ramadan' && lang === 'ar' ? { displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]') } : {};
+    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}), ...kept }, Object.assign({ layout }, more || {}, kept));
     chk(() => !r.err, () => `ST-2 setup ${name}: ${r.t.slice(0, 300)}`);
     if (r.err) continue;
     const pages = pagesOf(path.join(ROOT, m, name + '.Report'));

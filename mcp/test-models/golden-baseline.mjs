@@ -109,7 +109,10 @@ await task(2, 'Arabic report, mirrored', async () => {
   const th = await call('generate_theme', { name: 'Golden Arabic', brand: '#0F6CBD', font: 'Tahoma', lang: 'ar', folder: 'themes' });
   const en = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'en', dir: 'ltr' });
   const ar = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' });
-  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' }, { fields: { kpis: RAMADAN_KPIS } });
+  // (0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id) the two fields of its titles
+  // with no Arabic name get Arabic names the person approved, as in the task (the agent drafts, the user approves)
+  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' }, { fields: { kpis: RAMADAN_KPIS },
+    displayNames: { 'Calendar[Month Short]': 'الشهر', 'Sales[Total Sales vs Last Ramadan %]': 'التغير عن رمضان الماضي %' } });
   return { cards: cardsOf(b), fontWarnings: th.j.warnings.filter((w) => /Arabic/.test(w)).length, mirror: mirrored(en, ar), ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(3, 'Ramadan vs last Ramadan', async () => {

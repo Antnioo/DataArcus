@@ -23,6 +23,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -285,7 +286,9 @@ try {
   // ---------- TS-8: the approval page shows the sheet, escaped ----------
   {
     const k1 = `Sales[${BAD_COL}]`, k2 = `Sales[${BAD_M}]`, alias = 'منطقة <b>عريضة</b> & "ج"';
-    const p = await w.call('plan_layout', { path: 'bad/M.SemanticModel', lang: 'ar', layout: 'analysis', name: 'سيئ', planFields: { kpis: [k2], category: k1 }, displayNames: { [k1]: alias } });
+    // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the person keeps the hostile measure
+    // English on purpose (its model name): the sheet then shows it as kept in English
+    const p = await w.call('plan_layout', { path: 'bad/M.SemanticModel', lang: 'ar', layout: 'analysis', name: 'سيئ', planFields: { kpis: [k2], category: k1 }, displayNames: Object.assign({ [k1]: alias }, keepEnglish(k2)) });
     const pid = p.j && p.j.plan && p.j.plan.planId; let html = '';
     if (pid) { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? await req(url, 'GET') : ''; if (url) await req(url, 'POST', 'decision=decline'); }
     const text = unesc(html.replace(/<[^>]+>/g, ' '));

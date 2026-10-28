@@ -17,6 +17,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 import { LIMIT } from './lib/scope.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -127,7 +128,8 @@ try {
     return r;
   };
   const EN = await build('EN all on', Object.assign({ name: 'Q1 EN', lang: 'en', layout: 'exec', kpis: 6, filters: 'end' }, ALL_ON));
-  await build('AR all on', Object.assign({ name: 'Q1 AR', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', displayNames: DN, waterfallRtl: 'mirror' }, ALL_ON));
+  // (0.3.1 CX1, F01: the two fields DN gives no Arabic name are kept English on purpose, as the person says it)
+  await build('AR all on', Object.assign({ name: 'Q1 AR', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', displayNames: Object.assign({}, DN, keepEnglish('Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]')), waterfallRtl: 'mirror' }, ALL_ON));
   // (the same with no Arabic name approved yet: every field listed as kept in English, the terminology sheet all asked)
   await build('AR all on, no names yet', Object.assign({ name: 'Q1 AR2', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', waterfallRtl: 'mirror' }, ALL_ON));
   await build('Ramadan date questions', { name: 'Q1 Ramadan', lang: 'ar', layout: 'focus', kpis: 3, filters: 'top', displayNames: DN, secondPage: false,

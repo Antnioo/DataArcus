@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 import * as Approval from './lib/approval-window.mjs';
 import { proposeArabic, draftText } from './lib/arabic-names.mjs';
 
@@ -69,8 +70,11 @@ S.sampleFiles(S.SAMPLE_FOLDER).forEach((f) => { const p = path.join(ROOT, f.path
 const w = await serverClient(ROOT, {});
 try {
   const first = S.tour(S.SAMPLE_FOLDER, 'en')[0].call.args, asked = first.planFields.slicers;
+  // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the sample's two fields with no Arabic
+  // name are kept English on purpose: these checks are about the slicers and the approval page, not the names
+  const KEPT = keepEnglish('Sales[Units Sold]', 'Sales[Average Basket]');
   for (const lang of ['en', 'ar']) {
-    const x = await w.call('plan_layout', Object.assign({}, first, { lang })), sl = (x.j && x.j.slicers) || {}, written = sl.written || [], added = sl.added || [];
+    const x = await w.call('plan_layout', Object.assign({}, first, { lang }, lang === 'ar' ? { displayNames: KEPT } : {})), sl = (x.j && x.j.slicers) || {}, written = sl.written || [], added = sl.added || [];
     chk(() => !x.err && x.j.plan && x.j.plan.planId && written.length === 3 && added.length === 1 && written.length === asked.length + added.length && !asked.some((f) => added.includes(f)),
       () => `B1 ${lang}. the plan lists the 3 slicers it writes, the tour's 2 and the 1 added: ${JSON.stringify(sl)} ${short(x)}`);
     const say = lang === 'ar' ? sl.sayInPlanAr : sl.sayInPlan;

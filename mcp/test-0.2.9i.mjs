@@ -11,7 +11,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
 import { serverSource, twinSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared; the twin is lib/arabic-twin.mjs and its steps)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -248,7 +248,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     // are reused there; "English names" is a model with no approved terms: the same model in its own folder)
     model('i-ar-en', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
       measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
-    const dEn = await designed('I ar en', null, 'i-ar-en'), hEn = await hand('I ar hand en', null, 'i-ar-en');
+    // (0.3.1 CX1, F01: this check is about English names in an Arabic report: the person keeps them English on purpose)
+    const KEPT = { displayNames: keepEnglish('Projects[Total Budget]', 'Projects[Projects]') };
+    const dEn = await designed('I ar en', KEPT, 'i-ar-en'), hEn = await hand('I ar hand en', KEPT, 'i-ar-en');
     // (0.3.1 LR2 allowed «التفاصيل» here for its «حسب» joins; changed back 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a
     // title on English names is wholly English on both paths, "by" and ": detail", so the round-14 condition holds again)
     const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();

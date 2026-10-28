@@ -14,7 +14,7 @@ import { fitLists, out } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
 import { planIdInput, ADDS_SAME, modelPath } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
-import { notWrittenWhy, freeScriptName, plannedTaken, writePlannedScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
+import { freeScriptName, plannedTaken, writePlannedScript, hasControl, scriptTables, formatsAnswer } from '../lib/fix-scripts.mjs';
 import { hiddenOf } from '../lib/hidden-names.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -169,18 +169,25 @@ export function register(server, ctx) {
       if (!q.name) throw new Error(`Nothing was written: plan ${planId} did not name the script "${q.base}.tmdl" (the model's findings changed since the plan). Make the plan again (call check_model_health without planId), show it to the user and wait for their go.`);
       const taken = plannedTaken(scriptDir, q.name, q.script); if (taken) throw taken;
     }
-    for (const q of queue) {
-      try { pw.step(() => writePlannedScript(scriptDir, q.name, q.script)); } catch (e) {
-        const fx = Object.entries(fixes).find(([, x]) => x && x.fixScriptFile === q.file);
-        if (fx) { delete fx[1].fixScriptFile; delete fx[1].howToApply; fx[1].scriptNotWritten = notWrittenWhy(scriptDir, e) + (fx[0] === 'FORMATS' ? ' Set the formats by hand in Power BI Desktop.' : ' Use the object names above and make the changes by hand in Power BI Desktop.'); }
-      }
-    }
     // (B-148) the answers file: written only with the approved plan, which lists it; never without a place next to the model
     let answersDone = {}, shown = applied;
+    const recordsNow = () => { const at = new Date().toISOString(), fresh = given.map((x) => Object.assign({}, x, { at }));
+      return { fresh, recs: forgetAnswers ? fresh : applied.keep.filter((k) => !fresh.some((x) => x.evidenceSignature === k.evidenceSignature)).concat(fresh) }; };
+    // (0.3.1 CX1, Codex's F08: each script's failure was caught and the loop went on, so of two scripts one could stay on
+    // disk, the answer no error and the plan used) the approved scripts, and the answers file after them, are one batch,
+    // all or none (files.mjs planWrites.batch): on any failure everything this call created is removed (never a file that
+    // was there before), a prior answers file stays as it was (it is written last, and replaced in one step or not at
+    // all), and the answer is an error saying what is left and whether the plan was used
+    let batchErr = null;
+    if (queue.length) {
+      const steps = queue.map((q) => (made) => writePlannedScript(scriptDir, q.name, q.script, made));
+      if (writeAnswersFile && scriptDir) steps.push(() => { const { fresh, recs } = recordsNow(), f = writeAnswers(scriptDir, scriptBase, recs, mem);
+        answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); });
+      try { pw.batch(steps, 'the fix scripts' + (writeAnswersFile && scriptDir ? ' and the answers file' : '')); } catch (e) { batchErr = e; }
+    }
     if (writeAnswersFile && !scriptDir) answersDone = { answersNotWritten: 'The working folder is the model folder itself, and nothing is written inside a model folder: choose the project folder as the working folder to keep answers.' };
-    else if (writeAnswersFile && write) {
-      const at = new Date().toISOString(), fresh = given.map((x) => Object.assign({}, x, { at }));
-      const recs = forgetAnswers ? fresh : applied.keep.filter((k) => !fresh.some((x) => x.evidenceSignature === k.evidenceSignature)).concat(fresh);
+    else if (writeAnswersFile && write && !queue.length) {
+      const { fresh, recs } = recordsNow();
       // (R5, F04) replaced only if it is still the file read at the start of this call (mem.checked)
       try { const f = pw.step(() => writeAnswers(scriptDir, scriptBase, recs, mem)); answersDone = { answersFile: path.basename(f), recorded: fresh.length, forgotten: forgetAnswers ? mem.records.length : applied.stale.length }; shown = Memory.apply(r.confirm || [], recs, r.rawTables); }
       catch (e) {
@@ -191,6 +198,7 @@ export function register(server, ctx) {
       }
     }
     const planUse = pw ? pw.done() : null;   // (audit 6, A6-2; R4: unused only when a write failed and the disk is as approved)
+    if (batchErr) throw new Error([batchErr.message, planUse || '', writeAnswersFile && scriptDir ? 'The answers file was not written either; one that was there before is as it was.' : ''].filter(Boolean).join(' '));
     if (planUse && answersDone.answersNotWritten) answersDone.answersPlan = planUse;
     // the plan for the scripts (and the answers file), when there are any to write and no approved plan was given
     // (R5, F04) the plan says whether the file is new or replaces the one DataArcus wrote, and what is dropped from it
