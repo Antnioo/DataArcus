@@ -23,7 +23,8 @@
   test.mjs 1594 = 1594, 10 assertions changed on purpose; golden tasks 1, 2, 12 modelNotes and task 10 suggestChars
   6022 -> 6059, their whys written; arabic-titles 27, fidelity 40, metric-switcher 60, terminology-sheet 48: the same
   counts, assertions changed on purpose (below). FX5b not in integration yet (dd25902 still its head): not merged.
-- **Resume:** the full run on the last code commit, then CI; merge FX5b and run again when the reviewer says it landed.
+- Full run on 32bc7f9: "run-tests: 121 suites passed"
+- **Resume:** CI on the branch (tests.yml); merge FX5b and run again when the reviewer says it landed.
 
 ## Plan
 1. The reader keeps a calendar's DAX years (CALENDAR ( DATE ( y1, .. ), DATE ( y2, .. ) )) as FX4's first cut did
