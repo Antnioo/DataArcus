@@ -151,7 +151,7 @@ check(/check_report/.test(W.en) && /DataArcus 0\.3\.1/.test(W.en) && /0\.3\.0 ha
 check(/check_report/.test(W.ar) && /0\.3\.1/.test(W.ar) && /0\.3\.0/.test(W.ar), 'W-1. the Arabic article does not say the lens comes with 0.3.1 (and not with 0.3.0)');
 // W-2 the numbers only as L1 measured them, said as on four made-up reports
 check(/four made-up reports/.test(W.en) && /\b18 findings\b/.test(W.en) && /\b14 of them\b/.test(W.en) && /\b13 findings\b/.test(W.en) && /\b4 findings\b/.test(W.en), 'W-2. the English article does not give L1\'s numbers (18, 14 of them, 13, 4) on four made-up reports');
-check(/أربعة تقارير مختلقة/.test(W.ar) && /18 ملاحظة/.test(W.ar) && /14 منها/.test(W.ar) && /13 ملاحظة/.test(W.ar) && /4 ملاحظات/.test(W.ar), 'W-2. the Arabic article does not give the same numbers on four made-up reports');
+check(/أربعة تقارير تجريبية/.test(W.ar) && /18 ملاحظة/.test(W.ar) && /14 منها/.test(W.ar) && /13 ملاحظة/.test(W.ar) && /4 ملاحظات/.test(W.ar), 'W-2. the Arabic article does not give the same numbers on four made-up reports');
 // W-3 the privacy line
 check(/reads the report's files on your computer/.test(W.en) && /never your data/.test(W.en) && /changes nothing/.test(W.en), 'W-3. the English article lacks the privacy line (reads the files on your computer, never your data, changes nothing)');
 check(/يقرأ ملفات التقرير على جهازك/.test(W.ar) && /لا يقرأ بياناتك/.test(W.ar) && /لا يغيّر شيئًا/.test(W.ar), 'W-3. the Arabic article lacks the privacy line');

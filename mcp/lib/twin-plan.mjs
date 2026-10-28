@@ -12,7 +12,7 @@ import { fieldParametersOf } from './metric-switcher.mjs';
 import { DAX_MEASURE } from './dax-functions.mjs';
 import { TEXTS_MAX, pathOut, locate, memoryLoc, bytesAt, readOriginal, isObj, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
 import { litStr } from './twin-visuals.mjs';
-import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, notTranslatedOf, termsOf } from './twin-texts.mjs';
+import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, notTranslatedOf, termsOf, autoSentence } from './twin-texts.mjs';
 import { modelOf, dateTablesOf, continuousColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
 import { buildTwin } from './twin-pages.mjs';
@@ -106,6 +106,10 @@ export function planTwin(a) {
   const problems = [];
   texts.forEach((t) => { if ((t.kind === 'titleMeasure' || t.kind === 'measureText') && labels[t.id] != null) { const why = placeholderProblem(String(t.rawId).replace(/^(titleText|measureText):/, ''), labels[t.id]); if (why) { delete labels[t.id]; problems.push({ id: t.id, why }); } } });
   sameTextLabels(texts, labels);
+  // (0.3.1 FX3) an automatic title's draft: one Arabic sentence from its fields' approved Arabic names (a label or a
+  // term), else the fixed list's draft of its English
+  const fieldAr = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
+  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const v = fieldAr.get(x.ref); return v != null && /[\u0600-\u06FF]/.test(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
   T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
@@ -228,7 +232,7 @@ export function planTwin(a) {
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right
     waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `native: ${Gallery.WF_WHAT.native} (the user can choose "mirror": a stacked column chart read from the right, with no Total column and no legend)` : 'mirror: each waterfall is a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend (the user can choose "native": Power BI\'s own waterfall, left to right)',
     // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
-    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
+    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, auto, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
     ...(textsFrom ? { textsFrom: Math.min(textsFrom, listed.length) } : {}),
     labels: Object.assign({ given: [...givenIds].filter((k) => labels[k] != null).length, arabic: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),

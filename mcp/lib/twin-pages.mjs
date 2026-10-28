@@ -4,7 +4,7 @@
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf } from './twin-texts.mjs';
+import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
 import { createRequire } from 'node:module';
@@ -363,7 +363,12 @@ export function buildTwin(P, labels) {
     // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     r.visuals.forEach((vj) => {
+      const autos = autoTitlesOf(pg.id, vj);
       applied += Mirror.labelVisual(pg.id, vj, labels);
+      // (0.3.1 FX3) Power BI's automatic title or subtitle: written as the visual's own text, its approved Arabic, else
+      // its English as Power BI composes it from the original's names (wholly English, isolated), never left to compose
+      autos.forEach((a) => { const e = vj.visual.visualContainerObjects[a.key][a.i], ar = labels[a.id] != null ? String(labels[a.id]) : null;
+        e.properties.text = Ls(ar != null && ar.trim() ? ar : TextMeasure.isolateWhole(autoSentence(a, (x) => x.name))); if (ar != null) applied++; });
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
       if (textRename.size) rewireMeasures(vj, textRename);
       if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }

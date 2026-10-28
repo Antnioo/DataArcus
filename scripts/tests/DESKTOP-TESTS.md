@@ -2492,6 +2492,14 @@ and slicer headers, tooltip page names), a Latin run at the start, middle and en
 - No variant helps the page tab strip: page and tooltip page names lay out left to right.
 - So DataArcus's rule is V3: `isolateLatin` (`assets/js/text-measure.js`) since BD2; `isolateRuns` is V1.
 
+## 2026-10-28: Power BI's automatic titles and subtitles on an Arabic page (the laptop part 3, A1), Power BI Desktop 2.159.883.0
+Seen on the laptop (28 Oct, integration 0d342773): the twin of Microsoft's dataset 1 report, whose charts use Power BI's
+automatic subtitles (switched on, no text of their own). With the approved Arabic field names Desktop composed
+«الشريحة by إجمالي الربح» and «الدولة by إجمالي المبيعات» (dataset 2's twin likewise «المواليد الأحياء by الإمارة»): the
+field names joined by its own English "by", whatever the page's language. The file holds no text for it, so only the
+switch (show on, no text) can be checked: `AUTO_TITLE` (`assets/js/report-rules.js`). DataArcus's twin, EN-AR copy and
+bilingual Arabic half write such a title as the visual's own text: its approved Arabic, else its English (FX3).
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.
