@@ -464,7 +464,9 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.pg.selectOption('#csTable', 'auto');
     const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pngBtn')]);
     const bytes = fs.readFileSync(await d.path()), pg = E.page(st.layout);
-    check(bytes.equals(Buffer.from(E.glassPng(st, pg.w, pg.h))) && PNG.sync.read(bytes).width === pg.w, `${lang} glass: the background download is the engine's picture at ${pg.w} x ${pg.h} (${bytes.length} bytes)`);
+    // (0.3.1 LC1: Node deflates by node:zlib, the browser in JavaScript: the same pixels and mark, other bytes)
+    const got = PNG.sync.read(bytes), want = PNG.sync.read(Buffer.from(E.glassPng(st, pg.w, pg.h)));
+    check(E.isGlassPng(bytes) && got.width === pg.w && got.height === pg.h && Buffer.compare(got.data, want.data) === 0, `${lang} glass: the background download is the engine's picture at ${pg.w} x ${pg.h} (${bytes.length} bytes)`);
     await v.pg.reload({ waitUntil: 'networkidle' });
     check(await v.pg.$eval('#csLook', (e) => e.value) === 'glass', `${lang} glass: the choice is not kept after a reload`);
     await v.pg.selectOption('#csLook', 'auto');
