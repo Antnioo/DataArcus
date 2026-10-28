@@ -294,7 +294,10 @@
   // (round 23, the owner's "nothing critical left": "Order Id", "Invoice No" and "Customer Code" were chart categories:
   // an identifier's last word (id, key, code, guid, sk, no, num, number) is read without regard to case; the other words
   // as before; a camel-case end, OrderID, InvoiceNo, stays case-sensitive: "Paid" and "Casino" are words)
-  const NOT_CAT_OLD = /(^|[\s_-])(id|key|code|guid|sk|sort|order|index|url|link|email|phone|mobile|address|description|notes?|comments?|remarks?)s?$|[a-z]ID$|Key$/;
+  // (0.3.1 FX6, FX4's Seen 1: "Notes", "Comments", "Description" with a capital passed as categories) the words without
+  // regard to case; the camel-case ends (OrderID, ProductKey) stay case-sensitive ("Paid", "Turkey"), and so does the
+  // singular "note" (the test project's only text column, Sales[Note], is the category of 22 suites: mcp/work/FX6.md)
+  const NOT_CAT_OLD = { test: (x) => /(^|[\s_-])(id|key|code|guid|sk|sort|order|index|url|link|email|phone|mobile|address|description|notes|comments?|remarks?)s?$/i.test(x) || /(^|[\s_-])note$|[a-z]ID$|Key$/.test(x) };
   const NOT_CAT_ID = /(^|[\s_-])(id|key|code|guid|sk|no|num|number)s?$/i, NOT_CAT_CAMEL = /[a-z](Id|No|Code)$/;
   // (round 23 part 5, the review's 9: read without an Arabic mark, so "Order No (AR)" is an identifier too)
   const NOT_CAT = { test: (x0) => { const x = String(x0).replace(/\s*\((arabic|عربي|ar)\)\s*$/i, ''); return NOT_CAT_OLD.test(x) || NOT_CAT_ID.test(x) || NOT_CAT_CAMEL.test(x); } };

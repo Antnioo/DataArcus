@@ -50,6 +50,19 @@ const turned = (p) => { const v = (presetOf(mirrored('card', p)) || {}).expr; re
   const odd = { name: 'v3', position: { x: 0, y: 0, width: 10, height: 10 }, visual: { visualType: 'card', visualContainerObjects: { dropShadow: 'odd' } } };
   const p2 = M.mirrorVisual(plain, 100, {}).json, o2 = M.mirrorVisual(odd, 100, {}).json;
   chk(() => JSON.stringify(p2.visual) === JSON.stringify(plain.visual) && o2.visual.visualContainerObjects.dropShadow === 'odd', () => `S6. no shadow preset, or an odd shape: nothing written: ${JSON.stringify(p2.visual)} ${JSON.stringify(o2.visual)}`);
+  // (0.3.1 FX6, Codex's D04) a preset the visual takes from its theme (no local one): the Arabic visual gets the mirrored
+  // preset of its own, as the twin's options carry the theme (opts.theme, or the waterfall's opts.waterfall.theme)
+  const bare = (vco) => ({ name: 'v4', position: { x: 100, y: 40, width: 300, height: 200 }, visual: Object.assign({ visualType: 'card' }, vco ? { visualContainerObjects: vco } : {}) });
+  const themed = (styles) => ({ name: 't', visualStyles: styles });
+  const wild = themed({ '*': { '*': { dropShadow: [{ show: true, preset: 'BottomRight' }] } } });
+  const s7 = M.mirrorVisual(bare(), 1280, { theme: wild }).json;
+  chk(() => (presetOf(s7) || { expr: {} }).expr.Literal.Value === "'BottomLeft'", () => `S7. a wildcard theme's BottomRight shadow (no local one): the Arabic card gets BottomLeft of its own: ${JSON.stringify(s7.visual)}`);
+  const s8 = M.mirrorVisual(bare(), 1280, { waterfall: { theme: themed({ '*': { '*': { dropShadow: [{ preset: 'BottomRight' }] } }, card: { '*': { dropShadow: [{ preset: 'TopRight' }] } } }) } }).json;
+  chk(() => (presetOf(s8) || { expr: {} }).expr.Literal.Value === "'TopLeft'", () => `S8. the visual type's theme preset (card: TopRight) wins over the wildcard's, through the twin's options: ${JSON.stringify(s8.visual)}`);
+  const s9 = M.mirrorVisual(bare({ dropShadow: [{ properties: { show: lit('true') } }] }), 1280, { theme: wild }).json, p9 = s9.visual.visualContainerObjects.dropShadow;
+  chk(() => p9.length === 1 && p9[0].properties.show.expr.Literal.Value === 'true' && p9[0].properties.preset.expr.Literal.Value === "'BottomLeft'", () => `S9. a local shadow with no preset of its own takes the theme's, mirrored: ${JSON.stringify(p9)}`);
+  const s10a = M.mirrorVisual(bare(), 1280, { theme: themed({ '*': { '*': { dropShadow: [{ preset: 'Bottom' }] } } }) }).json, s10b = M.mirrorVisual(bare(), 1280, {}).json;
+  chk(() => s10a.visual.visualContainerObjects === undefined && s10b.visual.visualContainerObjects === undefined, () => `S10. guard: a theme preset that has no side (Bottom), or no theme: nothing written: ${JSON.stringify([s10a.visual, s10b.visual])}`);
 }
 
 // ---------- F: the screen ----------
