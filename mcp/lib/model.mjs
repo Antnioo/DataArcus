@@ -55,9 +55,6 @@ const SCREEN = [
   [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
   [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user'],
-  // (AUD-039 / the red team's F-1: the asks the screen missed) a DataArcus tool named in a name is never a model's own
-  [new RegExp(`\\b(${TOOL_NAMES.join('|')})\\b`, 'i'), 'names a DataArcus tool'],
-  [/\b(pre-?approved|already\s+approved|(user|owner|admin)\s+(has\s+)?(approved|said\s+go|clicked\s+approve)|clicked\s+approve|approval\s+(is\s+)?(granted|not\s+(required|needed))|admin\s+override|skip\s+the\s+plan|without\s+(a|the)\s+plan|no\s+plan\s+(is\s+)?needed|do\s+not\s+show\s+a\s+plan|without\s+asking)\b/i, 'claims an approval'],
   // (0.3.1 CX2, Codex's release review F09: two paraphrases passed) a tool asked for in other words, an export of every
   // record, a consent claimed: each with its object, so "Tool Usage", "Export Count" or "Consent Date" stay plain names.
   // The screen is patterns (a heuristic): it cannot catch every paraphrase; what keeps the user safe is the gate
@@ -65,6 +62,9 @@ const SCREEN = [
   [/\b(invoke|call|use|run|trigger)\s+(the|a|an|this|that|any|each|every)\s+(\w+\s+)?tools?\b/i, 'asks to call a tool'],
   [/\b(export|dump|extract|download|leak|exfiltrate)\b[^.]{0,30}\b(every|all|each)\s+(the\s+)?(records?|rows?|values?|entries|customers?)\b/i, 'asks for data values'],
   [/\b(has|have|had|already)\s+(consented|agreed)\b|\bconsent\s+(is\s+|was\s+|has\s+been\s+)?(given|granted)\b|\bproceed\s+with\s+(the\s+|this\s+)?(write|writing|change|changes|deletion|export|plan)\b/i, 'claims an approval'],
+  // (AUD-039 / the red team's F-1: the asks the screen missed) a DataArcus tool named in a name is never a model's own
+  [new RegExp(`\\b(${TOOL_NAMES.join('|')})\\b`, 'i'), 'names a DataArcus tool'],
+  [/\b(pre-?approved|already\s+approved|(user|owner|admin)\s+(has\s+)?(approved|said\s+go|clicked\s+approve)|clicked\s+approve|approval\s+(is\s+)?(granted|not\s+(required|needed))|admin\s+override|skip\s+the\s+plan|without\s+(a|the)\s+plan|no\s+plan\s+(is\s+)?needed|do\s+not\s+show\s+a\s+plan|without\s+asking)\b/i, 'claims an approval'],
   [/\[\s*(user|system|assistant)\s*\]\s*:|\b(system|note\s+(for|to)\s+the\s+ai)\s*:/i, 'speaks as the user or the system'],
   [/(^|[\s"'(])\.\.[\\/]|\b[a-z]:\\|(^|\s)~[\\/]|^\\\\|\s\\\\[a-z0-9]|(^|\s)\/(etc|usr|var|tmp|root|home)\/|%2f/i, 'holds a path outside the folder'],
   [/\b(show|return|list|quote|send|copy|put|give|print|paste)\b[^.]{0,30}\b((first|top|last)\s+\d+\s+rows?|rows?\s+of|values?\s+of|raw\s+data|data\s+values?|all\s+(the\s+)?(rows|values)|every\s+\w+\s+values?|datatable\s+source)\b|\bsend\b[^.]{0,30}\b(rows?|data|values?)\b[^.]{0,20}\bto\b/i, 'asks for data values'],
