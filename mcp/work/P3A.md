@@ -16,8 +16,11 @@
   KINDS gains a fourth kind only if a check reads it, said per test); full run: the base's suites + 1 (p3a).
 - **Got:** p3a 21 (15 of 21 red on 0d34277 first; the other 6 are guards, green there by design: the three cases
   reproduce the laptop's warnings, the other kinds keep theirs, the colours kept, a mode that agrees said nothing) ->
-  21 PASS. Every other suite: RESULTS_LINE.
-- FULL_RUN_LINE
+  21 PASS. Every other suite: mcp (test.mjs) 1593 = 1593, golden 12 = 12, check 31 = 31, test-0.3.1-checker 23 = 23,
+  validator-gap 5 = 5, look-options 55 = 55, approval-complete 25 = 25 (no number moved); mutation 191 -> 195 checks, 74 ->
+  75 mutants (C-maylook, guarded by p3a, added on purpose; C-known's anchor was split by my first edit: red on ca7bb4e
+  first, the order in impactOf changed back so its text is whole). Suites: the base's 114 + 1 (p3a) = 115.
+- Full run on af513d7: "run-tests: 115 suites passed"
 - **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Plan
@@ -110,6 +113,8 @@ said, not dropped".
 - The theme approval page's row labels (Mode, Page, ...) stay English on an Arabic theme plan.
 
 ## Lessons for the reviewer
+- My first full run (ca7bb4e) failed only the mutation suite: my edit split a line a mutant changes. A builder rule:
+  "before editing a line, grep test-0.3.1-mutation.mjs for it".
 - The laptop's case did not reproduce on the default sample: the warnings come only with a Tahoma design or a page
   smaller than 1920 x 1080. A brief that names the design and page size saves a search.
 - I started the full run before writing the CHANGELOG lines (CX1's notes put them in the file): stopped after one
