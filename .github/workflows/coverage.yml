@@ -90,8 +90,24 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (SPD, Codex #8) Chromium cached by playwright-core's version and its browsers' exact revisions (browsers.json: chromium,
+      # its headless shell, ffmpeg), per OS and arch; the
+      # install below then downloads nothing on a hit (it still installs the system packages), and the launch proves the
+      # cached browser runs
+      - name: Chromium's revision
+        id: chromium
+        run: echo "rev=$(node -p "const b = JSON.parse(require('fs').readFileSync('node_modules/playwright-core/browsers.json', 'utf8')).browsers; require('playwright-core/package.json').version + '-' + ['chromium', 'chromium-headless-shell', 'ffmpeg'].map((n) => (b.find((x) => x.name === n) || {}).revision).join('-')")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ steps.chromium.outputs.rev }}
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
+
+      - name: Chromium launches (after a cache hit too)
+        run: node -e "require('playwright-core').chromium.launch().then((b) => { console.log('Chromium ' + b.version() + ' launches'); return b.close(); }, (e) => { console.error(e.message); process.exit(1); })"
 
       - name: The website suites with Chromium's coverage
         run: |

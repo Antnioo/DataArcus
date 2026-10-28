@@ -349,6 +349,23 @@ try {
     assert.equal((T.y.match(/npm test -- --keep-going/g) || []).length, 3, 'the three MCP shard jobs run every planned suite');
   });
 
+  // (SPD, Codex #8) every job that installs Chromium: the cache keyed by OS, arch and the browsers' revisions first, a launch after
+  t('workflows: each Chromium install has its cache (OS, arch, revisions) before it and a launch after it', () => {
+    let installs = 0;
+    for (const f of ['tests.yml', 'coverage.yml']) {
+      const y = fs.readFileSync(path.join(REPO, '.github/workflows', f), 'utf8');
+      for (const job of y.split(/\n(?= {2}[\w-]+:\n)/).filter((j) => /playwright-core install/.test(j))) {
+        installs++;
+        const at = (re) => { const m = re.exec(job); return m ? m.index : -1; }, name = /^ {2}([\w-]+):/m.exec(job)[1];
+        const cache = at(/uses: actions\/cache@[0-9a-f]{40} #/), install = at(/playwright-core install --with-deps chromium/), launch = at(/chromium\.launch\(\)[^\n]*b\.close\(\)[^\n]*process\.exit\(1\)/);
+        assert.ok(cache > 0 && cache < install && install < launch, `${f} ${name}: cache ${cache}, install ${install}, launch ${launch}`);
+        assert.match(job, /path: ~\/\.cache\/ms-playwright\n {10}key: chromium-\$\{\{ runner\.os \}\}-\$\{\{ runner\.arch \}\}-\$\{\{ steps\.chromium\.outputs\.rev \}\}/, `${f} ${name}: the key`);
+        assert.match(job, /browsers\.json[^\n]*\['chromium', 'chromium-headless-shell', 'ffmpeg'\][^\n]*revision/, `${f} ${name}: the revisions`);
+      }
+    }
+    assert.equal(installs, 2, 'website-suites and coverage-web install Chromium');
+  });
+
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
   t('mutation: a guard whose baseline timed out fails the run, never counted as a pass', () => {
     const r = node([path.join(REPO, 'mcp/test-0.3.1-mutation.mjs')], { DA_MUTATION_ONLY: 'G-used', DA_MUTATION_GUARD_TIMEOUT: '0.01' }, path.join(REPO, 'mcp'));
