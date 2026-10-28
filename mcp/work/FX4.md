@@ -21,7 +21,8 @@
 - **Got:** fx4 25 checks (21 red on 5b60a4e first; the guards C8, T3, T5 green there; T4 changed and T7 added after the
   DAX route was taken out, "Tests changed on purpose") -> 25 PASS. test.mjs 1593 = 1593; golden: task 10 suggestChars
   6105 -> 6604 on purpose, nothing else moved. Website site-config PASS. Suites: base + 1 (fx4).
-- **Resume:** the full run on the last code commit, then CI on the branch (tests.yml), then the reviewer.
+- Full run on 34286c6: "run-tests: 117 suites passed"
+- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Plan
 1. **Categories (rule 1).** Never a category (chart axis, slicer, table group, the slicer pool): a column the counts say
