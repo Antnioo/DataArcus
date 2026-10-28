@@ -33,7 +33,7 @@
   suite's number changed: waterfall-rtl W3 and waterfall-rtl2 A8 went red on the gallery's waterfall and stay as they
   were (the waterfall left out, a decision below). Website: pbip 111, theme-generator 922, tools 399, layout 512,
   layout-canvas 31 PASS; site config PASS; the Theme Generator in Chromium (EN, AR): columns 35.5, no console error.
-- Full run on efaed59: "run-tests: 117 suites passed"
+- Full run on efaed59: "run-tests: 117 suites passed" (before CI's two website fixtures, below; run again after)
 - **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
@@ -51,6 +51,16 @@
    their step; bars Desktop's default for their count, 32.3 for 5): the page now loads text-measure, pbip-query and
    pbip-sizing with it (EN, AR, lab), and the builder does not load a script that is already on the page.
 4. **The value axis** is never written (D-1028-06's three equal bars are equal values; W8 proves it).
+
+## Tests changed on purpose (each said in its file)
+- Website `arabic-names` W7 (the English download, pinned): re-pinned (scripts/tests/fixtures/tt2-english-download.json,
+  its note): one column chart (Sales[Territory], its Top N) gains innerPadding and outerPadding 69; the download diffed
+  against 84596b9's engines: nothing else differs. 14 = 14 checks.
+- Website `design-engine` (the Theme Generator's page against scripts/tests/fixtures/design-engine/cases.json):
+  recaptured; 44 of 54 cases' canvas previews change, only in the sample bars' and columns' rects (their thickness);
+  every theme, slot table, saved design, file name and background byte for byte the same. 598 = 598; the lab page
+  MATCH. The fixtures' header asks for the owner's approval to remake them: D-1028-06's go and the brief's point 2
+  (the canvas draws the same thickness) are taken as it; said under For the owner.
 
 ## CHANGELOG line
 - "Bars and columns are never too thick" under [Unreleased] (plain words, changelog-words PASS).
@@ -71,6 +81,8 @@
   default is already thin enough; the laptop's capture confirms.
 
 ## For the owner
+- The Theme Generator's frozen previews (design-engine fixtures) were remade for the canvas's bar thickness, under
+  your D-1028-06 go; only the sample bars and columns differ. If you want them kept frozen, the canvas part can be undone.
 - The sample project's charts (Country, Channel: plain text columns) keep Power BI's look: the model gives no count for
   them, and reading its rows is reading data. If you want the sample's own charts thin too, DataArcus can say its own
   made-up sample's counts (it wrote them); that goes through create_report's files (FX2's), so a later job.
