@@ -9,6 +9,8 @@
 //   P1-P2 the phone layout: a chart whose mobile.json sets its own title formatting takes the same text; none: none added
 //   R1-R4 check_report's AUTO_TITLE on an Arabic page: the two charts, not the card nor a custom visual; none on an
 //         English page; none in the twin
+//   B1-B3 (D-1028-06, FX5b's item 3) the plan says which charts get thinner bars before the go: plan_layout's answer and
+//         the approval page, English and Arabic; counts, sizes and page names only, never a category's name or value
 //   node test-0.3.1-fx3b.mjs
 import './test-env.mjs';
 import fs from 'node:fs';
@@ -131,6 +133,24 @@ let twinPbip = null;
   chk(() => !en.err && !((en.j.counts || {}).byRule || {}).AUTO_TITLE, () => `R3: none on an English page: ${short(en)}`);
   const tw = twinPbip ? await call('check_report', { path: twinPbip, checks: ['rtl'] }) : { err: true, t: 'no twin' };
   chk(() => !tw.err && (tw.j.rulesRun || []).includes('AUTO_TITLE') && !((tw.j.counts || {}).byRule || {}).AUTO_TITLE, () => `R4: none in the twin: ${short(tw)}`);
+}
+
+// ---------- B: the padded charts in the plan and on its approval page ----------
+{
+  const SAMPLE = path.join('S', fs.readdirSync(path.join(ROOT, 'S')).find((x) => /\.pbip$/.test(x) && !/Plain|AR/.test(x)));
+  const pageOf = async (pid) => { const n = links().length; await call('approve_plan', { planId: pid }); for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50); const url = links()[n] || ''; return url ? httpReq(url, 'GET') : ''; };
+  const unesc = (h) => String(h).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<[^>]+>/g, '');
+  const en = await call('plan_layout', { name: 'Bars', path: SAMPLE, lang: 'en' }), bt = en.j && en.j.barThickness;
+  const KEYS = ['page', 'kind', 'categories', 'padding', 'thickness', 'max'];
+  chk(() => bt && bt.charts.length >= 1 && bt.charts.every((c) => Object.keys(c).every((k) => KEYS.includes(k)) && ['bar', 'column'].includes(c.kind) && Number.isFinite(c.categories)) && /thinner bars/.test(bt.said.en) && /أرفع/.test(bt.said.ar),
+    () => `B1: plan_layout's answer lists the padded charts (page, kind, counts and sizes only) with what to say in English and Arabic: ${JSON.stringify(bt || en.t).slice(0, 500)}`);
+  const hEn = en.j && en.j.plan && en.j.plan.planId ? unesc(await pageOf(en.j.plan.planId)) : '';
+  chk(() => bt && hEn.includes('Thinner bars') && hEn.includes(bt.said.en), () => `B2: the English approval page shows the padded charts: ${(hEn.match(/.{0,60}hinner.{0,200}/) || ['none'])[0]}`);
+  let a = { name: 'Bars', path: SAMPLE, lang: 'ar' }, ar = await call('plan_layout', a);
+  for (let i = 0; i < 3 && ar.j && !(ar.j.plan && ar.j.plan.planId) && ar.j.arabicNames; i++) { const an = ar.j.arabicNames, own = {}; (an.proposeYourself || []).forEach((k, n) => { own[k] = 'الحقل ' + (n + 1); });
+    a = Object.assign({}, a, { displayNames: Object.assign({}, a.displayNames || {}, an.suggestedDisplayNames || {}, own) }); ar = await call('plan_layout', a); }
+  const bta = ar.j && ar.j.barThickness, hAr = ar.j && ar.j.plan && ar.j.plan.planId ? unesc(await pageOf(ar.j.plan.planId)) : '';
+  chk(() => bta && hAr.includes('أشرطة أرفع') && hAr.includes(bta.said.ar), () => `B3: the Arabic approval page shows them in Arabic: ${(hAr.match(/.{0,60}أشرطة.{0,200}/) || ['none'])[0]} ${ar.err ? short(ar) : JSON.stringify(ar.j && ar.j.planProblems).slice(0, 300)}`);
 }
 
 await s.close();
