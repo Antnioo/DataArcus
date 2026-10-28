@@ -4,8 +4,8 @@ import './test-env.mjs';
 // (mcp/fixtures/fx4: model files and counts only, never a data value):
 //   C1-C9   a column of one value, a mostly unique text column, invoice numbers or coordinates are never a category
 //           (chart axis, slicer, table group, slicer pool); with no counts, the name rules alone and said (countsNote)
-//   T1-T6   a month name on the time axis across more than one year gives way to the year-month column (the counts or
-//           the calendar's own DAX say the range); one year, or a range not known: the month name stays
+//   T1-T7   a month name on the time axis across more than one year gives way to the year-month column (the counts say the
+//           range); one year, or a range not known (no counts): the month name stays, and why says so
 //   G1-G4   gross before net: the net measure is the headline KPI, the gross one follows
 //   W1-W3   every rule says itself in why (one line per field), capped
 //   I1-I2   columnStats takes counts only (whole numbers): a value is refused by the input
@@ -56,8 +56,13 @@ try {
   chk(() => /Month Name/.test(whyOf(f.j, 'Calendar[Year Month]')) && /year/i.test(whyOf(f.j, 'Calendar[Year Month]')), () => `T2. why says the switch (from the month name, across years): ${JSON.stringify(f.j && f.j.why)}`);
   chk(() => !f0.err && key(f0.j.date) === 'Calendar[Month Name]', () => `T3. (guard) no counts and no DAX calendar: the range is not known, the month name stays: ${JSON.stringify(f0.j && f0.j.date)}`);
   const d2 = await call('suggest_fields', { path: daxCalendar('fx4-dax-2y', 2013, 2014), kpis: 4 }), d1 = await call('suggest_fields', { path: daxCalendar('fx4-dax-1y', 2014, 2014), kpis: 4 });
-  chk(() => !d2.err && key(d2.j.date) === 'Calendar[Year Month]', () => `T4. A calendar whose own DAX runs 2013 to 2014: the year-month axis: ${short(d2)}`);
+  // (T4 was "a calendar whose own DAX runs 2013 to 2014: the year-month axis", red on 5b60a4e and green on 5042910; the
+  // DAX route was taken out (it moved golden tasks 1, 2 and 12, mcp/work/FX4.md "For the owner"): without counts the month
+  // name stays and why says the range is not known)
+  chk(() => !d2.err && key(d2.j.date) === 'Calendar[Month Name]' && /not known/.test(whyOf(d2.j, 'Calendar[Month Name]')), () => `T4. A DAX calendar of two years, no counts: the month name stays and why says the range is not known: ${short(d2)}`);
   chk(() => !d1.err && key(d1.j.date) === 'Calendar[Month Name]', () => `T5. (guard) a calendar of one year: the month name stays: ${short(d1)}`);
+  const f1 = await call('suggest_fields', { path: 'fx4-financial/model.bim', kpis: 4, columnStats: { distinct: { 'Calendar[Year]': 1 } } });
+  chk(() => !f1.err && key(f1.j.date) === 'Calendar[Month Name]' && !catFields(f1.j).includes('Calendar[Year]'), () => `T7. (guard) one year by the counts: the month name stays, and the year (one value) is no slicer: ${short(f1)}`);
   chk(() => (f.j.tip || {}).date == null || key(f.j.tip.date) === 'Calendar[Year Month]', () => `T6. The tooltip's trend follows the axis: ${JSON.stringify(f.j.tip)}`);
 
   // ---------- rule 3: net before gross ----------

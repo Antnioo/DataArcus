@@ -68,10 +68,6 @@
     const e = String(Array.isArray(src) ? src.join('\n') : src || '').trim(), m0 = e.match(/^(ADDCOLUMNS|SELECTCOLUMNS)\s*\(([\s\S]*)\)$/i);
     // (round 11, RESCORE-4's N18: a table built with CALENDAR or CALENDARAUTO is a calendar by its shape, whatever its name)
     if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) meta(out).calendarShape = true;   // (the picker's note: the model's answers are unchanged)
-    // (0.3.1 FX4, D-1028-04) the years a calendar's own DAX names, CALENDAR ( DATE ( y1, ... ), DATE ( y2, ... ) ): the
-    // model's definition, never its data; the time axis rule reads whether they span more than one year
-    const yrs = e.match(/\bCALENDAR\s*\(\s*DATE\s*\(\s*(\d{4})\s*,[^()]*\)\s*,\s*DATE\s*\(\s*(\d{4})\s*,/i);
-    if (yrs) meta(out).years = [+yrs[1], +yrs[2]];
     if (!m0) return out;
     const a = argsOf(m0[2]);
     for (let i = 1; i + 1 < a.length; i += 2) { const nm = a[i].match(/^"((?:[^"]|"")*)"$/); if (!nm) continue;
@@ -718,18 +714,18 @@
     if (date && /month|الشهر/i.test(date.c) && !/date/.test(date.type)) { const sh = columns.find((c) => c.t === date.t && SHORT_MONTH.test(c.c.replace(FAMILY, '').trim()) && family(c.c) === family(date.c)); if (sh) date = sh; }
     // (FX4, D-1028-04) a month NAME on the axis while the dates span more than one year adds up the same month of every
     // year in one point: the same table's year-month column takes its place, else its date. The span is known by the
-    // counts (a year of 2 values or more, a year-month of 13 or more) or by the calendar's own DAX (CALENDAR ( DATE ( y1 ..
-    // ), DATE ( y2 .. ) )); not known: the month name stays and the answer says so
+    // counts only (a year of 2 values or more, a year-month of 13 or more); not known: the month name stays and the
+    // answer says so. (A calendar's own DAX years were tried and left out: they moved every DAX calendar's axis, golden
+    // tasks 1, 2 and 12 among them, to a year-month ordered by the report, untested in Desktop: mcp/work/FX4.md)
     if (date && !/date/.test(date.type) && /month|الشهر/i.test(date.c) && sortKind(date.c) !== 'yearMonth' && !(opt && opt.pinned && opt.pinned.date)) {
       const all = ((opt && opt.modelTables) || []).concat(tables), tb = all.find((t) => t.name === date.t), raw = (tb && tb.columns) || [];
       const ymName = (n) => sortKind(n) === 'yearMonth' && /month/i.test(n) && /year/i.test(n);
       const yc = raw.filter((c) => /^(calendar\s*|fiscal\s*)?year$/i.test(c.name) && !/fiscal/i.test(c.name)).map((c) => ST.distinct(date.t, c.name)).find((n) => n != null);
-      const ym = raw.filter((c) => ymName(c.name)).map((c) => ST.distinct(date.t, c.name)).find((n) => n != null), yrs = tb && metaOf(tb).years;
-      const span = yc != null ? (yc > 1 ? `${num(yc)} years by the model's counts` : null) : ym != null ? (ym > 12 ? `${num(ym)} months by the model's counts` : null)
-        : yrs ? (yrs[1] > yrs[0] ? `${yrs[0]} to ${yrs[1]} by the calendar's own DAX` : null) : undefined;
+      const ym = raw.filter((c) => ymName(c.name)).map((c) => ST.distinct(date.t, c.name)).find((n) => n != null);
+      const span = yc != null ? (yc > 1 ? `${num(yc)} years by the model's counts` : null) : ym != null ? (ym > 12 ? `${num(ym)} months by the model's counts` : null) : undefined;
       const to = span ? (columns.find((c) => c.t === date.t && ymName(c.c) && monthText(c)) || columns.find((c) => c.t === date.t && dayDate(c)) || inDate.find(dayDate)) : null;
       if (to) { say(fieldKey(to.t, to.c), `The time axis is ${to.c}, not ${date.c}: the dates span more than one year (${span}), and a month name would add up the same month of every year in one point.`); date = to; }
-      else if (span === undefined) say(fieldKey(date.t, date.c), `${date.c} is the time axis; the date range is not known (no counts, no calendar DAX). If the dates span more than one year, use a year-month column or the date instead.`);
+      else if (span === undefined) say(fieldKey(date.t, date.c), `${date.c} is the time axis; the date range is not known (no counts given). If the dates span more than one year, use a year-month column or the date instead.`);
     }
     let year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // (FX4) a year of one value is no slicer
