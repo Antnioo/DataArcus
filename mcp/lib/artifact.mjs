@@ -104,7 +104,7 @@ function references(inv, tables, mem, pending) {
 }
 
 /** The checks of a project's files in memory (create_report's files: "<name>.Report/...", "<name>.pbip"). tables: the
- *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests); opts.pending: [{ t, name }] measures written with the report as a script (L4). Never writes into the user's folder. */
+ *  model reader's tables; lang: 'en' | 'ar'; opts.skip: checks left out (tests); opts.blockOverlap: an OVERLAP blocks (FX2); opts.pending: [{ t, name }] measures written with the report as a script (L4). Never writes into the user's folder. */
 export async function checkArtifact(files, tables, lang, opts) {
   const o = opts || {}, skip = skipped(o), rep = inReport(files), mem = new Map(rep.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8')]));
   const notRun = [], blocking = [], byRule = {};
@@ -140,9 +140,10 @@ export async function checkArtifact(files, tables, lang, opts) {
     }
     // 4. the design lint, every page
     if (skip.has('lint')) notRun.push({ check: 'lint', why: 'skipped' });
-    // (0.3.1 FX2, the laptop's C23: a bar chart drawn over the table's first rows passed as "pass") two data visuals of
-    // the planned report overlapping (the lint's OVERLAP: never a panel or a card laid over its own chart) block the plan
-    else { try { const L = lint(inv, tables, null, { titles: false }); checks.lint = { ran: true, findings: L.findings.length }; L.findings.forEach((f) => { count(f.rule, 1); if (f.rule === 'OVERLAP') blocking.push({ rule: f.rule, file: null }); }); }
+    // (0.3.1 FX2, the laptop's C23: a bar chart drawn over the table's first rows passed as "pass") with opts.blockOverlap
+    // (a report DataArcus lays out itself), two data visuals overlapping (the lint's OVERLAP: never a panel or a card laid
+    // over its own chart) block the plan; pages placed by hand keep the finding as a finding
+    else { try { const L = lint(inv, tables, null, { titles: false }); checks.lint = { ran: true, findings: L.findings.length }; L.findings.forEach((f) => { count(f.rule, 1); if (f.rule === 'OVERLAP' && o.blockOverlap) blocking.push({ rule: f.rule, file: null }); }); }
       catch (e) { notRun.push({ check: 'lint', why: 'the design lint could not read this report' }); } }
   }
   const checkedPages = checks.references.ran && checks.lint.ran ? checks.references.pages : 0;

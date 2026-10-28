@@ -4,8 +4,9 @@
 //         it): every legend position and shadow preset turns into a value the catalog has (H-1: "TopRight" became
 //         "TopLeft", PBIR_FORMATTING_ENUM_INVALID); one outside it is kept and said; every enum the mirror writes on a
 //         report is a catalog value; Microsoft's validator 0 errors on a twin of a line chart at each legend position
-//   C1-C4 C23 (960 x 720, exec, 0 KPIs, a rail, pills, flip cards): no two data visuals overlap (the rail's row ends
-//         together), on the other sizes and layouts the sweep found too; the exact check blocks an overlap
+//   C1-C5 C23 (960 x 720, exec, 0 KPIs, a rail, pills, flip cards): no two data visuals overlap (the rail's row ends
+//         together), on the other sizes and layouts the sweep found too; the exact check blocks an overlap in a
+//         report DataArcus lays out (C5: pages placed by hand keep it a finding)
 //   F1    C03 (ar, 1920 x 1080, focus, 0 KPIs, a rail, the metric switcher): the chart starts at the rail's top
 //   A1-A4 A-1 (no measures, lang ar): the columns counted or summed are drafted like the other fields, no plan id until
 //         they are, the plan lists each title's Arabic draft, and the titles are «عدد ...», «مجموع ...»
@@ -120,8 +121,9 @@ const overlaps = (sl) => { const d = (sl || []).filter(DATA), out = [];
   const d = E.fresh(); E.repairState(d);
   const R = Px.build({ name: 'Over', title: 'Over', pageName: 'P', lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: false, model: { byPath: 'M.SemanticModel' }, bind: B, texts: E.REPORT_TEXTS.en, gallery: false,
     pages: [{ name: 'P', page: { w: 1280, h: 720 }, panel: null, hand: true, png: new Uint8Array([1]), slots: [{ kind: 'bar', x: 20, y: 20, w: 600, h: 400 }, { kind: 'table', x: 300, y: 200, w: 600, h: 400 }] }] });
-  const c = await checkArtifact(R.files, [], 'en', { skip: ['validator', 'references', 'rules'] });
+  const c = await checkArtifact(R.files, [], 'en', { skip: ['validator', 'references', 'rules'], blockOverlap: true }), hand = await checkArtifact(R.files, [], 'en', { skip: ['validator', 'references', 'rules'] });
   chk(() => c.status === 'blocked' && (c.blocking || []).some((b) => b.rule === 'OVERLAP'), () => `C4: the exact check blocks a bar chart over a table: ${c.status} ${JSON.stringify(c.blocking)} ${JSON.stringify(c.byRule)}`);
+  chk(() => hand.status !== 'blocked' && hand.byRule.OVERLAP > 0, () => `C5: pages placed by hand keep an overlap as a finding, never a refusal: ${hand.status} ${JSON.stringify(hand.byRule)}`);
 }
 {
   const c03 = await plan({ path: SAMPLE, page: '1920x1080', layout: 'focus', kpis: 0, filters: 'start', slicerStyle: 'dropdown', metricSwitcher: ['Sales[Total Sales]', 'Sales[Order Count]', 'Sales[Units Sold]'], lang: 'ar' });
@@ -154,7 +156,7 @@ fs.rmSync(ROOT, { recursive: true, force: true });
 
 // ---------- T: TOOLS.md ----------
 {
-  const tools = fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8'), row = (k) => tools.split('\n').find((l) => l.startsWith('| `' + k + '` |')) || '';
+  const tools = fs.readFileSync(path.join(HERE, 'TOOLS.md'), 'utf8'), row = (k) => tools.split('\n').find((l) => l.startsWith('| **' + k + '** |')) || '';
   chk(() => ['flipCards', 'statusIcons', 'metricSwitcher', 'gallery'].every((k) => row(k).split('|').length >= 5)
     && /notFlipped/.test(row('flipCards')) && /1-8/.test(row('statusIcons')) && /2 to 5/.test(row('metricSwitcher')) && /2-12/.test(row('gallery')),
   () => 'T1: TOOLS.md has a row for each of flipCards, statusIcons, metricSwitcher and gallery, with what it writes and its limits');

@@ -60,7 +60,8 @@ async function exactArtifact(ab, pin, lang) {
   // (L5) the status icons' measures likewise
   // (L6) the DAX functions' measures likewise
   const pending = [].concat(built.flip ? built.flip.pending : [], built.icons ? built.icons.pending : [], built.dax ? built.dax.pending : []);
-  const check = await checkArtifact(built.files, tables, lang === 'ar' ? 'ar' : 'en', pending.length ? { pending } : undefined);
+  // (0.3.1 FX2, C23) an overlap blocks a report laid out by DataArcus (a design); pages placed by hand are the person's own
+  const check = await checkArtifact(built.files, tables, lang === 'ar' ? 'ar' : 'en', Object.assign(pending.length ? { pending } : {}, ab.design && !ab.pages ? { blockOverlap: true } : {}));
   const digest = digestOf(built.files), modelPrint = modelPrintOf(built.m);
   return { formatKeys: built.formatKeys, files: built.files, finish: built.finish, digest, modelPrint, pin, binding: bindingOf(digest, pin, modelPrint), check, a11y: built.a11y, slicers: built.slicers, gallery: built.gallery, waterfallRtl: built.waterfallRtl, metricSwitcher: built.metricSwitcher, flip: built.flip, icons: built.icons, dax: built.dax, bilingual };
 }

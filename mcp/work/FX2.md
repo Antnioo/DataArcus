@@ -17,7 +17,7 @@
   (Left/Right are not catalog presets: CenterLeft/CenterRight turn instead; said per check). Goldens, `0.2.9-layouts`,
   `0.3.1-ts1`-like layout suites: any page with a rail beside a row of two charts may change (said per test).
   Full run: the base's 114 suites + 1 (fx2) = 115.
-- **Got:** `fx2` 20 checks, 18 red on 5690ea8 first (the other 2 read the catalog and build the fixture);
+- **Got:** `fx2` 21 checks, 18 red on 5690ea8 first (2 read the catalog and build the fixture; C5 a guard);
   `0.3.1-cx2` 16 = 16 (S1's two middle pairs changed on purpose: CenterLeft/CenterRight); `phone` 355 = 355 (its
   no-measures Arabic case keeps Order Id English on purpose, as CX1 did for the other models); areas twin 12, arabic
   15, checker 6, report 40 suites pass; website design-engine 598, layout-canvas 31, site config pass.
@@ -63,7 +63,13 @@
   bracket) is unchanged.
 - `round22` e (English names kept on purpose): Order Id kept English too, beside Region and Channel; 10 (three charts,
   three titles): «رقم الطلب» approved for Order Id; 58 -> 58 checks.
-- No expected number changed. CI on 919563a was red on S7 (`0.2.9-sweep`) and the website's `design-engine`: my first
+- `0.3.0-twin` T10 (legend positions): the input BottomLeft (not a legend position in Microsoft's catalog) now stays
+  BottomLeft, kept and said (was mirrored to BottomRight); the other five are as before.
+- `round23` F6 (a distinct count is DISTINCTCOUNT, an Arabic report on a model with no measures): «رقم الطلب» and
+  «الكمية» approved for Order Id and Qty.
+- No expected number changed. The full run on 5164a8c (115 of 116) found test.mjs's F6 (above), R5 (pages placed by
+  hand that overlap on purpose: now OVERLAP blocks only a report DataArcus lays out, `blockOverlap`, fx2 C5), A7-13
+  (TOOLS.md's new rows looked like tool rows: the option names in bold) and T10 (above). CI on 919563a was red on S7 (`0.2.9-sweep`) and the website's `design-engine`: my first
   C03 rule stopped round 9's own move (a chart under a one-dropdown rail, and the lab's second page); 967e04e narrows it
   to a chart at the rail's own top: `v029sweep` 90 and `design-engine` 598, `layout-canvas` 31 pass, fixtures unchanged.
 
@@ -79,8 +85,9 @@ an Arabic report's counts and sums named in Arabic and listed for approval; the 
   than "fixed" to a valid one.
 - The rail's reflow ends the whole row (not only the chart touching the rail): the row stays one line, which the
   owner's grid asks; the alternative (the table not moved up) left a gap under the column chart only.
-- An OVERLAP finding in the exact build blocks the plan (every OVERLAP the sweep found was this defect; covers and a
-  card behind its own table are not OVERLAP).
+- An OVERLAP finding in the exact build blocks a plan DataArcus lays out (every OVERLAP the sweep found was this
+  defect; covers and a card behind its own table are not OVERLAP). Pages placed by hand are the person's: an overlap
+  there stays a finding (test.mjs R5 places two on purpose).
 - C03: the area rule (fill at least what it empties) holds only for a chart at the rail's own top. My first version
   applied it to every chart beside a short rail and the website's `design-engine` lab fixture (the second page under a
   KPI row, round 9 S7's own case) changed: narrowed, the fixture is unchanged.
@@ -93,7 +100,8 @@ an Arabic report's counts and sums named in Arabic and listed for approval; the 
 
 ## Risky changes
 - What a plan answer returns: `arabicNames.countedTitles` (at most 30 titles; names only, never a value).
-- The approval step: a plan whose exact build has two overlapping data visuals now gets no plan id (OVERLAP blocks).
+- The approval step: a plan DataArcus lays out (a design) whose exact build has two overlapping data visuals now gets
+  no plan id (OVERLAP blocks); pages placed by hand keep it a finding.
 - The twin plan's `cannot` can name "positions with no mirrored value" (at most 30).
 
 ## For the laptop
