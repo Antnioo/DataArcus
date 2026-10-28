@@ -715,14 +715,15 @@ const cardProblems = (dir, rtl) => {
     // model name as displayNames, keepEnglish), and the plan reuses a choice the person confirmed on the same model (the
     // terminology sheet): here it shows its model name as a kept term, not missing)
     // (changed 28 Oct 2026, 0.3.1 FX3, Codex's delta finding D03: CX1's exception took ANY field shown under its model
-    // name; only the field kept English on purpose takes it: Month Short, the person's earlier choice on this model)
-    const KEPT_EN = new Set(['Calendar.Month Short']);
+    // name; only the fields kept English on purpose take it: the three "Table AR" kept on this model (keepEnglish there),
+    // the person's earlier choice the plan remembers: Month Short and the two Last Ramadan measures)
+    const KEPT_EN = new Set(['Calendar.Month Short', 'Sales.Total Sales vs Last Ramadan %', 'Sales.Total Sales Last Ramadan (old)']);
     const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && (p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)) || (rtl && KEPT_EN.has(p.queryRef) && p.displayName === f.Property)); };
     // (FX3, D03) the check fails a translated field shown in English: Total Sales under "Total Sales"
     if (rtl) { const ts = projections(files).find((p) => p.queryRef === 'Sales.Total Sales'); check(ts && !planName(Object.assign({}, ts, { displayName: 'Total Sales' })), `${name}: a translated field shown under its English name (Total Sales as "Total Sales") must fail the display-name check (D03): ${JSON.stringify(ts || null).slice(0, 200)}`); }
     const keptMonth = projections(files).some((p) => p.queryRef === 'Calendar.Month Short' && p.displayName === 'Month Short');
     check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth) : !res.j.arabicNames),
-      `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
+      `${name}: without displayNames: a displayName written (${JSON.stringify(projections(files).filter((p) => !(p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p))).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}), or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
       // (0.3.1 CX1, F01: the two fields given no Arabic name here are kept English on purpose, as a person says it)

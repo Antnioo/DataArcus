@@ -128,8 +128,8 @@ const autoOf = (v) => Object.keys(AUTO).includes((v.visual || {}).visualType);
 
 // ---------- C: «بيانات تجريبية» ----------
 {
-  const g = spawnSync('git', ['grep', '-n', '-e', 'مختلق', '-e', 'مختلَق', '--', '.', ':!mcp/work'], { cwd: REPO, encoding: 'utf8' });
-  chk(() => g.status === 1 && !g.stdout, () => `C1: no «مختلَق / مختلقة» left in the product's files (git grep, the work notes aside): ${g.status} ${String(g.stdout || g.stderr).slice(0, 600)}`);
+  const g = spawnSync('git', ['grep', '-n', '-e', 'مختلق', '-e', 'مختلَق', '--', '.', ':!mcp/work', ':!mcp/test-0.3.1-fx3.mjs'], { cwd: REPO, encoding: 'utf8' });
+  chk(() => g.status === 1 && !g.stdout, () => `C1: no «مختلَق / مختلقة» left in the product's files (git grep, the work notes and this file aside): ${g.status} ${String(g.stdout || g.stderr).slice(0, 600)}`);
   const sp = fs.readFileSync(path.join(HERE, 'lib/sample-project.mjs'), 'utf8'), aw = fs.readFileSync(path.join(HERE, 'lib/approval-window.mjs'), 'utf8');
   chk(() => /بيانات تجريبية/.test(sp) && /'Made up': 'بيانات تجريبية'/.test(aw) && /مشروع المثال \(بيانات تجريبية\)/.test(aw), () => 'C2: the sample project and its approval page call its data «بيانات تجريبية»');
 }
