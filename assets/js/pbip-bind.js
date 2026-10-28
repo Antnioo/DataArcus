@@ -68,6 +68,10 @@
     const e = String(Array.isArray(src) ? src.join('\n') : src || '').trim(), m0 = e.match(/^(ADDCOLUMNS|SELECTCOLUMNS)\s*\(([\s\S]*)\)$/i);
     // (round 11, RESCORE-4's N18: a table built with CALENDAR or CALENDARAUTO is a calendar by its shape, whatever its name)
     if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) meta(out).calendarShape = true;   // (the picker's note: the model's answers are unchanged)
+    // (0.3.1 FX4, D-1028-04) the years a calendar's own DAX names, CALENDAR ( DATE ( y1, ... ), DATE ( y2, ... ) ): the
+    // model's definition, never its data; the time axis rule reads whether they span more than one year
+    const yrs = e.match(/\bCALENDAR\s*\(\s*DATE\s*\(\s*(\d{4})\s*,[^()]*\)\s*,\s*DATE\s*\(\s*(\d{4})\s*,/i);
+    if (yrs) meta(out).years = [+yrs[1], +yrs[2]];
     if (!m0) return out;
     const a = argsOf(m0[2]);
     for (let i = 1; i + 1 < a.length; i += 2) { const nm = a[i].match(/^"((?:[^"]|"")*)"$/); if (!nm) continue;
@@ -598,8 +602,32 @@
     const notReached = table.filter((f) => f && f.m != null && !reachOf(f).has(row.t));
     return { table: table.filter((f) => !notReached.includes(f)), notReached: notReached.map((f) => ({ t: f.t, m: f.m, row: { t: row.t, c: row.c } })) };
   }
+  // (0.3.1 FX4, the laptop's part 3, H-3; the owner's D-1028-04) the model's own counts, when the caller has them
+  // (suggest_fields' columnStats, read in Desktop): { rows: { Table: n }, distinct: { 'Table[Column]': n } }. Counts
+  // only, never a value. Names are matched as DAX does, without regard to case; a name the model does not have, or a
+  // count that is no whole number, is named in notInModel, never used
+  const STAT_KEY = /^(?:'((?:[^']|'')+)'|([^'[\]]+?))\s*\[((?:[^\]]|\]\])+)\]$/;
+  function statsOf(tables, stats) {
+    const lc = (x) => String(x).trim().toLowerCase(), rows = new Map(), dist = new Map(), notInModel = [], ok = (n) => Number.isInteger(n) && n >= 0;
+    const has = (t, c) => (tables || []).some((x) => lc(x.name) === t && (c == null || (x.columns || []).some((y) => lc(y.name) === c)));
+    Object.entries((stats && stats.rows) || {}).forEach(([t, n]) => { if (!ok(n) || !has(lc(t))) notInModel.push(t); else rows.set(lc(t), n); });
+    Object.entries((stats && stats.distinct) || {}).forEach(([k, n]) => { const m = String(k).trim().match(STAT_KEY), t = m && lc((m[1] || m[2]).replace(/''/g, "'")), c = m && lc(m[3].replace(/\]\]/g, ']'));
+      if (!m || !ok(n) || !has(t, c)) notInModel.push(k); else dist.set(t + '\u0000' + c, n); });
+    return { given: !!stats, rows: (t) => rows.get(lc(t)), distinct: (t, c) => dist.get(lc(t) + '\u0000' + lc(c)), notInModel };
+  }
+  // (FX4) a text column named as coordinates (a point on a map, never a category), and one named as invoice numbers
+  const COORD = /(^|\s)(latitude|longitude|lat|lon|lng|coordinates?|geo\s?point|geo\s?location|lat\s?long|lat\s?lon)(\s|$)/i, INVOICE = /(^|\s)(invoice|receipt)s?$/i;
+  // (FX4) a measure's gross form and the measure it is the gross of: Gross Sales / Sales, Gross Revenue / Net Revenue,
+  // Sales before Discounts / Sales (names compared without regard to case, spaces or "_")
+  const plainName = (x) => String(x).toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+  const grossBase = (n) => { const s = plainName(n), g = s.match(/^(.*?)\s*\bgross\b\s*(.*)$/), b = s.match(/^(.+?)\s*\b(before|pre)\s*discounts?$/);
+    const base = g ? plainName(g[1] + ' ' + g[2]) : b ? plainName(b[1]) : ''; return base || null; };
+  const WHY_MAX = 20;
   function suggest(tables, nKpis, opt) {
     const { measures, columns, hiddenMeasures } = catalog(tables, opt && opt.modelTables);
+    // (FX4) every rule that acts says itself here, one plain line per field (the first rule that names it)
+    const ST = statsOf((opt && opt.modelTables) || tables, opt && opt.stats), why = [], say = (field, line) => { if (!why.some((w) => w.field === field)) why.push({ field, line }); };
+    const num = (n) => Number(n).toLocaleString('en-US');
     // (A3-6: a measure other measures build on, [Its Name] in their DAX, is a core number: a shape, in any language)
     const usedBy = new Set(measures.filter((y) => measures.some((z) => z !== y && exprOf(z).includes('[' + y.m + ']'))).map((y) => y.m));
     const score = (x) => (CORE.test(exprOf(x)) ? 3 : 0) + (metaOf(x).amount ? 1 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
@@ -626,6 +654,14 @@
     const group = (x) => (metaOf(x).currency && !metaOf(x).divides ? 0 : (metaOf(x).base ? 0 : 2) + (metaOf(x).amount ? 0 : 1));
     const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || (timeDep.get(a) ? 1 : 0) - (timeDep.get(b) ? 1 : 0)
       || group(a) - group(b) || score(b) - score(a));
+    // (FX4, D-1028-04: net before gross) where a measure and its gross form are both there, the net one goes first, so
+    // it is the headline and the first card; the gross one may follow (a time variant or a percent is never moved
+    // ahead of a base amount by this)
+    const nets = [];
+    ranked.slice().forEach((g) => { const b = grossBase(g.m); if (!b) return;
+      const n = ranked.find((y) => y !== g && !grossBase(y.m) && [b, 'net ' + b, b + ' net'].includes(plainName(y.m)));
+      if (!n || n.stale || !!n.pct !== !!g.pct || (timeDep.get(n) ? 1 : 0) > (timeDep.get(g) ? 1 : 0)) return;
+      const gi = ranked.indexOf(g), ni = ranked.indexOf(n); if (ni > gi) { ranked.splice(ni, 1); ranked.splice(gi, 0, n); } nets.push([n, g]); });
     // a card shows one number for the whole page: never a period measure (S4: "No data" without its period), a what-if
     // value (D4), a helper (D2) or a share of all (D14); never two cards with the same value (D6, D14)
     // (rc.4, round 9, N5 + D14: one measure over another of the same value (the second its ALL form): 100 % on a card)
@@ -653,6 +689,7 @@
     if (ratio && kpis.length < nKpis) { kpis.push(ratio); keys.add(keyOf(ratio)); }
     ranked.filter((x) => cardable(x)).forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x) && !keys.has(keyOf(x))) { kpis.push(x); keys.add(keyOf(x)); } });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
+    nets.forEach(([n, g]) => { if (main === n || kpis.includes(n)) say(fieldKey(n.t, n.m), `${n.m} is the headline number before ${g.m}: the net amount first; the gross one (before discounts or returns) may follow.`); });
     // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
     // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
     // related to; and the walk began at the table the measure is stored in, which for a measures table of its own is
@@ -679,7 +716,24 @@
     // takes the model's short month names ("Jan") where it has them, in the same order
     const SHORT_MONTH = /^(month\s*(short|abbr|abbreviation)|short\s*month|mmm)$/i;
     if (date && /month|الشهر/i.test(date.c) && !/date/.test(date.type)) { const sh = columns.find((c) => c.t === date.t && SHORT_MONTH.test(c.c.replace(FAMILY, '').trim()) && family(c.c) === family(date.c)); if (sh) date = sh; }
-    const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
+    // (FX4, D-1028-04) a month NAME on the axis while the dates span more than one year adds up the same month of every
+    // year in one point: the same table's year-month column takes its place, else its date. The span is known by the
+    // counts (a year of 2 values or more, a year-month of 13 or more) or by the calendar's own DAX (CALENDAR ( DATE ( y1 ..
+    // ), DATE ( y2 .. ) )); not known: the month name stays and the answer says so
+    if (date && !/date/.test(date.type) && /month|الشهر/i.test(date.c) && sortKind(date.c) !== 'yearMonth' && !(opt && opt.pinned && opt.pinned.date)) {
+      const all = ((opt && opt.modelTables) || []).concat(tables), tb = all.find((t) => t.name === date.t), raw = (tb && tb.columns) || [];
+      const ymName = (n) => sortKind(n) === 'yearMonth' && /month/i.test(n) && /year/i.test(n);
+      const yc = raw.filter((c) => /^(calendar\s*|fiscal\s*)?year$/i.test(c.name) && !/fiscal/i.test(c.name)).map((c) => ST.distinct(date.t, c.name)).find((n) => n != null);
+      const ym = raw.filter((c) => ymName(c.name)).map((c) => ST.distinct(date.t, c.name)).find((n) => n != null), yrs = tb && metaOf(tb).years;
+      const span = yc != null ? (yc > 1 ? `${num(yc)} years by the model's counts` : null) : ym != null ? (ym > 12 ? `${num(ym)} months by the model's counts` : null)
+        : yrs ? (yrs[1] > yrs[0] ? `${yrs[0]} to ${yrs[1]} by the calendar's own DAX` : null) : undefined;
+      const to = span ? (columns.find((c) => c.t === date.t && ymName(c.c) && monthText(c)) || columns.find((c) => c.t === date.t && dayDate(c)) || inDate.find(dayDate)) : null;
+      if (to) { say(fieldKey(to.t, to.c), `The time axis is ${to.c}, not ${date.c}: the dates span more than one year (${span}), and a month name would add up the same month of every year in one point.`); date = to; }
+      else if (span === undefined) say(fieldKey(date.t, date.c), `${date.c} is the time axis; the date range is not known (no counts, no calendar DAX). If the dates span more than one year, use a year-month column or the date instead.`);
+    }
+    let year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
+    // (FX4) a year of one value is no slicer
+    if (year && ST.distinct(year.t, year.c) === 1) { say(fieldKey(year.t, year.c), `${year.c} is not a slicer: the model's counts give it one value.`); year = null; }
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
     // (round 11, N18: a column the model sums or formats as a plain number is a number, whatever its type in the files)
     const textLike = (c) => !metaOf(c).numeric && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c)));
@@ -704,11 +758,24 @@
     const unreached = reach ? cats.filter((c) => !reach.has(c.t)) : [];
     if (reach) cats = cats.filter((c) => reach.has(c.t));
     cats = byLang(cats, L, note);
+    // (FX4, D-1028-04) never a category (a chart's axis, a slicer, a table's group): a column of one value by the model's
+    // counts; a text column of mostly unique values (90% of its table's rows or more, in a table of over 100 rows: a small
+    // lookup's own names stay) or of over 5,000; one named as coordinates, or as invoice numbers. Without counts the name
+    // rules alone (the caller says counts were not available). Each column left out is said in why
+    const notCat = (c) => { const n = ST.distinct(c.t, c.c), r = ST.rows(c.t), txt = textLike(c), nm = splitName(c.c);
+      if (n === 1) return `${c.c} is not a category: the model's counts give it one value, so a chart or slicer by it shows one item.`;
+      if (txt && (COORD.test(nm) || /^(latitude|longitude)$/i.test(String(c.cat || '')))) return `${c.c} is not a category: its name says it holds coordinates (a point on a map).`;
+      if (txt && INVOICE.test(nm)) return `${c.c} is not a category: its name says it holds invoice numbers, one item per invoice.`;
+      if (txt && n != null && r > 100 && n >= 0.9 * r) return `${c.c} is not a category: ${num(n)} distinct values in ${num(r)} rows, mostly unique (an identifier or free text).`;
+      if (txt && n != null && n > 5000) return `${c.c} is not a category: ${num(n)} distinct values, more than a chart or slicer can show (5,000 at most).`;
+      return null; };
+    const keepCat = (c) => { const w = notCat(c); if (w) say(fieldKey(c.t, c.c), w); return !w; };
+    cats = cats.filter(keepCat);
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
     // (round 11, RESCORE-4's N18: never its numbers: a summed or "0"-formatted column is no part; when even these are
     // missing the charts that need a category are left out and the answer says so: noCategory)
-    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)))).filter(Boolean);
+    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)) && keepCat(c))).filter(Boolean);
     const noCategory = !cats.length;
     // (the rc's laptop proof, D7: the column chart never by the bar chart's field, nor by a field of the same name in
     // another table: the same chart twice; with no other category, a date table's part, else the bar chart's: its slot
@@ -791,6 +858,9 @@
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;
+    // (FX4) why: one plain line per field a rule acted on, capped; counts given for names the model does not have
+    if (why.length) { out.why = why.slice(0, WHY_MAX); if (why.length > WHY_MAX) out.whyNotListed = why.length - WHY_MAX; }
+    if (ST.notInModel.length) out.statsNotInModel = ST.notInModel.slice(0, WHY_MAX);
     return out;
   }
   // Round 12 (#25; seen in Desktop 2.158, round 11: a report on a model without measures was a header and one small

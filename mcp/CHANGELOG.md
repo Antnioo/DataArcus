@@ -14,6 +14,12 @@ package's manifest; this file says what is in it.
   button whose Arabic text is longer now takes the width it needs from the dropdown slicers beside it (or, with no
   slicer beside it, its text takes the largest size at which the text and the icon both fit), so it looks like the
   English one. Only where nothing gives room is the icon left out, and the plan says so.
+- **Safer picks on a model DataArcus has not seen before:** suggest_fields no longer puts a column with one value,
+  a column of mostly unique values (invoice numbers, free text) or a column of map coordinates on a chart's axis, in a
+  slicer or as a table's group; a month name gives way to a year-month axis when the dates span more than one year;
+  and of a gross and a net amount, the net one is the headline number. Each choice is explained in the answer (why).
+  The counts it uses are passed by the AI app from Power BI Desktop (columnStats: counts only, never values); without
+  them the answer says only the name rules were used.
 - **The Health Check works offline once the page has loaded:** the analysis is loaded with the page, so a file
   dropped after the connection is gone still gets its score. Nothing is sent anywhere, as before.
 - **An Arabic plan's approval page is all Arabic:** the theme's, the Gulf calendar's (its inputs too), the twin's, the

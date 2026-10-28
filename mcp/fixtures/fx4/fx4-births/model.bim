@@ -1,0 +1,73 @@
+{
+  "name": "fx4-births",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "tables": [
+      {
+        "name": "Births",
+        "columns": [
+          {
+            "name": "Country",
+            "dataType": "string",
+            "sourceColumn": "Country"
+          },
+          {
+            "name": "Geo Point",
+            "dataType": "string",
+            "sourceColumn": "Geo Point"
+          },
+          {
+            "name": "Unit",
+            "dataType": "string",
+            "sourceColumn": "Unit"
+          },
+          {
+            "name": "Emirate",
+            "dataType": "string",
+            "sourceColumn": "Emirate"
+          },
+          {
+            "name": "Nationality",
+            "dataType": "string",
+            "sourceColumn": "Nationality"
+          },
+          {
+            "name": "Gender",
+            "dataType": "string",
+            "sourceColumn": "Gender"
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Births",
+            "dataType": "int64",
+            "sourceColumn": "Births",
+            "summarizeBy": "sum"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Births",
+            "expression": "SUM ( 'Births'[Births] )",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Births",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source = #table({\"A\"}, {}) in Source"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

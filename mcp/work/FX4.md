@@ -13,7 +13,7 @@
 - **Measured today on 84596b9 (the fixtures, through the server):** financial: headline KPI Gross Sales, time axis
   Calendar[Month Name] over two years; births: Births[Country] (one value) is the bar, donut and first slicer, Geo Point
   in the slicer pool; retail: Online Retail[Invoice] is the column chart's, the map's, the table's and a slicer's category.
-- **Expected checks (written before the work):** new `fx4` about 20 checks, every rule's check red on 84596b9 first, the
+- **Expected checks:** (written before the work) new `fx4` about 20 checks, every rule's check red on 84596b9 first, the
   guards (a real category still picked, no counts given: the name rules alone) green there. Existing suites: the same
   counts. Picks may move on purpose where a fixture's calendar spans years by its own DAX and has a month name on the
   axis (golden task 1's Ramadan calendar, possibly others): each such change said per test below, golden-expected.json's
