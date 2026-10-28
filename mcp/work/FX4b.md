@@ -22,9 +22,11 @@
   number, sorted in the model). Red on dd25902 first: 16 of 46; on 37a0de1 (Date only, before the order precedence) 3.
   test.mjs 1594 = 1594, 10 assertions changed on purpose; golden tasks 1, 2, 12 modelNotes and task 10 suggestChars
   6022 -> 6059, their whys written; arabic-titles 27, fidelity 40, metric-switcher 60, terminology-sheet 48: the same
-  counts, assertions changed on purpose (below). FX5b not in integration yet (dd25902 still its head): not merged.
-- Full run on 32bc7f9: "run-tests: 121 suites passed"
-- **Resume:** CI on the branch (tests.yml); merge FX5b and run again when the reviewer says it landed.
+  counts, assertions changed on purpose (below).
+- Full run on 32bc7f9: "run-tests: 121 suites passed" (before FX5b).
+- FX5b landed (1b2a53a) during that run: merged in (a799c72, only pbip-bind.min.js conflicted, rebuilt by build:min).
+- Full run on a799c72: "run-tests: 122 suites passed"
+- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Plan
 1. The reader keeps a calendar's DAX years (CALENDAR ( DATE ( y1, .. ), DATE ( y2, .. ) )) as FX4's first cut did
