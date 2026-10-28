@@ -32,7 +32,8 @@
   Website: pbip 111, theme-generator 922, design-engine 598, arabic-names 14 PASS (unchanged counts).
 - Full run on 926453b: "run-tests: 120 suites passed". CI run 40705766468: every job green on Linux, Windows and
   macOS (macOS shard 2 was cancelled before any step ran, no runner; re-run once, green).
-- **Resume:** merged integration f6e1e45f (FX3), B1 approves its drafted texts; the full run again, then CI.
+- After merging integration f6e1e45f (FX3) and B1's change: Full run on 7338e71: "run-tests: 121 suites passed"
+- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
 1. **columnStats (create_report, plan_layout).** Before: neither took counts, so a chart on a plain text column kept
