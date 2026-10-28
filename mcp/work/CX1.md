@@ -23,10 +23,12 @@
 - **Got:** cx1 24 (15 of 24 red on dd6d7ad first; the other 9 are set-up and guards, green there by design) -> 24 PASS;
   test-microsoft-watch 63 -> 65 (W12: 1 of 2 red on dd6d7ad first, the other the stranger guard); r4-write-safety 46 ->
   47 (H1-H3 changed on purpose, H3's retry added); write-gate 7 = 7 (its list said on purpose); mcp (test.mjs) 1593 =
-  1593, phone 355 = 355, arabic-titles 27 = 27, terminology-sheet 48 = 48, arabic-calendar 31 = 31, story-titles 94 = 94,
-  preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 = 32, large-model-caps 215 = 215, twin-complete 24 = 24, powerbi-2026-10
-  26 = 26 (each measured on dd6d7ad too); tt1 28 = 28; lint 0; full run 110 -> 111 suites (+ cx1).
-- Full run on bd807bf: "run-tests: 111 suites passed"
+  1593, golden 12 tasks = 12 (no result moved), phone 355 = 355, arabic-titles 27 = 27, terminology-sheet 48 = 48,
+  arabic-calendar 31 = 31, story-titles 94 = 94, preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 =
+  32, large-model-caps 215 = 215, twin-complete 24 = 24, powerbi-2026-10 26 = 26 (each measured on dd6d7ad too); each
+  names its fields by hand (Tests changed on purpose); tt1 28 = 28; lint 0; merged integration c77b295 (TW1 in): 111 ->
+  112 suites (+ cx1).
+- Full run on 33df971: "run-tests: 112 suites passed"
 - **Resume:** done; CI started on the branch (tests.yml, through the GitHub tools), then the reviewer.
 
 ## Plan
@@ -64,6 +66,26 @@ Before -> after:
 - F10: the watch read the first 100 comments -> every page (per_page 100, until a page that is not full; at most 100
   pages), the github-actions[bot] filter kept.
 
+## Tests changed on purpose
+Each: what it now gives, and why (F01: an Arabic plan whose titles would be English gets no plan id); no expected
+number changed unless said.
+- `test-0.3.0-write-safety.mjs` H1-H3 (F08): a failed script batch is an error, not a normal answer; H3 neither script
+  stays and the plan is not used (was: one written, plan used); H3's retry added: 46 -> 47.
+- `test-0.3.1-write-gate.mjs`: the list of writing calls says the batch's rollBack (files.mjs 2 -> 3) and the answers file
+  written in the batch (check_model_health 1 -> 2); 7 = 7.
+- `test-models/golden-baseline.mjs` task 2: approved Arabic names for Month Short and Total Sales vs Last Ramadan %, as
+  the agent-level task does; its "why" in golden-expected.json says it; no result moved (no --update).
+- Kept English on purpose (the check is about layout, phone, slicers, calendars, story titles, caps or texts, not the
+  names), each listing its fields: test.mjs (Gulf Sales, Table AR, Names AR (its 2 unnamed fields: used 6 -> 8, said), R9
+  SVG AR, R10 fit, D5 titles, R13 Long, R12 AR2, R12 Six, R14 sample, N1; Round0 AR's check accepts Month Short shown
+  as the term kept English on purpose by Table AR on the same model, said in its comment), test-round23 (R23 esc, R23 cc), test-0.2.9b
+  (B29 ar), test-0.2.9i (I ar en: this check is about English names, kept on purpose), test-phone (ramadan, large),
+  story-titles (ramadan ar), arabic-calendar (before and after the script), twin-complete (TC-2d), large-model-caps (AR all
+  on: the 2 fields DN leaves), lr1, r4a, metric-switcher (AR_DN), powerbi-2026-10 (ar), preview-match (T1a all, T1b the 4
+  with no fixed word), terminology-sheet TS-8 (the hostile measure; TW1's file, 1 call).
+- arabic-titles AT-3: its subject is the English-names case: the first plan (no id) gives the lists checked; the person
+  then keeps the 11 fields English on purpose and the report is written; AT-3f allows their names.
+
 ## CHANGELOG line
 Five lines in `mcp/CHANGELOG.md` [Unreleased]: "No English titles slip into an Arabic report", "Fix scripts written all
 or none", "No page out of reach in the English and Arabic report", "Long answers capped", "The weekly Microsoft watch
@@ -95,8 +117,8 @@ none
   placed (no caller used its return before).
 - The approval step (on purpose): an Arabic plan with English titles for unnamed fields gets no plan id.
 - The EN-AR copy (on purpose): a pair whose button is not placed has both pages in the tabs.
-- `test-0.3.0-terminology-sheet.mjs` is TW1's file: 3 lines changed in TS-8's set-up only (the hostile measure kept
-  English on purpose); a merge with TW1 may need that hunk kept.
+- `test-0.3.0-terminology-sheet.mjs` is TW1's file: TS-8's one plan_layout call gives the hostile measure kept English on
+  purpose (merged with TW1's version on c77b295, no conflict).
 
 ## For the laptop
 - F02: open an EN-AR copy of a report with a crowded header in Power BI Desktop: both pages of that pair show in the page
@@ -112,5 +134,5 @@ none
 
 ## Lessons for the reviewer
 - A rule that refuses a plan ripples into every suite that planned that case silently: list the suites that call the
-  tool with that input before estimating (here 13 suites, 2 test.mjs checks).
-- A helper standing in for the person's choice (keptEnglish) keeps old checks' numbers without weakening the rule.
+  tool with that input before estimating (here 14 suites).
+- A test helper that keeps English by default weakens the rule it works around; each check names its own choice.
