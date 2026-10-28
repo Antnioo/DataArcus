@@ -14,7 +14,9 @@ export const HELP = `npm test [-- <options>]  (mcp/run-tests.mjs; the suites: mc
   npm test -- --affected[=<ref>]   LOCAL RUNS ONLY: the suites the files changed since <ref> touch (git diff --name-only
                                    <ref>, and new files; default tests.json affected.base), the reason printed for each
                                    pick. CI and the final gate NEVER use it: they run every suite (it refuses in CI).
-  DA_SHARD=0/N                     test.mjs says SKIP (CI's shard 0); DA_SHARD=k/N, k >= 1: only test.mjs, its part k
+  DA_SHARD=k/N                     CI's shard k of this OS: test.mjs's part k (SKIP when k is 0) and the suites
+                                   the plan deals to shard k by mcp/test-times.json (each suite in one shard)
+  npm test -- --plan [--os <os>]   CI's plan for an OS (default this one): each shard's seconds and suites
 A failure prints: FAIL script=<file> check="<first failing check>" cause=<cause> os=<os> shard=<k/N>
   causes: ${'checks-failed timeout crash no-result-line duplicate-suite unexpected-skip zero-checks exit-nonzero wrong-name'}
 It refuses to run when a test-*.mjs file in this folder is in neither "suites" nor "ignored" (nor "pending").`;
@@ -22,12 +24,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { judge, oneLine, detailOf, budget, isSummaryLine, osName, shardOf, affected, scrub, REPO } from './test-results.mjs';
+import { judge, oneLine, detailOf, budget, isSummaryLine, osName, shardOf, affected, scrub, count, planShards, MANIFEST, REPO } from './test-results.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 export function readRegistry(dir = HERE) {
   return JSON.parse(fs.readFileSync(path.join(dir, 'tests.json'), 'utf8'));
+}
+// (SPD) the measured seconds CI's plan deals the suites by (none: every suite weighs the same; the plan still deals each once)
+export function readTimes(dir = HERE) {
+  try { return JSON.parse(fs.readFileSync(path.join(dir, 'test-times.json'), 'utf8')); } catch { return {}; }
 }
 
 // what is wrong with the registry: a test-*.mjs file listed nowhere, a listed file that is not there, a file twice,
@@ -63,10 +69,10 @@ export function registryProblems(dir = HERE, reg = readRegistry(dir), { names: n
 }
 
 // one suite: its output (stdout and stderr as they came), exit code, signal, and whether its time ran out
-function runOne(file, { cwd, timeout, verbose }) {
+function runOne(file, { cwd, timeout, verbose, env = process.env }) {
   return new Promise((resolve) => {
     const win = process.platform === 'win32';
-    const child = spawn(process.execPath, [file], { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: !win, windowsHide: true });
+    const child = spawn(process.execPath, [file], { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], detached: !win, windowsHide: true });
     const chunks = [];
     let timedOut = false, done = false;
     const kill = () => { try { if (win) execFileSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' }); else process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch { /* gone */ } } };
@@ -100,7 +106,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const timeout = +(opt('--timeout') || process.env.DA_SUITE_TIMEOUT || 2700);
   const logDir = path.resolve(opt('--log-dir') || path.join(DIR, '.test-logs'));
   const aff = args.find((a) => a === '--affected' || a.startsWith('--affected='));
-  const valued = new Set(['--timeout', '--log-dir'].map((o) => args.indexOf(o) + 1).filter((i) => i > 0));
+  const valued = new Set(['--timeout', '--log-dir', '--os'].map((o) => args.indexOf(o) + 1).filter((i) => i > 0));
   const areas = args.filter((a, i) => !a.startsWith('--') && a !== '-h' && !valued.has(i));
   const unknown = areas.filter((a) => !Object.hasOwn(reg.areas, a));
   if (unknown.length) {
@@ -108,9 +114,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exit(2);
   }
   if (!(timeout > 0)) { console.error('run-tests: --timeout takes seconds, more than 0'); process.exit(2); }
-  // DA_SHARD=k/N (k >= 1) runs only the sharded suite (test.mjs's part k); DA_SHARD=0/N runs the others, test.mjs SKIP
-  const shard = shardOf(), k = shard === '-' ? null : +shard.split('/')[0];
-  let suites = reg.suites.filter((s) => (!areas.length || areas.includes(s.area)) && (!k || s.sharded));
+  // (SPD, Codex #1) DA_SHARD=k/N runs CI's shard k: test.mjs (its part k; a SKIP in shard 0) and the suites the plan
+  // deals to shard k on this OS (planShards, by mcp/test-times.json), each other suite with DA_SHARD=0/N as before
+  const shard = shardOf(), k = shard === '-' ? null : +shard.split('/')[0], N = shard === '-' ? null : +shard.split('/')[1];
+  const inShard = k === null ? null : new Set(planShards(reg, readTimes(DIR), osName(), N).shards[k].map((s) => s.file));
+  let suites = reg.suites.filter((s) => (!areas.length || areas.includes(s.area)) && (!inShard || inShard.has(s.file)));
+  const envOf = (s) => (N === null || s.sharded ? process.env : { ...process.env, DA_SHARD: `0/${N}` });
   if (aff) {
     if (process.env.CI || process.env.GITHUB_ACTIONS) { console.error('run-tests: --affected is for local runs only; CI and the final gate run every suite'); process.exit(2); }
     const ref = aff.includes('=') ? aff.slice(aff.indexOf('=') + 1) : (reg.affected || {}).base;
@@ -122,6 +131,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     suites = suites.filter((s) => a.suites.includes(s));
     console.log(`  -> ${a.all ? 'every suite' : `${suites.length} suite${suites.length === 1 ? '' : 's'}`}`);
     if (!suites.length) process.exit(0);
+  }
+  if (args.includes('--plan')) {
+    const os = opt('--os') || osName(), n = N || 4, p = planShards(reg, readTimes(DIR), os, n);
+    console.log(p.shards.map((x, j) => `shard ${j}/${n} (${os}) ${String(p.loads[j]).padStart(7)} s: ${x.filter((s) => !s.sharded || j).map((s) => s.sharded ? `${s.file} (part ${j})` : s.file).join(', ')}`).join('\n'));
+    process.exit(0);
   }
   if (args.includes('--list')) {
     console.log(suites.map((s) => `${s.area.padEnd(9)} ${s.file.padEnd(40)} ${s.purpose}`).join('\n'));
@@ -135,8 +149,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   fs.mkdirSync(logDir, { recursive: true });
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { if (runOne.current) runOne.current(); process.exit(130); });
   const failed = [], spend = budget(), seen = new Map(), o = osName();
+  // (SPD, Codex #10) the manifest: each suite's seconds, status, checks and cause, written after each suite; finished
+  // only when the run got to its end (ci-sum rejects a shard whose manifest is missing or unfinished)
+  const manifest = { os: o, shard, commit: process.env.GITHUB_SHA || null, run: process.env.GITHUB_RUN_ID || null, node: process.version, planned: suites.map((s) => s.file), suites: [], finished: false };
+  const writeManifest = (finished = false) => { manifest.finished = finished; fs.writeFileSync(path.join(logDir, MANIFEST), JSON.stringify(manifest, null, 1) + '\n'); };
+  writeManifest();
   for (const [i, s] of suites.entries()) {
-    const r = await runOne(s.file, { cwd: DIR, timeout, verbose });
+    const t0 = Date.now(), r = await runOne(s.file, { cwd: DIR, timeout, verbose, env: envOf(s) });
+    const seconds = Math.round((Date.now() - t0) / 100) / 10;
     const log = path.join(logDir, s.file.replace(/[\\/]/g, '__') + '.log');
     fs.writeFileSync(log, r.out);
     if (!verbose) r.out.replace(/\r\n/g, '\n').split('\n').filter(isSummaryLine).forEach((l) => console.log(l));
@@ -144,6 +164,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     // a name printed by an earlier suite of this run too
     if (j.ok && seen.has(s.name)) j = { ok: false, cause: 'duplicate-suite', check: `"${s.name}" printed by ${seen.get(s.name)} too` };
     seen.set(s.name, s.file);
+    const own = (j.results || []).filter((x) => x.name === s.name).pop();
+    manifest.suites.push({ file: s.file, name: s.name, seconds, status: j.ok ? (j.skipped ? 'SKIP' : 'PASS') : 'FAIL', checks: own ? count(own.rest) : null, cause: j.ok ? null : j.cause });
+    writeManifest();
     if (j.ok) continue;
     const fromEnd = ['crash', 'timeout', 'no-result-line'].includes(j.cause);
     const check = j.cause === 'timeout' ? `stopped after ${timeout}s; last: ${j.check}` : j.cause === 'crash' && r.error ? r.error.message : j.check;
@@ -151,11 +174,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (!verbose) spend.take(detailOf(r.out).map((l) => '      ' + l.trim()), { fromEnd, log }).forEach((l) => console.log(l));
     failed.push(`${s.file} (${j.cause})`);
     if (!keepGoing) {
+      writeManifest(true);
       const left = suites.length - i - 1;
       console.error(`run-tests: stopped at ${s.file}; ${left} suite${left === 1 ? '' : 's'} after it did not run (npm test -- --keep-going runs them all)`);
       process.exit(r.code || 1);
     }
   }
+  writeManifest(true);
   if (failed.length) {
     console.error(`run-tests: ${failed.length} of ${suites.length} suites failed:\n` + failed.map((f) => '  - ' + f).join('\n'));
     process.exit(1);

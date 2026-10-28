@@ -33,7 +33,13 @@ export const CAUSES = {
   'unknown-suite': 'a result line names a suite that is not listed',
   'missing-shard': 'a shard log is missing or there twice',
   'g13': 'a report created by the parts does not validate',
+  'missing-manifest': 'a shard has no manifest.json (the runner\'s record of each suite it ran)',
+  'manifest-mismatch': 'a shard\'s log and its manifest disagree on a suite (its status or its checks)',
 };
+// (SPD, Codex #10) the runner's record of a run, in its log folder: { os, shard, commit, run, planned: [files], suites:
+// [{ file, name, seconds, status, checks, cause }], finished }. ci-sum reads it beside each shard's log;
+// scripts/test-times.mjs reads CI's to write mcp/test-times.json
+export const MANIFEST = 'manifest.json';
 
 export const RESULT = /^(PASS|FAIL|SKIP)\s{2}(\S+)\s+(.*)$/;
 export const results = (text) => String(text).replace(/\r\n/g, '\n').split('\n').map((l, i) => { const m = RESULT.exec(l); return m && { status: m[1], name: m[2], rest: m[3], i }; }).filter(Boolean);
@@ -172,4 +178,28 @@ export function affected(paths, reg) {
   }
   const chosen = all ? suites : suites.filter((s) => picks.has(s.file));
   return { all: !!all, suites: chosen, reasons };
+}
+
+// (SPD, Codex #1) CI's plan: mcp/tests.json's suites dealt over the shards 0..n of one OS by their measured seconds
+// (mcp/test-times.json, written by scripts/test-times.mjs from a CI run's manifests, never typed). The sharded suite
+// (test.mjs) is in every shard: its part k in shard k (SHARDS and TOGETHER in test.mjs decide the parts), a SKIP in shard
+// 0. Every other suite goes to exactly one shard: the longest first, each onto the shard with the least seconds so far
+// (a tie: the lower shard); a suite without a time weighs the median of the OS's suites; an OS without times uses
+// linux's. Each shard keeps tests.json's order. mcp/run-tests.mjs (DA_SHARD=k/N) and scripts/ci-sum.mjs both call this,
+// so they agree on which suite runs where: the times change how even the shards are, never which suites run.
+export function planShards(reg, times, os, n) {
+  const all = (times && times.os) || {}, t = all[os] || all.linux || {};
+  const suites = reg.suites || [], plain = suites.filter((s) => !s.sharded);
+  const known = plain.map((s) => t[s.file]).filter((v) => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+  const median = known.length ? known[Math.floor((known.length - 1) / 2)] : 1;
+  const weight = (key) => (Number.isFinite(t[key]) && t[key] > 0 ? t[key] : median);
+  const loads = Array.from({ length: n + 1 }, (_, k) => (k ? suites.filter((s) => s.sharded).reduce((a, s) => a + weight(`${s.file}@${k}`), 0) : 0));
+  const where = new Map(), weights = {};
+  for (const s of plain) weights[s.file] = weight(s.file);
+  for (const s of [...plain].sort((a, b) => weights[b.file] - weights[a.file] || (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))) {
+    const k = loads.indexOf(Math.min(...loads));
+    where.set(s.file, k); loads[k] += weights[s.file];
+  }
+  const round = (v) => Math.round(v * 10) / 10;
+  return { shards: loads.map((_, k) => suites.filter((s) => s.sharded || where.get(s.file) === k)), loads: loads.map(round), weights };
 }
