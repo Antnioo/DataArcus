@@ -21,7 +21,10 @@
   base's; test.mjs 1593; G-13 249, 0 with errors; mutation 74 of 74 killed (Linux; 73 / 72 by platform, as the base).
   results-adapter 22 -> 42 checks (18 of the 20 new red on the commit before them first; the 2 others are guards).
 - Full run on b6422ba: "run-tests: 114 suites passed"
-- **Resume:** done once the final CI run is in the note; then the reviewer.
+- **Final CI (run 40654751372 on f48157e, no queue):** MCP wall from run start Linux 12.2 -> 6.5 min, Windows 25.3 ->
+  11.0, macOS 11.9 -> 6.9; the whole run 32.0 -> 12.0 min (coverage out). Checks 15,604 / 15,629 / 15,600 equal; 114
+  result lines per OS identical to the base's; G-13 249; Chromium cache hit, "Chromium 156.0.8078.4 launches".
+- **Resume:** done; the reviewer.
 
 ## Plan (one commit each, red first where a test applies)
 1. (Codex #10) The manifest and the result contract (run-tests, ci-sum); mutation's baseline rejects a timeout.
