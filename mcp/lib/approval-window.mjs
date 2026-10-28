@@ -172,7 +172,7 @@ const WORDS = {
     files: 'الملفات التي ستُكتب', counts: 'الملفات معدودة حسب النوع', yours: 'الملفات التي طلبتها:', all: (n) => `جميع الملفات (${n}): القائمة كاملة، حسب النوع`, about: 'عن السكربت',
     roles: { report: 'التقرير: افتحه في Power BI Desktop', script: 'السكربت: انظر «عن السكربت» أدناه', theme: 'ملف السمة: في Power BI Desktop اختر View ثم Themes ثم Browse for themes' },
     // (T2: the page's title stayed English on an Arabic page) the titles per plan kind
-    titles: { theme: 'ملف سمة', report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات مختلَقة)', columns: 'سكربت أعمدة التقويم العربية' },
+    titles: { theme: 'ملف سمة', report: 'تقرير', twin: 'النسخة العربية من تقرير', same: 'تقرير واحد بالإنجليزية والعربية', calendar: 'سكربت تقويم الخليج', sample: 'مشروع المثال (بيانات تجريبية)', columns: 'سكربت أعمدة التقويم العربية' },
     plan: (id) => `الخطة <bdi dir="ltr">${esc(id)}</bdi>. لا يوافق عليها إلا نقرة هنا: ما يُكتب في المحادثة لا يوافق عليها. لا توافق إلا على خطة طلبتها.` }
 };
 // the file kinds in Arabic, beside their English names (the names Power BI's own files and this page's groups use)
@@ -212,7 +212,7 @@ export function plainLine(paths, kind, ar, at) {
   const where = (f) => (at == null ? '' : folderSaid(at === '.' ? dirOf(f) : dirOf(f) === '.' ? at : `${at}/${dirOf(f)}`, ar)), near = { report: [', next to your model', '، بجانب نموذجك'], redesign: [', next to the original', '، بجانب التقرير الأصلي'], twin: [', next to the original', '، بجانب التقرير الأصلي'] }[kind];
   const sc = (n) => (ar ? `، ومعه سكربت${n === 1 ? '' : 'ات'} (${n}) في المجلد نفسه` : `, and ${n === 1 ? '1 script' : `${n} scripts`} beside it`);
   const inEn = (f) => (where(f) ? `, in ${where(f)}` : ''), inAr = (f) => (where(f) ? `، في ${where(f)}` : '');
-  if (kind === 'sample' && pbip.length) return ar ? `مشروع مثال جديد (بيانات مختلَقة)${inAr(pbip[0])}` : `1 new sample project (made-up data)${inEn(pbip[0])}`;
+  if (kind === 'sample' && pbip.length) return ar ? `مشروع مثال جديد (بيانات تجريبية)${inAr(pbip[0])}` : `1 new sample project (made-up data)${inEn(pbip[0])}`;
   if (pbip.length) {
     const n = pbip.length, pg = ar ? ` (الصفحات: ${pages})` : `: ${pages} page${pages === 1 ? '' : 's'}`;
     return (ar ? `${n === 1 ? 'تقرير جديد واحد' : `تقارير جديدة (${n})`}${pages ? pg : ''}${near ? near[1] : ''}${inAr(pbip[0])}` : `${n === 1 ? '1 new report' : `${n} new reports`}${pages ? pg : ''}${near ? near[0] : ''}${inEn(pbip[0])}`) + (scripts.length ? sc(scripts.length) : '');
@@ -245,14 +245,14 @@ const scriptHtml = (s, writes, ar) => {
 const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['Fields', 'الحقول'], ['Pages', 'الصفحات'], ['Names shown in the report', 'الأسماء الظاهرة في التقرير'], ['Look and options', 'المظهر والخيارات'], ['Options', 'الخيارات'],
   ['Arabic texts', 'النصوص العربية'], ['Terminology sheet: English | Arabic', 'ورقة المصطلحات: الإنجليزية | العربية'], ['Shown in English', 'تظهر بالإنجليزية'], ['One report, English and Arabic', 'تقرير واحد بالإنجليزية والعربية'],
   ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
-  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات مختلَقة)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
+  ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات تجريبية)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
   // (SQ3, T1-S9) the report's other headings an Arabic page shows
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
   // (FX1) the rest an Arabic page shows
   ['Not fully Arabic', 'ليست عربية بالكامل'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
 // (0.3.1 LR1) the sample section's row names in Arabic
-const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات مختلَقة', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
+const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات تجريبية', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
 // with words takes its Arabic words in the Arabic half; a bare count, or words not listed here, stays in the English half
 const COUNT_AR = [[/^(\d+), no Arabic text$/, (n) => `${n}، دون نص عربي`], [/^(\d+), no Arabic name$/, (n) => `${n}، دون اسم عربي`],
