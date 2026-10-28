@@ -27,7 +27,7 @@
   preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 = 32, large-model-caps 215 = 215, twin-complete 24 = 24, powerbi-2026-10
   26 = 26 (each measured on dd6d7ad too); tt1 28 = 28; lint 0; full run 110 -> 111 suites (+ cx1).
 - Full run on bd807bf: "run-tests: 111 suites passed"
-- **Resume:** done; CI on the branch (to start: no gh CLI here), then the reviewer.
+- **Resume:** done; CI started on the branch (tests.yml, through the GitHub tools), then the reviewer.
 
 ## Plan
 1. This note (commit, push).
@@ -83,7 +83,7 @@ reads every comment".
 - F02: keep both pages shown rather than refuse the plan: the copy stays writable, nothing is stranded, and the plan
   says it; a page the original author hid stays hidden (its own visibility kept).
 - F11: the cut marks a cut surrogate pair by cutting one character less (no broken character).
-- The brief's `gh workflow run` is not available here (no gh CLI); CI on the branch is for the reviewer to start.
+- No gh CLI here: CI on the branch was started through the GitHub tools (tests.yml, the same manual run).
 
 ## For the owner
 none
