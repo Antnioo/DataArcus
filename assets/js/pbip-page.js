@@ -131,7 +131,12 @@
   // from the model's metadata alone (a day, month or quarter axis; two values; a few known texts; a calendar's rows)
   const BAND_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart|clusteredColumnChart|columnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/;
   const BAR_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart)$/;
-  const knownCount = (f) => { if (!f) return 0; const k = isTextField(f) && catKind(f); return (k && k.rows) || (f.two ? 2 : 0) || (f.cal && +f.cal.rows) || +f.few || 0; };
+  // (0.3.1 FX5b) and the model's own count where the caller has it: o.model.counts(t, c), create_report's columnStats
+  // (Cardinality read in Desktop, counts only) or the sample project's own made-up rows; the fewest of what is known
+  const knownCount = (f, o) => { if (!f) return 0; const k = isTextField(f) && catKind(f), m = (o && o.model) || {};
+    const given = typeof m.counts === 'function' && f.c != null ? +m.counts(f.t, f.c) : 0;
+    const ns = [(k && k.rows) || (f.two ? 2 : 0) || (f.cal && +f.cal.rows) || +f.few || 0, given].filter((x) => x > 0);
+    return ns.length ? Math.min(...ns) : 0; };
   // the count a chart's thickness was set by, for its phone layout (the same rule on the phone's box)
   const BANDS = new WeakMap();
   const catOf = (Bt, query) => { const p = ((query.queryState.Category || {}).projections || [])[0], col = p && p.field.Column;
@@ -296,10 +301,12 @@
       // grow, inner and outer padding alike, so the bars stay centred; the value axis is never touched (equal values stay
       // equal). Count not known: nothing written, Desktop's default as before. (small multiples share the width by panel;
       // the gallery's waterfall, a column chart of steps, keeps its own look)
-      const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' && s.kind !== 'waterfall' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query)) || Infinity) : 0;
+      const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' && s.kind !== 'waterfall' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query), o) || Infinity) : 0;
       const box = visual.position || {}, horizontal = BAR_TYPES.test(visual.visualType);
       const band = nCat < Infinity ? barBand(nCat, barSpan(horizontal, +box.width || s.w, +box.height || s.h, pg.page.h), pg.page.h) : null;
-      if (band) { put('categoryAxis', { innerPadding: lit(band.pct + 'L'), outerPadding: lit(band.pct + 'L') }); BANDS.set(visual, nCat); }
+      if (band) { put('categoryAxis', { innerPadding: lit(band.pct + 'L'), outerPadding: lit(band.pct + 'L') }); BANDS.set(visual, nCat);
+        // (FX5b) said in the plan: where, which kind, how many categories, the padding and the thickness (never a name)
+        n.barBands.push({ page: pg.name || base, kind: s.kind, visualType: visual.visualType, categories: nCat, padding: band.pct, thickness: Math.round(band.bar * 10) / 10, max: Math.round(band.max * 10) / 10 }); }
       // O-13: the line chart's month label
       if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, 'Ascending');   // (a mirrored report's: turned round by the engine, after this)
