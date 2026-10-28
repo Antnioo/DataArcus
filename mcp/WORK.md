@@ -17,7 +17,7 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
   (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
 - 28 Oct (laptop part 3): [SPD](work/SPD.md) (faster tests: CI 32 -> 12 min, same checks), [P3A](work/P3A.md) (one check verdict), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX3](work/FX3.md), [FX4](work/FX4.md) (part 3 fixes), [FX5](work/FX5.md) (bar thickness, D-1028-06).
-- Running: FX6 (Codex's finds), FX5b (bar counts for text columns), then FX3b, FX4b.
+- Running: FX6 (Codex's finds), FX5b (bar counts for text columns), [FX3b](work/FX3b.md) (default titles in Arabic; items 1-3 done, item 4 after FX5b), FX4b.
 
 ## Next step
 1. Merge FX6, FX5b, FX3b, FX4b; a new rc build; the laptop re-checks what changed.
