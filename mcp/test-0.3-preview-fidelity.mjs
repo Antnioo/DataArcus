@@ -102,7 +102,10 @@ try {
   chk(() => eti >= 0 && !efl.some((f) => f.i === eti), () => `F-03. the exec page's table is not flagged: ${JSON.stringify(efl)} ${JSON.stringify(exec.visuals[eti] && { w: exec.visuals[eti].w, columns: exec.visuals[eti].columns })}`);
 
   // ---------- F-04: slanted category labels ----------
-  chk(() => P.notes(dense).some((f) => f.i === li && f.kind === 'slant' && /slant/.test(f.why || '')) && notesOf(dsvg).some((f) => f.i === li && f.kind === 'slant') && !dfl.some((f) => f.i === li), () => `F-04. the dense page's 509-wide line chart by 12 months (42 a month, a 3-letter month needs 65.5 at 15pt) has the note, no flag: ${JSON.stringify(P.notes(dense).filter((f) => f.i === li))}`);
+  // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the large model's calendar runs over several years by its own
+  // DAX, so the line chart is by Calendar[Year Month], whose number of labels is the data's: the preview says "labels from
+  // your data", never a slant it cannot know, and no flag; the slant rule on 12 short months is checked just below)
+  chk(() => P.notes(dense).some((f) => f.i === li && f.kind === 'labels') && !P.notes(dense).some((f) => f.i === li && f.kind === 'slant') && !dfl.some((f) => f.i === li), () => `F-04. the dense page's 509-wide line chart by Year Month (its labels' count the data's) has the labels note, no slant note, no flag: ${JSON.stringify(P.notes(dense).filter((f) => f.i === li))}`);
   chk(() => !efl.length && !P.check(exec).length, () => `F-04. nothing on the exec page is flagged: ${JSON.stringify(P.check(exec))}`);
   const lab = (category, w, extra) => P.notes({ w: 1920, h: 1080, visuals: [Object.assign({ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 400, title: 'x', category, labelSize: 15 }, extra || {})] }).filter((f) => f.kind === 'slant');
   chk(() => lab('Month Short', 509).some((f) => /slant/.test(f.why)) && !lab('Month Short', 1242).length, () => 'F-04. 12 short months slant in 509, stand in 1242');

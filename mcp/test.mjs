@@ -563,12 +563,14 @@ if (part('quality')) {
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
     // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
     // where it has them, so the labels stay level; it was Calendar[Month Name])
-    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
+    // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], in time order by its month's first date; Month Short added up the same month of six years)
+    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Year Month]') && !cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
       `fields: ${[...new Set(cols)].join(', ')}`);
     // 5. the model's own issues are told, with the fix, and the model is not changed
     const notes = (q.j.modelNotes || []).map((n) => n.field);
     // (round 12, #16: the note is on the short month names the report now shows; it was on Calendar[Month Name])
-    check(notes.includes('Calendar[Month Short]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
+    // (FX4b, D-1028-07: the note is on Year Month, the axis now; it has no sort-by column in the model either)
+    check(notes.includes('Calendar[Year Month]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
 // tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since round 14 with the text column last, at the right edge;
@@ -698,7 +700,8 @@ const cardProblems = (dir, rtl) => {
     // (round 12, #16, the owner's go 6 Oct: the charts' time axis is the model's short month names, Calendar[Month Short],
     // so their labels stay level; the checks below named Calendar[Month Name] before)
     const sp = sortProblems(files), byOf = (cat) => [...new Set(sp.sorted.filter((x) => x.category === cat).map((x) => x.by))].join();
-    check(!sp.bad.length && byOf('Calendar.Month Short') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Short') && sp.sorted.some((x) => x.type === 'lineChart'),
+    // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], sorted by Min of the calendar's Year Month Sort (YEAR * 100 + MONTH; the round 2 way, measured in Desktop), its trend tooltip too; Month Short added up the same month of six years)
+    check(!sp.bad.length && byOf('Calendar.Year Month') === 'Calendar.Year Month Sort' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Year Month') && sp.sorted.some((x) => x.type === 'lineChart' && x.category === 'Calendar.Year Month'),
       `${name}: months not put in order: ${JSON.stringify(sp.sorted).slice(0, 300)} ${sp.bad.slice(0, 2).join('; ')}`);
     check(byOf('Calendar.Day Name') === 'Calendar.Day of Week', `${name}: the chart by Day Name is sorted by "${byOf('Calendar.Day Name')}", want Calendar.Day of Week`);
     // round 2: display names. Without the input nothing carries one; an Arabic report lists the fields it shows under
@@ -722,10 +725,11 @@ const cardProblems = (dir, rtl) => {
     // (FX3, D03) the check fails a translated field shown in English: Total Sales under "Total Sales"
     if (rtl) { const ts = projections(files).find((p) => p.queryRef === 'Sales.Total Sales'); check(ts && !planName(Object.assign({}, ts, { displayName: 'Total Sales' })), `${name}: a translated field shown under its English name (Total Sales as "Total Sales") must fail the display-name check (D03): ${JSON.stringify(ts || null).slice(0, 200)}`); }
     const keptMonth = projections(files).some((p) => p.queryRef === 'Calendar.Month Short' && p.displayName === 'Month Short');
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth) : !res.j.arabicNames),
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth || (!projections(files).some((p) => p.queryRef === 'Calendar.Month Short') && !res.j.arabicNames.missing.includes('Calendar[Year Month]'))) : !res.j.arabicNames),   /* (FX4b, D-1028-07: Month Short is no longer shown; Year Month, shown in its place, has its Arabic plan name) */
       `${name}: without displayNames: a displayName written (${JSON.stringify(projections(files).filter((p) => !(p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p))).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}), or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
-      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
+      // (FX4b, D-1028-07: the axis is Calendar[Year Month] now, so the month's given name is given to it; it was Calendar[Month Short])
+      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Year Month]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
       // (0.3.1 CX1, F01: the two fields given no Arabic name here are kept English on purpose, as a person says it)
       const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: Object.assign({}, given, keepEnglish('Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]')) });
       if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
@@ -733,11 +737,11 @@ const cardProblems = (dir, rtl) => {
         const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
-        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
+        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Year Month').length >= 2 && of('Calendar.Year Month').every((p) => p.displayName === 'الشهر')
           && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === proposeArabic('Total Sales Last Ramadan')),   // (changed 19 Oct 2026, R2: the plan's pinned name; was none)
-          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
+          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Year Month|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
-        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
+        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'") && !txt.includes("'Total Sales حسب Year Month'"), 'display names: titles still use the model names');
         // the table's column formatting still points at the field (its queryRef), not at the name
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
@@ -745,7 +749,7 @@ const cardProblems = (dir, rtl) => {
         // (changed 27 Oct 2026, CX1, F01: the fields of English titles kept English on purpose (keepEnglish), so
         // "vs Last Ramadan %" shows its model name, given, and 2 more names are used: 8, was 6)
         const keptPct = ps.some((p) => p.queryRef === 'Sales.Total Sales vs Last Ramadan %' && p.displayName === 'Total Sales vs Last Ramadan %');
-        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && (an.missing.includes('Sales[Total Sales vs Last Ramadan %]') || keptPct) && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
+        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && (an.missing.includes('Sales[Total Sales vs Last Ramadan %]') || keptPct) && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Year Month]') && !an.missing.includes('Calendar[Quarter]')
           && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === (keptPct ? 8 : 6), `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
@@ -803,7 +807,8 @@ const cardProblems = (dir, rtl) => {
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
   // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
-  check(!r.err && f(r.j.date) === 'Calendar[Month Short]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+  // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], in time order by its month's first date; Month Short added up the same month of six years)
+  check(!r.err && f(r.j.date) === 'Calendar[Year Month]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
 }
 
 // ---------- round 3: safety before the first beta build ----------
@@ -1089,7 +1094,7 @@ if (part('round4')) {
   chk(() => !noFocus.err && noFocus.j.needsFocus === true && !noFocus.j.kpis && noFocus.j.areas.some((a) => a.area === 'Logistics') && /focus/.test(noFocus.j.why), () => `suggest_fields on a large model without a focus must pick nothing and ask for one: ${noFocus.t.slice(0, 240)}`);
   const lg = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
   // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
-  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Short]' && f(lg.j.cats.bar) === 'Hub[Hub Region]' && f(lg.j.cats.column) === 'Lane[Lane Region]'   /* round 22: lookups the main measure's table (Shipments) is related to; they were Carrier and Route, which only Deliveries is related to (the same total on every bar in Desktop) */
+  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Year Month]' /* (FX4b, D-1028-07: the large model's calendar runs over several years by its own DAX; was Calendar[Month Short]) */ && f(lg.j.cats.bar) === 'Hub[Hub Region]' && f(lg.j.cats.column) === 'Lane[Lane Region]'   /* round 22: lookups the main measure's table (Shipments) is related to; they were Carrier and Route, which only Deliveries is related to (the same total on every bar in Desktop) */
     && lg.j.slicers.map(f).join() === 'Calendar[Year],Hub[Hub Region],Lane[Lane Region]' && lg.j.scope.tables === 23 && lg.j.scope.focus === 'logistics', () => `suggest_fields with focus "logistics": ${lg.err ? lg.t.slice(0, 200) : JSON.stringify({ kpis: lg.j.kpis.map(f), date: f(lg.j.date), bar: f(lg.j.cats.bar), column: f(lg.j.cats.column), slicers: lg.j.slicers.map(f), scope: lg.j.scope })}`);
   const zz = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'zzz' });
   chk(() => !zz.err && zz.j.needsFocus === true && !zz.j.kpis && /zzz/.test(zz.j.why) && zz.j.areas.length > 5, () => `suggest_fields with a focus that matches nothing: ${zz.t.slice(0, 240)}`);
@@ -1721,7 +1726,8 @@ if (part('round9')) {
     const svgProj = tables.length ? tables[0].visual.query.queryState.Values.projections.filter((p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) : [];
     const plain = await ask('create_report', { path: 'dax-project', name: 'R9 No SVG', design: exec });
     // 1. the files are D-P1's: one report-level measure per column (Text, ImageUrl) on the entity of its first measure, the last columns of the first table
-    chk(() => ext.$schema === 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json' && ext.name === 'extension' && ext.entities.length === 1 && ext.entities[0].name === 'Sales'
+    chk(() => ext.$schema === 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json' && ext.name === 'extension' && ext.entities.filter((e) => e.name !== 'Calendar').length === 1 && ext.entities[0].name === 'Sales'   /* (FX4b, D-1028-07: the Year Month axis's order measure, "Month start (sort)", lives on the Calendar entity of the same file) */
+      && ext.entities.filter((e) => e.name === 'Calendar').every((e) => e.measures.every((m) => !/ImageUrl/.test(m.dataCategory || '')))
       && ms.length === 2 && ms[0].name === 'Progress' && ms[1].name === 'Day' && ms.every((m) => m.dataType === 'Text' && m.dataCategory === 'ImageUrl' && Object.keys(m).sort().join() === 'dataCategory,dataType,expression,name')
       && svgProj.length === 2 && JSON.stringify(svgProj[0]) === JSON.stringify({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Progress' } }, queryRef: 'Sales.Progress', nativeQueryRef: 'Progress' })
       && tables[0].visual.query.queryState.Values.projections.slice(-2).map((p) => p.queryRef).join() === 'Sales.Progress,Sales.Day' && tables.slice(1).every((t) => !/extension/.test(JSON.stringify(t)))
