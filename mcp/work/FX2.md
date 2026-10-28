@@ -20,7 +20,7 @@
 - **Got:** `fx2` 20 checks, 18 red on 5690ea8 first (the other 2 read the catalog and build the fixture);
   `0.3.1-cx2` 16 = 16 (S1's two middle pairs changed on purpose: CenterLeft/CenterRight); `phone` 355 = 355 (its
   no-measures Arabic case keeps Order Id English on purpose, as CX1 did for the other models); areas twin 12, arabic
-  15, checker 6, report 40 suites pass; no golden changed; website run-all, site config pass.
+  15, checker 6, report 40 suites pass; website design-engine 598, layout-canvas 31, site config pass.
 - **State:** the work committed; the full run next.
 - **Resume:** the full run, then CI.
 
@@ -53,8 +53,19 @@
 | A-1 | no measures, lang ar: the counted and summed columns were not in the Arabic names list, so the plan said "kept English on purpose" and gave a plan id: "Count of Order Id", "Sum of Amount"; with a name approved the count lost its word («رقم الطلب») | they are drafted like every field (the fixed list's «المبلغ», «الكمية»; Order Id in proposeYourself), no plan id until each has a name; `arabicNames.countedTitles` lists each title's English and its Arabic draft; the titles «عدد رقم الطلب»، «مجموع المبلغ»، «عدد رقم الطلب حسب اسم الشهر» | plan_layout.mjs (counted), report-run.mjs named() | fx2 A1-A5; phone |
 | C Seen 2 | TOOLS.md named none of the four | a table: what each writes and its limits, from the code (flip-cards.mjs, status-icons.mjs, metric-switcher.mjs, report-inputs.mjs) | mcp/TOOLS.md | fx2 T1 |
 
-Changed on purpose: `0.3.1-cx2` S1 (two pairs: CenterRight/CenterLeft for Right/Left; 16 = 16 checks); `phone`'s
-no-measures Arabic case keeps `Orders[Order Id]` English on purpose (its checks are about the phone layout; 355 = 355).
+## Tests changed on purpose (before -> after)
+- `0.3.1-cx2` S1: the pairs Right -> Left, Left -> Right became CenterRight -> CenterLeft, CenterLeft -> CenterRight
+  (Left and Right are not presets in Microsoft's catalog); 16 -> 16 checks.
+- `phone`: its Arabic reports on the no-measures model now pass `Orders[Order Id]` kept English on purpose (keepEnglish,
+  as CX1 did for its other models; the checks are about the phone layout); 355 -> 355 checks.
+- `mcp` (test.mjs, block 3, repeated titles): the Arabic report on the no-measures model approves «رقم الطلب» for
+  Order Id (displayNames); before, the plan gave an id with "Count of Order Id"; the check (every title its own, no
+  bracket) is unchanged.
+- `round22` e (English names kept on purpose): Order Id kept English too, beside Region and Channel; 10 (three charts,
+  three titles): «رقم الطلب» approved for Order Id; 58 -> 58 checks.
+- No expected number changed. CI on 919563a was red on S7 (`0.2.9-sweep`) and the website's `design-engine`: my first
+  C03 rule stopped round 9's own move (a chart under a one-dropdown rail, and the lab's second page); 967e04e narrows it
+  to a chart at the rail's own top: `v029sweep` 90 and `design-engine` 598, `layout-canvas` 31 pass, fixtures unchanged.
 
 ## CHANGELOG line
 "What a test run in Power BI Desktop found": the twin's legend and shadow positions only into ones Power BI has; a
