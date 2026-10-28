@@ -16,13 +16,14 @@
   the chart starts at the rail's top), T (TOOLS.md names the four options). `0.3.1-cx2` S1 and S5 change on purpose
   (Left/Right are not catalog presets: CenterLeft/CenterRight turn instead; said per check). Goldens, `0.2.9-layouts`,
   `0.3.1-ts1`-like layout suites: any page with a rail beside a row of two charts may change (said per test).
-  Full run: the base's 114 suites + 1 (fx2) = 115.
+  Full run: the base's suites + 1 (fx2).
 - **Got:** `fx2` 21 checks, 18 red on 5690ea8 first (2 read the catalog and build the fixture; C5 a guard);
   `0.3.1-cx2` 16 = 16 (S1's two middle pairs changed on purpose: CenterLeft/CenterRight); `phone` 355 = 355 (its
   no-measures Arabic case keeps Order Id English on purpose, as CX1 did for the other models); areas twin 12, arabic
   15, checker 6, report 40 suites pass; website design-engine 598, layout-canvas 31, site config pass.
-- **State:** the work committed; the full run next.
-- **Resume:** the full run, then CI.
+- **State: DONE.** Full run on 6a1445d: "run-tests: 116 suites passed" (mcp 1593, fx2 21; the base's 115 + fx2: my
+  plan's "114" was the --list count's mistake). CI started on the branch after this line.
+- **Resume:** none; the reviewer's merge.
 
 ## The plan
 1. **H-1** `assets/js/report-mirror.js` LEGEND: Microsoft's catalog (@microsoft/powerbi-core-visual-schema 0.1.3,
