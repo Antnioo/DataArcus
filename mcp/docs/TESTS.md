@@ -34,6 +34,10 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   folder: each suite's seconds, status, checks and cause, and whether the run finished) must be there, finished, and
   agree with the log; a suite that timed out, crashed or printed 0 checks fails the sum. It prints the total checks per
   OS and each shard's seconds. Each problem and each `::error` annotation is the one-line form above.
+- The builder's local loop (SPD, Codex #9): while working, the suites of the change only, `npm test -- <area>` or
+  `npm test -- --affected` (seconds to minutes); at the end, after the last code commit, one full run `npm test --
+  --keep-going` (30-40 min, in the background, waited on to its last line, "run-tests: N suites passed"), then CI on
+  the branch. The rule is unchanged: CI and the final gate run every suite; a partial run never stands for the full one.
 - `npm test -- --affected[=<ref>]` is for local runs only: it runs the suites the files changed since `<ref>` touch
   (default tests.json `affected.base`; `git diff --name-only`, new files too), printing the reason for each pick
   ("mcp/lib/twin-write.mjs -> area twin: ..."); a safety-infrastructure path, an unmapped engine or an unknown path picks

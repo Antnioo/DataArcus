@@ -396,6 +396,10 @@ try {
     assert.match(h.stdout, /CI and the final gate NEVER use it/);
     assert.match(fs.readFileSync(path.join(REPO, 'mcp/docs/TESTS.md'), 'utf8'), /--affected[\s\S]{0,700}never use it/i);
   });
+  // (SPD, Codex #9) the builder's local loop where builders read it: an area or --affected while working, one full run at the end
+  t('the local loop is written in mcp/CLAUDE.md and mcp/docs/TESTS.md: <area> / --affected while working, one full run at the end', () => {
+    for (const f of ['mcp/CLAUDE.md', 'mcp/docs/TESTS.md']) assert.match(fs.readFileSync(path.join(REPO, f), 'utf8'), /local loop[^]{0,120}npm test -- <area>` or\s+`npm test -- --affected`[^]{0,200}one full run\s+`npm test --\s+--keep-going`/, f);
+  });
   t('--affected=HEAD lists the reasons and the picks, runs nothing with --list', () => {
     const r = node([path.join(REPO, 'mcp/run-tests.mjs'), '--affected=HEAD', '--list']);
     assert.equal(r.status, 0, r.stderr); assert.match(r.stdout, /^run-tests --affected \(since HEAD; local only/);
