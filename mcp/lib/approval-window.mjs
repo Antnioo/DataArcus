@@ -247,7 +247,7 @@ const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['F
   ['Page pairs', 'أزواج الصفحات'], ['Language buttons', 'أزرار اللغة'], ['Slicers kept in sync', 'المقسمات المتزامنة'], ['Inputs', 'المدخلات'], ['Dates and seasonal scope', 'التواريخ والنطاق الموسمي'], ['Not checked before writing', 'لم يُفحص قبل الكتابة'],
   ['All inputs, as given (raw)', 'كل المدخلات كما أُعطيت'], ['Colours', 'الألوان'], ['Sample project (made-up data)', 'مشروع المثال (بيانات تجريبية)'], ['Tables', 'الجداول'], ['DAX function library', 'مكتبة دوال DAX'],
   // (SQ3, T1-S9) the report's other headings an Arabic page shows
-  ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Visual gallery', 'معرض المرئيات'],
+  ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Thinner bars', 'أشرطة أرفع'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
   // (FX1) the rest an Arabic page shows
   ['Not fully Arabic', 'ليست عربية بالكامل'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
@@ -550,6 +550,10 @@ function summaryOf(kind, data) {
         // (SQ15b, L3-S2) the measures left out: their table is not related to the charts' axes
         Array.isArray(ms.leftOut) && ms.leftOut.length ? [['Measures left out', ms.leftOut.map((x) => `${cut(String(x.field), 120)}: ${cut(String(x.why), 300)}`)]] : [],
         [['Title with nothing chosen', String(ms.fallbackTitle || '')], ['Model change', String(ms.modelChange || '')], ['Script file', String(ms.script || '')], ['Before the script is applied', String(ms.beforeApplied || '')], ['Saved selection', String(ms.savedSelection || '')]]) });
+    // (0.3.1 FX3b, D-1028-06) the charts whose bars the writer makes thinner, in the page's language (FX5b's said: counts
+    // and sizes only, never a category's name or value)
+    const bt = d.barThickness && typeof d.barThickness === 'object' && d.barThickness.said && typeof d.barThickness.said === 'object' ? d.barThickness : null;
+    if (bt) sections.push({ heading: 'Thinner bars', rows: [[{ en: 'Charts', ar: 'المخططات' }, { en: String(bt.said.en || ''), ar: String(bt.said.ar || '') }]] });
     // (0.3.0 D2) each gallery visual the user asked for: what is written and why (the writer's rule on the fields), and
     // how the preview draws it
     const GN = { combo: 'Combo (line and clustered column)', waterfall: 'Waterfall', smallMultiples: 'Small multiples' };

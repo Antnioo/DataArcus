@@ -362,13 +362,18 @@ export function buildTwin(P, labels) {
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
     // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
+    const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);
       applied += Mirror.labelVisual(pg.id, vj, labels);
       // (0.3.1 FX3) Power BI's automatic title or subtitle: written as the visual's own text, its approved Arabic, else
       // its English as Power BI composes it from the original's names (wholly English, isolated), never left to compose
-      autos.forEach((a) => { const e = vj.visual.visualContainerObjects[a.key][a.i], ar = labels[a.id] != null ? String(labels[a.id]) : null;
-        e.properties.text = Ls(ar != null && ar.trim() ? ar : TextMeasure.isolateWhole(autoSentence(a, (x) => x.name))); if (ar != null) applied++; });
+      // (FX3b) a missing title card: a new entry holding the text alone, never "show"
+      autos.forEach((a) => { const ar = labels[a.id] != null ? String(labels[a.id]) : null, text = Ls(ar != null && ar.trim() ? ar : TextMeasure.isolateWhole(autoSentence(a, (x) => x.name)));
+        if (a.i < 0) { const vco = vj.visual.visualContainerObjects = isObj(vj.visual.visualContainerObjects) ? vj.visual.visualContainerObjects : {}; vco[a.key] = (Array.isArray(vco[a.key]) ? vco[a.key] : []).concat([{ properties: { text } }]); }
+        else vj.visual.visualContainerObjects[a.key][a.i].properties.text = text;
+        if (a.key === 'title') autoTitled.set(String(vj.name), text);
+        if (ar != null) applied++; });
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
       if (textRename.size) rewireMeasures(vj, textRename);
       if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }
@@ -390,7 +395,12 @@ export function buildTwin(P, labels) {
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
       const m = P.keepLtr(pg) ? JSON.parse(JSON.stringify(v.mobile.json)) : Mirror.mirrorMobile(v.json, v.mobile.json);
-      applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels, { font: ctx.text.font, was: v.json }); if (isObj(m)) wholeTitles(m.visualContainerObjects); return m; });
+      applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels, { font: ctx.text.font, was: v.json });
+      // (0.3.1 FX3b, FX3's Seen 2) a phone layout that sets its own title formatting (an entry with no text) takes the text
+      // written for the visual's automatic title, so the phone shows the same; none of its own: nothing is added
+      const tx = isObj(r.visuals[i]) ? autoTitled.get(String(r.visuals[i].name)) : null;
+      if (tx && isObj(m) && isObj(m.visualContainerObjects) && Array.isArray(m.visualContainerObjects.title)) m.visualContainerObjects.title.forEach((e) => { if (isObj(e) && !e.selector && isObj(e.properties) && e.properties.text === undefined) e.properties.text = tx; });
+      if (isObj(m)) wholeTitles(m.visualContainerObjects); return m; });
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
     return { pg, page, visuals: r.visuals, mobiles };
   });

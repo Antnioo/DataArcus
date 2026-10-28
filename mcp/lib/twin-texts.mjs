@@ -11,6 +11,7 @@ import { TEXT_CAP, isObj, pageOf } from './twin-read.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
+const Rules = require('../../assets/js/report-rules.js');
 
 // ---- title measures (rc.24, the laptop's proof of rc.23: 4 chart titles stayed English in the twin) ----
 // A chart's "fx" title is a measure; one of the report's own (reportExtensions.json, as DataArcus writes "Title: ..." for a
@@ -154,6 +155,12 @@ export function autoTitlesOf(pageId, json) {
     if (!isObj(e) || e.selector || !isObj(e.properties) || !isOn(e.properties.show) || hasText(e.properties.text)) return;
     out.push({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats });
   }));
+  // (0.3.1 FX3b, the owner's hand-made charts: no title card at all) no "show" set and no text: the type's default title
+  // (Microsoft's catalog, report-rules.js defaultTitle) is Power BI's to compose when it is on. i: the entry the text
+  // goes in (-1: none yet); only the text is ever written, never "show". A subtitle is off unless switched on
+  const own = (Array.isArray(vco.title) ? vco.title : []).map((e, i) => [e, i]).filter(([e]) => isObj(e) && !e.selector && isObj(e.properties));
+  if (!out.some((a) => a.key === 'title') && !own.some(([e]) => e.properties.show !== undefined || hasText(e.properties.text)) && Rules.defaultTitle(json.visual.visualType) === 'on')
+    out.push({ key: 'title', i: own.length ? own[0][1] : -1, id: 'title:' + where, vals, cats, byDefault: true });
   return out;
 }
 // the sentence: the values "and", then "by" the categories (Power BI's own words); Arabic: «و» and «حسب»
@@ -211,7 +218,7 @@ export function textsOf(R) {
 // (the glossary's draft of the rest, else none). Shown elsewhere too (a card, a chart, a matrix), one name serves both:
 // its draft is kept and both are said. queryRef -> { only }
 const AVG = /^\s*(?:avg\.?|average)\s+(.+)$/i;
-const AUTO_WHAT = 'Power BI\'s automatic title (switched on, no text of its own): the twin writes it as the visual\'s own text, its approved Arabic or else this English, so Power BI never composes it from Arabic field names with its English "by". Draft it as one Arabic sentence from the fields\' approved Arabic names («A حسب B»)';
+const AUTO_WHAT = 'Power BI\'s automatic title (switched on, or its type\'s default title, with no text of its own): the twin writes it as the visual\'s own text, its approved Arabic or else this English, so Power BI never composes it from Arabic field names with its English "by". Draft it as one Arabic sentence from the fields\' approved Arabic names («A حسب B»)';
 const ROW_WHAT = 'Table column header: each row of the table is one item, so name what ONE row shows (a measure named "Avg ..." gives that item\'s own value on its row; the Total row is Power BI\'s own)';
 const ROW_AND_MORE = 'Shown as a table column (each row one item: that item\'s own value) and elsewhere (over many items): one Arabic name serves both';
 function rowFieldsOf(R) {
@@ -258,13 +265,13 @@ export function sameTextLabels(texts, labels) {
 // (the same words on several visuals, a field and the alt text that repeats it, are one row: where says each kind and
 // count; ids name them in texts), the why of its strongest reason
 export function notTranslatedOf(texts, labels, problems) {
-  const rows = new Map(), RANK = ['withheld', 'problem', 'field', 'other'];
+  const rows = new Map(), RANK = ['withheld', 'problem', 'field', 'auto', 'other'];   // (FX3b: an automatic title's reason before a plain text's)
   texts.filter((t) => labels[t.id] == null && /[A-Za-z]/.test(t.raw)).forEach((t) => {
     const p = problems.find((x) => x.id === t.id);
     const [rank, why] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
       : p ? ['problem', 'its Arabic was not taken: ' + p.why]
       : t.kind === 'field' ? ['field', 'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)']
-      : t.automatic ? ['other', 'Power BI\'s automatic title, with no Arabic approved: the twin writes this English text as the visual\'s own (wholly English), so Power BI never composes it from Arabic field names with its English "by"']
+      : t.automatic ? ['auto', 'Power BI\'s automatic title, with no Arabic approved: the twin writes this English text as the visual\'s own (wholly English), so Power BI never composes it from Arabic field names with its English "by"']
       : ['other', 'no Arabic was approved for it: the twin shows it as it is'];
     const k = t.text == null ? '\u0000' + t.id : t.text, what = (t.phone ? 'phone layout: ' : '') + (KIND_SAID[t.kind] || t.kind);
     if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why });
