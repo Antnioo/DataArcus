@@ -204,7 +204,7 @@ export function knownGap(code, object, visualJson, caps = getCapabilities) {
 // its source text. Every finding: { origin: validator | schema | rule | instruction (| lint, in the lint section),
 // rule, severity error | warning | note, file, page, visual, what, fix, source, impact } (CHECK-REPORT.md, "Finding shape"))
 export const impactOf = (f) => {
-  if (f.origin === 'validator') { if (f.known) return 'desktopOpens'; if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
+  if (f.origin === 'validator') { if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
   if (f.origin === 'schema') return 'canBreak';
   return 'dataarcusRule';
 };
