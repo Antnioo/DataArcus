@@ -340,8 +340,9 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // F6. A column the visual counts (Function 2, a distinct count) is DISTINCTCOUNT in the row label's DAX
   {
+    // (0.3.1 FX2, A-1: the columns counted or summed, Order Id and Qty, are drafted like any field: their approved names here)
     modelR('r23-nomeas', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Qty', 'double')] }]);
-    const x = await auto('r23-nomeas', 'R23 nomeas', 'ar', { noDataMessage: false }), m = ext(x, 'r23-nomeas').find((e) => /^Row label: /.test(e.name));
+    const x = await auto('r23-nomeas', 'R23 nomeas', 'ar', { noDataMessage: false, displayNames: { 'Sales[Order Id]': 'رقم الطلب', 'Sales[Qty]': 'الكمية' } }), m = ext(x, 'r23-nomeas').find((e) => /^Row label: /.test(e.name));
     chk(() => m && /DISTINCTCOUNT \( 'Sales'\[Order Id\] \)/.test(m.expression) && !/COUNTA/.test(m.expression), () => `F6. a distinct count is DISTINCTCOUNT: ${m && m.expression} ${short(x)}`);
   }
   // F7. One implementation of the room rule: the server's text slots use lib/slots.mjs's absorb (no copy of its own)
