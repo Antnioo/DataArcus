@@ -26,6 +26,9 @@
 - Full run on 32bc7f9: "run-tests: 121 suites passed" (before FX5b).
 - FX5b landed (1b2a53a) during that run: merged in (a799c72, only pbip-bind.min.js conflicted, rebuilt by build:min).
 - Full run on a799c72: "run-tests: 122 suites passed"
+- The reviewer's note: a new stamp after FX5b's 20261028fx5b: pbip-bind.min.js (in theme-generator.js) and
+  theme-generator.min.js (its three pages) -> 20261028fx4b (3c7fe80).
+- Full run on 3c7fe80: "run-tests: 122 suites passed"
 - **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Plan
