@@ -165,12 +165,27 @@
     m[0] = k > 2 ? (3 * sl[0] - m[1]) / 2 : sl[0]; m[k - 1] = k > 2 ? (3 * sl[k - 2] - m[k - 2]) / 2 : sl[0];
     return pts.slice(0, -1).map((p0, i) => { const p1 = pts[i + 1], d = h[i] / 3; return [p0, [p0[0] + d, p0[1] + m[i] * d], [p1[0] - d, p1[1] - m[i + 1] * d], p1]; });
   }
+  // (0.3.1 FX5) n bars t thick along a length L, every gap the same (the written inner and outer padding are equal):
+  // [{ at, t }] from the start of the length
+  const barsOf = (bars, L) => { const t = Math.min(bars.t, L / bars.n), g = Math.max(0, (L - bars.n * t) / (bars.n + 1)); return Array.from({ length: bars.n }, (x, i) => ({ at: g + i * (t + g), t })); };
+  // the bars a bar or column chart's file sets (its categoryAxis innerPadding and outerPadding equal, the writer's barBand,
+  // pbip-sizing.js): their count and thickness on the page H high, by the writer's own rule; null where it sets none
+  const barsFor = (k, v, H) => {
+    const Z = shared(() => require('./pbip-sizing.js'), 'DAPbipSizing'), pct = v && +v.band;
+    if (!Z || !Z.barCountOf || !(pct > 0) || !/^(bar|column)$/.test(k)) return null;
+    const span = Z.barSpan(k === 'bar', +v.w || 0, +v.h || 0, H), n = Z.barCountOf(pct, span, H), p = pct / 100;
+    return n ? { n, t: span * (1 - p) / (n + p) } : null;
+  };
   function shape(k, b, rtl, c, u, v) {
     const X = (f) => (rtl ? b.x + b.w * (1 - f) : b.x + b.w * f), Y = (f) => b.y + b.h * f;
     const R = (f0, g0, fw, gh, fill, op) => { const x0 = rtl ? X(f0 + fw) : X(f0); return `<rect x="${n(x0)}" y="${n(Y(g0))}" width="${n(b.w * fw)}" height="${n(b.h * gh)}" rx="${n(Math.min(b.w * fw, b.h * gh, 24 * u) * 0.2)}" fill="${fill || GREY}"${op ? ` opacity="${op}"` : ''}/>`; };
     switch (k) {
-      case 'bar': return [0.86, 0.7, 0.56, 0.42, 0.3].map((f, i) => R(0.06, 0.08 + i * 0.18, f * 0.88, 0.11)).join('');
-      case 'column': return [0.5, 0.78, 0.6, 0.9, 0.66, 0.8].map((f, i) => R(0.07 + i * 0.145, 0.95 - f * 0.88, 0.1, f * 0.88)).join('');
+      // (0.3.1 FX5) a chart whose file sets its bars' thickness (v.bars, from its padding: the writer's barBand) draws that
+      // many bars that thick, the gaps equal, as Desktop draws them; else the placeholder's own five bars or six columns
+      case 'bar': if (v && v.bars) return barsOf(v.bars, b.h).map((g, i) => R(0.06, g.at / b.h, [0.86, 0.7, 0.56, 0.42, 0.3][i % 5] * 0.88, g.t / b.h)).join('');
+        return [0.86, 0.7, 0.56, 0.42, 0.3].map((f, i) => R(0.06, 0.08 + i * 0.18, f * 0.88, 0.11)).join('');
+      case 'column': if (v && v.bars) return barsOf(v.bars, b.w).map((g, i) => { const f = [0.5, 0.78, 0.6, 0.9, 0.66, 0.8][i % 6]; return R(g.at / b.w, 0.95 - f * 0.88, g.t / b.w, f * 0.88); }).join('');
+        return [0.5, 0.78, 0.6, 0.9, 0.66, 0.8].map((f, i) => R(0.07 + i * 0.145, 0.95 - f * 0.88, 0.1, f * 0.88)).join('');
       case 'line': {
         // (L1) as the file draws it: smooth (monotone, as Power BI's monotoneX: the curve never swings past a point) with a
         // dot on each point, or straight (v.smooth, v.markers: read from the line chart's lineStyles)
@@ -299,7 +314,7 @@
       } else inner = (v.grid === 'dotted' && /^(bar|column|line)$/.test(k) ? [0.25, 0.5, 0.75].map((g) => (k === 'bar'
         ? `<line class="grid" x1="${n(ib.x + ib.w * g)}" y1="${n(ib.y)}" x2="${n(ib.x + ib.w * g)}" y2="${n(ib.y + ib.h)}"`
         : `<line class="grid" x1="${n(ib.x)}" y1="${n(ib.y + ib.h * g)}" x2="${n(ib.x + ib.w)}" y2="${n(ib.y + ib.h * g)}"`) + ` stroke="${GREY}" stroke-width="${n(u)}" stroke-dasharray="${n(u)} ${n(3 * u)}" opacity=".7"/>`).join('') : '')
-        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, v)) + timeArrow(k, ib, v, u);
+        + (k === 'image' || k === 'shape' ? shape(k, b, rtl, col, u) : shape(k, ib, rtl, col, u, ((bars) => (bars ? Object.assign({}, v, { bars }) : v))(barsFor(k, v, H)))) + timeArrow(k, ib, v, u);
       return `<g class="v" data-i="${i}" data-kind="${k}">${panel}${inner ? `<g class="ph">${inner}</g>` : ''}${t}${end}`;
     }).join('');
     // the flags: a dashed outline in a calm amber and the flag's word in a small tag at the box's top corner (inside the page)
@@ -424,6 +439,10 @@
     }
     // (0.3.0 L2) the button slicer's buttons (its one row's columns, else 3) and a chart's dotted or hidden gridlines
     if (type === 'advancedSlicerVisual') out.pills = Math.max(1, Math.min(8, numOf(props(ob.layout).columnCount) || 3));
+    // (0.3.1 FX5) the bars' thickness the writer set: a bar or column chart's equal inner and outer padding (a percent)
+    if (/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart|columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) {
+      const ca = props(ob.categoryAxis); if (numOf(ca.innerPadding) > 0 && numOf(ca.innerPadding) === numOf(ca.outerPadding)) out.band = numOf(ca.innerPadding);
+    }
     { const va = props(ob.valueAxis); if (boolOf(va.gridlineShow) === false) out.grid = 'none'; else if (strOf(va.gridlineStyle) === 'dotted') out.grid = 'dotted'; }
     // (L1) a line's look as written: smooth, and a dot on each point (lineStyles, the entry with no selector)
     if (/^(lineChart|areaChart|stackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/.test(type)) { const st = props(ob.lineStyles); if (strOf(st.lineChartType) === 'smooth') out.smooth = true; if (boolOf(st.showMarker) === true) out.markers = true; }

@@ -1,5 +1,5 @@
 {
-  "_note": "TT2 W7: the English download of the made-up \"Own\" model, its files the pictures aside, the random names of the writer numbered in order, as one SHA-256 (scripts/tests/arabic-names.mjs digest). Written on 13afb3a before TT2; re-pinned on 75652532 after TS1 (FHD text x 1.25, the owner D-1027-16): 65 changes, every one a TS1 text size (15->12.5, 18->15, 42->35, 27->22.5) or a box those sizes size (widths, x, heights); nothing else differs (reviewer, 27 Oct)",
-  "base": "75652532",
-  "sha256": "87b232bf86c981363fdd65d8ef54a6cd65073b6444d9979bd75fd7a85c653933"
+  "_note": "TT2 W7: the English download of the made-up \"Own\" model, its files the pictures aside, the random names of the writer numbered in order, as one SHA-256 (scripts/tests/arabic-names.mjs digest). Written on 13afb3a before TT2; re-pinned on 75652532 after TS1 (FHD text x 1.25, the owner D-1027-16): 65 changes, every one a TS1 text size (15->12.5, 18->15, 42->35, 27->22.5) or a box those sizes size (widths, x, heights); nothing else differs (reviewer, 27 Oct); re-pinned by FX5 (28 Oct, the owner D-1028-06) on purpose: one column chart (Sales[Territory], kept to its Top N) gains categoryAxis innerPadding and outerPadding 69 (its columns at most 36 thick); nothing else differs (diffed on 84596b9's engines)",
+  "base": "84596b9c",
+  "sha256": "a3cf9001e25fb1a06926aa8f266f1ee07342c460f520ec67176e785a7de6743c"
 }

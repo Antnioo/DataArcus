@@ -55,6 +55,31 @@
   // or a little wider and takes 50; at and over it 40, which leaves the bars about 60% (only 508 wide was measured).
   const BAR_NARROW_720 = 560;
   const barNameShare = (w, pageH) => (w * 720 / pageH < BAR_NARROW_720 ? 50 : 40);
+  // 0.3.1 FX5 (the owner, 28 Oct, D-1028-06: "why would i have a bar chart with three bars same length we need to apply
+  // some kind of sizing ... and also not make the bars that wide or columns in case of column chart"): a bar or column is
+  // never thicker than BAR_MAX_720 on a 1280 x 720 page, times the text factor on others (design-engine.js textScale: 45
+  // at 1920 x 1080). 36 is two of Desktop's own bars where it packs them (22.2 a row at 10pt, DESKTOP-TESTS.md round 0's
+  // rows, less its 20% inner padding: 17.8): derived from that measurement, the maximum itself to be seen on the laptop.
+  // The gaps are Microsoft's catalog's (powerbi-core-visual-schema 0.1.3) categoryAxis innerPadding ("Space between
+  // categories") and outerPadding ("Outer padding"), whole percents of a category's step; the step is span / (n - inner
+  // + 2 x outer). barBand(n, span, pageH): with inner = outer = p the bars are span x (1 - p) / (n + p) thick and every gap
+  // is the same, so p = (span - max x n) / (span + max), rounded up; null (nothing written, Desktop's default) where the
+  // count is not known or Desktop's default bar (span / n less its 20%) is not thicker than the maximum.
+  const BAR_MAX_720 = 36, BAR_DEFAULT_INNER = 0.2;
+  const Eng = () => (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
+  const barMax = (pageH) => { const E = Eng(); return BAR_MAX_720 * (E && E.textScale ? E.textScale(+pageH || 720) : 1); };
+  // the length the categories share along a chart's category axis, in page units: a bar chart's height less 45 above, 8
+  // under and 38 for the value axis (the measured rows of topCount, 720 units, scaled with the page); a column chart's
+  // width less its padding and 40 for the value axis (topCount's)
+  const barSpan = (horizontal, w, h, pageH) => { const H = +pageH || 720; return Math.max(0, horizontal ? h - (45 + 8 + 38) * H / 720 : w - 2 * Math.round(16 * H / 1080) - 40); };
+  const barBand = (n, span, pageH) => {
+    const k = Math.floor(+n), max = barMax(pageH);
+    if (!(k >= 1) || !(span > 0) || span / k * (1 - BAR_DEFAULT_INNER) <= max) return null;
+    const pct = Math.min(99, Math.ceil(100 * (span - max * k) / (span + max))), p = pct / 100;
+    return { n: k, pct, bar: span * (1 - p) / (k + p), gap: span * p / (k + p), max };
+  };
+  // the reverse, for a picture drawn from the written files (page-preview.js): the count a written pct was made for
+  const barCountOf = (pct, span, pageH) => { const p = +pct / 100, max = barMax(pageH); return p > 0 && p < 1 && span > 0 ? Math.max(1, Math.round(span * (1 - p) / max - p)) : null; };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
   // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
   // measure names). A table holds only the fields its width has room for, by the rule its pictures already follow
@@ -252,7 +277,7 @@
   const PHONE_TITLE = 14;
   const phoneTitleSize = (text, w, top) => Math.max(8, Math.min(top == null ? PHONE_TITLE : top, Math.floor(w / (0.55 * 4 / 3 * Math.max(1, String(text).length)))));
   const api = {
-    PHONE_TAB, phoneTabWidth, PHONE_TITLE, phoneTitleSize, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    PHONE_TAB, phoneTabWidth, PHONE_TITLE, phoneTitleSize, TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, BAR_MAX_720, BAR_DEFAULT_INNER, barMax, barSpan, barBand, barCountOf, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);
