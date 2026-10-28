@@ -100,8 +100,8 @@ try {
     // (c) the same verdict from create_report's check on the same files
     chk(() => ck && ck.validator && ck.validator.ran === true && ck.validator.canBreak === kinds.canBreak.count && ck.validator.mayLook === kinds.mayLook.count && ck.validator.desktopOpens === kinds.desktopOpens.count,
       () => `P${k + 2}. ${label}: create_report's check gives the same counts in each kind as check_report: ${JSON.stringify(ck && ck.validator)} vs ${JSON.stringify(cr && cr.counts.byImpact)}`);
-    chk(() => ck && /may not look as meant/.test(ck.summary) && !/can break/i.test(ck.summary) && new RegExp(codes[0]).test(JSON.stringify(ck.validator.byRule || {})),
-      () => `P${k + 3}. ${label}: create_report's summary says Microsoft's validator's warnings, as check_report does: ${JSON.stringify(ck && { summary: ck.summary, validator: ck.validator })}`);
+    chk(() => ck && (lang === 'ar' ? /قد لا تظهر كما يُراد/.test(ck.summary) && !/تعطل/.test(ck.summary) : /may not look as meant/.test(ck.summary) && !/can break/i.test(ck.summary)) && new RegExp(codes[0]).test(JSON.stringify(ck.validator.byRule || {})),
+      () => `P${k + 3}. ${label}: create_report's summary says Microsoft's validator's warnings, as check_report does (in the report's language): ${JSON.stringify(ck && { summary: ck.summary, validator: ck.validator })}`);
   }
 
   // ---------- T1-T6: generate_theme, mode and a full palette ----------

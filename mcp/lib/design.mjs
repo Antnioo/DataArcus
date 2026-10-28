@@ -165,6 +165,11 @@ export function themeDesign(a) {
     });
     d.preset = null;
     if (a.brand != null) fix('brand', a.brand, null, 'not used: a palette was given');
+    // (0.3.1 P3A, the laptop's part 3, B-1: a full light palette with mode "dark" gave a light theme and dropped the mode
+    // with no line) the palette's own page decides, its colours kept exactly as given (a colour is never changed without
+    // the user's yes); a mode it disagrees with is said, never dropped silently
+    const pageLight = E.lum(d.ui.background) > 0.45;
+    if (a.mode && hex(p.ui && p.ui.background) && pageLight === dark) fix('mode', a.mode, pageLight ? 'light' : 'dark', `not used: the palette's own page colour ${d.ui.background} is ${pageLight ? 'light' : 'dark'}, and the palette's colours are kept exactly as given. For a ${a.mode} theme, give a ${a.mode} page, visual and text colour in palette.ui`);
   } else if (a.brand != null) {
     const b = hex(a.brand);
     let h = a.harmony == null ? 'calm' : a.harmony;

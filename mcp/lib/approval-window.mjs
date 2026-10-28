@@ -659,7 +659,7 @@ function summaryOf(kind, data) {
     const from = !src ? null : src.from === 'visuals' ? `from the colours on the visuals of report "${String(src.report)}"`
       : `from the theme of report "${String(src.report)}" (${String(src.theme)})${src.from === 'theme and visuals' ? ' and the colours on its visuals' : ''}`;
     sections.push({ heading: 'Colours', rows: [from ? ['Where they come from', from] : null, ['Data colours', { swatches: (Array.isArray(C.data) ? C.data : []).map((c, i) => [String(i + 1), String(c)]) }],
-      ['Page', one(C.page)], ['Visuals', one(C.visuals)], ['Text', one(C.text)], ['Accent', one(C.accent)], C.mode ? ['Mode', C.mode === 'dark' ? 'dark' : 'light'] : null].filter(Boolean) });
+      ['Page', one(C.page)], ['Visuals', one(C.visuals)], ['Text', one(C.text)], ['Accent', one(C.accent)], C.mode ? ['Mode', (C.mode === 'dark' ? 'dark' : 'light') + (C.modeAsked === 'dark' || C.modeAsked === 'light' ? (C.modeAsked !== C.mode ? `: the palette's own colours decide; "${C.modeAsked}" was asked and not used` : '') : '')] : null].filter(Boolean) });
   }
   const titles = { theme: 'Theme file', scripts: 'Model fix scripts', calendar: 'Gulf calendar script' };
   const own = Object.values(pins)[0] || {}, shownAnswers = Array.isArray(d.answersShown) ? d.answersShown : null;

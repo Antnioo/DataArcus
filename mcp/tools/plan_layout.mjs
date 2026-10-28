@@ -13,6 +13,7 @@ import { planNative, nativeArtifact, shownOf } from '../lib/native-copy.mjs';
 import { planRedesign } from '../lib/redesign.mjs';
 import { planPreview, planLint, aggregationAnswer } from '../lib/plan-lint.mjs';
 import { checkArtifact, digestOf, modelPrintOf, bindingOf } from '../lib/artifact.mjs';
+import { validatorVerdict } from '../lib/check-report.mjs';   // (0.3.1 P3A: the validator's findings in check_report's kinds)
 import { BEFORE_APPLIED as FLIP_BEFORE } from '../lib/flip-cards.mjs';
 import { resolveIcons } from '../lib/status-icons.mjs';
 import { daxOption, resolveDax } from '../lib/dax-functions.mjs';
@@ -453,7 +454,7 @@ export function register(server, ctx) {
     const preview = exact && exact.bilingual ? (() => { const pv = previewOf(exact.bilingual.english), tw = twinPreview(exact.bilingual.P, exact.files);
       return tw ? Object.assign({}, pv || {}, { lang: a.lang === 'ar' ? 'ar' : 'en', pages: tw.pages, pairs: tw.pairs }) : pv; })() : previewOf(exact ? exact.files : null);
     const exactCheck = !planPin ? {} : { exactCheck: exact ? Object.assign({}, exact.check, preview && preview.check && (preview.check.worthALookItems || []).length ? { worthALookItems: preview.check.worthALookItems } : {}, { digest: exact.digest,
-      sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.`
+      sayInPlan: exact.check.status === 'pass' ? `Say in the plan: the report this plan writes was built and checked before the go, all ${exact.check.pages} pages (${exact.check.tooltipPages} tooltip): Microsoft's validator offline, every field against the model, the measured rules of what Power BI Desktop draws, and the layout check. create_report writes exactly these files, or nothing when the model or a file changes before the write.${(() => { const vv = validatorVerdict((exact.check.checks.validator || {}).kinds, 'en'); return vv ? ' ' + vv : ''; })()}`
         : exact.check.status === 'incomplete' ? `Tell the user: not every check could run on the report this plan writes (notRun), so it is not known to be clean. ${(exact.check.notRun || []).every((n) => !MUST_RUN[n.check] || n.capped) ? 'The approval page lists what was not checked; create_report writes exactly the files that were checked.' : 'No plan id is given (planProblems).'}`
           : 'The report this plan writes fails its check (blocking): no plan id. Change the plan.' })
       : { status: 'notBuilt', why: planProblems.length ? 'the plan is outside the tools\' limits (planProblems)' : 'create_report would refuse these inputs (call it to see why): nothing to check, and no plan can be written from them' } };

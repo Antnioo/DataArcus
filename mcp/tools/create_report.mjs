@@ -5,6 +5,7 @@ import { withPlan } from '../lib/files.mjs';
 import { writeNative } from '../lib/native-copy.mjs';
 import { writeRedesign } from '../lib/redesign.mjs';
 import { modelPrintOf, digestOf, bindingOf } from '../lib/artifact.mjs';
+import { validatorVerdict } from '../lib/check-report.mjs';
 import * as Plans from '../lib/plans.mjs';
 import * as Terms from '../lib/terminology.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
@@ -100,6 +101,15 @@ function writeApproved(a, art) {
   if (modelPrintOf(m) !== art.modelPrint) throw new Error(`Nothing was written: the model changed since plan ${a.planId} was approved, so the report that was checked is not the one this model gives.${again}`);
   if (digestOf(art.files) !== art.digest || bindingOf(art.digest, art.pin, art.modelPrint) !== Plans.approvedBinding(a.planId)) throw new Error(`Nothing was written: the report kept for plan ${a.planId} is not the one that was approved.${again}`);
   const done = art.finish(a.planId);
+  // (0.3.1 P3A, the laptop's part 3: this check said "0 problems" while check_report said "can break" on the same files)
+  // Microsoft's validator ran on these very bytes in the plan's check: its findings, in the kinds check_report gives them
+  const V = art.check && art.check.checks && art.check.checks.validator;
+  if (done.check && V && V.ran) {
+    const vv = validatorVerdict(V.kinds, a.lang);
+    done.check = Object.assign({}, done.check, { tellUser: 'Checked before it was written (Microsoft\'s validator offline, the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.',
+      summary: vv ? `${String(done.check.summary || '').replace(/\.?\s*$/, '')}. ${vv}` : done.check.summary,
+      validator: Object.assign({ ran: true, canBreak: +V.kinds.canBreak || 0, mayLook: +V.kinds.mayLook || 0, desktopOpens: +V.kinds.desktopOpens || 0 }, V.byRule ? { byRule: V.byRule } : {}) });
+  }
   // (0.3.0 J18) the terms of a written Arabic plan are confirmed for this model (this session only)
   { const pd = Plans.planOf(a.planId); if (pd && pd.data && Array.isArray(pd.data.terminology)) Terms.remember(m, pd.data.terminology); }
   // (0.3.1 X2) the bilingual report: what the one write holds
