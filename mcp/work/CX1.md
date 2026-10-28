@@ -76,13 +76,19 @@ number changed unless said.
 - `test-models/golden-baseline.mjs` task 2: approved Arabic names for Month Short and Total Sales vs Last Ramadan %, as
   the agent-level task does; its "why" in golden-expected.json says it; no result moved (no --update).
 - Kept English on purpose (the check is about layout, phone, slicers, calendars, story titles, caps or texts, not the
-  names), each listing its fields: test.mjs (Gulf Sales, Table AR, Names AR (its 2 unnamed fields: used 6 -> 8, said), R9
-  SVG AR, R10 fit, D5 titles, R13 Long, R12 AR2, R12 Six, R14 sample, N1; Round0 AR's check accepts Month Short shown
-  as the term kept English on purpose by Table AR on the same model, said in its comment), test-round23 (R23 esc, R23 cc), test-0.2.9b
+  names), each listing its fields: test.mjs (Gulf Sales, Table AR, Names AR (below), R9
+  SVG AR, R10 fit, D5 titles, R13 Long, R12 AR2, R12 Six, R14 sample, N1), test-round23 (R23 esc, R23 cc), test-0.2.9b
   (B29 ar), test-0.2.9i (I ar en: this check is about English names, kept on purpose), test-phone (ramadan, large),
   story-titles (ramadan ar), arabic-calendar (before and after the script), twin-complete (TC-2d), large-model-caps (AR all
   on: the 2 fields DN leaves), lr1, r4a, metric-switcher (AR_DN), powerbi-2026-10 (ar), preview-match (T1a all, T1b the 4
   with no fixed word), terminology-sheet TS-8 (the hostile measure; TW1's file, 1 call).
+- test.mjs "Round0 AR: without displayNames" (33df971; red on d0eaa9e, CI run 40617821387): before: Month Short listed in
+  arabicNames.missing, every displayName the plan's pinned one; after: Month Short is either listed as missing or shown
+  under its model name, the term kept English on purpose by "Table AR" earlier on the same model (the plan reuses a choice
+  the person confirmed); any other displayName is still the plan's pinned one; Total Sales still never missing. F01
+  itself is unchanged: an Arabic plan with an unnamed title field and no names given is still refused (cx1 A1, A2).
+- test.mjs "display names" (Names AR): before: displayNames used 6, vs Last Ramadan % missing; after: its 2 fields with
+  no Arabic name kept English on purpose (keepEnglish), shown under their model names: used 8.
 - arabic-titles AT-3: its subject is the English-names case: the first plan (no id) gives the lists checked; the person
   then keeps the 11 fields English on purpose and the report is written; AT-3f allows their names.
 
