@@ -38,8 +38,8 @@
 3. **A-1** `tools/plan_layout.mjs`: the columns counted or summed (Bind.counts) are fields the Arabic plan names
    (suggested or proposeYourself, titlesInEnglish.fields, no plan id until drafted); `lib/report-run.mjs` named(): a
    counted or summed column with an approved name is «عدد <name>» / «مجموع <name>» (English: Count of / Sum of).
-4. **C03** fitSlots' second branch (the chart under the rail): only when the band it leaves above it is no larger
-   than the rail's column it fills; else the chart stays beside the rail, at its top.
+4. **C03** fitSlots' second branch (the chart under the rail): a chart at the rail's own top only when the band it
+   leaves above it is no larger than the rail's column it fills; else it stays beside the rail, at its top.
 5. **C Seen 2** `mcp/TOOLS.md`: flipCards, statusIcons, metricSwitcher, gallery: what each writes and its limits.
 
 ## Results (before -> after)
@@ -49,7 +49,7 @@
 | H-1 shadow | Left/Right swapped (not catalog values); CenterLeft/CenterRight left unturned | CenterLeft <-> CenterRight; a value outside the catalog kept and said | report-mirror.js SHADOW_SIDE | fx2 H4; cx2 S1 |
 | H-1 every enum | not checked | every enumerated property the twin writes (the writer's own report of every kind and the 11 legend cases) is a catalog member; Microsoft's validator 0 errors | the catalog's capabilities and vco-capabilities | fx2 H5, H7 |
 | C23 | a rail beside a row: only the chart touching the rail ended at its bottom; the row's other chart kept its height and the row under moved up beneath it (bar 70-425 over the table from 307). The sweep: 40 of 384 plans (exec, 0 KPIs, rail start or end, every size; ops 960 x 720), each with exactCheck "pass" | the whole row ends at the rail's bottom (each keeping REFLOW_KEEP), else nothing moves; an OVERLAP of two data visuals in the exact build blocks the plan. The sweep after: 0 of 384 | design-engine.js fitSlots; artifact.mjs checkArtifact | fx2 C1-C4 |
-| C03 | the focus chart moved under the 312-high rail, a 1069 x 320 band empty above it | it moves only when the room it fills under the rail is at least the band it leaves; here it stays beside the rail from its top (y 105, 1063 x 951); the rail's column under it is empty (294 x 620) | design-engine.js fitSlots | fx2 F1 |
+| C03 | the focus chart moved under the 312-high rail, a 1069 x 320 band empty above it | a chart that starts at the rail's own top moves only when the room it fills under the rail is at least the band it leaves (one under a KPI row moves as before: round 9, S7); here it stays beside the rail from its top (y 105, 1063 x 951); the rail's column under it is empty (294 x 620) | design-engine.js fitSlots | fx2 F1 |
 | A-1 | no measures, lang ar: the counted and summed columns were not in the Arabic names list, so the plan said "kept English on purpose" and gave a plan id: "Count of Order Id", "Sum of Amount"; with a name approved the count lost its word («رقم الطلب») | they are drafted like every field (the fixed list's «المبلغ», «الكمية»; Order Id in proposeYourself), no plan id until each has a name; `arabicNames.countedTitles` lists each title's English and its Arabic draft; the titles «عدد رقم الطلب»، «مجموع المبلغ»، «عدد رقم الطلب حسب اسم الشهر» | plan_layout.mjs (counted), report-run.mjs named() | fx2 A1-A5; phone |
 | C Seen 2 | TOOLS.md named none of the four | a table: what each writes and its limits, from the code (flip-cards.mjs, status-icons.mjs, metric-switcher.mjs, report-inputs.mjs) | mcp/TOOLS.md | fx2 T1 |
 
@@ -70,8 +70,9 @@ an Arabic report's counts and sums named in Arabic and listed for approval; the 
   owner's grid asks; the alternative (the table not moved up) left a gap under the column chart only.
 - An OVERLAP finding in the exact build blocks the plan (every OVERLAP the sweep found was this defect; covers and a
   card behind its own table are not OVERLAP).
-- C03: the area rule (fill at least what it empties) keeps every page the sweep saw unchanged except the focus pages
-  with no KPI cards and a rail.
+- C03: the area rule (fill at least what it empties) holds only for a chart at the rail's own top. My first version
+  applied it to every chart beside a short rail and the website's `design-engine` lab fixture (the second page under a
+  KPI row, round 9 S7's own case) changed: narrowed, the fixture is unchanged.
 - A-1: «عدد <name>» and «مجموع <name>» exactly as the brief words them, built from the field's approved name.
 
 ## For the owner

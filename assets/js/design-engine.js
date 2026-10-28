@@ -1150,9 +1150,10 @@
         const s0 = beside[0], next = out.filter((q) => q.y >= s0.y + s0.h && q.x < s0.x + s0.w && q.x + q.w > s0.x).map((q) => q.y - (s0.y + s0.h)), g = next.length ? Math.min(...next) : SLOT_GAP / 2;
         const y = B + g, h = s0.y + s0.h - y, x0 = Math.min(s0.x, rail.x), x1 = Math.max(s0.x + s0.w, rail.x + rail.w);
         // (0.3.1 FX2, the laptop's C03: "a large empty band above the chart, left of the rail", a focus page with no KPI
-        // cards) only where the room it fills under the rail is at least the band it leaves empty above it
-        const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h;
-        if (h >= REFLOW_KEEP * s0.h && fills >= band) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
+        // cards) a chart that starts at the rail's own top (nothing above it beside the rail) moves only where the room it
+        // fills under the rail is at least the band it would leave empty above it; one under a KPI row moves as before
+        const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h, atTop = s0.y <= rail.y + 1;
+        if (h >= REFLOW_KEEP * s0.h && (!atTop || fills >= band)) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
     }
     if (rail) out = out.map((s) => {
