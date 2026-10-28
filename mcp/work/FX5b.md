@@ -32,7 +32,7 @@
   Website: pbip 111, theme-generator 922, design-engine 598, arabic-names 14 PASS (unchanged counts).
 - Full run on 926453b: "run-tests: 120 suites passed". CI run 40705766468: every job green on Linux, Windows and
   macOS (macOS shard 2 was cancelled before any step ran, no runner; re-run once, green).
-- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
+- **Resume:** merged integration f6e1e45f (FX3), B1 approves its drafted texts; the full run again, then CI.
 
 ## Before -> after
 1. **columnStats (create_report, plan_layout).** Before: neither took counts, so a chart on a plain text column kept
@@ -50,6 +50,12 @@
    category's name or value (D7).
 4. **The writer** (`pbip-page.js`): a chart's count is the fewest of its Top N, the metadata count (FX5) and the
    model's count (`model.counts`, from report-run); `pbip-bind.js` exports `statsOf` (names matched as DAX does).
+
+## Tests changed on purpose (each said in the test)
+- fx5b B1 (after merging integration f6e1e45f, FX3's D-1027-04 rule: a bilingual plan gives its id only once its
+  Arabic texts are approved or kept English on purpose): the plan is called once to read its drafted texts, then with
+  each one approved (`arabicTexts`), as sq10 K2-S1 does; its check of the padding (88 on the English and the Arabic
+  page) unchanged. No other check of mine plans a bilingual report.
 
 ## CHANGELOG line
 - FX5's line "Bars and columns are never too thick" extended: the counts from the model (columnStats) and the

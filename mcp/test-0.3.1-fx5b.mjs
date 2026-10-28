@@ -117,7 +117,13 @@ try {
 
   // ---------- B: the bilingual report (English and Arabic pages, one write) ----------
   {
-    const args = { path: folder, name: 'FX5bBi', layout: 'exec', filters: 'top', secondPage: true, languages: 'en+ar' };
+    // (changed 28 Oct 2026, FX3's rule, the owner's D-1027-04: a bilingual plan gives its id only once the Arabic pages'
+    // texts are approved or kept English on purpose; here every drafted text is approved, the others kept English, as
+    // sq10 K2-S1 does. The check of the padding is unchanged)
+    const args0 = { path: folder, name: 'FX5bBi', layout: 'exec', filters: 'top', secondPage: true, languages: 'en+ar' }, biTexts = {};
+    const bi0 = await call('plan_layout', args0);
+    ((bi0.j && bi0.j.bilingual && bi0.j.bilingual.texts) || []).forEach((x) => { biTexts[x.text] = x.draftArabic || x.text; });
+    const args = Object.assign({}, args0, { arabicTexts: biTexts });
     const { p, w } = await writeOf(args, null);
     const w2 = w.err && /pages or a design/.test(w.t) ? await call('create_report', Object.assign({ planId: p.j && p.j.plan && p.j.plan.planId, design: p.j && p.j.design }, args)) : w;
     const cs = chartsIn(path.join(ROOT, folder, 'FX5bBi.Report')), col = cs.filter((x) => x.type === 'clusteredColumnChart' && x.w >= 1800);
