@@ -154,14 +154,14 @@ try {
 
   // ---------- the sample project in Arabic (T1-S6) ----------
   const s1 = await w.call('plan_layout', { sample: true, lang: 'ar' }), HS = idOf(s1) ? await pageOf(idOf(s1)) : '', IS = items(HS);
-  chk(() => IS.length === 1 && /المجلد الجديد «[^»]+» في مجلد العمل/.test(unesc(IS[0])) && /بيانات مختلَقة/.test(unesc(IS[0])), () => `T1-S6k. the sample's Arabic page says its write in Arabic: ${IS.map(unesc).join(' | ') || short(s1)}`);
+  chk(() => IS.length === 1 && /المجلد الجديد «[^»]+» في مجلد العمل/.test(unesc(IS[0])) && /بيانات تجريبية/.test(unesc(IS[0])), () => `T1-S6k. the sample's Arabic page says its write in Arabic: ${IS.map(unesc).join(' | ') || short(s1)}`);
 
   // ---------- LR1 item 4 (the laptop run of 26 Oct): the Arabic sample page's own rows in Arabic, the English under each ----------
   const secRows = (H, head) => { const i = H.indexOf(head), j = i < 0 ? -1 : H.indexOf('</table>', i); return i < 0 || j < 0 ? [] : [...H.slice(i, j).matchAll(/<tr><td class="k"[^>]*>([\s\S]*?)<\/td><td[^>]*>([\s\S]*?)<\/td><\/tr>/g)].map((m) => [m[1], m[2]]); };
   // (FX1, the laptop's part 3: an Arabic page wholly Arabic; changed on purpose from "the English line under each")
   const both = (c) => AR.test(c) && !/<br>|class="note"/.test(c);
-  const SR = secRows(HS, 'مشروع المثال (بيانات مختلَقة)'), keysAr = SR.map(([k]) => unesc(k));
-  chk(() => SR.length >= 7 && SR.every(([k, v]) => both(k) && both(v)) && ['ما هو', 'بيانات مختلَقة', 'المجلد'].every((k) => keysAr.some((x) => x.trim() === k)),
+  const SR = secRows(HS, 'مشروع المثال (بيانات تجريبية)'), keysAr = SR.map(([k]) => unesc(k));
+  chk(() => SR.length >= 7 && SR.every(([k, v]) => both(k) && both(v)) && ['ما هو', 'بيانات تجريبية', 'المجلد'].every((k) => keysAr.some((x) => x.trim() === k)),
     () => `LR1-4a. the Arabic sample page: each row's name and value in Arabic alone: ${SR.map(([k, v]) => `${unesc(k)} = ${unesc(v).slice(0, 80)}`).join(' | ') || HS.slice(0, 200)}`);
   const TR = secRows(HS, 'الجداول (');
   chk(() => TR.length === 4 && TR.every(([, v]) => both(v)), () => `LR1-4b. the Arabic sample page's Tables rows in Arabic alone: ${TR.map(([k, v]) => `${unesc(k)} = ${unesc(v)}`).join(' | ')}`);

@@ -247,6 +247,10 @@ export function register(server, ctx) {
       const noMeasures = keys && !sc.needsFocus && !(a.planFields && (a.planFields.kpis || []).length) && !Bind.suggest(sc.tables, 8, relsOf(m, 'ar')).kpis.filter(Boolean).length;
       const counted = a.lang === 'ar' && keys && noMeasures ? Bind.counts(sc.tables, null, { lang: 'ar' }) : [];
       counted.forEach((c) => keys.add(`${c.t}[${c.c}]`));
+      // (0.3.1 FX3, FX2's Seen 1; the owner, D-1027-04) the metric switcher's labels are the plan's names of its measures:
+      // on an Arabic report each is drafted and approved like a title's field, or kept English on purpose
+      const switched = a.lang === 'ar' && keys && a.metricSwitcher ? resolveSwitch(m.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      switched.forEach((k) => keys.add(k));
       if (a.lang === 'ar' && keys) {
         const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
         const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
@@ -464,7 +468,20 @@ export function register(server, ctx) {
       // (0.3.1 CX1, Codex's F01; the owner, D-1027-04: "don't keep english titles in arabic reports", never silent) a title
       // that would be written English for a field with no Arabic name: no plan id until each field is drafted and approved,
       // or kept English on purpose
+      // (FX3) a switcher label that would be English: listed, and no plan id, as a title's field
+      const sw = m0 && a.metricSwitcher ? resolveSwitch(m0.tables, a.metricSwitcher).measures.map((x) => `${x.t}[${x.m}]`) : [];
+      const swFields = (notTranslated || []).filter((x) => !keptOnPurpose.has(x.field) && sw.includes(x.field)).map((x) => x.field);
+      if (swFields.length) { arabicNames.arabicNames.switcherLabels = { fields: swFields, how: 'The metric switcher\'s choices and its charts\' titles read these names: on an Arabic report they are Arabic. Draft an Arabic name for each (plain business Arabic, as howToPropose says), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; a name the user keeps in English on purpose: its model name as its displayNames entry.' };
+        planProblems.push(`an Arabic report's metric switcher shows its measures by their Arabic names, and ${swFields.length === 1 ? 'this measure has' : 'these measures have'} none yet, so ${swFields.length === 1 ? 'its label' : 'their labels'} would be English: ${swFields.join(', ')} (arabicNames.switcherLabels). Draft an Arabic name for each, show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; or, for a measure the user keeps English on purpose, give its model name as its displayNames entry. No plan id until every measure listed has one or the other.`); }
       if (fields.length) planProblems.push(`an Arabic report's titles are Arabic (the owner's rule), and ${fields.length === 1 ? 'this field has' : 'these fields have'} no Arabic name yet, so the titles naming ${fields.length === 1 ? 'it' : 'them'} would be written in English: ${fields.join(', ')} (arabicNames.titlesInEnglish). Draft an Arabic name for each, show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as displayNames; or, for a field the user keeps English on purpose, give its model name as its displayNames entry (its titles are then wholly English). No plan id until every field listed has one or the other.`); }
+    // (0.3.1 FX3, the laptop part 3's C09: languages "en+ar" wrote "Total Sales per Month Name" wholly English on its
+    // Arabic page, a text the person had not approved, where lang "ar" would have refused) the Arabic half follows the same
+    // gate as an Arabic report (CX1's F01): no plan id while a title on an Arabic page (a visual's title or subtitle, a
+    // title measure's text) has no approved Arabic, from arabicTexts or the terminology sheet, nor its English given back
+    // to keep it English on purpose
+    if (exact && exact.bilingual) { const BP = exact.bilingual.P, isTitle = (t) => !t.phone && t.text != null && (t.kind === 'title' || t.kind === 'titleMeasure' || /\/c\.subTitle\.\d+\.text$/.test(String(t.rawId)));
+      const english = [...new Set(BP.texts.filter((t) => isTitle(t) && BP.labels[t.id] == null && /[A-Za-z]/.test(String(t.text))).map((t) => String(t.text)))];
+      if (english.length) planProblems.push(`the Arabic pages' titles are Arabic (the owner's rule, as for an Arabic report), and ${english.length === 1 ? 'this title has' : 'these titles have'} no approved Arabic yet, so ${english.length === 1 ? 'it' : 'they'} would be written in English on the Arabic pages: ${english.slice(0, 20).map((x) => JSON.stringify(visible(x).slice(0, 120))).join(', ')}${english.length > 20 ? ` and ${english.length - 20} more` : ''} (bilingual.texts). Draft the Arabic of each (its draftArabic, or your own in plain business Arabic), show the drafts to the user to approve or edit, and call plan_layout again with the approved ones as arabicTexts ({ "<the English text>": "..." }); for a title the user keeps English on purpose, give its English text back as its Arabic (it is then written wholly English). No plan id until every title listed has one or the other.`); }
     // (0.3.1 X2, V1's pictures) a bilingual plan draws each English page beside its Arabic page, from the plan's own build
     // (the copy's files, as create_report writes them); its check is the English build's, as a plan in English
     const preview = exact && exact.bilingual ? (() => { const pv = previewOf(exact.bilingual.english), tw = twinPreview(exact.bilingual.P, exact.files);

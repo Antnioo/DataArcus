@@ -148,7 +148,11 @@ try {
   chk(() => /no Hijri year column was found by name/.test(note0), () => `J17-S2b. guard: no column confirmed and none named so: the note says it was not found: ${short(rm0.c)} ${note0}`);
 
   // ---------- K2-S1: the bilingual plan ----------
-  const bi = await w.call('plan_layout', { path: 'g', name: 'Both', layout: 'exec', lang: 'en', languages: 'en+ar' });
+  // (changed 28 Oct 2026, 0.3.1 FX3: a bilingual plan gives its id only once the Arabic pages' titles are approved or kept
+  // English on purpose, as an Arabic report's; here every drafted text is approved, the others kept English on purpose)
+  const bi0 = await w.call('plan_layout', { path: 'g', name: 'Both', layout: 'exec', lang: 'en', languages: 'en+ar' }), biTexts = {};
+  ((bi0.j && bi0.j.bilingual && bi0.j.bilingual.texts) || []).forEach((x) => { biTexts[x.text] = x.draftArabic || x.text; });
+  const bi = await w.call('plan_layout', { path: 'g', name: 'Both', layout: 'exec', lang: 'en', languages: 'en+ar', arabicTexts: biTexts });
   const NF = bi.j && bi.j.bilingual && bi.j.bilingual.notFullyArabic;
   chk(() => NF && /^Not fully Arabic: /.test(NF.en) && /^ليست عربية بالكامل: /.test(NF.ar), () => `K2-S1b. the bilingual plan says notFullyArabic: ${short(bi)} ${JSON.stringify(NF)}`);
   const biHtml = idOf(bi) ? await pageOf(idOf(bi)) : '';

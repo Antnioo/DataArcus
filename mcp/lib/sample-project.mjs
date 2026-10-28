@@ -124,17 +124,17 @@ export function sampleSaid(folder) {
 export function sampleSaidAr(folder) {
   const S = sampleSaid(folder), [yl, ml] = months()[MONTHS - 1], cities = new Set(BRANCHES.map((b) => b[1])).size, cats = new Set(PRODUCTS.map((p) => p[1])).size;
   return { project: `ملف المشروع «${S.project}»`,
-    what: `سلسلة متاجر تجزئة خليجية مختلَقة: الفروع ${BRANCHES.length} في ${cities} مدن خليجية، والمنتجات ${PRODUCTS.length} في ${cats} فئات، ومبيعات ${MONTHS} شهرًا بالدرهم الإماراتي (من ${MONTHS_AR[FIRST[1] - 1]} ${FIRST[0]} إلى ${MONTHS_AR[ml - 1]} ${yl}).`,
+    what: `سلسلة متاجر تجزئة خليجية تجريبية: الفروع ${BRANCHES.length} في ${cities} مدن خليجية، والمنتجات ${PRODUCTS.length} في ${cats} فئات، ومبيعات ${MONTHS} شهرًا بالدرهم الإماراتي (من ${MONTHS_AR[FIRST[1] - 1]} ${FIRST[0]} إلى ${MONTHS_AR[ml - 1]} ${yl}).`,
     dateTable: `Calendar (معلَّم جدولًا للتاريخ: كل يوم من ${FIRST[0]}-01-01 إلى ${yl}-${String(ml).padStart(2, '0')}-${new Date(Date.UTC(yl, ml, 0)).getUTCDate()})`,
     report: `${SAMPLE_NAME}.Report: تقرير فارغ (صفحة واحدة فارغة) على النموذج، لفتح المشروع في Power BI Desktop`,
-    madeUp: 'كل اسم ورقم فيه مختلَق: لا شركة ولا مركز تسوق ولا مكان عمل ولا شخص حقيقي.',
+    madeUp: 'كل الأسماء والأرقام فيه تجريبية: لا شركة ولا مركز تسوق ولا مكان عمل ولا شخص حقيقي.',
     relationships: `العلاقات: ${S.relationships}`,
     rows: 'تُكتب الصفوف في ملفات النموذج فقط: لا تحملها أي إجابة. يحمّلها Power BI Desktop عندما ينقر المستخدم Refresh.',
-    tables: S.tables.map((t) => `صفوف مختلَقة: ${t.rows}، الأعمدة: ${t.columns}${t.measures ? `، المقاييس: ${t.measures}` : ''}`) };
+    tables: S.tables.map((t) => `صفوف تجريبية: ${t.rows}، الأعمدة: ${t.columns}${t.measures ? `، المقاييس: ${t.measures}` : ''}`) };
 }
 export const sampleWrites = (folder, n) => [`the new folder "${folder}" in the working folder: a made-up Gulf retail project, the model "${SAMPLE_NAME}" (4 tables of made-up rows, 4 measures, 3 relationships, a date table) and an empty report, ${n} new files; nothing else is touched`];
 // (SQ3, T1-S6) the same line in Arabic, for the sample's Arabic approval page
-export const sampleWritesAr = (folder, n) => [`المجلد الجديد «${folder}» في مجلد العمل: مشروع تجزئة خليجي ببيانات مختلَقة، النموذج «${SAMPLE_NAME}» (4 جداول من صفوف مختلَقة، 4 مقاييس، 3 علاقات، جدول تاريخ) وتقرير فارغ، الملفات الجديدة: ${n}؛ لا يُمَسّ أي شيء آخر`];
+export const sampleWritesAr = (folder, n) => [`المجلد الجديد «${folder}» في مجلد العمل: مشروع تجزئة خليجي ببيانات تجريبية، النموذج «${SAMPLE_NAME}» (4 جداول من صفوف تجريبية، 4 مقاييس، 3 علاقات، جدول تاريخ) وتقرير فارغ، الملفات الجديدة: ${n}؛ لا يُمَسّ أي شيء آخر`];
 /** create_report's write of the approved sample: the files the plan listed, new, in their own new folder */
 export function writeSample(folder) { const files = sampleFiles(folder); writeTree(ROOT, files); return files.length; }
 
@@ -158,7 +158,7 @@ export function tour(folder, lang) {
 export function writtenSaid(folder, n, lang) {
   const ar = lang === 'ar', open = `${folder}/${SAMPLE_NAME}.pbip`;
   return { written: true, sample: { folder, files: n, model: `${folder}/${SAMPLE_NAME}.SemanticModel` }, open,
-    sayFirst: ar ? `كُتب مشروع المثال: ${open}. افتحه في Power BI Desktop (الإصدار 2.159 أو أحدث) ثم انقر Refresh لتحميل الصفوف. كل الأسماء والأرقام فيه مختلَقة. ثم جرّب الجولة: أربعة طلبات تالية، واحدًا تلو الآخر.`
+    sayFirst: ar ? `كُتب مشروع المثال: ${open}. افتحه في Power BI Desktop (الإصدار 2.159 أو أحدث) ثم انقر Refresh لتحميل الصفوف. كل الأسماء والأرقام فيه تجريبية. ثم جرّب الجولة: أربعة طلبات تالية، واحدًا تلو الآخر.`
       : `The sample project is written: ${open}. Open it in Power BI Desktop (2.159 or later) and click Refresh to load its rows. Every name and number in it is made up. Then try the tour: 4 next requests, one at a time.`,
     tour: tour(folder, lang),
     tourNote: 'Offer the tour\'s asks in the user\'s words, one at a time; each runs as its call says, with the usual plan and approval before any write.' };

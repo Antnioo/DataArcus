@@ -39,6 +39,8 @@
     headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")'),
     // (0.3.1 SQ5, 0.2.9-writer-S12) the bar chart's rows the report writer and the design engine use (its Lessons line:
     // "Night of 6-7 Oct"; RULES-POWERBI.md, "Night of 6-7 October")
+    // (0.3.1 FX3) the laptop part 3, A1: Desktop composes an automatic title or subtitle from the field names with its own "by"
+    autoTitle: M('2026-10-28', '2.159.883.0', 'Power BI\'s automatic titles and subtitles on an Arabic page: the field names joined by Desktop\'s own English "by"'),
     barRows: M('2026-10-06', '2.158.1177', 'the laptop sitting: a bar chart at the theme\'s 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more for its value axis')
   };
   // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
@@ -336,6 +338,24 @@
         R.visuals.forEach((x) => {
           const t = plain(((x.json.visual || {}).visualContainerObjects || {}).title);
           if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) ? (word(str(t.alignment)) ? str(t.alignment) : 'by a value that is not a plain word') : 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
+        });
+      } },
+    // (0.3.1 FX3, the laptop part 3's A1: the twin of a report with automatic subtitles showed «الشريحة by إجمالي الربح»)
+    // a data visual of two fields or more whose title or subtitle is switched on with no text of its own: Desktop composes
+    // it from the field names with its own English "by" and "and", whatever the page's language (the file can't show it)
+    { id: 'AUTO_TITLE', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.autoTitle,
+      about: 'Power BI composes a title or subtitle switched on with no text of its own from the field names, joined by its own English "by" and "and": on a right-to-left page, Arabic names give a half Arabic, half English title',
+      run(R, out) {
+        const NOT_DATA = ['textbox', 'actionButton', 'shape', 'basicShape', 'image', 'pageNavigator', 'bookmarkNavigator'];
+        R.visuals.forEach((x) => {
+          const v = x.json.visual || {}, qs = (v.query || {}).queryState || {};
+          const fields = Object.keys(qs).filter((r) => r !== 'Tooltips').reduce((n, r) => n + entries((qs[r] || {}).projections).length, 0);
+          if (NOT_DATA.includes(x.type) || fields < 2) return;
+          [['title', 'title'], ['subTitle', 'subtitle']].forEach(([card, said]) => {
+            const t = entries((v.visualContainerObjects || {})[card]).filter((e) => e && !e.selector && e.properties);
+            if (t.some((e) => lit(e.properties.show) === 'true' && (e.properties.text === undefined || (lit(e.properties.text) !== undefined && !str(e.properties.text).trim()))))
+              out(x, `its ${said} is automatic (switched on, no text of its own) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, `Give the ${said} its own text, wholly Arabic (or wholly English): create_arabic_twin lists it with an Arabic draft from the approved field names and writes the approved text.`);
+          });
         });
       } },
     { id: 'THEME_NAME', group: 'theme', severity: 'warning', source: SRC.round0,

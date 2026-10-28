@@ -130,6 +130,36 @@ export function textMeasuresOf(R) {
 // invisible character or is longer than 160 is replaced by an opaque one ("h:" and 16 hex digits of its hash), which
 // the server maps back: no such name reaches the answer (the cross-review's T5)
 const safeId = (raw) => (!INSTRUCTION.test(raw) && visible(raw) === raw && raw.length <= 160 ? raw : 'h:' + crypto.createHash('sha256').update(raw).digest('hex').slice(0, 16));
+// (0.3.1 FX3, the laptop part 3's A1: the twin of a report whose charts use Power BI's automatic subtitles showed
+// «الشريحة by إجمالي الربح», Desktop composing it from the approved Arabic field names with its own English "by") a data
+// visual's title or subtitle switched on with no text of its own is Power BI's to compose, from the field names. Each is
+// a text of the twin: its English as Power BI composes it from the original's names ("Total Profit by Segment"), its
+// draft one Arabic sentence from the approved Arabic field names («إجمالي الربح حسب الشريحة»); the twin writes it as the
+// visual's own text (its approved Arabic, else that English), so Desktop never composes a mixed one.
+// [{ key: 'title' | 'subTitle', i (the entry), id (the text's id, as an explicit one's), vals, cats: [{ ref, name }] }]
+const AUTO_CATS = new Set(['Category', 'Series', 'Legend', 'Rows', 'Columns', 'Axis', 'Group', 'Details']), AUTO_SKIP = new Set(['Tooltips']);
+const AUTO_KINDS = new Set(['button', 'textbox', 'shape', 'image', 'group', 'unreadable']);
+const isOn = (p) => isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && String(p.expr.Literal.Value) === 'true';
+const hasText = (p) => p !== undefined && p !== null && !(isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && /^'\s*'$/.test(String(p.expr.Literal.Value)));
+export function autoTitlesOf(pageId, json) {
+  if (!isObj(json) || !isObj(json.visual) || AUTO_KINDS.has(Mirror.kindOf(json))) return [];
+  const qs = isObj(json.visual.query) && isObj(json.visual.query.queryState) ? json.visual.query.queryState : {}, vals = [], cats = [];
+  Object.keys(qs).filter((role) => !AUTO_SKIP.has(role)).forEach((role) => (isObj(qs[role]) && Array.isArray(qs[role].projections) ? qs[role].projections : []).forEach((x) => {
+    if (!isObj(x) || typeof x.queryRef !== 'string' || !x.queryRef) return;
+    const name = String(x.displayName != null ? x.displayName : (x.nativeQueryRef || x.queryRef.replace(/^.*?\./, '')));
+    (AUTO_CATS.has(role) ? cats : vals).push({ ref: x.queryRef, name }); }));
+  if (vals.length + cats.length < 2) return [];   // (one field: its own name, no "by" to compose)
+  const vco = isObj(json.visual.visualContainerObjects) ? json.visual.visualContainerObjects : {}, where = pageId + '/' + json.name, out = [];
+  ['title', 'subTitle'].forEach((key) => (Array.isArray(vco[key]) ? vco[key] : []).forEach((e, i) => {
+    if (!isObj(e) || e.selector || !isObj(e.properties) || !isOn(e.properties.show) || hasText(e.properties.text)) return;
+    out.push({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats });
+  }));
+  return out;
+}
+// the sentence: the values "and", then "by" the categories (Power BI's own words); Arabic: «و» and «حسب»
+export const autoSentence = (a, names, ar) => { const v = a.vals.map(names), c = a.cats.map(names), and = ar ? ' و' : ' and ';
+  if (v.some((x) => x == null) || c.some((x) => x == null)) return null;
+  return v.length ? v.join(and) + (c.length ? (ar ? ' حسب ' : ' by ') + c.join(and) : '') : c.join(and); };
 export function textsOf(R) {
   const all = [], seen = new Set();
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
@@ -139,6 +169,9 @@ export function textsOf(R) {
     const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
       return /PageNavigation/i.test(String(lit(p.type))) ? lit(p.navigationSection) : null; };
     pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
+    // (FX3) Power BI's automatic titles and subtitles: listed with the visual's texts, their English as Power BI composes it
+    pg.visuals.forEach((v) => autoTitlesOf(pg.id, v.json).forEach((a) => add({ id: a.id, kind: a.key === 'title' ? 'title' : 'text', text: autoSentence(a, (x) => x.name), automatic: a.key,
+      autoRefs: a.vals.concat(a.cats).map((x) => x.ref), auto: a }, { page: pg.id, visual: String(v.json.name) })));
     // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
@@ -160,7 +193,7 @@ export function textsOf(R) {
   const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
     // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
     if (t.page && out.id !== t.id) out.page = safeName(t.page);
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
@@ -178,6 +211,7 @@ export function textsOf(R) {
 // (the glossary's draft of the rest, else none). Shown elsewhere too (a card, a chart, a matrix), one name serves both:
 // its draft is kept and both are said. queryRef -> { only }
 const AVG = /^\s*(?:avg\.?|average)\s+(.+)$/i;
+const AUTO_WHAT = 'Power BI\'s automatic title (switched on, no text of its own): the twin writes it as the visual\'s own text, its approved Arabic or else this English, so Power BI never composes it from Arabic field names with its English "by". Draft it as one Arabic sentence from the fields\' approved Arabic names («A حسب B»)';
 const ROW_WHAT = 'Table column header: each row of the table is one item, so name what ONE row shows (a measure named "Avg ..." gives that item\'s own value on its row; the Total row is Power BI\'s own)';
 const ROW_AND_MORE = 'Shown as a table column (each row one item: that item\'s own value) and elsewhere (over many items): one Arabic name serves both';
 function rowFieldsOf(R) {
@@ -230,6 +264,7 @@ export function notTranslatedOf(texts, labels, problems) {
     const [rank, why] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
       : p ? ['problem', 'its Arabic was not taken: ' + p.why]
       : t.kind === 'field' ? ['field', 'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)']
+      : t.automatic ? ['other', 'Power BI\'s automatic title, with no Arabic approved: the twin writes this English text as the visual\'s own (wholly English), so Power BI never composes it from Arabic field names with its English "by"']
       : ['other', 'no Arabic was approved for it: the twin shows it as it is'];
     const k = t.text == null ? '\u0000' + t.id : t.text, what = (t.phone ? 'phone layout: ' : '') + (KIND_SAID[t.kind] || t.kind);
     if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why });
