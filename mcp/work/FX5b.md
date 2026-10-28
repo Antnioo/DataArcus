@@ -33,7 +33,8 @@
 - Full run on 926453b: "run-tests: 120 suites passed". CI run 40705766468: every job green on Linux, Windows and
   macOS (macOS shard 2 was cancelled before any step ran, no runner; re-run once, green).
 - After merging integration f6e1e45f (FX3) and B1's change: Full run on 7338e71: "run-tests: 121 suites passed"
-- **Resume:** done; CI on the branch (tests.yml), then the reviewer.
+- CI run 40728805800 on the merge and B1 (7338e71 + note): every job green on Linux, Windows and macOS.
+- **Resume:** done; the reviewer.
 
 ## Before -> after
 1. **columnStats (create_report, plan_layout).** Before: neither took counts, so a chart on a plain text column kept
