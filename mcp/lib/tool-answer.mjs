@@ -27,7 +27,11 @@ const scrub = (str) => {
 export const pretty = (o) => JSON.stringify(o, null, 2), flat = (o) => JSON.stringify(o);
 // (CX1, Codex's F11: a text answer passed whole) a text over 40,000 characters is cut as the lists are, and the cut said
 const CUT_SAID = `\n\n(This answer was cut to stay under ${ANSWER_MAX.toLocaleString('en-US')} characters: the rest is not shown. Ask for one part at a time. Tell the user the answer was cut.)`;
-const capText = (s) => { if (s.length <= ANSWER_MAX) return s; let n = ANSWER_MAX - CUT_SAID.length; if (/[\uD800-\uDBFF]/.test(s[n - 1])) n--; return s.slice(0, n) + CUT_SAID; };
+// (FX6, Codex's D05) never inside a control character's escape (model.mjs visible(): \u and 4 or 5 hex digits): the cut
+// goes back to the escape's start, then never after a lone high surrogate
+const capText = (s) => { if (s.length <= ANSWER_MAX) return s; let n = ANSWER_MAX - CUT_SAID.length;
+  const i = s.lastIndexOf('\\', n - 1), tok = i > n - 7 ? /^\\u[0-9a-f]{4,5}/.exec(s.slice(i, i + 7)) : null; if (tok && i + tok[0].length > n) n = i;
+  if (/[\uD800-\uDBFF]/.test(s[n - 1])) n--; return s.slice(0, n) + CUT_SAID; };
 export const text = (o, opts) => { if (typeof o === 'string') return { content: [{ type: 'text', text: capText(scrub(textOut(o))) }] }; const x = out(o); return pretty(x).length > AIM ? compact(o, opts) : { content: [{ type: 'text', text: scrub(pretty(capAnswer(x, (y) => pretty(y).length, opts))) }] }; };
 export const compact = (o, opts) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length, opts))) }] });
 // (A1-9: the reading block's coded errors are worded here, in the tool layer; A6: a name's invisible characters shown, nameOut)

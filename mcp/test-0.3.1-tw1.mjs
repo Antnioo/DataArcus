@@ -98,6 +98,21 @@ try {
     const { w: w2 } = await writeOf({ path: 'p2/Twin Sales.pbip', arabicMonth: false, labels: { 'title:p1overview/cardSales': 'المبيعات' } });
     const m2 = get(() => rd(path.join(D2, 'Twin Sales AR.Report/definition/pages/p1overview/visuals/cardSales/mobile.json')));
     chk(() => !w2.err && lit(m2.visualContainerObjects.title[0].properties.titleWrap) === undefined && lit(m2.objects.value[0].properties.fontSize) === one.V + 'D', () => `P3. guard: a short Arabic title keeps one line and the one-line fit: ${w2.err ? w2.t.slice(0, 300) : JSON.stringify(m2)}`);
+    // (0.3.1 FX6, Codex's D01) the phone layout with a title of its own ('Sales'), approved apart from the desktop's
+    const withPhoneTitle = (name) => { const Dx = fresh(name), Vx = path.join(Dx, DEF, 'pages/p1overview/visuals/cardSales/'), mj = rd(V + 'mobile.json'); wr(Vx + 'visual.json', j);
+      mj.visualContainerObjects.title[0].properties.text = Lv("'Sales'"); wr(Vx + 'mobile.json', mj); return Dx; };
+    const phoneOf = (Dx) => get(() => rd(path.join(Dx, 'Twin Sales AR.Report/definition/pages/p1overview/visuals/cardSales/mobile.json')));
+    const D4 = withPhoneTitle('p4'), { w: w4 } = await writeOf({ path: 'p4/Twin Sales.pbip', arabicMonth: false, labels: { 'title:p1overview/cardSales': AR, 'phone:title:p1overview/cardSales': 'المبيعات' } });
+    const m4 = phoneOf(D4), t4 = get(() => m4.visualContainerObjects.title[0].properties);
+    chk(() => !w4.err && lit(t4.text) === "'المبيعات'" && lit(t4.titleWrap) === undefined && lit(m4.objects.value[0].properties.fontSize) === one.V + 'D',
+      () => `P4. a phone title approved apart from the desktop's (a long desktop Arabic title that wraps) is kept as approved, on one line with the one-line fit: ${w4.err ? w4.t.slice(0, 300) : JSON.stringify(m4)}`);
+    const D5 = withPhoneTitle('p5'), { w: w5 } = await writeOf({ path: 'p5/Twin Sales.pbip', arabicMonth: false, labels: { 'title:p1overview/cardSales': 'المبيعات', 'phone:title:p1overview/cardSales': AR } });
+    const m5 = phoneOf(D5), t5 = get(() => m5.visualContainerObjects.title[0].properties);
+    chk(() => !w5.err && lit(t5.text) === "'" + AR + "'" && lit(t5.titleWrap) === 'true' && lit(m5.objects.value[0].properties.fontSize) === two.V + 'D',
+      () => `P5. the approved phone title is the one fitted: a long one wraps with the two-line fit, though the desktop title is short: ${w5.err ? w5.t.slice(0, 300) : JSON.stringify(m5)}`);
+    const D6 = fresh('p6'), V6 = path.join(D6, DEF, 'pages/p1overview/visuals/cardSales/'); wr(V6 + 'visual.json', j); fs.copyFileSync(V + 'mobile.json', V6 + 'mobile.json');
+    const { w: w6 } = await writeOf({ path: 'p6/Twin Sales.pbip', arabicMonth: false, labels: { 'title:p1overview/cardSales': AR } }), t6 = get(() => phoneOf(D6).visualContainerObjects.title[0].properties);
+    chk(() => !w6.err && lit(t6.text) === "'" + AR + "'" && lit(t6.titleWrap) === 'true', () => `P6. guard: a phone layout with no title of its own takes the desktop's Arabic, wrapped: ${w6.err ? w6.t.slice(0, 300) : JSON.stringify(t6)}`);
   }
 } catch (e) {
   problems.push('the suite stopped: ' + String(e && e.stack || e).slice(0, 600));

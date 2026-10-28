@@ -22,7 +22,8 @@ import { formatsAnswer, formatsScriptOf } from './fix-scripts.mjs';
 import { hiddenOf } from './hidden-names.mjs';
 import { relsOf, resolveFields, resolvePageFilters, SVG_STATUS, resolveSvgColumns, boundOf, slicersOf, axesProblems, axesOf } from './report-fields.mjs';
 import { unknownKeys, THEME_MAX, LOGO_MAX, BACKGROUND_MAX, reportPin } from './report-inputs.mjs';
-import { flipAnswer, topSaid, CARD_RULE, modelNotes, phoneAnswer, calendarSaid, tableSmallerSaid, rowLabelSaid, rowLabelSkippedSaid, extRenamedSaid, uniqueFields } from './report-said.mjs';
+import { flipAnswer, topSaid, barSaid, CARD_RULE, modelNotes, phoneAnswer, calendarSaid, tableSmallerSaid, rowLabelSaid, rowLabelSkippedSaid, extRenamedSaid, uniqueFields } from './report-said.mjs';
+import { sampleCounts } from './sample-counts.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js');
@@ -232,6 +233,11 @@ export function reportRun(a, mode) {
     return Bind.mapFields(b, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m), g = given.get(k) || given.get(from.get(k)); if (!g) return f; g.used = true; return Object.assign({}, f, { name: aggName(f, g.name) }); }); };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
+  // (0.3.1 FX5b, the owner's D-1028-06) the distinct counts a bar or column chart's thickness follows: columnStats' (the
+  // model's own, read in Desktop; counts only, never a value), then the sample project's own (DataArcus's made-up rows,
+  // lib/sample-counts.mjs); names matched as DAX does (pbip-bind.js statsOf)
+  const givenStats = a.columnStats ? Bind.statsOf(m.tables, a.columnStats) : null, sampleOwn = sampleCounts(m), sampleStats = sampleOwn ? Bind.statsOf(m.tables, { distinct: sampleOwn }) : null;
+  const countOf = (t, c) => (givenStats && givenStats.distinct(t, c)) || (sampleStats && sampleStats.distinct(t, c)) || 0;
   // Power BI's own words can't be set by a report (measured: no slicer property holds "All")
   if (a.lang === 'ar') reportNotes.push('Power BI\'s own words in the report ("All" in a slicer, "Select all", "Search") follow each viewer\'s Power BI language, not the report: nothing in the report files can change them.');
   let logo = null, logoRatio;
@@ -308,7 +314,7 @@ export function reportRun(a, mode) {
     look = { ui: design.ui, font: design.font, rtl: designRtl(design.layout, a.lang) };
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = B0), gallery: galleryOn(pages), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, phoneLayout: design.layout.phoneLayout !== false, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: isGlass(design) ? glassPng(design, p.page.w, p.page.h) : png1, panel: p.panel, grow: true }))
     });
     boundPages = pages; switchAt = { rtl: designRtl(design.layout, a.lang), page: pages[0].page };
@@ -361,7 +367,7 @@ export function reportRun(a, mode) {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames, columns: modelColumns, counts: countOf }, bind: (bind = withSplit(listFormats(named(bindFor(kpisOf(a.pages)))), a.pages)), gallery: galleryOn(a.pages), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, smoothLines: a.smoothLines, slicerStyle: a.slicerStyle, grid: a.grid, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', waterfallRtl: a.waterfallRtl, logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: texts(a.lang),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
@@ -432,6 +438,8 @@ export function reportRun(a, mode) {
   catch (e) { projectCheck = { notChecked: 'the check could not read this project: ' + String(e && e.message || e).slice(0, 160) }; }
   // (J14: the build ends here; the write and the answer run from the approved artifact, writeApproved)
   if (!building) throw new Error(`Nothing was written: plan ${a.planId} holds no checked report to write (plan_layout builds and checks the report before the go, and create_report writes exactly that). Make the plan again with plan_layout and the same inputs, show it to the user and wait for their go.`);
+  // (0.3.1 FX5b) each chart given thinner bars, said in the plan and the answer (EN and AR)
+  const barThickness = barSaid(r.barBands);
   const finish = (planId) => {   // (the body keeps its indentation: the write and the answer, as before J14)
   // (0.3, B-153: the plan is used the moment the tree is in place, or left unused when a failed write left nothing)
   // (0.3.0 R4, F06: the format script the plan lists is written in the same write, after the report)
@@ -613,11 +621,11 @@ export function reportRun(a, mode) {
     // (0.3.0) the phone layout: written for every page unless the design says phoneLayout false
     { phone: phoneAnswer(r.files.some((f) => /\/mobile\.json$/.test(f.path))) },
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, looks, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {},
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}, barThickness ? { barThickness } : {},
     galleryList ? { gallery: { slots: galleryList } } : {}, SW ? { metricSwitcher: switchSaid(SW) } : {}, CO && CO.offered ? { calendarArabic: calendarSaid(CO, shown, { scriptFile: CO.scriptAfterGo, howToApply: CO.howToApply }) } : CO && CO.leftOut ? { calendarArabic: { offered: false, why: CO.why, leftOut: CO.leftOut } } : {});
   };
   // (0.3.0 F7) the fields the report binds, the keys of its formats script (the plan lists exactly these)
-  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, slicers: slicersOf(r.bound), a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
+  return { formatKeys: [...new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf))], files: r.files, finish, m, barThickness, slicers: slicersOf(r.bound), a11y: r.a11y || null, gallery: galleryList, waterfallRtl: r.waterfallRtl || null, metricSwitcher: SW, flip: flip ? Object.assign(flipAnswer(flip), { pending: flip.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: flip.scriptFile }) : null,
     icons: icons ? Object.assign(iconsSaid(icons), { pending: icons.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: icons.scriptFile }) : null,
     dax: daxR ? Object.assign(daxSaid(daxR), { pending: daxR.measures.map((x) => ({ t: x.t, name: x.name })), scriptAfterGo: daxR.scriptFile }) : null };
 }

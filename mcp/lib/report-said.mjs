@@ -16,6 +16,23 @@ export const flipAnswer = (f) => Object.assign({ cards: f.cards.map((c) => ({ pa
   how: 'Each card is three Image visuals in its box: a backdrop in the card colour, the front (its title and value) and the back (the measure\'s name and one line: its description from the model, its value, the change on last year where the model has a marked date table), hidden until the card is clicked; each face goes to the other through a display-only bookmark of its own (two a card), which touches no slicer or filter. The turn takes 0.3 s. The pictures are measures the model does not have yet: they are written as a TMDL script next to the project, applied by the user first.' },
   f.notFlipped.length ? { notFlipped: f.notFlipped } : {}, f.skipped.length ? { skipped: f.skipped.map((x) => ({ page: shownName(x.page, 80), card: x.card, why: x.why })) } : {});
 export const topSaid = (x) => `Top ${x.top}` + (x.allUpTo > x.top ? `, all of them when it has ${x.allUpTo} or fewer` : '');
+// (0.3.1 FX5b, the owner's D-1028-06) the bar and column charts given thinner bars by their number of categories, as the
+// plan says them to the person before the go, in English and Arabic: where, which kind, how many categories, the space
+// between them and the thickness. Counts and sizes only: never a category's name or value
+const KIND_EN = { bar: 'bar chart', column: 'column chart' }, KIND_AR = { bar: 'المخطط الشريطي', column: 'المخطط العمودي' };
+const one = (x) => String(Math.round(x * 10) / 10);
+// a count of categories in Arabic: one, the dual, 3 to 10 with the plural, 11 and more with the singular
+const catsAr = (n) => (n === 1 ? 'فئة واحدة' : n === 2 ? 'فئتان' : `${n} ${n <= 10 ? 'فئات' : 'فئة'}`);
+export function barSaid(bands) {
+  const charts = (bands || []).map((x) => ({ page: String(x.page), kind: x.kind === 'bar' ? 'bar' : 'column', categories: x.categories, padding: x.padding, thickness: x.thickness, max: x.max }));
+  if (!charts.length) return null;
+  const max = [...new Set(charts.map((x) => one(x.max)))].join(' or ');
+  const en = `${charts.length === 1 ? 'One chart gets' : charts.length + ' charts get'} thinner bars, by the number of categories each shows, never thicker than ${max} (the values and the value axis unchanged): `
+    + charts.map((x) => `the ${KIND_EN[x.kind]} on "${visible(x.page)}" (${x.categories} categor${x.categories === 1 ? 'y' : 'ies'}: ${x.padding}% space between them, bars ${one(x.thickness)} thick)`).join('; ') + '.';
+  const ar = `${charts.length === 1 ? 'مخطط واحد تصبح أشرطته' : charts.length === 2 ? 'مخططان تصبح أشرطتهما' : `${charts.length} ${charts.length <= 10 ? 'مخططات' : 'مخططًا'} تصبح أشرطتها`} أرفع بحسب عدد الفئات التي يعرضها كل منها، ولا يزيد سُمكها على ${max} (القيم ومحور القيم دون تغيير): `
+    + charts.map((x) => `${KIND_AR[x.kind]} في الصفحة «${visible(x.page)}» (${catsAr(x.categories)}: مسافة ${x.padding}% بينها، وسُمك الشريط ${one(x.thickness)})`).join('؛ ') + '.';
+  return { charts, said: { en, ar } };
+}
 export const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a count, or a measure whose format has no decimals (or a count without a format), shows its whole number with thousand separators (179, 101,914), except an amount (a currency in its format, or a sum of money: sales, revenue, cost, budget...), which keeps automatic units with 2 decimals (EUR 54.66M; 14.81K under a million: Power BI cannot switch the units by the value without a change in the model); every other measure keeps automatic units with 2 decimals (3.43M). A measure that shows text is never put on a card.';
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the

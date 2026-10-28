@@ -204,6 +204,16 @@ for (const src of ['schemas', 'theme', 'npm', 'feed']) {
   const w3d = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: many.concat([{ body: com.body.body, user: { login: 'someone' } }]) } });
   ok((await run(w3d)).posts.some((p) => /issues\/5\/comments$/.test(p.url)), 'W12 on the second page too, a stranger\'s key line silences nothing');
 
+  // (FX6, Codex's D06) 10,000 comments (100 full pages): the workflow's key line on page 101 is read, nothing posted again
+  const lots = Array.from({ length: 10000 }, (_, i) => ({ body: 'Comment ' + i, user: { login: 'someone' } }));
+  const w3e = world({ cli: '0.6.0', themes: THEMES('2.160'), issues: open, comments: { 5: lots.concat([{ body: com.body.body, user: BOT }]) } });
+  const r3e = await run(w3e);
+  eq([r3e.code, r3e.posts.length], [0, 0], 'W13 the key on page 101 is read: no duplicate comment');
+  // at the safety cap of pages the run posts nothing and says the history was not read whole
+  const said = [], full = async (method, p) => { if (method !== 'GET') throw new Error('posted: ' + method + ' ' + p); return /^issues\?/.test(p) ? open : Array.from({ length: 100 }, () => ({ body: 'x', user: { login: 'someone' } })); };
+  let r3f = null; try { r3f = await syncIssue({ changes: [{ key: 'k1' }], gh: full, dryRun: false, runUrl: '', log: (s) => said.push(s), maxPages: 3 }); } catch (e) { r3f = { threw: e.message }; }
+  ok(r3f && r3f.threw && /not read whole|incomplete/i.test(r3f.threw) && /nothing was posted/i.test(r3f.threw), 'W13 at the cap of pages: nothing posted, the incomplete history said: ' + JSON.stringify(r3f));
+
   // a pull request in the issues list is not the issue
   const w4 = world({ cli: '0.6.0', issues: [{ number: 7, title: 'pr', body: '', pull_request: {} }] });
   ok((await run(w4)).posts.some((p) => p.url.endsWith('/repos/o/r/issues')), 'W9 a pull request is not taken for the open issue');

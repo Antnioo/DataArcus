@@ -23,7 +23,10 @@ package's manifest; this file says what is in it.
   months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
   (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the
   phone layout too, and the approval page's preview and the Theme Generator draw them that thick. The values and the
-  value axis are unchanged: equal values still draw equal bars. Where the count is not known, Power BI's own look stays.
+  value axis are unchanged: equal values still draw equal bars. The count can also come from the model: create_report
+  and plan_layout take the same counts suggest_fields does (columnStats: distinct counts read in Power BI Desktop, never a
+  value), and the sample project gives its own. create_report's answer lists each chart made thinner, in English and
+  Arabic. Where the count is not known, Power BI's own look stays.
 - **The Arabic Reset button keeps its icon:** in the Arabic twin and the English and Arabic copy, a Reset filters
   button whose Arabic text is longer now takes the width it needs from the dropdown slicers beside it (or, with no
   slicer beside it, its text takes the largest size at which the text and the icon both fit), so it looks like the
@@ -315,6 +318,13 @@ package's manifest; this file says what is in it.
   Azure Maps. A text search box becomes a dropdown slicer with its search on in its own box (the input slicer second),
   a row of chips a dropdown with why (the pills' measured height), never a list cut by its box; a word cloud's bars are
   sorted by their value, largest first.
+- **The Arabic twin's phone titles and shadows as approved:** a card's phone title you approved apart from its desktop
+  title is now kept and fitted as approved (it was replaced by the desktop title when that one wrapped), and a phone
+  title changed on its own is fitted too. A shadow the theme gives the visuals (bottom right, say), not set on the
+  visual itself, is now cast to the other side on the Arabic pages as well; the English pages keep the theme's. A long
+  text answer cut at 40,000 characters never ends in half of a hidden character's code. suggest_fields no longer takes
+  a column named "Notes", "Comments" or "Description" with a capital for a category. The weekly Microsoft watch, on an
+  issue too long to read whole (over 100,000 comments), now posts nothing and says so.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
