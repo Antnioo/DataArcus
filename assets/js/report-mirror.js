@@ -201,6 +201,22 @@
       if (p != null && SHADOW_SIDE[p]) { e.properties.preset = str(SHADOW_SIDE[p]); n++; } else if (p != null && kept && !SHADOW_STAY.includes(p)) kept.push({ what: 'shadow preset', value: p }); });
     return n > 0;
   }
+  // (0.3.1 FX6, Codex's D04: a shadow the visual takes from its theme, with no preset of its own, kept its side) the
+  // theme's preset for the visual (visualStyles <type> then "*", state "*": the first dropShadow entry that gives one), of
+  // a side, becomes the visual's own preset, mirrored. Only the visuals mirrored here (the Arabic pages); the theme and
+  // the English pages are not changed. Returns whether one was written
+  const themePreset = (theme, type) => { const vs = isObj(theme) && isObj(theme.visualStyles) ? theme.visualStyles : null; if (!vs) return null;
+    for (const t of [type, '*']) { const st = typeof t === 'string' && isObj(vs[t]) && isObj(vs[t]['*']) ? vs[t]['*'] : null, e = st && Array.isArray(st.dropShadow) ? st.dropShadow.find((x) => isObj(x) && typeof x.preset === 'string') : null; if (e) return e.preset; }
+    return null; };
+  function themeShadow(v, theme) {
+    if (!isObj(v) || (v.visualContainerObjects !== undefined && !isObj(v.visualContainerObjects))) return false;
+    const ds = v.visualContainerObjects ? v.visualContainerObjects.dropShadow : undefined; if (ds !== undefined && !Array.isArray(ds)) return false;
+    const own = (ds || []).filter((e) => isObj(e) && !e.selector); if (own.some((e) => isObj(e.properties) && e.properties.preset !== undefined)) return false;
+    const p = themePreset(theme, v.visualType); if (!p || !SHADOW_SIDE[p]) return false;
+    if (own.length && isObj(own[0].properties)) own[0].properties.preset = str(SHADOW_SIDE[p]);
+    else { if (!v.visualContainerObjects) v.visualContainerObjects = {}; (v.visualContainerObjects.dropShadow = ds || []).unshift({ properties: { preset: str(SHADOW_SIDE[p]) } }); }
+    return true;
+  }
   function mirrorVisual(json0, W, opts) {
     const o = opts || {};
     if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
@@ -210,6 +226,7 @@
     if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
     const v = json.visual;
     if (isObj(v) && mirrorShadow(v.visualContainerObjects, kept)) changes.push('shadow');
+    else if (isObj(v) && themeShadow(v, isObj(o.theme) ? o.theme : isObj(o.waterfall) ? o.waterfall.theme : null)) changes.push('shadow');
     if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
     // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
     const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
@@ -536,6 +553,10 @@
   // (pbip-sizing.js phoneCardFit): its full name (the alt text, else the title, as the writer reads it) on one line, or
   // on two (titleWrap) with the two-line card fit; one too long for two lines stays on one line, which Power BI ends
   // with "…" (the approved text is never shortened here). Only where that name is not the original's (was). o: { font, was }
+  // (0.3.1 FX6, Codex's D01: a phone title approved apart from the desktop's was replaced by the desktop's, and a change
+  // on the phone alone was never fitted) the text fitted is the phone card's own final title when its phone layout has
+  // one (as approved, else as it was), and the desktop's full name only when it has none; o.phoneWas: that phone title
+  // before the labels (null: none)
   const textAt = (v, bag, key) => { const e = (entries(isObj(v) && isObj(v.visual) ? v.visual.visualContainerObjects : null, bag) || []).find((x) => isObj(x.properties) && !x.selector); return e ? strOf(e.properties[key]) : null; };
   const fullName = (v) => { const a = textAt(v, 'general', 'altText'); return a != null && a.trim() ? a : textAt(v, 'title', 'text'); };
   function phoneCard(json, mobile, o) {
@@ -543,7 +564,8 @@
     const tl = vco && Array.isArray(vco.title) && isObj(vco.title[0]) && isObj(vco.title[0].properties) ? vco.title[0].properties : null;
     const val = (entries(mobile.objects, 'value') || []).find((e) => isObj(e.properties) && e.properties.fontSize !== undefined);
     if (!Z || !Z.make || json.visual.visualType !== 'cardVisual' || !tl || !val || !isObj(p) || !Number.isFinite(p.width) || !Number.isFinite(p.height)) return;
-    const full = fullName(json); if (full == null || !full.trim() || (o.was && full === fullName(o.was))) return;
+    const own = strOf(tl.text), full = own != null ? own : fullName(json), was = own != null ? o.phoneWas : o.was ? fullName(o.was) : undefined;
+    if (full == null || !full.trim() || full === was) return;
     const size = parseFloat(lit(tl.fontSize)) || 10, value = parseFloat(lit(val.properties.fontSize)) || 20;
     const f = Z.make({ font: o.font || 'Segoe UI', LABEL: 10 }).phoneCardFit(full.replace(MARKS, ''), p.width, p.height, size, Math.max(20, value));
     if (f.mode === 'wrap') { tl.text = str(full); tl.titleWrap = mk('true'); } else delete tl.titleWrap;
@@ -554,7 +576,8 @@
   function labelMobile(pageId, json, mobile, labels, o) {
     if (!isObj(json) || !isObj(json.visual) || !isObj(mobile) || !labels) return 0;
     const sub = {}; Object.keys(labels).forEach((k) => { if (k.startsWith('phone:')) sub[k.slice(6)] = labels[k]; });
-    const view = phoneView(json, mobile), was = new Map();
+    const view = phoneView(json, mobile), was = new Map(), vco0 = isObj(mobile.visualContainerObjects) ? mobile.visualContainerObjects : null;
+    const tl0 = vco0 && Array.isArray(vco0.title) && isObj(vco0.title[0]) && isObj(vco0.title[0].properties) ? vco0.title[0].properties : null, phoneWas = tl0 ? strOf(tl0.text) : null;
     if (kindOf(json) === 'textbox') eachRun(view.visual, (run, i, j) => { if (Object.prototype.hasOwnProperty.call(sub, `textbox:${pageId}/${json.name}/${i}.${j}`)) was.set(run, run.value); });
     const n = labelVisual(pageId, view, sub), Z = Sizing(), p = mobile.position, w = isObj(p) && Number.isFinite(p.width) ? p.width : NaN;
     if (Z && Z.phoneTitleSize && Number.isFinite(w)) (entries(mobile.objects, 'general') || []).forEach((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).forEach((para) => {
@@ -562,7 +585,7 @@
       const st = rs[0].textStyle, m = isObj(st) && /^(\d+(?:\.\d+)?)pt$/.exec(String(st.fontSize || '')); if (!m) return;
       const size = Z.phoneTitleSize(String(rs[0].value).replace(MARKS, ''), w, +m[1]); if (size < +m[1]) st.fontSize = size + 'pt';
     }));
-    phoneCard(json, mobile, o || {});
+    phoneCard(json, mobile, Object.assign({}, o || {}, { phoneWas }));
     return n;
   }
   // the phone box mirrored on the 323-wide canvas, a text box's paragraphs to the right (centred kept), as on the page.
