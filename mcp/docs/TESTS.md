@@ -5,11 +5,16 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
 - MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures).
   The suites are listed once, by area, in `mcp/tests.json` (file, area, one-line purpose); `npm test` runs them through
   `mcp/run-tests.mjs` in that order and stops at the first failure; `npm test -- <area>` runs one area,
-  `npm test -- --keep-going` runs all and fails at the end (CI's shard 0 does), `npm test -- --list` lists them. A new
+  `npm test -- --keep-going` runs all and fails at the end (CI's shards do), `npm test -- --list` lists them. A new
   suite gets one line in `tests.json`'s `suites` (a helper or a block of `test.mjs` goes in `ignored`, with why): a
   `test-*.mjs` in neither stops the run and fails `scripts/check-result-lines.mjs`. The MCP must stay self-contained: its code and tests use only its own
   `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
-- CI runs `test.mjs` in 4 shards (`DA_SHARD=k/4`, B-145) and `npm test`'s other scripts with `DA_SHARD=0/4`; the
+- CI runs 5 MCP shards per OS (`DA_SHARD=k/4`, k 0-4; B-145, SPD): shard k runs `test.mjs`'s part k (a SKIP in shard
+  0) and the tests.json suites the plan deals to it, each suite in exactly one shard, each with `DA_SHARD=0/4` as before.
+  The plan (`planShards`, `mcp/test-results.mjs`) deals them longest first onto the lightest shard by the seconds in
+  `mcp/test-times.json`, which `node scripts/test-times.mjs <folder>` writes from a green CI run's artifacts (`gh run
+  download <id>`; never typed by hand); a suite without a time weighs the median, so a new suite needs no step.
+  `npm test -- --plan [--os windows]` prints it. The times change how even the shards are, never which suites run. The
   required checks `mcp` / `mcp-windows` add them up (`scripts/ci-sum.mjs`). A new block in `test.mjs` must be a part
   (`if (part('id')) {`) listed in exactly one of `SHARDS`; a part that reads what an earlier part wrote goes in
   `TOGETHER` with it. The run fails otherwise. To rebalance: `DA_PART_TIMES=1 node test.mjs` prints each part's
@@ -23,9 +28,12 @@ Moved here unchanged by A1 (0.3.1, 25 Oct) from `mcp/CLAUDE.md` ("Tests"); its s
   `no-result-line`, `duplicate-suite`, `unexpected-skip`, `zero-checks`, `exit-nonzero`, `wrong-name` (tests.json's
   `name` is the name the result line prints). The full output: `mcp/.test-logs/<file>.log` (git-ignored; `--log-dir`),
   CI's artifacts; `--verbose` streams it all as before. One adapter reads results everywhere: `mcp/test-results.mjs`.
-- CI's sum (`scripts/ci-sum.mjs`) checks identities, not counts: shard 0 prints exactly tests.json's suites by name,
-  once each (test.mjs's SKIP the one allowed, as `sharded`), shards 1-4 exactly test.mjs; the website exactly
-  run-all.mjs's `ALL`. Each problem and each `::error` annotation is the one-line form above.
+- CI's sum (`scripts/ci-sum.mjs`) checks identities, not counts: each shard prints exactly the plan's suites for it by
+  name (test.mjs's SKIP in shard 0 the one allowed, as `sharded`), every suite once over all the shards; the website
+  exactly run-all.mjs's `ALL`. (SPD, the result contract) Each shard's `manifest.json` (the runner writes it in its log
+  folder: each suite's seconds, status, checks and cause, and whether the run finished) must be there, finished, and
+  agree with the log; a suite that timed out, crashed or printed 0 checks fails the sum. It prints the total checks per
+  OS and each shard's seconds. Each problem and each `::error` annotation is the one-line form above.
 - `npm test -- --affected[=<ref>]` is for local runs only: it runs the suites the files changed since `<ref>` touch
   (default tests.json `affected.base`; `git diff --name-only`, new files too), printing the reason for each pick
   ("mcp/lib/twin-write.mjs -> area twin: ..."); a safety-infrastructure path, an unmapped engine or an unknown path picks

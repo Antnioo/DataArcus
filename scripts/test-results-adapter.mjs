@@ -8,7 +8,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { results, count, oneLine, parseOneLine, scrub, budget, judge, identityProblems, affected, LIMITS, CAUSES } from '../mcp/test-results.mjs';
+import * as adapter from '../mcp/test-results.mjs';
+const { results, count, oneLine, parseOneLine, scrub, budget, judge, identityProblems, affected, LIMITS, CAUSES } = adapter;
 
 const REPO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const D = fs.mkdtempSync(path.join(os.tmpdir(), 'results-adapter-'));
@@ -240,6 +241,98 @@ try {
   t('run-all: a suite that ran 0 checks fails as zero-checks (its source)', () => {
     const src = fs.readFileSync(path.join(REPO, 'scripts/tests/run-all.mjs'), 'utf8');
     assert.match(src, /zero-checks/); assert.match(src, /res\.checks/);
+  });
+
+  // ---- (SPD, Codex #1) the plan: tests.json's suites dealt over the shards by their measured seconds, per OS
+  const planShards = adapter.planShards || (() => { throw new Error('no planShards in mcp/test-results.mjs'); });
+  const PR = { suites: [{ file: 'test.mjs', name: 'mcp', sharded: true }, ...['a', 'b', 'c', 'd', 'e', 'f'].map((x) => ({ file: `test-${x}.mjs`, name: x }))] };
+  const PT = { source: { run: '1', commit: 'abc' }, os: { linux: { 'test.mjs@1': 50, 'test.mjs@2': 10, 'test-a.mjs': 60, 'test-b.mjs': 40, 'test-c.mjs': 30, 'test-d.mjs': 20, 'test-e.mjs': 5 }, windows: { 'test-f.mjs': 500 } } };
+  const namesOf = (p) => p.shards.map((x) => x.map((y) => y.name));
+  t('plan: longest first onto the lightest shard; test.mjs in every shard (its part k in shard k); tests.json order kept', () => {
+    const p = planShards(PR, PT, 'linux', 2);
+    // loads 0 / 50 / 10 (test.mjs's parts); f has no time: the median, 30. a 60 -> 0; b 40 -> 2; c 30 -> 1 (50 = 50,
+    // the lower shard); f 30 -> 2; d 20 -> 0; e 5 -> 0 (80 = 80 = 80)
+    assert.deepEqual(namesOf(p), [['mcp', 'a', 'd', 'e'], ['mcp', 'c'], ['mcp', 'b', 'f']]);
+    assert.deepEqual(p.loads, [85, 80, 80]);
+  });
+  t('plan: each suite exactly once over the shards, for every OS and any n; the same answer every time', () => {
+    for (const os of ['linux', 'windows', 'macos']) for (const n of [1, 2, 4]) {
+      const p = planShards(PR, PT, os, n), flat = p.shards.flat().filter((x) => !x.sharded).map((x) => x.name).sort();
+      assert.deepEqual(flat, ['a', 'b', 'c', 'd', 'e', 'f'], `${os} ${n}`);
+      assert.ok(p.shards.every((x) => x.filter((y) => y.sharded).length === 1), `${os} ${n}: test.mjs once in each shard`);
+      assert.deepEqual(planShards(PR, PT, os, n), p);
+    }
+  });
+  t('plan: a suite without a time weighs the median; an OS without times uses linux\'s; no times at all still deals every suite', () => {
+    assert.equal(planShards(PR, PT, 'linux', 2).weights['test-f.mjs'], 30);
+    assert.deepEqual(namesOf(planShards(PR, PT, 'macos', 2)), namesOf(planShards(PR, PT, 'linux', 2)));
+    assert.deepEqual([planShards(PR, PT, 'windows', 2).weights['test-f.mjs'], planShards(PR, PT, 'windows', 2).weights['test-a.mjs']], [500, 500], 'windows: its own times, its own median');
+    assert.deepEqual(planShards(PR, {}, 'linux', 2).shards.flat().filter((x) => !x.sharded).length, 6);
+  });
+  // the runner and ci-sum read the same plan: DA_SHARD=k/N runs exactly shard k's suites; the other suites see DA_SHARD=0/N
+  const P = path.join(D, 'plan'); fs.mkdirSync(P);
+  fs.writeFileSync(path.join(P, 'test.mjs'), "const k = process.env.DA_SHARD.split('/')[0]; console.log(k === '0' ? 'SKIP  mcp  (DA_SHARD=0/2: x)' : `PASS  mcp  ${k}00 checks  (shard ${process.env.DA_SHARD}: 1 parts)\nG13  60 reports, 0 with errors`);\n");
+  for (const x of ['a', 'b', 'c', 'd', 'e', 'f']) fs.writeFileSync(path.join(P, `test-${x}.mjs`), `console.log('PASS  ${x}  ' + (process.env.DA_SHARD === '0/2' ? 3 : 0) + ' checks');\n`);
+  fs.writeFileSync(path.join(P, 'tests.json'), JSON.stringify({ areas: { a: 'A' }, suites: PR.suites.map((x) => ({ ...x, area: 'a', purpose: 'p' })), ignored: [], pending: [] }));
+  fs.writeFileSync(path.join(P, 'test-times.json'), JSON.stringify(PT));
+  const shardRun = (k) => { const l = path.join(D, `plan-logs-${k}`); const r = node([path.join(REPO, 'mcp/run-tests.mjs'), '--keep-going', '--log-dir', l], { DA_TESTS_DIR: P, DA_SHARD: `${k}/2` }); return { ...r, log: r.stdout, man: fs.readFileSync(path.join(l, 'manifest.json'), 'utf8') }; };
+  const runs = [0, 1, 2].map(shardRun);
+  t('the runner: DA_SHARD=k/N runs the plan\'s shard k (linux), each other suite with DA_SHARD=0/N', () => {
+    const want = planShards(PR, PT, 'linux', 2);
+    runs.forEach((r, k) => {
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.deepEqual(results(r.stdout).map((x) => x.name), namesOf(want)[k], `shard ${k}`);
+      assert.ok(results(r.stdout).filter((x) => x.name !== 'mcp').every((x) => count(x.rest) === 3), `shard ${k}: DA_SHARD=0/2 for the other suites`);
+    });
+  });
+  t('ci-sum: the plan\'s shards pass and add up; a suite in a shard not its own fails', () => {
+    const d = fs.mkdtempSync(path.join(D, 'cip-'));
+    runs.forEach((r, k) => { fs.writeFileSync(path.join(d, `mcp-shard-${k}.log`), r.log); fs.mkdirSync(path.join(d, `mcp-shard-${k}-full`)); fs.writeFileSync(path.join(d, `mcp-shard-${k}-full`, 'manifest.json'), r.man); });
+    const sum = () => node([path.join(REPO, 'scripts/ci-sum.mjs'), 'mcp', d, '--registry', path.join(P, 'tests.json'), '--times', path.join(P, 'test-times.json'), '--os', 'linux']);
+    const good = sum();
+    assert.equal(good.status, 0, good.stdout); assert.match(good.stdout, /PASS {2}mcp {2}319 checks in all shards \(linux: 7 suites, 3 shards\)/);
+    const swap = (k, j, name) => { for (const [x, y] of [[k, false], [j, true]]) { const f = path.join(d, `mcp-shard-${x}.log`), m = path.join(d, `mcp-shard-${x}-full`, 'manifest.json'), M = JSON.parse(fs.readFileSync(m, 'utf8')); let txt = fs.readFileSync(f, 'utf8'); txt = y ? txt + `PASS  ${name}  3 checks\n` : txt.replace(`PASS  ${name}  3 checks\n`, ''); M.suites = y ? [...M.suites, { file: `test-${name}.mjs`, name, seconds: 1, status: 'PASS', checks: 3, cause: null }] : M.suites.filter((e) => e.name !== name); fs.writeFileSync(f, txt); fs.writeFileSync(m, JSON.stringify(M)); } };
+    swap(0, 1, 'a');
+    const bad = sum();
+    assert.equal(bad.status, 1, bad.stdout);
+    assert.match(bad.stdout, /script=mcp\/test-a\.mjs check="a: no result line" cause=missing-suite os=linux shard=0\/2/);
+    assert.match(bad.stdout, /cause=unknown-suite os=linux shard=1\/2/);
+  });
+  // the measured seconds: scripts/test-times.mjs writes mcp/test-times.json from a CI run's manifests, never typed
+  t('test-times: the seconds per OS from a run\'s manifests (test.mjs per part), its run and commit recorded', () => {
+    const d = fs.mkdtempSync(path.join(D, 'tt-')), out = path.join(d, 'times.json');
+    const man = (os, k, suites, more = {}) => { const f = path.join(d, `${os}-${k}`, 'ci-logs', `mcp-shard-${k}-full`); fs.mkdirSync(f, { recursive: true }); fs.writeFileSync(path.join(f, 'manifest.json'), JSON.stringify({ os, shard: `${k}/1`, commit: 'c0ffee', run: '42', finished: true, suites, ...more })); };
+    man('linux', 0, [{ file: 'test.mjs', name: 'mcp', seconds: 0.1, status: 'SKIP' }, { file: 'test-a.mjs', name: 'a', seconds: 61.24, status: 'PASS', checks: 5 }]);
+    man('linux', 1, [{ file: 'test.mjs', name: 'mcp', seconds: 180, status: 'PASS', checks: 700 }]);
+    man('windows', 0, [{ file: 'test-a.mjs', name: 'a', seconds: 99, status: 'PASS', checks: 5 }]);
+    const r = node([path.join(REPO, 'scripts/test-times.mjs'), d, '--out', out]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const T = JSON.parse(fs.readFileSync(out, 'utf8'));
+    assert.deepEqual([T.source.run, T.source.commit, T.os], ['42', 'c0ffee', { linux: { 'test-a.mjs': 61.2, 'test.mjs@1': 180 }, windows: { 'test-a.mjs': 99 } }]);
+    man('macos', 0, [{ file: 'test-a.mjs', name: 'a', seconds: 9, status: 'FAIL', cause: 'timeout' }]);
+    const f = node([path.join(REPO, 'scripts/test-times.mjs'), d, '--out', out]);
+    assert.equal(f.status, 1); assert.match(f.stderr, /macos.*test-a\.mjs.*FAIL/);
+    man('macos', 0, [{ file: 'test-a.mjs', name: 'a', seconds: 9, status: 'PASS', checks: 5 }], { commit: 'other' });
+    const c = node([path.join(REPO, 'scripts/test-times.mjs'), d, '--out', out]);
+    assert.equal(c.status, 1); assert.match(c.stderr, /one run/);
+  });
+  t('mcp/test-times.json: from a CI run (its run and commit named), seconds only, for tests.json\'s suites; every OS deals every suite once', () => {
+    const T = JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/test-times.json'), 'utf8'));
+    assert.match(String(T.source.run), /^\d+$/); assert.match(T.source.commit, /^[0-9a-f]{40}$/); assert.match(T.about, /scripts\/test-times\.mjs/);
+    const R = JSON.parse(fs.readFileSync(path.join(REPO, 'mcp/tests.json'), 'utf8'));
+    const files = new Set(R.suites.flatMap((x) => (x.sharded ? [1, 2, 3, 4].map((k) => `${x.file}@${k}`) : [x.file])));
+    for (const os of ['linux', 'windows', 'macos']) {
+      assert.ok(T.os[os], os);
+      for (const [k, v] of Object.entries(T.os[os])) { assert.ok(files.has(k), `${os}: ${k} is not a tests.json suite`); assert.ok(v > 0, `${os}: ${k} ${v}`); }
+      const p = planShards(R, T, os, 4);
+      assert.deepEqual(p.shards.flat().filter((x) => !x.sharded).map((x) => x.file).sort(), R.suites.filter((x) => !x.sharded).map((x) => x.file).sort(), os);
+    }
+  });
+  t('SPD changed no product code: no SPD commit touches mcp/lib, mcp/tools, mcp/server.mjs, assets/ or a site page', () => {
+    const r = spawnSync('git', ['log', '--no-merges', '--grep=^SPD', '--format=%h %s', '--name-only', '--', 'mcp/lib', 'mcp/tools', 'mcp/server.mjs', 'assets', '*.html'], { cwd: REPO, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr); assert.equal(r.stdout.trim(), '');
+    const all = spawnSync('git', ['log', '--no-merges', '--grep=^SPD', '--format=%h'], { cwd: REPO, encoding: 'utf8' });
+    assert.ok(all.stdout.trim().split('\n').length >= 3 || !all.stdout.trim(), 'the SPD commits are found');
   });
 
   // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out

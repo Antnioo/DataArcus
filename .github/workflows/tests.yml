@@ -169,11 +169,13 @@ jobs:
 
   mcp-parts:
     runs-on: ubuntu-latest
-    timeout-minutes: 40   # as the Windows and macOS shards: shard 0 runs every mcp/tests.json suite (12.7 min on 27 Oct)
+    timeout-minutes: 40   # as the Windows and macOS shards (before SPD shard 0 ran every mcp/tests.json suite: 12.7 min on 27 Oct)
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -194,8 +196,8 @@ jobs:
         run: npm ci
 
       # (A2, 0.3.1) every shard through npm test's runner: the console (this log) has the result lines and, for a failure,
-      # one line first and 4 KB of detail; each suite's full output is in mcp-shard-<k>-full/ (the artifact). Shard 0:
-      # mcp/tests.json's suites, test.mjs says SKIP; shards 1-4: test.mjs's part k only. A suite still running after
+      # one line first and 4 KB of detail; each suite's full output and the run's manifest.json (SPD) are in
+      # mcp-shard-<k>-full/ (the artifact). Shard k: the plan's suites (above). A suite still running after
       # DA_SUITE_TIMEOUT seconds fails as "timeout" before the job's own limit cancels it unnamed.
       - name: MCP checks, shard ${{ matrix.shard }} of 4
         env:
@@ -341,7 +343,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -418,7 +422,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts, mcp/tests.json's suites (test.mjs says SKIP; --keep-going: every suite runs); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs), through the same runner
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
