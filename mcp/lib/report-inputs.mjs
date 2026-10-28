@@ -9,7 +9,7 @@ import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
 import { USES as DAX_USES } from './dax-functions.mjs';
 import { readUserFile } from './files.mjs';
 import { GALLERY_KINDS, LIMITS } from './tool-limits.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot } from './tool-inputs.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape } from './tool-inputs.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -70,6 +70,8 @@ export const CREATE_REPORT_INPUTS = {
     sharedAxes: z.array(z.object({ measures: z.array(z.string().max(300)).length(2).describe('Two measures as Table[Measure], exactly as read_model lists them'), answer: z.enum(['comparable', 'separate']) }).strict()).max(20).optional()
       .describe('Only the user\'s own answer to a sharedAxes question of the plan: two measures in the same unit, scale and currency share one chart axis (a combo, a chart of several values) only when the user says they compare ("comparable"); "separate" keeps them in separate visuals. Never answer for the user. Measures in different units (SAR and AED, minutes and hours, a percentage and an amount) are always separate visuals, whatever the answer; there is never a secondary axis, and no currency is converted. Left out: every pair in the same unit is separate visuals and the plan asks'),
     chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
+    // (0.3.1 FX5b, the owner's D-1028-06: three bars on a plain text column drawn wide) the model's own counts
+    columnStats: columnStatsShape().optional().describe('Counts only, never values, when Desktop has the model open (suggest_fields\' columnStats, the same shape): distinct: { "Table[Column]": its distinct count (Cardinality from COLUMNSTATISTICS(); never pass its Min or Max) }, rows: { "Table": its row count }. With them a bar or column chart on a column of few values draws its bars no thicker than 36 on a 1280 x 720 page (45 at 1920 x 1080), evenly spaced (barThickness says each chart). Without them only the counts the model\'s metadata gives are used (months, quarters, days, a few known texts, a chart\'s Top N)'),
     chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
     waterfallRtl: WATERFALL_RTL_INPUT(),
     text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box ("What it means" in the focus layout), from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out and the chart beside it takes its room: a placeholder is never written'),
@@ -119,7 +121,7 @@ export const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-export const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'metricSwitcher', 'flipCards', 'waterfallRtl', 'statusIcons', 'sharedAxes', 'customVisualsSecond', 'languages', 'tabsShown', 'arabicTexts', 'arabicTerms', 'daxFunctions'];
+export const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl', 'gallery', 'slicerStyle', 'grid', 'metricSwitcher', 'flipCards', 'waterfallRtl', 'statusIcons', 'sharedAxes', 'customVisualsSecond', 'languages', 'tabsShown', 'arabicTexts', 'arabicTerms', 'daxFunctions', 'columnStats'];
 // (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
 // option left out of create_report takes the plan's value, not a schema default that differs from it)
 const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: true, font: 'Segoe UI', slicerStyle: 'dropdown', grid: 'solid', flipCards: false, waterfallRtl: Gallery.WATERFALL_RTL_DEFAULT, statusIcons: false, daxFunctions: false };

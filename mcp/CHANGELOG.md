@@ -23,7 +23,10 @@ package's manifest; this file says what is in it.
   months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
   (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the
   phone layout too, and the approval page's preview and the Theme Generator draw them that thick. The values and the
-  value axis are unchanged: equal values still draw equal bars. Where the count is not known, Power BI's own look stays.
+  value axis are unchanged: equal values still draw equal bars. The count can also come from the model: create_report
+  and plan_layout take the same counts suggest_fields does (columnStats: distinct counts read in Power BI Desktop, never a
+  value), and the sample project gives its own. create_report's answer lists each chart made thinner, in English and
+  Arabic. Where the count is not known, Power BI's own look stays.
 - **The Arabic Reset button keeps its icon:** in the Arabic twin and the English and Arabic copy, a Reset filters
   button whose Arabic text is longer now takes the width it needs from the dropdown slicers beside it (or, with no
   slicer beside it, its text takes the largest size at which the text and the icon both fit), so it looks like the

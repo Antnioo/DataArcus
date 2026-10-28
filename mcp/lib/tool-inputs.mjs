@@ -30,3 +30,6 @@ export const slot = z.object({
   title: z.string().optional(), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(),
   text: z.string().min(1).max(400).optional().describe('A text slot\'s sentence (from the approved plan); a text slot without one is left out')
 });
+// (0.3.1 FX5b) the model's own counts as suggest_fields takes them (FX4's columnStats, the same shape), for create_report
+// and plan_layout: whole numbers only, so no data value can be passed
+export const columnStatsShape = () => z.object({ rows: z.record(z.string(), z.number().int().min(0)).optional(), distinct: z.record(z.string(), z.number().int().min(0)).optional() }).strict();
