@@ -15,7 +15,7 @@
   } = Q;
   // (0.3, J4: the story titles' rules, story-titles.js, loaded before pbip-query.js on the website's pages)
   const ST = (typeof module !== 'undefined' && module.exports ? require('./story-titles.js') : root.DAStoryTitles);
-  const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
+  const { barBand, barNameShare, barSpan, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
   // (0.2.9.1, B-174) each written slot's place in the planned page, { from: its planned kind, nth among them }, as
   // kindChanges name it, so a chart kept to its top N is told against the plan's own slot
   const SLOT_PLAN = new WeakMap();
@@ -126,6 +126,14 @@
     return Math.max(3, Math.floor(plot / need));
   };
   // the category field a chart's query shows (after the page's own choice of categories)
+  // 0.3.1 FX5: the bar and column kinds the writer writes with a category axis (Microsoft's catalog gives each
+  // categoryAxis innerPadding and outerPadding), the horizontal ones, and the count of categories a field is known to have
+  // from the model's metadata alone (a day, month or quarter axis; two values; a few known texts; a calendar's rows)
+  const BAND_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart|clusteredColumnChart|columnChart|hundredPercentStackedColumnChart|lineClusteredColumnComboChart|lineStackedColumnComboChart)$/;
+  const BAR_TYPES = /^(clusteredBarChart|barChart|hundredPercentStackedBarChart)$/;
+  const knownCount = (f) => { if (!f) return 0; const k = isTextField(f) && catKind(f); return (k && k.rows) || (f.two ? 2 : 0) || (f.cal && +f.cal.rows) || +f.few || 0; };
+  // the count a chart's thickness was set by, for its phone layout (the same rule on the phone's box)
+  const BANDS = new WeakMap();
   const catOf = (Bt, query) => { const p = ((query.queryState.Category || {}).projections || [])[0], col = p && p.field.Column;
     return col ? Object.values(Bt.cats || {}).find((x) => x && x.t === col.Expression.SourceRef.Entity && x.c === col.Property) || null : null; };
 
@@ -282,6 +290,15 @@
       if (visual.visualType === 'clusteredBarChart') { const cf = catOf(Bt, visual.query), need = 25 * 10.2 * pg.page.h / 1080;
         // (design round 10, D19 on one more chart: names a chart is cut to the Top N of are names it has many of)
         put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && (cf.wide || top) && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
+      // 0.3.1 FX5 (the owner, 28 Oct, D-1028-06: three bars drawn about 70 thick, a few columns each very wide): where the
+      // count of categories is known (the chart's Top N, a day, month or quarter axis, a field of two or a few known texts,
+      // a calendar's rows; the fewer of the two), a bar or column is never thicker than the measured maximum (pbip-sizing.js barBand): the gaps
+      // grow, inner and outer padding alike, so the bars stay centred; the value axis is never touched (equal values stay
+      // equal). Count not known: nothing written, Desktop's default as before. (small multiples share the width by panel)
+      const nCat = col && BAND_TYPES.test(visual.visualType) && s.kind !== 'multiples' ? Math.min(top || Infinity, knownCount(catOf(Bt, visual.query)) || Infinity) : 0;
+      const box = visual.position || {}, horizontal = BAR_TYPES.test(visual.visualType);
+      const band = nCat < Infinity ? barBand(nCat, barSpan(horizontal, +box.width || s.w, +box.height || s.h, pg.page.h), pg.page.h) : null;
+      if (band) { put('categoryAxis', { innerPadding: lit(band.pct + 'L'), outerPadding: lit(band.pct + 'L') }); BANDS.set(visual, nCat); }
       // O-13: the line chart's month label
       if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, 'Ascending');   // (a mirrored report's: turned round by the engine, after this)
@@ -1359,7 +1376,10 @@
       else if (t === 'slicer') { objects.header = obj({ textSize: num(PHONE.slicer) }); objects.items = obj({ textSize: num(PHONE.slicer) }); }
       else if (t === 'advancedSlicerVisual') objects.value = obj({ fontSize: num(PHONE.slicer) }, DEF);   // (L2: the pills' text, as a button's)
       else if (t === 'actionButton') objects.text = obj({ fontSize: num(PHONE.button) }, DEF);
-      else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) }); }
+      else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) });
+        // (0.3.1 FX5) the thickness rule on the phone's box, in its own 720-high units (a count the page's chart was set by)
+        const pb = BANDS.has(vis) ? barBand(BANDS.get(vis), barSpan(BAR_TYPES.test(t), p.w, p.h, 720), 720) : null;
+        if (pb) Object.assign(objects.categoryAxis[0].properties, { innerPadding: lit(pb.pct + 'L'), outerPadding: lit(pb.pct + 'L') }); }
       else if (t === 'tableEx') { objects.columnHeaders = obj({ fontSize: num(PHONE.table) }); objects.values = obj({ fontSize: num(PHONE.table) }); objects.total = obj({ fontSize: num(PHONE.table) });
         // Round 12 (#29; seen in Desktop 2.158, round 11: the phone table with pictures was wider than the canvas): the
         // pictures' size on the phone, capped by what the other columns leave of the 323 at the phone's 8pt (as on the

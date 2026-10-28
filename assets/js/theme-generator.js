@@ -286,6 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const sizes = (c) => E.sizes(c, PW);
   function computeSlots(c) { applyPage(c); return E.computeSlots(c, isAr() ? 'ar' : 'en'); }
 
+  // (0.3.1 FX5) the sample's bars and columns as thick as Power BI draws n of them in the slot: the writer's rule
+  // (pbip-sizing.js barBand, never thicker than its maximum), else Desktop's default (its 20% between categories);
+  // null before the sizes are loaded (the sample's own look)
+  const barThick = (n, horizontal, s) => {
+    const Z = window.DAPbipSizing; if (!Z || !Z.barBand) return null;
+    const span = Z.barSpan(horizontal, s.w, s.h, PH), b = Z.barBand(n, span, PH);
+    return b ? b.bar : span / n * (1 - Z.BAR_DEFAULT_INNER);
+  };
   // Sample content so the preview reads like a finished report (never drawn in the PNG)
   function sample(s, u, right) {
     const d = state.data, R = E.roles(u), sec = R.secondary, grid = R.grid, p = 14;
@@ -306,12 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
           + `<polyline points="${pts(b)}" fill="none" stroke="${d[1]}" stroke-width="2.5" stroke-linejoin="round"/><polyline points="${pts(a)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/>`;
       }
       case 'bar': {
-        const v = [0.92, 0.74, 0.61, 0.45, 0.32], n = Math.max(3, Math.min(5, Math.floor(H / 26))), bh = Math.min(16, H / n - 8);
-        return v.slice(0, n).map((f, i) => { const w = (W - 8) * f; return `<rect x="${right ? X + W - w : X}" y="${Y + i * (H / n) + 4}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${d[0]}" opacity="${1 - i * 0.12}"/>`; }).join('');
+        const v = [0.92, 0.74, 0.61, 0.45, 0.32], n = Math.max(3, Math.min(5, Math.floor(H / 26))), t = barThick(n, true, s), bh = t ? Math.min(t, H / n) : Math.min(16, H / n - 8);
+        return v.slice(0, n).map((f, i) => { const w = (W - 8) * f; return `<rect x="${right ? X + W - w : X}" y="${(Y + i * (H / n) + (t ? (H / n - bh) / 2 : 4)).toFixed(1)}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${d[0]}" opacity="${1 - i * 0.12}"/>`; }).join('');
       }
       case 'column': {
-        const v = [0.5, 0.64, 0.58, 0.72, 0.68, 0.84, 0.78, 0.95], n = v.length, gap = W / n;
-        return v.map((f, i) => `<rect x="${(X + i * gap + gap * 0.18).toFixed(1)}" y="${(Y + H - f * H).toFixed(1)}" width="${(gap * 0.64).toFixed(1)}" height="${(f * H).toFixed(1)}" rx="3" fill="${d[0]}" opacity="${i === n - 1 ? 1 : 0.5}"/>`).join('');
+        const v = [0.5, 0.64, 0.58, 0.72, 0.68, 0.84, 0.78, 0.95], n = v.length, gap = W / n, t = barThick(n, false, s), cw = t ? Math.min(t, gap) : gap * 0.64;
+        return v.map((f, i) => `<rect x="${(X + i * gap + (gap - cw) / 2).toFixed(1)}" y="${(Y + H - f * H).toFixed(1)}" width="${cw.toFixed(1)}" height="${(f * H).toFixed(1)}" rx="3" fill="${d[0]}" opacity="${i === n - 1 ? 1 : 0.5}"/>`).join('');
       }
       case 'donut': {
         const r = Math.max(10, Math.min(W, H) / 2 - 10), cx = s.x + s.w / 2, cy = Y + H / 2, C = 2 * Math.PI * r; let acc = 0;
@@ -559,9 +567,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261027tw1', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261027tw1', '/assets/js/pbip-notes.min.js?v=20261019l2',
-      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261027tw1', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261027tw1', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261028fx5', '/assets/js/pbip-notes.min.js?v=20261019l2',
+      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261028fx5', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
+    // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
+    // loaded again)
+    const onPage = (src) => [...document.scripts].some((x) => x.src === new URL(src, location.href).href);
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
+      if (onPage(src)) return resolve();
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
@@ -853,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261027gd2').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261028fx5').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
       const run = withProject((P, input, { m, specs, pages: pp }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
         // (0.3.1 GD2) a glass design's pages get the pictures the download writes (pngBlob's glass picture, each page's layout)
