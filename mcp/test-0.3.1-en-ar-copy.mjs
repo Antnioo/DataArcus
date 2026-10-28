@@ -9,7 +9,7 @@
 //   2   each Arabic page's Tab stops in right-to-left reading order (the copy and the separate twin); the English pages'
 //       with the language button in their reading order
 //   3   an Arabic title that needs more room than the English box is widened (one line), inside the page, over nothing
-//   4   the Arabic pages' text boxes with text are not drawn as the theme's panels; the English pages are the original's;
+//   4   the Arabic pages' text boxes with text keep the panel the English pages keep (TW1: the twin identical); the English pages are the original's;
 //       create_report's own header title has the panel off (a guard)
 //   5   check_report says it when a table or matrix shows fewer rows than at Power BI's label size, or its values wrap;
 //       nothing for a table DataArcus wrote; the twin changes no text size or word wrap
@@ -122,7 +122,11 @@ try {
       () => `F2. the Arabic title is on one line, inside the page, over no visual: ${JSON.stringify(t && t.position)}`); }
 
   // ---------- 4: text boxes are not panels ----------
-  chk(() => arBoxes.every((v) => ['background', 'border', 'dropShadow'].every((k) => off(v.visual.visualContainerObjects, k))), () => `X1. the Arabic pages' text boxes with text have the theme's panel off: ${JSON.stringify(arBoxes.map((v) => v.visual.visualContainerObjects || null))}`);
+  // (TW1, M1-S1: the owner, 27 Oct, "i want the twin to be identical": the Arabic pages' text boxes keep the panel the
+  // English pages' have; this check said "off" before, R1's item 4)
+  const enBoxes = EN.flatMap((p) => visualsOf(COPY, p)).filter((v) => typeOf(v) === 'textbox' && textOfBox(v).trim()), panelOf = (v) => JSON.stringify(['background', 'border', 'dropShadow'].map((k) => (v.visual.visualContainerObjects || {})[k] || null));
+  chk(() => arBoxes.length === 4 && enBoxes.length === 4 && arBoxes.every((v) => !['background', 'border', 'dropShadow'].some((k) => off(v.visual.visualContainerObjects, k))) && new Set(arBoxes.concat(enBoxes).map(panelOf)).size === 1,
+    () => `X1. the Arabic pages' text boxes with text keep the panel their English pages' keep (the twin identical): ${JSON.stringify(arBoxes.concat(enBoxes).map((v) => [v.name, panelOf(v)]))}`);
   chk(() => ORD.every((p, i) => visualsOf(ORIG, p).filter((v) => typeOf(v) === 'textbox').every((v) => JSON.stringify(visualsOf(COPY, EN[i]).find((x) => x.name === v.name)) === JSON.stringify(v))), () => 'X2. the English pages\' text boxes are the original\'s');
 
   // ---------- 5: tables and matrices ----------

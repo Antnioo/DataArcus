@@ -13,7 +13,7 @@ import { DAX_MEASURE } from './dax-functions.mjs';
 import { TEXTS_MAX, pathOut, locate, memoryLoc, bytesAt, readOriginal, isObj, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
 import { litStr } from './twin-visuals.mjs';
 import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, notTranslatedOf, termsOf } from './twin-texts.mjs';
-import { modelOf, dateTablesOf, dateColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
+import { modelOf, dateTablesOf, continuousColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
 import { buildTwin } from './twin-pages.mjs';
 import { createRequire } from 'node:module';
@@ -70,7 +70,7 @@ export function planTwin(a) {
   const same = a.into === 'same' || !!a.inMemory, outBase = a.inMemory ? loc.base : loc.base + (same ? COPY_TAG : ' AR');
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
   const free = a.inMemory ? true : nothingAt(twinDir) && nothingAt(twinPbip);
-  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = dateColumnsOf(model.m);
+  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = continuousColumnsOf(model.m);   // (TW1, M1-S3: numbers too)
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
   // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
@@ -216,9 +216,8 @@ export function planTwin(a) {
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot, ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
-    // (0.3.1 R1) the text boxes that drew as the theme's panels
-    ...(built.panelsOff ? { textBoxes: { panelsOff: built.panelsOff, how: 'The report\'s theme draws every visual on a panel (a background, a border, a shadow), text boxes too: on the Arabic pages the twin switches the panel off for each text box with text that left it to the theme, so a title or a note reads as text on the page (one that sets its own panel keeps it; an empty text box keeps its panel).',
-      ...(same ? { englishPages: 'The English pages are the original\'s: their text boxes still draw as panels. To match, select a text box in Power BI Desktop, Format > General > Effects: switch Background, Visual border and Shadow off.' } : {}), sayInPlan: 'Say it in the plan, and what the English pages keep (englishPages).' } } : {}),
+    // (TW1, M1-S2: the tables that say «الإجمالي» on their total row are said in mirrors, Mirror.KIND_WHAT.table: the
+    // answer's size is shared with the texts list, twinFit)
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',

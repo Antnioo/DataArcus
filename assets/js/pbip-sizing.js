@@ -194,7 +194,18 @@
       for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
       return '…';
     };
-    return { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
+    // Round 12 (#1; seen in Desktop 2.158, round 11: "Total Sales Last Rama..." on every phone page): a phone card's title
+    // too long for one line at its size wraps to two (titleWrap, as on the page) where two lines and the value fit the
+    // card (w x h), otherwise it stays on one line ('cut': the writer shortens it at a word with "…", oneLine). Returns
+    // { c: the card's fit, mode: 'one' | 'wrap' | 'cut' }. (0.3.1 TW1, SQ4-S2: the writer's phone cards and the Arabic
+    // twin's, one rule)
+    const phoneCardFit = (text, w, h, title, value) => {
+      const c = cardFit(w, h, 1, title, value), room = w - 2 * c.P;
+      if (!text || textWidth(text, title, true, font) <= room) return { c, mode: 'one' };
+      const ls = wrapLines(text, title, room), two = cardFit(w, h, 1, title, value, null, undefined, 2);
+      return ls.length <= 2 && ls.every((l) => textWidth(l, title, true, font) <= room) && two.V >= 8 ? { c: two, mode: 'wrap' } : { c, mode: 'cut', room };
+    };
+    return { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, PILL_PAD, PILL_GAP, pillW, pillFits, pillTextRoom, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine, phoneCardFit };
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).

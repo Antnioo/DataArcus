@@ -318,13 +318,13 @@
       return filters;
     };
     // the sizes that follow the font and the label size (pbip-sizing.js)
-    const { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine } = Z.make({ font, LABEL });
+    const { cardFit, pt, charW, boxH, buttonH, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine, phoneCardFit } = Z.make({ font, LABEL });
     return {
       paneObjects, SOLID, headed, frame, textbox, TH, TITLE, CALLOUT, TIP_VALUE, TIP_TITLE,
       FULL, valueEm, resetFill, resetIcon, resetLook, resetTip, LABEL, SLICER_TEXT, DEF, cardCode,
       cardObjects, cardFrame, def, pageFilters, fixVisual, cardFit, pt, charW, boxH, buttonH,
       slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines,
-      kpiTitleFit, titleFit, oneLine
+      kpiTitleFit, titleFit, oneLine, phoneCardFit
     };
   }
 
@@ -335,10 +335,10 @@
       SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, kindChanges, base, blankKept, bookmarks,
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
-      noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
+      noData, noDataSkipped, noPageButtons, o, oneLine, own, phoneCardFit, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, pillH, pillRoom, pillFits, pillW, PILL_PAD, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, topSet, waterfallRtl, slicerStyles, gridCharts
+      trend, u, valueEm, extMeasure, extField, topSet, waterfallRtl, slicerStyles, gridCharts
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -675,11 +675,18 @@
         const swOf = () => (across ? (roomOf() - gap * (fields.length - 1)) / Math.max(1, fields.length) : roomOf());
         if (across && swOf() < SLICER_MIN) { withReset = false; leftOut.push({ page: pg.name || base, kind: 'reset', title: resetText, narrow: true }); }
         while (across && fields.length && swOf() < SLICER_MIN) { const i = fields.length - 1, f = fields.pop(); leftOut.push({ page: pg.name || base, kind: 'slicer', title: label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1), narrow: true }); }
-        const sw = swOf();
-        const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
+        // (0.3.1 TW1, SQ1-S2: a 60 x 80 slot, higher than wide, put its second slicer at y 88, under the slot) stacked, the
+        // slicers (each the height a dropdown needs, slicerH) and the Reset button hold the slot's height: the Reset is left
+        // out first, then slicers from the last, each told (narrow, short); the first slicer stays, as high as the slot gives it,
+        // as a strip keeps one SLICER_MIN wide. A slot that holds them is as before (the same sums).
+        const SH = slicerH(SLICER_TEXT), stackNeed = () => fields.length * SH + (withReset ? bh + gap * fields.length : gap * (fields.length - 1)) + 2 * pad;
+        if (!across && fields.length && stackNeed() > s.h) { withReset = false; leftOut.push({ page: pg.name || base, kind: 'reset', title: resetText, narrow: true, short: true }); }
+        while (!across && fields.length > 1 && stackNeed() > s.h) { const i = fields.length - 1, f = fields.pop(); leftOut.push({ page: pg.name || base, kind: 'slicer', title: label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1), narrow: true, short: true }); }
+        const sw = swOf(), nn = Math.max(1, fields.length), stackRoom = withReset ? s.h - 2 * pad - bh - gap * n : s.h - 2 * pad - gap * (nn - 1);
+        const sh = across ? s.h - 2 * pad : withReset ? Math.max(SH, Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n)) : Math.min(stackRoom / nn, Math.max(SH, Math.min(76 * k, stackRoom / nn)));
         // (0.3.0 F2) stacked, a pill slicer gets the height measured for it (pillH) where the rail has room, else its share
         // of what is left; a strip keeps its height (the pills' text, then the dropdown, decide in slicerVisual)
-        const hs = across ? fields.map(() => sh) : stackHeights(fields, sh, s.h - 2 * pad - bh - gap * n);
+        const hs = across ? fields.map(() => sh) : stackHeights(fields, sh, stackRoom);
         let yAt = s.y + pad;
         fields.forEach((f, i) => {
           // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
@@ -1332,13 +1339,11 @@
         // Round 12 (#1; seen in Desktop 2.158, round 11: "Total Sales Last Rama..." on every phone page): a title too
         // long for one line at 10pt wraps to two (titleWrap, as on the page) where two lines and the value fit the card,
         // otherwise it is shortened at a word with "…"; the phone shows the full name where the page shortened it.
-        let c = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE);
-        const tl = { fontSize: num(TIP_TITLE), fontColor: color(u.text) }, full = S0(((vis.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText), room = p.w - 2 * c.P;
-        if (shown && full && textWidth(full, TIP_TITLE, true, font) > room) {
-          const ls = wrapLines(full, TIP_TITLE, room), two = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE, null, undefined, 2);
-          if (ls.length <= 2 && ls.every((l) => textWidth(l, TIP_TITLE, true, font) <= room) && two.V >= 8) { c = two; Object.assign(tl, { text: str(full), titleWrap: bool(true) }); }
-          else tl.text = str(oneLine(full, TIP_TITLE, room));
-        }
+        // (the rule: pbip-sizing.js phoneCardFit, the Arabic twin's too)
+        const tl = { fontSize: num(TIP_TITLE), fontColor: color(u.text) }, full = S0(((vis.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText);
+        const pf = phoneCardFit(shown && full ? full : '', p.w, p.h, TIP_TITLE, TIP_VALUE), c = pf.c;
+        if (pf.mode === 'wrap') Object.assign(tl, { text: str(full), titleWrap: bool(true) });
+        else if (pf.mode === 'cut') tl.text = str(oneLine(full, TIP_TITLE, pf.room));
         return { objects: { value: obj({ fontSize: num(c.V) }, DEF), padding: obj({ paddingUniform: num(c.I) }, DEF) },
           visualContainerObjects: { title: obj(tl), padding: obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }) } };
       }

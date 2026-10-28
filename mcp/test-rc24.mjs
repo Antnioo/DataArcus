@@ -185,7 +185,9 @@ try {
       const sc = pg.page.height / 1080, cw = (v.visual.objects || {}).columnWidth || [], width = (q) => { const e = cw.find((x) => x.selector && x.selector.metadata === q); return e ? parseFloat(lit(e.properties.value)) : null; };
       const sum = cw.reduce((a, e) => a + parseFloat(lit(e.properties.value)), 0);
       if (sum > v.position.width - 36 * sc + 0.5) bad.push(`${v.name}: columns ${sum} wider than the table's ${v.position.width} less 36`);
-      v.visual.query.queryState.Values.projections.forEach((p) => { const cwid = width(p.queryRef); if (cwid == null || !p.displayName) return; const need = textWidth(p.displayName, T, true, 'Segoe UI') + 24 * sc; if (cwid + 0.5 < need) bad.push(`${v.name}/${p.queryRef}: ${cwid} for a header that needs ${Math.ceil(need)}`); });
+      // (TW1, M1-S2: a hidden column, width 0, has no header to fit: the twin's right-to-left table hides its name column
+      // as the writer's does, round 23; check_report's tableHeaders skips it too)
+      v.visual.query.queryState.Values.projections.forEach((p) => { const cwid = width(p.queryRef); if (cwid == null || cwid <= 1 || !p.displayName) return; const need = textWidth(p.displayName, T, true, 'Segoe UI') + 24 * sc; if (cwid + 0.5 < need) bad.push(`${v.name}/${p.queryRef}: ${cwid} for a header that needs ${Math.ceil(need)}`); });
     }));
     const cut = (p2.j.fitted && p2.j.fitted.headersCut) || [];
     chk(() => !bad.length || bad.length === cut.length, () => `T-4. every Arabic header fits its column within the table's width, or is listed in the plan: ${bad.join('; ')} | plan ${JSON.stringify(cut)}`);
