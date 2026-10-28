@@ -116,6 +116,18 @@ try {
     assert.equal(full.split('\n').filter((l) => /^ {6}- K\d+/.test(l)).length, 300);
     assert.ok(fs.existsSync(path.join(logs, 'test-pass.mjs.log')));
   });
+  // (SPD, Codex #10) the run's manifest: one entry per suite, its seconds, status, checks and cause; finished
+  t('the runner writes manifest.json: each suite with its seconds, status, checks and cause; the run finished', () => {
+    const m = JSON.parse(fs.readFileSync(path.join(logs, 'manifest.json'), 'utf8'));
+    assert.equal(m.finished, true); assert.equal(m.shard, '-'); assert.ok(m.os);
+    assert.deepEqual(m.planned, Object.keys(suite).map((k) => `test-${k}.mjs`));
+    const by = Object.fromEntries(m.suites.map((e) => [e.file, e]));
+    assert.deepEqual(m.suites.map((e) => e.file), m.planned);
+    assert.deepEqual([by['test-pass.mjs'].status, by['test-pass.mjs'].checks, by['test-pass.mjs'].cause], ['PASS', 3, null]);
+    assert.deepEqual([by['test-hang.mjs'].status, by['test-hang.mjs'].cause], ['FAIL', 'timeout']);
+    assert.ok(by['test-hang.mjs'].seconds >= 3 && by['test-pass.mjs'].seconds < 3, JSON.stringify(by['test-hang.mjs']));
+    assert.deepEqual([by['test-crash.mjs'].cause, by['test-zero.mjs'].cause, by['test-fail.mjs'].checks], ['crash', 'zero-checks', 310]);
+  });
   t('the runner stops at the first failure without --keep-going; one area runs alone', () => {
     const r = node([path.join(REPO, 'mcp/run-tests.mjs'), '--log-dir', logs], { DA_TESTS_DIR: S });
     assert.equal(r.status, 1); assert.match(r.stderr, /stopped at test-fail\.mjs; 8 suites after it did not run/);
@@ -126,11 +138,68 @@ try {
   // ---- ci-sum on made-up CI logs: shard 0 by identity
   const reg = path.join(D, 'reg.json');
   fs.writeFileSync(reg, JSON.stringify({ suites: [{ file: 'test.mjs', name: 'mcp', sharded: true }, { file: 'test-a.mjs', name: 'a' }, { file: 'test-b.mjs', name: 'b' }] }));
-  const ci = (files, more = []) => { const d = fs.mkdtempSync(path.join(D, 'ci-')); for (const [f, txt] of Object.entries(files)) fs.writeFileSync(path.join(d, f), txt); return node([path.join(REPO, 'scripts/ci-sum.mjs'), 'mcp', d, '--registry', reg, '--os', 'windows', ...more], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: '' }); };
+  // (SPD) each shard's log comes with its manifest (mcp-shard-<k>-full/manifest.json, as the runner writes it); manifests
+  // made from the log's own result lines unless the test gives one (or false: none)
+  const manifestOf = (k, n, text, os = 'windows') => ({ os, shard: `${k}/${n}`, finished: true, suites: results(text).map((r) => ({ file: `test-${r.name}.mjs`, name: r.name, seconds: 1, status: r.status, checks: count(r.rest), cause: r.status === 'FAIL' ? 'checks-failed' : null })) });
+  const ci = (files, more = [], manifests = {}) => {
+    const d = fs.mkdtempSync(path.join(D, 'ci-'));
+    for (const [f, txt] of Object.entries(files)) {
+      fs.writeFileSync(path.join(d, f), txt);
+      const k = +(/^mcp-shard-(\d+)\.log$/.exec(f) || [])[1], m = Object.hasOwn(manifests, k) ? manifests[k] : manifestOf(k, Math.max(2, ...Object.keys(files).map((x) => +(/(\d+)\.log$/.exec(x) || [0, 0])[1])), txt);
+      if (Number.isInteger(k) && m) { fs.mkdirSync(path.join(d, `mcp-shard-${k}-full`)); fs.writeFileSync(path.join(d, `mcp-shard-${k}-full`, 'manifest.json'), JSON.stringify(m)); }
+    }
+    return node([path.join(REPO, 'scripts/ci-sum.mjs'), 'mcp', d, '--registry', reg, '--os', 'windows', ...more], { GITHUB_ACTIONS: 'true', GITHUB_STEP_SUMMARY: '' });
+  };
+  const causesOf = (r) => [...new Set(r.stdout.split('\n').map((l) => parseOneLine(l.replace(/^ +- /, ''))).filter(Boolean).map((o) => `${o.cause} ${o.script}`))];
   const parts = { 'mcp-shard-1.log': 'PASS  mcp  700 checks  (shard 1/2: 9 parts)\nG13  40 reports, 0 with errors\n', 'mcp-shard-2.log': 'PASS  mcp  800 checks  (shard 2/2: 9 parts)\nG13  30 reports, 0 with errors\n' };
   t('ci-sum: the listed suites pass and add up', () => {
     const r = ci({ 'mcp-shard-0.log': 'SKIP  mcp  (DA_SHARD=0/2: shards 1-2 run its parts)\nPASS  a  5 checks\nPASS  b  6 checks\n', ...parts });
     assert.equal(r.status, 0, r.stdout); assert.match(r.stdout, /PASS {2}mcp {2}1512 checks in all shards/);
+  });
+  // (SPD, Codex #10) the result contract: a run is rejected when a shard's manifest is missing, a suite ran twice (in two
+  // shards), crashed or timed out (said by the manifest, with no result line), printed 0 checks, or the log and the
+  // manifest disagree; the total is printed per OS
+  const ok0 = 'SKIP  mcp  (DA_SHARD=0/2: shards 1-2 run its parts)\nPASS  a  5 checks\nPASS  b  6 checks\n';
+  t('ci-sum: the total checks printed with the OS, the suites and each shard\'s seconds', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts });
+    assert.equal(r.status, 0, r.stdout); assert.match(r.stdout, /PASS {2}mcp {2}1512 checks in all shards \(windows: 3 suites, 3 shards\)/);
+    assert.match(r.stdout, /^shard 0\/2 +\d+(\.\d)? s +2 suites/m);
+  });
+  t('ci-sum: a shard without its manifest fails (missing-manifest)', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts }, [], { 1: false });
+    assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['missing-manifest mcp-shard-1-full/manifest.json']);
+  });
+  t('ci-sum: a manifest of an unfinished run, or of another shard or OS, fails', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts }, [], { 0: { ...manifestOf(0, 2, ok0), finished: false }, 2: manifestOf(1, 2, parts['mcp-shard-2.log'], 'linux') });
+    assert.equal(r.status, 1, r.stdout);
+    assert.deepEqual(causesOf(r).sort(), ['crash mcp-shard-0-full/manifest.json', 'missing-shard mcp-shard-2-full/manifest.json']);
+  });
+  t('ci-sum: a suite that timed out or crashed (no result line; the manifest says so) fails by that cause', () => {
+    const log = 'SKIP  mcp  (DA_SHARD=0/2: x)\nFAIL script=mcp/test-a.mjs check="stopped after 780s" cause=timeout os=windows shard=0/2\nFAIL script=mcp/test-b.mjs check="Error: x" cause=crash os=windows shard=0/2\n';
+    const m = { ...manifestOf(0, 2, log), suites: [{ file: 'test.mjs', name: 'mcp', seconds: 0, status: 'SKIP', checks: null, cause: null }, { file: 'test-a.mjs', name: 'a', seconds: 780, status: 'FAIL', checks: null, cause: 'timeout' }, { file: 'test-b.mjs', name: 'b', seconds: 2, status: 'FAIL', checks: null, cause: 'crash' }] };
+    const r = ci({ 'mcp-shard-0.log': log, ...parts }, [], { 0: m });
+    assert.equal(r.status, 1, r.stdout);
+    for (const c of ['timeout mcp/test-a.mjs', 'crash mcp/test-b.mjs']) assert.ok(causesOf(r).includes(c), `${c} in ${causesOf(r)}`);
+  });
+  t('ci-sum: a suite that printed 0 checks fails (zero-checks)', () => {
+    const log = 'SKIP  mcp  (DA_SHARD=0/2: x)\nPASS  a  5 checks\nPASS  b  0 checks\n';
+    const r = ci({ 'mcp-shard-0.log': log, ...parts });
+    assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['zero-checks mcp/test-b.mjs']);
+  });
+  t('ci-sum: a suite in two shards fails as duplicate-suite', () => {
+    const r = ci({ 'mcp-shard-0.log': ok0, 'mcp-shard-1.log': parts['mcp-shard-1.log'] + 'PASS  a  5 checks\n', 'mcp-shard-2.log': parts['mcp-shard-2.log'] });
+    assert.equal(r.status, 1, r.stdout); assert.ok(causesOf(r).includes('duplicate-suite mcp/test-a.mjs'), causesOf(r).join('; '));
+  });
+  t('ci-sum: the log and the manifest disagree (another count, a suite only in one) fails (manifest-mismatch)', () => {
+    const m = manifestOf(0, 2, ok0); m.suites[1].checks = 4; m.suites.pop();
+    const r = ci({ 'mcp-shard-0.log': ok0, ...parts }, [], { 0: m });
+    assert.equal(r.status, 1, r.stdout); assert.deepEqual(causesOf(r), ['manifest-mismatch mcp/test-a.mjs', 'manifest-mismatch mcp/test-b.mjs']);
+  });
+  t('ci-sum: a failed shard (a FAIL line) and a missing shard log still fail', () => {
+    const f = ci({ 'mcp-shard-0.log': ok0, 'mcp-shard-1.log': 'FAIL  mcp  3 of 700 checks  (shard 1/2: 9 parts)\nG13  40 reports, 0 with errors\n', 'mcp-shard-2.log': parts['mcp-shard-2.log'] });
+    assert.equal(f.status, 1, f.stdout); assert.ok(causesOf(f).includes('checks-failed mcp/test.mjs'), causesOf(f).join('; '));
+    const m = ci({ 'mcp-shard-0.log': ok0, 'mcp-shard-2.log': parts['mcp-shard-2.log'] });
+    assert.equal(m.status, 1, m.stdout); assert.ok(causesOf(m).includes('missing-shard ci-logs/mcp-shard-1.log'), causesOf(m).join('; '));
   });
   t('ci-sum: the same count of result lines with another suite in place of b fails, by name, with an annotation in the one-line form', () => {
     const r = ci({ 'mcp-shard-0.log': 'SKIP  mcp  (DA_SHARD=0/2: shards 1-2 run its parts)\nPASS  a  5 checks\nPASS  z  6 checks\n', ...parts });
@@ -171,6 +240,14 @@ try {
   t('run-all: a suite that ran 0 checks fails as zero-checks (its source)', () => {
     const src = fs.readFileSync(path.join(REPO, 'scripts/tests/run-all.mjs'), 'utf8');
     assert.match(src, /zero-checks/); assert.match(src, /res\.checks/);
+  });
+
+  // (SPD; Codex: a guard's baseline that timed out was counted as a pass) mutation rejects a baseline that timed out
+  t('mutation: a guard whose baseline timed out fails the run, never counted as a pass', () => {
+    const r = node([path.join(REPO, 'mcp/test-0.3.1-mutation.mjs')], { DA_MUTATION_ONLY: 'G-used', DA_MUTATION_GUARD_TIMEOUT: '0.01' }, path.join(REPO, 'mcp'));
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /baseline: test-partial-writes\.mjs timed out/);
+    assert.match(r.stdout, /^FAIL {2}mutation {2}/m);
   });
 
   // ---- --affected (local only)

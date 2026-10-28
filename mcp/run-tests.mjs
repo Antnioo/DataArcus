@@ -22,7 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { judge, oneLine, detailOf, budget, isSummaryLine, osName, shardOf, affected, scrub, REPO } from './test-results.mjs';
+import { judge, oneLine, detailOf, budget, isSummaryLine, osName, shardOf, affected, scrub, count, MANIFEST, REPO } from './test-results.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -135,8 +135,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   fs.mkdirSync(logDir, { recursive: true });
   for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { if (runOne.current) runOne.current(); process.exit(130); });
   const failed = [], spend = budget(), seen = new Map(), o = osName();
+  // (SPD, Codex #10) the manifest: each suite's seconds, status, checks and cause, written after each suite; finished
+  // only when the run got to its end (ci-sum rejects a shard whose manifest is missing or unfinished)
+  const manifest = { os: o, shard, commit: process.env.GITHUB_SHA || null, run: process.env.GITHUB_RUN_ID || null, node: process.version, planned: suites.map((s) => s.file), suites: [], finished: false };
+  const writeManifest = (finished = false) => { manifest.finished = finished; fs.writeFileSync(path.join(logDir, MANIFEST), JSON.stringify(manifest, null, 1) + '\n'); };
+  writeManifest();
   for (const [i, s] of suites.entries()) {
-    const r = await runOne(s.file, { cwd: DIR, timeout, verbose });
+    const t0 = Date.now(), r = await runOne(s.file, { cwd: DIR, timeout, verbose });
+    const seconds = Math.round((Date.now() - t0) / 100) / 10;
     const log = path.join(logDir, s.file.replace(/[\\/]/g, '__') + '.log');
     fs.writeFileSync(log, r.out);
     if (!verbose) r.out.replace(/\r\n/g, '\n').split('\n').filter(isSummaryLine).forEach((l) => console.log(l));
@@ -144,6 +150,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     // a name printed by an earlier suite of this run too
     if (j.ok && seen.has(s.name)) j = { ok: false, cause: 'duplicate-suite', check: `"${s.name}" printed by ${seen.get(s.name)} too` };
     seen.set(s.name, s.file);
+    const own = (j.results || []).filter((x) => x.name === s.name).pop();
+    manifest.suites.push({ file: s.file, name: s.name, seconds, status: j.ok ? (j.skipped ? 'SKIP' : 'PASS') : 'FAIL', checks: own ? count(own.rest) : null, cause: j.ok ? null : j.cause });
+    writeManifest();
     if (j.ok) continue;
     const fromEnd = ['crash', 'timeout', 'no-result-line'].includes(j.cause);
     const check = j.cause === 'timeout' ? `stopped after ${timeout}s; last: ${j.check}` : j.cause === 'crash' && r.error ? r.error.message : j.check;
@@ -151,11 +160,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (!verbose) spend.take(detailOf(r.out).map((l) => '      ' + l.trim()), { fromEnd, log }).forEach((l) => console.log(l));
     failed.push(`${s.file} (${j.cause})`);
     if (!keepGoing) {
+      writeManifest(true);
       const left = suites.length - i - 1;
       console.error(`run-tests: stopped at ${s.file}; ${left} suite${left === 1 ? '' : 's'} after it did not run (npm test -- --keep-going runs them all)`);
       process.exit(r.code || 1);
     }
   }
+  writeManifest(true);
   if (failed.length) {
     console.error(`run-tests: ${failed.length} of ${suites.length} suites failed:\n` + failed.map((f) => '  - ' + f).join('\n'));
     process.exit(1);

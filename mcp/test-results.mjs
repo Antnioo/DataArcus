@@ -33,7 +33,13 @@ export const CAUSES = {
   'unknown-suite': 'a result line names a suite that is not listed',
   'missing-shard': 'a shard log is missing or there twice',
   'g13': 'a report created by the parts does not validate',
+  'missing-manifest': 'a shard has no manifest.json (the runner\'s record of each suite it ran)',
+  'manifest-mismatch': 'a shard\'s log and its manifest disagree on a suite (its status or its checks)',
 };
+// (SPD, Codex #10) the runner's record of a run, in its log folder: { os, shard, commit, run, planned: [files], suites:
+// [{ file, name, seconds, status, checks, cause }], finished }. ci-sum reads it beside each shard's log;
+// scripts/test-times.mjs reads CI's to write mcp/test-times.json
+export const MANIFEST = 'manifest.json';
 
 export const RESULT = /^(PASS|FAIL|SKIP)\s{2}(\S+)\s+(.*)$/;
 export const results = (text) => String(text).replace(/\r\n/g, '\n').split('\n').map((l, i) => { const m = RESULT.exec(l); return m && { status: m[1], name: m[2], rest: m[3], i }; }).filter(Boolean);

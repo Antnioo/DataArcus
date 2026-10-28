@@ -19,7 +19,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE
 const T0 = Date.now(), ALL = !!process.env.DA_MUTATION_ALL;
 const ONLY = new Set(String(process.env.DA_MUTATION_ONLY || '').split(',').map((s) => s.trim()).filter(Boolean));
 const WORKERS = Math.max(1, Math.min(4, os.cpus().length));
-const GUARD_TIMEOUT = 240000;   // (a guard that times out kills nothing: a hang is not a failing check)
+// (a guard that times out kills nothing: a hang is not a failing check; a baseline that times out fails the run, SPD)
+// DA_MUTATION_GUARD_TIMEOUT: seconds (the adapter's test sets a tiny one to prove that)
+const GUARD_TIMEOUT = process.env.DA_MUTATION_GUARD_TIMEOUT ? +process.env.DA_MUTATION_GUARD_TIMEOUT * 1000 : 240000;
 
 // ---------- the mutants: { id, file (from the repo root), edits: [[exactly this, becomes this], ...], guards, only?, equivalent? } ----------
 // equivalent: a mutant no test can kill without a hook in product code, with why; listed, not run (T1.md)
@@ -209,8 +211,8 @@ async function pool(jobs, work) {
   await Promise.all(copies.map(async (copy) => { while (next < jobs.length) { const j = jobs[next++]; await work(copy, j); } }));
 }
 await pool(guards, async (copy, g) => { const r = await runGuard(copy, g); baseline.set(g, r); });
-for (const g of guards) { const r = baseline.get(g); ok(!r.failed, `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`); }
-const badBaseline = new Set(guards.filter((g) => baseline.get(g).failed));
+for (const g of guards) { const r = baseline.get(g); ok(!r.failed && !r.timedOut, r.timedOut ? `baseline: ${g} timed out on the unmutated copy (${GUARD_TIMEOUT / 1000}s): a pass by it would mean nothing` : `baseline: ${g} fails on the unmutated copy (${r.result}): a kill by it would mean nothing`); }
+const badBaseline = new Set(guards.filter((g) => baseline.get(g).failed || baseline.get(g).timedOut));
 await pool(mutants, async (copy, m) => {
   const a = apply(copy, m);
   if (!ok(!a.error, `${m.id}: ${a.error}`)) return;
