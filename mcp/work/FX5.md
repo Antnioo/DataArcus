@@ -31,26 +31,59 @@
 - **Resume:** the plan pushed; next the red test, then the rule.
 
 ## Before -> after
-(to fill)
+1. **The writer (`pbip-page.js` fixVisual).** A bar or column chart (clustered, stacked, 100%, the combo charts) whose
+   count of categories is known: the fewer of its Top N and the field's known count (a day, month or quarter axis; two
+   values; a few known texts; a calendar's rows). Before: no padding, Desktop's default (3 bars in 277 high at 1280 x
+   720: 49.6 each; the 1,872-wide column chart at 1080 with 3: 480). After: `categoryAxis.innerPadding` =
+   `outerPadding` = p (36 -> bars 35.4; 45 at 1920 x 1080 -> 44.6; 75 on a 600-wide column chart -> 35.9; 91 on the
+   1,872-wide one -> 41.4). 12 months in 277 high (12.4 each) and an unknown count: nothing written, as before.
+2. **The phone layout.** The same rule on the phone's own box (720 units): a 323 x 190 column chart with 3 gets 52
+   beside its 8pt; a 190-high bar chart with 3 (26.4 each) nothing.
+3. **The previews.** `page-preview.js` reads the equal paddings and draws that many bars that thick (3 x 35.4 high,
+   3 x 35.9 wide) instead of its 5 bars or 6 columns; with no padding its own placeholder, as before. The Theme
+   Generator's canvas draws its sample bars and columns by `barBand` (columns 35.5 on a full slot instead of 64% of
+   their step; bars Desktop's default for their count, 32.3 for 5): the page now loads text-measure, pbip-query and
+   pbip-sizing with it (EN, AR, lab), and the builder does not load a script that is already on the page.
+4. **The value axis** is never written (D-1028-06's three equal bars are equal values; W8 proves it).
 
 ## CHANGELOG line
-(to fill)
+- "Bars and columns are never too thick" under [Unreleased] (plain words, changelog-words PASS).
 
 ## Decisions I made
-- `BAR_MAX_720` 36 is derived from Desktop's measured default row (DESKTOP-TESTS.md, 22.2 a row at 10pt, 1280 x 720),
-  not measured as a maximum: the laptop confirms the look (For the laptop).
+- `BAR_MAX_720` 36 is derived from Desktop's measured default row (DESKTOP-TESTS.md, 22.2 a row at 10pt, 1280 x 720,
+  less its 20% inner padding = 17.8; twice that), not measured as a maximum: the laptop confirms the look.
+- Inner padding = outer padding: every gap the same and the bars centred, one number to write and to read back
+  (the preview recovers the count from it: `barCountOf`).
+- The count is the fewer of the Top N and the field's known count (a 3-value field under a Top 8 is 3 bars). The
+  Top N is an upper bound: with fewer real categories the bars are thicker than the maximum, but never thicker than
+  today. The model gives no row count for a plain text column (metadata only), so such a chart keeps Desktop's look.
+- Small multiples (their panels share the width), the waterfall and the ribbon chart are not padded: their bars do not
+  follow one category count. Combo charts are padded; the preview still draws them as a line (its shape for them).
+- The plan's answer does not list the padding: its words live in create_report and report-run.mjs (FX2's files).
+- Desktop's own default gap is taken as 20% inner and 0 outer (Power BI's visuals utilities' 0.2) to decide when the
+  default is already thin enough; the laptop's capture confirms.
 
 ## For the owner
-(to fill)
+- The sample project's charts (Country, Channel: plain text columns) keep Power BI's look: the model gives no count for
+  them, and reading its rows is reading data. If you want the sample's own charts thin too, DataArcus can say its own
+  made-up sample's counts (it wrote them); that goes through create_report's files (FX2's), so a later job.
 
 ## Risky changes
-(to fill)
+- The Theme Generator pages load three more small scripts at start (about 27 KB minified, already used by the builder);
+  the builder now skips a script already on the page. EN, AR and the lab page; site config and the website suites PASS.
 
 ## For the laptop
-(to fill)
+- Desktop must confirm, EN and AR, at 1280 x 720 and 1920 x 1080: a bar chart and a column chart with 3 known
+  categories (a field of 3 known texts, or a quarter axis, 4) draw bars about 35 (720) and 45 (1080) thick, evenly
+  spaced, centred; 12 months unchanged; the phone layout's column chart with 3 spaced the same way. And that Desktop
+  takes paddings over 50 (91 on a full-width column chart): if it caps them, the bars are thicker than planned (never
+  thicker than before).
 
 ## Seen, not in scope
-(to fill)
+- STOP: mcp/lib/report-run.mjs (FX2/FX4): the plan's answer could list each padded chart (count, padding, thickness).
+- The sample project's Details column chart (1,872 x 291, Country) keeps no padding: count unknown (For the owner).
+- The preview draws a combo chart as a line only (its columns not shown): unchanged.
 
 ## Lessons for the reviewer
-(to fill)
+- Microsoft's catalog has the spacing properties under `categoryAxis` (innerPadding, outerPadding), not `layout`
+  (whose `clusteredGapSize` is the space between series).

@@ -10,6 +10,11 @@ package's manifest; this file says what is in it.
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >
   Extensions > DataArcus for Power BI > Uninstall), then double-click the 0.3.0 file and choose Install. Your reports
   stay where they were written.
+- **Bars and columns are never too thick:** where the number of categories is known (a chart kept to its top N, days,
+  months, quarters, a field of two or a few known values), a bar or column is at most 36 thick on a 1280 x 720 page
+  (45 at 1920 x 1080), so three bars or columns no longer fill the chart; the space between them grows evenly, on the
+  phone layout too, and the approval page's preview and the Theme Generator draw them that thick. The values and the
+  value axis are unchanged: equal values still draw equal bars. Where the count is not known, Power BI's own look stays.
 - **The Arabic Reset button keeps its icon:** in the Arabic twin and the English and Arabic copy, a Reset filters
   button whose Arabic text is longer now takes the width it needs from the dropdown slicers beside it (or, with no
   slicer beside it, its text takes the largest size at which the text and the icon both fit), so it looks like the
