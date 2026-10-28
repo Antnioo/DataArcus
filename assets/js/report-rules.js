@@ -51,6 +51,14 @@
   const Sizing = () => { try { return typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null; } catch (e) { return null; } };
   // (0.3.1 TS1) the design engine, for the theme's text size on a page (sizeAt: the one place, x 1.25 on 1920 x 1080)
   const Engine = () => { try { return typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine || null; } catch (e) { return null; } };
+  // (0.3.1 FX3b) each visual type's default title, from Microsoft's catalog (@microsoft/powerbi-core-visual-schema 0.1.3,
+  // capabilities.json): these types are marked suppressDefaultTitle, their title is off unless switched on; every other
+  // type of the catalog shows its default title (composed from the field names); a type outside it (a custom visual) is
+  // not known. Copied here for the browser (mcp/test-0.3.1-fx3b.mjs K1 compares it with the catalog)
+  const DEFAULT_TITLE_OFF = Object.freeze(['actionButton', 'aiNarratives', 'basicShape', 'bookmarkNavigator', 'card', 'cardVisual', 'decompositionTreeVisual', 'filterSlicer', 'ganttChart', 'image', 'keyDriversVisual',
+    'matrix', 'multiRowCard', 'pageNavigator', 'pivotTable', 'qnaVisual', 'rdlVisual', 'scorecard', 'shape', 'slicer', 'table', 'tableEx', 'textbox']);
+  const VisualTypes = () => { try { return typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes || null; } catch (e) { return null; } };
+  const defaultTitle = (type) => { const V = VisualTypes(); return DEFAULT_TITLE_OFF.includes(type) ? 'off' : V && V.NATIVE_TYPES && V.NATIVE_TYPES.includes(type) ? 'on' : 'not known'; };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
   const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
@@ -353,8 +361,13 @@
           if (NOT_DATA.includes(x.type) || fields < 2) return;
           [['title', 'title'], ['subTitle', 'subtitle']].forEach(([card, said]) => {
             const t = entries((v.visualContainerObjects || {})[card]).filter((e) => e && !e.selector && e.properties);
-            if (t.some((e) => lit(e.properties.show) === 'true' && (e.properties.text === undefined || (lit(e.properties.text) !== undefined && !str(e.properties.text).trim()))))
-              out(x, `its ${said} is automatic (switched on, no text of its own) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, `Give the ${said} its own text, wholly Arabic (or wholly English): create_arabic_twin lists it with an Arabic draft from the approved field names and writes the approved text.`);
+            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !str(e.properties.text).trim()));
+            const shown = t.filter((e) => e.properties.show !== undefined), on = shown.length ? lit(shown[shown.length - 1].properties.show) === 'true' : null;
+            // (FX3b) no "show" set (a missing title card, the owner's hand-made charts): the type's default title, from the
+            // catalog; a subtitle is off unless switched on
+            const fix = `Give the ${said} its own text, wholly Arabic (or wholly English): create_arabic_twin lists it with an Arabic draft from the approved field names and writes the approved text.`;
+            if (noText && on === true) out(x, `its ${said} is automatic (switched on, no text of its own) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, fix);
+            else if (noText && on === null && card === 'title' && defaultTitle(x.type) === 'on') out(x, `its title has no text of its own and its type shows Power BI's default title (Microsoft's visual catalog) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, fix);
           });
         });
       } },
@@ -416,6 +429,6 @@
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, byDirection, buttonNeed, headerNeed, tableHeaders };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, byDirection, buttonNeed, headerNeed, tableHeaders, DEFAULT_TITLE_OFF, defaultTitle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);
