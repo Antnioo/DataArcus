@@ -1135,16 +1135,25 @@
       const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
       const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
-      if (cut > 0 && beside.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
-        const under = (s) => s.y >= B + cut && s.x < Math.max(...beside.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...beside.map((q) => q.x).concat(rail.x));
-        out = out.map((s) => (beside.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
+      // (0.3.1 FX2, the laptop's C23: "the bar chart draws below its panel, over the table's first rows") the slots in
+      // the same row as one beside the rail (its top and bottom) end there too: the row stays one line, and the slots
+      // moved up under it never go under a chart of that row that kept its height
+      const row = beside.length ? out.filter((s) => s !== rail && !beside.includes(s) && !OWN_SLOTS.includes(s.kind) && beside.some((b) => Math.abs(s.y - b.y) <= 1 && Math.abs(s.y + s.h - b.y - b.h) <= 1)) : [];
+      const ends = beside.concat(row);
+      if (cut > 0 && ends.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
+        const under = (s) => s.y >= B + cut && s.x < Math.max(...ends.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...ends.map((q) => q.x).concat(rail.x));
+        out = out.map((s) => (ends.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
       } else if (beside.length === 1 && !out.some((q) => q !== beside[0] && q !== rail && !OWN_SLOTS.includes(q.kind) && q.kind !== 'kpi' && q.y < beside[0].y + beside[0].h && q.y + q.h > beside[0].y)) {
         // (only a chart alone in its row: moving one chart of a row would break the row's line)
         // (design round 9, S7 with one or two dropdowns: the chart beside would keep too little of its height) the one
         // chart beside starts under the rail, a row's gap below it, and takes the rail's column: where it keeps its share
         const s0 = beside[0], next = out.filter((q) => q.y >= s0.y + s0.h && q.x < s0.x + s0.w && q.x + q.w > s0.x).map((q) => q.y - (s0.y + s0.h)), g = next.length ? Math.min(...next) : SLOT_GAP / 2;
         const y = B + g, h = s0.y + s0.h - y, x0 = Math.min(s0.x, rail.x), x1 = Math.max(s0.x + s0.w, rail.x + rail.w);
-        if (h >= REFLOW_KEEP * s0.h) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
+        // (0.3.1 FX2, the laptop's C03: "a large empty band above the chart, left of the rail", a focus page with no KPI
+        // cards) a chart that starts at the rail's own top (nothing above it beside the rail) moves only where the room it
+        // fills under the rail is at least the band it would leave empty above it; one under a KPI row moves as before
+        const band = (y - s0.y) * s0.w, fills = (x1 - x0 - s0.w) * h, atTop = s0.y <= rail.y + 1;
+        if (h >= REFLOW_KEEP * s0.h && (!atTop || fills >= band)) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
     }
     if (rail) out = out.map((s) => {

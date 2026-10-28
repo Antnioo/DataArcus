@@ -42,6 +42,8 @@ const MODELS = [{ path: 'ramadan' }, { path: 'arabic' }, { path: 'plain' }, { pa
 // its English titles English on purpose, as the person says it: these checks are about the phone layout, not the names
 const KEPT = {
   ramadan: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]'),
+  // (0.3.1 FX2, A-1: the columns a model with no measures counts or sums are drafted like the other fields)
+  plain: keepEnglish('Orders[Order Id]'),
   large: keepEnglish('Calendar[Month Short]', 'Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Returns[Returns Total Amount]', 'Hub[Hub Region]', 'Shipments[Shipments Total Discount]',
     'Shipment Legs[Shipment Legs Total Hours]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Lane[Lane Region]', 'Hub[Hub Group]', 'Hub[Hub Category]')
 };

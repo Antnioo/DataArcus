@@ -449,7 +449,8 @@ export function v030engine({ check }) {
   // legends: left and right swapped, centred kept
   { const pos = (p) => { const r = run(v('clusteredColumnChart', { queryState: { Category: { projections: [col('S', 'R')] }, Series: { projections: [col('S', 'P')] }, Y: { projections: [mea('S', 'A')] } } }, p ? { legend: [{ properties: { position: lit("'" + p + "'") } }] } : null), 1280); return r.visual && r.visual.objects.legend[0].properties.position.expr.Literal.Value; };
     const got = ['Top', 'Left', 'BottomLeft', 'Right', 'TopCenter', null].map(pos);
-    check(JSON.stringify(got) === JSON.stringify(["'TopRight'", "'Right'", "'BottomRight'", "'Left'", "'TopCenter'", "'TopRight'"]), `T10. legend positions: ${JSON.stringify(got)}`); }
+    // (0.3.1 FX2, H-1: BottomLeft is not a legend position in Microsoft's catalog, so it has no mirrored value: kept, said)
+    check(JSON.stringify(got) === JSON.stringify(["'TopRight'", "'Right'", "'BottomLeft'", "'Left'", "'TopCenter'", "'TopRight'"]), `T10. legend positions: ${JSON.stringify(got)}`); }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

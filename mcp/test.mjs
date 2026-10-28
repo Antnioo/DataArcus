@@ -4588,7 +4588,8 @@ if (part('round20')) {
   //    ("Count of Order Id (Region)"), English and Arabic alike; a title already unique is not changed
   {
     fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'r20-plain'), { recursive: true });
-    const titles = async (lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 4, lang }); const x = await ask('create_report', { path: 'r20-plain', name: 'R20 plain ' + lang, lang, design: pl.j.design });
+    // (0.3.1 FX2, A-1: the column the Arabic report counts, Order Id, is drafted like any field: its approved name here)
+    const titles = async (lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 4, lang }); const x = await ask('create_report', Object.assign({ path: 'r20-plain', name: 'R20 plain ' + lang, lang, design: pl.j.design }, lang === 'ar' ? { displayNames: { 'Orders[Order Id]': 'رقم الطلب' } } : {}));
       if (x.err) return { err: x.t.slice(0, 200) };
       const def = path.join(ROOT, 'r20-plain', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
       return order.map((pg) => fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')))

@@ -160,7 +160,8 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     model('r22-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'string'), col('Region', 'string'), col('Channel', 'string')] }]);
     // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's names, «المنطقة» and «القناة» here, and the titles
     // are then their own; this case is the English names', so it keeps them through displayNames, the plan's way to keep them)
-    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
+    // (0.3.1 FX2, A-1: the column counted, Order Id, is a field its titles name: kept English on purpose too)
+    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel', 'Orders[Order Id]': 'Order Id' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
     const x = await mk('R22 same title', 470), xn = await mk('R22 same title narrow', 110);
     const pick = (r, w) => vis(r, 'r22-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === w), narrow = pick(xn, 110), wide = pick(x, 470);
     chk(() => narrow.length === 2 && narrow.every((v) => !/… \(/.test(titleOf(v))), () => `e. a bracket never follows a shortened title: ${JSON.stringify(narrow.map((v) => [titleOf(v), JSON.stringify(vco(v, 'title').properties.titleWrap || null)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
@@ -295,8 +296,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   //    the group share the column too, a short number after it ("(Region 2)"), fitted, with the same alt text
   {
     // (two text columns for three charts: the pool gives one of them twice; Order Id is a number, counted)
+    // (0.3.1 FX2, A-1: the column counted, Order Id, is drafted like any field: its approved name here)
     model('r22b-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Channel', 'string')] }]);
-    const x = await ask('create_report', { path: 'r22b-nm', name: 'R22b three charts', lang: 'ar', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 },
+    const x = await ask('create_report', { path: 'r22b-nm', name: 'R22b three charts', lang: 'ar', displayNames: { 'Orders[Order Id]': 'رقم الطلب' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 },
       { kind: 'bar', x: 36, y: 100, w: 380, h: 300 }, { kind: 'column', x: 440, y: 100, w: 380, h: 300 }, { kind: 'bar', x: 860, y: 100, w: 380, h: 300 }] }] });
     const cs = vis(x, 'r22b-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === 380), ts = cs.map(titleOf);
     chk(() => cs.length === 3 && new Set(ts).size === 3 && cs.every((v) => altOf(v) === titleOf(v)), () => `10. three charts, three titles, each alt text its title: ${JSON.stringify(cs.map((v) => [titleOf(v), altOf(v)]))} ${x.err ? x.t.slice(0, 200) : ''}`);

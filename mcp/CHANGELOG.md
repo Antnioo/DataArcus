@@ -5,6 +5,15 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **What a test run in Power BI Desktop found:** the Arabic twin now turns a chart's legend and a visual's shadow only into
+  positions Power BI has (a legend at the top right went to a "top left" Power BI does not know, and Microsoft's
+  validator refused it); a position Power BI does not list is kept and named in the plan. On a page with a filter
+  rail beside a row of two charts, the whole row now ends at the rail's bottom, so no chart is drawn over the table
+  under it, and the check before writing now refuses a plan where two charts overlap. The single-focus page with no
+  KPI cards keeps its chart at the top beside the filters, with no empty band above it. On a model with no measures,
+  an Arabic report's counts and sums are named in Arabic («عدد ...», «مجموع ...») from the field names you approve,
+  and the plan lists each one for your approval. The tool reference describes flip cards, status icons, the metric
+  switcher and the gallery charts with their limits.
 - **Going back to 0.3.0:** if 0.3.1 does not suit you, download `dataarcus-0.3.0.mcpb` from its release (v0.3.0)
   on https://github.com/Antnioo/dataarcus-releases/releases and check its SHA-256 before you install it: it must be
   `aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb`. In Claude Desktop, uninstall 0.3.1 (Settings >

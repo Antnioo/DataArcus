@@ -226,7 +226,10 @@ export function reportRun(a, mode) {
   // name the picker swapped for its Arabic column keeps the name given for the English one
   const englishNames = new Set();
   const named = (b) => { const from = new Map(((b && b.calendarSwaps) || []).map((w) => [Bind.fieldKey(w.to.t, w.to.c), Bind.fieldKey(w.from.t, w.from.c)]));
-    return Bind.mapFields(b, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m), g = given.get(k) || given.get(from.get(k)); if (!g) return f; g.used = true; return Object.assign({}, f, { name: g.name }); }); };
+    // (0.3.1 FX2, the laptop's A-1: a model with no measures showed «رقم الطلب» for the count of Order Id) a column the
+    // visual counts or sums keeps its aggregation in the name given: «عدد <name>», «مجموع <name>» (Count of, Sum of)
+    const aggName = (f, name) => (f.agg == null ? name : f.agg === 0 ? arName('مجموع', 'Sum of')(name) : arName('عدد', 'Count of')(name));
+    return Bind.mapFields(b, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m), g = given.get(k) || given.get(from.get(k)); if (!g) return f; g.used = true; return Object.assign({}, f, { name: aggName(f, g.name) }); }); };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // Power BI's own words can't be set by a report (measured: no slicer property holds "All")

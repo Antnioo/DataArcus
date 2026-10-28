@@ -112,7 +112,11 @@
   const projections = (query, role) => (isObj(query) && isObj(query.queryState) && isObj(query.queryState[role]) && Array.isArray(query.queryState[role].projections) ? query.queryState[role].projections : null);
   const first = (ps) => (ps && isObj(ps[0]) ? ps[0] : null);
   const sameField = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-  const LEGEND = { Top: 'TopRight', TopLeft: 'TopRight', TopRight: 'TopLeft', Bottom: 'BottomRight', BottomLeft: 'BottomRight', BottomRight: 'BottomLeft', Left: 'Right', Right: 'Left', LeftCenter: 'RightCenter', RightCenter: 'LeftCenter' };
+  // (0.3.1 FX2, the laptop's H-1: "TopRight" was mirrored to "TopLeft", a value Power BI does not have, PBIR_FORMATTING_ENUM_INVALID)
+  // a legend's positions as Microsoft's catalog has them (@microsoft/powerbi-core-visual-schema, every chart's
+  // legend.position): Top is top left, Bottom bottom left, Left and Right their tops; the centred ones stay. A value
+  // outside the catalog is kept as it is and said (kept)
+  const LEGEND = { Top: 'TopRight', TopRight: 'Top', Bottom: 'BottomRight', BottomRight: 'Bottom', Left: 'Right', Right: 'Left', LeftCenter: 'RightCenter', RightCenter: 'LeftCenter', TopCenter: 'TopCenter', BottomCenter: 'BottomCenter' };
   // a time category: a hierarchy level, a column of a date table, or a column named like a date part
   const TIME_NAME = /\b(date|month|year|quarter|week|day|weekday|period)s?\b|التاريخ|الشهر|السنة|الربع|الأسبوع|اليوم/i;
   function isTime(field, dateTables) {
@@ -131,7 +135,8 @@
   // 0.3.1 M1, the owner: "make sure the AR and twin are using the same engine"). v: the visual (visual.json's "visual"),
   // kind: kindOf's ('bar', 'column', 'waterfallKept' or 'waterfallTime': a waterfall that stays one gets its value axis at
   // the right). Changes v in place; what it changed is pushed to changes ----
-  function chartRtl(v, kind, o, changes) {
+  function chartRtl(v, kind, o, changes, kept0) {
+    const kept = kept0 || [];
     const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
     if (kind === 'waterfallKept' || kind === 'waterfallTime') { plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true'); changes.push('value axis'); }
     if (kind === 'bar') {
@@ -174,6 +179,7 @@
         const e = plainEntry(objects(), 'legend'), cur = strOf(e.properties.position);
         const next = cur == null ? 'TopRight' : LEGEND[cur] || cur;
         if (next !== cur) { e.properties.position = str(next); changes.push('legend'); }
+        else if (!LEGEND[cur]) kept.push({ what: 'legend position', value: cur });
       }
     }
   }
@@ -185,23 +191,25 @@
   // (0.3.1 CX2, TW1 Seen 2; the owner, D-1027-12 "twin identical") a container's shadow cast to one side is cast to the
   // other: its preset's Left and Right swap (BottomRight -> BottomLeft); Top, Bottom and Center stay. A Custom angle is
   // kept as it is (which way Desktop measures the angle is not measured yet). Any visual's container, custom ones too.
-  // Returns whether a preset turned
-  const SHADOW_SIDE = { Left: 'Right', Right: 'Left', TopLeft: 'TopRight', TopRight: 'TopLeft', BottomLeft: 'BottomRight', BottomRight: 'BottomLeft' };
-  function mirrorShadow(bag) {
+  // (0.3.1 FX2: the presets as Microsoft's catalog has them, dropShadow.preset: the middle ones are CenterLeft and
+  // CenterRight; a value outside the catalog is kept and said.) Returns whether a preset turned
+  const SHADOW_SIDE = { CenterLeft: 'CenterRight', CenterRight: 'CenterLeft', TopLeft: 'TopRight', TopRight: 'TopLeft', BottomLeft: 'BottomRight', BottomRight: 'BottomLeft' };
+  const SHADOW_STAY = ['Top', 'Bottom', 'Center', 'Custom'];
+  function mirrorShadow(bag, kept) {
     let n = 0;
     (entries(bag, 'dropShadow') || []).forEach((e) => { const p = isObj(e) ? strOf((e.properties || {}).preset) : null;
-      if (p != null && SHADOW_SIDE[p]) { e.properties.preset = str(SHADOW_SIDE[p]); n++; } });
+      if (p != null && SHADOW_SIDE[p]) { e.properties.preset = str(SHADOW_SIDE[p]); n++; } else if (p != null && kept && !SHADOW_STAY.includes(p)) kept.push({ what: 'shadow preset', value: p }); });
     return n > 0;
   }
   function mirrorVisual(json0, W, opts) {
     const o = opts || {};
     if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
-    const json = clone(json0), changes = [];
+    const json = clone(json0), changes = [], kept = [];
     let kind = kindOf(json), measures = null, why = null;
     const p = isObj(json.position) ? json.position : {};
     if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
     const v = json.visual;
-    if (isObj(v) && mirrorShadow(v.visualContainerObjects)) changes.push('shadow');
+    if (isObj(v) && mirrorShadow(v.visualContainerObjects, kept)) changes.push('shadow');
     if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
     // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
     const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
@@ -235,7 +243,7 @@
         measures = wf.measures; changes.push('waterfall', 'value axis', 'sort');
       } else { kind = 'waterfallKept'; why = wf.why; }
     }
-    if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else chartRtl(v, kind, o, changes);
+    if (kind === 'bar' && o.keepDirection) { /* its bars keep their direction */ } else chartRtl(v, kind, o, changes, kept);
     // (0.3.0 L2) a button slicer on one row (the writer's pills): its buttons read from the right, by a descending sort on
     // its field (a sort it already has is turned round); one of several rows moves only
     if (kind === 'slicer' && v.visualType === 'advancedSlicerVisual') {
@@ -315,7 +323,7 @@
       const e = plainEntry(vco(), 'title'), a = strOf(e.properties.alignment);
       if (a !== 'center' && a !== 'right') { e.properties.alignment = str('right'); changes.push('title'); }
     }
-    return Object.assign({ json, kind, changes }, measures ? { measures } : {}, why ? { why } : {});
+    return Object.assign({ json, kind, changes }, measures ? { measures } : {}, why ? { why } : {}, kept.length ? { kept } : {});
   }
 
   // ---- the matrix (0.3.1 M1: the owner opened an Arabic copy whose months-across matrix was not mirrored at all) ----
@@ -438,7 +446,7 @@
       const hx = at[u.host] != null ? at[u.host] : W - h.x - h.w;
       at[u.visual] = round(hx + a.x - h.x);
     });
-    const kinds = {}, custom = [], unreadable = [], measures = [], waterfallsKept = [], out = list.map((v) => {
+    const kinds = {}, custom = [], unreadable = [], measures = [], waterfallsKept = [], kept = [], out = list.map((v) => {
       const W = widthOf(v), n = nameOf(v);
       // (the backstop: whatever the file holds, a visual that can't be mirrored is copied as it is and listed)
       let r; try { r = mirrorVisual(v, W, keepBars.has(n) ? Object.assign({}, opts, { keepDirection: true }) : opts); } catch (e) { r = { json: v, kind: 'unreadable', changes: [] }; }
@@ -448,9 +456,10 @@
       if (r.kind === 'unreadable') unreadable.push(isObj(v) && v.name != null ? String(v.name) : '(no name)');
       if (r.measures) measures.push(...r.measures);
       if (r.kind === 'waterfallKept') waterfallsKept.push({ name: String(v.name), why: r.why });
+      (r.kept || []).forEach((x) => kept.push(Object.assign({ name: String(v.name) }, x)));
       return r.json;
     });
-    return { visuals: out, kinds, custom, unreadable, units, measures, waterfallsKept };
+    return { visuals: out, kinds, custom, unreadable, units, measures, waterfallsKept, kept };
   }
 
   // ---- texts: what a reader sees that the report itself says (the model's data values are not here) ----
