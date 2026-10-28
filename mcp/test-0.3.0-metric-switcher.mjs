@@ -47,7 +47,8 @@ const W3 = ['Web Orders[Web Orders Count]', 'Web Orders[Web Orders Total Value]'
 const AR_NAMES = { 'Web Orders[Web Orders Count]': 'عدد الطلبات', 'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Score Share %]': 'حصة النقاط' };
 // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the other fields of the titles are kept
 // English on purpose, as the person says it: these checks are about the switcher, not the names
-const AR_DN = Object.assign({}, AR_NAMES, keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]'));
+// (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the large model's calendar runs over several years by its own DAX, so its time axis is Calendar[Year Month], no longer Month Short)
+const AR_DN = Object.assign({}, AR_NAMES, keepEnglish('Calendar[Year Month]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]'));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const httpReq = (url, body) => new Promise((resolve) => {

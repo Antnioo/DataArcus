@@ -1,13 +1,14 @@
 {
   "recorded": "integration/0.3-preview ce8335b, before the R2 fix",
+  "changed": "28 Oct 2026, 0.3.1 FX4b (the owner's D-1028-07): the line chart's title by Year Month, was by Month Short (the model's calendar runs over several years by its own DAX); every other title as recorded",
   "titles": [
     "Details",
     "Executive summary",
     "Web Orders Average Score",
     "Web Orders Count",
     "Web Orders Total Score",
-    "Web Orders Total Score by Month Short",
     "Web Orders Total Score by Plan Group: detail",
+    "Web Orders Total Score by Year Month",
     "Web Orders Total Value",
     "  Reset filters"
   ]

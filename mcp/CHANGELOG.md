@@ -34,6 +34,10 @@ package's manifest; this file says what is in it.
   and of a gross and a net amount, the net one is the headline number. Each choice is explained in the answer (why).
   The counts it uses are passed by the AI app from Power BI Desktop (columnStats: counts only, never values); without
   them the answer says only the name rules were used.
+- **A trend over several years is no longer added up by month name:** when a model's own calendar runs over more than
+  one year (CALENDAR from one year to a later one), the report's trend is by year and month (Year Month), in time
+  order, instead of by the month name, which put the same month of every year in one point. This happens without any
+  counts, from the calendar's definition alone, and the answer says so (why).
 - **The Health Check works offline once the page has loaded:** the analysis is loaded with the page, so a file
   dropped after the connection is gone still gets its score. Nothing is sent anywhere, as before.
 - **An Arabic plan's approval page is all Arabic:** the theme's, the Gulf calendar's (its inputs too), the twin's, the

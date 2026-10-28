@@ -732,11 +732,20 @@
       const span = yc != null ? (yc > 1 ? `${num(yc)} years by the model's counts` : null) : ym != null ? (ym > 12 ? `${num(ym)} months by the model's counts` : null)
         : yrs ? (yrs[1] > yrs[0] ? `${yrs[0]} to ${yrs[1]} by the calendar's own DAX` : null) : undefined;
       const to = span ? (columns.find((c) => c.t === date.t && ymName(c.c) && monthText(c)) || columns.find((c) => c.t === date.t && dayDate(c)) || inDate.find(dayDate)) : null;
-      // (FX4b) a year-month label is put in time order by its month's first date, MIN of its table's date ("Month start
-      // (sort)", measured in Desktop for O-13): a table built with CALENDAR always has its own Date column, a date, even
-      // where the files give it no type (a DAX calendar without a refresh), so that column orders the label, never the
-      // label read as a date (DATEVALUE, which depends on Desktop's reading of the text)
-      if (to && !to.dateOf && !/date/.test(to.type) && tb && metaOf(tb).calendarShape) { const dc = raw.find((c) => /^date$/i.test(c.name) && /^(unknown|date|datetime)$/i.test(String(c.dataType || 'unknown'))); if (dc) to.dateOf = { t: to.t, c: dc.name }; }
+      // (FX4b) the year-month label's order, by the writer's own precedence (timeAxisPlan): the model's sort-by column
+      // (ordered), else the table's year-month number ("Year Month Sort", "Year Month Number": sortBy, Min of it in the
+      // chart, measured in round 2), else its month's first date, MIN of the table's date ("Month start (sort)", measured
+      // for O-13). The name rule that gives month and day names their order (nameLike) does not read "Year Month", so the
+      // order is set here, on the field this rule picks only. A table built with CALENDAR always has its own Date column,
+      // a date, even where the files give it no type (a DAX calendar without a refresh): never the label read as a date
+      // (DATEVALUE, which depends on Desktop's reading of the text)
+      if (to && !/date/.test(to.type) && !to.ordered && !to.sortBy) {
+        const own = raw.find((c) => c.name === to.c), typeOf = (c) => String(c.dataType || 'unknown').toLowerCase();
+        const n = raw.find((c) => c.name !== to.c && SORT_BY.yearMonth.test(c.name.trim()) && (/^(int64|double|decimal|number)$/.test(typeOf(c)) || (typeOf(c) === 'unknown' && /(no|num|number|index|key|sort|order|id)$/i.test(c.name.trim()))));
+        if (own && (own.sortBy || own.sortByColumn)) to.ordered = true;
+        else if (n) to.sortBy = { t: to.t, c: n.name };
+        else if (!to.dateOf && tb && metaOf(tb).calendarShape) { const dc = raw.find((c) => /^date$/i.test(c.name) && /^(unknown|date|datetime)$/.test(typeOf(c))); if (dc) to.dateOf = { t: to.t, c: dc.name }; }
+      }
       if (to) { say(fieldKey(to.t, to.c), `The time axis is ${to.c}, not ${date.c}: the dates span more than one year (${span}), and a month name would add up the same month of every year in one point.`); date = to; }
       else if (span === undefined) say(fieldKey(date.t, date.c), `${date.c} is the time axis; the date range is not known (no counts given, no calendar DAX that names it). If the dates span more than one year, use a year-month column or the date instead.`);
     }

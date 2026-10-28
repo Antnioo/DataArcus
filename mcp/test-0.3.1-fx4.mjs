@@ -38,12 +38,14 @@ const daxCalendar = (name, y1, y2) => { const j = JSON.parse(fs.readFileSync(pat
 // (FX4b) the order model: a sales table and a DAX calendar of two years, its Month Name first (as the Ramadan calendar's)
 // and its Year Month a text label with no sort-by column
 // (typed false: no column of the calendar has a type, as a DAX calendar's TMDL files before a refresh)
-const orderModel = (name, typed) => { const col = (n, dataType, x) => Object.assign({ name: n, sourceColumn: n }, typed || !x || !x.cal ? { dataType } : {}, x ? Object.assign({}, x, { cal: undefined }) : {});
+// (sortCol: a "Year Month Sort" number column, YEAR * 100 + MONTH, as the Ramadan calendar has; modelSort: Year Month sorted
+// by it in the model, as the large model's calendar)
+const orderModel = (name, typed, sortCol, modelSort) => { const col = (n, dataType, x) => Object.assign({ name: n, sourceColumn: n }, typed || !x || !x.cal ? { dataType } : {}, x ? Object.assign({}, x, { cal: undefined }) : {});
   const model = { tables: [
     { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double', { summarizeBy: 'sum' }), col('Date', 'dateTime')],
       measures: [{ name: 'Total Amount', expression: "SUM ( 'Sales'[Amount] )", formatString: '#,0.00' }], partitions: [{ name: 'Sales', mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }] },
-    { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime', { isKey: true, cal: 1 }), col('Year', 'int64', { summarizeBy: 'none', cal: 1 }), col('Month Name', 'string', { sortByColumn: 'Month Number', cal: 1 }), col('Month Number', 'int64', { summarizeBy: 'none', cal: 1 }), col('Year Month', 'string', { cal: 1 })],
-      partitions: [{ name: 'Calendar', mode: 'import', source: { type: 'calculated', expression: 'ADDCOLUMNS ( CALENDAR ( DATE ( 2022, 1, 1 ), DATE ( 2023, 12, 31 ) ), "Year", YEAR ( [Date] ), "Year Month", FORMAT ( [Date], "mmm yyyy" ), "Month Name", FORMAT ( [Date], "mmmm" ), "Month Number", MONTH ( [Date] ) )' } }] }],
+    { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime', { isKey: true, cal: 1 }), col('Year', 'int64', { summarizeBy: 'none', cal: 1 }), col('Month Name', 'string', { sortByColumn: 'Month Number', cal: 1 }), col('Month Number', 'int64', { summarizeBy: 'none', cal: 1 }), col('Year Month', 'string', Object.assign({ cal: 1 }, modelSort ? { sortByColumn: 'Year Month Sort' } : {}))].concat(sortCol || modelSort ? [col('Year Month Sort', 'int64', { summarizeBy: 'none', cal: 1 })] : []),
+      partitions: [{ name: 'Calendar', mode: 'import', source: { type: 'calculated', expression: 'ADDCOLUMNS ( CALENDAR ( DATE ( 2022, 1, 1 ), DATE ( 2023, 12, 31 ) ), "Year", YEAR ( [Date] ), "Year Month", FORMAT ( [Date], "mmm yyyy" ), "Month Name", FORMAT ( [Date], "mmmm" ), "Month Number", MONTH ( [Date] ), "Year Month Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] ) )' } }] }],
     relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] };
   const sm = path.join(ROOT, name, 'Order.SemanticModel'); fs.mkdirSync(sm, { recursive: true });
   fs.writeFileSync(path.join(sm, 'model.bim'), JSON.stringify(JSON.parse(JSON.stringify({ name: 'Order', compatibilityLevel: 1567, model })), null, 2)); fs.writeFileSync(path.join(sm, 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
@@ -92,22 +94,35 @@ try {
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], first = new Map();
   for (let d = new Date(Date.UTC(2022, 0, 1)); d <= new Date(Date.UTC(2023, 11, 31)); d = new Date(d.getTime() + 864e5)) { const lab = MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); if (!first.has(lab) || d < first.get(lab)) first.set(lab, d); }
   const bySort = [...first.keys()].sort((a, b) => first.get(a) - first.get(b)), timeOrder = [2022, 2023].flatMap((y) => MON.map((m) => m + ' ' + y));
-  for (const [tag, typed] of [['typed', true], ['untyped', false]]) {
-    const mp = orderModel('fx4b-order-' + tag, typed), before = new Set(walkFiles(ROOT)), rep = await P('create_report', { path: mp, name: 'FX4b Order', design: pl.j && pl.j.design, lang: 'en' });
+  // the Year Month Sort number over the same dates (the calendar's DAX: YEAR * 100 + MONTH), each label's
+  const ymNum = new Map([...first.entries()].map(([lab, d]) => [lab, d.getUTCFullYear() * 100 + d.getUTCMonth() + 1]));
+  for (const [tag, typed, sortCol, modelSort] of [['typed', true], ['untyped', false], ['sort column', false, true], ['model sort', true, false, true]]) {
+    const mp = orderModel('fx4b-order-' + tag.replace(/ /g, '-'), typed, sortCol, modelSort), before = new Set(walkFiles(ROOT)), rep = await P('create_report', { path: mp, name: 'FX4b Order', design: pl.j && pl.j.design, lang: 'en' });
     const written = walkFiles(ROOT).filter((f) => !before.has(f)), visuals = written.filter((f) => /visual\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
     const lines = visuals.filter((v) => v.visual && v.visual.visualType === 'lineChart');
     const catOf = (v) => (((v.visual.query.queryState.Category || {}).projections || [])[0] || {}).queryRef, sortOf = (v) => ((v.visual.query.sortDefinition || {}).sort || [])[0];
     const line = lines.find((v) => catOf(v) === 'Calendar.Year Month'), s0 = line && sortOf(line);
+    const extFile = written.find((f) => /reportExtensions\.json$/.test(f)) || written.find((f) => /definition[\\/]report\.json$/.test(f));
     chk(() => !rep.err && line, () => `O1 ${tag}. The report on a two-year DAX calendar has a line chart by Calendar[Year Month]: ${rep.err ? rep.t.slice(0, 300) : JSON.stringify(lines.map(catOf))}`);
+    if (sortCol || modelSort) {
+      // the writer's order for a label with a number column (round 2, measured): Min of Calendar[Year Month Sort] in the
+      // chart's tooltips, ascending; or, sorted by it in the model, the model's own order
+      const agg = s0 && s0.field.Aggregation, byCol = agg && agg.Function === 3 && agg.Expression.Column.Property;
+      chk(() => !s0 || (s0.direction === 'Ascending' && (byCol === 'Year Month Sort' || (modelSort && s0.field.Column && s0.field.Column.Property === 'Year Month'))), () => `O2 ${tag}. Its sort, where it has one, is ascending by Min of Calendar[Year Month Sort] or by the model-sorted label: ${JSON.stringify(s0)}`);
+      chk(() => sortCol ? byCol === 'Year Month Sort' : true, () => `O3 ${tag}. With a Year Month Sort number column, the line is sorted by Min of it: ${JSON.stringify(s0)}`);
+      chk(() => JSON.stringify([...ymNum.keys()].sort((a, b) => ymNum.get(a) - ymNum.get(b))) === JSON.stringify(timeOrder), () => `O4 ${tag}. Sorted by YEAR * 100 + MONTH the 24 labels run Jan 2022 .. Dec 2023 in time order`);
+    } else {
     chk(() => s0 && s0.direction === 'Ascending' && s0.field.Measure && s0.field.Measure.Expression.SourceRef.Schema === 'extension' && s0.field.Measure.Expression.SourceRef.Entity === 'Calendar', () => `O2 ${tag}. Its sort is ascending by a report measure of the calendar: ${JSON.stringify(s0)}`);
-    const extFile = written.find((f) => /reportExtensions\.json$/.test(f)), ext = extFile ? JSON.parse(fs.readFileSync(extFile, 'utf8')) : {};
+    const ext = extFile ? JSON.parse(fs.readFileSync(extFile, 'utf8')) : {};
     const sm = s0 && s0.field.Measure && ((ext.entities || []).find((e) => e.name === 'Calendar') || { measures: [] }).measures.find((m) => m.name === s0.field.Measure.Property);
     chk(() => sm && /^MIN\s*\(\s*'?Calendar'?\[Date\]\s*\)$/.test(String(sm.expression).trim()), () => `O3 ${tag}. That measure is the month's first date, MIN of the calendar's own date (never the label read as a date): ${JSON.stringify(sm)}`);
     chk(() => sm && JSON.stringify(bySort) === JSON.stringify(timeOrder), () => `O4 ${tag}. Sorted by that measure the 24 labels run Jan 2022 .. Dec 2023 in time order: ${bySort.slice(0, 4)}`);
+    }
     // the repo's own check of a written sort (scripts/tests/report-check.mjs, the rules measured in Desktop) finds nothing
     const rd = extFile && path.dirname(path.dirname(extFile)), files = {}; if (rd) walkFiles(rd).forEach((f) => { files[path.relative(rd, f).split(path.sep).join('/')] = fs.readFileSync(f); });
     const sp = rd ? sortProblems(files) : { bad: ['no report'], sorted: [] };
-    chk(() => !sp.bad.length && sp.sorted.some((x) => x.type === 'lineChart' && x.category === 'Calendar.Year Month'), () => `O6 ${tag}. sortProblems finds nothing wrong and sees the line chart in order: ${JSON.stringify(sp).slice(0, 400)}`);
+    // (model sort: the line writes no sort of its own and takes the model's sort-by order, round 12's rule for a name the model sorts)
+    chk(() => !sp.bad.length && (sp.sorted.some((x) => x.type === 'lineChart' && x.category === 'Calendar.Year Month') || (modelSort && line && !s0)), () => `O6 ${tag}. sortProblems finds nothing wrong and sees the line chart in order: ${JSON.stringify(sp).slice(0, 400)}`);
   }
   chk(() => JSON.stringify([...first.keys()].sort()) !== JSON.stringify(timeOrder) && [...first.keys()].sort()[0] === 'Apr 2022', () => `O5. (guard) the labels A to Z are not in time order (Apr 2022 first), so the order comes from the measure`);
 

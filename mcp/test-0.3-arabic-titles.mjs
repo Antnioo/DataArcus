@@ -119,7 +119,8 @@ try {
   const MP = 'large/Large Synthetic.SemanticModel';
   const s = await serverClient(ROOT, {});
   const readReport = (dir) => { const out = {}; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (f.endsWith('.json')) { try { out[path.relative(dir, f)] = rd(f); } catch (x) { /* not JSON */ } } }); rec(dir); return out; };
-  const KEPT = keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]',
+  // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the large model's calendar runs over several years by its own DAX, so its time axis is Calendar[Year Month], no longer Month Short)
+  const KEPT = keepEnglish('Calendar[Year Month]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]',
     'Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]', 'Coupon[Coupon Status]', 'Coupon[Coupon Group]');
   const write = async (lang, layout, name) => {
     // (0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id) the first plan lists the

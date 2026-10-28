@@ -106,7 +106,7 @@ const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARC
 // the terms of the golden model's Web Orders report (made up); one with a Latin acronym and digits
 const KPI = 'مؤشر KPI 2024';
 const DN = { 'Coupon[Coupon Region]': 'منطقة القسيمة', 'Plan[Plan Group]': 'مجموعة الخطة', 'Web Orders[Web Orders Total Score]': KPI, 'Web Orders[Web Orders Count]': 'عدد الطلبات',
-  'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Average Score]': 'متوسط الدرجة', 'Calendar[Month Short]': 'الشهر' };
+  'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Average Score]': 'متوسط الدرجة', 'Calendar[Year Month]': 'الشهر' };   // (FX4b, D-1028-07: the axis is Calendar[Year Month] now; was Calendar[Month Short])
 const EN_OF = (k) => k.replace(/^.*?\[(.*)\]$/, '$1');
 const rowOf = (sheet, k) => (Array.isArray(sheet) ? sheet.find((r) => r && r.field === k) : null);
 
@@ -214,8 +214,9 @@ try {
   const p0 = await twinPlan({}), T0 = (p0.j && p0.j.texts) || [];
   const L = {}; T0.filter((t) => t.draftArabic && t.kind !== 'field').forEach((t) => { L[t.id] = t.draftArabic; });
   T0.filter((t) => t.text === 'Orders EN').forEach((t) => { L[t.id] = 'تقرير الطلبات'; });
-  // (Month Short is left out: the twin takes the term the person confirmed on the Arabic report, unchanged since)
-  const TERMS = Object.assign({}, DN); delete TERMS['Calendar[Month Short]'];
+  // (Year Month is left out: the twin takes the term the person confirmed on the Arabic report, unchanged since)
+  // (FX4b, D-1028-07: Year Month, the axis now; was Month Short)
+  const TERMS = Object.assign({}, DN); delete TERMS['Calendar[Year Month]'];
   {
     const p1 = await twinPlan({ labels: L, terms: TERMS }), J = p1.j || {}, T1 = J.texts || [];
     const fieldsOf = (k) => T1.filter((t) => t.kind === 'field' && (t.field === k));
@@ -229,10 +230,10 @@ try {
     chk(() => tm && tm.label === `أعلى {1} من {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
       () => `TS-2b. a title and an alt text made of the fields' names take the terms (derived): ${JSON.stringify([tm, al].map((t) => t && [t.text, t.label, t.labelFrom]))}`);
     const sh = (J.terminology && J.terminology.sheet) || [], cr = rowOf(sh, 'Coupon[Coupon Region]');
-    const ms = rowOf(sh, 'Calendar[Month Short]'), yr = rowOf(sh, 'Calendar[Year]');
-    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => String(x).replace(/: .*$/, ''))).length >= 3 && ms && ms.status === 'approved' && ms.earlier === true && ms.ar === DN['Calendar[Month Short]']
+    const ms = rowOf(sh, 'Calendar[Year Month]'), yr = rowOf(sh, 'Calendar[Year]');
+    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => String(x).replace(/: .*$/, ''))).length >= 3 && ms && ms.status === 'approved' && ms.earlier === true && ms.ar === DN['Calendar[Year Month]']
       && yr && yr.status === 'draft' && !yr.earlier,
-      () => `TS-2c. the twin's sheet: the given terms, the term the person confirmed on the Arabic report (Month Short, earlier), and a draft approved only with that plan still a draft (Year): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
+      () => `TS-2c. the twin's sheet: the given terms, the term the person confirmed on the Arabic report (Year Month, earlier), and a draft approved only with that plan still a draft (Year): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
     // TS-7b: the twin's plan pins its terms
     const id = J.plan && J.plan.planId;
     if (id) await s.call('approve_plan', { planId: id });
@@ -321,7 +322,7 @@ try {
   // ---------- TS-10b (last: the term kept in English stays in the session's memory) ----------
   {
     // the proof's tab (20 Oct): a field kept in English on a tooltip page, «تلميح · Month Short»
-    const DNm = Object.assign({}, DN, { 'Calendar[Month Short]': 'Month Short' });   // (the person keeps it in English)
+    const DNm = Object.assign({}, DN, { 'Calendar[Year Month]': 'Year Month' });   // (the person keeps it in English; FX4b, D-1028-07: Year Month, the axis now, was Month Short)
     const pm = await plan({ displayNames: DNm, name: 'تقرير مختلط' }), mid = pm.j && pm.j.plan && pm.j.plan.planId;
     if (mid) await s.call('approve_plan', { planId: mid });
     const rm = mid ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير مختلط', planId: mid, design: pm.j.design }) : pm;
