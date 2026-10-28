@@ -25,6 +25,8 @@ library](#the-dax-function-library-031).
 |---|---|
 | `suggest_fields` | Which measures and columns go in each KPI card, chart, table and slicer (same rules as the theme generator). Optional `focus` (a word the user said, such as "logistics") or `tables`: the picks then come from that part of the model (the matching tables with measures, the tables related to them, the date tables). A large model needs one: without it nothing is picked and the areas are listed. |
 
+`columnStats` (0.3.1, FX4): counts only, `{ rows: { "Table": n }, distinct: { "Table[Column]": n } }` (whole numbers; COLUMNSTATISTICS()'s Cardinality, never its Min or Max). With them no category is a column of one value or of mostly unique values (90% of its rows, over 100 rows; or over 5,000 values), and a month name gives way to a year-month axis (or the date) when the years are more than one; without them `countsNote` says only the name rules applied. Always: no coordinate or invoice column as a category, net before gross, and `why` says each rule that acted.
+
 ## `check_model_health`
 
 | Tool | What it does |

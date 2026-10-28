@@ -16,11 +16,11 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   website's download), [TS1](work/TS1.md) (FHD text x 1.25; S10's gap), [PF1](work/PF1.md) (glass pictures fast),
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
   (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
-- 28 Oct (laptop part 3 running): [SPD](work/SPD.md) (faster tests: CI 32 -> 12 min, same checks), [P3A](work/P3A.md) (one check verdict), [FX1](work/FX1.md), [FX2](work/FX2.md) (part 3 fixes).
-- Running: FX4, FX5, then FX3 (the laptop's finds).
+- 28 Oct (laptop part 3 running): [SPD](work/SPD.md) (faster tests: CI 32 -> 12 min, same checks), [P3A](work/P3A.md) (one check verdict), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX4](work/FX4.md) (part 3 fixes).
+- Running: FX3, FX5, then FX6 (the laptop's and Codex's finds).
 
 ## Next step
-1. Merge FX3, FX4, FX5 (laptop part 3's fixes); a new rc build; the laptop re-checks what changed.
+1. Merge FX3, FX5, FX6; a new rc build; the laptop re-checks what changed.
 2. The laptop part 3: every "For the laptop" list of 0.3.1 (GD2's twin and approval page first).
 3. An outside review (Codex); then the PR integration -> main: the owner merges.
 
