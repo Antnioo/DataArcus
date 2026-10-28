@@ -109,12 +109,13 @@ export function planTwin(a) {
   T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [] }, together = { on: [], bars: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
+    (r.kept || []).forEach((x) => where.kept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.what + ' ' + safeName(x.value) + ')'));
     // (T-3, T-6 of rc.5: the pairs mirrored as one)
     const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
     u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
@@ -128,6 +129,8 @@ export function planTwin(a) {
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
   if (where.other.length) cannot.push({ what: 'other visuals (scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
+  // (0.3.1 FX2, H-1) a legend position or a shadow preset outside Microsoft's catalog has no mirrored value: kept, said
+  if (where.kept.length) cannot.push({ what: 'positions with no mirrored value', why: 'kept as they are: the value is not one Power BI lists for it (Microsoft\'s visual catalog), so it has no mirrored value', where: where.kept.slice(0, 30) });
   if (where.waterfallKept.length) cannot.push({ what: 'waterfall charts the running total can\'t follow', why: Mirror.KIND_WHAT.waterfallKept, where: where.waterfallKept.slice(0, 30) });
   // (0.3.1 R1: a real user's Arabic matrix read left to right, its first column at the left) said plainly, nothing faked
   if (where.matrix.length) cannot.push({ what: 'matrices', why: MATRIX_SAID, where: where.matrix.slice(0, 30) });

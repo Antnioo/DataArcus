@@ -240,6 +240,12 @@ export function register(server, ctx) {
         if (Object.keys(prop).length) { planNames = Object.assign({}, prop, a.displayNames || {});
           displayNamesAns = { displayNames: { inThePlan: prop, sayInPlan: 'The report shows these fields under readable names, the plan\'s default: list every one in the plan ("loan_intent" shown as "Loan Intent"), so the user sees each before saying go. The plan pins them, and create_report writes them without displayNames. To change one, or keep the model\'s own name, call plan_layout again with displayNames { "Table[Field]": "the name" } and show the new plan. The model is not renamed.' } }; }
       }
+      // (0.3.1 FX2, the laptop's A-1: on a model with no measures the Arabic pages showed "Count of Order Id", "Sum of
+      // Amount") the columns the report counts or sums (create_report's COUNTS, the same picker) are fields its titles
+      // name: each is drafted and approved like the others, its title then «عدد <name>», «مجموع <name>»
+      const noMeasures = keys && !sc.needsFocus && !(a.planFields && (a.planFields.kpis || []).length) && !Bind.suggest(sc.tables, 8, relsOf(m, 'ar')).kpis.filter(Boolean).length;
+      const counted = a.lang === 'ar' && keys && noMeasures ? Bind.counts(sc.tables, null, { lang: 'ar' }) : [];
+      counted.forEach((c) => keys.add(`${c.t}[${c.c}]`));
       if (a.lang === 'ar' && keys) {
         const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
         const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
@@ -264,6 +270,15 @@ export function register(server, ctx) {
           if (Object.keys(prop).length) planNames = Object.assign({}, prop, reusedNames(), a.displayNames || {});
           notTranslated = none.map((k) => ({ field: k, shownAs: k.replace(/^.*?\[(.*)\]$/, '$1'), why: NOT_TRANSLATED_WHY }));
           Object.assign(arabicNames.arabicNames, Object.keys(prop).length ? { inThePlan: Object.assign({}, prop) } : {}, { notTranslated });
+        }
+        // (FX2, A-1) each count or sum title, its Arabic draft beside its English: from the field's Arabic name (given,
+        // confirmed earlier or the fixed list's), approved with it; none yet: its field is drafted first (proposeYourself)
+        if (counted.length) {
+          const nameOf = Object.assign({}, prop, reusedNames(), Object.fromEntries(Object.entries(a.displayNames || {}).map(([k, v]) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return [mk ? `${mk[1]}[${mk[2]}]` : String(k), String(v)]; })));
+          const titles = counted.slice(0, 30).map((c) => { const k = `${c.t}[${c.c}]`, nm = nameOf[k], ar = nm && /[\u0600-\u06FF]/.test(nm) ? (c.agg === 0 ? 'مجموع ' : 'عدد ') + nm : null;
+            return { field: k, en: (c.agg === 0 ? 'Sum of ' : 'Count of ') + c.c, ar }; });
+          if (!arabicNames.arabicNames) arabicNames = { arabicNames: {} };
+          arabicNames.arabicNames.countedTitles = { titles, sayInPlan: 'The model has no measures, so the report counts or sums these columns itself. Show each title\'s Arabic draft beside its English, marked as a draft: it is the field\'s Arabic name with «عدد» (a count) or «مجموع» (a sum), approved with that name. A title with no draft (ar null) waits for its field\'s name (proposeYourself); until the user approves one, it is written wholly in English.' };
         }
       }
       if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };

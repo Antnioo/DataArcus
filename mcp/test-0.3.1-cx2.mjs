@@ -35,7 +35,7 @@ const presetOf = (j) => (((((j.visual || {}).visualContainerObjects || {}).dropS
 const mirrored = (type, preset, angle) => M.mirrorVisual(shadowed(type, preset, angle), 1280, {}).json;
 const turned = (p) => { const v = (presetOf(mirrored('card', p)) || {}).expr; return v && v.Literal ? v.Literal.Value : null; };
 {
-  const pairs = [['BottomRight', 'BottomLeft'], ['BottomLeft', 'BottomRight'], ['TopRight', 'TopLeft'], ['TopLeft', 'TopRight'], ['Right', 'Left'], ['Left', 'Right']];
+  const pairs = [['BottomRight', 'BottomLeft'], ['BottomLeft', 'BottomRight'], ['TopRight', 'TopLeft'], ['TopLeft', 'TopRight'], ['CenterRight', 'CenterLeft'], ['CenterLeft', 'CenterRight']];   // (0.3.1 FX2: the catalog's middle presets are CenterLeft and CenterRight, never Left or Right)
   const got = pairs.map(([a]) => turned(a));
   chk(() => pairs.every(([, b], i) => got[i] === `'${b}'`), () => `S1. a side shadow turns with the visual: ${JSON.stringify(pairs.map(([a], i) => `${a} -> ${got[i]}`))}`);
   chk(() => ['Bottom', 'Top', 'Center'].every((p) => turned(p) === `'${p}'`), () => `S2. Bottom, Top and Center stay: ${JSON.stringify(['Bottom', 'Top', 'Center'].map(turned))}`);
