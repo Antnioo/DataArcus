@@ -24,8 +24,8 @@
   test-microsoft-watch 63 -> 65 (W12: 1 of 2 red on dd6d7ad first, the other the stranger guard); r4-write-safety 46 ->
   47 (H1-H3 changed on purpose, H3's retry added); write-gate 7 = 7 (its list said on purpose); mcp (test.mjs) 1593 =
   1593, phone 355 = 355, arabic-titles 27 = 27, terminology-sheet 48 = 48, arabic-calendar 31 = 31, story-titles 94 = 94,
-  preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 = 32, large-model-caps 215 = 215 (each measured on
-  dd6d7ad too); tt1 28 = 28; lint 0; full run: below.
+  preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 = 32, large-model-caps 215 = 215, twin-complete 24 = 24, powerbi-2026-10
+  26 = 26 (each measured on dd6d7ad too); tt1 28 = 28; lint 0; full run: below.
 - **Resume:** done once the full run's line is written; then CI on the branch, then the reviewer.
 
 ## Plan
@@ -71,7 +71,7 @@ reads every comment".
 ## Decisions I made
 - F01 refuses only for fields named in titles (titlesInEnglish.fields), as the brief says; a field shown in English
   only as a header (notTranslated, no title) keeps today's answer (said in the plan, no refusal).
-- F01's ripple: 11 older suites planned Arabic reports on English models without naming those fields. Their set-ups
+- F01's ripple: 13 older suites planned Arabic reports on English models without naming those fields. Their set-ups
   now keep the fields English on purpose (test-plan.mjs keptEnglish / keepingEnglish: the person's choice stood in for,
   the old output exactly); no expected number changed; two checks of test.mjs (display names) accept the kept model name
   as a given name (said in comments there).
@@ -111,5 +111,5 @@ none
 
 ## Lessons for the reviewer
 - A rule that refuses a plan ripples into every suite that planned that case silently: list the suites that call the
-  tool with that input before estimating (here 11 suites, 2 test.mjs checks).
+  tool with that input before estimating (here 13 suites, 2 test.mjs checks).
 - A helper standing in for the person's choice (keptEnglish) keeps old checks' numbers without weakening the rule.

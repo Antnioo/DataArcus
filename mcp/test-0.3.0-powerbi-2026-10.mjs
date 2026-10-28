@@ -18,6 +18,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 import { validatorCounts } from './test-validator.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req = createRequire(import.meta.url);
@@ -102,6 +103,7 @@ try {
   const MP = 'large/Large Synthetic.SemanticModel', log = path.join(ROOT, 'links.txt');
   const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
   const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '300' });
+  s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
   try {
     const cases = [{ id: 'en', lang: 'en', layout: 'exec' }, { id: 'ar', lang: 'ar', layout: 'ops' }];
     const dirs = [];

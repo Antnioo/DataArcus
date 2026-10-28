@@ -22,6 +22,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepingEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -74,7 +75,9 @@ const MP = 'large/Large Synthetic.SemanticModel', ORIG = path.join(ROOT, 'large/
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const linkAt = async (i) => { for (let k = 0; k < 100 && links().length <= i; k++) await sleep(50); return links()[i] || ''; };
 const s = await serverClient(ROOT, {});
+s.call = keepingEnglish(s.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
+w.call = keepingEnglish(w.call);   // (0.3.1 CX1, F01: the fields of English titles kept English on purpose, as these checks were written)
 
 try {
   const write = async (lang, name) => {
