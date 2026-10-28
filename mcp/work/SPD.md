@@ -18,7 +18,7 @@
   shards within about 1 min of each other; MCP wall Linux about 6-7 min, Windows about 11-12, macOS about 7-8 (the
   longest single suite, mutation, 169 / 366 / 180 s, is under the per-shard average). Checks per OS equal: 15,604 /
   15,629 / 15,600; test.mjs 1593; G-13 249; mutation 74 of 74 killed; the suite list per OS the base's.
-- **Expected tests:** results-adapter grows by the manifest and plan checks (about +8), red first on 0d34277; every
+- **Expected checks:** results-adapter grows by the manifest and plan checks (about +8), red first on 0d34277; every
   other suite's count unchanged.
 - **Resume:** step 1.
 
