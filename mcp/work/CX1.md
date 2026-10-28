@@ -25,8 +25,9 @@
   47 (H1-H3 changed on purpose, H3's retry added); write-gate 7 = 7 (its list said on purpose); mcp (test.mjs) 1593 =
   1593, phone 355 = 355, arabic-titles 27 = 27, terminology-sheet 48 = 48, arabic-calendar 31 = 31, story-titles 94 = 94,
   preview-match 41 = 41, metric-switcher 60 = 60, lr1 18 = 18, r4a 32 = 32, large-model-caps 215 = 215, twin-complete 24 = 24, powerbi-2026-10
-  26 = 26 (each measured on dd6d7ad too); tt1 28 = 28; lint 0; full run: below.
-- **Resume:** done once the full run's line is written; then CI on the branch, then the reviewer.
+  26 = 26 (each measured on dd6d7ad too); tt1 28 = 28; lint 0; full run 110 -> 111 suites (+ cx1).
+- Full run on bd807bf: "run-tests: 111 suites passed"
+- **Resume:** done; CI on the branch (to start: no gh CLI here), then the reviewer.
 
 ## Plan
 1. This note (commit, push).
