@@ -30,7 +30,8 @@
 - **Got:** fx5b 21 checks, red on 396aaab first (14 of 21; the 7 green there: the guards C2, C5, D5, D8 and the new
   helper's own counts D1, D2, with S checks' parity) -> 21 PASS; every planned number (D3 88, D4 52, C1 36, D5 none).
   Website: pbip 111, theme-generator 922, design-engine 598, arabic-names 14 PASS (unchanged counts).
-- Full run on 926453b: "run-tests: 120 suites passed"
+- Full run on 926453b: "run-tests: 120 suites passed". CI run 40705766468: every job green on Linux, Windows and
+  macOS (macOS shard 2 was cancelled before any step ran, no runner; re-run once, green).
 - **Resume:** done; CI on the branch (tests.yml), then the reviewer.
 
 ## Before -> after
