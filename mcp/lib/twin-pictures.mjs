@@ -9,10 +9,17 @@ import { pagePicture, offPanel, newOverlaps } from './page-picture.mjs';
 export const RES = 'StaticResources/RegisteredResources/';
 const lit = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'") : null);
 const Ls = (s) => ({ expr: { Literal: { Value: "'" + String(s).replace(/'/g, "''") + "'" } } });
-// a page's pictures in one of its cards (background, outspace): [{ entry's image object, name, fit }]
+// a page's pictures in one of its cards (background, outspace): [{ entry's image object, name (the FILE), label, fit }].
+// (MP1b, laptop part 6 on the owner's reports) Desktop writes a picture with two names: image.name is the name shown to
+// the author ('gradient-background.png'), url's ResourcePackageItem.ItemName the file under RegisteredResources
+// ('gradient-background4528801825573012.png'): the file is read from ItemName, the name only when there is none. A
+// picture taken off the page (name and url '') is no picture.
+const itemOf = (im) => (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem) && typeof im.url.expr.ResourcePackageItem.ItemName === 'string' ? im.url.expr.ResourcePackageItem.ItemName : null);
 const imagesIn = (page, card) => (isObj(page) && isObj(page.objects) && Array.isArray(page.objects[card]) ? page.objects[card] : [])
   .map((e) => (isObj(e) && isObj(e.properties) && isObj(e.properties.image) && isObj(e.properties.image.image) ? e.properties.image.image : null))
-  .filter((im) => im && lit(im.name) != null).map((im) => ({ im, name: lit(im.name), fit: lit(im.scaling) }));
+  .map((im) => (im ? { im, label: lit(im.name), name: itemOf(im) || lit(im.name), fit: lit(im.scaling) } : null)).filter((x) => x && x.name);
+/** The page ids whose background holds a picture (not DataArcus's own placeholder or glass: blank(file)) */
+export const picturePageIds = (R, info) => new Set(R.pages.filter((pg) => { const x = info.get(String(pg.id)); return x && !x.wallpaper; }).map((pg) => pg.id));
 
 // what the plan, the answer and the approval page say of a page, in English and Arabic
 const FIT_AR = { Normal: 'بحجمها الأصلي', Fit: 'ملاءمة', Fill: 'تعبئة' };
@@ -27,8 +34,8 @@ export function pictureSaid(x, mirrorPictures) {
     : { en: `kept left to right: ${x.why}; mirrorPicturePages true mirrors it anyway (the picture as it is)`, ar: 'تبقى من اليسار إلى اليمين: تعذّرت قراءة صورتها' };
 }
 
-/** Each page's pictures, before the build: Map page id -> { picture: 'flipped' | 'asked' | 'kept', fit, rel, name, ...,
- *  wallpaper (an outspace picture), why (kept: why the picture can't be flipped), words }. blank(name): DataArcus's own
+/** Each page's pictures, before the build: Map page id -> { picture: 'flipped' | 'asked' | 'kept', fit, rel, name (the
+ *  file), ..., wallpaper (an outspace picture), why (kept: why the picture can't be flipped), words }. blank(file): DataArcus's own
  *  placeholder or glass picture (not a picture here). flip: the page ids the user approved the flip of. */
 export function picturesOf(R, loc, blank, flip) {
   const info = new Map(), approved = new Set((Array.isArray(flip) ? flip : []).map(String));
@@ -61,7 +68,7 @@ export function flipPicturesOf(R, loc, info, built, keepLtr) {
       const key = x.rel + '|' + x.fit + '|' + x.W + 'x' + x.H;
       if (byKey.has(key)) to = byKey.get(key);
       else { const base = x.name.replace(/\.[^.]*$/, ''); to = base + '-ar.png'; for (let k = 2; taken.has(to.toLowerCase()); k++) to = base + '-ar-' + k + '.png'; taken.add(to.toLowerCase()); byKey.set(key, to); added.push({ name: to, data: Buffer.from(P.png) }); }
-      imagesIn(page, 'background').filter((y) => y.name === x.name).forEach(({ im }) => { im.name = Ls(to); if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to; });
+      imagesIn(page, 'background').filter((y) => y.name === x.name).forEach(({ im, label }) => { if (label === x.name) im.name = Ls(to); if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to; });
     }
     x.writtenAs = to;
     const en = pg.visuals.map((v) => v.json), at = (n) => safeName(pg.id) + '/' + safeName(n);
