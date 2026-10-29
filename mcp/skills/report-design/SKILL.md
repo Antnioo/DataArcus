@@ -116,7 +116,8 @@ When the user wants an Arabic (right-to-left) version of a report they already h
    applies in TMDL view; DataArcus never applies it); with a waterfall, `waterfallRtl` ("native", the default: Power
    BI's own waterfall, reading left to right as in English while the rest of the page is mirrored; "mirror": a
    stacked column chart drawn as a waterfall that reads from the right, with no Total column, no total label and no legend); and
-   `mirrorPicturePages` when the plan names a page drawn on a picture (kept left to right by default).
+   for a page drawn on a picture (`picturePages`), its picture is flipped with the page; one "asked" (it may hold words
+   or a logo) is shown to the user and flipped only with their yes (`flipPictures`).
 4. Call the tool again with the approved texts as `labels` (`{ id: text }`): its plan id is for exactly those texts.
    Show the final plan, wait for "go", `approve_plan` (the user clicks Approve in its window), then the tool with `planId`.
 5. Tell the user what was written, everything under `cannot`, and how to apply the month script; offer `check_report`

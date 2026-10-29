@@ -10,8 +10,8 @@
 //          page first), and every visual mirrored onto the same panel (the JPEG report asked with mirrorPicturePages,
 //          which before wrote the original picture under mirrored visuals)
 //   O1-O2  the original reports' files byte-identical
-//   A1-A4  the plan says per page flipped (fit, padded), the approval page in English and Arabic, the plan's exact files
-//          (its digest) hold the new pictures
+//   A1-A4  the plan says per page flipped (fit, padded) in English and Arabic, the approval page (wholly Arabic, FX1) a
+//          row per page, the plan's exact files (its digest) hold the new pictures
 //   T1-T2  a picture with words in it: asked, its page kept left to right until flipPictures names it; then flipped
 //   W1     a wallpaper picture (outspace) kept as it is, and said
 //   X1-X2  the copy holding both languages: the Arabic pages on the new pictures, registered; the English untouched
@@ -49,17 +49,18 @@ let PP = null; try { PP = await import('./lib/page-picture.mjs'); } catch (e) { 
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; px[i] = (x * 7) & 255; px[i + 1] = (y * 11) & 255; px[i + 2] = (x * y) & 255; px[i + 3] = x < 5 ? 0 : 255; }
   const same = (img, want, tol) => img && img.w === w && img.h === h && img.rgba.every((v, i) => Math.abs(v - want[i]) <= tol);
   const asWritten = (o) => { const p = new PNG(Object.assign({ width: w, height: h }, o)); p.data = Buffer.from(px); return PNG.sync.write(p, o); };
-  const grey = px.map((v, i) => (i % 4 === 3 ? v : 0)), g = new Uint8Array(w * h * 4);
-  for (let i = 0; i < w * h; i++) { const l = Math.round(0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]); g[i * 4] = g[i * 4 + 1] = g[i * 4 + 2] = l; g[i * 4 + 3] = px[i * 4 + 3]; }
-  void grey;
   const rd = (b) => (PP ? PP.readPicture(new Uint8Array(b)) : null);
   chk(() => same(rd(asWritten({ colorType: 6 })), px, 0), () => 'D1: a PNG with alpha (RGBA, 8 bits) read pixel for pixel');
-  chk(() => same(rd(asWritten({ colorType: 2 })), px.map((v, i) => (i % 4 === 3 ? 255 : v)), 0), () => 'D2: an RGB PNG read pixel for pixel (opaque)');
-  chk(() => { const r = rd(asWritten({ colorType: 0, inputColorType: 6 })); return r && r.w === w && r.rgba[0] === r.rgba[1] && r.rgba[3] === 255 && same(r, (() => { const o = g.slice(); for (let i = 3; i < o.length; i += 4) o[i] = 255; return o; })(), 1); }, () => 'D3: a grey PNG read (grey into R, G and B, opaque)');
-  chk(() => same(rd(asWritten({ colorType: 4, inputColorType: 6 })), g, 1), () => 'D4: a grey PNG with alpha read');
-  chk(() => same(rd(asWritten({ colorType: 6, bitDepth: 16 })), px, 0), () => 'D5: a 16-bit PNG read (each channel\'s high byte)');
+  // (pngjs's own reading of a file it wrote is the reference where it changes the pixels: RGB lays the transparent ones
+  // on white, grey takes its own average, 16 bits come back divided by 257)
+  const back = (b) => PNG.sync.read(b).data;
+  chk(() => { const b = asWritten({ colorType: 2 }), r = rd(b); return same(r, back(b), 0) && r.rgba.every((v, i) => i % 4 !== 3 || v === 255); }, () => 'D2: an RGB PNG read pixel for pixel (opaque)');
+  chk(() => { const b = asWritten({ colorType: 0, inputColorType: 6 }), r = rd(b); return r && r.rgba[0] === r.rgba[1] && r.rgba[3] === 255 && same(r, back(b), 0); }, () => 'D3: a grey PNG read (grey into R, G and B, opaque)');
+  chk(() => { const b = asWritten({ colorType: 4, inputColorType: 6 }); return same(rd(b), back(b), 0); }, () => 'D4: a grey PNG with alpha read');
+  chk(() => { const b = asWritten({ colorType: 6, bitDepth: 16 }); return same(rd(b), back(b), 1); }, () => 'D5: a 16-bit PNG read (each channel\'s high byte)');
   // a palette PNG and an interlaced one, written here by hand (pngjs writes neither): the same small picture
-  chk(() => { const b = PP && PP.testPng ? PP.testPng(w, h, px, { palette: true }) : null; return b && same(rd(b), px, 0); }, () => 'D6: a palette PNG (with its tRNS alpha) read');
+  const few = px.map((v, i) => (i % 4 === 3 ? v : v & 0xc0));   // (at most 256 colours, for the palette)
+  chk(() => { const b = PP && PP.testPng ? PP.testPng(w, h, few, { palette: true }) : null; return b && same(rd(b), few, 0); }, () => 'D6: a palette PNG (with its tRNS alpha) read');
   chk(() => { const b = PP && PP.testPng ? PP.testPng(w, h, px, { interlaced: true }) : null; return b && same(rd(b), px, 0); }, () => 'D7: an interlaced (Adam7) PNG read');
   // the JPEGs: the website's own picture (baseline, 4:2:0) against Pillow's reading of it (measured once: the mean of
   // each channel and 12 pixels), the progressive and restart-marker drawings against the drawing
@@ -181,16 +182,18 @@ async function picturesOf(R, set, label, extra) {
   return w;
 }
 const wp = await picturesOf(RP, PNGS, 'PNG');
-const wj = await picturesOf(RJ, JPGS, 'JPEG (mirrorPicturePages true)', { mirrorPicturePages: true });
+await picturesOf(RJ, JPGS, 'JPEG (mirrorPicturePages true)', { mirrorPicturePages: true });
 chk(() => JSON.stringify(filesOf(RP.dir)) === JSON.stringify(before[0]), () => 'O1: the PNG report\'s files byte-identical after its twin');
 chk(() => JSON.stringify(filesOf(RJ.dir)) === JSON.stringify(before[1]), () => 'O2: the JPEG report\'s files byte-identical after its twin');
 const said = ((wp.plan && wp.plan.j && wp.plan.j.picturePages) || []);
 chk(() => said.length === 9 && said.every((x) => x.picture === 'flipped') && said.filter((x) => x.fit === 'Normal').every((x) => x.padded === true) && said.filter((x) => x.fit !== 'Normal').every((x) => x.padded === false) && said.every((x) => /flipped/.test(x.what)),
   () => `A1: the plan says each picture page flipped, its fit and whether it was padded: ${JSON.stringify(said).slice(0, 500)}`);
-chk(() => /picture flipped \(Normal, drawn on the page first\)/.test(wp.page || '') && /picture flipped \(Fit\)/.test(wp.page || ''), () => `A2: the approval page says it per page in English: ${String(wp.page || '').length} characters`);
-chk(() => /الصورة معكوسة/.test(wp.page || ''), () => 'A3: the approval page says it in Arabic');
+// (the twin's approval page is wholly Arabic, FX1: one row per picture page, its English in the plan's answer, A1)
+const rows = (wp.page || '').split('صفحة على صورة').length - 1, padded = (wp.page || '').split('بعد رسمها على حجم الصفحة').length - 1;
+chk(() => rows === 9 && padded === 3, () => `A2: the approval page has a row for each of the 9 picture pages, the 3 Normal ones said drawn on the page first: ${rows} rows, ${padded} padded`);
+chk(() => (wp.page || '').split('الصورة معكوسة أفقيًا').length - 1 === 9, () => 'A3: the approval page says each picture flipped, in Arabic');
 // the plan's exact files (their digest, which the approval records) hold the 9 new pictures, as written
-chk(() => wp.j && wp.plan.j.exact && wp.plan.j.exact.files === Object.keys(before[0]).length + 9 + 1 && wp.j.exact.digest === wp.plan.j.exact.digest, () => `A4: the plan's exact files hold the new pictures (${Object.keys(before[0]).length} + 9 + the .pbip): ${JSON.stringify(wp.plan && wp.plan.j && wp.plan.j.exact)}`);
+chk(() => wp.j && wp.plan.j.exact && wp.plan.j.exact.files === Object.keys(before[0]).length + 9 + 2 && wp.j.exact.digest === wp.plan.j.exact.digest, () => `A4: the plan's exact files hold the new pictures (${Object.keys(before[0]).length} + 9 + .platform + the .pbip): ${JSON.stringify(wp.plan && wp.plan.j && wp.plan.j.exact)}`);
 
 // ---------- T, W, V: words in a picture, a wallpaper, a badge on a text box ----------
 {
@@ -205,7 +208,7 @@ chk(() => wp.j && wp.plan.j.exact && wp.plan.j.exact.files === Object.keys(befor
   chk(() => hx.x === W - 320 && bx.x === hx.x + 10, () => `V1: a badge at the end of a left-aligned text box goes to its other end with the text (host ${hx && hx.x}, badge ${bx && bx.x}, want ${W - 320 + 10})`);
   // (item 2) a visual that leaves its panel once mirrored (here: widened by the text fitting) is named by page and visual
   const off = ((p0.j && p0.j.pictureChecks && p0.j.pictureChecks.offPanel) || []);
-  chk(() => off.some((x) => /tightPage\/tv1/.test(x.where) && /panel/.test(x.what)) && !off.some((x) => /tv0|tv2|wordsPage|badgePage/.test(x.where)), () => `V3: a text box widened off its panel is named in the plan by page and visual, and only it: ${JSON.stringify(p0.j && p0.j.pictureChecks)}`);
+  chk(() => off.some((x) => /tightPage\/tv1/.test(x.where) && /panel/.test(x.what)) && !off.some((x) => /tv0|tv2|wordsPage|badgePage/.test(x.where)), () => `V3: a text box widened off its panel is named in the plan by page and visual, and only it: ${JSON.stringify(p0.j && p0.j.pictureChecks)} ${JSON.stringify(pp.find((x) => x.page === "tightPage"))} ${JSON.stringify((p0.j.fitted || {}).textboxes)}`);
   chk(() => JSON.stringify(filesOf(RW.dir)) === JSON.stringify(before[2]), () => 'O3: the third report\'s files byte-identical');
 }
 chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 120, y: 0, width: 100, height: 50 } }], [{ name: 'a', position: { x: 540, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 500, y: 0, width: 100, height: 50 } }]); return o.length === 1 && o[0].visuals.join() === 'a,b'; },

@@ -352,6 +352,11 @@ package's manifest; this file says what is in it.
   for it and says why, in English and Arabic, until you approve a fixed Arabic title or keep those names English too.
   A subtitle given by a measure is now listed like such a title, and a reference line's own label (a target line, for
   example) is listed and written in the Arabic you approve.
+- **Every page of the Arabic twin right to left, pages drawn on a picture too:** the page's picture (PNG or JPEG) is
+  flipped left to right into a new picture of the Arabic page's own, and the visuals are mirrored onto it, so each one
+  sits on the same panel (the original picture is not changed). A picture that may hold words or a logo, which would
+  read backwards, is shown in the plan and flipped only when you approve it. A picture around the page (its wallpaper)
+  stays as it is. The plan and the approval page say it for each page, and name any visual that leaves its panel.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
