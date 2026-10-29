@@ -21,8 +21,10 @@
   run: the base's 128 suites.
 - **Got:** `mp1` 87 checks (78 + 9: MC-a, b, c1, c2, d1, d2, e1, e2, O5; the estimate said about 7: c and d took 2
   each, plus the e2 guard and O5), red on 4d1aaff8 first: 7 of 87 failed there (MC-a, b, c1, c2, d1, d2, e1); e2 and
-  O5 guards. AREAS_LINE
-- **State:** FULL_RUN_LINE
+  O5 guards. Areas on fe62655b: twin 20, arabic 15, report 42; lint 0; changelog-words, agent-memory PASS. No
+  other suite's number moved; no `assets/js/` change.
+- **State: DONE.** Full run on fe62655b: "run-tests: 128 suites passed" (mp1 87, mcp 1594, mutation 198, 76 mutants all
+  killed). CI: below.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
