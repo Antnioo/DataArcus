@@ -18,6 +18,8 @@
 //   X1-X2  the copy holding both languages: the Arabic pages on the new pictures, registered; the English untouched
 //   N, F1-F2 (MP1b) the laptop's two Normal shapes (centred by Desktop) flipped as they are, each visual on its panel;
 //          the placement as Desktop 2.159 measured it; the box check on a stretched Fit picture
+//   R1-R7  (MP1b) laptop part 6's real shapes: a picture with a label and a file name, an emptied picture, a bar chart
+//          beside a table of other fields, nested groups, KPI icons beside and on titles, a help box's button
 //   V1-V3  a badge on a text box mirrored within it (no new overlap with its text); a new overlap named; a text box the
 //          fitting widens off its panel named by page and visual
 //   node test-0.3.1-mp1.mjs
@@ -147,7 +149,27 @@ const RW = report('Pictures Words', [
   // (MP1b) the same on a Fit picture that is not page-shaped (400 x 250 stretched to 640 x 360)
   { id: 'tightFit', name: 'Tight Fit', visuals: onPanels('band', 400, 250, 'Fit').map((b, i) => vis('tf' + i, i === 1 ? 'textbox' : 'shape', b, i === 1 ? { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Calls answered' }] }] } }] } } : null)), objects: { background: [{ properties: { image: imageOf('band-wide.png', 'Fit'), transparency: L('0D') } }] } },
   { id: 'badgePage', name: 'Badge', visuals: [vis('host', 'textbox', { x: 20, y: 280, w: 300, h: 60, z: 1000 }, { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Calls answered' }] }] } }] } }), vis('badge', 'textbox', { x: 280, y: 295, w: 30, h: 30, z: 2000 }, { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: '%' }] }] } }] } })] }], WORDS);
-const before = [RP, RJ, RW, RN].map((r) => filesOf(r.dir));
+// (MP1b, laptop part 6 on the owner's dashboards, made up here in their shapes) a picture Desktop writes with two names
+// (image.name the author's label, url's ItemName the file), an emptied picture, a bar chart beside a table of other
+// fields (in a group, and a nested group), KPI icons beside and on titles, a help box's button over its text
+const C = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c });
+const Me = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
+const hidden = { categoryAxis: [{ properties: { show: L('false') } }] }, text = (t) => ({ objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: t }] }] } }] } });
+const inG = (v, g) => Object.assign(v, { parentGroupName: g }), group = (name, b) => ({ $schema: SCHEMA + 'visualContainer/2.1.0/schema.json', name, position: { x: b.x, y: b.y, z: 1, width: b.w, height: b.h, tabOrder: 1 }, visualGroup: { displayName: name, groupMode: 'ScaleMode' } });
+const twoNames = (label, file, fit) => ({ image: { name: S(label), url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: file } } }, scaling: S(fit) } });
+const REAL = { 'gradient-background4528801825573012.png': pngOf(400, 250, draw('rail', 400, 250)) };
+const RR = report('Real Shapes', [
+  { id: 'named', name: 'Named', visuals: onPanels('rail', 400, 250, 'Fit').map((b, i) => vis('nm' + i, 'shape', b)), objects: { background: [{ properties: { image: twoNames('gradient-background.png', 'gradient-background4528801825573012.png', 'Fit'), transparency: L('0D') } }] } },
+  { id: 'emptied', name: 'Emptied', visuals: [vis('ev', 'shape', { x: 20, y: 20, w: 200, h: 100 })], objects: { background: [{ properties: { image: { image: { name: S(''), url: S(''), scaling: S('Fit') } }, transparency: L('0D') } }] } },
+  { id: 'row', name: 'Row', visuals: [group('g1', { x: 20, y: 20, w: 600, h: 150 }),
+    inG(vis('dept', 'clusteredBarChart', { x: 0, y: 0, w: 300, h: 150 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } }, objects: hidden }), 'g1'),
+    inG(vis('ratings', 'tableEx', { x: 310, y: 0, w: 290, h: 150 }, { query: { queryState: { Values: { projections: [Me('All Measures', 'Repeat Rate')] } } } }), 'g1'),
+    group('g2', { x: 20, y: 200, w: 400, h: 120 }), inG(group('g3', { x: 100, y: 10, w: 250, h: 100 }), 'g2'), inG(vis('deep', 'shape', { x: 10, y: 10, w: 60, h: 60 }), 'g3')] },
+  { id: 'kpi', name: 'KPI', visuals: [vis('card', 'shape', { x: 20, y: 20, w: 280, h: 100, z: 1000 }), vis('ktitle', 'textbox', { x: 40, y: 30, w: 160, h: 30, z: 2000 }, text('Calls')), vis('kicon', 'image', { x: 250, y: 30, w: 30, h: 30, z: 3000 }),
+    vis('ncard', 'cardVisual', { x: 20, y: 140, w: 280, h: 100, z: 1000 }, { query: { queryState: { Data: { projections: [Me('All Measures', 'Visits')] } } }, visualContainerObjects: { title: [{ properties: { show: L('true'), text: S('Resolution') } }] } }),
+    vis('nicon', 'image', { x: 260, y: 150, w: 30, h: 30, z: 3000 })] },
+  { id: 'help', name: 'Help', visuals: [vis('box', 'shape', { x: 140, y: 100, w: 360, h: 200, z: 1000 }), vis('gotit', 'actionButton', { x: 400, y: 250, w: 70, h: 30, z: 2000 }), vis('helptext', 'textbox', { x: 160, y: 110, w: 320, h: 180, z: 3000 }, text('Pick a branch to see its calls'))] }], REAL);
+const before = [RP, RJ, RW, RN, RR].map((r) => filesOf(r.dir));
 
 const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' }), call = s.call;
@@ -240,6 +262,23 @@ chk(() => { const eq = (a, b) => Object.keys(b).every((k) => Math.abs(a[k] - b[k
   () => `F1: Normal centred at scale 1, Fit stretched, Fill centred at the larger scale: ${PP && JSON.stringify(['Normal', 'Fit', 'Fill'].map((f) => PP.placement(400, 250, f, 640, 360)))}`);
 chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 120, y: 0, width: 100, height: 50 } }], [{ name: 'a', position: { x: 540, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 500, y: 0, width: 100, height: 50 } }]); return o.length === 1 && o[0].visuals.join() === 'a,b'; },
   () => 'V2: a new overlap between two visuals is named');
+
+// ---------- R: the real shapes of laptop part 6 (MP1b, each red on d9d3ae98 first) ----------
+{
+  const p0 = await call('create_arabic_twin', { path: RR.pbip, arabicMonth: false }), pp = (p0.j && p0.j.picturePages) || [];
+  const w = await write({ path: RR.pbip, arabicMonth: false }), at = (pg, n) => (w.dir ? rd(path.join(w.dir, 'definition/pages', pg, 'visuals', n, 'visual.json')).position : {});
+  const nb = w.dir ? bgOf(rd(path.join(w.dir, 'definition/pages/named/page.json'))) : null;
+  chk(() => (pp.find((x) => x.page === 'named') || {}).picture === 'flipped' && nb && nb.item !== 'gradient-background4528801825573012.png' && fs.existsSync(path.join(w.dir, 'StaticResources/RegisteredResources', nb.item)) && at('named', 'nm0').x === W - onPanels('rail', 400, 250, 'Fit')[0].x - onPanels('rail', 400, 250, 'Fit')[0].w,
+    () => `R1: a picture named as Desktop writes it (label 'gradient-background.png', file 'gradient-background4528801825573012.png') is found, flipped and its page mirrored: ${JSON.stringify(pp.find((x) => x.page === 'named'))} ${JSON.stringify(nb)}`);
+  chk(() => !pp.some((x) => x.page === 'emptied') && at('emptied', 'ev').x === W - 220, () => `R2: an emptied picture (name and url '') is no picture: the page mirrored as any page: ${JSON.stringify(pp)} ${at('emptied', 'ev').x}`);
+  // every visual's page box W - x - w of its English page box: the group's (20 + child) and the nested group's
+  chk(() => at('row', 'g1').x === 20 && at('row', 'dept').x === 300 && at('row', 'ratings').x === 0, () => `R3: a bar chart beside a table of other fields (in a group) each mirrored, not kept as one block (group 20, chart at 300, table at 0 in it; page boxes ${W - 20 - 300} and 20): ${JSON.stringify(['g1', 'dept', 'ratings'].map((n) => at('row', n).x))}`);
+  chk(() => at('row', 'g2').x === 220 && at('row', 'g3').x === 50 && at('row', 'deep').x === 180, () => `R4 (guard): a nested group mirrored to the page box W - x - w (deep at 20 + 100 + 10 = 130 -> 450 = 220 + 50 + 180): ${JSON.stringify(['g2', 'g3', 'deep'].map((n) => at('row', n).x))}`);
+  chk(() => at('kpi', 'kicon').x === W - 250 - 30, () => `R5: a KPI icon beside its title on a card goes where its mirror is (${W - 280}), not onto the title mirrored next to it: ${at('kpi', 'kicon').x} (title ${at('kpi', 'ktitle').x})`);
+  chk(() => at('kpi', 'nicon').x === W - 260 - 30, () => `R6: an icon on a card whose own title turns right goes to the card's other end (${W - 290}): ${at('kpi', 'nicon').x}`);
+  chk(() => at('help', 'gotit').x === W - 400 - 70, () => `R7: a help box's button under its text box goes to the text box's other end with the text (${W - 470}), not its English x 400: ${at('help', 'gotit').x}`);
+  chk(() => JSON.stringify(filesOf(RR.dir)) === JSON.stringify(before[4]), () => 'O4: the real-shapes report\'s files byte-identical');
+}
 
 // ---------- X: the copy holding both languages ----------
 {
