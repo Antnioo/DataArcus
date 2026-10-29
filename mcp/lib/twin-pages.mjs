@@ -4,7 +4,7 @@
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence } from './twin-texts.mjs';
+import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
 import { createRequire } from 'node:module';
@@ -375,6 +375,8 @@ export function buildTwin(P, labels) {
         else vj.visual.visualContainerObjects[a.key][a.i].properties.text = text;
         if (a.key === 'title') autoTitled.set(String(vj.name), text);
         if (ar != null) applied++; });
+      // (TB1b) a subtitle given by a measure: written only as its approved Arabic (a fixed subtitle)
+      subtitleMeasuresOf(vj).forEach(({ i }) => { const ar = labels[`text:${pg.id}/${vj.name}/c.subTitle.${i}.text`]; if (ar != null && String(ar).trim()) { vj.visual.visualContainerObjects.subTitle[i].properties.text = Ls(String(ar)); applied++; } });
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
       if (textRename.size) rewireMeasures(vj, textRename);
       if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }

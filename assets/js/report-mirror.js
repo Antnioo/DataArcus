@@ -507,7 +507,10 @@
   // text:<page>/<visual>/<o (objects) | c (container)>.<card>.<entry>.<property>. The title and a button's text keep their ids
   // (0.3.1 TB1) and the labels Desktop draws beside a value that were not listed (Microsoft's catalog): a KPI's goal text
   // (kpi goals.goalText), a data label's own title and detail (labels.dynamicLabelTitle, dynamicLabelDetail, when a text)
-  const TEXT_PROPS = ['altText', 'showBlankAs', 'enabledTooltip', 'disabledTooltip', 'tooltip', 'text', 'titleText', 'subTitleText', 'placeholderText', 'labelText', 'headerText', 'tooltipText', 'goalText', 'dynamicLabelTitle', 'dynamicLabelDetail'];
+  // (0.3.1 TB1b) a reference line's own label: displayName on the catalog's reference line cards (xAxisReferenceLine,
+  // y1AxisReferenceLine, referenceLine), only there (REF_LINE)
+  const TEXT_PROPS = ['altText', 'showBlankAs', 'enabledTooltip', 'disabledTooltip', 'tooltip', 'text', 'titleText', 'subTitleText', 'placeholderText', 'labelText', 'headerText', 'tooltipText', 'goalText', 'dynamicLabelTitle', 'dynamicLabelDetail', 'displayName'];
+  const REF_LINE = /^(?:[a-z0-9]*AxisReferenceLine|referenceLine)$/;
   const TEXT_KIND = { altText: 'altText', showBlankAs: 'blankText', enabledTooltip: 'buttonTooltip', disabledTooltip: 'buttonTooltip', tooltip: 'buttonTooltip' };
   function eachTextProp(json, fn) {
     const v = json.visual, button = kindOf(json) === 'button';
@@ -516,6 +519,7 @@
         // (0.3.0 A3) a button's own title (the visual's title card: off by default, still the name a screen reader may
         // read, and shown when switched on) is listed with the other texts, so it takes the button's approved Arabic
         if (prop === 'text' && ((w === 'c' && card === 'title' && !button) || (w === 'o' && card === 'text' && button))) return;
+        if (prop === 'displayName' && !(w === 'o' && REF_LINE.test(card))) return;
         const s = strOf(e.properties[prop]); if (s != null && /\p{L}/u.test(s)) fn({ key: `${w}.${card}.${i}.${prop}`, prop, entry: e, text: s });
       }); });
     }); });

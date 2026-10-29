@@ -134,6 +134,17 @@ export function planTwin(a) {
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // (TB1) an approved title that changed with the selection: said, it is now a fixed title
   texts.forEach((t) => { if (t.kind === 'dynamicTitle' && labels[t.id] != null) Object.assign(t, { approved: 'approved: written as a fixed Arabic title; it no longer changes with the selection', approvedAr: 'وُوفق عليه: يُكتب عنوانًا عربيًا ثابتًا، فلا يتغير بعد ذلك مع التحديد' }); });
+  // (0.3.1 TB1b, D-1027-03: a title is wholly Arabic or wholly English) a field parameter's title kept (Power BI's to
+  // compose) on a visual where one of its fields will be written with an Arabic name would be composed from both: mixed.
+  // Named here; the tool gives no plan id while one is left (approve a fixed Arabic title, or keep those names English)
+  const arOf = (v) => v != null && /[\u0600-\u06FF]/.test(String(v)), fieldNow = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
+  const ownNow = new Map(texts.filter((t) => t.kind === 'visualField').map((t) => [t.rawId.slice('fieldAt:'.length), labels[t.id]]));
+  const mixedTitles = texts.filter((t) => t.autoParam && labels[t.id] == null).map((t) => { const a = t.autoParam, ar = a.vals.concat(a.cats).filter((x) => { const k = a.where + '/' + x.ref; return arOf(ownNow.has(k) ? ownNow.get(k) : fieldNow.get(x.ref)); });
+    return ar.length ? { id: t.id, text: t.text, fields: ar.map((x) => safeName(x.name)).slice(0, 10),
+      why: `kept, Power BI would compose this title from the field chosen (English) and ${ar.length === 1 ? 'a field' : 'fields'} written in Arabic on the same visual: a mixed title, which DataArcus never writes`,
+      whyAr: 'لو أُبقي لركّب Power BI هذا العنوان من الحقل المختار (بالإنجليزية) ومن حقول تُكتب بالعربية في المرئي نفسه: عنوان مختلط، ولا تكتب DataArcus عنوانًا مختلطًا أبدًا',
+      how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
+      howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
@@ -240,7 +251,7 @@ export function planTwin(a) {
     if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
   const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, logicalId, labels, texts, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -254,7 +265,8 @@ export function planTwin(a) {
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right
     waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `native: ${Gallery.WF_WHAT.native} (the user can choose "mirror": a stacked column chart read from the right, with no Total column and no legend)` : 'mirror: each waterfall is a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend (the user can choose "native": Power BI\'s own waterfall, left to right)',
     // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
-    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, auto, dyn, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
+    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, auto, dyn, autoParam, ...t }) => t),
+    ...(mixedTitles.length ? { mixedTitles: mixedTitles.slice(0, 30) } : {}), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
     ...(textsFrom ? { textsFrom: Math.min(textsFrom, listed.length) } : {}),
     labels: Object.assign({ given: [...givenIds].filter((k) => labels[k] != null).length, arabic: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),

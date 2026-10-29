@@ -188,12 +188,16 @@ function fieldNamesOf(R) {
   return new Map([...by].map(([q, e]) => [q, e.model != null ? e.model : [...e.names].reduce((a, b) => (b[1] > a[1] ? b : a))[0]]));
 }
 const OWN_WHAT = (f) => `This visual's own name for the field (elsewhere it shows "${visible(f).slice(0, 120)}"): approved on its own; the field's Arabic is not written over it`;
+// (TB1b) a visual's subtitles whose text is a measure: [{ i (the entry), ms (its Measure) }]
+export const subtitleMeasuresOf = (json) => { const vco = isObj(json) && isObj(json.visual) && isObj(json.visual.visualContainerObjects) ? json.visual.visualContainerObjects : {};
+  return (Array.isArray(vco.subTitle) ? vco.subTitle : []).map((e, i) => ({ i, ms: isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null }))
+    .filter(({ ms }) => ms && typeof ms.Property === 'string' && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) && typeof ms.Expression.SourceRef.Entity === 'string'); };
 // what the plan says of a title that changes with the selection, EN and AR (the follows: a measure or a field parameter)
 const DYNAMIC = {
   said: (en, ar) => ({ what: `${en}: it changes with the selection, so the twin can't translate it in place. Approve an Arabic title to write it as a fixed title (it then no longer changes with the selection), or keep it as it is`,
     whatAr: `${ar}: يتغير مع التحديد، فلا يمكن ترجمته في مكانه. وافق على عنوان عربي ليُكتب عنوانًا ثابتًا (فلا يتغير بعد ذلك مع التحديد)، أو أبقه كما هو`,
     dyn: { en: `${en}: it changes with the selection, so it is kept as it is, not translated (an approved Arabic title writes a fixed one)`, ar: `${ar}: يتغير مع التحديد، فيبقى كما هو دون ترجمة (العنوان العربي المعتمد يُكتب عنوانًا ثابتًا)` } }),
-  measure: (m) => DYNAMIC.said(`A title given by the measure ${safeName(m)}`, `عنوان يعطيه المقياس «${safeName(m)}»`),
+  measure: (m, sub) => DYNAMIC.said(`A ${sub ? 'subtitle' : 'title'} given by the measure ${safeName(m)}`, `${sub ? 'عنوان فرعي' : 'عنوان'} يعطيه المقياس «${safeName(m)}»`),
   param: (t) => DYNAMIC.said(`Power BI's title of a visual on the field parameter ${safeName(t)}, composed from the field chosen (if another field of the visual has an Arabic name, Power BI composes it from both)`, `عنوان Power BI لمرئي على معلمة الحقول «${safeName(t)}»، يُركَّب من الحقل المختار (وإن كان لحقل آخر في المرئي اسم عربي ركّبه Power BI من الاثنين)`)
 };
 export function textsOf(R) {
@@ -213,7 +217,7 @@ export function textsOf(R) {
     });
     // (FX3) Power BI's automatic titles and subtitles: listed with the visual's texts, their English as Power BI composes it
     // (TB1: on a field parameter, a title that changes with the selection)
-    pg.visuals.forEach((v) => autoTitlesOf(pg.id, v.json).forEach((a) => add(a.param != null ? Object.assign({ id: a.id, kind: 'dynamicTitle', text: autoSentence(a, (x) => x.name) }, DYNAMIC.param(a.param))
+    pg.visuals.forEach((v) => autoTitlesOf(pg.id, v.json).forEach((a) => add(a.param != null ? Object.assign({ id: a.id, kind: 'dynamicTitle', text: autoSentence(a, (x) => x.name), autoParam: a }, DYNAMIC.param(a.param))
       : { id: a.id, kind: a.key === 'title' ? 'title' : 'text', text: autoSentence(a, (x) => x.name), automatic: a.key, autoRefs: a.vals.concat(a.cats).map((x) => x.ref), auto: a }, { page: pg.id, visual: String(v.json.name) })));
     // (TB1, the laptop's part 4: Fintech's matrix title, given by a measure, stayed English and was never listed) a title
     // whose text is a measure the twin can't translate (the model's, or a report measure not of fixed texts)
@@ -222,6 +226,10 @@ export function textsOf(R) {
       const src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
       if (!src || typeof ms.Property !== 'string' || typeof src.Entity !== 'string' || (src.Schema === 'extension' && translatable.has(src.Entity + '\u0000' + ms.Property))) return;
       add(Object.assign({ id: 'title:' + pg.id + '/' + v.json.name, kind: 'dynamicTitle', text: ms.Property }, DYNAMIC.measure(src.Entity + '[' + ms.Property + ']')), { page: pg.id, visual: String(v.json.name) }); });
+    // (TB1b, D-1027-04: a subtitle is part of the title) a subtitle whose text is a measure, any measure (the twin
+    // translates no subtitle measure's DAX): its own text, the same way
+    pg.visuals.forEach((v) => subtitleMeasuresOf(v.json).forEach(({ i, ms }) => add(Object.assign({ id: `text:${pg.id}/${v.json.name}/c.subTitle.${i}.text`, kind: 'dynamicTitle', text: ms.Property },
+      DYNAMIC.measure(ms.Expression.SourceRef.Entity + '[' + ms.Property + ']', true)), { page: pg.id, visual: String(v.json.name) })));
     // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
@@ -243,7 +251,7 @@ export function textsOf(R) {
   const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? Object.assign({ what: t.what }, t.measures ? { measures: t.measures.slice(0, 30) } : {}) : {}, t.whatAr ? { whatAr: t.whatAr, dyn: t.dyn } : {});
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? Object.assign({ what: t.what }, t.measures ? { measures: t.measures.slice(0, 30) } : {}) : {}, t.whatAr ? { whatAr: t.whatAr, dyn: t.dyn } : {}, t.autoParam ? { autoParam: t.autoParam } : {});
     // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
     if (t.page && out.id !== t.id) out.page = safeName(t.page);
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
@@ -281,7 +289,8 @@ function rowFieldsOf(R) {
 // (TB1) a visual's own name with no label: null, kept as it is (the engine's labelVisual writes no field label over it);
 // a label Desktop draws beside a value (Microsoft's catalog: BESIDE, on the visual's objects, the phone's too) wrapped whole
 const BESIDE = new Set(['referenceLabelTitle.titleText', 'label.text', 'goals.goalText', 'labels.dynamicLabelTitle', 'labels.dynamicLabelDetail']);
-const besideOf = (rawId) => { const m = /^(?:phone:)?text:.+\/o\.([^./]+)\.\d+\.([^./]+)$/.exec(String(rawId)); return !!m && BESIDE.has(m[1] + '.' + m[2]); };
+// (TB1b) and a reference line's own label, drawn beside its value
+const besideOf = (rawId) => { const m = /^(?:phone:)?text:.+\/o\.([^./]+)\.\d+\.([^./]+)$/.exec(String(rawId)); return !!m && (BESIDE.has(m[1] + '.' + m[2]) || (m[2] === 'displayName' && /^(?:[a-z0-9]*AxisReferenceLine|referenceLine)$/.test(m[1]))); };
 export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = (besideOf(by.get(k)) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k]); });
   texts.forEach((t) => { if (t.kind === 'visualField' && !Object.prototype.hasOwnProperty.call(out, t.rawId)) out[t.rawId] = null; }); return out; };
 
