@@ -341,12 +341,26 @@ export function pageBoxes(visuals) {
   return out;
 }
 const meets = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
-/** Pairs of visuals that overlap on the Arabic page and did not on the English one: [{ visuals: [a, b] }] */
+/** Pairs of visuals that overlap on the Arabic page and did not on the English one: [{ visuals: [a, b], why: 'new' }];
+ *  (0.3.1 MP1c, laptop part 7: ER's weekday bars on the heatmap's row headers, Call Center's bar chart over the ratings
+ *  table, both "none" here as they overlapped in English too) also a pair that overlapped in English when the overlap
+ *  moved from a matrix's right part to its left, where its row headers stay (why 'rowHeaders'), or a bar chart over a
+ *  table or matrix (which stay left to right inside) had its bars turned (why 'barsTurned') */
+const MATRIX = new Set(['pivotTable']), TABLES = new Set(['pivotTable', 'tableEx']), BARS = /^(clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart|barChart)$/;
+const typeOfV = (v) => (v && v.visual && typeof v.visual.visualType === 'string' ? v.visual.visualType : '');
+const turned = (v) => ((v && v.visual && v.visual.objects && Array.isArray(v.visual.objects.valueAxis) ? v.visual.objects.valueAxis : []).some((e) => e && e.properties && e.properties.invertAxis && e.properties.invertAxis.expr && e.properties.invertAxis.expr.Literal && String(e.properties.invertAxis.expr.Literal.Value) === 'true'));
+const midX = (a, b) => (Math.max(a.x, b.x) + Math.min(a.x + a.w, b.x + b.w)) / 2;
 export function newOverlaps(enVisuals, arVisuals) {
   const en = pageBoxes(enVisuals), ar = pageBoxes(arVisuals), names = [...ar.keys()].filter((n) => en.has(n)).sort(), out = [];
+  const byEn = new Map((enVisuals || []).filter((v) => v && v.name != null).map((v) => [String(v.name), v])), byAr = new Map((arVisuals || []).filter((v) => v && v.name != null).map((v) => [String(v.name), v]));
   for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
-    const a = names[i], b = names[j];
-    if (meets(ar.get(a), ar.get(b)) > 4 && meets(en.get(a), en.get(b)) <= 0) out.push({ visuals: [a, b] });
+    const a = names[i], b = names[j], e = meets(en.get(a), en.get(b)), r = meets(ar.get(a), ar.get(b));
+    if (r > 4 && e <= 0) { out.push({ visuals: [a, b], why: 'new' }); continue; }
+    if (r <= 4 || e <= 0) continue;
+    const m = [a, b].find((n) => MATRIX.has(typeOfV(byEn.get(n)))), o = m === a ? b : a;
+    if (m) { const E = en.get(m), A = ar.get(m); if (midX(en.get(o), E) > E.x + E.w / 2 && midX(ar.get(o), A) < A.x + A.w / 2) { out.push({ visuals: [a, b], why: 'rowHeaders' }); continue; } }
+    const t = [a, b].find((n) => TABLES.has(typeOfV(byEn.get(n)))), c = t === a ? b : a;
+    if (t && BARS.test(typeOfV(byEn.get(c))) && turned(byAr.get(c)) && !turned(byEn.get(c))) out.push({ visuals: [a, b], why: 'barsTurned' });
   }
   return out;
 }
