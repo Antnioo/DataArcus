@@ -27,8 +27,8 @@
   cards «المرضى», no dynamic titles, the goal text unlisted, nothing wrapped); 5 guards green there (P5 answers within
   40,000, P7 a small sheet whole, V5 the sheet consistent, D4 a kept title left as it is, B5 a title unchanged).
   Areas: twin 17 suites pass, arabic 15 pass; lint 0; check-min 75 match, stamps new since main; result-lines,
-  changelog-words, agent-memory PASS. No other suite's number changed.
-- **State:** FULL_RUN_PENDING.
+  changelog-words, agent-memory PASS. No other suite's number changed (mcp 1594, large-model-caps 217, mutation 195).
+- **State: DONE.** Full run on 388a02cb: "run-tests: 124 suites passed" (the base's 123 + tb1). CI started after this line.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
