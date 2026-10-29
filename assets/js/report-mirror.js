@@ -419,6 +419,9 @@
   const showsNames = (v) => ['table', 'matrix', 'textbox', 'slicer', 'newCard'].includes(kindOf(v)) || ['card', 'multiRowCard'].includes(v.visual.visualType);
   const nameOf = (v) => (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number') ? String(v.name) : null);
   const boxOf = (v) => { const p = isObj(v) && isObj(v.position) ? v.position : null; return p && [p.x, p.y, p.width, p.height].every(Number.isFinite) && p.width > 0 && p.height > 0 ? { x: p.x, y: p.y, w: p.width, h: p.height, z: Number.isFinite(p.z) ? p.z : null } : null; };
+  // a field's key (Table.Field) for a column, a measure or a hierarchy level, or null
+  const fieldKey = (f) => { const c = isObj(f) ? (f.Column || f.Measure || f.HierarchyLevel) : null, src = isObj(c) && isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
+    return c && typeof c.Property === 'string' ? (src == null ? '' : String(src)) + '.' + c.Property : c && typeof c.Level === 'string' ? 'level.' + c.Level : null; };
   const parentOf = (v) => (isObj(v) && v.parentGroupName != null ? String(v.parentGroupName) : '');
   const axisHidden = (v) => (entries(isObj(v.visual) ? v.visual.objects : null, 'categoryAxis') || []).some((e) => !e.selector && isObj(e.properties) && lit(e.properties.show) === 'false');
   function unitsOf(visuals) {
@@ -437,7 +440,14 @@
     list.forEach((v) => {
       if (kindOf(v) !== 'bar' || !axisHidden(v) || taken.has(nameOf(v))) return;
       const a = boxOf(v);
-      const near = list.filter((n) => n !== v && parentOf(n) === parentOf(v) && showsNames(n) && !taken.has(nameOf(n))).map((n) => {
+      // (0.3.1 MP1b, laptop part 6: "Calls by Department" beside a ratings table of other fields was kept as one block in
+      // its English order, the two then lying on each other's place) a visual of fields is the bars' names only when it
+      // shows the bars' own category field; a text box (no fields) still can be
+      const cat = fieldKey((first(projections(v.visual.query, 'Category')) || {}).field);
+      const namesOf = (n) => { const qs = isObj(n.visual.query) && isObj(n.visual.query.queryState) ? n.visual.query.queryState : {}, keys = [];
+        Object.keys(qs).forEach((r) => (projections(n.visual.query, r) || []).forEach((x) => { if (isObj(x)) keys.push(fieldKey(x.field)); })); return keys; };
+      const sameField = (n) => { const ks = namesOf(n); return !ks.length || (cat != null && ks.includes(cat)); };
+      const near = list.filter((n) => n !== v && parentOf(n) === parentOf(v) && showsNames(n) && !taken.has(nameOf(n)) && sameField(n)).map((n) => {
         const b = boxOf(n), gap = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w)), shared = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
         return { n, gap, ok: gap >= -2 && gap <= 24 && shared >= Math.min(a.h, b.h) / 2 };
       }).filter((c) => c.ok).sort((x, y) => x.gap - y.gap);

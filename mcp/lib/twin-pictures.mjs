@@ -9,17 +9,24 @@ import { pagePicture, offPanel, newOverlaps } from './page-picture.mjs';
 export const RES = 'StaticResources/RegisteredResources/';
 const lit = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && typeof p.expr.Literal.Value === 'string' ? p.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'") : null);
 const Ls = (s) => ({ expr: { Literal: { Value: "'" + String(s).replace(/'/g, "''") + "'" } } });
-// a page's pictures in one of its cards (background, outspace): [{ entry's image object, name, fit }]
+// a page's pictures in one of its cards (background, outspace): [{ entry's image object, name (the FILE), label, fit }].
+// (MP1b, laptop part 6 on the owner's reports) Desktop writes a picture with two names: image.name is the name shown to
+// the author ('gradient-background.png'), url's ResourcePackageItem.ItemName the file under RegisteredResources
+// ('gradient-background4528801825573012.png'): the file is read from ItemName, the name only when there is none. A
+// picture taken off the page (name and url '') is no picture.
+const itemOf = (im) => (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem) && typeof im.url.expr.ResourcePackageItem.ItemName === 'string' ? im.url.expr.ResourcePackageItem.ItemName : null);
 const imagesIn = (page, card) => (isObj(page) && isObj(page.objects) && Array.isArray(page.objects[card]) ? page.objects[card] : [])
   .map((e) => (isObj(e) && isObj(e.properties) && isObj(e.properties.image) && isObj(e.properties.image.image) ? e.properties.image.image : null))
-  .filter((im) => im && lit(im.name) != null).map((im) => ({ im, name: lit(im.name), fit: lit(im.scaling) }));
+  .map((im) => (im ? { im, label: lit(im.name), name: itemOf(im) || lit(im.name), fit: lit(im.scaling) } : null)).filter((x) => x && x.name);
+/** The page ids whose background holds a picture (not DataArcus's own placeholder or glass: blank(file)) */
+export const picturePageIds = (R, info) => new Set(R.pages.filter((pg) => { const x = info.get(String(pg.id)); return x && !x.wallpaper; }).map((pg) => pg.id));
 
 // what the plan, the answer and the approval page say of a page, in English and Arabic
 const FIT_AR = { Normal: 'بحجمها الأصلي', Fit: 'ملاءمة', Fill: 'تعبئة' };
 export const WORDS_SAID = 'This picture may contain words or a logo that will read backwards';
 const WORDS_SAID_AR = 'قد تحتوي هذه الصورة على كلمات أو شعار سيُقرأ معكوسًا';
 export function pictureSaid(x, mirrorPictures) {
-  if (x.picture === 'flipped') return { en: `picture flipped (${x.padded ? 'Normal, drawn on the page first' : x.fit}) and the visuals mirrored onto it`, ar: `الصورة معكوسة أفقيًا (${FIT_AR[x.fit] || FIT_AR.Normal}${x.padded ? '، بعد رسمها على حجم الصفحة' : ''}) والمرئيات معكوسة فوقها` };
+  if (x.picture === 'flipped') return { en: `picture flipped (${x.fit}) and the visuals mirrored onto it`, ar: `الصورة معكوسة أفقيًا (${FIT_AR[x.fit] || FIT_AR.Normal}) والمرئيات معكوسة فوقها` };
   if (x.picture === 'asked') return mirrorPictures ? { en: `asked: ${WORDS_SAID}. Mirrored as asked (mirrorPicturePages); its picture is not flipped, so the visuals leave its panels`, ar: `${WORDS_SAID_AR}. عُكست الصفحة كما طُلب، أما صورتها فلم تُعكس، فتخرج المرئيات عن ألواحها` }
     : { en: `asked: ${WORDS_SAID}. The page stays left to right until the user approves its flip (flipPictures)`, ar: `${WORDS_SAID_AR}. تبقى الصفحة من اليسار إلى اليمين حتى توافق على عكس صورتها` };
   if (x.wallpaper) return { en: 'kept: its wallpaper picture (outside the page, placed by the window) stays as it is; the page is mirrored', ar: 'تبقى صورة ما حول الصفحة كما هي (خارج الصفحة)، والصفحة معكوسة' };
@@ -27,8 +34,8 @@ export function pictureSaid(x, mirrorPictures) {
     : { en: `kept left to right: ${x.why}; mirrorPicturePages true mirrors it anyway (the picture as it is)`, ar: 'تبقى من اليسار إلى اليمين: تعذّرت قراءة صورتها' };
 }
 
-/** Each page's pictures, before the build: Map page id -> { picture: 'flipped' | 'asked' | 'kept', fit, rel, name, ...,
- *  wallpaper (an outspace picture), why (kept: why the picture can't be flipped), words }. blank(name): DataArcus's own
+/** Each page's pictures, before the build: Map page id -> { picture: 'flipped' | 'asked' | 'kept', fit, rel, name (the
+ *  file), ..., wallpaper (an outspace picture), why (kept: why the picture can't be flipped), words }. blank(file): DataArcus's own
  *  placeholder or glass picture (not a picture here). flip: the page ids the user approved the flip of. */
 export function picturesOf(R, loc, blank, flip) {
   const info = new Map(), approved = new Set((Array.isArray(flip) ? flip : []).map(String));
@@ -41,7 +48,7 @@ export function picturesOf(R, loc, blank, flip) {
     if (!(Number.isFinite(W) && Number.isFinite(H) && W > 0 && H > 0)) return info.set(String(pg.id), Object.assign(out, { picture: 'kept', why: 'its page size is not a number' }));
     let P; try { P = pagePicture(new Uint8Array(bytesAt(loc, rel)), fit, W, H); } catch (e) { P = { why: 'its picture could not be read' }; }
     if (P.why) return info.set(String(pg.id), Object.assign(out, { picture: 'kept', why: P.why }));
-    info.set(String(pg.id), Object.assign(out, { picture: P.words && !approved.has(String(pg.id)) ? 'asked' : 'flipped', padded: P.padded, words: P.words > 0, size: `${P.iw} x ${P.ih}`, W, H }));
+    info.set(String(pg.id), Object.assign(out, { picture: P.words && !approved.has(String(pg.id)) ? 'asked' : 'flipped', words: P.words > 0, size: `${P.iw} x ${P.ih}`, W, H }));
   });
   return info;
 }
@@ -61,7 +68,7 @@ export function flipPicturesOf(R, loc, info, built, keepLtr) {
       const key = x.rel + '|' + x.fit + '|' + x.W + 'x' + x.H;
       if (byKey.has(key)) to = byKey.get(key);
       else { const base = x.name.replace(/\.[^.]*$/, ''); to = base + '-ar.png'; for (let k = 2; taken.has(to.toLowerCase()); k++) to = base + '-ar-' + k + '.png'; taken.add(to.toLowerCase()); byKey.set(key, to); added.push({ name: to, data: Buffer.from(P.png) }); }
-      imagesIn(page, 'background').filter((y) => y.name === x.name).forEach(({ im }) => { im.name = Ls(to); if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to; });
+      imagesIn(page, 'background').filter((y) => y.name === x.name).forEach(({ im, label }) => { if (label === x.name) im.name = Ls(to); if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to; });
     }
     x.writtenAs = to;
     const en = pg.visuals.map((v) => v.json), at = (n) => safeName(pg.id) + '/' + safeName(n);
@@ -77,7 +84,7 @@ export function picturePagesSaid(R, info, mirrorPictures) {
   return R.pages.filter((pg) => info.has(String(pg.id))).map((pg) => {
     const x = info.get(String(pg.id)), s = pictureSaid(x, mirrorPictures);
     const name = typeof pageOf(pg).displayName === 'string' ? safeName(pageOf(pg).displayName) : '';
-    return Object.assign({ page: safeName(pg.id) }, name ? { name } : {}, { picture: x.picture }, x.fit && !x.wallpaper ? { fit: x.fit } : {}, x.picture === 'flipped' ? { padded: !!x.padded } : {},
+    return Object.assign({ page: safeName(pg.id) }, name ? { name } : {}, { picture: x.picture }, x.fit && !x.wallpaper ? { fit: x.fit } : {},
       x.picture === 'asked' ? { flipWith: `flipPictures: ["${safeName(pg.id)}"] once the user has looked at the picture and approves its flip` } : {}, x.wallpaperToo ? { wallpaper: 'its wallpaper picture (outside the page) stays as it is' } : {}, { what: s.en, whatAr: s.ar });
   });
 }

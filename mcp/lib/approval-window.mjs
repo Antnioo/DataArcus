@@ -663,7 +663,7 @@ function summaryOf(kind, data) {
     const two = (a, e) => ({ en: e, ar: a });
     sections.push({ heading: 'Options', rows: [[two('الرسوم عبر الزمن', 'Charts over time'), d.timeRightToLeft === false ? two('من اليسار إلى اليمين، كما في الإنجليزية', 'left to right, as in English') : two('من اليمين إلى اليسار، مثل بقية الصفحة', 'right to left, like the rest of the page')],
       [two('أعمدة التقويم العربية', 'Arabic calendar columns'), d.arabicMonth ? two('نعم: يضيفها سكربت إلى جدول التاريخ لديك (انظر «عن السكربت»)', 'yes: a script adds them to your date table (see "About the script")') : two('لا', 'no')]]
-      // (0.3.1 MP1) each page drawn on a picture: its picture flipped (fit, padded) / asked (it may hold words) / kept
+      // (0.3.1 MP1) each page drawn on a picture: its picture flipped (its fit) / asked (it may hold words) / kept
       .concat(Array.isArray(d.pictures) ? d.pictures.map((x) => [two(`صفحة على صورة «${String(x.page)}»`, `Page on a picture "${String(x.page)}"`), two(String(x.ar || ''), String(x.en || ''))])
         : uses('picturePages') ? [[two('الصفحات المرسومة على صورة خلفية', 'Pages drawn on a background picture'), d.mirrorPicturePages ? two('معكوسة رغم ذلك (صورتها لا تُعكس)', 'mirrored anyway (their picture is not)') : two('تبقى من اليسار إلى اليمين (لا يمكن عكس الصورة)', 'kept left to right (the picture can\'t be mirrored)')]] : [],
         uses('waterfalls') ? [[two('الشلال من اليمين إلى اليسار', 'Waterfall, right to left'), two(wfRtlSaidAr(d.waterfallRtl), wfRtlSaid(d.waterfallRtl))]] : [],

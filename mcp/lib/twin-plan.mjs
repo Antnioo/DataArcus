@@ -22,7 +22,7 @@ const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
-import { picturesOf, flipPicturesOf, picturePagesSaid } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
+import { picturesOf, flipPicturesOf, picturePagesSaid, picturePageIds } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
 
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
@@ -101,7 +101,8 @@ export function planTwin(a) {
   // flipped (lib/twin-pictures.mjs); kept left to right only when its picture can't be read, or may hold words and the
   // user has not approved its flip (flipPictures); mirrorPicturePages still mirrors those (the picture as it is)
   const pictures = picturesOf(R, loc, blank, a.flipPictures), mirrorPictures = a.mirrorPicturePages === true;
-  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank }) && !(pictures.get(String(pg.id)) || {}).wallpaper).map((pg) => pg.id));
+  // (MP1b) the pages on a picture, as picturesOf read them (the file by its ItemName; an emptied picture is none)
+  const pictureIds = picturePageIds(R, pictures);
   const keepLtr = (pg) => pictureIds.has(pg.id) && (pictures.get(String(pg.id)) || {}).picture !== 'flipped' && !mirrorPictures;
   const pagesKept = R.pages.filter(keepLtr).length;
   const given = a.labels || {}, labels = {}, unknown = [];

@@ -295,19 +295,37 @@ function rowLabelTable(vj, isText, extMeasure) {
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
-// (0.3.1 MP1, the laptop's part 4b: a KPI icon landed on its own title «المكالمات») a small visual on a text box is kept
-// at its place on it (Mirror's units: what a bigger visual draws inside does not flip), but a text box's text does turn
-// right (Mirror.mirrorVisual): there the small visual goes to the other end of the text box, so the text and it swap
-// sides together, as the box's own padding does. A text box whose paragraphs are all centred keeps it where it is.
+// (0.3.1 MP1, the laptop's part 4b: a KPI icon landed on its own title «المكالمات») a small visual on a bigger one is kept
+// at its place on it (Mirror's units: what a bigger visual draws inside does not flip). Where text does turn right, the
+// small visual goes to the other end with it, as the boxes' own padding does:
+// - (MP1b, laptop part 6: Fintech's «فهمت» over its help text) it lies on a text box whose text turns right (that text
+//   box its host or not): to the text box's other end;
+// - it sits on a text box, or on a visual whose own title turns right (a card's title): to that visual's other end;
+// - (MP1b, part 6: Call Center's 4 KPI icons) kept at its place it would lie on another visual it did not touch in
+//   English (a title mirrored beside it): mirrored on its own (to the host's other end).
+// A text box whose paragraphs are all centred turns nothing.
 const textTurns = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [])
   .some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && pa.horizontalTextAlignment !== 'center'));
-const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'width'].every((k) => Number.isFinite(v.position[k]));
+const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'y', 'width', 'height'].every((k) => Number.isFinite(v.position[k]));
+const litOf = (p) => (isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) ? String(p.expr.Literal.Value).replace(/^'|'$/g, '') : null);
+const titleAlign = (v) => { const t = isObj(v) && isObj(v.visual) && isObj(v.visual.visualContainerObjects) && Array.isArray(v.visual.visualContainerObjects.title) ? v.visual.visualContainerObjects.title.find((e) => isObj(e) && !e.selector && isObj(e.properties)) : null;
+  return t && litOf(t.properties.show) !== 'false' ? String(litOf(t.properties.alignment) || 'left').toLowerCase() : null; };
+const titleTurns = (en, ar) => { const a = titleAlign(en), b = titleAlign(ar); return a != null && b === 'right' && a !== 'right'; };
+const overlapOf = (a, b) => Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
 function badgesWithText(pg, r) {
   const en = new Map(pg.visuals.filter((v) => isObj(v.json)).map((v) => [String(v.json.name), v.json])), ar = new Map((r.visuals || []).filter(isObj).map((v) => [String(v.name), v]));
+  const within = (b0, t0, t1) => Mirror.round(t1.position.x + t0.position.width - (b0.position.x - t0.position.x) - b0.position.width);
   ((r.units && r.units.on) || []).forEach((u) => {
     const h0 = en.get(String(u.host)), b0 = en.get(String(u.visual)), h1 = ar.get(String(u.host)), b1 = ar.get(String(u.visual));
-    if (![h0, b0, h1, b1].every(boxOk) || Mirror.kindOf(h0) !== 'textbox' || !textTurns(h0)) return;
-    b1.position.x = Mirror.round(h1.position.x + h0.position.width - (b0.position.x - h0.position.x) - b0.position.width);
+    if (![h0, b0, h1, b1].every(boxOk)) return;
+    const sib = [...en.entries()].filter(([n, v]) => n !== String(u.visual) && n !== String(u.host) && boxOk(v) && boxOk(ar.get(n)) && String(v.parentGroupName || '') === String(b0.parentGroupName || '') && !v.visualGroup);
+    // a text box under it whose text turns right
+    const t = sib.find(([, v]) => Mirror.kindOf(v) === 'textbox' && textTurns(v) && overlapOf(v.position, b0.position) >= b0.position.width * b0.position.height / 2);
+    if (t) { b1.position.x = within(b0, t[1], ar.get(t[0])); return; }
+    // its host's text or title turns right
+    if ((Mirror.kindOf(h0) === 'textbox' && textTurns(h0)) || titleTurns(h0, h1)) { b1.position.x = within(b0, h0, h1); return; }
+    // kept, it would lie on another visual it did not touch in English
+    if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) b1.position.x = within(b0, h0, h1);
   });
 }
 export function buildTwin(P, labels) {

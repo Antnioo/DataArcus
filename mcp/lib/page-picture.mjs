@@ -1,11 +1,12 @@
 // (0.3.1 MP1, the owner, 29 Oct: "I want all the pages to be mirrored rtl", D-1029-03) a page drawn on a picture, in the
 // Arabic twin: its picture read (PNG or JPEG, by DataArcus's own readers below: no new package), flipped left to right
 // and written as a PNG, so the visuals mirrored onto it (x' = W - x - w) sit on the same panels.
-// The rule (Codex's research, 29 Oct; Desktop's placement still to be measured on the laptop): a picture iw x ih drawn
-// at scale s from ox lands its column u at x = ox + s*u; flipping it and mirroring the visuals agree when
-// 2*ox + s*iw = W. Fit (s = min(W/iw, H/ih)) and Fill (s = max) are centred, so they agree for any size; Normal (scale
-// 1 at 0,0) only when iw = W: the picture is first drawn on a transparent W x H canvas at (0,0) (padded or cropped),
-// then flipped, and stays Normal.
+// The rule (Codex's research, 29 Oct): a picture iw x ih drawn at scale sx from ox lands its column u at x = ox + sx*u;
+// flipping it and mirroring the visuals agree when 2*ox + sx*iw = W. Desktop 2.159 places a page picture (laptop part
+// 6 block B, 29 Oct; scripts/tests/DESKTOP-TESTS.md, "where Desktop places a page picture"): Normal centred at scale
+// 1, Fit stretched to the whole page, Fill centred at the larger scale. All three agree for any picture size, so the
+// picture is flipped as it is, its own size and fit kept (MP1's padding of a Normal picture, from a model that put it
+// at 0,0, is gone).
 // What a picture holds is never returned to Claude: only its size, whether it may hold words, and which visuals leave
 // their panel (names and places).
 import zlib from 'node:zlib';
@@ -247,19 +248,20 @@ export function testPng(w, h, rgba, o) {
 
 // ---------- the rule ----------
 export const FITS = ['Normal', 'Fit', 'Fill'];
-/** Where a picture of iw x ih lands on a W x H page: { s, ox, oy } (Codex's model: Normal at 0,0 scale 1; Fit and Fill
- *  centred at the smaller and the larger scale). A fit Power BI may write that is none of these is read as Normal. */
+/** Where a picture of iw x ih lands on a W x H page: { sx, sy, ox, oy }, as Desktop 2.159 was measured to place it
+ *  (DESKTOP-TESTS.md, 2026-10-29, "where Desktop places a page picture"): Normal centred at scale 1; Fit stretched to
+ *  the page (its proportions not kept); Fill centred at the larger scale. A fit that is none of these is read as Normal. */
 export function placement(iw, ih, fit, W, H) {
-  if (fit === 'Fit' || fit === 'Fill') { const s = fit === 'Fit' ? Math.min(W / iw, H / ih) : Math.max(W / iw, H / ih); return { s, ox: (W - s * iw) / 2, oy: (H - s * ih) / 2 }; }
-  return { s: 1, ox: 0, oy: 0 };
+  if (fit === 'Fit') return { sx: W / iw, sy: H / ih, ox: 0, oy: 0 };
+  const s = fit === 'Fill' ? Math.max(W / iw, H / ih) : 1;
+  return { sx: s, sy: s, ox: (W - s * iw) / 2, oy: (H - s * ih) / 2 };
 }
-/** The picture the Arabic page is drawn on: Normal and narrower or wider than the page, drawn first on a transparent
- *  W x H canvas at (0,0) (padded or cropped: flip and mirror then agree); then flipped left to right. { w, h, rgba, padded } */
-export function flippedFor(img, fit, W, H) {
-  const pad = !FITS.slice(1).includes(fit) && img.w !== W, w = pad ? W : img.w, h = pad ? H : img.h, out = new Uint8Array(w * h * 4), on = pad ? new Uint8Array(w * h * 4) : img.rgba;
-  for (let y = 0; y < Math.min(h, img.h); y++) for (let x = 0; x < Math.min(w, img.w); x++) { const s = (y * img.w + x) * 4, d = (y * w + (w - 1 - x)) * 4; out[d] = img.rgba[s]; out[d + 1] = img.rgba[s + 1]; out[d + 2] = img.rgba[s + 2]; out[d + 3] = img.rgba[s + 3]; if (pad) on.set(img.rgba.subarray(s, s + 4), (y * w + x) * 4); }
-  // (unflipped: the English picture as it lands, the page's own size when padded)
-  return { w, h, rgba: out, padded: pad, unflipped: { w, h, rgba: on } };
+/** The picture the Arabic page is drawn on: the English one flipped left to right, its own size (every fit is placed
+ *  symmetrically about the page's centre line). { w, h, rgba } */
+export function flippedFor(img) {
+  const { w, h } = img, out = new Uint8Array(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const s = (y * w + x) * 4, d = (y * w + (w - 1 - x)) * 4; out[d] = img.rgba[s]; out[d + 1] = img.rgba[s + 1]; out[d + 2] = img.rgba[s + 2]; out[d + 3] = img.rgba[s + 3]; }
+  return { w, h, rgba: out };
 }
 
 // ---------- what the picture shows: its regions of one colour (panels), and words ----------
@@ -309,18 +311,18 @@ const lru = (max) => { const m = new Map(); return { get: (k) => { if (!m.has(k)
 const kept = lru(32);
 const keyOf = (b) => crypto.createHash('sha256').update(b).digest('hex') + ':' + b.length;
 /** A page picture for the Arabic page: { why } when it can't be read, else { iw, ih, png (the Arabic page's picture,
- *  the caller's own copy), padded, words (lines that look like words), same (the flip is the picture itself),
+ *  the caller's own copy), words (lines that look like words), same (the flip is the picture itself),
  *  panels: { at(box, mirrored) } }. fit: the page's scaling; W x H: the page. */
 export function pagePicture(bytes, fit, W, H) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), key = keyOf(b) + '|' + fit + '|' + W + 'x' + H, hit = kept.get(key);
   if (hit) return hit.why ? hit : Object.assign({}, hit, { png: hit.png.slice() });
   const img = readPicture(b);
   if (img.why) { kept.set(key, img); return img; }
-  const f = flippedFor(img, fit, W, H), R = regions(f.unflipped), words = wordsIn(R);
-  let same = !f.padded; if (same) for (let i = 0; i < f.rgba.length; i++) if (f.rgba[i] !== img.rgba[i]) { same = false; break; }
+  const f = flippedFor(img), R = regions(img), words = wordsIn(R);
+  let same = true; if (same) for (let i = 0; i < f.rgba.length; i++) if (f.rgba[i] !== img.rgba[i]) { same = false; break; }
   // (kept: the panels' bounds only, never the label of every pixel; a 14-picture report stays in the cache)
   const big = R.w * R.h / 1000, regionsKept = { k: R.k, w: R.w, h: R.h, list: R.list.filter((x) => x.area >= big && x.x1 - x.x0 >= 8 && x.y1 - x.y0 >= 8) };
-  const r = { iw: img.w, ih: img.h, w: f.w, h: f.h, padded: f.padded, words, same, png: writePng(f.w, f.h, f.rgba), regions: regionsKept };
+  const r = { iw: img.w, ih: img.h, w: f.w, h: f.h, words, same, png: writePng(f.w, f.h, f.rgba), regions: regionsKept };
   kept.set(key, r);
   return Object.assign({}, r, { png: r.png.slice() });
 }
@@ -354,7 +356,7 @@ export function newOverlaps(enVisuals, arVisuals) {
  *  each region's bounds taken mirrored) */
 function panelAt(P, box, place, mirrored) {
   const R = P.regions, k = R.k, slack = 2;
-  const x0 = (box.x - place.ox) / place.s / k, x1 = (box.x + box.w - place.ox) / place.s / k, y0 = (box.y - place.oy) / place.s / k, y1 = (box.y + box.h - place.oy) / place.s / k;
+  const x0 = (box.x - place.ox) / place.sx / k, x1 = (box.x + box.w - place.ox) / place.sx / k, y0 = (box.y - place.oy) / place.sy / k, y1 = (box.y + box.h - place.oy) / place.sy / k;
   let best = null;
   R.list.forEach((r) => {
     if ((r.x0 === 0 && r.y0 === 0 && r.x1 === R.w && r.y1 === R.h)) return;
@@ -367,8 +369,8 @@ function panelAt(P, box, place, mirrored) {
  *  sit in the same panel of the flipped one: [names]. P: pagePicture's result for the page; enFit: the English page's
  *  scaling; W x H: the page. The flipped picture is P's own regions mirrored (the PNG written is exactly that flip). */
 export function offPanel(P, enVisuals, arVisuals, enFit, W, H) {
-  // (the regions are the English picture's as it lands, padded to the page for Normal: both pages place it alike)
-  const en = pageBoxes(enVisuals), ar = pageBoxes(arVisuals), at = placement(P.w, P.h, P.padded ? 'Normal' : enFit, W, H), out = [];
+  // (the regions are the English picture's; both pages place their picture alike, as Desktop does: placement)
+  const en = pageBoxes(enVisuals), ar = pageBoxes(arVisuals), at = placement(P.w, P.h, enFit, W, H), out = [];
   en.forEach((b, n) => { const was = panelAt(P, b, at, false); if (was == null || !ar.has(n)) return; if (panelAt(P, ar.get(n), at, true) !== was) out.push(n); });
   return out.sort();
 }

@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
     // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261027tw1', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261028fx5', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261029mp1b', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261028fx5', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
       '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261028fx5b', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
     // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
     // loaded again)
