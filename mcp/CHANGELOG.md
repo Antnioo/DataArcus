@@ -352,6 +352,12 @@ package's manifest; this file says what is in it.
   for it and says why, in English and Arabic, until you approve a fixed Arabic title or keep those names English too.
   A subtitle given by a measure is now listed like such a title, and a reference line's own label (a target line, for
   example) is listed and written in the Arabic you approve.
+- **The Arabic twin keeps each field's meaning:** a field's Arabic is now given for the field's own name, never for a
+  name one visual gives it, so approving it changes only the visuals that show the field as it is (a card renamed
+  "Female" keeps its own Arabic). A title given by a column (the value chosen in a field parameter, say) is now listed
+  like a title given by a measure, and it is never kept English beside Arabic names. The written twin's answer no longer
+  says a title measure stayed English when its titles were written as approved Arabic, and check_report's fix for a
+  file shape Desktop was measured to open says only what was measured.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

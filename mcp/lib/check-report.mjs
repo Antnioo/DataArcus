@@ -166,6 +166,9 @@ export const DESKTOP_OPENED = Object.fromEntries([['PBIR_FORMATTING_PROP_NESTED'
   ['PBIR_ROLE_REQUIRED_MISSING', 3], ['PBIR_SLICER_HEIGHT_BELOW_FLOOR', 2], ['PBIR_ROLE_MAX_EXCEEDED', 1], ['PBIR_SCATTER_NO_GROUPING', 1],
   ['PBIR_DRILLTHROUGH_BACK_BUTTON_MISSING', 1], ['PBIR_VISUAL_TYPE_DEPRECATED', 1], ['PBIR_THEME_VISUAL_UNKNOWN', 1]]
   .map(([code, n]) => [code, { evidence: `${OPENED_IN}: ${n} on reports that opened with no error${code === 'PBIR_ROLE_REQUIRED_MISSING' ? '; an earlier laptop proof (11 Oct 2026, mcp/work/0.2.9-custom-visuals.md, Z1) saw a donut written with no value draw empty: the report opens, the visual may show nothing' : ''}` }]));
+// (0.3.1 TB1c: a finding's fix said "opening and saving the report fixes most structure problems", which no
+// measurement shows) a code Desktop was measured to open says only that
+const OPENED_FIX = 'See Microsoft\'s report authoring reference for this code. Power BI Desktop 2.159 opened reports with this shape with no error (measured 28 Oct 2026); saving the report in Desktop may rewrite it.';
 export const IMPACT = {
   desktopOpens: 'Power BI Desktop opens the report with these (seen on a working hand-built report): only Microsoft\'s strict validation, and Fabric when the report is published through it, would refuse them. Fix them before publishing through Fabric or Git; the report is not broken in Desktop.',
   canBreak: 'These can break the report in Power BI Desktop: a page or visual that does not open, or shows an error or nothing. Fix these first.',
@@ -425,7 +428,7 @@ export async function checkReport(p, opts) {
         if (file && !file.startsWith('..') && /visual\.json$/i.test(file) && VALIDATOR_GAPS.some((g) => g.code === code && g.object === it.path)) { try { known = knownGap(code, it.path, readJson(path.join(loc.reportDir, ...file.split('/')))); } catch (e) { known = null; } }
         if (known) { validator.known++; if (d.severity === 'error') validator.errors--; else if (d.severity === 'warning') validator.warnings--; }
         add(Object.assign({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: known ? 'note' : d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !file.startsWith('..') ? file : null, page: null, visual: null,
-          what: scrub(String(it.message || '').split(String(it.file || '\u0000')).join('').replace(/[:\s]+$/, ''), loc.reportDir), fix: 'See Microsoft\'s report authoring reference for this code; in Power BI Desktop, opening and saving the report fixes most structure problems.',
+          what: scrub(String(it.message || '').split(String(it.file || '\u0000')).join('').replace(/[:\s]+$/, ''), loc.reportDir), fix: Object.hasOwn(DESKTOP_OPENED, code) ? OPENED_FIX : 'See Microsoft\'s report authoring reference for this code.',
           source: `Microsoft validator ${VALIDATOR_VERSION}: ${code}` }, known ? { known, fix: 'Nothing to fix: Power BI Desktop draws it (see known.evidence). Keep it; only Microsoft\'s validator does not list it yet.' } : {}));
       }
     } catch (e) { Object.assign(validator, { ran: false, mode: 'not available', why: scrub(e && e.message, loc.reportDir) }); }

@@ -174,18 +174,19 @@ export const autoSentence = (a, names, ar) => { const v = a.vals.map(names), c =
   if (v.some((x) => x == null) || c.some((x) => x == null)) return null;
   return v.length ? v.join(and) + (c.length ? (ar ? ' حسب ' : ' by ') + c.join(and) : '') : c.join(and); };
 // (0.3.1 TB1, the laptop's part 4: two cards of one measure named "Male" and "Female" both showed the field's Arabic,
-// «المرضى», and neither name was listed) a field's name is the model's when a visual shows it so, else the name most of
-// its visuals give it (a tie: the first); a visual that shows it under another name has its own text,
-// fieldAt:<page>/<visual>/<queryRef>, approved on its own (the field's label or term is never written over it)
+// «المرضى», and neither name was listed) a visual that shows a field under another name has its own text,
+// fieldAt:<page>/<visual>/<queryRef>, approved on its own (the field's label or term is never written over it).
+// (TB1c, the laptop's part 5: the field took the Female card's name as its own, Desktop writing a rename into its
+// nativeQueryRef too, and «إناث» went on five charts of all patients) the field's text is always the model's own name,
+// read from the field itself (a measure's or column's Property; an aggregation's nativeQueryRef), never a visual's
 const projectionsOf = (json) => { const qs = isObj(json) && isObj(json.visual) && isObj(json.visual.query) && isObj(json.visual.query.queryState) ? json.visual.query.queryState : {};
   return Object.values(qs).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])).filter((x) => isObj(x) && typeof x.queryRef === 'string' && x.queryRef); };
-const modelName = (x) => String(x.nativeQueryRef || x.queryRef);
+const modelName = (x) => { const f = isObj(x.field) ? x.field : {}, own = isObj(f.Measure) ? f.Measure.Property : isObj(f.Column) ? f.Column.Property : null;
+  return String(typeof own === 'string' && own ? own : x.nativeQueryRef || x.queryRef); };
 function fieldNamesOf(R) {
   const by = new Map();
-  R.pages.forEach((pg) => pg.visuals.forEach((v) => projectionsOf(v.json).forEach((x) => {
-    const e = by.get(x.queryRef) || { model: null, names: new Map() }, n = x.displayName != null ? String(x.displayName) : modelName(x);
-    if (n === modelName(x)) e.model = n; e.names.set(n, (e.names.get(n) || 0) + 1); by.set(x.queryRef, e); })));
-  return new Map([...by].map(([q, e]) => [q, e.model != null ? e.model : [...e.names].reduce((a, b) => (b[1] > a[1] ? b : a))[0]]));
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => projectionsOf(v.json).forEach((x) => { if (!by.has(x.queryRef)) by.set(x.queryRef, modelName(x)); })));
+  return by;
 }
 const OWN_WHAT = (f) => `This visual's own name for the field (elsewhere it shows "${visible(f).slice(0, 120)}"): approved on its own; the field's Arabic is not written over it`;
 // (TB1b) a visual's subtitles whose text is a measure: [{ i (the entry), ms (its Measure) }]
@@ -198,6 +199,7 @@ const DYNAMIC = {
     whatAr: `${ar}: يتغير مع التحديد، فلا يمكن ترجمته في مكانه. وافق على عنوان عربي ليُكتب عنوانًا ثابتًا (فلا يتغير بعد ذلك مع التحديد)، أو أبقه كما هو`,
     dyn: { en: `${en}: it changes with the selection, so it is kept as it is, not translated (an approved Arabic title writes a fixed one)`, ar: `${ar}: يتغير مع التحديد، فيبقى كما هو دون ترجمة (العنوان العربي المعتمد يُكتب عنوانًا ثابتًا)` } }),
   measure: (m, sub) => DYNAMIC.said(`A ${sub ? 'subtitle' : 'title'} given by the measure ${safeName(m)}`, `${sub ? 'عنوان فرعي' : 'عنوان'} يعطيه المقياس «${safeName(m)}»`),
+  column: (c) => DYNAMIC.said(`A title given by the column ${safeName(c)} (the value chosen in it)`, `عنوان يعطيه العمود «${safeName(c)}» (القيمة المختارة فيه)`),
   param: (t) => DYNAMIC.said(`Power BI's title of a visual on the field parameter ${safeName(t)}, composed from the field chosen (if another field of the visual has an Arabic name, Power BI composes it from both)`, `عنوان Power BI لمرئي على معلمة الحقول «${safeName(t)}»، يُركَّب من الحقل المختار (وإن كان لحقل آخر في المرئي اسم عربي ركّبه Power BI من الاثنين)`)
 };
 export function textsOf(R) {
@@ -224,6 +226,18 @@ export function textsOf(R) {
     pg.visuals.forEach((v) => { const vco = isObj(v.json) && isObj(v.json.visual) && isObj(v.json.visual.visualContainerObjects) ? v.json.visual.visualContainerObjects : {};
       const ms = (Array.isArray(vco.title) ? vco.title : []).map((e) => (isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null)).find(Boolean);
       const src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+      if (!ms) {
+        // (TB1c, the laptop's part 5: AdventureWorks' line chart titled by Min of its field parameter's column stayed
+        // English beside an Arabic axis, never listed) a title whose text is a column, or an aggregation of one: the
+        // same, and kept it is refused where another field of the visual is Arabic (mixOf: mixedTitles, twin-plan.mjs)
+        const c = (Array.isArray(vco.title) ? vco.title : []).map((e) => { const x = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) ? e.properties.text.expr : null;
+          const cl = x && isObj(x.Column) ? x.Column : x && isObj(x.Aggregation) && isObj(x.Aggregation.Expression) && isObj(x.Aggregation.Expression.Column) ? x.Aggregation.Expression.Column : null;
+          return cl && typeof cl.Property === 'string' && isObj(cl.Expression) && isObj(cl.Expression.SourceRef) && typeof cl.Expression.SourceRef.Entity === 'string' ? cl : null; }).find(Boolean);
+        if (!c) return;
+        const where = pg.id + '/' + v.json.name, refs = projectionsOf(v.json).map((x) => ({ ref: x.queryRef, name: x.displayName != null ? String(x.displayName) : modelName(x) }));
+        add(Object.assign({ id: 'title:' + where, kind: 'dynamicTitle', text: c.Property, mixOf: { where, vals: refs, cats: [] } }, DYNAMIC.column(c.Expression.SourceRef.Entity + '[' + c.Property + ']')), { page: pg.id, visual: String(v.json.name) });
+        return;
+      }
       if (!src || typeof ms.Property !== 'string' || typeof src.Entity !== 'string' || (src.Schema === 'extension' && translatable.has(src.Entity + '\u0000' + ms.Property))) return;
       add(Object.assign({ id: 'title:' + pg.id + '/' + v.json.name, kind: 'dynamicTitle', text: ms.Property }, DYNAMIC.measure(src.Entity + '[' + ms.Property + ']')), { page: pg.id, visual: String(v.json.name) }); });
     // (TB1b, D-1027-04: a subtitle is part of the title) a subtitle whose text is a measure, any measure (the twin
@@ -251,7 +265,7 @@ export function textsOf(R) {
   const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? Object.assign({ what: t.what }, t.measures ? { measures: t.measures.slice(0, 30) } : {}) : {}, t.whatAr ? { whatAr: t.whatAr, dyn: t.dyn } : {}, t.autoParam ? { autoParam: t.autoParam } : {});
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? Object.assign({ what: t.what }, t.measures ? { measures: t.measures.slice(0, 30) } : {}) : {}, t.whatAr ? { whatAr: t.whatAr, dyn: t.dyn } : {}, t.autoParam ? { autoParam: t.autoParam } : {}, t.mixOf ? { mixOf: t.mixOf } : {});
     // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
     if (t.page && out.id !== t.id) out.page = safeName(t.page);
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
