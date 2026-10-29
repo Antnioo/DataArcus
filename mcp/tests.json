@@ -110,6 +110,7 @@
     { "file": "test-skill-packaging.mjs", "name": "skill-packaging", "area": "release", "purpose": "the skills folder copied as the plugin next to Microsoft's" },
     { "file": "test-0.3.1-dax-functions.mjs", "name": "dax-functions", "area": "report", "purpose": "the DAX function library as one TMDL script" },
     { "file": "test-0.3.1-p3a.mjs", "name": "p3a", "area": "checker", "purpose": "create_report and check_report give one verdict on the same files; generate_theme says a mode it does not use" },
+    { "file": "test-0.3.1-tb2.mjs", "name": "tb2", "area": "checker", "purpose": "validator codes measured on reports that opened in Desktop are openedInDesktop, not can break; the plan counts the same kinds" },
     { "file": "test-0.3.1-fx1.mjs", "name": "fx1", "area": "twin", "purpose": "the laptop's part 3 (FX1): the twin's and the copy's Arabic Reset button keeps its icon (the slicers beside it give the width, or a smaller text); an Arabic plan's approval page is wholly Arabic (theme, calendar, twin, copy, report)" },
     { "file": "test-0.3.1-fx4.mjs", "name": "fx4", "area": "core", "purpose": "the laptop's part 3 (FX4): suggest_fields never picks a column of one value, of mostly unique values, of coordinates or of invoice numbers as a category; a year-month axis over a month name across years; net before gross; why says each rule" },
     { "file": "test-0.3.1-validator-gap.mjs", "name": "validator-gap", "area": "checker", "purpose": "check_report's known-validator-gap path end to end, on a copy whose catalog lacks the proven object" },
