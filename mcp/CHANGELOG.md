@@ -329,6 +329,15 @@ package's manifest; this file says what is in it.
   text answer cut at 40,000 characters never ends in half of a hidden character's code. suggest_fields no longer takes
   a column named "Notes", "Comments" or "Description" with a capital for a category. The weekly Microsoft watch, on an
   issue too long to read whole (over 100,000 comments), now posts nothing and says so.
+- **The Arabic twin of a large hand-built report:** on a report with many fields, every call of the twin now lists
+  texts to translate: its terminology sheet is paged on its own (termsFrom) when it would fill the answer, so every
+  text and every term can be reached. Two visuals that show one field under their own names (say "Male" and "Female")
+  each keep their own name and get their own Arabic: the field's Arabic is never written over them. A title that
+  changes with the selection (given by a measure, or on a field parameter) is now listed and said plainly in English
+  and Arabic: you can approve a fixed Arabic title (it then no longer changes with the selection) or keep it as it is.
+  An Arabic label beside a number (a card's reference label, a KPI's goal text, a data label's title) is now written so
+  the number's signs stay where an Arabic reader expects them, and a KPI's goal text and a data label's own title are
+  listed for their Arabic too.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
