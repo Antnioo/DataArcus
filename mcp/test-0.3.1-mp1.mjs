@@ -11,11 +11,13 @@
 //          page first), and every visual mirrored onto the same panel (the JPEG report asked with mirrorPicturePages,
 //          which before wrote the original picture under mirrored visuals)
 //   O1-O2  the original reports' files byte-identical
-//   A1-A4  the plan says per page flipped (fit, padded) in English and Arabic, the approval page (wholly Arabic, FX1) a
+//   A1-A4  the plan says per page flipped (its fit; MP1b: never padded) in English and Arabic, the approval page (wholly Arabic, FX1) a
 //          row per page, the plan's exact files (its digest) hold the new pictures
 //   T1-T2  a picture with words in it: asked, its page kept left to right until flipPictures names it; then flipped
 //   W1     a wallpaper picture (outspace) kept as it is, and said
 //   X1-X2  the copy holding both languages: the Arabic pages on the new pictures, registered; the English untouched
+//   N, F1-F2 (MP1b) the laptop's two Normal shapes (centred by Desktop) flipped as they are, each visual on its panel;
+//          the placement as Desktop 2.159 measured it; the box check on a stretched Fit picture
 //   V1-V3  a badge on a text box mirrored within it (no new overlap with its text); a new overlap named; a text box the
 //          fitting widens off its panel named by page and visual
 //   node test-0.3.1-mp1.mjs
@@ -94,10 +96,12 @@ const W = PAGE.w, H = PAGE.h, FITS = ['Normal', 'Fit', 'Fill'];
 const pngOf = (w, h, rgba) => { const p = new PNG({ width: w, height: h }); p.data = Buffer.from(rgba); return PNG.sync.write(p); };
 const imageOf = (name, fit) => ({ image: { name: S(name), url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: name } } }, scaling: S(fit) } });
 // where a picture of iw x ih lands on the page (the rule the brief gives: Normal at 0,0 scale 1; Fit and Fill centred)
-const place = (iw, ih, fit) => { const s = fit === 'Fit' ? Math.min(W / iw, H / ih) : fit === 'Fill' ? Math.max(W / iw, H / ih) : 1; return fit === 'Normal' ? { s, ox: 0, oy: 0 } : { s, ox: (W - s * iw) / 2, oy: (H - s * ih) / 2 }; };
+// (MP1b: as Desktop 2.159 places a page picture, measured by laptop part 6 block B, scripts/tests/DESKTOP-TESTS.md:
+// Normal centred at scale 1, Fit stretched to the page, Fill centred at the larger scale)
+const place = (iw, ih, fit) => { if (fit === 'Fit') return { sx: W / iw, sy: H / ih, ox: 0, oy: 0 }; const s = fit === 'Fill' ? Math.max(W / iw, H / ih) : 1; return { sx: s, sy: s, ox: (W - s * iw) / 2, oy: (H - s * ih) / 2 }; };
 // a visual on each panel: the panel's box on the page, inside the page, 8 in from its edges
 const onPanels = (layout, iw, ih, fit) => { const q = place(iw, ih, fit);
-  return LAYOUTS[layout].panels.map((p) => { const x0 = Math.max(0, q.ox + q.s * p.at[0] * iw), y0 = Math.max(0, q.oy + q.s * p.at[1] * ih), x1 = Math.min(W, q.ox + q.s * p.at[2] * iw), y1 = Math.min(H, q.oy + q.s * p.at[3] * ih);
+  return LAYOUTS[layout].panels.map((p) => { const x0 = Math.max(0, q.ox + q.sx * p.at[0] * iw), y0 = Math.max(0, q.oy + q.sy * p.at[1] * ih), x1 = Math.min(W, q.ox + q.sx * p.at[2] * iw), y1 = Math.min(H, q.oy + q.sy * p.at[3] * ih);
     return { panel: p.id, x: Math.round(x0 + 8), y: Math.round(y0 + 8), w: Math.round(x1 - x0 - 16), h: Math.round(y1 - y0 - 16) }; }).filter((b) => b.w > 10 && b.h > 10); };
 const vis = (name, type, b, extra) => ({ $schema: SCHEMA + 'visualContainer/2.1.0/schema.json', name, position: { x: b.x, y: b.y, z: b.z || 1000, width: b.w, height: b.h, tabOrder: b.z || 1000 }, visual: Object.assign({ visualType: type }, extra || {}) });
 function report(name, pages, pictures) {
@@ -126,16 +130,24 @@ const pagesFor = (ext) => { const pages = [], pictures = {};
   return { pages, pictures };
 };
 const PNGS = pagesFor('png'), JPGS = pagesFor('jpg');
-const RP = report('Pictures PNG', PNGS.pages, PNGS.pictures), RJ = report('Pictures JPG', JPGS.pages, JPGS.pictures);
+// (MP1b) the laptop's two Normal shapes on the 640 x 360 page: 520 x 360 and 400 x 250, each centred by Desktop
+const NORMALS = (() => { const pages = [], pictures = {};
+  [['rail', 520, 360], ['cols', 400, 250]].forEach(([layout, iw, ih]) => { const file = `n-${layout}-${iw}.png`, id = `n${layout}${iw}`, boxes = onPanels(layout, iw, ih, 'Normal');
+    pictures[file] = pngOf(iw, ih, draw(layout, iw, ih));
+    pages.push({ id, name: `${layout} ${iw} Normal`, layout, fit: 'Normal', iw, ih, boxes, objects: { background: [{ properties: { image: imageOf(file, 'Normal'), transparency: L('0D') } }] }, visuals: boxes.map((b, i) => vis(`${id}v${i}`, 'shape', b)) }); });
+  return { pages, pictures }; })();
+const RN = report('Pictures Normal', NORMALS.pages, NORMALS.pictures), RP = report('Pictures PNG', PNGS.pages, PNGS.pictures), RJ = report('Pictures JPG', JPGS.pages, JPGS.pictures);
 // a third report: a picture with words painted in it, a wallpaper picture, a badge on a text box
-const WORDS = { 'words.png': pngOf(400, 250, draw('cols', 400, 250, { words: true })), 'wall.png': pngOf(64, 36, draw('rail', 64, 36)), 'band.png': pngOf(520, 360, draw('band', 520, 360)) };
+const WORDS = { 'words.png': pngOf(400, 250, draw('cols', 400, 250, { words: true })), 'wall.png': pngOf(64, 36, draw('rail', 64, 36)), 'band.png': pngOf(520, 360, draw('band', 520, 360)), 'band-wide.png': pngOf(400, 250, draw('band', 400, 250)) };
 const RW = report('Pictures Words', [
   { id: 'wordsPage', name: 'Words', visuals: onPanels('cols', 400, 250, 'Fit').map((b, i) => vis('wv' + i, 'shape', b)), objects: { background: [{ properties: { image: imageOf('words.png', 'Fit'), transparency: L('0D') } }] } },
   { id: 'wallPage', name: 'Wallpaper', visuals: [vis('wallv', 'shape', { x: 20, y: 20, w: 200, h: 100 })], objects: { outspace: [{ properties: { image: imageOf('wall.png', 'Fit') } }] } },
   // (a text box on the band's small square, narrower than its text: the twin's text fitting widens it off the square)
   { id: 'tightPage', name: 'Tight', visuals: onPanels('band', 520, 360, 'Normal').map((b, i) => vis('tv' + i, i === 1 ? 'textbox' : 'shape', b, i === 1 ? { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Calls answered' }] }] } }] } } : null)), objects: { background: [{ properties: { image: imageOf('band.png', 'Normal'), transparency: L('0D') } }] } },
+  // (MP1b) the same on a Fit picture that is not page-shaped (400 x 250 stretched to 640 x 360)
+  { id: 'tightFit', name: 'Tight Fit', visuals: onPanels('band', 400, 250, 'Fit').map((b, i) => vis('tf' + i, i === 1 ? 'textbox' : 'shape', b, i === 1 ? { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Calls answered' }] }] } }] } } : null)), objects: { background: [{ properties: { image: imageOf('band-wide.png', 'Fit'), transparency: L('0D') } }] } },
   { id: 'badgePage', name: 'Badge', visuals: [vis('host', 'textbox', { x: 20, y: 280, w: 300, h: 60, z: 1000 }, { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'Calls answered' }] }] } }] } }), vis('badge', 'textbox', { x: 280, y: 295, w: 30, h: 30, z: 2000 }, { objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: '%' }] }] } }] } })] }], WORDS);
-const before = [RP, RJ, RW].map((r) => filesOf(r.dir));
+const before = [RP, RJ, RW, RN].map((r) => filesOf(r.dir));
 
 const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' }), call = s.call;
@@ -164,22 +176,22 @@ async function picturesOf(R, set, label, extra) {
     const pj = rd(path.join(w.dir, 'definition/pages', pg.id, 'page.json')), bg = bgOf(pj), orig = bgOf(rd(path.join(R.dir, 'definition/pages', pg.id, 'page.json')));
     // (a page still on the original JPEG: that JPEG is the drawing, so the drawing's pixels stand for it)
     let pic = null; try { pic = /\.jpg$/.test(bg.name) ? { width: pg.iw, height: pg.ih, data: draw(pg.layout, pg.iw, pg.ih), jpeg: true } : PNG.sync.read(fs.readFileSync(path.join(w.dir, 'StaticResources/RegisteredResources', bg.name))); } catch (e) { pic = null; }
-    // the Arabic page's picture: a new PNG, registered, the English picture flipped (Normal: drawn on the page first)
-    const want = pg.fit === 'Normal' ? [W, H] : [pg.iw, pg.ih], src = draw(pg.layout, pg.iw, pg.ih);
+    // the Arabic page's picture: a new PNG, registered, the English picture flipped as it is (MP1b: its own size, every fit)
+    const want = [pg.iw, pg.ih], src = draw(pg.layout, pg.iw, pg.ih);
     const flipped = () => { if (!pic || pic.jpeg || pic.width !== want[0] || pic.height !== want[1]) return false; const jpg = /\.jpg$/.test(orig.name);
       let worst = 0; for (let y = 2; y < want[1] - 2; y += 2) for (let x = 2; x < want[0] - 2; x += 2) { const sx = want[0] - 1 - x, i = (y * want[0] + x) * 4;
         if (sx >= pg.iw || y >= pg.ih) { if (pic.data[i + 3] !== 0) return false; continue; }
         const j = (y * pg.iw + sx) * 4; if (jpg && LAYOUTS[pg.layout].panels.concat([{ at: [0, 0, 1, 1] }]).some((p) => [p.at[0] * pg.iw, p.at[2] * pg.iw].some((e) => Math.abs(sx - e) < 4) || [p.at[1] * pg.ih, p.at[3] * pg.ih].some((e) => Math.abs(y - e) < 4))) continue;
         for (let c = 0; c < 3; c++) worst = Math.max(worst, Math.abs(pic.data[i + c] - src[j + c])); }
       return worst <= (jpg ? 14 : 0); };
-    chk(() => bg && bg.name !== orig.name && bg.item === bg.name && /\.png$/.test(bg.name) && reg.has(bg.name) && bg.fit === pg.fit && flipped(), () => `${label} P ${pg.id}: the Arabic page on a new picture, the English one flipped${pg.fit === 'Normal' ? ' (drawn on the 640 x 360 page first)' : ''}: ${JSON.stringify(bg)} ${pic ? pic.width + 'x' + pic.height : 'no PNG'}`);
+    chk(() => bg && bg.name !== orig.name && bg.item === bg.name && /\.png$/.test(bg.name) && reg.has(bg.name) && bg.fit === pg.fit && flipped(), () => `${label} P ${pg.id}: the Arabic page on a new picture, the English one flipped: ${JSON.stringify(bg)} ${pic ? pic.width + 'x' + pic.height : 'no PNG'}`);
     // every visual mirrored, and on the same panel of the picture under it
     const cols = [{ id: 'frame', rgb: LAYOUTS[pg.layout].frame }].concat(LAYOUTS[pg.layout].panels);
     // (the panel under 5 points of a box: its centre and near its corners; the English box's points taken mirrored, so
     // each Arabic point is compared with the English point it mirrors)
     const PTS = [[0.5, 0.5], [0.05, 0.05], [0.95, 0.05], [0.05, 0.95], [0.95, 0.95]];
     const sample = (img, b, fit, mirrored) => { if (!img) return []; const q = place(img.width, img.height, fit); return PTS.map(([fx, fy]) => {
-      const px = Math.floor((b.x + (mirrored ? 1 - fx : fx) * b.w - q.ox) / q.s), py = Math.floor((b.y + fy * b.h - q.oy) / q.s); if (px < 0 || py < 0 || px >= img.width || py >= img.height) return null; const i = (py * img.width + px) * 4; return near([img.data[i], img.data[i + 1], img.data[i + 2]], cols); }); };
+      const px = Math.floor((b.x + (mirrored ? 1 - fx : fx) * b.w - q.ox) / q.sx), py = Math.floor((b.y + fy * b.h - q.oy) / q.sy); if (px < 0 || py < 0 || px >= img.width || py >= img.height) return null; const i = (py * img.width + px) * 4; return near([img.data[i], img.data[i + 1], img.data[i + 2]], cols); }); };
     const under = (b) => sample(pic, b, pg.fit, false), enUnder = (b) => sample({ width: pg.iw, height: pg.ih, data: src }, b, pg.fit, true);
     const off = pg.boxes.map((b, i) => { const v = rd(path.join(w.dir, 'definition/pages', pg.id, 'visuals', `${pg.id}v${i}`, 'visual.json')).position, ab = { x: v.x, y: v.y, w: v.width, h: v.height };
       const u = under(ab), e = enUnder(b); return v.x === W - b.x - b.w && u.length === 5 && u[0] === b.panel && JSON.stringify(u) === JSON.stringify(e) ? null : `${pg.id}v${i} at ${v.x} (mirrored ${W - b.x - b.w}) on ${JSON.stringify(u)}, was on ${JSON.stringify(e)}`; }).filter(Boolean);
@@ -189,14 +201,17 @@ async function picturesOf(R, set, label, extra) {
 }
 const wp = await picturesOf(RP, PNGS, 'PNG');
 await picturesOf(RJ, JPGS, 'JPEG (mirrorPicturePages true)', { mirrorPicturePages: true });
+// N (MP1b, red on d9d3ae98): Normal is centred by Desktop, so its picture is flipped as it is (its own size, no padding)
+// and each visual mirrored onto it sits on the same panel
+await picturesOf(RN, NORMALS, 'N (Normal centred)');
 chk(() => JSON.stringify(filesOf(RP.dir)) === JSON.stringify(before[0]), () => 'O1: the PNG report\'s files byte-identical after its twin');
 chk(() => JSON.stringify(filesOf(RJ.dir)) === JSON.stringify(before[1]), () => 'O2: the JPEG report\'s files byte-identical after its twin');
 const said = ((wp.plan && wp.plan.j && wp.plan.j.picturePages) || []);
-chk(() => said.length === 9 && said.every((x) => x.picture === 'flipped') && said.filter((x) => x.fit === 'Normal').every((x) => x.padded === true) && said.filter((x) => x.fit !== 'Normal').every((x) => x.padded === false) && said.every((x) => /flipped/.test(x.what)),
-  () => `A1: the plan says each picture page flipped, its fit and whether it was padded: ${JSON.stringify(said).slice(0, 500)}`);
+chk(() => said.length === 9 && said.every((x) => x.picture === 'flipped') && said.every((x) => x.padded === undefined && !/drawn on the page|padded/.test(x.what)) && said.every((x) => /flipped/.test(x.what)),
+  () => `A1: the plan says each picture page flipped, its fit, never padded (MP1b): ${JSON.stringify(said).slice(0, 500)}`);
 // (the twin's approval page is wholly Arabic, FX1: one row per picture page, its English in the plan's answer, A1)
 const rows = (wp.page || '').split('صفحة على صورة').length - 1, padded = (wp.page || '').split('بعد رسمها على حجم الصفحة').length - 1;
-chk(() => rows === 9 && padded === 3, () => `A2: the approval page has a row for each of the 9 picture pages, the 3 Normal ones said drawn on the page first: ${rows} rows, ${padded} padded`);
+chk(() => rows === 9 && padded === 0, () => `A2: the approval page has a row for each of the 9 picture pages, none said drawn on the page first (MP1b): ${rows} rows, ${padded} padded`);
 chk(() => (wp.page || '').split('الصورة معكوسة أفقيًا').length - 1 === 9, () => 'A3: the approval page says each picture flipped, in Arabic');
 // the plan's exact files (their digest, which the approval records) hold the 9 new pictures, as written
 chk(() => wp.j && wp.plan.j.exact && wp.plan.j.exact.files === Object.keys(before[0]).length + 9 + 2 && wp.j.exact.digest === wp.plan.j.exact.digest, () => `A4: the plan's exact files hold the new pictures (${Object.keys(before[0]).length} + 9 + .platform + the .pbip): ${JSON.stringify(wp.plan && wp.plan.j && wp.plan.j.exact)}`);
@@ -214,9 +229,15 @@ chk(() => wp.j && wp.plan.j.exact && wp.plan.j.exact.files === Object.keys(befor
   chk(() => hx.x === W - 320 && bx.x === hx.x + 10, () => `V1: a badge at the end of a left-aligned text box goes to its other end with the text (host ${hx && hx.x}, badge ${bx && bx.x}, want ${W - 320 + 10})`);
   // (item 2) a visual that leaves its panel once mirrored (here: widened by the text fitting) is named by page and visual
   const off = ((p0.j && p0.j.pictureChecks && p0.j.pictureChecks.offPanel) || []);
-  chk(() => off.some((x) => /tightPage\/tv1/.test(x.where) && /panel/.test(x.what)) && !off.some((x) => /tv0|tv2|wordsPage|badgePage/.test(x.where)), () => `V3: a text box widened off its panel is named in the plan by page and visual, and only it: ${JSON.stringify(p0.j && p0.j.pictureChecks)} ${JSON.stringify(pp.find((x) => x.page === "tightPage"))} ${JSON.stringify((p0.j.fitted || {}).textboxes)}`);
+  chk(() => off.some((x) => /tightPage\/tv1/.test(x.where) && /panel/.test(x.what)) && !off.some((x) => /tv0|tv2|tf0|tf2|wordsPage|badgePage/.test(x.where)), () => `V3: a text box widened off its panel is named in the plan by page and visual, and only it: ${JSON.stringify(p0.j && p0.j.pictureChecks)} ${JSON.stringify(pp.find((x) => x.page === "tightPage"))} ${JSON.stringify((p0.j.fitted || {}).textboxes)}`);
+  chk(() => off.some((x) => /tightFit\/tf1/.test(x.where)), () => `F2 (MP1b): on a Fit picture not page-shaped (stretched), the text box widened off its panel is named: ${JSON.stringify(off)}`);
   chk(() => JSON.stringify(filesOf(RW.dir)) === JSON.stringify(before[2]), () => 'O3: the third report\'s files byte-identical');
 }
+// F1 (MP1b): the placement as Desktop 2.159 measured it (laptop part 6 block B)
+chk(() => { const eq = (a, b) => Object.keys(b).every((k) => Math.abs(a[k] - b[k]) < 1e-9); const P = PP.placement;
+  return eq(P(520, 360, 'Normal', 640, 360), { sx: 1, sy: 1, ox: 60, oy: 0 }) && eq(P(400, 250, 'Normal', 640, 360), { sx: 1, sy: 1, ox: 120, oy: 55 })
+    && eq(P(400, 250, 'Fit', 640, 360), { sx: 1.6, sy: 1.44, ox: 0, oy: 0 }) && eq(P(400, 250, 'Fill', 640, 360), { sx: 1.6, sy: 1.6, ox: 0, oy: -20 }); },
+  () => `F1: Normal centred at scale 1, Fit stretched, Fill centred at the larger scale: ${PP && JSON.stringify(['Normal', 'Fit', 'Fill'].map((f) => PP.placement(400, 250, f, 640, 360)))}`);
 chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 120, y: 0, width: 100, height: 50 } }], [{ name: 'a', position: { x: 540, y: 0, width: 100, height: 50 } }, { name: 'b', position: { x: 500, y: 0, width: 100, height: 50 } }]); return o.length === 1 && o[0].visuals.join() === 'a,b'; },
   () => 'V2: a new overlap between two visuals is named');
 
