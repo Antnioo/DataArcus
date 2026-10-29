@@ -32,7 +32,7 @@
 - **State: DONE.** Full run on 95f170e4: "run-tests: 128 suites passed" (the base's 128; mp1 78, mcp 1594, mutation 198,
   76 mutants all killed). Areas on 95f170e4: twin 20, arabic 15, report 42; lint 0. Website: run-all's lang-switcher,
   text-align and layout-canvas crashed together under load (Chromium "browser has been closed"), each PASS alone
-  (1442, 474, 31 checks); site config PASS. CI: below.
+  (1442, 474, 31 checks); site config PASS. CI on 61a9f78f: run 40880840674 green.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
