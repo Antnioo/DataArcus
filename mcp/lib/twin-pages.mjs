@@ -369,7 +369,8 @@ export function buildTwin(P, labels) {
       // (0.3.1 FX3) Power BI's automatic title or subtitle: written as the visual's own text, its approved Arabic, else
       // its English as Power BI composes it from the original's names (wholly English, isolated), never left to compose
       // (FX3b) a missing title card: a new entry holding the text alone, never "show"
-      autos.forEach((a) => { const ar = labels[a.id] != null ? String(labels[a.id]) : null, text = Ls(ar != null && ar.trim() ? ar : TextMeasure.isolateWhole(autoSentence(a, (x) => x.name)));
+      // (TB1) a title on a field parameter follows the field chosen: written only as an approved Arabic (a fixed title)
+      autos.forEach((a) => { if (a.param != null && labels[a.id] == null) return; const ar = labels[a.id] != null ? String(labels[a.id]) : null, text = Ls(ar != null && ar.trim() ? ar : TextMeasure.isolateWhole(autoSentence(a, (x) => x.name)));
         if (a.i < 0) { const vco = vj.visual.visualContainerObjects = isObj(vj.visual.visualContainerObjects) ? vj.visual.visualContainerObjects : {}; vco[a.key] = (Array.isArray(vco[a.key]) ? vco[a.key] : []).concat([{ properties: { text } }]); }
         else vj.visual.visualContainerObjects[a.key][a.i].properties.text = text;
         if (a.key === 'title') autoTitled.set(String(vj.name), text);

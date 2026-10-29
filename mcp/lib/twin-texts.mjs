@@ -142,43 +142,86 @@ const AUTO_CATS = new Set(['Category', 'Series', 'Legend', 'Rows', 'Columns', 'A
 const AUTO_KINDS = new Set(['button', 'textbox', 'shape', 'image', 'group', 'unreadable']);
 const isOn = (p) => isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && String(p.expr.Literal.Value) === 'true';
 const hasText = (p) => p !== undefined && p !== null && !(isObj(p) && isObj(p.expr) && isObj(p.expr.Literal) && /^'\s*'$/.test(String(p.expr.Literal.Value)));
+// (0.3.1 TB1, the laptop's part 4: AdventureWorks' chart on a field parameter kept its English title, never listed) a
+// visual on a field parameter: its automatic title follows the field chosen. Each entry says it (param: the parameter's
+// table), one field is enough, and the twin writes it only when an Arabic title is approved (a fixed one)
+const paramOf = (qs) => { for (const r of Object.values(qs)) for (const p of (isObj(r) && Array.isArray(r.fieldParameters) ? r.fieldParameters : [])) {
+  const c = isObj(p) && isObj(p.parameterExpr) && isObj(p.parameterExpr.Column) ? p.parameterExpr.Column : null, t = c && isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
+  if (typeof t === 'string') return t; } return null; };
 export function autoTitlesOf(pageId, json) {
   if (!isObj(json) || !isObj(json.visual) || AUTO_KINDS.has(Mirror.kindOf(json))) return [];
-  const qs = isObj(json.visual.query) && isObj(json.visual.query.queryState) ? json.visual.query.queryState : {}, vals = [], cats = [];
+  const qs = isObj(json.visual.query) && isObj(json.visual.query.queryState) ? json.visual.query.queryState : {}, vals = [], cats = [], param = paramOf(qs);
   Object.keys(qs).filter((role) => !AUTO_SKIP.has(role)).forEach((role) => (isObj(qs[role]) && Array.isArray(qs[role].projections) ? qs[role].projections : []).forEach((x) => {
     if (!isObj(x) || typeof x.queryRef !== 'string' || !x.queryRef) return;
     const name = String(x.displayName != null ? x.displayName : (x.nativeQueryRef || x.queryRef.replace(/^.*?\./, '')));
     (AUTO_CATS.has(role) ? cats : vals).push({ ref: x.queryRef, name }); }));
-  if (vals.length + cats.length < 2) return [];   // (one field: its own name, no "by" to compose)
+  if (vals.length + cats.length < (param != null ? 1 : 2)) return [];   // (one field: its own name, no "by" to compose)
   const vco = isObj(json.visual.visualContainerObjects) ? json.visual.visualContainerObjects : {}, where = pageId + '/' + json.name, out = [];
   ['title', 'subTitle'].forEach((key) => (Array.isArray(vco[key]) ? vco[key] : []).forEach((e, i) => {
     if (!isObj(e) || e.selector || !isObj(e.properties) || !isOn(e.properties.show) || hasText(e.properties.text)) return;
-    out.push({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats });
+    out.push(Object.assign({ key, i, id: key === 'title' ? 'title:' + where : `text:${where}/c.subTitle.${i}.text`, vals, cats, where }, param != null ? { param } : {}));
   }));
   // (0.3.1 FX3b, the owner's hand-made charts: no title card at all) no "show" set and no text: the type's default title
   // (Microsoft's catalog, report-rules.js defaultTitle) is Power BI's to compose when it is on. i: the entry the text
   // goes in (-1: none yet); only the text is ever written, never "show". A subtitle is off unless switched on
   const own = (Array.isArray(vco.title) ? vco.title : []).map((e, i) => [e, i]).filter(([e]) => isObj(e) && !e.selector && isObj(e.properties));
   if (!out.some((a) => a.key === 'title') && !own.some(([e]) => e.properties.show !== undefined || hasText(e.properties.text)) && Rules.defaultTitle(json.visual.visualType) === 'on')
-    out.push({ key: 'title', i: own.length ? own[0][1] : -1, id: 'title:' + where, vals, cats, byDefault: true });
+    out.push(Object.assign({ key: 'title', i: own.length ? own[0][1] : -1, id: 'title:' + where, vals, cats, byDefault: true, where }, param != null ? { param } : {}));
   return out;
 }
 // the sentence: the values "and", then "by" the categories (Power BI's own words); Arabic: «و» and «حسب»
 export const autoSentence = (a, names, ar) => { const v = a.vals.map(names), c = a.cats.map(names), and = ar ? ' و' : ' and ';
   if (v.some((x) => x == null) || c.some((x) => x == null)) return null;
   return v.length ? v.join(and) + (c.length ? (ar ? ' حسب ' : ' by ') + c.join(and) : '') : c.join(and); };
+// (0.3.1 TB1, the laptop's part 4: two cards of one measure named "Male" and "Female" both showed the field's Arabic,
+// «المرضى», and neither name was listed) a field's name is the model's when a visual shows it so, else the name most of
+// its visuals give it (a tie: the first); a visual that shows it under another name has its own text,
+// fieldAt:<page>/<visual>/<queryRef>, approved on its own (the field's label or term is never written over it)
+const projectionsOf = (json) => { const qs = isObj(json) && isObj(json.visual) && isObj(json.visual.query) && isObj(json.visual.query.queryState) ? json.visual.query.queryState : {};
+  return Object.values(qs).flatMap((r) => (isObj(r) && Array.isArray(r.projections) ? r.projections : [])).filter((x) => isObj(x) && typeof x.queryRef === 'string' && x.queryRef); };
+const modelName = (x) => String(x.nativeQueryRef || x.queryRef);
+function fieldNamesOf(R) {
+  const by = new Map();
+  R.pages.forEach((pg) => pg.visuals.forEach((v) => projectionsOf(v.json).forEach((x) => {
+    const e = by.get(x.queryRef) || { model: null, names: new Map() }, n = x.displayName != null ? String(x.displayName) : modelName(x);
+    if (n === modelName(x)) e.model = n; e.names.set(n, (e.names.get(n) || 0) + 1); by.set(x.queryRef, e); })));
+  return new Map([...by].map(([q, e]) => [q, e.model != null ? e.model : [...e.names].reduce((a, b) => (b[1] > a[1] ? b : a))[0]]));
+}
+const OWN_WHAT = (f) => `This visual's own name for the field (elsewhere it shows "${visible(f).slice(0, 120)}"): approved on its own; the field's Arabic is not written over it`;
+// what the plan says of a title that changes with the selection, EN and AR (the follows: a measure or a field parameter)
+const DYNAMIC = {
+  said: (en, ar) => ({ what: `${en}: it changes with the selection, so the twin can't translate it in place. Approve an Arabic title to write it as a fixed title (it then no longer changes with the selection), or keep it as it is`,
+    whatAr: `${ar}: يتغير مع التحديد، فلا يمكن ترجمته في مكانه. وافق على عنوان عربي ليُكتب عنوانًا ثابتًا (فلا يتغير بعد ذلك مع التحديد)، أو أبقه كما هو`,
+    dyn: { en: `${en}: it changes with the selection, so it is kept as it is, not translated (an approved Arabic title writes a fixed one)`, ar: `${ar}: يتغير مع التحديد، فيبقى كما هو دون ترجمة (العنوان العربي المعتمد يُكتب عنوانًا ثابتًا)` } }),
+  measure: (m) => DYNAMIC.said(`A title given by the measure ${safeName(m)}`, `عنوان يعطيه المقياس «${safeName(m)}»`),
+  param: (t) => DYNAMIC.said(`Power BI's title of a visual on the field parameter ${safeName(t)}, composed from the field chosen (if another field of the visual has an Arabic name, Power BI composes it from both)`, `عنوان Power BI لمرئي على معلمة الحقول «${safeName(t)}»، يُركَّب من الحقل المختار (وإن كان لحقل آخر في المرئي اسم عربي ركّبه Power BI من الاثنين)`)
+};
 export function textsOf(R) {
-  const all = [], seen = new Set();
+  const all = [], seen = new Set(), names = fieldNamesOf(R);
+  const translatable = new Set(titleMeasuresOf(R).filter((x) => x.own && x.pd.branches).map((x) => x.entity + '\u0000' + x.name));
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
   R.pages.forEach((pg) => {
     add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
     // (rc.22, B-138: a page button kept its English text in the twin) a button that goes to a page knows that page
     const goesTo = (j) => { const l = ((((j || {}).visual || {}).visualContainerObjects || {}).visualLink || []).find((e) => e && e.properties) || {}, p = l.properties || {}, lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null);
       return /PageNavigation/i.test(String(lit(p.type))) ? lit(p.navigationSection) : null; };
-    pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
+    pg.visuals.forEach((v) => {
+      Mirror.textsOfVisual(pg.id, v.json).forEach((t) => { if (t.kind === 'field' && names.has(t.id.slice('field:'.length))) t.text = names.get(t.id.slice('field:'.length));
+        add(Object.assign(t, t.kind === 'button' && goesTo(v.json) ? { goesTo: 'page:' + goesTo(v.json) } : {}), t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) }); });
+      projectionsOf(v.json).forEach((x) => { const f = names.get(x.queryRef); if (x.displayName == null || String(x.displayName) === f) return;
+        add({ id: `fieldAt:${pg.id}/${v.json.name}/${x.queryRef}`, kind: 'visualField', text: String(x.displayName), what: OWN_WHAT(f) }, { page: pg.id, visual: String(v.json.name) }); });
+    });
     // (FX3) Power BI's automatic titles and subtitles: listed with the visual's texts, their English as Power BI composes it
-    pg.visuals.forEach((v) => autoTitlesOf(pg.id, v.json).forEach((a) => add({ id: a.id, kind: a.key === 'title' ? 'title' : 'text', text: autoSentence(a, (x) => x.name), automatic: a.key,
-      autoRefs: a.vals.concat(a.cats).map((x) => x.ref), auto: a }, { page: pg.id, visual: String(v.json.name) })));
+    // (TB1: on a field parameter, a title that changes with the selection)
+    pg.visuals.forEach((v) => autoTitlesOf(pg.id, v.json).forEach((a) => add(a.param != null ? Object.assign({ id: a.id, kind: 'dynamicTitle', text: autoSentence(a, (x) => x.name) }, DYNAMIC.param(a.param))
+      : { id: a.id, kind: a.key === 'title' ? 'title' : 'text', text: autoSentence(a, (x) => x.name), automatic: a.key, autoRefs: a.vals.concat(a.cats).map((x) => x.ref), auto: a }, { page: pg.id, visual: String(v.json.name) })));
+    // (TB1, the laptop's part 4: Fintech's matrix title, given by a measure, stayed English and was never listed) a title
+    // whose text is a measure the twin can't translate (the model's, or a report measure not of fixed texts)
+    pg.visuals.forEach((v) => { const vco = isObj(v.json) && isObj(v.json.visual) && isObj(v.json.visual.visualContainerObjects) ? v.json.visual.visualContainerObjects : {};
+      const ms = (Array.isArray(vco.title) ? vco.title : []).map((e) => (isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null)).find(Boolean);
+      const src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+      if (!src || typeof ms.Property !== 'string' || typeof src.Entity !== 'string' || (src.Schema === 'extension' && translatable.has(src.Entity + '\u0000' + ms.Property))) return;
+      add(Object.assign({ id: 'title:' + pg.id + '/' + v.json.name, kind: 'dynamicTitle', text: ms.Property }, DYNAMIC.measure(src.Entity + '[' + ms.Property + ']')), { page: pg.id, visual: String(v.json.name) }); });
     // (0.3.0 D3) the phone layout's own texts: the header text box, a card's full title the writer wrapped for the phone
     pg.visuals.forEach((v) => { if (v.mobile) Mirror.textsOfMobile(pg.id, v.json, v.mobile.json).forEach((t) => add(Object.assign(t, { phone: true }), { page: pg.id, visual: String(v.json.name) })); });
   });
@@ -200,7 +243,7 @@ export function textsOf(R) {
   const rowShown = rowFieldsOf(R);
   return all.map((t) => {
     const raw = String(t.text);
-    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? { what: t.what, measures: t.measures.slice(0, 30) } : {});
+    const out = Object.assign({ id: safeId(t.id), kind: t.kind, rawId: t.id, raw }, t.automatic ? { automatic: t.automatic === 'title' ? 'title' : 'subtitle', what: AUTO_WHAT, auto: t.auto } : {}, t.phone ? { phone: true } : {}, t.goesTo ? { goesTo: safeId(t.goesTo) } : {}, t.what ? Object.assign({ what: t.what }, t.measures ? { measures: t.measures.slice(0, 30) } : {}) : {}, t.whatAr ? { whatAr: t.whatAr, dyn: t.dyn } : {});
     // (0.3.0 D3: twice the texts in the same answer) the page and the visual are said apart only when the id can't say them
     if (t.page && out.id !== t.id) out.page = safeName(t.page);
     if (t.visual && out.id !== t.id) out.visual = safeName(t.visual);
@@ -208,7 +251,7 @@ export function textsOf(R) {
     const text = visible(raw);
     const row = t.kind === 'field' ? rowShown.get(String(t.id).slice('field:'.length)) : null;
     if (row) out.what = row.only ? ROW_WHAT : ROW_AND_MORE;
-    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: row && row.only ? draftText(raw.replace(AVG, '$1')) : draftText(raw) });
+    return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: t.kind === 'dynamicTitle' ? null : row && row.only ? draftText(raw.replace(AVG, '$1')) : draftText(raw) });
   });
 }
 // (0.3.1 R1: a real user's per-row "Days open" column, a measure named "Avg days open", was drafted «متوسط أيام الفتح») A
@@ -235,7 +278,12 @@ function rowFieldsOf(R) {
 }
 // the labels by the ids the answer gave, as the mirror engine's ids (the report's own names); (0.3.0 J18) each as it is
 // written: a Latin run inside Arabic text isolated (terminology.mjs)
-export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = Terms.isolateLatin(labels[k]); }); return out; };
+// (TB1) a visual's own name with no label: null, kept as it is (the engine's labelVisual writes no field label over it);
+// a label Desktop draws beside a value (Microsoft's catalog: BESIDE, on the visual's objects, the phone's too) wrapped whole
+const BESIDE = new Set(['referenceLabelTitle.titleText', 'label.text', 'goals.goalText', 'labels.dynamicLabelTitle', 'labels.dynamicLabelDetail']);
+const besideOf = (rawId) => { const m = /^(?:phone:)?text:.+\/o\.([^./]+)\.\d+\.([^./]+)$/.exec(String(rawId)); return !!m && BESIDE.has(m[1] + '.' + m[2]); };
+export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = (besideOf(by.get(k)) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k]); });
+  texts.forEach((t) => { if (t.kind === 'visualField' && !Object.prototype.hasOwnProperty.call(out, t.rawId)) out[t.rawId] = null; }); return out; };
 
 // ---- the plan ----
 export const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
@@ -248,7 +296,7 @@ export const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice
 // same text on the same visual, an alt text, a card's blank text or a tooltip that of any listed text with exactly
 // its words (a chart's alt text is its title). A label given for it wins; a text with {n} is never shared
 const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text']);
-const KIND_SAID = { page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', bookmarkGroup: 'bookmark group', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
+const KIND_SAID = { visualField: 'field name on one visual', dynamicTitle: 'title that changes with the selection', page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', bookmarkGroup: 'bookmark group', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
 export function sameTextLabels(texts, labels) {
   const key = (t) => (t.text != null && !/\{\d+\}/.test(t.raw) ? t.raw.trim() : null), byText = new Map();
   const learn = (t) => { const k = key(t); if (k && labels[t.id] != null && !byText.has(k)) byText.set(k, t); };
@@ -265,20 +313,21 @@ export function sameTextLabels(texts, labels) {
 // (the same words on several visuals, a field and the alt text that repeats it, are one row: where says each kind and
 // count; ids name them in texts), the why of its strongest reason
 export function notTranslatedOf(texts, labels, problems) {
-  const rows = new Map(), RANK = ['withheld', 'problem', 'field', 'auto', 'other'];   // (FX3b: an automatic title's reason before a plain text's)
+  const rows = new Map(), RANK = ['withheld', 'problem', 'dynamic', 'field', 'auto', 'other'];   // (FX3b: an automatic title's reason before a plain text's)
   texts.filter((t) => labels[t.id] == null && /[A-Za-z]/.test(t.raw)).forEach((t) => {
     const p = problems.find((x) => x.id === t.id);
-    const [rank, why] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
+    const [rank, why, whyAr] = t.text == null ? ['withheld', 'reads like an instruction to an AI assistant: kept as it is, unless the user gives its Arabic']
       : p ? ['problem', 'its Arabic was not taken: ' + p.why]
+      : t.dyn ? ['dynamic', t.dyn.en, t.dyn.ar]
       : t.kind === 'field' ? ['field', 'a field name with no Arabic given: Power BI shows it as the model names it (the person kept it; the model is never renamed)']
       : t.automatic ? ['auto', 'Power BI\'s automatic title, with no Arabic approved: the twin writes this English text as the visual\'s own (wholly English), so Power BI never composes it from Arabic field names with its English "by"']
       : ['other', 'no Arabic was approved for it: the twin shows it as it is'];
     const k = t.text == null ? '\u0000' + t.id : t.text, what = (t.phone ? 'phone layout: ' : '') + (KIND_SAID[t.kind] || t.kind);
-    if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why });
+    if (!rows.has(k)) rows.set(k, { text: t.text, where: {}, ids: [], rank, why, whyAr });
     const r = rows.get(k); r.where[what] = (r.where[what] || 0) + 1; r.ids.push(t.id);
-    if (RANK.indexOf(rank) < RANK.indexOf(r.rank)) Object.assign(r, { rank, why });
+    if (RANK.indexOf(rank) < RANK.indexOf(r.rank)) Object.assign(r, { rank, why, whyAr });
   });
-  return [...rows.values()].map((r) => ({ text: r.text, where: Object.entries(r.where).map(([w, n]) => (n > 1 ? `${w} (${n})` : w)).join(', '), why: r.why, ids: r.ids }));
+  return [...rows.values()].map((r) => Object.assign({ text: r.text, where: Object.entries(r.where).map(([w, n]) => (n > 1 ? `${w} (${n})` : w)).join(', '), why: r.why }, r.whyAr ? { whyAr: r.whyAr } : {}, { ids: r.ids }));
 }
 
 // (0.3.0 J18, B-171) the terminology sheet of the twin: each field text's field ("Table[Field]", from the projections that

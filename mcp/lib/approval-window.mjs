@@ -669,7 +669,8 @@ function summaryOf(kind, data) {
     sections.push({ heading: `Arabic texts (${labels.length})`, rows: labels.map(([k, v]) => [d.names && d.names[k] ? (d.namesAr && d.namesAr[k] ? { en: d.names[k], ar: d.namesAr[k] } : d.names[k]) : 'A text of the report', String(v)]) });   // (rc.22, B-139: named, never by internal ids)
     if (Array.isArray(d.terminology) && d.terminology.length) sections.push(termSheet(d.terminology));
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
-    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), String(x.why || '')]) });
+    // (TB1) a why the plan gives in both languages (a title that changes with the selection) shown in the page's
+    if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), x.whyAr ? { en: String(x.why || ''), ar: String(x.whyAr) } : String(x.why || '')]) });
     // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
     const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
     if (NF && NF.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NF.en), ar: String(NF.ar || NF.en) }]] });

@@ -17,8 +17,8 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
   (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
 - 28 Oct (laptop part 3): [SPD](work/SPD.md) (CI 32 -> 12 min), [P3A](work/P3A.md), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX3](work/FX3.md), [FX4](work/FX4.md), [FX5](work/FX5.md), [FX6](work/FX6.md), [FX5b](work/FX5b.md), [FX3b](work/FX3b.md), [FX4b](work/FX4b.md).
-- 29 Oct (laptop part 4: the owner's 6 dashboards, verdict no): [TB2](work/TB2.md) ("can break" honest).
-- Running: TB1 (the twin's 4 bugs).
+- 29 Oct (laptop part 4): [TB2](work/TB2.md) ("can break" honest), [TB1](work/TB1.md) (the twin's 4 bugs).
+- Running: TB1b (TB1's leftovers).
 
 ## Next step
 1. rc.3 (two identical builds); the laptop part 4: the owner's 7 dashboards and every "For the laptop" since part 3.

@@ -505,7 +505,9 @@
   // English) every other text of a visual's formatting a viewer meets: its alt text (read aloud, and in the selection
   // pane), a card's text for a blank value, a button's tooltips, a subtitle... one id per property:
   // text:<page>/<visual>/<o (objects) | c (container)>.<card>.<entry>.<property>. The title and a button's text keep their ids
-  const TEXT_PROPS = ['altText', 'showBlankAs', 'enabledTooltip', 'disabledTooltip', 'tooltip', 'text', 'titleText', 'subTitleText', 'placeholderText', 'labelText', 'headerText', 'tooltipText'];
+  // (0.3.1 TB1) and the labels Desktop draws beside a value that were not listed (Microsoft's catalog): a KPI's goal text
+  // (kpi goals.goalText), a data label's own title and detail (labels.dynamicLabelTitle, dynamicLabelDetail, when a text)
+  const TEXT_PROPS = ['altText', 'showBlankAs', 'enabledTooltip', 'disabledTooltip', 'tooltip', 'text', 'titleText', 'subTitleText', 'placeholderText', 'labelText', 'headerText', 'tooltipText', 'goalText', 'dynamicLabelTitle', 'dynamicLabelDetail'];
   const TEXT_KIND = { altText: 'altText', showBlankAs: 'blankText', enabledTooltip: 'buttonTooltip', disabledTooltip: 'buttonTooltip', tooltip: 'buttonTooltip' };
   function eachTextProp(json, fn) {
     const v = json.visual, button = kindOf(json) === 'button';
@@ -526,7 +528,11 @@
     if (has('title:' + where)) (entries(v.visualContainerObjects, 'title') || []).forEach((e) => { if (e.properties && e.properties.text) { e.properties.text = str(labels['title:' + where]); n++; } });
     if (kindOf(json) === 'textbox') eachRun(v, (run, i, j) => { const id = `textbox:${where}/${i}.${j}`; if (has(id)) { run.value = String(labels[id]); n++; } });
     if (kindOf(json) === 'button' && has('button:' + where)) (entries(v.objects, 'text') || []).forEach((e) => { if (e.properties && e.properties.text) { e.properties.text = str(labels['button:' + where]); n++; } });
-    eachProjection(v, (x) => { if (typeof x.queryRef === 'string' && has('field:' + x.queryRef)) { x.displayName = String(labels['field:' + x.queryRef]); n++; } });
+    // (0.3.1 TB1, the laptop's part 4: two cards of one measure named "Male" and "Female" both took the field's Arabic) a
+    // visual's own name for a field is its own text, fieldAt:<page>/<visual>/<queryRef>: its label (null: kept as it
+    // is) wins, and the field's label is never written over it
+    eachProjection(v, (x) => { if (typeof x.queryRef !== 'string') return; const own = 'fieldAt:' + where + '/' + x.queryRef;
+      if (has(own)) { if (labels[own] != null) { x.displayName = String(labels[own]); n++; } } else if (has('field:' + x.queryRef)) { x.displayName = String(labels['field:' + x.queryRef]); n++; } });
     eachTextProp(json, (p) => { const id = 'text:' + where + '/' + p.key; if (has(id)) { p.entry.properties[p.prop] = str(labels[id]); n++; } });
     return n;
   }

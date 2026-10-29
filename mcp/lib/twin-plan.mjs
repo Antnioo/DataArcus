@@ -49,13 +49,31 @@ export function twinKey(p) { const { dir } = locate(p); try { return fs.realpath
 // where the rest starts (moreTexts); notTranslated (said in the plan before the go) is cut only when the texts alone can't
 // make room, with its count (the approval window always shows it whole). The room left for the plan the server adds: PLAN_ROOM
 const PLAN_ROOM = 2500;
-function twinFit(a, from) {
-  const size = (x) => JSON.stringify(out(x)).length, before = { texts: a.textsNotListed || 0, notTranslated: a.notTranslatedNotListed || 0 }, all = a.texts;
-  const t = fitLists(a, () => [[a, 'texts']], size, AIM - PLAN_ROOM), t2 = t && t.k === 0 ? (a.texts = all, fitLists(a, () => [[a, 'texts'], [a, 'notTranslated']], size, AIM - PLAN_ROOM)) : null;
+// (0.3.1 TB1, the laptop's part 4: a report of 84 fields answered "Only 0 texts (from 0) fit" on every call, its
+// terminology sheet of 25,004 characters filling the answer) the texts always get room: when fewer than TEXTS_ROOM of
+// them (or all there are) fit, the sheet is cut to make room for them, from termsFrom, with where it goes on
+// (terminology.moreTerms); askNext stays the whole sheet's
+const TEXTS_ROOM = 20, SHEET_ROOM = 1;
+function twinFit(a, from, termsFrom) {
+  const size = (x) => JSON.stringify(out(x)).length, before = { texts: a.textsNotListed || 0, notTranslated: a.notTranslatedNotListed || 0 }, all = a.texts, aim = AIM - PLAN_ROOM;
+  let t = fitLists(a, () => [[a, 'texts']], size, aim);
+  const sheet = a.terminology && Array.isArray(a.terminology.sheet) ? a.terminology : null, room = Math.min(TEXTS_ROOM, all.length);
+  if (t && t.k < room && sheet && sheet.sheet.length) {
+    // (the sheet alone first: notTranslated stays whole (Q1) while the sheet keeps a row; else notTranslated, which
+    // the approval window always shows whole, is cut with it, as many rows as the sheet keeps)
+    a.texts = all.slice(0, room);
+    const rows = sheet.sheet.slice(), nt = a.notTranslated;
+    fitLists(a, () => [[sheet, 'sheet']], size, aim);
+    if (sheet.sheet.length < Math.min(SHEET_ROOM, rows.length)) { sheet.sheet = rows; a.notTranslated = nt; fitLists(a, () => [[sheet, 'sheet'], [a, 'notTranslated']], size, aim); }
+    const cut = sheet.sheetNotListed || 0; delete sheet.sheetNotListed;
+    if (cut) sheet.moreTerms = { listed: sheet.sheet.length, from: termsFrom + sheet.sheet.length, notListed: cut, how: `The terminology sheet is long: only ${sheet.sheet.length} of its rows (from ${termsFrom}) fit beside the texts. Call create_arabic_twin again with the same inputs and termsFrom: ${termsFrom + sheet.sheet.length} for the next rows; the plan and what is written stay the same.` };
+    a.texts = all; delete a.textsNotListed; t = fitLists(a, () => [[a, 'texts']], size, aim);
+  }
+  const t2 = t && t.k === 0 ? (a.texts = all, fitLists(a, () => [[a, 'texts'], [a, 'notTranslated']], size, aim)) : null;
   // (the lists the twin's plan already stopped at TEXTS_MAX keep that count too)
   const keep = (k, n) => { const v = (a[k + 'NotListed'] || 0) + n; if (v) a[k + 'NotListed'] = v; else delete a[k + 'NotListed']; };
   if (t) keep('texts', before.texts);
-  if (t2) keep('notTranslated', before.notTranslated);
+  if (t2 || a.notTranslatedNotListed !== before.notTranslated) keep('notTranslated', before.notTranslated);
   const left = (a.texts || []).length, rest = a.textsNotListed || 0;
   if (rest) a.moreTexts = { listed: left, from: from + left, notListed: rest, how: `Only ${left} texts (from ${from}) fit in one answer. Call create_arabic_twin again with the same inputs and textsFrom: ${from + left} for the next ones, and draft them too; then give all the approved labels together in one call, which proposes the plan to approve. Nothing is written without the approved plan.` };
   if (a.notTranslatedNotListed) a.moreNotTranslated = { listed: (a.notTranslated || []).length, notListed: a.notTranslatedNotListed, how: 'The rest of the texts that stay English are shown in DataArcus\'s approval window, with the plan, before the person approves: tell the user that this list is shortened. A label for one makes it Arabic.' };
@@ -65,7 +83,7 @@ function twinFit(a, from) {
 export function planTwin(a) {
   // (0.3.1 X2) inMemory: { files, base, projectDir }: the English report create_report's plan builds, made one report
   // with its Arabic pages under its own name (into "same"); nothing of it is on disk yet
-  const loc = a.inMemory ? memoryLoc(a.inMemory) : locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0));
+  const loc = a.inMemory ? memoryLoc(a.inMemory) : locate(a.path), R = readOriginal(loc), textsFrom = Math.max(0, Math.floor(Number(a.textsFrom) || 0)), termsFrom = Math.max(0, Math.floor(Number(a.termsFrom) || 0));
   // (0.3.0 X1) into "same": one report holding both languages, "<name> (EN-AR)"; the default, the separate twin "<name> AR"
   const same = a.into === 'same' || !!a.inMemory, outBase = a.inMemory ? loc.base : loc.base + (same ? COPY_TAG : ' AR');
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
@@ -109,9 +127,13 @@ export function planTwin(a) {
   // (0.3.1 FX3) an automatic title's draft: one Arabic sentence from its fields' approved Arabic names (a label or a
   // term), else the fixed list's draft of its English
   const fieldAr = new Map(texts.filter((t) => t.kind === 'field').map((t) => [String(t.rawId).slice('field:'.length), labels[t.id]]));
-  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const v = fieldAr.get(x.ref); return v != null && /[\u0600-\u06FF]/.test(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
+  // (TB1) a visual's own name for a field: its own label, else no Arabic draft from the field's
+  const ownAr = new Map(texts.filter((t) => t.kind === 'visualField').map((t) => [t.rawId.slice('fieldAt:'.length), labels[t.id]]));
+  texts.forEach((t) => { if (!t.auto) return; const d = autoSentence(t.auto, (x) => { const k = t.auto.where + '/' + x.ref, v = ownAr.has(k) ? ownAr.get(k) : fieldAr.get(x.ref); return v != null && /[\u0600-\u06FF]/.test(v) ? String(v).trim() : null; }, true); if (d) t.draftArabic = d; });
   T.statuses();
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
+  // (TB1) an approved title that changed with the selection: said, it is now a fixed title
+  texts.forEach((t) => { if (t.kind === 'dynamicTitle' && labels[t.id] != null) Object.assign(t, { approved: 'approved: written as a fixed Arabic title; it no longer changes with the selection', approvedAr: 'وُوفق عليه: يُكتب عنوانًا عربيًا ثابتًا، فلا يتغير بعد ذلك مع التحديد' }); });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
@@ -150,7 +172,7 @@ export function planTwin(a) {
   // (0.3.0 A3) the metric switcher's choices are the rows of a field parameter table of the model (its script, made for
   // the English report, names them): the twin's slicer still switches, and its choices read as that table names them
   const switchers = fieldParametersOf(R.pages.flatMap((pg) => pg.visuals.map((v) => ({ file: safeName(pg.id) + '/' + safeName(isObj(v.json) ? v.json.name : ''), json: v.json }))));
-  if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (the metric switcher script made for the English report names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher`, where: [...new Set(switchers.map((x) => x.file))].slice(0, 30) });
+  if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (as that table names them; DataArcus's metric switcher script, made for the English report, names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher`, where: [...new Set(switchers.map((x) => x.file))].slice(0, 30) });
   // (0.3.1 L6) the DAX function library's pictures and titles are measures of the model (its DAX functions script, made
   // for the English report): the twin shows them as those measures draw them
   const daxShown = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const hit = []; const seek = (o) => { if (!isObj(o) && !Array.isArray(o)) return; if (isObj(o) && isObj(o.Measure) && typeof o.Measure.Property === 'string' && DAX_MEASURE.test(o.Measure.Property)) hit.push(1); Object.values(o).forEach(seek); };
@@ -203,7 +225,7 @@ export function planTwin(a) {
   const toEnglish = copy ? copy.buttons.filter((b) => b.placed && b.on === LANG.ar.on).length : 0;
   if (toEnglish) notTranslated.push({ text: LANG.ar.text, where: `language button (${toEnglish})`, why: 'the button on each Arabic page that opens its English page: a language switch names the language it opens in that language, as the English pages\' button reads «العربية»', ids: [] });
   // (0.3.0 J18) the terminology sheet: each field's places on the twin's own pages, as built
-  const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }), Terms.isolateLatin);
+  const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ id: x.pg.id, name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }, new Set(texts.filter((t) => t.kind === 'visualField').map((t) => t.rawId.slice('fieldAt:'.length)))), Terms.isolateLatin);
   const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
     how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
@@ -232,17 +254,17 @@ export function planTwin(a) {
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right
     waterfallRtl: Gallery.waterfallRtlOf(a.waterfallRtl) === 'native' ? `native: ${Gallery.WF_WHAT.native} (the user can choose "mirror": a stacked column chart read from the right, with no Total column and no legend)` : 'mirror: each waterfall is a stacked column chart drawn as a waterfall, read from the right; no Total column, no legend (the user can choose "native": Power BI\'s own waterfall, left to right)',
     // (0.3.0 Q1) from textsFrom on: the server cuts the list to fit one answer and says where the rest starts (moreTexts)
-    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, auto, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
+    texts: listed.slice(textsFrom, textsFrom + TEXTS_MAX).map(({ rawId, raw, fieldKey, auto, dyn, ...t }) => t), ...(listed.length > textsFrom + TEXTS_MAX ? { textsNotListed: listed.length - textsFrom - TEXTS_MAX } : {}),
     ...(textsFrom ? { textsFrom: Math.min(textsFrom, listed.length) } : {}),
     labels: Object.assign({ given: [...givenIds].filter((k) => labels[k] != null).length, arabic: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length }, problems.length ? { problems } : {}),
     notTranslated: notTranslated.slice(0, TEXTS_MAX).map(({ ids, ...r }) => r), ...(notTranslated.length > TEXTS_MAX ? { notTranslatedNotListed: notTranslated.length - TEXTS_MAX } : {}),
     ...(built.notShown.length ? { notShown: built.notShown.slice(0, 60) } : {}),
     ...(languages ? { languages } : {}),
-    terminology: Object.assign({ sheet: termRows }, Terms.askNextOf(termRows), { how: Terms.HOW_TWIN }, T.unknown.length ? { unknownTerms: T.unknown } : {}, T.notUsing.length ? { labelsNotUsingTerm: T.notUsing.slice(0, 60) } : {}),
+    terminology: Object.assign({ sheet: termRows.slice(termsFrom) }, termsFrom ? { termsFrom: Math.min(termsFrom, termRows.length) } : {}, Terms.askNextOf(termRows), { how: Terms.HOW_TWIN }, T.unknown.length ? { unknownTerms: T.unknown } : {}, T.notUsing.length ? { labelsNotUsingTerm: T.notUsing.slice(0, 60) } : {}),
     sayInPlan: 'Before the go, show the user notTranslated: every text that stays English in the twin, with why (each text the user approved no Arabic for, such as a field name kept as the model names it). A text with labelFrom takes the approved Arabic of the same text (a page button its page\'s name, an alt text or a phone copy the visual\'s title): show those too. altTextToo: the visual\'s alt text says the title\'s words and takes the title\'s Arabic (one label for both; a label for its id gives it its own). notShown: the original\'s title measures the twin\'s charts no longer use (kept in its file, shown nowhere).',
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...notCopiedOf(R.left),
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
-  }, textsFrom), (x) => JSON.stringify(x).length, { last: ['texts'] }) };   // (A3: the texts cut last)
+  }, textsFrom, termsFrom), (x) => JSON.stringify(x).length, { last: ['texts'] }) };   // (A3: the texts cut last)
 }
