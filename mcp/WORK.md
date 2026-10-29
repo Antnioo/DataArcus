@@ -15,13 +15,13 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   [SF1](work/SF1.md) (the hard rules proven; the way back to 0.3.0), [TT2](work/TT2.md) (Arabic names approved on the
   website's download), [TS1](work/TS1.md) (FHD text x 1.25; S10's gap), [PF1](work/PF1.md) (glass pictures fast),
   [TW1](work/TW1.md) (the twin identical: panels, Total, axes, phone titles; glass previews), [LC1](work/LC1.md)
-  (the layout preview after the fit), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
+  (layout preview), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
 - 28 Oct (laptop part 3): [SPD](work/SPD.md) (CI 32 -> 12 min), [P3A](work/P3A.md), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX3](work/FX3.md), [FX4](work/FX4.md), [FX5](work/FX5.md), [FX6](work/FX6.md), [FX5b](work/FX5b.md), [FX3b](work/FX3b.md), [FX4b](work/FX4b.md).
-- 29 Oct (laptop part 4): [TB2](work/TB2.md), [TB1](work/TB1.md), [TB1b](work/TB1b.md), [TB1c](work/TB1c.md), [MP1](work/MP1.md), [MP1b](work/MP1b.md).
-- Running: none (rc.6, then laptop part 7).
+- 29 Oct (laptop part 4): [TB2](work/TB2.md), [TB1](work/TB1.md), [TB1b](work/TB1b.md), [TB1c](work/TB1c.md), [MP1](work/MP1.md), [MP1b](work/MP1b.md), [MP1c](work/MP1c.md).
+- Running: none (rc.7, then laptop part 8).
 
 ## Next step
-1. rc.6 (two identical builds); laptop part 7: picture pages on the owner's 6 dashboards.
+1. rc.7 (two identical builds); laptop part 8: part 7's collisions on the owner's dashboards.
 2. The PR integration -> main: the owner merges.
 
 ## Open decisions (the owner's; no work before his go)

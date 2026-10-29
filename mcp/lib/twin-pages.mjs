@@ -328,6 +328,48 @@ function badgesWithText(pg, r) {
     if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) b1.position.x = within(b0, h0, h1);
   });
 }
+// (0.3.1 MP1c, laptop part 7: ER's weekday bars over the heatmap's row headers; Call Center's small bar chart over the
+// ratings table, its count labels on the stars) a matrix keeps its row headers at its left, and a table of one column is
+// not reversed: both stay left to right inside. A bar chart drawn over one of them keeps its place on it and its bars'
+// direction (as Mirror keeps a badge on its host, and T-6 a bar list's direction); a visual that overlapped a matrix on
+// its right part (away from its row headers) is narrowed on its side facing the matrix by the overlap in the twin, so
+// it does not lie on the row headers (inside its own mirrored box: it stays on its panel)
+const valuesOf = (v) => (isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.length : 0);
+const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || (Mirror.kindOf(v) === 'table' && valuesOf(v) <= 1);
+function aroundTables(pg, r, opts) {
+  const list = pg.visuals.map((v) => v.json), byName = new Map(list.filter(isObj).map((v) => [String(v.name), v])), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
+  const widthOf = (v) => { const g = v.parentGroupName != null ? byName.get(String(v.parentGroupName)) : null; return g && boxOk(g) ? g.position.width : pageOf(pg).width; };
+  list.filter((m) => boxOk(m) && staysLtr(m) && arAt.has(String(m.name))).forEach((m0) => {
+    const m1 = r.visuals[arAt.get(String(m0.name))];
+    list.filter((v) => v !== m0 && boxOk(v) && !v.visualGroup && String(v.parentGroupName || '') === String(m0.parentGroupName || '') && arAt.has(String(v.name))).forEach((v0) => {
+      const i = arAt.get(String(v0.name)), v1 = r.visuals[i], a = v0.position, b = m0.position, ov = overlapOf(a, b); if (!ov || !boxOk(v1) || !boxOk(m1)) return;
+      if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
+        let k; try { k = Mirror.mirrorVisual(v0, widthOf(v0), Object.assign({}, opts, { keepDirection: true })).json; } catch (e) { return; }
+        if (!isObj(k) || !isObj(k.position)) return;
+        k.position.x = Mirror.round(m1.position.x + a.x - b.x); r.visuals[i] = k; return;
+      }
+      // (a matrix only: its row headers are at its left in both languages)
+      if (Mirror.kindOf(m0) !== 'matrix') return;
+      const mid = (p, q) => (Math.max(p.x, q.x) + Math.min(p.x + p.width, q.x + q.width)) / 2;
+      const p1 = v1.position, q1 = m1.position;
+      if (mid(a, b) > b.x + b.width / 2 && overlapOf(p1, q1) > 0 && mid(p1, q1) < q1.x + q1.width / 2 && p1.x < q1.x && q1.x - p1.x > 0) p1.width = Mirror.round(q1.x - p1.x);
+    });
+  });
+}
+// (0.3.1 MP1c, laptop part 7: Call Center's KPI titles ["\t\t\t\t\t", "Calls"], the word under the mirrored icon) on a text
+// box paragraph the twin turns right, the runs of only tabs or spaces at its start (indentation) move to its end, so
+// the room they kept stays on the side of the icon; after the labels (the runs' ids are those the plan listed)
+const paragraphsIn = (o) => { const g = isObj(o) && isObj(o.visual) && isObj(o.visual.objects) ? o.visual.objects.general : isObj(o) && isObj(o.objects) ? o.objects.general : null;
+  return (Array.isArray(g) ? g : []).flatMap((e) => (isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : [])); };
+function indentToEnd(en, ar) {
+  const ep = paragraphsIn(en), ap = paragraphsIn(ar);
+  ap.forEach((pa, i) => {
+    const was = isObj(ep[i]) ? ep[i].horizontalTextAlignment : undefined;
+    if (!isObj(pa) || pa.horizontalTextAlignment !== 'right' || was === 'right' || was === 'center' || !Array.isArray(pa.textRuns)) return;
+    let k = 0; while (k < pa.textRuns.length - 1 && isObj(pa.textRuns[k]) && typeof pa.textRuns[k].value === 'string' && /^[ \t\u00A0]+$/.test(pa.textRuns[k].value)) k++;
+    if (k && pa.textRuns.slice(k).some((x) => isObj(x) && typeof x.value === 'string' && x.value.trim())) pa.textRuns = pa.textRuns.slice(k).concat(pa.textRuns.slice(0, k));
+  });
+}
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns };
   // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
@@ -395,7 +437,7 @@ export function buildTwin(P, labels) {
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
     // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
-    if (!P.keepLtr(pg)) badgesWithText(pg, r);
+    if (!P.keepLtr(pg)) { badgesWithText(pg, r); aroundTables(pg, r, opts); }
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);
@@ -418,6 +460,7 @@ export function buildTwin(P, labels) {
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
     });
+    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i] && Mirror.kindOf(vj) === 'textbox') indentToEnd(pg.visuals[i].json, vj); });
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
@@ -433,6 +476,7 @@ export function buildTwin(P, labels) {
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
       const m = P.keepLtr(pg) ? JSON.parse(JSON.stringify(v.mobile.json)) : Mirror.mirrorMobile(v.json, v.mobile.json);
       applied += Mirror.labelMobile(pg.id, r.visuals[i], m, labels, { font: ctx.text.font, was: v.json });
+      if (!P.keepLtr(pg) && Mirror.kindOf(v.json) === 'textbox') indentToEnd(v.mobile.json, m);
       // (0.3.1 FX3b, FX3's Seen 2) a phone layout that sets its own title formatting (an entry with no text) takes the text
       // written for the visual's automatic title, so the phone shows the same; none of its own: nothing is added
       const tx = isObj(r.visuals[i]) ? autoTitled.get(String(r.visuals[i].name)) : null;

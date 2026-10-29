@@ -73,7 +73,12 @@ export function flipPicturesOf(R, loc, info, built, keepLtr) {
     x.writtenAs = to;
     const en = pg.visuals.map((v) => v.json), at = (n) => safeName(pg.id) + '/' + safeName(n);
     offPanel(P, en, visuals, x.fit, x.W, x.H).forEach((n) => checks.offPanel.push({ where: at(n), what: 'it sat on a panel of the English picture; mirrored, it is not on the same panel of the flipped picture', whatAr: 'كان على لوح في صورة الصفحة الإنجليزية، وبعد العكس لم يعد على اللوح نفسه في الصورة المعكوسة' }));
-    newOverlaps(en, visuals).forEach((o) => checks.newOverlaps.push({ where: safeName(pg.id) + ': ' + o.visuals.map((n) => safeName(n)).join(', '), what: 'these visuals overlap in the twin and did not in the English page', whatAr: 'تتداخل هذه المرئيات في النسخة العربية ولم تكن تتداخل في الصفحة الإنجليزية' }));
+    // (MP1c) and a pair that overlapped in English too, where the twin's overlap lands on a matrix's row headers or a bar
+    // chart over a table or matrix turned its bars
+    const SAID = { new: ['these visuals overlap in the twin and did not in the English page', 'تتداخل هذه المرئيات في النسخة العربية ولم تكن تتداخل في الصفحة الإنجليزية'],
+      rowHeaders: ['in the twin their overlap lies on the matrix\'s row headers (a matrix keeps them at its left); in English it was away from them', 'في النسخة العربية يقع تداخلها على رؤوس صفوف المصفوفة (تبقى على يسارها)، وكان في الإنجليزية بعيدًا عنها'],
+      barsTurned: ['the bar chart drawn over the table or matrix grows from the right in the twin, while the table stays left to right inside', 'المخطط الشريطي المرسوم فوق الجدول أو المصفوفة ينمو من اليمين في النسخة العربية، بينما يبقى الجدول من اليسار إلى اليمين']};
+    newOverlaps(en, visuals).forEach((o) => { const t = SAID[o.why] || SAID.new; checks.newOverlaps.push({ where: safeName(pg.id) + ': ' + o.visuals.map((n) => safeName(n)).join(', '), what: t[0], whatAr: t[1] }); });
   });
   built.addedPictures = added;
   built.pictureChecks = checks.offPanel.length || checks.newOverlaps.length ? checks : null;

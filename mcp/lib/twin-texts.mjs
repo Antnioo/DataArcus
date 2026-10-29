@@ -305,7 +305,13 @@ function rowFieldsOf(R) {
 const BESIDE = new Set(['referenceLabelTitle.titleText', 'label.text', 'goals.goalText', 'labels.dynamicLabelTitle', 'labels.dynamicLabelDetail']);
 // (TB1b) and a reference line's own label, drawn beside its value
 const besideOf = (rawId) => { const m = /^(?:phone:)?text:.+\/o\.([^./]+)\.\d+\.([^./]+)$/.exec(String(rawId)); return !!m && (BESIDE.has(m[1] + '.' + m[2]) || (m[2] === 'displayName' && /^(?:[a-z0-9]*AxisReferenceLine|referenceLine)$/.test(m[1]))); };
-export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = (besideOf(by.get(k)) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k]); });
+// (0.3.1 MP1c, laptop part 7: Fintech's help lines read ".صفّ ... حالته 1") a text box's Arabic whose first or last
+// character is not an Arabic letter (a digit, an emoji, a full stop) is wrapped whole too (BD2's V3, measured right on
+// text boxes): isolateLatin wraps only a text with a Latin letter, and the neutral ends took the box's left-to-right order
+const ARABIC_END = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]$/;
+const neutralEnds = (rawId, v) => { if (!/^(?:phone:)?textbox:/.test(String(rawId))) return false; const t = String(v == null ? '' : v).trim(), a = [...t];
+  return a.length > 0 && /[\u0600-\u06FF]/.test(t) && (!ARABIC_END.test(a[0]) || !ARABIC_END.test(a[a.length - 1])); };
+export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = (besideOf(by.get(k)) || neutralEnds(by.get(k), labels[k]) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k]); });
   texts.forEach((t) => { if (t.kind === 'visualField' && !Object.prototype.hasOwnProperty.call(out, t.rawId)) out[t.rawId] = null; }); return out; };
 
 // ---- the plan ----
