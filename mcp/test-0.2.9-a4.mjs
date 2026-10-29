@@ -74,6 +74,11 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
     let out = null, err = null; try { out = Rules.check(R, { groups: Rules.GROUPS }); } catch (e) { err = e; }
     chk(() => out && !err && out.findings.some((f) => f.rule === 'THEME_NAME') && (out.failed || []).length && out.failed.every((f) => f.rule && f.why),
       () => `A4-2: Rules.check isolates each rule (THEME_NAME still found, the failed rules named): ${err ? err.message : JSON.stringify(out && { failed: out.failed, rules: out.findings.map((f) => f.rule) })}`);
+    // (ST1, 0.2.9-checks-S1) THEME_NAME's fix says what was measured (DESKTOP_OPENS, 2026-10-10): Desktop opens it
+    const R2 = { ...R, pages: [{ id: 'p', name: 'P', w: 1280, h: 720, visuals: [] }], visuals: [], hasPlatform: true, theme: { ref: 'Glass.json', json: { name: 'Other' }, file: 'StaticResources/RegisteredResources/Glass.json' } };
+    let tn = null; try { tn = Rules.check(R2, { groups: Rules.GROUPS }).findings.find((f) => f.rule === 'THEME_NAME'); } catch (e) { tn = { err: e.message }; }
+    chk(() => tn && !/may not load/.test(JSON.stringify(tn)) && /Fabric/.test(JSON.stringify(tn)) && /Desktop opens it/.test(JSON.stringify(tn)),
+      () => `THEME_NAME's fix text matches the measurement (the validator and Fabric reject it, Desktop opens it): ${JSON.stringify(tn)}`);
   }
 
   // ---------- A4-3: "opens in Power BI Desktop" only when the validator ran offline and every file was read ----------
@@ -86,8 +91,10 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
       () => `A4-3: the validator not run: no "opens" sentence: ${said(n0, { validator: { ran: false, mode: 'not run' }, unread: 0, desktopOpensErrors: 0 })}`);
     chk(() => !/opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })) && /2 files?/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })),
       () => `A4-3: files not read: no "opens" sentence, the count said: ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 2, desktopOpensErrors: 0 })}`);
-    chk(() => /opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })),
-      () => `A4-3: validator ran, every file read, nothing found: "opens": ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })}`);
+    // (0.3.1 RB, item 5: moved on purpose: check_report never opens Desktop, so it says what ran and that Desktop was not
+    // opened, never "the report opens in Power BI Desktop")
+    chk(() => /^Nothing found that Power BI Desktop is known to refuse \(Microsoft's validator[^)]*ran; Power BI Desktop itself was not opened\)/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })) && !/opens in Power BI Desktop/.test(said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })),
+      () => `A4-3: validator ran, every file read, nothing found: what ran, and Desktop not opened: ${said(n0, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 0 })}`);
     chk(() => /Its 1 error\b/.test(said({ desktopOpens: 1, canBreak: 0, dataarcusRule: 1 }, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 1 })),
       () => `A4-3: only the desktopOpens errors are counted: ${said({ desktopOpens: 1, canBreak: 0, dataarcusRule: 1 }, { validator: { ran: true, mode: 'offline' }, unread: 0, desktopOpensErrors: 1 })}`);
     // end to end: an unreadable page and only the size rules; then a missing $schema and a 70pt button text
@@ -174,6 +181,11 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
       () => `A4-7: the lint's findings carry the same fields (origin lint, impact, level on the common scale, source): ${JSON.stringify(xl.j && xl.j.lint && xl.j.lint.findings.slice(0, 3))}`);
     chk(() => typeof CR.impactOf === 'function' && CR.impactOf({ origin: 'rule', rule: 'X', source: 'Microsoft validator 0.4.0: X' }) === 'dataarcusRule' && CR.impactOf({ origin: 'validator', rule: 'PBIR_THEME_FILE_NAME_MISMATCH', file: 'x' }) === 'desktopOpens',
       () => 'A4-7: impactOf reads the origin, never the source text');
+    // (0.3.1 T1, the mutation suite: a known gap of the validator could count as "can break" and no test failed: today's
+    // catalog lists the one proven gap, so no report gives one) a known validator finding is "Desktop opens it"
+    chk(() => CR.impactOf({ origin: 'validator', known: true, rule: 'PBIR_FORMATTING_OBJECT_UNKNOWN', file: 'definition/pages/p/visuals/v/visual.json' }) === 'desktopOpens'
+      && CR.impactOf({ origin: 'validator', rule: 'PBIR_FORMATTING_OBJECT_UNKNOWN', file: 'definition/pages/p/visuals/v/visual.json' }) === 'canBreak',
+      () => 'T1: a known validator gap is "Desktop opens it", the same code not known is "can break"');
     const doc = fs.readFileSync(path.join(HERE, 'plans', 'CHECK-REPORT.md'), 'utf8');
     chk(() => /origin/.test(doc) && /impact/.test(doc), () => 'A4-7: CHECK-REPORT.md writes the finding shape (origin, impact)');
   }

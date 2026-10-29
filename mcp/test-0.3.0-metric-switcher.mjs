@@ -24,6 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -44,6 +45,10 @@ const hashDir = (d) => { const h = crypto.createHash('sha256'); const walk = (x)
 const MP = 'large/Large Synthetic.SemanticModel', HP = 'hostile/Hostile.SemanticModel', modelHash0 = hashDir(path.join(ROOT, MP));
 const W3 = ['Web Orders[Web Orders Count]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Score Share %]'];
 const AR_NAMES = { 'Web Orders[Web Orders Count]': 'عدد الطلبات', 'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Score Share %]': 'حصة النقاط' };
+// (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the other fields of the titles are kept
+// English on purpose, as the person says it: these checks are about the switcher, not the names
+// (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the large model's calendar runs over several years by its own DAX, so its time axis is Calendar[Year Month], no longer Month Short)
+const AR_DN = Object.assign({}, AR_NAMES, keepEnglish('Calendar[Year Month]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]'));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const httpReq = (url, body) => new Promise((resolve) => {
@@ -158,7 +163,7 @@ try {
   chk(() => cr && cr.j.fieldParameters && cr.j.fieldParameters.parameters.some((p) => p.table === 'Metric') && /Until the script is applied|not in the model/.test(cr.j.fieldParameters.note), () => `V1: check_report knows the field parameter and says the page needs the script: ${JSON.stringify(cr && cr.j.fieldParameters).slice(0, 400)}`);
 
   // ---------- A: Arabic, and the twin ----------
-  const ar = Object.assign({}, base, { name: 'L3 AR', lang: 'ar', metricSwitcher: W3, displayNames: AR_NAMES });
+  const ar = Object.assign({}, base, { name: 'L3 AR', lang: 'ar', metricSwitcher: W3, displayNames: AR_DN });
   const B = await planAndWrite(ar);
   const okA = B.id ? await ask('create_report', Object.assign({}, ar, { planId: B.id, design: B.pl.j.design })) : B.pl;
   const dirA = path.join(ROOT, 'large', 'L3 AR.Report'), sA = path.join(ROOT, 'large', 'L3 AR - metric switcher.tmdl'), mA = metricPage(dirA);
@@ -171,7 +176,9 @@ try {
   // isDefaultSort, which a field-parameter visual may recompute), Descending by the month, the value axis at the right
   const lineA = mA && mA.visuals.find((v) => v.visual.visualType === 'lineChart'), sdA = lineA && lineA.visual.query.sortDefinition;
   const slA2 = slA && ((slA.visual.objects.general || []).find((e) => e.properties && e.properties.filter) || {}).properties;
-  chk(() => sdA && sdA.sort[0].direction === 'Descending' && !sdA.isDefaultSort && lit(lineA.visual.objects.valueAxis[0].properties.switchAxisPosition) === 'true' && lit(lineA.visual.objects.categoryAxis[0].properties.invertAxis) === 'true',
+  // (0.3.1 M1, changed on purpose: the twin's rules, report-mirror.js: no invertAxis on the month names' categorical axis,
+  // which Desktop ignores; the sort Descending does it)
+  chk(() => sdA && sdA.sort[0].direction === 'Descending' && !sdA.isDefaultSort && lit(lineA.visual.objects.valueAxis[0].properties.switchAxisPosition) === 'true' && !(lineA.visual.objects.categoryAxis || []).some((e) => e.properties && e.properties.invertAxis),
     () => `A4: the Arabic Metric line is mirrored with a sort of its own: ${JSON.stringify(sdA)} ${JSON.stringify(lineA && lineA.visual.objects).slice(0, 300)}`);
   chk(() => slA2 && slA2.filter.filter.Where[0].Annotations.filterExpressionMetadata.valueMap[0]['0'] === AR_NAMES['Web Orders[Web Orders Count]'], () => `A5: the Arabic switch opens on its first metric, under its Arabic label: ${JSON.stringify(slA2).slice(0, 400)}`);
   if (!okA.err) await validate('AR', dirA, 'large/L3 AR.pbip', 'ar');
@@ -203,6 +210,9 @@ try {
     fs.writeFileSync(path.join(ROOT, MP, 'definition/tables/Metric.tmdl'), bad);
     const crb = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crb.err && (crb.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crb.j.impact.kinds.canBreak.count === 0, () => `V2: a title measure that reads the display column alone is a finding (the lab's composite-key error): ${short(crb)}`);
+    // (0.3.1 T1, the mutation suite: the finding could become an error and V2 still passed, since "can break" comes from
+    // the finding's origin) the finding is a warning
+    chk(() => !crb.err && (crb.j.findings || []).filter((f) => f.rule === 'FIELD_PARAMETER_TITLE').every((f) => f.severity === 'warning' && f.impact === 'dataarcusRule'), () => `V2b: the field parameter's title finding is a warning, a DataArcus rule: ${JSON.stringify((crb.j && crb.j.findings || []).filter((f) => f.rule === 'FIELD_PARAMETER_TITLE').map((f) => [f.severity, f.impact]))}`);
     fs.writeFileSync(path.join(ROOT, MP, 'definition/tables/Metric.tmdl'), R.body);
     const crg = await ask('check_report', { path: 'large/L3 Switch.pbip', lang: 'en' });
     chk(() => !crg.err && !(crg.j.findings || []).some((f) => f.rule === 'FIELD_PARAMETER_TITLE') && crg.j.fieldParameters && /in the model/.test(crg.j.fieldParameters.note), () => `V3: with the script's own table no finding, and the note says the table is in the model: ${JSON.stringify(crg.j && crg.j.fieldParameters).slice(0, 400)}`);
@@ -226,7 +236,7 @@ try {
   }
   // ---------- F3: the Metric page's background is the report's own (0.3.0 A1: it had none); English and Arabic ----------
   for (const lang of ['en', 'ar']) {
-    const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_NAMES } : {});
+    const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_DN } : {});
     const B = await planAndWrite(ba), okB = B.id ? await ask('create_report', Object.assign({}, ba, { planId: B.id, design: B.pl.j.design })) : B.pl;
     const bdir = path.join(ROOT, 'large', `L3 Background ${lang}.Report`), mpB = metricPage(bdir), first = pagesOf(bdir).find((p) => p.json.type !== 'Tooltip' && (!mpB || p.id !== mpB.id) && p.json.objects);
     const bg = (p) => p && p.json.objects && p.json.objects.background && p.json.objects.background[0].properties, os = (p) => p && p.json.objects && JSON.stringify(p.json.objects.outspace);

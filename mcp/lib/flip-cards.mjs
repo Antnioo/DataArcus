@@ -11,6 +11,7 @@
 import { createRequire } from 'node:module';
 import { readsLikeInstruction, modelOf } from './model.mjs';
 import { freeNamer, tagOf, scriptFileOf } from './model-script.mjs';   // (the one helper for model additions as scripts, shared with L3)
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js');
@@ -30,9 +31,11 @@ const SUFFIX = { front: 'flip front', back: 'flip back', backdrop: 'flip backdro
 // the turn (the lab's v2, measured): .3 s at most, from 25 degrees and opacity .6
 export const TURN = { seconds: 0.3, degrees: 25, opacity: 0.6, perspective: 700 };
 const DESC_MAX = 90;
+/** E's Arabic words for K, M, B (0.3.0 A3): the one list, for the flip cards and the DAX function library's pictures. */
+export const UNITS_AR = Object.freeze({ K: ' ألف', M: ' مليون', B: ' مليار' });
 const W = {
   en: { units: null, yoy: ' vs last year', front: (t) => `${t}, KPI card: select to see what it means`, back: (t) => `${t}: what it means; select to turn back`, bmFront: (t) => `Flip ${t}: front`, bmBack: (t) => `Flip ${t}: back` },
-  ar: { units: { K: ' ألف', M: ' مليون', B: ' مليار' }, yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
+  ar: { units: UNITS_AR, yoy: ' مقارنة بالعام الماضي', front: (t) => `${t}، بطاقة مؤشر: اختر لترى معناها`, back: (t) => `${t}: معناها؛ اختر للرجوع`, bmFront: (t) => `قلب ${t}: الوجه`, bmBack: (t) => `قلب ${t}: الخلف` }
 };
 
 // ---- text for the picture: XML-escaped, then every %, # and " and every non-ASCII character URL-encoded (a data URL) ----
@@ -55,15 +58,17 @@ const cssFont = (f) => String(f || 'Segoe UI').replace(/[^A-Za-z0-9 -]/g, '').tr
 // the KPI rule's shapes for the front (pbip-bind's card rule, as DAX): a percent, a whole count, else automatic units
 // (0.3.0 A3, the reviewer's decision of 20 Oct: no English in Arabic reports) units: null writes K, M, B after the number
 // (English, as before); { K, M, B } the Arabic unit words: the number (Western digits) is _t, the word is _u, already
-// encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number
-function frontValue(m, mref, units) {
+// encoded for the picture (a DAX value text is escaped by safeDax, which would encode it twice), after the number.
+// (0.3.1 SQ2, L6-S2) plain: the word as plain DAX text, for a caller whose function escapes its own text (dax-functions)
+export function frontValue(m, mref, units, plain) {
   const f = String(m.formatString || ''), pct = /%/.test(f) || /%|\b(rate|ratio|share|margin)\b/i.test(String(m.name));
   if (pct) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "0.0%" ) )` };
   if (f && !/\./.test(f) && /COUNT/i.test(String(m.expression || ''))) return { t: `IF ( ISBLANK ( _v ), "--", FORMAT ( _v, "#,0" ) )` };
   const u = (n, s) => `FORMAT ( _v / ${n}, "#,0.00" )` + (units ? '' : ` & "${s}"`);
   const t = `IF ( ISBLANK ( _v ), "--", IF ( ABS ( _v ) >= 1E9, ${u('1E9', 'B')}, IF ( ABS ( _v ) >= 1E6, ${u('1E6', 'M')}, IF ( ABS ( _v ) >= 1E3, ${u('1E3', 'K')}, FORMAT ( _v, "#,0.00" ) ) ) ) )`;
   if (!units) return { t };
-  return { t, u: `IF ( ISBLANK ( _v ), "", IF ( ABS ( _v ) >= 1E9, ${lt(units.B)}, IF ( ABS ( _v ) >= 1E6, ${lt(units.M)}, IF ( ABS ( _v ) >= 1E3, ${lt(units.K)}, "" ) ) ) )` };
+  const w = plain ? dax.string : lt;
+  return { t, u: `IF ( ISBLANK ( _v ), "", IF ( ABS ( _v ) >= 1E9, ${w(units.B)}, IF ( ABS ( _v ) >= 1E6, ${w(units.M)}, IF ( ABS ( _v ) >= 1E3, ${w(units.K)}, "" ) ) ) )` };
 }
 // the value's DAX lines (VAR _t, and VAR _u with units) and its text in the picture
 const valueVars = (fv) => ['VAR _t = ' + fv.t].concat(fv.u ? ['VAR _u = ' + fv.u] : []);
@@ -102,7 +107,7 @@ function measuresOf(c, t, m, cal, words) {
 
 // the calendar a measure's year on year may use: the key date column of a table marked as a date table (dataCategory
 // Time), related directly to the measure's table; else null with why
-function calendarFor(model, table) {
+export function calendarFor(model, table) {
   const cals = (model.tables || []).filter((t) => /^time$/i.test(String(t.dataCategory || '')));
   for (const t of cals) {
     const c = (t.columns || []).find((x) => x.isKey && /^date(time)?$/i.test(String(x.dataType || '')));
@@ -223,4 +228,4 @@ export function flipScript(measures, seed) {
 /** How the user applies the script, for the answer and the plan. */
 // (0.3.0 F1, the laptop proof on Desktop 2.159) what each card shows before the script is applied: Power BI's own message
 export const BEFORE_APPLIED = 'each card shows Power BI\'s own message "Data shapes must contain at least one group or calculation that outputs data" (its measures are not in the model yet)';
-export const flipHow = (file) => `Apply the script first: the flip cards show their pictures only once the model has the measures. The script is in the file "${file}", next to the project. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Then click a card to turn it (Ctrl+click while editing; a plain click in reading view and in the service). Until the script is applied ${BEFORE_APPLIED}.`;
+export const flipHow = (file, dir) => `Apply the script first: the flip cards show their pictures only once the model has the measures. The script is in the file "${file}", ${besideSaid(dir)}. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Then click a card to turn it (Ctrl+click while editing; a plain click in reading view and in the service). Until the script is applied ${BEFORE_APPLIED}.`;

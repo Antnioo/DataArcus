@@ -78,5 +78,435 @@
     "Explain what the main chart shows and what to do about it.": "اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.",
     "New design": "تصميم جديد",
     "Tooltip page: add a card or a small chart here.": "صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا."
-  }
+  },
+  "_concepts": "DataArcus's own Arabic vocabulary (0.3.1 E, the Arabic review of 21 Oct): one Arabic term per concept, for every engine, the MCP's answers and the site. variants are patterns of the other forms (a clitic و ف ب ك ل and ال may come before; diacritics are folded); source is Microsoft's own Arabic wording (Learn's Arabic training units, Microsoft Support), or 'none found'; 'to choose' = the owner decides. Read by mcp/lib/arabic-terms.mjs; mcp/test-0.3.1-arabic-terms.mjs and scripts/test-arabic-terms.mjs fail on a variant anywhere outside allow.",
+  "concepts": [
+    {
+      "id": "filters",
+      "en": "Filters (the report's, the Filters pane)",
+      "ar": "الفلاتر",
+      "variants": [
+        "(?:ال)?عوامل (?:ال)?تصفية",
+        "(?:ال)?مرشحات"
+      ],
+      "microsoft": "عوامل التصفية",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/3-visuals"
+      ],
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). What every report writes; Power BI's menus say «عوامل التصفية»."
+    },
+    {
+      "id": "filtering",
+      "en": "Filtering, to filter",
+      "ar": "التصفية",
+      "variants": [
+        "(?:ال)?فلترة",
+        "(?:ي|ت)فلتر"
+      ],
+      "microsoft": "التصفية",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen",
+      "note": "The act; the things are «الفلاتر». DAX's filter context stays «سياق التصفية»."
+    },
+    {
+      "id": "reset",
+      "en": "Reset filters = Clear the filters on this page (one button)",
+      "ar": "إعادة ضبط الفلاتر",
+      "variants": [
+        "مسح (?:ال)?فلاتر",
+        "إعادة تعيين (?:ال)?فلاتر",
+        "مسح عوامل (?:ال)?تصفية"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "One button, one text: its label and its tooltip (design choice 6, 5 Oct).",
+      "phrases": [
+        "Reset filters",
+        "Clear the filters on this page"
+      ]
+    },
+    {
+      "id": "slicer",
+      "en": "Slicer",
+      "ar": "مقسم",
+      "variants": [
+        "(?:ال)?مقسم(?:ات)? طر(?:يقة|ق) (?:ال)?عرض",
+        "(?:ال)?سلايسر"
+      ],
+      "microsoft": "مقسم طريقة العرض",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects",
+        "https://support.microsoft.com/ar-sa/office/249f966b-a9d5-4b0f-b31a-12651785d29d"
+      ],
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «المقسمات». Microsoft's «مقسم طريقة العرض» is a variant. On an Arabic page of the site the first use is followed by the English once.",
+      "englishOnce": "Slicer",
+      "form": "(?:ال)?مقسم(?:ات)?"
+    },
+    {
+      "id": "tooltip",
+      "en": "Tooltip",
+      "ar": "تلميح",
+      "variants": [
+        "(?:ال)?تلميح(?:ات)? (?:ال)?أدوات",
+        "(?:ال)?تلميح أداة"
+      ],
+      "microsoft": "تلميحات الأدوات",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-requirements/3-determine",
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-user-experience/4-bookmarks"
+      ],
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «التلميحات»; the tooltip page «صفحة التلميح». Microsoft's «تلميح الأدوات» is a variant. On an Arabic page of the site the first use is followed by the English once.",
+      "englishOnce": "Tooltip",
+      "form": "(?:ال)?تلميح(?:ات)?"
+    },
+    {
+      "id": "dates",
+      "en": "Dates (Ramadan, Eid, announced)",
+      "ar": "تواريخ",
+      "variants": [
+        "(?:ال)?مواعيد",
+        "(?:ال)?موعد"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "«مواعيد» are appointments or timings; a calendar has dates."
+    },
+    {
+      "id": "product",
+      "en": "The product's name",
+      "ar": "DataArcus",
+      "variants": [
+        "داتا ?أركوس"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "Latin everywhere (Power BI texts isolate it, terminology.mjs isolateLatin). The Arabic spelling once in the keywords of every Arabic page, for search (the owner, 25 Oct: \"add the arabic dataarcus\").",
+      "allowIn": "keywords"
+    },
+    {
+      "id": "likeforlike",
+      "en": "Like for like (a season with its own)",
+      "ar": "كل موسم بنظيره",
+      "variants": [
+        "(?:ال)?متماثل ب(?:ال)?متماثل"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "How an Arabic analyst says it; «المتماثل بالمتماثل» is a calque."
+    },
+    {
+      "id": "visual",
+      "en": "Visual",
+      "ar": "المرئيات",
+      "variants": [
+        "(?:ال)?عناصر (?:ال)?مرئية",
+        "(?:ال)?عنصرا? (?:ال)?مرئيا?"
+      ],
+      "microsoft": "المرئيات",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). The singular «مرئي» (a visual). «العناصر المرئية» is a variant."
+    },
+    {
+      "id": "chart",
+      "en": "Chart",
+      "ar": "مخطط",
+      "variants": [
+        "رسما? بيانيا?",
+        "(?:ال)?رسوم (?:ال)?بيانية"
+      ],
+      "microsoft": "مخطط",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+      ],
+      "status": "chosen"
+    },
+    {
+      "id": "kpicard",
+      "en": "KPI card",
+      "ar": "بطاقة مؤشر",
+      "variants": [
+        "بطاق(?:ة|ات) KPI"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "Plural «بطاقات المؤشرات»; «(KPI)» may follow it."
+    },
+    {
+      "id": "datetable",
+      "en": "Date table",
+      "ar": "جدول التاريخ",
+      "variants": [
+        "جدو?ا?ل (?:ال)?تقويم"
+      ],
+      "microsoft": "جدول تاريخ",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-time-intelligence/2-functions"
+      ],
+      "status": "chosen",
+      "note": "Mark as date table: «وضع علامة كجدول تاريخ». The Gulf calendar (the generator, «تقويم الخليج») keeps its name."
+    },
+    {
+      "id": "dashboard",
+      "en": "Dashboard",
+      "ar": "لوحة معلومات",
+      "variants": [
+        "لوح(?:ة|ات) (?:ال)?تحكم"
+      ],
+      "microsoft": "لوحة معلومات",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/9-quick-insights"
+      ],
+      "status": "chosen",
+      "note": "The owner chose it (25 Oct). Plural «لوحات المعلومات»; Microsoft's term too."
+    },
+    {
+      "id": "measure",
+      "en": "Measure",
+      "ar": "مقياس",
+      "variants": [
+        "(?:ال)?مقياسات"
+      ],
+      "microsoft": "مقياس",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen",
+      "note": "Plural «مقاييس»."
+    },
+    {
+      "id": "column",
+      "en": "Column",
+      "ar": "عمود",
+      "variants": [],
+      "microsoft": "عمود محسوب",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+      ],
+      "status": "chosen",
+      "note": "Plural «أعمدة»."
+    },
+    {
+      "id": "page",
+      "en": "Page",
+      "ar": "صفحة",
+      "variants": [],
+      "microsoft": "صفحة التقرير",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen"
+    },
+    {
+      "id": "report",
+      "en": "Report",
+      "ar": "تقرير",
+      "variants": [],
+      "microsoft": "تقرير",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen"
+    },
+    {
+      "id": "model",
+      "en": "Model",
+      "ar": "النموذج",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "«نموذج البيانات» is the generic data model in the services pages, not another word for the same thing."
+    },
+    {
+      "id": "plan",
+      "en": "Plan",
+      "ar": "الخطة",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen"
+    },
+    {
+      "id": "approve",
+      "en": "Approve, approval",
+      "ar": "الموافقة",
+      "variants": [
+        "(?:ال)?مصادقة"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "The verb «وافق»."
+    },
+    {
+      "id": "theme",
+      "en": "Theme",
+      "ar": "السمة",
+      "variants": [
+        "(?:ال)?ثيم(?:ات)?",
+        "(?:ال)?نسق"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen"
+    },
+    {
+      "id": "bookmark",
+      "en": "Bookmark",
+      "ar": "إشارة مرجعية",
+      "variants": [
+        "(?:ال)?علام(?:ة|ات) (?:ال)?مرجعية"
+      ],
+      "microsoft": "إشارة مرجعية",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-user-experience/4-bookmarks",
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-reports/2-report-objects"
+      ],
+      "status": "chosen",
+      "note": "Plural «الإشارات المرجعية»."
+    },
+    {
+      "id": "drill",
+      "en": "Drill",
+      "ar": "التعمق",
+      "variants": [],
+      "microsoft": "التنقل لأسفل",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/perform-analytics-power-bi/1-introduction",
+        "https://learn.microsoft.com/ar-sa/training/modules/power-bi-effective-requirements/3-determine"
+      ],
+      "status": "chosen",
+      "note": "One form in DataArcus's texts; Power BI's menus say «التنقل لأسفل» (said for the owner)."
+    },
+    {
+      "id": "total",
+      "en": "Total (a table's total row)",
+      "ar": "الإجمالي",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "«المجموع» is Sum, another concept."
+    },
+    {
+      "id": "average",
+      "en": "Average",
+      "ar": "المتوسط",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen",
+      "note": "«معدل» is a rate, another concept."
+    },
+    {
+      "id": "fiscalyear",
+      "en": "Fiscal year",
+      "ar": "السنة المالية",
+      "variants": [
+        "(?:ال)?عام (?:ال)?مالي"
+      ],
+      "microsoft": "السنة المالية",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/1-introduction"
+      ],
+      "status": "chosen"
+    },
+    {
+      "id": "hijri",
+      "en": "Hijri",
+      "ar": "الهجري",
+      "variants": [],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen"
+    },
+    {
+      "id": "workday",
+      "en": "Working day",
+      "ar": "يوم عمل",
+      "variants": [
+        "(?:ال)?يوم (?:ال)?دوام",
+        "(?:ال)?أيام (?:ال)?دوام"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen"
+    },
+    {
+      "id": "weekend",
+      "en": "Weekend",
+      "ar": "عطلة نهاية الأسبوع",
+      "variants": [
+        "(?:ال)?عطلة (?:ال)?أسبوعية",
+        "(?:ال)?ويك ?إند"
+      ],
+      "microsoft": null,
+      "source": "none found",
+      "status": "chosen"
+    },
+    {
+      "id": "legend",
+      "en": "Legend",
+      "ar": "وسيلة الإيضاح",
+      "variants": [
+        "مفتاح (?:ال)?رسم"
+      ],
+      "microsoft": "وسيلة الإيضاح",
+      "source": [
+        "https://learn.microsoft.com/ar-sa/training/modules/dax-power-bi-modify-filter/5-context-transition"
+      ],
+      "status": "chosen"
+    }
+  ],
+  "_allow": "Where a variant may stay, each with why: a path pattern (whole files) or a path plus a text the line contains.",
+  "allow": [
+    {
+      "path": "^(articles/|ar/articles/|assets/js/translations/article-)(?!(?:article-)?power-bi-report-ready-for-arabic\\.)",
+      "why": "Blog articles: published text, reported in mcp/work/E.md; only a clear error is changed. The Arabic-readiness article (W, 25 Oct) is new and checked like a page."
+    },
+    {
+      "path": "^content/",
+      "why": "The owner's post plans and drafts (blog and LinkedIn): published or to be published text, as the articles."
+    },
+    {
+      "path": "^scripts/make-article-mockups\\.mjs$",
+      "why": "It draws the blog articles' published images (their text is the articles')."
+    },
+    {
+      "path": "\\.min\\.js$",
+      "why": "Built from its source (check:min); the source is checked."
+    },
+    {
+      "path": "^mcp/(work/|WORK\\.md|CHANGELOG\\.md|research/|plans/)|^scripts/tests/DESKTOP-TESTS\\.md$|^ROADMAP|^BACKLOG",
+      "why": "History and notes keep the words of their day (as versions do: the owner's rule of 16 Oct)."
+    },
+    {
+      "path": "(^|/)test[^/]*\\.mjs$|^scripts/tests/|^mcp/(test-models|fixtures|golden|lab)/|^scripts/test-",
+      "why": "Tests and fixtures: they quote what an engine writes (checked by their own run) or what a user types (made-up models)."
+    },
+    {
+      "path": "^assets/data/arabic-report-words\\.json$",
+      "why": "The sheet itself names every variant."
+    },
+    {
+      "path": "^mcp/lib/arabic-terms\\.mjs$",
+      "why": "The scanner itself (mcp/lib/arabic-terms.mjs) names no term but its patterns."
+    }
+  ]
 }

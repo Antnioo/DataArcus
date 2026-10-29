@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Arabic/English for text drawn by this script (static page text uses data-i18n)
   const isAr = () => document.documentElement.lang === 'ar';
   const L = (en, ar) => (isAr() ? ar : en);
-  const PRESET_AR = { 'DataArcus': 'داتا أركوس', 'Corporate': 'رسمي', 'Colorblind safe': 'آمن لعمى الألوان', 'Desert Gulf': 'صحراء الخليج', 'Midnight': 'منتصف الليل', 'Earthy': 'ترابي' };
+  const PRESET_AR = { 'DataArcus': 'DataArcus', 'Corporate': 'رسمي', 'Colorblind safe': 'آمن لعمى الألوان', 'Desert Gulf': 'صحراء الخليج', 'Midnight': 'منتصف الليل', 'Earthy': 'ترابي' };
 
   const E = window.DAEngine;   // design-engine.js: colours, theme JSON, page sizes, slots, background
   const PRESETS = E.PRESETS;
   const UI_LABELS_EN = { background: 'Page', card: 'Visual', text: 'Text', accent: 'Table accent', good: 'Good', neutral: 'Neutral', bad: 'Bad' };
-  const UI_LABELS_AR = { background: 'الصفحة', card: 'العنصر المرئي', text: 'النص', accent: 'لون الجدول', good: 'جيد', neutral: 'محايد', bad: 'سيئ' };
+  const UI_LABELS_AR = { background: 'الصفحة', card: 'المرئي', text: 'النص', accent: 'لون الجدول', good: 'جيد', neutral: 'محايد', bad: 'سيئ' };
   const uiLabel = (k) => (isAr() ? UI_LABELS_AR : UI_LABELS_EN)[k];
   const UI_LABELS = UI_LABELS_EN;
 
@@ -26,12 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE)); } catch (e) { state = null; }
   // an old or hand-edited save may be partial: each value that is not valid falls back to its default
+  // (0.3.1 GD1, the owner, 27 Oct: "i want to make the glassy dashboard default") a first visit, with nothing saved,
+  // opens on the glass look; a saved design keeps its own look (one saved without a look: plain, as it was made)
+  const firstVisit = !state || typeof state !== 'object';
   state = E.repairState(state);
+  if (firstVisit) state.chart = Object.assign({}, state.chart, { look: E.DEFAULT_LOOK });
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   // ---------- builders ----------
   const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="9" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
-  const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table' };
+  const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table', csLook: 'look' };
   const renderInputs = () => {
     $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, L('Color ', 'اللون ') + (i + 1))).join('');
     $('uiColors').innerHTML = Object.keys(UI_LABELS).map((k) => colorInput('u_' + k, state.ui[k], uiLabel(k))).join('');
@@ -45,10 +49,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const chart = () => E.chart(state);
   const buildTheme = () => E.buildTheme(state, isAr() ? 'ar' : 'en');
 
+  // (0.3.1 GL1) the glass look's picture as a data URL, made by the engine (glassPng) at a small size: the same soft
+  // picture the report gets at the page's size. Made again only when the colours change
+  let glassPic = { key: null, url: '' };
+  const glassUrl = () => {
+    const key = JSON.stringify([state.ui, state.data]);
+    if (glassPic.key !== key) { const b = E.glassPng(state, 640, 360); let bin = ''; for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); glassPic = { key, url: 'data:image/png;base64,' + btoa(bin) }; }
+    return glassPic.url;
+  };
+  const rgba = (h, a) => `rgba(${E.hexToRgb(h).join(',')},${a})`;
   const renderPreview = () => {
-    const u = state.ui, d = state.data, ro = E.roles(u), sec = ro.secondary, grid = ro.grid, cs = chart();   // (A2-10: the engine's derived colours)
-    const card = (k, v, delta, good) => `<div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
-    const months = isAr() ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    // (GL1) glass: what Power BI draws, no more: the card colour at the look's transparency over the soft picture, the
+    // 1-pixel rim and the shadow; no blur (Power BI has none)
+    const u = state.ui, d = state.data, ro = E.roles(u), cs = chart(), gl = E.isGlass(state) ? E.glassLook(state) : null, sec = gl ? gl.labels : ro.secondary, grid = ro.grid;   // (A2-10: the engine's derived colours)
+    const cardBg = gl ? `background:${rgba(u.card, (100 - gl.t) / 100)};border:1px solid ${gl.rim}${lay().shadow ? `;box-shadow:0 ${gl.shadow.distance}px ${gl.shadow.blur}px rgba(0,0,0,${(100 - gl.shadow.transparency) / 100})` : ''}` : `background:${u.card}`;
+    const card = (k, v, delta, good) => `<div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
+    const months = isAr() ? window.DataArcusArabicCalendar.MONTHS.slice(0, 6) : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const s1 = [42, 55, 48, 63, 70, 78], s2 = [30, 34, 41, 38, 49, 52], s3 = [18, 22, 20, 27, 25, 31];
     const bars = months.map((m, i) => [s1[i], s2[i], s3[i]].map((v, j) => { const x = 34 + i * 58 + j * 15, h = v * 1.6; return `<rect x="${x}" y="${150 - h}" width="13" height="${h}" rx="2" fill="${d[j]}"/>`
       + (cs.labels === 'on' ? `<text x="${x + 6.5}" y="${146 - h}" font-size="7" text-anchor="middle" fill="${sec}">${v}</text>` : ''); }).join('') + `<text x="${34 + i * 58 + 21}" y="166" font-size="10" text-anchor="middle" fill="${sec}">${m}</text>`).join('');
@@ -65,39 +81,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const pts = (arr, k) => arr.map((v, i) => `${40 + i * 62},${150 - v * k}`).join(' ');
     const donutVals = [40, 25, 20, 15]; let acc = 0; const R = 46, C = 2 * Math.PI * R;
     const donut = donutVals.map((v, i) => { const seg = `<circle r="${R}" cx="70" cy="70" fill="none" stroke="${d[i]}" stroke-width="20" stroke-dasharray="${C * v / 100} ${C}" stroke-dashoffset="${-C * acc / 100}" transform="rotate(-90 70 70)"/>`; acc += v; return seg; }).join('');
-    $('preview').style.background = u.background;
+    $('preview').style.background = gl ? `${u.background} url(${glassUrl()}) center / cover no-repeat` : u.background;
     $('preview').style.fontFamily = `'${state.font}', 'Segoe UI', sans-serif`;
     $('preview').innerHTML = `
       <div class="tg-kpis">${card(L('Revenue', 'الإيرادات'), 'AED 1.24M', L('▲ 12.4% vs LM', '▲ 12.4% عن الشهر الماضي'), true)}${card(L('Orders', 'الطلبات'), '8,432', L('▲ 5.1% vs LM', '▲ 5.1% عن الشهر الماضي'), true)}${card(L('Return rate', 'نسبة المرتجعات'), '4.8%', L('▼ 0.6 pts', '▼ 0.6 نقطة'), false)}</div>
       <div class="tg-grid2">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Sales by channel', 'المبيعات حسب القناة')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Sales by channel', 'المبيعات حسب القناة')}</div>
           ${barChart(gridLines, bars)}</div>
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Share by brand', 'الحصة حسب العلامة')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Share by brand', 'الحصة حسب العلامة')}</div>
           <svg viewBox="0 0 140 140" style="max-width:170px;margin:6px auto 0" role="img" aria-label="Donut chart preview">${donut}<text x="70" y="75" font-size="16" font-weight="800" text-anchor="middle" fill="${u.text}">40%</text></svg></div>
       </div>
       <div class="tg-grid2" style="margin-top:10px">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Trend', 'الاتجاه')}</div>
+        <div class="tg-card" style="${cardBg};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Trend', 'الاتجاه')}</div>
           <svg viewBox="0 0 390 160" role="img" aria-label="Line chart preview">${gridLines}<polyline points="${pts(s1, 1.6)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/><polyline points="${pts(s2, 1.6)}" fill="none" stroke="${d[1]}" stroke-width="3" stroke-linejoin="round"/></svg></div>
-        <div class="tg-card" style="background:${u.card};color:${u.text};overflow-x:auto"><table class="tg-table">
-          <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
-          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
+        <div class="tg-card" style="${cardBg};color:${u.text};overflow-x:auto"><table class="tg-table">
+          <tr style="background:${gl ? 'transparent' : u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${gl ? u.text : contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
+          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${gl ? (i % 2 && gl.table.band ? gl.table.band : 'transparent') : i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
-      </div>`;
+      </div>${gl ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${L(`Glass: see-through cards (${gl.t}% transparency) over a soft page picture made from your colours. Power BI has no blur behind a visual: this preview draws what Power BI draws, and the report gets the same picture.`, `زجاجي: بطاقات شفافة (شفافية ${gl.t}%) فوق صورة صفحة ناعمة مصنوعة من ألوانك. لا يرسم Power BI ضبابية خلف المرئيات: هذه المعاينة ترسم ما يرسمه Power BI، والتقرير يأخذ الصورة نفسها.`)}</p>` : lookMsg ? `<p class="tg-glassnote" style="margin:10px 0 0;font-size:.72rem;color:${u.text}">${lookMsg}</p>` : ''}`;
   };
 
   const renderContrast = () => {
     // the numbers come from the engine (the MCP reports the same); the page gives each check its words
-    const NAMES = { textOnVisuals: L('Text on visuals', 'النص على العناصر المرئية'), labelsOnVisuals: L('Labels on visuals', 'التسميات على العناصر المرئية'),
-      textOnPage: L('Text on page', 'النص على الصفحة'), color1OnVisuals: L('Color 1 on visuals', 'اللون 1 على العناصر المرئية') };
+    const NAMES = { textOnVisuals: L('Text on visuals', 'النص على المرئيات'), labelsOnVisuals: L('Labels on visuals', 'التسميات على المرئيات'),
+      textOnPage: L('Text on page', 'النص على الصفحة'), color1OnVisuals: L('Color 1 on visuals', 'اللون 1 على المرئيات'),
+      // (GL1) the glass look's worst cases: a see-through card over the darkest and the lightest pixel of the picture
+      textOnGlass: L('Text on the see-through cards', 'النص على البطاقات الشفافة'), labelsOnGlass: L('Labels on the see-through cards', 'التسميات على البطاقات الشفافة'),
+      color1OnGlass: L('Color 1 on the see-through cards', 'اللون 1 على البطاقات الشفافة'), textOnPicture: L('Text on the page picture', 'النص على صورة الصفحة') };
     const r0 = E.contrastChecks(state), checks = r0.checks.map((x) => [NAMES[x.id], x.ratio, x.min]), weak = r0.weak;
     // a failing ratio is rounded down, so 4.48 shows as 4.4:1 and never as the 4.5:1 it misses
     const shown = (r, min) => (r >= min ? r : Math.floor(r * 10) / 10).toFixed(1);
     $('contrast').innerHTML = checks.map(([k, r, min]) => `<div class="${r >= min ? 'ok' : 'warn'}"><i class="bi ${r >= min ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${k}: ${shown(r, min)}:1 ${r >= min ? '' : L(`(aim for ${min}:1)`, `(المطلوب ${min}:1)`)}</div>`).join('')
-      + (weak.length ? `<div class="warn"><i class="bi bi-exclamation-triangle me-1"></i>${L(`Color ${weak.join(', ')} almost disappears on the visual background.`, `اللون ${weak.join('، ')} يكاد يختفي على خلفية العنصر المرئي.`)}</div>` : '');
+      + (weak.length ? `<div class="warn"><i class="bi bi-exclamation-triangle me-1"></i>${L(`Color ${weak.join(', ')} almost disappears on the visual background.`, `اللون ${weak.join('، ')} يكاد يختفي على خلفية المرئي.`)}</div>` : '');
   };
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); updateStatus(); };
-  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
+  // (GD1) contrast is the gate: glass only where it keeps everything readable (the engine's glassFit); otherwise the
+  // page goes to Plain and the preview says why
+  let lookMsg = '';
+  const lookGate = () => {
+    if (!E.isGlass(state)) return;
+    const f = E.glassFit(state);
+    if (f.fits) { lookMsg = ''; return; }
+    state.chart = Object.assign(chart(), { look: 'auto' }); $('csLook').value = 'auto';
+    lookMsg = L('Plain look: with these colours the glass look can\'t keep every text readable, so the cards are solid. Choose other colours for glass.', 'شكل عادي: بهذه الألوان لا يُبقي الشكل الزجاجي كل النصوص مقروءة، لذا البطاقات مصمتة. اختر ألوانًا أخرى للشكل الزجاجي.');
+  };
+  const renderAll = () => { lookGate(); renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
   // Every font in the list is built into Power BI, but only some have Arabic letters: in an Arabic or
   // right-to-left report the others fall back to another font, so say so under the font picker.
   const AR_FONTS = E.AR_FONTS;
@@ -179,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
       out.innerHTML = `<div><span>${L(`Read from ${hx(esc(r.name))} in this tab; nothing was uploaded.`, `قُرئ من ${hx(esc(r.name))} داخل هذه الصفحة؛ لم يُرفع شيء.`)}</span></div>`
         + `<div><b>${L('Logo colours', 'ألوان الشعار')}</b>${r.mono ? ' ' + L('(no hue: the palette starts from its dark colour)', '(بلا لون واضح: تبدأ اللوحة من لونه الداكن)') : ''}<div class="sw tg-logo-swatches">${r.colours.map((c) => sw(c.hex, ` <small>${Math.round(c.share * 100)}%</small>`)).join('')}</div></div>`
         + `<div><b>${L('Palette, in order', 'اللوحة بالترتيب')}</b><div class="sw tg-logo-palette">${t.data.map((c) => sw(c)).join('')}</div></div>`
-        + t.adjusted.filter((a) => a.logo).map((a) => `<div class="warn tg-logo-adjusted"><i class="bi bi-info-circle me-1"></i><span>${L(`Your logo's ${hx(a.from)} stands ${ratio(a.before)} on the visual background, under the 3:1 bars and lines need; the palette uses ${hx(a.to)} (${ratio(a.after)}) instead. Your logo itself is unchanged.`, `لون شعارك ${hx(a.from)} يبلغ تباينه ${ratio(a.before)} على خلفية العنصر المرئي، أقل من 3:1 الذي تحتاجه الأعمدة والخطوط؛ لذلك تستخدم اللوحة ${hx(a.to)} ‏(${ratio(a.after)}) بدلًا منه. شعارك نفسه لم يتغيّر.`)}</span></div>`).join('')
+        + t.adjusted.filter((a) => a.logo).map((a) => `<div class="warn tg-logo-adjusted"><i class="bi bi-info-circle me-1"></i><span>${L(`Your logo's ${hx(a.from)} stands ${ratio(a.before)} on the visual background, under the 3:1 bars and lines need; the palette uses ${hx(a.to)} (${ratio(a.after)}) instead. Your logo itself is unchanged.`, `لون شعارك ${hx(a.from)} يبلغ تباينه ${ratio(a.before)} على خلفية المرئي، أقل من 3:1 الذي تحتاجه الأعمدة والخطوط؛ لذلك تستخدم اللوحة ${hx(a.to)} ‏(${ratio(a.after)}) بدلًا منه. شعارك نفسه لم يتغيّر.`)}</span></div>`).join('')
         + `<table class="tg-logo-table"><thead><tr><th>${L('Colour', 'اللون')}</th><th>${L('On visuals', 'على العناصر')}</th><th>${L('On page', 'على الصفحة')}</th><th>${L('Bars, lines (3:1)', 'أعمدة وخطوط (3:1)')}</th><th>${L('Text (4.5:1)', 'نص (4.5:1)')}</th></tr></thead><tbody>`
         + t.table.map((x) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${x.hex}"></i> ${hx(x.hex)}</td><td>${ratio(x.onCard)}</td><td>${ratio(x.onPage)}</td><td class="${x.shapes ? 'ok' : 'warn'}">${x.shapes ? yes : no}</td><td class="${x.text ? 'ok' : 'warn'}">${x.text ? yes : no}</td></tr>`).join('') + '</tbody></table>'
         + `<div class="tg-logo-cvd ${t.cvd.min >= 10 ? 'ok' : 'warn'}"><i class="bi ${t.cvd.min >= 10 ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${L(`Colour-blind check: neighbouring colours stay at least ${t.cvd.min.toFixed(1)} apart (CIEDE2000; deuteranopia ${t.cvd.deutan.toFixed(1)}, protanopia ${t.cvd.protan.toFixed(1)}, normal vision ${t.cvd.normal.toFixed(1)}).`, `فحص عمى الألوان: تبقى الألوان المتجاورة متباعدة بمقدار ${t.cvd.min.toFixed(1)} على الأقل (CIEDE2000؛ عمى الأخضر ${t.cvd.deutan.toFixed(1)}، عمى الأحمر ${t.cvd.protan.toFixed(1)}، الرؤية العادية ${t.cvd.normal.toFixed(1)}).`)}${t.cvd.min >= 10 ? '' : ' ' + L('Some neighbours are close: add data labels or a legend.', 'بعض الألوان المتجاورة قريبة: أضف تسميات البيانات أو وسيلة إيضاح.')}</div>`
@@ -209,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('themeName').addEventListener('input', (e) => { state.name = e.target.value.slice(0, 60); renderJson(); save(); });
   $('font').addEventListener('change', (e) => { state.font = e.target.value; renderAll(); });
   Object.entries(CHART_INPUTS).forEach(([id, k]) => $(id).addEventListener('change', (e) => {
-    state.chart = Object.assign(chart(), { [k]: e.target.value }); renderAll(); track('theme_chart_style', { [k]: e.target.value });
+    state.chart = Object.assign(chart(), { [k]: e.target.value }); lookMsg = ''; renderAll(); track('theme_chart_style', { [k]: e.target.value });
   }));
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
@@ -237,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
   // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
   let PW = 1280, PH = 720;   // the current page's size on the 720-tall design grid
-  const { M, PAGES, LIM, within, fitCustom, KINDS, LAYOUTS, hasMain, hasSplit } = E;
+  const { PAGES, LIM, within, fitCustom, KINDS, LAYOUTS, hasMain, hasSplit } = E;
   const page = (c) => E.page(c || lay());
   let pageMsg = '';   // shown once after a typed value was outside the limits
   const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
@@ -245,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sp = E.smallPage(c), small = sp ? L(`Under ${E.SMALL_PAGE.w} wide the executive layout becomes the single-focus layout (the KPI cards and one large chart), with no second page.`, `تحت عرض ${E.SMALL_PAGE.w} يصبح الملخص التنفيذي تخطيط الرسالة الواحدة (بطاقات المؤشرات ومخطط كبير واحد)، بدون صفحة ثانية.`) : '';
     return [w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`), small].filter(Boolean).join(' '); };
   const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
-  const toPage = (v, c) => E.toPage(v, c || lay());
   const boxOf = (s, c) => E.boxOf(s, c || lay());
   const lay = () => state.layout;
   const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
@@ -258,6 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const sizes = (c) => E.sizes(c, PW);
   function computeSlots(c) { applyPage(c); return E.computeSlots(c, isAr() ? 'ar' : 'en'); }
 
+  // (0.3.1 FX5) the sample's bars and columns as thick as Power BI draws n of them in the slot: the writer's rule
+  // (pbip-sizing.js barBand, never thicker than its maximum), else Desktop's default (its 20% between categories);
+  // null before the sizes are loaded (the sample's own look)
+  const barThick = (n, horizontal, s) => {
+    const Z = window.DAPbipSizing; if (!Z || !Z.barBand) return null;
+    const span = Z.barSpan(horizontal, s.w, s.h, PH), b = Z.barBand(n, span, PH);
+    return b ? b.bar : span / n * (1 - Z.BAR_DEFAULT_INNER);
+  };
   // Sample content so the preview reads like a finished report (never drawn in the PNG)
   function sample(s, u, right) {
     const d = state.data, R = E.roles(u), sec = R.secondary, grid = R.grid, p = 14;
@@ -278,12 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
           + `<polyline points="${pts(b)}" fill="none" stroke="${d[1]}" stroke-width="2.5" stroke-linejoin="round"/><polyline points="${pts(a)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/>`;
       }
       case 'bar': {
-        const v = [0.92, 0.74, 0.61, 0.45, 0.32], n = Math.max(3, Math.min(5, Math.floor(H / 26))), bh = Math.min(16, H / n - 8);
-        return v.slice(0, n).map((f, i) => { const w = (W - 8) * f; return `<rect x="${right ? X + W - w : X}" y="${Y + i * (H / n) + 4}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${d[0]}" opacity="${1 - i * 0.12}"/>`; }).join('');
+        const v = [0.92, 0.74, 0.61, 0.45, 0.32], n = Math.max(3, Math.min(5, Math.floor(H / 26))), t = barThick(n, true, s), bh = t ? Math.min(t, H / n) : Math.min(16, H / n - 8);
+        return v.slice(0, n).map((f, i) => { const w = (W - 8) * f; return `<rect x="${right ? X + W - w : X}" y="${(Y + i * (H / n) + (t ? (H / n - bh) / 2 : 4)).toFixed(1)}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${d[0]}" opacity="${1 - i * 0.12}"/>`; }).join('');
       }
       case 'column': {
-        const v = [0.5, 0.64, 0.58, 0.72, 0.68, 0.84, 0.78, 0.95], n = v.length, gap = W / n;
-        return v.map((f, i) => `<rect x="${(X + i * gap + gap * 0.18).toFixed(1)}" y="${(Y + H - f * H).toFixed(1)}" width="${(gap * 0.64).toFixed(1)}" height="${(f * H).toFixed(1)}" rx="3" fill="${d[0]}" opacity="${i === n - 1 ? 1 : 0.5}"/>`).join('');
+        const v = [0.5, 0.64, 0.58, 0.72, 0.68, 0.84, 0.78, 0.95], n = v.length, gap = W / n, t = barThick(n, false, s), cw = t ? Math.min(t, gap) : gap * 0.64;
+        return v.map((f, i) => `<rect x="${(X + i * gap + (gap - cw) / 2).toFixed(1)}" y="${(Y + H - f * H).toFixed(1)}" width="${cw.toFixed(1)}" height="${(f * H).toFixed(1)}" rx="3" fill="${d[0]}" opacity="${i === n - 1 ? 1 : 0.5}"/>`).join('');
       }
       case 'donut': {
         const r = Math.max(10, Math.min(W, H) / 2 - 10), cx = s.x + s.w / 2, cy = Y + H / 2, C = 2 * Math.PI * r; let acc = 0;
@@ -305,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // accent bars: side, thickness and color (Advanced options)
   const barW = (k, c) => E.barW(k, c || lay());
-  const barColor = (k, i) => E.barColor(state, k, i);
   const c0 = () => E.c0(lay()); // KPI text sits after a side bar
 
   // The background (design engine); the preview adds sample visuals, slot names and sizes over the panels
@@ -320,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         g += `<text x="${lx}" y="${p.y + 22}" ${font} font-size="12" font-weight="700" fill="${sec}" text-anchor="${right ? 'end' : 'start'}">${nm(p.role)}</text>`
           + `<text x="${right ? p.x + 12 : p.x + p.w - 12}" y="${p.y + 22}" font-family="Consolas, monospace" font-size="10" fill="${sec}" opacity=".75" text-anchor="${right ? 'start' : 'end'}">${((b) => `${b.w}×${b.h}`)(boxOf(p, c))}</text>`;   // the slot table's size (boxOf), for the layout drawn
       }
-      s += `<g data-s="${i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
+      s += `<g data-s="${p.s != null ? p.s : i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
     });
     return s;
   };
@@ -369,13 +404,25 @@ document.addEventListener('DOMContentLoaded', () => {
       ${out.join('')}</div></details>`;
   }
   const pngSize = (c) => E.pngSize(c || lay());
+  // (0.3.1 LC1) the canvas's slots: page 1 as the project download writes it (canvasFit, page units) on the 720 grid,
+  // each with its row in the slot table (s: the same kind and name, in order), or the layout's slots
+  const canvasSlots = (c, slots) => {
+    const fit = canvasFit && canvasFit(); if (!fit) return null;
+    const own = computeSlots(fit.layout), k = page(fit.layout).s, seen = {};
+    const drawn = fit.slots.map((f) => { const key = f.kind + '|' + nm(own[f.i].role), n = seen[key] = (seen[key] || 0) + 1;
+      const row = slots.map((x, j) => [x, j]).filter(([x]) => x.kind + '|' + nm(x.role) === key)[n - 1];
+      return Object.assign({}, own[f.i], { x: f.x / k, y: f.y / k, w: f.w / k, h: f.h / k, s: row ? row[1] : null }, f.stack ? { stack: true } : {}); });
+    computeSlots(c);   // (the page's size back to the layout's)
+    return { drawn, moved: drawn.length !== slots.length || drawn.some((d) => { const b = boxOf(d, c), r = d.s != null ? boxOf(slots[d.s], c) : null; return !r || b.x !== r.x || b.y !== r.y || b.w !== r.w || b.h !== r.h; }) };
+  };
   function renderLayoutPreview() {
-    const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
-    $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
+    const c = lay(), slots = computeSlots(c), pg = page(c), [pw, ph] = pngSize(c), fit = canvasSlots(c, slots);
+    $('layCanvas').innerHTML = bgSvg(fit ? fit.drawn : slots, Object.assign({ preview: true }, E.isGlass(state) ? { glass: Object.assign({ url: glassUrl() }, E.glassLook(state)) } : {}));
+    if (fit) $('layCanvas').querySelector('svg').setAttribute('data-fit', fit.moved ? 'moved' : 'same');
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
     updateStatus();
-    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`);
+    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`) + (fit && fit.moved ? ' ' + L('The preview shows page 1 as the Power BI project download writes it (the filter panel as high as its slicers). The table, PNG and CSV keep the layout\'s slots, for placing visuals yourself.', 'تعرض المعاينة الصفحة 1 كما يكتبها تنزيل مشروع Power BI (لوحة الفلاتر بارتفاع مقسماتها). يبقى الجدول وصورة PNG وملف CSV بمواضع التخطيط، لتضع العناصر بنفسك.') : '');
   }
   function renderLayout() {
     const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
@@ -484,7 +531,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // the background as a PNG blob (with the credit metadata); used by the PNG download and the Power BI project
   // (round 24, B1: fit, when given, turns the planned slots into those the report writer lays out, so the panels the
   // picture draws are the visuals' own: a left-out line chart's room given to the chart beside it, one panel under it)
-  const pngBlob = (c, fit) => new Promise((resolve, reject) => {
+  // (GL1) with the glass look the background is the engine's soft picture at the page's size (glassPng), the same bytes
+  // as the MCP's create_report writes; no panels (the cards are see-through visuals)
+  const pngBlob = (c, fit) => (E.isGlass(state) ? Promise.resolve(((p) => new Blob([E.glassPng(Object.assign({}, state, { layout: c || lay() }), p.w, p.h)], { type: 'image/png' }))(page(c || lay()))) : new Promise((resolve, reject) => {
     const was = state.layout; if (c) state.layout = c;
     const sl = computeSlots(lay()), [pw, ph] = pngSize(), svg = bgSvg(fit ? fit(sl) : sl, { w: pngSize()[0], h: pngSize()[1] });
     state.layout = was; if (c) applyPage(was);
@@ -496,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     img.onerror = () => reject(new Error('png'));
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  });
+  }));
   const downloadPng = () => {
     const key = pngKey();
     pngBlob().then((png) => {
@@ -512,13 +561,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only on pages that have the project card (the lab page for now). The builder loads on first use.
   const pbipBtn = $('pbipBtn');
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
+  let canvasFit = null;   // (0.3.1 LC1) set below on pages with the project card: page 1 as the download writes it
   if (pbipBtn) {
     let logo = null;
     // (0.2.9, A3-12: the writer is its modules first (0.3 J7: report-a11y.js before pbip-export.js), in this order; each written out with its own ?v= stamp;
-    // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['/assets/js/text-measure.min.js?v=20261020w8', '/assets/js/story-titles.min.js?v=20261020w8', '/assets/js/pbip-query.min.js?v=20261020s1', '/assets/js/pbip-sizing.min.js?v=w15', '/assets/js/pbip-notes.min.js?v=20261019l2',
-      '/assets/js/label-limits.min.js?v=20261019j11', '/assets/js/pbip-page.min.js?v=20261021p7', '/assets/js/report-a11y.min.js?v=20261020w8', '/assets/js/pbip-export.min.js?v=20261019w5'];
+    // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use; 0.3.1 M1: the shared mirror engine,
+    // report-mirror.js after the visual catalog it reads, before the writer whose Arabic charts it turns round)
+    const BUILDER = ['/assets/js/text-measure.min.js?v=20261027tt2', '/assets/js/story-titles.min.js?v=20261027tt2', '/assets/js/visual-types.min.js?v=20261019u1', '/assets/js/report-mirror.min.js?v=20261029mp1b', '/assets/js/pbip-query.min.js?v=20261026lr1', '/assets/js/pbip-sizing.min.js?v=20261028fx5', '/assets/js/pbip-notes.min.js?v=20261028fx5b',
+      '/assets/js/label-limits.min.js?v=20261027r4a', '/assets/js/pbip-page.min.js?v=20261028fx5b', '/assets/js/report-a11y.min.js?v=20261025sq5', '/assets/js/pbip-export.min.js?v=20261027tt2n'];
+    // (0.3.1 FX5: the page loads the sizes and what they read, for the canvas's bars; a script already on the page is not
+    // loaded again)
+    const onPage = (src) => [...document.scripts].some((x) => x.src === new URL(src, location.href).href);
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
+      if (onPage(src)) return resolve();
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
@@ -533,8 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let binding = null;
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('/assets/js/field-meaning.min.js?v=20261011t'))
-        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=w15')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        .then(() => (window.TmdlModel ? null : loadScript('/assets/js/tmdl-model.min.js?v=20261026a')))
+        .then(() => loadScript('/assets/js/pbip-bind.min.js?v=20261028fx4b')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -600,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261022a')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '/assets/js/model-health-worker.min.js?v=20261026a')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');
@@ -617,18 +672,83 @@ document.addEventListener('DOMContentLoaded', () => {
         if (out) out.textContent = f.name + (size && size.h > size.w ? '. ' + L('This logo is tall; a horizontal version will read much better in the header.', 'هذا الشعار طولي؛ نسخة أفقية منه ستكون أوضح بكثير في الشريط العلوي.') : '');
       });
     });
+    // ---- (0.3.1 TT2; the owner, 27 Oct, D-1027-19 "Both A") an Arabic download on English names: the names first ----
+    // Every field the report's visuals show with no Arabic name is listed (#pbipNames): its English name, an Arabic draft
+    // from DataArcus's fixed words (assets/data/arabic-report-words.json, this site's own file: nothing about the model is
+    // sent) or an empty box, and "Keep English" (never ticked by default). Nothing is built until the person approves
+    // every one; the approved names are the display names the titles use (each title wholly Arabic, or wholly English for
+    // a name kept English), and the README says them. The English download, the sample and a model named in Arabic: no step.
+    const namesBox = $('pbipNames');
+    let words = null, namesAnswers = {};   // the person's last approved answers, by field ("Table[Field]"), on this page only
+    const loadNames = () => Promise.all([window.DAArabicNames ? window.DAArabicNames : loadScript('/assets/js/arabic-names.min.js?v=20261027tt2n').then(() => window.DAArabicNames),
+      words || (words = fetch('/assets/data/arabic-report-words.json').then((r) => (r.ok ? r.json() : Promise.reject(new Error('words')))).catch((e) => { words = null; throw e; }))]);
+    const namesFor = (P, DB, input, m) => {
+      if (!namesBox || !isAr() || !(m === 'local' || m === 'service') || !input.bind) return Promise.resolve({ input });
+      return loadNames().then(([N, list]) => {
+        // the fields the report would show, from a build of this very input (its pictures aside)
+        const items = N.toApprove(P.build(Object.assign({}, input, { pages: input.pages.map((p) => Object.assign({}, p, { png: null })) })), input.bind, list);
+        const a = N.approve(items, namesAnswers);
+        if (!items.length) return { input };
+        if (!a.ok) return { input, pending: { N, items } };
+        return { input: Object.assign({}, input, { bind: N.withNames(input.bind, a.names, DB.mapFields), namesNote: N.note(a) }) };
+      });
+    };
+    const askNames = ({ N, items }) => {
+      const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+      const iso = (s) => '⁨' + s + '⁩';
+      namesBox.textContent = '';
+      const h = el('h3', 'h6 fw-bold mb-1', L('Arabic names for your fields', 'أسماء عربية لحقول نموذجك')); h.id = 'pbipNamesH';
+      // the drafts are suggestions to check: said in Arabic and in English
+      const ar = el('p', 'small mb-1', 'هذه المسودات اقتراحات من قائمة كلمات DataArcus الثابتة، وليست ترجمة: راجع كل اسم وعدّله قبل الموافقة. المربع الفارغ لا اقتراح له، فاكتب الاسم بنفسك، أو أبقِه بالإنجليزية. لا يُرسَل شيء من نموذجك.'); ar.lang = 'ar'; ar.dir = 'rtl';
+      const en = el('p', 'small text-white-50 mb-2', 'These drafts are suggestions from DataArcus\'s fixed word list, not a translation: check and edit each name before you approve. An empty box has no suggestion: type the name, or keep it in English. Nothing from your model is sent.'); en.lang = 'en'; en.dir = 'ltr';
+      namesBox.append(h, ar, en);
+      items.forEach((x, i) => {
+        const row = el('div', 'tg-names-row'), was = namesAnswers[x.key] || {}; row.setAttribute('data-name-key', x.key);
+        const name = el('label', 'tg-names-en', x.english); name.setAttribute('data-name-en', ''); name.lang = 'en'; name.dir = 'ltr'; name.htmlFor = 'pbipName' + i;
+        const box = el('input', 'form-control form-control-sm'); box.type = 'text'; box.id = 'pbipName' + i; box.maxLength = 80; box.lang = 'ar'; box.dir = 'rtl'; box.autocomplete = 'off';
+        box.value = was.ar != null ? was.ar : x.draft;
+        const keep = el('label', 'tg-check tg-names-keep'), cb = el('input'); cb.type = 'checkbox'; cb.checked = was.keep === true;
+        cb.setAttribute('aria-label', L('Keep in English: ', 'إبقاؤه بالإنجليزية: ') + iso(x.english));
+        keep.append(cb, ' ', el('span', null, L('Keep English', 'إبقاؤه بالإنجليزية')));
+        box.disabled = cb.checked; cb.addEventListener('change', () => { box.disabled = cb.checked; });
+        row.append(name, box, keep); namesBox.appendChild(row);
+      });
+      const msg = el('p', 'small tg-warn mb-2'); msg.id = 'pbipNamesMsg'; msg.setAttribute('role', 'alert');
+      const ok = el('button', 'btn btn-accent w-100'); ok.type = 'button'; ok.id = 'pbipNamesOk';
+      ok.append(el('i', 'bi bi-check2 me-1'), el('span', null, L('Approve these names and download', 'اعتمد هذه الأسماء ونزّل التقرير'))); ok.firstChild.setAttribute('aria-hidden', 'true');
+      ok.addEventListener('click', () => {
+        const answers = {};
+        namesBox.querySelectorAll('[data-name-key]').forEach((r) => { answers[r.getAttribute('data-name-key')] = { ar: r.querySelector('input[type=text]').value, keep: r.querySelector('input[type=checkbox]').checked }; });
+        const a = N.approve(items, answers);
+        if (!a.ok) {
+          const why = { hidden: L('has an invisible sign', 'فيه علامة غير مرئية'), notArabic: L('has no Arabic letter (tick "Keep English" to keep it in English)', 'ليس فيه حرف عربي (اختر «إبقاؤه بالإنجليزية» لتبقيه بالإنجليزية)'), long: L('is longer than 80 characters', 'أطول من 80 حرفًا') };
+          msg.textContent = (a.missing.length ? L('Type an Arabic name, or tick "Keep English", for: ', 'اكتب اسمًا عربيًا، أو اختر «إبقاؤه بالإنجليزية»، لـ: ') + a.missing.map(iso).join(L(', ', '، ')) + '. ' : '')
+            + a.bad.map((b) => iso(b.english) + ' ' + why[b.why] + '.').join(' ');
+          const first = items.find((x) => a.missing.includes(x.english) || a.bad.some((b) => b.key === x.key));
+          const row = first && [...namesBox.querySelectorAll('[data-name-key]')].find((r) => r.getAttribute('data-name-key') === first.key);
+          if (row) row.querySelector('input[type=text]').focus();
+          return;
+        }
+        namesAnswers = answers; namesBox.hidden = true; namesBox.textContent = '';
+        pbipBtn.click();
+      });
+      namesBox.append(msg, ok); namesBox.hidden = false;
+      toast(L('Approve the Arabic names first', 'وافق على الأسماء العربية أولًا'));
+      const first = namesBox.querySelector('input[type=text]'); if (first) first.focus();
+    };
     // the download's input, for the download and for its preview (0.3.0 step 1: the preview draws what the download
     // contains): null when something is missing (said in a toast), else a promise of then(P, input, what)
-    const withProject = (then) => {
-      const c = lay(), p = page(c), m = mode(), sample = m === 'sample';
+    // (0.3.1 LC1) the same input for the layout canvas (quiet: nothing said, undefined when something is missing)
+    const projectOf = (quiet) => {
+      const c = lay(), m = mode(), sample = m === 'sample';
       // your own model: where it is, and the fields picked for each visual
       let model = null;
       if (m === 'local') {
-        if (!own.local || !own.local.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
+        if (!own.local || !own.local.folder) { if (!quiet) toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
         model = { byPath: own.local.folder, taken: own.local.reports };
       } else if (m === 'service') {
         const ws = $('pbipWs').value.trim(), mn = $('pbipModelName').value.trim();
-        if (!ws || !mn) { toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
+        if (!ws || !mn) { if (!quiet) toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
         model = { ws, mn };   // the connection string is written once the helper has loaded, below
       }
       // the picker always shows the model of the current choice (see showPicker)
@@ -647,27 +767,57 @@ document.addEventListener('DOMContentLoaded', () => {
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
       const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined, noTime: !!(model && bind && !bind.date) });   // (D16: a model with no time axis gets the layout made for it, as the MCP's)
+      return { c, m, sample, model, bind, bindL, theme, specs };
+    };
+    // the project's pages and the writer's input, from projectOf's q and the model as the writer takes it
+    const inputOf = (q, model) => {
+      const { c, m, sample, bindL, theme, specs } = q;
+      // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
+      const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
+      const input = {
+        name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
+        lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
+        // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
+        ...(rtl() ? { chartAxes: 'mirrored' } : {}),
+        // the report's labels come from the design engine (the MCP uses the same); the readme stays here
+        texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
+          readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
+            '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
+            '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
+        })
+      };
+      return { pages, input };
+    };
+    const withProject = (then) => {
+      const q = projectOf(false); if (!q) return;
+      const { c, m, sample, bind, specs } = q; let model = q.model;
       return Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
-        // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
-        const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
-        const input = {
-          name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
-          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
-          // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
-          ...(rtl() ? { chartAxes: 'mirrored' } : {}),
-          // the report's labels come from the design engine (the MCP uses the same); the readme stays here
-          texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
-            readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
-              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
-              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
-          })
-        };
-        return then(P, input, { c, m, sample, bind, specs, pages });
+        const { pages, input } = inputOf(q, model);
+        // (0.3.1 TT2) an Arabic download on English names: with the names the person approved, or the list to approve
+        return namesFor(P, DB, input, m).then((names) => then(P, names.input, { c, m, sample, bind, specs, pages, names }));
       });
     };
+    // (0.3.1 LC1, the owner's D-1027-19 "Both A", SQ13-S2) the layout canvas draws page 1 as this download writes it:
+    // the same input, the writer's measures (Pbip.fitOptions) and the design engine's fitSlots on the page's own slots,
+    // in page units, as pbip-page.js places them (one rule, never a copy). The writer loads once, after the first draw
+    // (until then, and when the writer can not load, the canvas shows the layout's slots). { layout, slots } or null;
+    // each slot keeps i, its index in the page's slots
+    let fitLoading = null;
+    canvasFit = () => {
+      const q = projectOf(true); if (!q) return null;
+      const P = window.DAPbip, DB = window.DABind;
+      if (!P || (q.model && !DB)) {
+        if (!fitLoading) fitLoading = Promise.all([loadBuilder(), q.model ? loadBind() : null]).then(() => { renderLayoutPreview(); }, () => {});
+        return null;
+      }
+      const model = q.model && q.model.ws ? { byConnection: DB.connection(q.model.ws, q.model.mn) } : q.model, sp = q.specs[0];
+      return { layout: sp.layout, slots: E.fitSlots(sp.slots.map((x, i) => Object.assign({}, x, { i })), P.fitOptions(inputOf(q, model).input)[0]).slots };
+    };
+    // what the canvas depends on in this card: the pages, the panel, the data, the fields picked, the logo
+    ['pbipPages', 'pbipPanel', 'pbipData', 'pbipMap', 'pbipLogo', 'pbipWs', 'pbipModelName'].forEach((id) => { if ($(id)) $(id).addEventListener('change', () => renderLayoutPreview()); });
     pbipBtn.addEventListener('click', () => {
-      const run = withProject((P, input, { c, m, sample, bind, specs, pages }) => loadCheck().catch(() => null).then((Ck) => {
+      const run = withProject((P, input, { c, m, sample, bind, specs, pages, names }) => (names.pending ? askNames(names.pending) : loadCheck().catch(() => null).then((Ck) => {
         // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
         // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
         // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
@@ -684,7 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
         });
-      }));
+      })));
       if (!run) return;
       pbipBtn.disabled = true;
       run.catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
@@ -693,7 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (layout-check.js, the engine the MCP runs before it writes) on the project in memory, before it is offered: "0
     // problems Power BI Desktop would show" or the list, which stays in view; the download is never held back. Structure
     // only: the files' types, places, sizes and settings, and the model's column types when your own model is chosen
-    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261020l4', '../assets/js/layout-check.min.js?v=20261020w8'];
+    const CHECK = ['../assets/js/visual-types.min.js?v=20261019u1', '../assets/js/report-rules.min.js?v=20261028fx3', '../assets/js/layout-check.min.js?v=20261027r4a'];
     const loadCheck = () => (window.DALayoutCheck ? Promise.resolve(window.DALayoutCheck) : loadBuilder().then(() => CHECK.reduce((q, src) => q.then(() => loadScript(src)), Promise.resolve())).then(() => window.DALayoutCheck));
     const ckBox = $('pbipCheck');
     const showCheck = (C, files, m) => {
@@ -715,12 +865,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // MCP's approval window uses (page-preview.js) from the writer's own files: types, places, sizes, titles and field
     // names; grey placeholders, never a value
     const pvBtn = $('pbipPreviewBtn'), pvBox = $('pbipPreview');
-    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261021t2').then(() => window.DAPagePreview));
+    const loadPreview = () => (window.DAPagePreview ? Promise.resolve(window.DAPagePreview) : loadScript('../assets/js/page-preview.min.js?v=20261028fx5').then(() => window.DAPagePreview));
     if (pvBtn && pvBox) pvBtn.addEventListener('click', () => {
-      const run = withProject((P, input, { m }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+      const run = withProject((P, input, { m, specs, pages: pp }) => Promise.all([loadPreview(), loadCheck().catch(() => null)]).then(([PV, Ck]) => {
+        // (0.3.1 GD2) a glass design's pages get the pictures the download writes (pngBlob's glass picture, each page's layout)
+        if (E.isGlass(state)) specs.forEach((sp, i) => { const p = page(sp.layout); pp[i].png = E.glassPng(Object.assign({}, state, { layout: sp.layout }), p.w, p.h); });
         const files = P.build(input).files;
         if (Ck) showCheck(Ck, files, m);
-        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent } });
+        // (0.3.1 GD2) a glass page drawn on its own picture, the bytes the project writes (a data URL: the page's policy
+        // allows data: images, not blob:)
+        const picture = (b) => { if (!E.isGlassPng(b)) return null; let bin = ''; for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return 'data:image/png;base64,' + btoa(bin); };
+        const u = state.ui, pages = PV.fromFiles(files, { rtl: rtl(), colors: { background: u.background, card: u.card, ink: u.text, accent: u.accent }, picture });
         pvBox.textContent = '';
         pages.forEach((pg, i) => {
           const fig = document.createElement('figure'), cap = document.createElement('figcaption');
@@ -741,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- step 3: visual backgrounds, and a reminder when a downloaded file is out of date ----------
   // each file keeps a fingerprint of what was downloaded; a different fingerprint now means it is out of date
   let lastJson = null, lastPng = null, lastCsv = null;
-  function pngKey() { return bgSvg(computeSlots(lay()), {}); }
+  function pngKey() { return E.isGlass(state) ? 'glass' + JSON.stringify([state.ui, state.data, page()]) : bgSvg(computeSlots(lay()), {}); }
   function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, boxOf(s)])); }
   // Visual backgrounds follow what the visitor uses (owner 2026-10-04): Solid for a colour-only visitor, Transparent
   // from the first change in the Layout step (they are making a background), unless they picked one themselves
@@ -752,6 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(L('Visual backgrounds set to Transparent, to sit on the background image', 'أصبحت خلفيات العناصر شفافة، لتجلس على صورة الخلفية'));
   }
   function renderVis() {
+    // (GL1) with the glass look the cards are see-through visuals over the soft picture: no choice to make here
+    if (E.isGlass(state)) { $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span><small class="d-block mt-1 text-white-50">${L('Glass (step 1, Card look): see-through cards. The background download is the soft picture they sit on; set it in Format page › Canvas background, Image fit Fit (Stretch in older versions), transparency 0%.', 'زجاجي (الخطوة 1، شكل البطاقات): بطاقات شفافة. تنزيل الخلفية هو الصورة الناعمة التي تجلس عليها؛ ضعها من Format page › Canvas background مع Image fit: Fit وشفافية 0%.')}</small>`; return; }
     const t = !!lay().transparent;
     $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}
       ${t && autoSwitched ? `<small class="d-block mt-1 tg-warn" data-auto>${L('Switched to Transparent because you changed the layout. Choose Solid if you only use the theme.', 'تحوّلت إلى شفافة لأنك غيّرت التخطيط. اختر مصمتة إن كنت تستخدم السمة فقط.')}</small>` : ''}
@@ -768,7 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ['json', L('Theme', 'السمة'), lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2)],
       ['png', L('Background', 'الخلفية'), lastPng !== null && lastPng !== pngKey()],
       ['csv', L('Layout table', 'جدول التخطيط'), lastCsv !== null && lastCsv !== csvKey()]];
-    const old = files.filter((f) => f[2]), solid = lastPng !== null && !lay().transparent;
+    const old = files.filter((f) => f[2]), solid = lastPng !== null && !lay().transparent && !E.isGlass(state);   // (GL1: glass cards are meant to be seen through)
     const note = (text, act, btn) => `<div class="tg-note"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>${text}</span><button type="button" data-dl="${act}">${btn}</button></div>`;
     let h = '';
     if (old.length) h += note(L(`Changed since you downloaded: <b>${old.map((f) => f[1]).join(', ')}</b>.`, `تغيّر منذ التنزيل: <b>${old.map((f) => f[1]).join('، ')}</b>.`), 'stale', old.length > 1 ? L('Download these again', 'نزّلها من جديد') : L('Download again', 'نزّل من جديد'));
@@ -818,7 +975,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const foldSum = (id) => {
     const c = lay(), p = page(c);
     if (id === 'colors') return (state.preset ? (isAr() ? PRESET_AR[state.preset] || state.preset : state.preset) : L('Your colors', 'ألوانك')) + ' · ' + state.font + ' · ' + (state.name || '');
-    if (id === 'layout') return nm(LAYOUTS[c.preset].name) + ' · ' + p.w + ' × ' + p.h + ' · ' + L(`${c.kpis} KPI cards`, `${c.kpis} بطاقات مؤشرات`);
+    // (0.3.1 SQ8, 0.2.9-design-S4) the layout the preview shows: a small page's executive layout is the single-focus one
+    if (id === 'layout') return nm(LAYOUTS[E.fitLayout(c).preset].name) + ' · ' + p.w + ' × ' + p.h + ' · ' + L(`${c.kpis} KPI cards`, `${c.kpis} بطاقات مؤشرات`);
     return L('Theme, background and layout table', 'السمة والخلفية وجدول المواضع');
   };
   const foldSums = () => FOLDS.forEach((id) => { const s2 = document.querySelector(`#${id} > .tg-fold-sum`); if (s2) s2.textContent = foldSum(id); });

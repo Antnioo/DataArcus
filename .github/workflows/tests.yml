@@ -38,6 +38,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (Q1, 0.3.1) bugs only (eslint.config.mjs: no-undef, unused variables, unreachable code, duplicate keys ...), no style
+      - name: Lint the MCP and the site's engines for bugs (ESLint, pinned in package.json)
+        run: npm run lint
+
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
@@ -47,6 +51,13 @@ jobs:
       - name: Every MCP test script prints the result line CI's summary counts (B-198)
         run: node scripts/test-result-lines.mjs && node scripts/check-result-lines.mjs
 
+      # (A1, 0.3.1) what a new session reads first stays small: caps, job summaries, links and the task routes resolve
+      - name: The agent's startup pack within its caps; every link and task route resolves
+        run: node scripts/test-agent-memory.mjs && node scripts/check-agent-memory.mjs
+
+      - name: The MCP CHANGELOG's [Unreleased] section is in plain words (no internal codes; users read it)
+        run: node scripts/test-changelog-words.mjs && node scripts/changelog-words.mjs
+
       - name: The price updater reads Microsoft's page correctly (fixed text, no network)
         run: node scripts/test-powerbi-prices.mjs
 
@@ -54,6 +65,10 @@ jobs:
         run: node scripts/test-microsoft-watch.mjs
       - name: The PL-300 question file is what its source builds (no edit in the built file only)
         run: node scripts/pl300-bank/build.js --check
+
+      # (A2, 0.3.1) the one result adapter: a failure as one line, causes by name, suites checked by name, --affected
+      - name: Test results read one way (one-line failures, named causes, suite identities; made-up suites and logs)
+        run: node scripts/test-results-adapter.mjs
 
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
@@ -66,6 +81,9 @@ jobs:
 
       - name: The site's config files (robots, sitemap, icons, manifest, security.txt, llms.txt, every page's head)
         run: node scripts/test-site-config.mjs
+
+      - name: The site's Arabic uses one term per concept (the terminology sheet), the English once for slicer and tooltip
+        run: node scripts/test-arabic-terms.mjs
 
       - name: Analytics events follow GA4 rules (no parameter GA4 reads as the traffic source)
         run: node scripts/test-analytics-events.mjs
@@ -96,8 +114,24 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (SPD, Codex #8) Chromium cached by playwright-core's version and its browsers' exact revisions (browsers.json: chromium,
+      # its headless shell, ffmpeg), per OS and arch; the
+      # install below then downloads nothing on a hit (it still installs the system packages), and the launch proves the
+      # cached browser runs
+      - name: Chromium's revision
+        id: chromium
+        run: echo "rev=$(node -p "const b = JSON.parse(require('fs').readFileSync('node_modules/playwright-core/browsers.json', 'utf8')).browsers; require('playwright-core/package.json').version + '-' + ['chromium', 'chromium-headless-shell', 'ffmpeg'].map((n) => (b.find((x) => x.name === n) || {}).revision).join('-')")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ runner.arch }}-${{ steps.chromium.outputs.rev }}
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
+
+      - name: Chromium launches (after a cache hit too)
+        run: node -e "require('playwright-core').chromium.launch().then((b) => { console.log('Chromium ' + b.version() + ' launches'); return b.close(); }, (e) => { console.error(e.message); process.exit(1); })"
 
       # (in one shard only: it renders every Arabic copy again, so once per run is enough; a failure fails the shard,
       # so the website check)
@@ -108,7 +142,7 @@ jobs:
       - name: Website suites, shard ${{ matrix.shard }} of 3
         run: |
           mkdir -p ci-logs
-          node scripts/tests/run-all.mjs --shard ${{ matrix.shard }}/3 2>&1 | tee ci-logs/suites-${{ matrix.shard }}.log
+          node scripts/tests/run-all.mjs --shard ${{ matrix.shard }}/3 --log-dir ci-logs/suites-${{ matrix.shard }}-full 2>&1 | tee ci-logs/suites-${{ matrix.shard }}.log
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -129,28 +163,35 @@ jobs:
           echo "website-checks: ${{ needs.website-checks.result }}"; test "${{ needs.website-checks.result }}" = success
           echo "website-suites: ${{ needs.website-suites.result }}"; test "${{ needs.website-suites.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: website-suites-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
-        run: node scripts/ci-sum.mjs website ci-logs
+        if: always()
+        run: node scripts/ci-sum.mjs website ci-logs --os linux
 
   mcp-parts:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40   # as the Windows and macOS shards (before SPD shard 0 ran every mcp/tests.json suite: 12.7 min on 27 Oct)
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -158,6 +199,8 @@ jobs:
         working-directory: mcp
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # suites read old versions of files from git history (glass-tables: the base engine)
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -168,12 +211,17 @@ jobs:
       - name: Install
         run: npm ci
 
+      # (A2, 0.3.1) every shard through npm test's runner: the console (this log) has the result lines and, for a failure,
+      # one line first and 4 KB of detail; each suite's full output and the run's manifest.json (SPD) are in
+      # mcp-shard-<k>-full/ (the artifact). Shard k: the plan's suites (above). A suite still running after
+      # DA_SUITE_TIMEOUT seconds fails as "timeout" before the job's own limit cancels it unnamed.
       - name: MCP checks, shard ${{ matrix.shard }} of 4
         env:
           DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 780
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -193,20 +241,28 @@ jobs:
         run: |
           echo "mcp-parts: ${{ needs.mcp-parts.result }}"; test "${{ needs.mcp-parts.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: mcp-parts-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
-        run: node scripts/ci-sum.mjs mcp ci-logs
+        if: always()
+        run: node scripts/ci-sum.mjs mcp ci-logs --os linux
+
+  # (SPD, Codex #7) coverage and coverage-web (never gates) run nightly and by hand: .github/workflows/coverage.yml.
+  # Mutation stays here, on every push (an mcp/tests.json suite, in the MCP shards).
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
   # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).
@@ -218,7 +274,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 0: npm test's other scripts (test.mjs says SKIP); 1-4: test.mjs's parts (SHARDS in mcp/test.mjs)
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
         shard: [0, 1, 2, 3, 4]
     defaults:
       run:
@@ -226,6 +284,8 @@ jobs:
         working-directory: mcp
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # suites read old versions of files from git history (glass-tables: the base engine)
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -239,9 +299,10 @@ jobs:
       - name: MCP checks on Windows, shard ${{ matrix.shard }} of 4
         env:
           DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 2100
         run: |
           mkdir -p ../ci-logs
-          if [ "$DA_SHARD" = 0/4 ]; then npm test 2>&1 | tee ../ci-logs/mcp-shard-0.log; else node test.mjs 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"; fi
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -261,17 +322,101 @@ jobs:
         run: |
           echo "mcp-windows-parts: ${{ needs.mcp-windows-parts.result }}"; test "${{ needs.mcp-windows-parts.result }}" = success
 
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
         with:
           node-version: 22
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
         with:
           pattern: mcp-windows-parts-*
           path: ci-logs
           merge-multiple: true
 
       - name: Every part ran exactly once; the checks added up
-        run: node scripts/ci-sum.mjs mcp ci-logs
+        if: always()
+        run: node scripts/ci-sum.mjs mcp ci-logs --os windows
+
+  # macOS (0.3.1 P1, the owner 25 Oct: "beyond Windows, without shipping it"): DataArcus writes Power BI projects on
+  # macOS and Linux too (opened in Power BI Desktop on Windows, or deployed to Fabric). The same parts as mcp and
+  # mcp-windows, so a path or file-system difference (APFS's one folder for NFC and NFD names, /var a link to
+  # /private/var) shows here; test-platform-paths.mjs is the test written for those. Not a required check until the
+  # owner makes it one; the .mcpb keeps "win32" until one real Mac run by a person (the engine's PACKAGING.md).
+  mcp-macos-parts:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # (SPD) each shard k: test.mjs's part k (SHARDS in mcp/test.mjs; a SKIP in shard 0) and the mcp/tests.json suites the
+        # plan deals to shard k on this OS by their measured seconds (planShards, mcp/test-times.json), each suite once;
+        # --keep-going: every suite runs; ci-sum checks every shard against the same plan
+        shard: [0, 1, 2, 3, 4]
+    defaults:
+      run:
+        shell: bash
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # suites read old versions of files from git history (glass-tables: the base engine)
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: MCP checks on macOS, shard ${{ matrix.shard }} of 4
+        env:
+          DA_SHARD: ${{ matrix.shard }}/4
+          DA_SUITE_TIMEOUT: 2100
+        run: |
+          mkdir -p ../ci-logs
+          npm test -- --keep-going --log-dir "../ci-logs/mcp-shard-${{ matrix.shard }}-full" 2>&1 | tee "../ci-logs/mcp-shard-${{ matrix.shard }}.log"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mcp-macos-parts-${{ matrix.shard }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 7
+
+  mcp-macos:
+    needs: [mcp-macos-parts]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every shard passed (a failed, cancelled or skipped one fails this check)
+        run: |
+          echo "mcp-macos-parts: ${{ needs.mcp-macos-parts.result }}"; test "${{ needs.mcp-macos-parts.result }}" = success
+
+      # (0.3.1) the steps below run after a failed shard too, so ci-sum names the failing script (an annotation)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: always()
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: always()
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: always()
+        with:
+          pattern: mcp-macos-parts-*
+          path: ci-logs
+          merge-multiple: true
+
+      - name: Every part ran exactly once; the checks added up
+        if: always()
+        run: node scripts/ci-sum.mjs mcp ci-logs --os macos

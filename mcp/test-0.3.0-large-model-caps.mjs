@@ -17,6 +17,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 import { LIMIT } from './lib/scope.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -96,7 +97,7 @@ try {
     chk(() => !rest.err && rest.j.tables.length + (rest.j.notShown || []).length === rt.j.notShown.length, () => `C-2 read_model notShown: the rest is given when asked: ${short(rest)}`); }
   await call('suggest_fields focus ar', 'suggest_fields', { path: MP, focus: FOCUS, kpis: 6, lang: 'ar' });
   await call('suggest_fields no focus', 'suggest_fields', { path: MP, kpis: 6 });
-  await call('suggest_fields tables (60, the most it takes)', 'suggest_fields', { path: MP, kpis: 6, tables: names.slice(0, 60) });
+  await call('suggest_fields tables (60 of the 100 it takes)', 'suggest_fields', { path: MP, kpis: 6, tables: names.slice(0, 60) });
   const hp = await call('check_model_health maxItems 200, country', 'check_model_health', { path: MP, maxItems: 200, country: 'uae', asOf: '2026-10-20' });
   const hid = await approve('check_model_health (fix scripts)', hp);
   const ids = (hp.j && hp.j.findings || []).map((f) => f.id);
@@ -127,7 +128,8 @@ try {
     return r;
   };
   const EN = await build('EN all on', Object.assign({ name: 'Q1 EN', lang: 'en', layout: 'exec', kpis: 6, filters: 'end' }, ALL_ON));
-  await build('AR all on', Object.assign({ name: 'Q1 AR', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', displayNames: DN, waterfallRtl: 'mirror' }, ALL_ON));
+  // (0.3.1 CX1, F01: the two fields DN gives no Arabic name are kept English on purpose, as the person says it)
+  await build('AR all on', Object.assign({ name: 'Q1 AR', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', displayNames: Object.assign({}, DN, keepEnglish('Web Orders[Web Orders Max Score]', 'Web Orders[Web Orders Average Value]')), waterfallRtl: 'mirror' }, ALL_ON));
   // (the same with no Arabic name approved yet: every field listed as kept in English, the terminology sheet all asked)
   await build('AR all on, no names yet', Object.assign({ name: 'Q1 AR2', lang: 'ar', layout: 'analysis', kpis: 6, filters: 'start', waterfallRtl: 'mirror' }, ALL_ON));
   await build('Ramadan date questions', { name: 'Q1 Ramadan', lang: 'ar', layout: 'focus', kpis: 3, filters: 'top', displayNames: DN, secondPage: false,
@@ -177,7 +179,7 @@ try {
   for (const w of reportsWritten) {
     const rel = path.posix.join(MP, String(w.report).split(/[\\/]/).pop());
     await call(`read_report text ${w.label}`, 'read_report', { path: rel });
-    const rj = await call(`read_report json ${w.label}`, 'read_report', { path: rel, format: 'json' });
+    await call(`read_report json ${w.label}`, 'read_report', { path: rel, format: 'json' });
     const c = await call(`check_report ${w.label}`, 'check_report', { path: rel, maxFindings: 200 }), j = c.j || {};
     chk(() => !c.err && j.validator && j.validator.ran && j.validator.errors === 0 && j.impact.kinds.canBreak.count === 0,
       () => `C-4 ${w.label}: validator 0 errors and check_report 0 "can break": ${c.err ? c.t.slice(0, 300) : JSON.stringify({ v: j.validator, canBreak: j.impact && j.impact.kinds.canBreak, f: (j.findings || []).filter((f) => f.impact === 'canBreak').slice(0, 3).map((f) => [f.rule, f.file, f.what]) }).slice(0, 900)}`);

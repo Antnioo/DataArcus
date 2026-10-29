@@ -24,6 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const req = createRequire(import.meta.url);
@@ -151,7 +152,7 @@ chk(() => nameOfProj(ys(wa2)[0]) === 'Waterfall base: Total Sales (2)' && measur
     const js = ok[1].replace(/BLANK \(\)/g, 'null').replace(/ISBLANK \(/g, 'ISBLANK(').replace(/\bIF \(/g, 'IF(').replace(/\bMIN \(/g, 'Math.min(').replace(/\bMAX \(/g, 'Math.max(').replace(/\bSIGN \(/g, 'Math.sign(').replace(/\bNOT \(/g, '!(').replace(/ = /g, ' === ');
     if (/[A-Za-z]{3,}/.test(js.replace(/Math\.(min|max|sign)|ISBLANK|IF|null|_lo|_hi|_e|_s|_y/g, ''))) throw new Error('a DAX word the golden does not know: ' + js);
     const IF = (c, a, b) => (c ? a : b === undefined ? null : b), ISBLANK = (x) => x == null;
-    return new Function('IF', 'ISBLANK', '_y', '_e', '_s', '_lo', '_hi', 'return (' + js + ');')(IF, ISBLANK, _y, _e, _s, _lo, _hi);   // eslint-disable-line no-new-func
+    return new Function('IF', 'ISBLANK', '_y', '_e', '_s', '_lo', '_hi', 'return (' + js + ');')(IF, ISBLANK, _y, _e, _s, _lo, _hi);   // (built from the golden's DAX, its words checked above)
   };
   let drawn = null, err = '';
   try {
@@ -210,7 +211,7 @@ chk(() => /stacked column chart/.test(Mirror.KIND_WHAT.waterfall) && /no Total c
   const sec = page && page.sections ? page.sections.find((x) => /^Waterfalls, right to left \(1\)$/.test(x.heading)) : null;
   chk(() => sec && /Overview: Sales bridge/.test(sec.rows[0][0]) && /stacked column chart/.test(sec.rows[0][1]) && /no Total column/.test(sec.rows[0][1]),
     () => `P1: the approval page lists each waterfall and what it is written as: ${JSON.stringify(page).slice(0, 600)}`);
-  const sv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+  const sv = serverSource();
   chk(() => /waterfall \(gallery\) is written as a stacked column chart drawn as a waterfall, read from the right/.test(sv) && /no Total column in Arabic: the last step on the left ends at the total/.test(sv) && /reportNotes\.push\(`The waterfall/.test(sv),
     () => 'P2: create_report\'s chartAxes note, its report notes and plan_layout\'s waterfallRtl say what is written');
 }

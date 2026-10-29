@@ -51,6 +51,7 @@ Wrong-block pattern: server.mjs rebuilds the picker's binding (`bindFor`, :700-7
 - Golden numbers: 843c8dc's moves (`longTitleUses` 81→86, `suggestChars` 5610→5111) carry a "why". No portfolio-report tuning in these files on main (G1 is on the branch).
 
 ## Seen, not in scope
+Status of these items: [mcp/work/SEEN-QUEUE.md#audit-3-picker-writer](SEEN-QUEUE.md#audit-3-picker-writer)
 
 - `connection()` (pbip-bind.js:516-519): workspace name not URL-encoded (quotes doubled, so safe).
 - The picker's `langNote` and `twinsOf` keys `T[c]` (pbip-bind.js:292, 527-528) and the server's `keyOf` are ambiguous for names that contain `]`.

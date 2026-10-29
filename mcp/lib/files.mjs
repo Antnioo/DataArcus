@@ -116,6 +116,25 @@ export function planWrites(planId, tool) {
   const mark = writtenSince(); let failed = false, left = false, unknown = false;
   return {
     step(write) { try { return write(); } catch (e) { failed = true; if (!e || !e.left) unknown = true; else if (e.left.ours.length) left = true; throw e; } },
+    /**
+     * (0.3.1 CX1, Codex's F08: of two approved scripts one could stay on disk) several files written all or none: each
+     * write gets made, the list of what this batch created (write(made) pushes each file's record), and on any failure
+     * everything in it is removed (rollBack: only while it is still what this batch wrote, never a file that was there
+     * before), then one error, write-io's, says what is left; done() reads it as for one write. what: 'the fix scripts'.
+     */
+    batch(writes, what) {
+      const made = [], m0 = WRITTEN.length;
+      try { return writes.map((w) => w(made)); } catch (e) {
+        failed = true;
+        const back = rollBack(made), still = new Set(back.ours.concat(back.foreign));
+        const gone = new Set(made.map((r) => String(r.path)).filter((f) => !still.has(f)));
+        for (let i = WRITTEN.length - 1; i >= m0; i--) if (gone.has(WRITTEN[i])) WRITTEN.splice(i, 1);   // (removed again: not written)
+        if (!e || !e.left) unknown = true;
+        const ours = ((e && e.left && e.left.ours) || []).concat(back.ours), foreign = ((e && e.left && e.left.foreign) || []).concat(back.foreign);
+        if (ours.length) left = true;
+        throw writeFailed((e && e.first) || e, what, [...new Set(ours)].sort(), [...new Set(foreign)].sort());
+      }
+    },
     done() {
       const wrote = writtenSince(mark);
       if (failed && !left && !unknown && !wrote.length) return `The plan ${planId} was not used: once the cause is fixed (for a full disk: free some space), call this tool again with the same planId.`;
@@ -156,6 +175,23 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
 // at a time, and only those its own mkdir made are told (a folder another program made in between is not ours); a mkdir
 // that fails half-way removes what it made and says so (writeFailed).
 export function freeFile(folder, base, ext, made) {
+  const dir = folderFor(folder, made);
+  for (let n = 1; ; n++) {
+    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
+    if (nothingAt(f)) return f;
+  }
+}
+/** (0.3.1 AF2, the release audit's F09) The name freeFile would give now, for a plan to show: nothing is made or written
+ *  (a folder not there yet holds nothing, so the first name is free). The write then writes that name or nothing. */
+export function freeName(folder, base, ext) {
+  const dir = inside(folder || '.');
+  for (let n = 1; ; n++) {
+    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
+    if (nothingAt(f)) return path.basename(f);
+  }
+}
+/** (AF2) freeFile's folder: made one level at a time (made: the folders this call made, outermost first). */
+export function folderFor(folder, made) {
   const dir = inside(folder || '.');
   // (the folders missing before, found by walking up from dir to the first one that is there, never by comparing a
   // path with mkdirSync's answer: on Windows the two can spell one folder differently, a short name like RUNNER~1)
@@ -170,8 +206,5 @@ export function freeFile(folder, base, ext, made) {
   }
   mine.forEach(noteDir);
   if (Array.isArray(made)) made.push(...mine.map((r) => r.path));
-  for (let n = 1; ; n++) {
-    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
-    if (nothingAt(f)) return f;
-  }
+  return dir;
 }

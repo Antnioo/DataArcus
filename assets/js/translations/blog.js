@@ -59,6 +59,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      readyForArabic: {
+        badge: "ARABIC REPORTS",
+        title: "Is Your Power BI Report Ready for Arabic? 19 Things to Check",
+        date: "October 25, 2026",
+        excerpt: "What goes wrong when a report built in English is read in Arabic, kind by kind, and the fix for each: DataArcus through your approval, a Desktop setting, or plainly no setting.",
+        button: "Read Playbook"
+      },
       customVisualChecks: {
         badge: "AI AGENTS",
         title: "Before an AI Builds Your Power BI Custom Visual: 4 Checks",
@@ -73,7 +80,7 @@ window.blogTranslations = {
         excerpt: "We checked 23 Power BI models, 18 of them Microsoft's, against Microsoft's guidance. Our own tool was wrong 206 times. Five cases where a best-practice rule does not apply, with Microsoft's own words.",
         button: "Read Playbook"
       },
-      gulfCalendar: {"badge": "GULF CALENDAR", "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend", "date": "October 3, 2026", "excerpt": "Ramadan and Eid move, and the UAE changed its weekend in 2022. One DAX calendar with Hijri dates, announced Ramadan and Eid days, each country's weekend, and an Eid window measure.", "button": "Read Playbook"},
+      gulfCalendar: {"badge": "GULF CALENDAR", "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends", "date": "October 3, 2026", "excerpt": "Ramadan and Eid move, and the UAE changed its weekend in 2022. One DAX calendar with Hijri dates, announced Ramadan and Eid days, each country's weekend, and an Eid window measure.", "button": "Read Playbook"},
       aiReady: {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"},
       reportStyles: {
         badge: "REPORT DESIGN",
@@ -169,23 +176,23 @@ window.blogTranslations = {
     },
     // Meta (AR)
     meta: {
-      title: "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      title: "دليل Power BI: أدلة لفرق الخليج - DataArcus",
       description: "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
-      keywords: "مدونة Power BI, Power BI الخليج, التقويم الهجري في Power BI, مبيعات رمضان في Power BI, Copilot في Power BI, تصميم تقارير Power BI, DAX, تراخيص Power BI, مدونة DataArcus",
-      author: "داتا أركوس",
+      keywords: "داتا أركوس, مدونة Power BI, Power BI الخليج, التقويم الهجري في Power BI, مبيعات رمضان في Power BI, Copilot في Power BI, تصميم تقارير Power BI, DAX, تراخيص Power BI, مدونة DataArcus",
+      author: "DataArcus",
       "og:type": "website",
-      "og:title": "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      "og:title": "دليل Power BI: أدلة لفرق الخليج - DataArcus",
       "og:description": "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
       "og:url": "https://dataarcus.com/blog.html",
-      "og:site_name": "داتا أركوس",
+      "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/blog.jpg",
-      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "دليل Power BI: أدلة لفرق الخليج - داتا أركوس",
+      "twitter:title": "دليل Power BI: أدلة لفرق الخليج - DataArcus",
       "twitter:description": "أدلة Power BI عملية من عمل حقيقي لفرق الخليج: التقويم الخليجي ورمضان، نماذج جاهزة لـ Copilot، تصميم التقارير، DAX والتراخيص.",
       "twitter:image": "https://dataarcus.com/assets/img/og/blog.jpg",
-      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/blog.html",
     },
 
@@ -221,6 +228,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      readyForArabic: {
+        badge: "التقارير العربية",
+        title: "هل تقرير Power BI الخاص بك جاهز للعربية؟ 19 أمرًا تفحصها",
+        date: "25 أكتوبر 2026",
+        excerpt: "ما الذي يختل حين يُقرأ تقرير مبني بالإنجليزية بالعربية، نوعًا نوعًا، وعلاج كل نوع: DataArcus بموافقتك، أو إعداد في Desktop، أو لا إعداد له بوضوح.",
+        button: "اقرأ الدليل"
+      },
       customVisualChecks: {
         badge: "وكلاء الذكاء الاصطناعي",
         title: "قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص",
@@ -235,7 +249,7 @@ window.blogTranslations = {
         excerpt: "فحصنا 23 نموذج Power BI، منها 18 من Microsoft، مقابل إرشادات Microsoft. أخطأت أداتنا نفسها 206 مرات. خمس حالات لا تنطبق فيها قاعدة أفضل الممارسات، بكلمات Microsoft نفسها.",
         button: "اقرأ الدليل"
       },
-      gulfCalendar: {"badge": "التقويم الخليجي", "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة الصحيحة", "date": "3 أكتوبر 2026", "excerpt": "رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.", "button": "اقرأ الدليل"},
+      gulfCalendar: {"badge": "التقويم الخليجي", "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة", "date": "3 أكتوبر 2026", "excerpt": "رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، وتواريخ رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.", "button": "اقرأ الدليل"},
       aiReady: {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"},
       reportStyles: {
         badge: "تصميم التقارير",
@@ -309,7 +323,7 @@ window.blogTranslations = {
       },
       clv: {
         badge: "استراتيجية",
-        title: "المقياس الوحيد الذي يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه)",
+        title: "مقياس واحد يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه)",
         date: "23 أغسطس 2025",
         excerpt: "لماذا تُعد القيمة الدائمة للعميل (وليس فقط الإيرادات) هي مؤشر الأداء الرئيسي لنمو التجارة الإلكترونية، ومسار عملي لنمذجتها في Power BI.",
         button: "اقرأ الدليل"

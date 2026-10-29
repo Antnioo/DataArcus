@@ -10,6 +10,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), require = createRequire(import.meta.url);
 const src = (f) => fs.readFileSync(path.join(HERE, f), 'utf8');
@@ -70,7 +71,7 @@ export async function v029e({ call, check, ROOT }) {
   const r6 = await ask('read_model', { path: 'e6' }), cols6 = r6.j && r6.j.tables[0].columns;
   chk(() => cols6 && cols6.includes('Note (unknown)') && cols6.includes('Region (string)'), () => `A1-6. a model.bim column with no type reads as unknown, as in TMDL (never guessed as text): ${short(r6)}`);
   chk(() => Bind.fromTmsl({ model: { tables: [{ name: 'T', columns: [{ name: 'C' }] }] } })[0].columns[0].dataType === 'unknown', () => 'A1-6. the shared reader (website too) defaults a missing type to unknown');
-  chk(() => !/dataType \|\| 'string'|c\.dataType \|\| 'string'/.test(src('server.mjs') + src('lib/model.mjs')), () => 'A1-6. no tool or reader defaults a type to string');
+  chk(() => !/dataType \|\| 'string'|c\.dataType \|\| 'string'/.test(serverSource() + src('lib/model.mjs')), () => 'A1-6. no tool or reader defaults a type to string');
   // column types read from Desktop reach both views
   let m6 = null; try { m6 = M.loadModel('e6', { root: ROOT }); M.applyColumnTypes(m6, { 'Sales[Note]': 'string' }); } catch (e) { m6 = null; }
   chk(() => m6.tables[0].columns.find((c) => c.name === 'Note').dataType === 'string' && M.modelOf(m6.tmsl).tables[0].columns.find((c) => c.name === 'Note').dataType === 'string',
@@ -79,7 +80,7 @@ export async function v029e({ call, check, ROOT }) {
   // ---------- A1-8: one TMDL parse; one modelOf ----------
   chk(() => typeof Bind.parseTmdl === 'undefined' && typeof Bind.relsOfTmdl === 'undefined', () => 'A1-8. pbip-bind has no TMDL parser of its own (parseTmdl, relsOfTmdl): one parse, tmdl-model.js');
   chk(() => /TmdlModel|tmdl-model/.test(src('../assets/js/pbip-bind.js')) && /tmdl-model\.min\.js/.test(src('../assets/js/theme-generator.js')), () => 'A1-8. the website reads a TMDL folder through tmdl-model.js (loaded with the picker)');
-  chk(() => !/\(m\.tmsl && \(m\.tmsl\.model \|\| m\.tmsl\)\)|\(tmsl && \(tmsl\.model \|\| tmsl\)\)/.test(src('server.mjs')) && /modelOf\(/.test(src('server.mjs')), () => 'A1-8. one modelOf(tmsl) in place of the server\'s seven unwraps');
+  chk(() => !/\(m\.tmsl && \(m\.tmsl\.model \|\| m\.tmsl\)\)|\(tmsl && \(tmsl\.model \|\| tmsl\)\)/.test(serverSource()) && /modelOf\(/.test(serverSource()), () => 'A1-8. one modelOf(tmsl) in place of the server\'s seven unwraps');
   const tm = Tmdl.fromFiles([{ path: 'definition/tables/T.tmdl', text: 'table T\n\tmeasure M = 1\n\t\tformatString: #,0\n\t\tdisplayFolder: F\n\n\tcolumn C\n\t\tdataType: string\n\t\tsortByColumn: N\n\n\tcolumn N\n\t\tdataType: int64\n' }]);
   const t8 = Bind.fromTmsl(tm)[0];
   chk(() => t8.columns[0].sortBy === 'N' && t8.measures[0].displayFolder === 'F' && t8.measures[0].formatString === '#,0', () => `A1-8. a TMDL table read once gives the picker's fields: ${JSON.stringify(t8)}`);

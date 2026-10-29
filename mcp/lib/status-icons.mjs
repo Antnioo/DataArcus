@@ -12,6 +12,8 @@
 // The MCP never reads a value. Model names are untrusted: quoted (Fix.name, daxNames), compared, never followed.
 import { createRequire } from 'node:module';
 import { freeNamer, tagOf, scriptFileOf, nameKey } from './model-script.mjs';
+import { kpiTarget } from './model.mjs';
+import { besideSaid } from './plain-words.mjs';   // (0.3.1 R4A, T-9: the folder by its name and where it is)
 
 const require = createRequire(import.meta.url);
 const Fix = require('../../assets/js/model-health-tmdl.js'), Pbip = require('../../assets/js/pbip-export.js'), Bind = require('../../assets/js/pbip-bind.js'), E = require('../../assets/js/design-engine.js');
@@ -33,10 +35,14 @@ export const parseThreshold = (s) => { const m = /^\s*(>=|<=|>|<)\s*(-?\d+(?:\.\
 export function iconsOption(v) { if (v === true) return true; if (Array.isArray(v) && v.length) return v; return null; }
 
 const keyOf = (s) => { const mk = String(s).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? { t: mk[1], m: mk[2] } : null; };
+// (SQ15a) a KPI whose target is not one measure: said so, never quoted
+export const kpiSaid = (raw, t, m) => { const k = kpiTarget(raw, t, m); return k && k.expression ? '; its KPI in the model has a target, but it is an expression, not a measure DataArcus can name' : ''; };
 const shownName = (s) => JSON.stringify(Pbip.shown ? Pbip.shown(String(s)).slice(0, 160) : String(s).replace(/[\p{Cc}\p{Cf}]/gu, ' ').slice(0, 160));
 
-/** The target measure the model's metadata names for t[m] (raw: the model's tables), or null. */
+/** The target measure the model's metadata names for t[m] (raw: the model's tables), or null: the measure's own KPI
+ *  target first when it is a measure (SQ15a, L5-S1: kpiTarget, model.mjs), then the names. */
 export function targetOf(raw, t, m) {
+  const k = kpiTarget(raw, t, m); if (k && !k.expression) return k;
   const want = new Set(TARGET_WORDS.flatMap((w) => [`${m} ${w}`, `${w} ${m}`, `${m} - ${w}`]).map(nameKey));
   const tables = (raw || []).slice().sort((a, b) => (a.name === t ? -1 : b.name === t ? 1 : 0));
   for (const x of tables) { const hit = (x.measures || []).find((y) => y.name !== m && want.has(nameKey(y.name))); if (hit) return { t: x.name, m: hit.name }; }
@@ -67,7 +73,7 @@ export function resolveIcons(raw, opt) {
       return;
     }
     const target = targetOf(raw, k.t, k.m);
-    if (!target) { problems.push(`${at}: ${shownName(x.measure)} has no target measure in the model's metadata (a measure named "<name> Target", "<name> Goal" or "<name> Budget"), and no thresholds were given. Ask the user for thresholds (good and bad), or name a measure that has a target; thresholds are never guessed.`); return; }
+    if (!target) { problems.push(`${at}: ${shownName(x.measure)} has no target measure in the model's metadata (a measure named "<name> Target", "<name> Goal" or "<name> Budget"${kpiSaid(raw, k.t, k.m)}), and no thresholds were given. Ask the user for thresholds (good and bad), or name a measure that has a target; thresholds are never guessed.`); return; }
     items.push({ t: k.t, m: k.m, way: 'measure', target });
   });
   return { items, problems };
@@ -130,7 +136,7 @@ export function applyIcons(files, o) {
         const mt = raw.find((y) => y.name === t), mo = mt && (mt.measures || []).find((y) => y.name === m);
         if (!mo || !Bind.isPercent(m, mo.formatString, mo.expression) || Pbip.hasControl(t) || Pbip.hasControl(m)) return;
         const target = targetOf(raw, t, m);
-        if (!target) { skipped.set(key, { measure: `${t}[${m}]`, why: 'a rate with no target measure in the model\'s metadata ("<name> Target", "<name> Goal" or "<name> Budget"); give thresholds (good and bad) from the user for it' }); return; }
+        if (!target) { skipped.set(key, { measure: `${t}[${m}]`, why: 'a rate with no target measure in the model\'s metadata ("<name> Target", "<name> Goal" or "<name> Budget"' + kpiSaid(raw, t, m) + '); give thresholds (good and bad) from the user for it' }); return; }
         x = { t, m, way: 'measure', target };
       }
       if (!x) return;
@@ -175,7 +181,7 @@ export function iconsScript(measures, seed) {
 }
 
 /** How the user applies the script, for the answer and the plan. */
-export const iconsHow = (file) => `Apply the script first: the status icons show only once the model has the status measures. The script is in the file "${file}", next to the project. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Until the script is applied the columns show no icon.`;
+export const iconsHow = (file, dir) => `Apply the script first: the status icons show only once the model has the status measures. The script is in the file "${file}", ${besideSaid(dir)}. Save a copy of your file first; open the script in Notepad, select all and copy; in Power BI Desktop open TMDL view, open a new tab, paste, choose Preview (only new measures, in the folder "${FOLDER}"; nothing changed or replaced), then Apply. The model is not changed by DataArcus. Until the script is applied the columns show no icon.`;
 
 /** What the plan, the approval page and the answer say (names screened by the caller's JSON; no value is ever read). */
 export function iconsSaid(r) {

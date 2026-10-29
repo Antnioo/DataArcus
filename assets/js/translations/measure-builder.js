@@ -101,10 +101,10 @@ window.measureBuilderTranslations = {
       "copyAll": "نسخ كل المقاييس",
       "allHow": "في Power BI Desktop افتح <strong>DAX query view</strong> (الشريط الأيسر)، الصق الكود، واضغط <strong>Update model with changes</strong>. ستُضاف كل المقاييس دفعة واحدة.",
       "oneHow": "عبر <strong>Modeling → New measure</strong>: انسخ كل مقياس والصقه. أنشئها بهذا الترتيب.",
-      "ramNote": "تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم داتا أركوس</a>.",
+      "ramNote": "تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم DataArcus</a>.",
       "cta": {
         "title": "المقاييس سهلة. الأرقام الصحيحة ليست كذلك.",
-        "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني داتا أركوس نماذج بيانات Power BI وتصلحها.",
+        "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني DataArcus نماذج بيانات Power BI وتصلحها.",
         "next": "مولّد تقويم DAX المجاني",
         "guide": "دليل: لماذا تنكسر المقارنة السنوية في رمضان، والمقياس الذي يصلحها ←"
       },
@@ -115,7 +115,7 @@ window.measureBuilderTranslations = {
         "q2": "كيف أضيف كل المقاييس دفعة واحدة؟",
         "a2": "استخدم <strong>DAX query view</strong> في Power BI Desktop. الصق الكود كاملًا واضغط <strong>Update model with changes</strong>. ثم اضبط مقاييس النسب على تنسيق Percentage من شريط Measure tools.",
         "q3": "مقياس YTD أو PY يظهر فارغًا. لماذا؟",
-        "a3": "يحتاج ذكاء الوقت إلى جدول تواريخ حقيقي: صف لكل يوم بدون فجوات، ومُعلَّم كجدول تواريخ، ومرتبط بجدول الحقائق. استخدم عمود Date من هذا الجدول في العناصر المرئية، لا عمود التاريخ من جدول الحقائق.",
+        "a3": "يحتاج ذكاء الوقت إلى جدول تواريخ حقيقي: صف لكل يوم بدون فجوات، ومُعلَّم كجدول تواريخ، ومرتبط بجدول الحقائق. استخدم عمود Date من هذا الجدول في المرئيات، لا عمود التاريخ من جدول الحقائق.",
         "q4": "ما الفرق بين Rolling 3M و 30D Avg؟",
         "a4": "<strong>Rolling 3M</strong> يجمع آخر ثلاثة أشهر، وهو ممتاز لتنعيم المبيعات الموسمية. <strong>30D Avg</strong> هو المتوسط اليومي لآخر 30 يومًا، وهو أفضل لخطوط الاتجاه على البيانات اليومية.",
         "q5": "كيف تعمل مقارنة رمضان برمضان الماضي؟",
@@ -123,7 +123,8 @@ window.measureBuilderTranslations = {
       }
     },
     "meta": {
-      "title": "منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك", "description": "أنشئ مقاييس ذكاء الوقت في Power BI من مقياس أساسي واحد: YTD وMTD والنمو السنوي والشهري والأشهر المتحركة والإجماليات التراكمية ورمضان مقابل رمضان الماضي."
+      "title": "منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك", "description": "أنشئ مقاييس ذكاء الوقت في Power BI من مقياس أساسي واحد: YTD وMTD والنمو السنوي والشهري والأشهر المتحركة والإجماليات التراكمية ورمضان مقابل رمضان الماضي.",
+      "keywords": "داتا أركوس, DAX year over year, DAX YTD, DAX running total, DAX rolling 3 months, Power BI time intelligence, DAX measure generator",
     }
   }
 };

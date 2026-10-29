@@ -188,7 +188,7 @@ portfolio: {
           }
         ]
       },
-    latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"customVisualChecks": {"badge": "AI AGENTS", "title": "Before an AI Builds Your Power BI Custom Visual: 4 Checks", "date": "October 23, 2026", "excerpt": "AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft's own pages.", "button": "Read Playbook"}, "bestPracticeExceptions": {"badge": "BEST PRACTICE", "title": "We Checked 23 Power BI Models Against Microsoft's Rules. Our Own Tool Was Wrong 206 Times.", "date": "October 17, 2026", "excerpt": "We checked 23 Power BI models against Microsoft's guidance, and our own tool was wrong 206 times. Five cases where a best-practice rule does not apply.", "button": "Read Playbook"}, "gulfCalendar": {"badge": "GULF CALENDAR", "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend", "date": "October 3, 2026", "excerpt": "Ramadan and Eid move, and the UAE changed its weekend in 2022. One DAX calendar with Hijri dates, announced Ramadan and Eid days, each country's weekend, and an Eid window measure.", "button": "Read Playbook"}, "aiReady": {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"}, "reportStyles": {"badge": "REPORT DESIGN", "title": "One Design Doesn’t Fit All: 7 Power BI Report Styles", "date": "September 29, 2026", "excerpt": "Executive, sales, finance, marketing, operations, HR and customer service reports each answer a different question. The 7 styles with example pages, and a 3-question quiz to pick yours.", "button": "Read Playbook"}, "reportRedesign": {"badge": "REPORT DESIGN", "title": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes", "date": "September 28, 2026", "excerpt": "A leads report with the right visuals but loud colours and a messy layout. The five design changes that fixed it, and how to make them in 5 minutes with a free tool.", "button": "Read Playbook"}, "modelHealth": {"badge": "BEST PRACTICE", "title": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.", "date": "September 25, 2026", "excerpt": "Microsoft's public COVID-19 sample, checked in under a second: a quarter of its columns unused, two bookmarks pointing at a deleted column and auto date/time left on. What we found and how to check yours.", "button": "Read Playbook"}, "ramadanSales": {"badge": "POWER BI", "title": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan", "date": "September 23, 2026", "excerpt": "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.", "button": "Read Playbook"}, "licensingGuide": {"badge": "STRATEGY", "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?", "date": "September 23, 2026", "excerpt": "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.", "button": "Read Playbook"}, "journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that matched every lead exactly before replacing scattered join logic.", "button": "Read Playbook"}}},
+    latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"readyForArabic": {"badge": "ARABIC REPORTS", "title": "Is Your Power BI Report Ready for Arabic? 19 Things to Check", "date": "October 25, 2026", "excerpt": "What goes wrong when a report built in English is read in Arabic, and the fix for each.", "button": "Read Playbook"}, "customVisualChecks": {"badge": "AI AGENTS", "title": "Before an AI Builds Your Power BI Custom Visual: 4 Checks", "date": "October 23, 2026", "excerpt": "AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft's own pages.", "button": "Read Playbook"}, "bestPracticeExceptions": {"badge": "BEST PRACTICE", "title": "We Checked 23 Power BI Models Against Microsoft's Rules. Our Own Tool Was Wrong 206 Times.", "date": "October 17, 2026", "excerpt": "We checked 23 Power BI models against Microsoft's guidance, and our own tool was wrong 206 times. Five cases where a best-practice rule does not apply.", "button": "Read Playbook"}, "gulfCalendar": {"badge": "GULF CALENDAR", "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and Weekends", "date": "October 3, 2026", "excerpt": "Ramadan and Eid move, and the UAE changed its weekend in 2022. One DAX calendar with Hijri dates, announced Ramadan and Eid days, each country's weekend, and an Eid window measure.", "button": "Read Playbook"}, "aiReady": {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"}, "reportStyles": {"badge": "REPORT DESIGN", "title": "One Design Doesn’t Fit All: 7 Power BI Report Styles", "date": "September 29, 2026", "excerpt": "Executive, sales, finance, marketing, operations, HR and customer service reports each answer a different question. The 7 styles with example pages, and a 3-question quiz to pick yours.", "button": "Read Playbook"}, "reportRedesign": {"badge": "REPORT DESIGN", "title": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes", "date": "September 28, 2026", "excerpt": "A leads report with the right visuals but loud colours and a messy layout. The five design changes that fixed it, and how to make them in 5 minutes with a free tool.", "button": "Read Playbook"}, "modelHealth": {"badge": "BEST PRACTICE", "title": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.", "date": "September 25, 2026", "excerpt": "Microsoft's public COVID-19 sample, checked in under a second: a quarter of its columns unused, two bookmarks pointing at a deleted column and auto date/time left on. What we found and how to check yours.", "button": "Read Playbook"}, "ramadanSales": {"badge": "POWER BI", "title": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan", "date": "September 23, 2026", "excerpt": "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.", "button": "Read Playbook"}, "licensingGuide": {"badge": "STRATEGY", "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?", "date": "September 23, 2026", "excerpt": "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.", "button": "Read Playbook"}, "journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that matched every lead exactly before replacing scattered join logic.", "button": "Read Playbook"}}},
 
     // FAQ Section
     faq: {
@@ -225,7 +225,7 @@ portfolio: {
         },
         {
           q: "Does the AI agent see my data?",
-          a: "<strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. It writes only inside the one folder you choose. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>Claude gets your model's structure, never the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop, and write a new report next to your model, only inside the one folder you choose. What they send to Claude: your model's and report's names and structure (tables, columns, measures, formats, pages, visuals), and the short texts typed on report pages (titles, text boxes), which can hold a figure or a name; never table rows, filter or slicer values, or bookmark states. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -309,30 +309,30 @@ portfolio: {
     },
     // Page Meta
     meta: {
-      title: "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      title: "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
       description: "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
-      keywords: "استشاري Power BI, نمذجة البيانات, DAX, لوحات تحكم ذكاء الأعمال, الشرق الأوسط, تحليلات CRM, متخصص Power BI",
-      author: "داتا أركوس",
+      keywords: "داتا أركوس, استشاري Power BI, نمذجة البيانات, DAX, لوحات معلومات ذكاء الأعمال, الشرق الأوسط, تحليلات CRM, متخصص Power BI",
+      author: "DataArcus",
       "og:type": "website",
-      "og:title": "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      "og:title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
       "og:description": "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
       "og:url": "https://dataarcus.com/",
-      "og:site_name": "داتا أركوس",
+      "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
-      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      "twitter:title": "DataArcus - Power BI مُتحقَّق منه ومهيّأ للخليج",
       "twitter:description": "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
       "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
-      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار DataArcus مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/",
     },
 
     // Hero Section
     hero: {
       title: "تقارير Power BI نتحقق منها في Power BI نفسه، ولا نكتفي بتوليدها",
-      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>نسخة تجريبية عامة</a>).",
+      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل DataArcus إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>نسخة تجريبية عامة</a>).",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       buttonAgent: "جرّب الوكيل الذكي (تجريبي)",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -346,7 +346,7 @@ portfolio: {
         "تطوير واجهات مرئية مخصصة"
       ],
       proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "ملفات التقارير تُفحص بمدقّق التنسيق من Microsoft", "العربية والإنجليزية"],
-      proof: {"live": "نموذج تفاعلي مباشر", "title": "محرّك مخاطر محفظة مشاريع Fintech", "subtitle": "72 مشروعًا، ببيانات تحدٍّ عامة", "caption": "مخاطر الميزانية والجدول الزمني والتسليم في نموذج واحد: إدارة القيمة المكتسبة تتوقّع التكلفة النهائية وتاريخ الانتهاء لكل مشروع.", "link": "شاهد لوحة التحكم"}
+      proof: {"live": "نموذج تفاعلي مباشر", "title": "محرّك مخاطر محفظة مشاريع Fintech", "subtitle": "72 مشروعًا، ببيانات تحدٍّ عامة", "caption": "مخاطر الميزانية والجدول الزمني والتسليم في نموذج واحد: إدارة القيمة المكتسبة تتوقّع التكلفة النهائية وتاريخ الانتهاء لكل مشروع.", "link": "شاهد لوحة المعلومات"}
     },
 
     // Tech Stack Section
@@ -364,12 +364,12 @@ portfolio: {
       subtitle: "أيًا كانت المنصة التي تعمل عليها شركتك، سواء CRM أو تجارة إلكترونية أو أدوات إدارة مشاريع أو جداول بيانات، أحوّلها إلى نموذج يمكن لفريقك الوثوق به فعليًا.",
       cards: [
         {
-          title: "لوحات تحكم تنفيذية وتشغيلية",
-          desc: "رؤية لحظية وموحدة لأعمالك، مبنية بنفس الطريقة التي يُبنى بها كل نموذج في داتا أركوس: مصدر حقيقة واحد تم التحقق منه بدلاً من خمسة تقارير تتعارض بصمت."
+          title: "لوحات معلومات تنفيذية وتشغيلية",
+          desc: "رؤية لحظية وموحدة لأعمالك، مبنية بنفس الطريقة التي يُبنى بها كل نموذج في DataArcus: مصدر حقيقة واحد تم التحقق منه بدلاً من خمسة تقارير تتعارض بصمت."
         },
         {
           title: "نمذجة بيانات وخطوط بيانات موثوقة",
-          desc: "جودة لوحات تحكمك تعتمد على جودة النموذج تحتها. أبني نماذج نظيفة وموثقة تم التحقق منها مقابل النظام المصدر قبل إطلاق أي شيء."
+          desc: "جودة لوحات معلوماتك تعتمد على جودة النموذج تحتها. أبني نماذج نظيفة وموثقة تم التحقق منها مقابل النظام المصدر قبل إطلاق أي شيء."
         },
         {
           title: "التحليل التنبؤي والاتجاهات",
@@ -386,7 +386,7 @@ portfolio: {
     // Portfolio Section
 portfolio: {
       title: "نماذج الحلول",
-      subtitle: "استكشف لوحات التحكم التجريبية التي بنيتها. شاهد ما هو ممكن لبياناتك.",
+      subtitle: "استكشف لوحات المعلومات التجريبية التي بنيتها. شاهد ما هو ممكن لبياناتك.",
       cardFintech: {
         badge: "التكنولوجيا المالية والمخاطر",
         title: "محرك مخاطر محافظ التكنولوجيا المالية",
@@ -408,10 +408,10 @@ portfolio: {
     // About Section
     about: {
       title: "توليد التقرير سهل، والتحقق منه هو العمل الحقيقي",
-      subtitle: "تقدّم Microsoft وغيرها اليوم أدوات ذكاء اصطناعي تولّد تقارير Power BI. ويبقى الأهم أن تعرف أن الأرقام صحيحة، وأن النموذج وراءها سليم، وأن العربية تُقرأ سليمة، وأن رمضان والعيد وعطلة الخليج محسوبة كما يجب. وحول هذا بُني داتا أركوس.",
+      subtitle: "تقدّم Microsoft وغيرها اليوم أدوات ذكاء اصطناعي تولّد تقارير Power BI. ويبقى الأهم أن تعرف أن الأرقام صحيحة، وأن النموذج وراءها سليم، وأن العربية تُقرأ سليمة، وأن رمضان والعيد وعطلة الخليج محسوبة كما يجب. وحول هذا بُني DataArcus.",
       note: "<a href='https://learn.microsoft.com/power-bi/developer/agentic/power-bi-agentic-overview' class='text-accent' target='_blank' rel='noopener'>مهارات Microsoft لكتابة التقارير</a> مجانية، لكنها تعمل داخل وكيل برمجة بالذكاء الاصطناعي مثل GitHub Copilot بخطة اشتراكه الخاصة، أما <a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Copilot داخل Power BI</a> فيحتاج إلى سعة Fabric مدفوعة (F2 أو أعلى) أو Power BI Premium ‏(P1 أو أعلى).",
-      quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات، ثم مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
-      p1: "وراء داتا أركوس شخص واحد، هو أنا، أبني كل أداة وأراجع كل تقرير بنفسي. وإلى جانب الأدوات المجانية أقبل أعمالًا مدفوعة: تصميم تقارير Power BI وتدقيق النماذج، ومنها تدقيق الجاهزية لـ Copilot. تتعامل مباشرة مع من يقوم بالعمل، وما تراه في المعرض هو ما ستحصل عليه.",
+      quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات، ثم مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. DataArcus هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
+      p1: "وراء DataArcus شخص واحد، هو أنا، أبني كل أداة وأراجع كل تقرير بنفسي. وإلى جانب الأدوات المجانية أقبل أعمالًا مدفوعة: تصميم تقارير Power BI وتدقيق النماذج، ومنها تدقيق الجاهزية لـ Copilot. تتعامل مباشرة مع من يقوم بالعمل، وما تراه في المعرض هو ما ستحصل عليه.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
       certification: {
         title: "شهادات معتمدة",
@@ -423,7 +423,7 @@ portfolio: {
       stats: [
         { title: "مقالًا منشورًا في المدونة" },
         { title: "لغتان: العربية والإنجليزية" },
-        { title: "لوحة تحكم متكاملة تم بناؤها" },
+        { title: "لوحة معلومات متكاملة تم بناؤها" },
         { title: "أدوات Power BI و Fabric مجانية منشورة" },
         { title: "وكيل ذكاء اصطناعي في نسخة تجريبية عامة (11 أداة)" }
       ],
@@ -432,7 +432,7 @@ portfolio: {
       ctaLink: "أخبرني عن بياناتك"
     },
 
-    process: {"title": "كيف يسير المشروع", "subtitle": "ثلاث خطوات، بدون مفاجآت.", "steps": [{"title": "مكالمة وضوح البيانات المجانية", "desc": "20 دقيقة حول بياناتك والقرارات التي تحتاج إلى اتخاذها. تحصل على إجابة واضحة عمّا يمكن إصلاحه، حتى لو لم نعمل معًا."}, {"title": "البناء والتحقق", "desc": "أبني نموذج البيانات ولوحات التحكم، وأطابق كل رقم مع نظامك المصدر قبل أن ترى أي رسم بياني."}, {"title": "التسليم والدعم", "desc": "يحصل فريقك على التقرير وشرح عملي وتوثيق كامل. أي تعديل بعد الإطلاق على بُعد رسالة واحدة، مع الشخص الذي بناه مباشرة."}]},
+    process: {"title": "كيف يسير المشروع", "subtitle": "ثلاث خطوات، بدون مفاجآت.", "steps": [{"title": "مكالمة وضوح البيانات المجانية", "desc": "20 دقيقة حول بياناتك والقرارات التي تحتاج إلى اتخاذها. تحصل على إجابة واضحة عمّا يمكن إصلاحه، حتى لو لم نعمل معًا."}, {"title": "البناء والتحقق", "desc": "أبني نموذج البيانات ولوحات المعلومات، وأطابق كل رقم مع نظامك المصدر قبل أن ترى أي مخطط."}, {"title": "التسليم والدعم", "desc": "يحصل فريقك على التقرير وشرح عملي وتوثيق كامل. أي تعديل بعد الإطلاق على بُعد رسالة واحدة، مع الشخص الذي بناه مباشرة."}]},
     toolsStrip: {
         badge: "مجانية · بدون تسجيل",
         title: "أدوات Power BI و Fabric مجانية",
@@ -476,12 +476,12 @@ portfolio: {
           },
           {
             tag: "ابنِ",
-            title: "مصمم بطاقات KPI",
+            title: "مصمم بطاقات المؤشرات (KPI)",
             desc: "بطاقات مؤشرات وخطوط اتجاه لـ Power BI في مقياس DAX واحد."
           }
         ]
       },
-    latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"customVisualChecks": {"badge": "وكلاء الذكاء الاصطناعي", "title": "قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص", "date": "23 أكتوبر 2026", "excerpt": "صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص قبل أن تعتمد على واحد منها في العمل، من صفحات Microsoft.", "button": "اقرأ الدليل"}, "bestPracticeExceptions": {"badge": "أفضل الممارسات", "title": "فحصنا 23 نموذج Power BI مقابل قواعد Microsoft. أخطأت أداتنا نفسها 206 مرات.", "date": "17 أكتوبر 2026", "excerpt": "فحصنا 23 نموذج Power BI مقابل إرشادات Microsoft، وأخطأت أداتنا نفسها 206 مرات. خمس حالات لا تنطبق فيها قاعدة أفضل الممارسات.", "button": "اقرأ الدليل"}, "gulfCalendar": {"badge": "التقويم الخليجي", "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة الصحيحة", "date": "3 أكتوبر 2026", "excerpt": "رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.", "button": "اقرأ الدليل"}, "aiReady": {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"}, "reportStyles": {"badge": "تصميم التقارير", "title": "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI", "date": "29 سبتمبر 2026", "excerpt": "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.", "button": "اقرأ الدليل"}, "reportRedesign": {"badge": "تصميم التقارير", "title": "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق", "date": "28 سبتمبر 2026", "excerpt": "تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.", "button": "اقرأ الدليل"}, "modelHealth": {"badge": "أفضل الممارسات", "title": "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 85 من 100.", "date": "25 سبتمبر 2026", "excerpt": "نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.", "button": "اقرأ الدليل"}, "ramadanSales": {"badge": "Power BI", "title": "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي", "date": "23 سبتمبر 2026", "excerpt": "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.", "button": "اقرأ الدليل"}, "licensingGuide": {"badge": "استراتيجية", "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟", "date": "23 سبتمبر 2026", "excerpt": "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.", "button": "اقرأ الدليل"}, "journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق كل عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}}},
+    latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"readyForArabic": {"badge": "التقارير العربية", "title": "هل تقرير Power BI الخاص بك جاهز للعربية؟ 19 أمرًا تفحصها", "date": "25 أكتوبر 2026", "excerpt": "ما الذي يختل حين يُقرأ تقرير مبني بالإنجليزية بالعربية، وعلاج كل نوع.", "button": "اقرأ الدليل"}, "customVisualChecks": {"badge": "وكلاء الذكاء الاصطناعي", "title": "قبل أن يبني الذكاء الاصطناعي مرئيًا مخصصًا في Power BI: أربعة فحوص", "date": "23 أكتوبر 2026", "excerpt": "صار وكلاء الذكاء الاصطناعي يتعاملون مع مرئيات Power BI المخصصة، وبعضهم يكتب مرئيات جديدة. أربعة فحوص قبل أن تعتمد على واحد منها في العمل، من صفحات Microsoft.", "button": "اقرأ الدليل"}, "bestPracticeExceptions": {"badge": "أفضل الممارسات", "title": "فحصنا 23 نموذج Power BI مقابل قواعد Microsoft. أخطأت أداتنا نفسها 206 مرات.", "date": "17 أكتوبر 2026", "excerpt": "فحصنا 23 نموذج Power BI مقابل إرشادات Microsoft، وأخطأت أداتنا نفسها 206 مرات. خمس حالات لا تنطبق فيها قاعدة أفضل الممارسات.", "button": "اقرأ الدليل"}, "gulfCalendar": {"badge": "التقويم الخليجي", "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة", "date": "3 أكتوبر 2026", "excerpt": "رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، وتواعيد رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.", "button": "اقرأ الدليل"}, "aiReady": {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"}, "reportStyles": {"badge": "تصميم التقارير", "title": "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI", "date": "29 سبتمبر 2026", "excerpt": "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.", "button": "اقرأ الدليل"}, "reportRedesign": {"badge": "تصميم التقارير", "title": "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق", "date": "28 سبتمبر 2026", "excerpt": "تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.", "button": "اقرأ الدليل"}, "modelHealth": {"badge": "أفضل الممارسات", "title": "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 85 من 100.", "date": "25 سبتمبر 2026", "excerpt": "نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.", "button": "اقرأ الدليل"}, "ramadanSales": {"badge": "Power BI", "title": "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي", "date": "23 سبتمبر 2026", "excerpt": "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.", "button": "اقرأ الدليل"}, "licensingGuide": {"badge": "استراتيجية", "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟", "date": "23 سبتمبر 2026", "excerpt": "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.", "button": "اقرأ الدليل"}, "journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق كل عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}}},
 
     // FAQ Section
     faq: {
@@ -490,7 +490,7 @@ portfolio: {
       items: [
         {
           q: "كيف تعمل مكالمة وضوح البيانات المجانية؟",
-          a: "<strong>إنها مكالمة مركّزة مدتها 20 دقيقة، وليست عرضًا ترويجيًا.</strong> أحضر ما لديك (جدول بيانات فوضوي، تصدير من CRM، لوحة تحكمك الحالية) وسأستعرض معك ما يمكن إصلاحه فعليًا وكيف سيبدو نموذج حقيقي. بدون بناء، بدون التزام، فقط إجابة صريحة حول ما إذا كان الأمر يستحق المتابعة."
+          a: "<strong>إنها مكالمة مركّزة مدتها 20 دقيقة، وليست عرضًا ترويجيًا.</strong> أحضر ما لديك (جدول بيانات فوضوي، تصدير من CRM، لوحة معلوماتك الحالية) وسأستعرض معك ما يمكن إصلاحه فعليًا وكيف سيبدو نموذج حقيقي. بدون بناء، بدون التزام، فقط إجابة صريحة حول ما إذا كان الأمر يستحق المتابعة."
         },
         {
           q: "ما هو العائد الحقيقي على الاستثمار (ROI) من تطبيق Power BI؟",
@@ -505,20 +505,20 @@ portfolio: {
           a: "<strong>هذا أمر طبيعي، وهو بالضبط نوع المشكلة التي أحلّها.</strong> أربط وأنظّف البيانات من أنظمة CRM ومنصات التجارة الإلكترونية وأنظمة ERP وجداول البيانات في نموذج واحد موثوق.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>أتصل بـ:</strong> أنظمة CRM، Shopify، WooCommerce، قواعد بيانات SQL، واجهات APIs، ملفات Excel، ومعظم مصادر بيانات الأعمال الشائعة الأخرى.</div><p class=\"mt-3 mb-0\"><em>\"كلما كانت بياناتك أكثر فوضوية، كان تأثير التحول أكبر.\"</em></p>"
         },
         {
-          q: "هل سيتمكن فريقنا من استخدام لوحات التحكم؟",
-          a: "<strong>بالتأكيد. أبني الحلول لتناسب مستوى مهارة فريقك وأقدم تدريبًا شاملاً.</strong> يتضمن كل مشروع تدريبًا للمستخدمين ووثائق كاملة، بالإضافة إلى خيارات دعم مستمرة.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">للمستخدمين:</strong><br>• كيفية قراءة لوحات التحكم<br>• الفلترة والتعمق في البيانات<br>• خيارات التصدير والمشاركة</div><div class=\"col-md-6\"><strong class=\"text-accent\">للمسؤولين:</strong><br>• جدولة تحديث البيانات<br>• صلاحيات المستخدمين<br>• استكشاف الأخطاء الأساسية</div></div></div>"
+          q: "هل سيتمكن فريقنا من استخدام لوحات المعلومات؟",
+          a: "<strong>بالتأكيد. أبني الحلول لتناسب مستوى مهارة فريقك وأقدم تدريبًا شاملاً.</strong> يتضمن كل مشروع تدريبًا للمستخدمين ووثائق كاملة، بالإضافة إلى خيارات دعم مستمرة.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">للمستخدمين:</strong><br>• كيفية قراءة لوحات المعلومات<br>• التصفية والتعمق في البيانات<br>• خيارات التصدير والمشاركة</div><div class=\"col-md-6\"><strong class=\"text-accent\">للمسؤولين:</strong><br>• جدولة تحديث البيانات<br>• صلاحيات المستخدمين<br>• استكشاف الأخطاء الأساسية</div></div></div>"
         },
         {
           q: "لماذا العمل مع متخصص مستقل بدلاً من شركة استشارات كبرى؟",
-          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت كل لوحة في <a href='portfolio.html' class='text-accent'>نماذج الحلول</a> بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
+          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت كل لوحة في <a href='portfolio.html' class='text-accent'>نماذج الحلول</a> بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة معلوماتك.</div>"
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
-          a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية، حتى لو لم تكن بناء لوحة تحكم كاملة بعد. لا يوجد أي التزام مطلوب."
+          a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية، حتى لو لم تكن بناء لوحة معلومات كاملة بعد. لا يوجد أي التزام مطلوب."
         },
         {
           q: "هل يرى وكيل الذكاء الاصطناعي بياناتي؟",
-          a: "<strong>يقرأ بنية نموذجك الدلالي، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات) لا صفوف البيانات، وتكتب تقريرًا جديدًا بجانب نموذجك. ولا يكتب إلا داخل المجلد الذي تختاره. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>يصل إلى Claude بنية نموذجك الدلالي، لا الصفوف التي فيه أبدًا.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop، وتكتب تقريرًا جديدًا بجانب نموذجك، داخل المجلد الذي تختاره فقط. وما ترسله إلى Claude: أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير (العناوين ومربعات النص) وقد تحمل رقمًا أو اسمًا؛ ولا ترسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات (Slicers) ولا حالات الإشارات المرجعية. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -573,7 +573,7 @@ portfolio: {
             value: "الأسبوعان الأول والثاني"
           },
           {
-            label: "بناء لوحة التحكم",
+            label: "بناء لوحة المعلومات",
             value: "الأسبوعان الثاني والثالث"
           },
           {

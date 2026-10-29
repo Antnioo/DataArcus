@@ -40,7 +40,6 @@
   const entries = (l) => (Array.isArray(l) ? l : []);
   const plain = (l) => entries(l).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e && e.properties && typeof e.properties === 'object' ? e.properties : {}), {});
   const shown = (x) => String(x).replace(/(?![‌‍])\p{Cf}/gu, '').replace(/\s+/g, ' ').trim();
-  const AR = /[؀-ۿݐ-ݿﭐ-﻿]/;
   const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
   const hex6 = (c) => { const s = String(c || '').trim().replace(/^'|'$/g, ''); if (!HEX.test(s)) return null; return s.length === 4 ? '#' + s.slice(1).split('').map((ch) => ch + ch).join('') : s.toLowerCase(); };
 
@@ -97,7 +96,7 @@
       matrix: (r, c, m) => [r && `Rows by ${r}`, c && `columns by ${c}`, m && `values: ${m}`].filter(Boolean).join('; ') + '.',
       slicer: (c) => `Filters the page by ${c}.`, shows: (x) => `Shows ${x}.` },
     ar: { by: (m, c) => `${m} حسب ${c}`, over: (m, c) => `${m} على مدى ${c}`, share: (m, c) => `حصة ${m} حسب ${c}`,
-      series: (s) => `لون لكل ${s}، كما في وسيلة الإيضاح.`, card: (m) => `${m} حسب عوامل التصفية في الصفحة.`,
+      series: (s) => `لون لكل ${s}، كما في وسيلة الإيضاح.`, card: (m) => `${m} حسب الفلاتر في الصفحة.`,
       rows: (c, m) => (m ? `صف لكل ${c}، مع ${m}.` : `صف لكل ${c}.`), totals: (m) => `إجماليات ${m}.`,
       matrix: (r, c, m) => [r && `الصفوف حسب ${r}`, c && `الأعمدة حسب ${c}`, m && `القيم: ${m}`].filter(Boolean).join('؛ ') + '.',
       slicer: (c) => `يصفّي الصفحة حسب ${c}.`, shows: (x) => `يعرض ${x}.` }
@@ -158,10 +157,14 @@
   }
   // in tab order, the pairs a reader would meet the other way round: the later stop wholly above the earlier one, or
   // beside it in the same band (their heights overlap by half the smaller) and wholly before it in the reading direction
+  // (0.3.1 SQ5, R1-S2: a tall visual beside two stacked ones, the writer's own order counted as a pair) and that
+  // readingOrder, the order the writer gives, puts the other way round too: a page can be read two ways there (its
+  // rows, or the column first), and only an order against both is counted
   function inversions(ordered, dir) {
-    const rtl = dir === 'rtl'; let n = 0;
+    const rtl = dir === 'rtl', rank = new Map(readingOrder(ordered, dir).map((b, k) => [b, k])); let n = 0;
     for (let i = 0; i < ordered.length; i++) for (let j = i + 1; j < ordered.length; j++) {
       const a = ordered[i], b = ordered[j];
+      if (rank.get(b) > rank.get(a)) continue;
       if (b.y + b.h <= a.y + 0.5) { n++; continue; }
       const ov = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
       if (ov >= 0.5 * Math.min(a.h, b.h) && (rtl ? b.x + 0.5 >= a.x + a.w : b.x + b.w <= a.x + 0.5)) n++;
@@ -289,8 +292,9 @@
           if ((/^(shape|basicShape|image)$/.test(x.type)) || (x.type === 'textbox' && !shown(textOf(x.json.visual)).length)) out(x, `a ${x.type === 'textbox' ? 'text box without text' : x.type === 'image' ? 'picture without alt text' : 'shape without alt text'} is a Tab stop`, 'Hide it from the tab order (View > Selection > Tab order: select its number), or give it alt text if it means something.');
         }));
       } },
-    { id: 'A11Y_TAB_ORDER', group: 'a11y', severity: 'warning', source: SRC(GUIDE.tab, 'Tab order'),
-      about: 'the Tab stops of a page (and of each group) follow the reading order: top to bottom, then left to right, or right to left in a right-to-left report; a visual that shows data is a Tab stop',
+    // (0.3.1 S1, byDir: in a report holding both languages each page is judged in its own reading direction)
+    { id: 'A11Y_TAB_ORDER', group: 'a11y', severity: 'warning', source: SRC(GUIDE.tab, 'Tab order'), byDir: true,
+      about: 'the Tab stops of a page (and of each group) follow the reading order: top to bottom, then left to right, or right to left in a right-to-left report (a tall visual beside a column of smaller ones can be read by its rows or the column first: either is taken); a visual that shows data is a Tab stop',
       run(R, out) {
         const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');
         mainPages(R).forEach((pg) => {

@@ -2,8 +2,8 @@
 // preview of draft PR #37 (assets/js/page-preview.js: fromFiles + render) with Power BI Desktop's PDF export of the same
 // written reports: every box was placed right, but the titles, two kinds of cut content and the words that carry meaning
 // were not what Desktop draws.
-//   F-01: a title is drawn at its visual's own size (the theme's 18pt = 24 on a 1920 page for charts and tables; a KPI
-//         card's own 10pt) and wraps at the box's inner width by the writer's text measure: two lines in a ~508 slot
+//   F-01: a title is drawn at its visual's own size (the theme's 15pt = 20 on a 1920 page since 0.3.1 TS1, was 18pt = 24; a KPI
+//         card's own 10pt) and wraps at the box's inner width by the writer's text measure: two lines in a ~508 slot for a long title
 //   F-02: the placeholder plot starts below the title's lines (it shrinks by the lines the title takes)
 //   F-03: "to check" (cut): a table column narrower than its header needs (0.3.0 D5, changed on purpose: check_report's
 //         own measure, TABLE_HEADER_CUT, per column with a set width, no longer the sum of all headers); on the dense
@@ -59,26 +59,35 @@ try {
   chk(() => dense.w === 1920 && idx(dense, 'lineChart', 509) >= 0 && idx(dense, 'tableEx', 507) >= 0 && dense.visuals.filter((v) => v.type === 'cardVisual' && v.title).length === 6, () => `the dense page as the laptop's: ${dense.visuals.map((v) => `${v.type} ${v.w}`).join(', ')}`);
 
   // ---------- F-01: titles at their own size, wrapped ----------
-  const li = idx(dense, 'lineChart', 509), lg = groupOf(dsvg, li), ll = titleLines(lg);
-  chk(() => ll.length === 2 && ll.every((l) => near(l.size, 24)), () => `F-01. the 509-wide line chart's title on 2 lines at 24 (18pt): ${JSON.stringify(ll)}`);
+  // (0.3.1 TS1, on purpose: the theme's title on 1920 x 1080 is 15pt = 20, x 1.25 (the owner's D-1027-16), was 18pt = 24;
+  // the dense page's titles now fit their ~508 slots on one line, so the wrapping is checked with a longer title, and
+  // every title takes the lines the writer's measure gives it at 15pt)
+  const TP = 15, TPX = TP * 4 / 3, LONG = 'Shipments Total Net Amount by Month and Lane Region Short';
+  const li = idx(dense, 'lineChart', 509), withTitle = (i, t) => Object.assign({}, dense, { visuals: dense.visuals.map((v, k) => (k === i ? Object.assign({}, v, { title: t }) : v)) });
+  const longPage = withTitle(li, LONG), lg = groupOf(P.render(longPage), li), ll = titleLines(lg);
+  chk(() => ll.length === 2 && ll.every((l) => near(l.size, TPX)), () => `F-01. a long title in the 509-wide line chart on 2 lines at 20 (15pt): ${JSON.stringify(ll)}`);
   const slots = dense.visuals.map((v, i) => ({ v, i })).filter(({ v }) => /^(lineChart|clusteredBarChart|clusteredColumnChart|donutChart|tableEx)$/.test(v.type) && !v.panel && v.w >= 505 && v.w <= 510);
-  chk(() => slots.length >= 4 && slots.every(({ i }) => titleLines(groupOf(dsvg, i)).length === 2), () => `F-01. every chart and table title in a ~508 slot takes 2 lines on the dense page: ${slots.map(({ i, v }) => `${v.type} ${titleLines(groupOf(dsvg, i)).length}`).join(', ')}`);
-  chk(() => titleLines(lg).map((l) => l.text).join(' ') === dense.visuals[li].title, () => `F-01. the lines are the whole title, split at words: ${JSON.stringify(titleLines(lg).map((l) => l.text))}`);
   const { textWidth } = require('../assets/js/text-measure.js');
-  chk(() => ll.every((l) => textWidth(l.text, 18, true, 'Segoe UI') <= 509 - 2 * 16), () => `F-01. each line fits the box's inner width by the writer's measure (509 less 16 a side)`);
+  const needs = (v) => (textWidth(v.title, TP, true, 'Segoe UI') <= v.w - 2 * 16 ? 1 : 2);
+  chk(() => slots.length >= 4 && slots.every(({ i, v }) => titleLines(groupOf(dsvg, i)).length === needs(v)), () => `F-01. every chart and table title in a ~508 slot takes the lines the writer's measure gives it at 15pt: ${slots.map(({ i, v }) => `${v.type} ${titleLines(groupOf(dsvg, i)).length} (needs ${needs(v)})`).join(', ')}`);
+  chk(() => titleLines(lg).map((l) => l.text).join(' ') === LONG, () => `F-01. the lines are the whole title, split at words: ${JSON.stringify(titleLines(lg).map((l) => l.text))}`);
+  chk(() => ll.every((l) => textWidth(l.text, TP, true, 'Segoe UI') <= 509 - 2 * 16), () => `F-01. each line fits the box's inner width by the writer's measure (509 less 16 a side)`);
   const ci = dense.visuals.findIndex((v) => v.type === 'cardVisual' && v.title), cl = titleLines(groupOf(dsvg, ci));
   chk(() => cl.length >= 1 && near(cl[0].size, 13.3, 0.1), () => `F-01. a KPI card's title at its own 10pt (13.3): ${JSON.stringify(cl)}`);
   const wide = exec.visuals.findIndex((v) => v.type === 'lineChart' && !v.panel);
-  chk(() => wide >= 0 && titleLines(groupOf(esvg, wide)).length === 1 && near(titleLines(groupOf(esvg, wide))[0].size, 24), () => `F-01. a title that fits stays on one line: ${JSON.stringify(titleLines(groupOf(esvg, wide)))}`);
+  chk(() => wide >= 0 && titleLines(groupOf(esvg, wide)).length === 1 && near(titleLines(groupOf(esvg, wide))[0].size, TPX), () => `F-01. a title that fits stays on one line: ${JSON.stringify(titleLines(groupOf(esvg, wide)))}`);
 
   // ---------- F-02: the plot shrinks by the title's lines ----------
-  const one = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === li ? Object.assign({}, v, { title: 'Net by Month' }) : v)) });
+  const one = withTitle(li, 'Net by Month');
   const lg1 = groupOf(P.render(one), li), top2 = phTop(lg), top1 = phTop(lg1);
   chk(() => top2 != null && top2 > ll[1].y, () => `F-02. the plot starts below the title's 2nd line: plot ${top2}, 2nd line ${ll[1] && ll[1].y}`);
+  // (Q1 T-3, 0.3.1: top1 was computed and never compared) the same chart with a 1-line title: its plot starts higher, by
+  // no more than the one line it saves (36 at 24; the line's highest point moves with the plot: 26.8 measured here)
+  chk(() => titleLines(lg1).length === 1 && top1 != null && top2 != null && top1 < top2 && top2 - top1 <= 40, () => `F-02. a 1-line title gives the plot back its line: plot ${top1} with 1 line, ${top2} with 2`);
   // (measured on the 508 bar chart: its first bar sits at a fixed share of the plot, a line's highest point moves with it)
-  const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(dsvg, bi), bone = Object.assign({}, dense, { visuals: dense.visuals.map((v, i) => (i === bi ? Object.assign({}, v, { title: 'Net by Hub' }) : v)) });
+  const bi = idx(dense, 'clusteredBarChart', 508), bg = groupOf(P.render(withTitle(bi, LONG)), bi), bone = withTitle(bi, 'Net by Hub');
   const btop2 = phTop(bg), btop1 = phTop(groupOf(P.render(bone), bi));
-  chk(() => titleLines(bg).length === 2 && btop1 != null && btop2 - btop1 >= 30 && btop2 - btop1 <= 40, () => `F-02. a 2-line title takes about one line (36 at 24) more from the plot than a 1-line one: ${btop1} -> ${btop2}`);
+  chk(() => titleLines(bg).length === 2 && btop1 != null && btop2 - btop1 >= 25 && btop2 - btop1 <= 34, () => `F-02. a 2-line title takes about one line (30 at 20, 15pt: the bounds 30-40 of 18pt's 36 x 20 / 24) more from the plot than a 1-line one: ${btop1} -> ${btop2}`);
 
   // ---------- F-03: the table's columns cut ----------
   const ti = idx(dense, 'tableEx', 507), eti = idx(exec, 'tableEx');
@@ -93,13 +102,20 @@ try {
   chk(() => eti >= 0 && !efl.some((f) => f.i === eti), () => `F-03. the exec page's table is not flagged: ${JSON.stringify(efl)} ${JSON.stringify(exec.visuals[eti] && { w: exec.visuals[eti].w, columns: exec.visuals[eti].columns })}`);
 
   // ---------- F-04: slanted category labels ----------
-  chk(() => P.notes(dense).some((f) => f.i === li && f.kind === 'slant' && /slant/.test(f.why || '')) && notesOf(dsvg).some((f) => f.i === li && f.kind === 'slant') && !dfl.some((f) => f.i === li), () => `F-04. the dense page's 509-wide line chart by 12 months (42 a month, a 3-letter month needs 65.5 at 15pt) has the note, no flag: ${JSON.stringify(P.notes(dense).filter((f) => f.i === li))}`);
+  // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the large model's calendar runs over several years by its own
+  // DAX, so the line chart is by Calendar[Year Month], whose number of labels is the data's: the preview says "labels from
+  // your data", never a slant it cannot know, and no flag; the slant rule on 12 short months is checked just below)
+  chk(() => P.notes(dense).some((f) => f.i === li && f.kind === 'labels') && !P.notes(dense).some((f) => f.i === li && f.kind === 'slant') && !dfl.some((f) => f.i === li), () => `F-04. the dense page's 509-wide line chart by Year Month (its labels' count the data's) has the labels note, no slant note, no flag: ${JSON.stringify(P.notes(dense).filter((f) => f.i === li))}`);
   chk(() => !efl.length && !P.check(exec).length, () => `F-04. nothing on the exec page is flagged: ${JSON.stringify(P.check(exec))}`);
   const lab = (category, w, extra) => P.notes({ w: 1920, h: 1080, visuals: [Object.assign({ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 400, title: 'x', category, labelSize: 15 }, extra || {})] }).filter((f) => f.kind === 'slant');
   chk(() => lab('Month Short', 509).some((f) => /slant/.test(f.why)) && !lab('Month Short', 1242).length, () => 'F-04. 12 short months slant in 509, stand in 1242');
   chk(() => lab('Month Name', 1000).some((f) => /slant/.test(f.why)) && !lab('Month Name', 1400).length, () => `F-04. full month names (up to 9 letters: 116.5 a month) slant in 1000, stand in 1400: ${JSON.stringify(lab('Month Name', 1000))}`);
   chk(() => !lab('Quarter', 509).length && lab('Weekday Short', 400).some((f) => /slant/.test(f.why)), () => 'F-04. 4 quarters stand in 509; 7 short weekdays slant in 400');
   chk(() => lab('Month Short', 509, { labelSize: 10 }).length === 0 || lab('Month Short', 300, { labelSize: 10 }).some((f) => /slant/.test(f.why)), () => 'F-04. the rule follows the label size');
+  // (Q1 P-1, 0.3.1: notes() computed the page's scale, page.h / 1080, and never used it) the rule is in page units, as
+  // every PBIR size and font is: the same box and label size give the same note on a 1280 x 720 page as on 1920 x 1080
+  const labOn = (pw, ph, w) => P.notes({ w: pw, h: ph, visuals: [{ type: 'clusteredColumnChart', x: 10, y: 10, w, h: 300, title: 'x', category: 'Month Short', labelSize: 9 }] }).map((f) => f.kind + ' ' + (f.why || '')).join();
+  chk(() => [300, 509, 700, 1000].every((w) => labOn(1280, 720, w) === labOn(1920, 1080, w)) && labOn(1280, 720, 300) !== labOn(1280, 720, 1000), () => `F-04. the slant note is in page units, the same on a 720 and a 1080 page: ${[300, 509, 700, 1000].map((w) => `${w}: "${labOn(1280, 720, w)}" / "${labOn(1920, 1080, w)}"`).join('; ')}`);
   const unk = { w: 1920, h: 1080, visuals: [{ type: 'clusteredColumnChart', x: 10, y: 10, w: 509, h: 400, title: 'Net by Lane Region', category: 'Lane Region', labelSize: 15 }] };
   chk(() => !P.check(unk).length && P.notes(unk).some((f) => f.i === 0 && f.kind === 'labels'), () => `F-04. an unknown category: no flag (no guess), a note that its labels' length is unknown: ${JSON.stringify(P.check(unk))} ${JSON.stringify(P.notes ? P.notes(unk) : null)}`);
   const us = P.render(unk), usa = P.render(Object.assign({}, unk, { rtl: true }), { lang: 'ar' });

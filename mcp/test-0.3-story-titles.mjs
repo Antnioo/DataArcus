@@ -15,6 +15,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -75,8 +76,11 @@ try {
     chk(() => a.every((x) => [...words(x.text)].every((w) => full.has(w))) && v.every((x) => [...words(x.text)].every((w) => words(v[0].text).has(w))), () => 'ST-1g. every shortened title is made of whole words of the full one');
     chk(() => ST.variants({ t: 'S', m: 'Total net sales' }, null, 'by').map((x) => x.text).includes('Net sales'), () => 'ST-1m. a name left after "Total" starts with a capital ("Net sales")');
     chk(() => ST.variants({ t: 'S', m: 'Total Sales', name: 'Total Sales Display' }, { t: 'R', c: 'Region' }, 'by').every((x) => x.m === 'Total Sales Display'), () => 'ST-1h. the user\'s display name is never rewritten');
-    chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة' && ST.join('عدد Order Id', 'Region', 'حسب') === 'عدد Order Id',
-      () => 'ST-1i. "M by C", «M حسب C», and one script per title');
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English; it replaces LR2's
+    // «حسب» between any two names: two English names in an Arabic report take "by", a mixed pair the measure alone)
+    chk(() => ST.join('Total Sales', 'Region', 'by') === 'Total Sales by Region' && ST.join('إجمالي المبيعات', 'المنطقة', 'حسب') === 'إجمالي المبيعات حسب المنطقة' && ST.join('Total Sales', 'Region', 'حسب') === 'Total Sales by Region'
+      && ST.join('عدد Order Id', 'Region', 'حسب') === 'عدد Order Id' && ST.join('عدد Order Id', 'Region', 'by') === 'عدد Order Id',
+    () => 'ST-1i. "M by C", «M حسب C», each wholly one language (0.3.1 TT1: "Total Sales by Region" in an Arabic report too; a mixed pair: the measure alone)');
     const alts = [2, 3, 4].map((n) => ST.alternate('Total', 'Note', n, true, 'by')), altAr = [2, 3].map((n) => ST.alternate('إجمالي المبيعات', 'المنطقة', n, true, 'حسب'));
     chk(() => JSON.stringify(alts) === JSON.stringify(['Note ranked by Total', 'Total per Note', 'Total breakdown by Note']) && JSON.stringify(altAr) === JSON.stringify(['ترتيب المنطقة حسب إجمالي المبيعات', 'إجمالي المبيعات لكل المنطقة']),
       () => `ST-1j. the alternates: ${JSON.stringify([alts, altAr])}`);
@@ -86,9 +90,14 @@ try {
   }
 
   // ---------- ST-2, ST-3: golden models ----------
-  const runs = [['health', 'en', 'exec'], ['health', 'en', 'analysis'], ['large', 'en', 'ops', 'logistics'], ['arabic', 'ar', 'exec'], ['arabic', 'ar', 'ops'], ['ramadan', 'en', 'exec'], ['ramadan', 'ar', 'exec'], ['plain', 'en', 'analysis']];
-  for (const [m, lang, layout, focus] of runs) {
-    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}) }, { layout });
+  const runs = [['health', 'en', 'exec'], ['health', 'en', 'analysis'], ['large', 'en', 'ops', 'logistics'], ['arabic', 'ar', 'exec'], ['arabic', 'ar', 'ops', null, { kpis: 6, filters: 'start' }], ['ramadan', 'en', 'exec'], ['ramadan', 'ar', 'exec'], ['plain', 'en', 'analysis']];
+  // (0.3.1 TS1: the Arabic ops report on the dense variant, six KPI cards and the filter rail, ~508 slots: at the theme's
+  // 15pt titles (x 1.25, was 18pt) its long titles fit the wider slots whole, so ST-6b's shortened title is drawn here)
+  for (const [m, lang, layout, focus, more] of runs) {
+    // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the Arabic Ramadan report keeps these
+    // fields English on purpose, as the person says it: ST checks the story titles' shape, not the names
+    const kept = m === 'ramadan' && lang === 'ar' ? { displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]') } : {};
+    const name = 'ST ' + m + ' ' + lang + ' ' + layout, { r } = await report({ path: m, name, lang, ...(focus ? { focus } : {}), ...kept }, Object.assign({ layout }, more || {}, kept));
     chk(() => !r.err, () => `ST-2 setup ${name}: ${r.t.slice(0, 300)}`);
     if (r.err) continue;
     const pages = pagesOf(path.join(ROOT, m, name + '.Report'));

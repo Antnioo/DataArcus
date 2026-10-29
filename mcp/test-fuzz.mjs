@@ -27,7 +27,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -127,7 +127,9 @@ function mutateText(r, text, log) {
 
 // ---------- the properties ----------
 const results = { cases: 0, checks: 0, crashes: [], props: [], skipped: [], fixedKnown: [] };
-const crashOf = (e) => e instanceof Error && (e.constructor !== Error || /Maximum call stack|is not a function|Cannot read prop|of undefined|of null|Invalid (array|string) length/.test(e.message)) || !(e instanceof Error);
+// (SQ6: the reader's coded refusals, ReadError with its code, are refusals on purpose too, as a plain Error is)
+const refusalClass = (e) => e.constructor === Error || (e.constructor && e.constructor.name === 'ReadError' && typeof e.code === 'string' && /^[A-Z_]+$/.test(e.code));
+const crashOf = (e) => e instanceof Error && (!refusalClass(e) || /Maximum call stack|is not a function|Cannot read prop|of undefined|of null|Invalid (array|string) length/.test(e.message)) || !(e instanceof Error);
 // where a crash is: the first frame in DataArcus's own code (file and line) and the error's kind and message shape
 const frameOf = (e) => { const l = String((e && e.stack) || '').split('\n').slice(1).find((x) => /(assets[\\/]js|mcp[\\/]lib)[\\/]/.test(x)) || ''; const m = /([\w.-]+\.m?js):(\d+)/.exec(l); return m ? `${m[1]}:${m[2]}` : 'outside DataArcus'; };
 const shape = (e) => `${(e && e.constructor && e.constructor.name) || typeof e}: ${String(e && e.message || e).replace(/'[^']*'|"[^"]*"/g, '…').replace(/\d+/g, 'n').slice(0, 90)}`;
@@ -138,7 +140,6 @@ const sig = (target, e) => `${frameOf(e)} ${shape(e)}`;
 // anywhere else, or a property failing on another target, fails the run. Remove an entry once its fix is merged.
 const KNOWN = [];
 // Inputs that make a target run for hours (a hang can't be caught, only not started): skipped, counted, while open
-const longestName = (m) => Math.max(0, ...(m.tables || []).flatMap((t) => [t.name].concat((t.columns || []).map((c) => c.name), (t.measures || []).map((x) => x.name))).map((n) => String(n == null ? '' : n).length));
 // (F-W1, the writer's hang on a 200,000-character name, is fixed: pbip-sizing.js cuts a title to what its box could show
 // before it searches for the shortened one; the plan lint runs on every case again)
 const KNOWN_SLOW = [];

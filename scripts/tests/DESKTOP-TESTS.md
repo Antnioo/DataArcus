@@ -3,7 +3,8 @@
 Some fixes can only be proven in real Power BI. This file keeps what was tested there, how, and what we learned.
 Setup: Claude Code on the laptop with Microsoft's `powerbi-authoring` plugin (Power BI Authoring MCP), the Desktop
 bridge CLI (`powerbi-desktop`) and the DataArcus MCP (`mcp/`). Test models carry data with known answers, so every
-expected number is written down before the run.
+expected number is written down before the run. `mcp/WORK.md` below means the memory as it was on that day:
+since 0.3.1 (G1) its history is in `mcp/work/archive/` (`README.md` there lists every section by file).
 
 ## 2026-09-29: Power BI Desktop 2.157 (August 2026)
 
@@ -1659,7 +1660,7 @@ over stdio (`builder-scripts\r10-make.mjs`); captures of the canvas through the 
 `<tests folder>\desk-r11\` (1.1719 capture pixels per page unit on a 1920 x 1080 page, 1.7578 on 1280 x 720; the page
 starts 115 pixels down); one report per command, in the foreground (`shot11.ps1`). The phone layout: "Mobile layout"
 pressed by UI Automation, the phone canvas captured from the window (`r11-phone.ps1`; 1.25 screen pixels per phone
-unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/WORK.md`, "Round 11, order of
+unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 11, order of
 work", written before each run.
 
 ### Item 2, the phone layout: 4 and 8 tabs, English and Arabic
@@ -1677,7 +1678,7 @@ KPI cards and a bar chart on every page; the round 10 page names). The phone pos
 - **Cut on every one of these phone pages, and not a tab: the second card's title, "Total Sales Last Rama..."** (a
   157.5-wide phone card, its title at 10pt). Known since 2026-10-01 ("long card titles end in ..." on the phone);
   round 10's wrap-or-shorten rule is applied to the page's cards only, not to the phone's. Not fixed tonight
-  (`mcp/WORK.md`, "Round 11, for the owner").
+  (`mcp/work/archive/WORK-2026-10-05-09.md`, "Round 11, for the owner").
 - On the phone the titles of the cards and of the chart are drawn in a pale grey (the theme's label colour on a
   white canvas), much fainter than on the page: see the design findings.
 
@@ -1778,7 +1779,7 @@ client (`gc-check.ps1`), the query files in `<tests folder>\desk-r11\gc\`.
   as Desktop saves it ("is not a date column (its type is unknown)"): Sales is a DAX table, and TMDL carries no
   type for its columns. For the run the three test models' Sales columns were given `dataType` and
   `isDataTypeInferred` by hand (`r11-gc-types.cjs`); Desktop opened them without a message. A user whose fact
-  table is a DAX table cannot get the relationship from the tool today (`mcp/WORK.md`, "for the owner").
+  table is a DAX table cannot get the relationship from the tool today (`mcp/work/archive/WORK-2026-10-05-09.md`, "for the owner").
 - The Sales table's measures that name `Calendar` show "Field list item has error" in the Data pane until the
   calendar is applied and refreshed (three of them were listed right after Apply); none after the refresh.
 
@@ -1950,7 +1951,7 @@ Made-up models only (the Ramadan sample, copied to `<tests folder>\13-r13`; `13-
 sort-by column on Month Name and Day Name). Reports from the working copy's server over stdio
 (`builder-scripts\r13-make.mjs`); captures of the canvas through the bridge at double size in
 `<tests folder>\desk-r13\`, one report per command, in the foreground (`r13-shot.ps1`). Colours are read from the
-capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/WORK.md`, "Round 13,
+capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 13,
 order of work", written before each run.
 
 ### Item 1, gradient ("fading") colours in bar and column charts
@@ -2374,7 +2375,7 @@ Every report is on a made-up model whose rows are DAX tables; the laptop was unl
 (`builder-scripts\r23-poke.ps1`: UI Automation finds the visuals about a minute after "ready"). Captures (2x, nothing
 scaled down), crops and pixel comparisons: `<tests folder>\r23\shots\` (`crops\`, `cmp\`, `poke\`); the reports
 `<tests folder>\r23\lab\`, `golden-b\`, `showcase\`, `site\`; scripts `builder-scripts\r23-*`. The full table is in
-`mcp/WORK.md`, "Round 23, laptop proof, the stop report".
+`mcp/work/archive/WORK-2026-10-05-09.md`, "Round 23, laptop proof, the stop report".
 
 | Check | Result | Crop |
 |---|---|---|
@@ -2399,7 +2400,7 @@ Facts learned:
 ## 2026-10-08 afternoon, round 23's laptop re-proof (`fix/round-23-total` at `9ff1363`), Power BI Desktop 2.158.1304
 The three findings of the midday proof, fixed in parts 7 and 8, opened again on made-up models (the same labs, copied,
 and three variants). Captures (2x) and hover pictures: `<tests folder>\r23b\shots\` (`crops\`); reports `r23b\lab\`,
-`r23b\site\`; scripts `builder-scripts\r23b-*`. The full table is in `mcp/WORK.md`, "Round 23, laptop re-proof".
+`r23b\site\`; scripts `builder-scripts\r23b-*`. The full table is in `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 23, laptop re-proof".
 
 | Check | Result | Crop |
 |---|---|---|
@@ -2419,7 +2420,7 @@ Facts learned:
 
 ## 2026-10-08 evening, round 24's laptop proof (`fix/round-23-total` at `754d29c`), Power BI Desktop 2.158.1304
 The website's download only (the lab page served from the work tree), made-up models, English and Arabic, 1280 x 720.
-Captures `<tests folder>\r24\shots\`; the table is in `mcp/WORK.md`, "Round 24, laptop proof".
+Captures `<tests folder>\r24\shots\`; the table is in `mcp/work/archive/WORK-2026-10-05-09.md`, "Round 24, laptop proof".
 
 | Check | Result | Crop |
 |---|---|---|
@@ -2479,6 +2480,53 @@ our header measure (bold text letter by letter + 24 a page of 1080 high, the wri
   the text alone; header wrap, the header's weight and font were not read in Desktop. To measure next: the Arabic header
   texts' drawn widths at 10 and 15pt (crop), the header's font in the format pane, and whether a header wraps.
 - check_report said nothing about the cut header (0.2.9.1 adds TABLE_HEADER_CUT; report-rules.js `headerNeed`).
+
+## 2026-10-27: Arabic text with a Latin run (the bidi lab, BD2), Power BI Desktop 2.159
+Measured on the laptop (27 Oct, Windows text recognition on the drawn report; the lab and its table:
+`mcp/lab/BIDI-LAB.md`). Each kind of canvas text (text boxes, visual titles, card labels and callouts, buttons, table
+and slicer headers, tooltip page names), a Latin run at the start, middle and end of an Arabic text, in five variants:
+- V0 (no marks) wrong everywhere; V1 (each Latin run in FSI ... PDI) right except where Desktop cuts a text with "..."
+  (cards: the "..." at the wrong end).
+- **V3 (V1 wrapped whole in U+2067 ... U+2069, RLI ... PDI) right on every canvas kind, cut card texts included**;
+  V4 draws as V3.
+- No variant helps the page tab strip: page and tooltip page names lay out left to right.
+- So DataArcus's rule is V3: `isolateLatin` (`assets/js/text-measure.js`) since BD2; `isolateRuns` is V1.
+
+## 2026-10-28: Power BI's automatic titles and subtitles on an Arabic page (the laptop part 3, A1), Power BI Desktop 2.159.883.0
+Seen on the laptop (28 Oct, integration 0d342773): the twin of Microsoft's dataset 1 report, whose charts use Power BI's
+automatic subtitles (switched on, no text of their own). With the approved Arabic field names Desktop composed
+«الشريحة by إجمالي الربح» and «الدولة by إجمالي المبيعات» (dataset 2's twin likewise «المواليد الأحياء by الإمارة»): the
+field names joined by its own English "by", whatever the page's language. The file holds no text for it, so only the
+switch (show on, no text) can be checked: `AUTO_TITLE` (`assets/js/report-rules.js`). DataArcus's twin, EN-AR copy and
+bilingual Arabic half write such a title as the visual's own text: its approved Arabic, else its English (FX3).
+
+## 2026-10-28: Microsoft's validator on six hand-built reports that open (the laptop part 4, C1, C5, C6), Power BI Desktop 2.159
+(Recorded 29 Oct 2026 for TB2 from the laptop's results, engine `lab/rc031-part4` 6caf204,
+`business/beta/rc031-part4/RESULTS.md`; 0.3.1-rc.3 = integration 694aa8a7.) The reports are six hand-built
+dashboards, the ones live on dataarcus.com, read only; nothing of them is in this repo. `check_report` said "can break
+the report in Power BI Desktop" on each (67, 21, 4, 5, 1 and 8 findings), and each report opened in Power BI Desktop
+2.159 with no error banner (C5). The codes counted on them (the validator's severity in brackets):
+- `PBIR_FORMATTING_PROP_NESTED` 76 (error), `PBIR_FILTER_NAME_DUPLICATE_GLOBAL` 14 (warning),
+  `PBIR_BOOKMARK_ACTION_TARGET_MISSING` 6 (error), `PBIR_ROLE_REQUIRED_MISSING` 3 (error),
+  `PBIR_SLICER_HEIGHT_BELOW_FLOOR` 2 (error), `PBIR_ROLE_MAX_EXCEEDED` 1 (error), `PBIR_SCATTER_NO_GROUPING` 1 (warning),
+  `PBIR_DRILLTHROUGH_BACK_BUTTON_MISSING` 1 (warning), `PBIR_VISUAL_TYPE_DEPRECATED` 1 (warning),
+  `PBIR_THEME_VISUAL_UNKNOWN` 1 (warning).
+So these ten codes are what Desktop opens a report with: `check_report`'s `openedInDesktop` kind
+(`mcp/lib/check-report.mjs`, `DESKTOP_OPENED`). What was measured is the report opening, not each part drawing: a
+visual missing a required role was seen to draw empty once (11 Oct 2026, `mcp/work/0.2.9-custom-visuals.md`, Z1).
+Any other code stays "can break" until a Desktop proof like this one says otherwise.
+
+## 2026-10-29: where Desktop places a page picture, Normal, Fit and Fill (the laptop part 6, block B, MP1), Power BI Desktop 2.159
+(Recorded 29 Oct 2026 for MP1b from the laptop's results, engine `lab/rc031-part6` 07f18d0,
+`business/beta/rc031-part6/RESULTS.md`, shots `mp1-p1..p4-en-ar-p6.png`.) MP1's made-up pages (a 640 x 360 page, a
+green page colour behind the picture, the picture's edges found by pixel runs calibrated on the text boxes):
+- **Normal is centred at scale 1**, not at (0,0): a 520 x 360 picture's left edge at page x 60; a 400 x 250 one at
+  x 120-520, y 44-294 (about (H - ih) / 2 down).
+- **Fit is stretched to the whole page** (x 0-640): its proportions are not kept, it is not centred at the smaller scale.
+- **Fill is centred at the larger scale**, as modelled.
+So every fit is placed symmetrically about the page's centre line, and the twin flips a page picture as it is, its size
+and fit kept: `placement` and `flippedFor` (`mcp/lib/page-picture.mjs`). MP1's Normal pages, padded to the page at
+(0,0), were off by (W - iw) / 2 across and (H - ih) / 2 down; its Fit and Fill pages passed.
 
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is

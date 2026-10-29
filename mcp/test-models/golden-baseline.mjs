@@ -15,7 +15,6 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { withPlans } from '../test-plan.mjs';
 import { validatorCounts } from '../test-validator.mjs';
@@ -64,10 +63,17 @@ const reportFacts = (project, report, rtl) => {
   const order = JSON.parse(String(files[Object.keys(files).find((f) => /\/pages\/pages\.json$/.test(f))])).pageOrder;
   const pages = Object.keys(files).filter((f) => /\/pages\/[^/]+\/page\.json$/.test(f)).map((f) => JSON.parse(String(files[f]))).sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
   const lp = layoutProblems(filesOf(dir, dir));
+  // (SQ11, 0.2.9-writer-S8) every table's and matrix's written text size, values/headers (the theme's tableEx size where
+  // the visual sets none), sorted: a moved text size (B-06's kind of change) fails here, not only in Desktop
+  const theme = Object.keys(files).filter((f) => /\/RegisteredResources\/[^/]+\.json$/.test(f)).map((f) => { try { return JSON.parse(String(files[f])); } catch { return {}; } }).find((t) => t.visualStyles) || {};
+  const themeSize = +((((theme.visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize || 'theme';
+  const sizeOf = (v, k) => { const p = ((((v.visual || {}).objects || {})[k] || [])[0] || {}).properties || {}; return p.fontSize ? +String(p.fontSize.expr.Literal.Value).replace(/D$/, '') : themeSize; };
+  const tableText = Object.keys(files).filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f)).map((f) => JSON.parse(String(files[f])))
+    .filter((v) => v.visual && ['tableEx', 'pivotTable'].includes(v.visual.visualType)).map((v) => `${v.visual.visualType} ${sizeOf(v, 'values')}/${sizeOf(v, 'columnHeaders')}`).sort().join(', ');
   return { pages: pages.filter((p) => p.visibility !== 'HiddenInViewMode' && !/tooltip/i.test(p.type || '')).map((p) => `${p.displayName} ${p.width}x${p.height}`),
     hidden: pages.filter((p) => p.visibility === 'HiddenInViewMode' || /tooltip/i.test(p.type || '')).length,
     visuals: Object.keys(files).filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f)).length,
-    validator: validate(dir), sizeProblems: lp.sizes.length, phoneProblems: lp.phone.length, project: projectProblems(files).length, tableHeaders: tableProblems(files, rtl).bad.length,
+    validator: validate(dir), sizeProblems: lp.sizes.length, phoneProblems: lp.phone.length, project: projectProblems(files).length, tableHeaders: tableProblems(files, rtl).bad.length, tableText,
     firstProblems: lp.sizes.concat(lp.phone).slice(0, 2) };
 };
 // right to left: every slot of the Arabic plan is the English slot mirrored on the page (x -> width - x - w); the engine
@@ -103,7 +109,10 @@ await task(2, 'Arabic report, mirrored', async () => {
   const th = await call('generate_theme', { name: 'Golden Arabic', brand: '#0F6CBD', font: 'Tahoma', lang: 'ar', folder: 'themes' });
   const en = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'en', dir: 'ltr' });
   const ar = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' });
-  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' }, { fields: { kpis: RAMADAN_KPIS } });
+  // (0.3.1 CX1, Codex's F01: an Arabic plan whose titles would be English gets no plan id) the two fields of its titles
+  // with no Arabic name get Arabic names the person approved, as in the task (the agent drafts, the user approves)
+  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' }, { fields: { kpis: RAMADAN_KPIS },
+    displayNames: { 'Calendar[Month Short]': 'الشهر', 'Sales[Total Sales vs Last Ramadan %]': 'التغير عن رمضان الماضي %' } });
   return { cards: cardsOf(b), fontWarnings: th.j.warnings.filter((w) => /Arabic/.test(w)).length, mirror: mirrored(en, ar), ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(3, 'Ramadan vs last Ramadan', async () => {

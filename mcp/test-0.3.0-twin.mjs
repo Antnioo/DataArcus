@@ -154,9 +154,12 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => objProp(bar, 'valueAxis', 'invertAxis') === 'true' && objProp(bar, 'categoryAxis', 'switchAxisPosition') === 'true' && objProp(bar, 'valueAxis', 'switchAxisPosition') === undefined && objProp(bar, 'categoryAxis', 'invertAxis') === undefined, () => `T6. bar chart: bars from the right, names at the right, nothing else: ${JSON.stringify(bar.visual.objects)}`);
     chk(() => JSON.stringify(bar.visual.query.sortDefinition) === JSON.stringify(o2.barProduct.visual.query.sortDefinition), () => 'T6. bar chart: its top-to-bottom order (its sort) kept');
     const tbl = p2.tblProducts, refs = tbl.visual.query.queryState.Values.projections.map((p) => p.queryRef);
-    chk(() => JSON.stringify(refs) === JSON.stringify(['Sales.Total Sales', 'Sum(Sales.Amount)', 'Sales.Product']), () => `T6. table: columns reversed (the first at the right): ${JSON.stringify(refs)}`);
+    // (0.3.1 TW1, M1-S2, on purpose: the reversed columns put a number first and lost Power BI's total word; the twin now
+    // writes create_report's right-to-left table: the text column first and hidden, the numbers reversed, the row label
+    // at the right, so the first column read from the right is still Product)
+    chk(() => JSON.stringify(refs) === JSON.stringify(['Sales.Product', 'Sales.Total Sales', 'Sum(Sales.Amount)', 'Sales.Row label: Product']), () => `T6. table: right to left as create_report's (the name column hidden first, the numbers reversed, the row label at the right): ${JSON.stringify(refs)}`);
     chk(() => { const e = tbl.visual.objects.columnFormatting.find((x) => x.selector.metadata === 'Sales.Product'); return lit(e.properties.alignment) === "'Right'" && lit(e.properties.styleHeader) === 'true'; }, () => `T6. table: the text column right-aligned with its header: ${JSON.stringify(tbl.visual.objects.columnFormatting)}`);
-    chk(() => !tbl.visual.objects.columnFormatting.some((x) => x.selector.metadata !== 'Sales.Product'), () => 'T6. table: the number columns keep their alignment (nothing written)');
+    chk(() => !tbl.visual.objects.columnFormatting.some((x) => !['Sales.Product', 'Sales.Row label: Product'].includes(x.selector.metadata)), () => 'T6. table: the number columns keep their alignment (nothing written; the row label right-aligned, as the writer\'s)');
     const tb = (v) => v.visual.objects.general[0].properties.paragraphs;
     chk(() => tb(p1.title)[0].horizontalTextAlignment === 'right' && tb(p1.title)[0].textRuns[0].value === 'نظرة على المبيعات', () => `T6. text box right-aligned, with the approved label: ${JSON.stringify(tb(p1.title))}`);
     chk(() => tb(p2.note2)[0].horizontalTextAlignment === 'center' && tb(p2.note2)[0].textRuns[0].value === 'Product details', () => `T6. a centred text box stays centred; an unlabelled text is kept: ${JSON.stringify(tb(p2.note2))}`);
@@ -172,8 +175,13 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => same(noLabel(p1.slRegion), o1.slRegion) && p1.slRegion.visual.query.queryState.Values.projections[0].displayName === 'المنطقة', () => 'T6. slicer: moved, the approved field label as its header, nothing else');
     // (the navigator has a shown title: the labs' title rule right-aligns every title, so its title's alignment is the
     // one other change; the plan said both "moved only" and "titles right", and the title rule is the more specific)
-    const noAlign = (v) => { const c = JSON.parse(JSON.stringify(v)); delete c.visual.visualContainerObjects.title[0].properties.alignment; return c; };
-    chk(() => same(noAlign(p1.nav), o1.nav) && objProp(p1.nav, 'title', 'alignment', true) === "'right'", () => 'T6. navigator: moved, its title right-aligned, nothing else');
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title the person left English is isolated whole in the
+    // twin, text-measure.js isolateWhole: its text compared as the original's isolated)
+    const TMw = createRequire(import.meta.url)('../assets/js/text-measure.js');
+    const noAlign = (v, o) => { const c = JSON.parse(JSON.stringify(v)), tp = c.visual.visualContainerObjects.title[0].properties, op = o.visual.visualContainerObjects.title[0].properties; delete tp.alignment;
+      const raw = (p) => String(p.text.expr.Literal.Value).slice(1, -1).replace(/''/g, "'");
+      if (tp.text && op.text && raw(tp) === TMw.isolateWhole(raw(op))) tp.text = JSON.parse(JSON.stringify(op.text)); return c; };
+    chk(() => same(noAlign(p1.nav, o1.nav), o1.nav) && objProp(p1.nav, 'title', 'alignment', true) === "'right'", () => 'T6. navigator: moved, its title right-aligned and isolated whole when English, nothing else');
     const pj = rd(path.join(pagesDir(TWIN), 'p1overview/page.json')), pjo = rd(path.join(pagesDir(ORIG), 'p1overview/page.json'));
     chk(() => pj.displayName === 'نظرة عامة' && pj.name === pjo.name && pj.width === pjo.width, () => `T6. page: the approved name, its id and size kept: ${JSON.stringify([pj.name, pj.displayName, pj.width])}`);
   }
@@ -441,7 +449,8 @@ export function v030engine({ check }) {
   // legends: left and right swapped, centred kept
   { const pos = (p) => { const r = run(v('clusteredColumnChart', { queryState: { Category: { projections: [col('S', 'R')] }, Series: { projections: [col('S', 'P')] }, Y: { projections: [mea('S', 'A')] } } }, p ? { legend: [{ properties: { position: lit("'" + p + "'") } }] } : null), 1280); return r.visual && r.visual.objects.legend[0].properties.position.expr.Literal.Value; };
     const got = ['Top', 'Left', 'BottomLeft', 'Right', 'TopCenter', null].map(pos);
-    check(JSON.stringify(got) === JSON.stringify(["'TopRight'", "'Right'", "'BottomRight'", "'Left'", "'TopCenter'", "'TopRight'"]), `T10. legend positions: ${JSON.stringify(got)}`); }
+    // (0.3.1 FX2, H-1: BottomLeft is not a legend position in Microsoft's catalog, so it has no mirrored value: kept, said)
+    check(JSON.stringify(got) === JSON.stringify(["'TopRight'", "'Right'", "'BottomLeft'", "'Left'", "'TopCenter'", "'TopRight'"]), `T10. legend positions: ${JSON.stringify(got)}`); }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

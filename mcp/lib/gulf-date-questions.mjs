@@ -17,7 +17,6 @@ const Memory = require('../../assets/js/confirm-memory.js'), Gulf = require('../
 const COUNTRY_CODES = ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'];
 export const GRAINS = ['gregorian', 'hijri', 'seasonDay'], SCOPES = ['all', 'year'];
 const keyOf = (s) => { const mk = /^'?(.+?)'?\[(.+)\]$/.exec(String(s == null ? '' : s).trim()); return mk ? { t: mk[1], c: mk[2], key: `${mk[1]}[${mk[2]}]` } : null; };
-const lc = (s) => String(s == null ? '' : s).toLowerCase();
 const shown = (k) => shownName(k, 160);
 const isDate = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
 const exprOf = (t) => { const p = (t.partitions || []).find((x) => x.source && x.source.type === 'calculated'); return p ? (Array.isArray(p.source.expression) ? p.source.expression.join('\n') : String(p.source.expression || '')) : null; };
@@ -46,7 +45,6 @@ const Q = {
   hijriYearColumn: (list) => ({ en: `Which column holds the Hijri year: ${list.join(', ')}? It was found by its name only.`,
     ar: `أي عمود يحفظ السنة الهجرية: ${list.join('، ')}؟ وُجد بالاسم فقط.` })
 };
-const OPTIONS = { grain: GRAINS, scope: SCOPES };
 export const HOW = 'Ask askNext, in the person\'s language, and wait for their answer; then call plan_layout again with it in gulfDates ({ dateRole: "Table[Column]", grain: "gregorian" | "hijri" | "seasonDay", scope: "all" | "year", year: <the Hijri year the person gives>, hijriYearColumn: "Table[Column]", and for a missing calendar country, firstYear, lastYear }). Never answer a question yourself, never take a year as "the current one", and never infer the date from which relationship is active.';
 const SAY = 'Say in the plan which date the report follows and whether the person confirmed it (using); for a seasonal page the grain, the scope (one Hijri year the person named, or every season together) and the dates\' status (announced or estimated, and the country\'s limits). Never claim how a season performed, or that seasons are complete or comparable: the tools read no data. DataArcus never activates a relationship, never edits one and never writes USERELATIONSHIP.';
 
@@ -111,7 +109,7 @@ export function gulfDateQuestions(m, a, opts) {
     if (memo.has(q)) { const v = fromMemo(memo.get(q)); if (v != null) { answers[q] = v; earlier.push(q); return 'earlier'; } }
     return null;
   };
-  const roleSt = take('dateRole', (v) => { const k = keyOf(v); const hit = k && candidates.find((x) => x.key === k.key); if (!hit) { problems.push(`gulfDates.dateRole ${shown(String(v))} is not one of the date candidates of the plan's tables (${candidates.map((x) => shown(x.key)).join(', ') || 'none'}): ask the person which of them they mean.`); return null; } return hit.key; },
+  take('dateRole', (v) => { const k = keyOf(v); const hit = k && candidates.find((x) => x.key === k.key); if (!hit) { problems.push(`gulfDates.dateRole ${shown(String(v))} is not one of the date candidates of the plan's tables (${candidates.map((x) => shown(x.key)).join(', ') || 'none'}): ask the person which of them they mean.`); return null; } return hit.key; },
     (v) => fieldAnswer(v, candidates.map((x) => x.key)));
   take('grain', (v) => (GRAINS.includes(v) ? v : null), (v) => (GRAINS.includes(v) ? v : null));
   take('scope', (v) => (SCOPES.includes(v) ? v : null), (v) => (SCOPES.includes(v) ? v : null));
@@ -232,7 +230,10 @@ export function gulfDateQuestions(m, a, opts) {
     ...(seasonal ? [['Grain', answers.grain ? { gregorian: 'Gregorian months', hijri: 'Hijri months', seasonDay: 'day of the season' }[answers.grain] + (grain && grain.axis ? ` (${grain.axis}${grain.sortedBy ? `, sorted by ${grain.sortedBy}` : ''})` : '') : 'not answered'],
       ['Seasonal scope', SCOPE_SAID + (scopeNote && answers.scope === 'all' ? `; ${scopeNote.replace(/^[^:]*: /, '')}` : '')]] : []),
     ...(status ? [[`${season} dates`, status.en]] : [])];
-  return { answer, problems, rows };
+  // (0.3.1 SQ10, J17-S2) the calendar's Hijri-year column when it is known (declared by the Calendar Generator's table or
+  // confirmed by the person; a guess by name is not), for create_report's Ramadan note: { t, c } or null
+  const hy = columns.hijriYear && columns.hijriYear.by !== 'name' ? keyOf(columns.hijriYear.field) : null;
+  return { answer, problems, rows, hijriYear: hy ? { t: hy.t, c: hy.c } : null };
 }
 
 // the add_gulf_calendar offer: the person's own country and years (never a default), the country's weekend option
@@ -242,16 +243,18 @@ function calendarOffer(g) {
   if (Number.isInteger(g.firstYear)) inputs.firstYear = g.firstYear; else ask.push('firstYear');
   if (Number.isInteger(g.lastYear)) inputs.lastYear = g.lastYear; else ask.push('lastYear');
   return { tool: 'add_gulf_calendar', inputs, askTheUser: ask, weekend: inputs.country ? Gulf.COUNTRIES[inputs.country].weekendOption : null,
-    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption),
-    notModelled: 'The weekend differs by country (the generator\'s own options above), and the generator has no option for an emirate\'s own government weekend (Sharjah\'s differs from the federal one) or the Friday half day: ask the person which weekend their business keeps.',
+    weekends: COUNTRY_CODES.map((c) => Gulf.COUNTRIES[c].weekendOption).concat(Object.values(Gulf.WEEKEND_RULES).map((r) => r.weekendOption)),
+    notModelled: 'The weekend differs by country (the generator\'s own options above, with Sharjah\'s government weekend as add_gulf_calendar\'s weekend "shj"), and the generator has no option for another emirate\'s own government weekend, the Friday half day, public holidays or an employer\'s own rest days: ask the person which weekend their business keeps.',
     what: 'add_gulf_calendar writes the calendar as a TMDL script in a new file next to the project, for the person to apply in TMDL view; nothing is written into the model. Ask the person for their country and the years their data covers: never take a default.' };
 }
 
 // whether the season's dates are announced or estimated, from the calendar's files and gulf-dates.js (never from rows)
 function statusOf({ gen, columns, cal, answers, country, season, seasonAr }) {
   const C = COUNTRY_CODES.includes(country) ? Gulf.COUNTRIES[country] : null, other = C && country !== 'uae' && country !== 'ksa';
-  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} may announce another day.` : '';
-  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، وقد تُعلن ${C.nameAr} يومًا آخر.` : '';
+  // (0.3.1 GC) a country whose own differing announcements are sourced (Oman: gulf-dates.js own) says so
+  const own = other && GD.own && GD.own[country];
+  const limit = other ? ` For ${C.name} the generator uses the UAE's announced dates or Umm al-Qura estimates: ${C.name} ${own ? 'announced some of them a day later (sourced, 2019-2026) and ' : ''}may announce another day.` : '';
+  const limitAr = other ? ` بالنسبة إلى ${C.nameAr} يستخدم المولّد تواريخ الإمارات المعلنة أو تقديرات أم القرى، و${own ? `قد أعلنت ${C.nameAr} بعضها بعد يوم (موثَّق، 2019-2026)، وقد ` : 'قد '}تُعلن ${C.nameAr} يومًا آخر.` : '';
   if (!gen) return { dates: 'cantTell', en: `The ${season} dates in ${shown(cal || 'the calendar')} come from its data: DataArcus can't tell whether they are announced or estimated (the tools read no rows).${limit}`,
     ar: `تواريخ ${seasonAr} في ${shown(cal || 'التقويم')} تأتي من بياناته، ولا يمكن لـ DataArcus معرفة هل هي معلنة أم تقديرية (الأدوات لا تقرأ الصفوف).${limitAr}` };
   const observed = !!columns.estimated, est = shown(columns.estimated ? columns.estimated.field : `${cal}[Is Estimated Date]`);

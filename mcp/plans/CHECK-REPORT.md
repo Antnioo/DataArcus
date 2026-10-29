@@ -142,7 +142,11 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
   the finding is made; `impact` is read from it, never from the `source` text.
 - `severity`: `error`, `warning` or `note`, one scale for every origin.
 - `impact`: `desktopOpens` (only validator codes seen on a working report, in the files where they were seen),
-  `canBreak` (any other validator code, any schema error) or `dataarcusRule`. The answer's `impact` gives a summary
+  `canBreak` (any other validator code, any schema error), `openedInDesktop` (0.3.1 TB2: ten validator codes counted
+  on hand-built reports Power BI Desktop 2.159 opened with no error, 28 Oct 2026: `DESKTOP_OPENED`, each with its
+  measurement), `mayLook` (0.3.1 P3A: the validator's warnings
+  PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR and PBIR_SLICER_HEADER_MAY_CLIP, which Desktop was measured to draw: `DESKTOP_DRAWS`)
+  or `dataarcusRule`. The answer's `impact` gives a summary
   and one sentence per kind; "opens in Power BI Desktop" is said only when the validator ran offline and every file
   was read (A4-3).
 - `known` (polish round P2, 12 Oct 2026; validator findings only): `{ what, evidence }` when the finding is exactly a
@@ -165,7 +169,7 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
 | Size | 774,484 bytes unpacked, 13 files (its own code: `cli.js` 393,897 bytes, `index.js` 151,330 bytes) |
 | Node | `>=20` |
 | Dependencies | `ajv`, `ajv-formats`, `commander`, `@microsoft/powerbi-core-visual-schema` (MIT, 978,089 bytes), `powerbi-client` (MIT, 1,566,812 bytes), `@microsoft/powerbi-desktop-bridge-cli` (MIT, 139,516 bytes), and **`playwright`** (Apache-2.0, 5,094,512 bytes, which pulls `playwright-core`, 13,453,369 bytes) |
-| Today in DataArcus | a dev dependency of `mcp/` pinned to 0.4.0, run by `mcp/test.mjs` on two exports; **not shipped** in the package (`mcp/CLAUDE.md`) |
+| Today in DataArcus | a dev dependency of `mcp/` pinned to 0.4.0, run by `mcp/test.mjs` on two exports; **not shipped** in the package (`mcp/CLAUDE.md` then; today the pin is in `mcp/package.json`) |
 
 **It goes online by default.** The CLI's `validate` command fetches the JSON schemas over HTTPS: `fetchUrl` uses
 `https.get`, limited to allowed hosts (`developer.microsoft.com`, and `raw.githubusercontent.com` for theme schemas).
@@ -237,7 +241,7 @@ we didn't make. They describe our layouts, not Power BI. The tool says so in `no
 
 **Where the rules move:** from `scripts/tests/report-check.mjs` into a shared engine,
 `assets/js/report-rules.js`, used by the tests, the MCP and later the website (the engines are shared on purpose,
-`mcp/CLAUDE.md`). Each rule carries its id, its numbers and its evidence line. The tests keep calling the same rules,
+`mcp/docs/HOW-BUILT.md`). Each rule carries its id, its numbers and its evidence line. The tests keep calling the same rules,
 so nothing that passes today changes.
 
 ## 4. Safety: untrusted text, and data values never returned

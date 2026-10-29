@@ -10,11 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     data: 'DP600', code: 'DP-600', store: 'dataarcus-dp600-v1', ev: 'dp600',
     outline: '/assets/data/dp600-outline.json',
     page: 'https://dataarcus.com/tools/dp-600-practice-exam.html',
-    dom: {
-      prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5 },
-      model: { en: 'Implement and manage semantic models', ar: 'بناء وإدارة النماذج الدلالية', w: '25–30%', wt: 27.5 },
-      maintain: { en: 'Maintain a data analytics solution', ar: 'صيانة حل التحليلات', w: '25–30%', wt: 27.5 }
-    },
+    // each area's `study`: its section of Microsoft's study guide (read 25 Oct 2026: the anchor is the id of the area's
+    // heading, whose text is the area's name and weight; the page title is "Study guide for Exam DP-600: ...")
+    dom: ((G) => ({
+      prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5, study: G + '#prepare-data-4550' },
+      model: { en: 'Implement and manage semantic models', ar: 'بناء وإدارة النماذج الدلالية', w: '25–30%', wt: 27.5, study: G + '#implement-and-manage-semantic-models-2530' },
+      maintain: { en: 'Maintain a data analytics solution', ar: 'صيانة حل التحليلات', w: '25–30%', wt: 27.5, study: G + '#maintain-a-data-analytics-solution-2530' }
+    }))('https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600'),
     skill: {
       get: { d: 'prep', en: 'Get data', ar: 'الحصول على البيانات' },
       transform: { d: 'prep', en: 'Transform data', ar: 'تحويل البيانات' },
@@ -95,6 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const renName = (k) => { const t = REN.topics.find((x) => x.k === k); return L(t.en, t.ar); };
   const skillName = (s) => L(SKILL[s].en, SKILL[s].ar);
   const domName = (d) => L(DOM[d].en, DOM[d].ar);
+  // (I-2) one exam area's result row: under 70% (the percent as shown) a link to its section of Microsoft's study guide
+  const domRow = (d, right, n) => {
+    const p = n ? right / n : 0, pct = Math.round(p * 100), weak = n > 0 && pct < 70;
+    return '<div class="dp-domrow" data-dom="' + d + '"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (n ? pct + '%' : '·') + '</b></div>' + bar(p, pct >= 70 ? 'good' : 'warn') +
+      (weak && DOM[d].study ? '<div class="dp-domsub"><a href="' + esc(DOM[d].study) + '" target="_blank" rel="noopener" data-learn data-study><i class="bi bi-book"></i> ' + L('Study: this area in Microsoft\'s study guide', 'ذاكر: هذا المحور في دليل المذاكرة من Microsoft') + '</a></div>' : '') + '</div>';
+  };
 
   // Most-cited Microsoft Learn pages per skill, taken from the question references
   const LEARN = {};
@@ -316,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inProg = !!P.mock;
     const domRows = Object.keys(DOM).map((d) => {
       const s = stats(ALL.filter((q) => q.d === d));
-      return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (s.seen ? Math.round(s.acc * 100) + '%' : '·') + '</b></div>' + bar(s.acc * Math.min(1, s.seen / s.total * 1.6)) + '<div class="dp-domsub">' + L(num(s.seen) + ' of ' + num(s.total) + ' answered', 'أجبت ' + num(s.seen) + ' من ' + num(s.total)) + '</div></div>';
+      return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small><bdi dir="ltr">' + DOM[d].w + '</bdi></small></span><b>' + (s.seen ? Math.round(s.acc * 100) + '%' : '·') + '</b></div>' + bar(s.acc * Math.min(1, s.seen / s.total * 1.6)) + '<div class="dp-domsub">' + L(num(s.seen) + ' of ' + num(s.total) + ' answered', 'أجبت ' + num(s.seen) + ' من ' + num(s.total)) + '</div></div>';
     }).join('');
     root.innerHTML =
       (inProg ? '<div class="dp-resume"><span><i class="bi bi-hourglass-split"></i> ' + L('You have a mock exam in progress.', 'لديك اختبار تجريبي لم يكتمل.') + '</span><button type="button" class="btn btn-accent btn-sm" data-go="resume">' + L('Resume', 'متابعة') + '</button></div>' : '') +
@@ -437,13 +445,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function sessionEnd() {
     const c = ctx, n = Object.keys(c.checked).length, right = Object.values(c.checked).filter((g) => g === 1).length;
-    const bySkill = {};
-    c.items.forEach((inst, i) => { if (c.checked[i] == null) return; const s = byId[inst.id].s; bySkill[s] = bySkill[s] || [0, 0]; bySkill[s][1]++; if (c.checked[i] === 1) bySkill[s][0]++; });
+    const bySkill = {}, byDom = {};
+    c.items.forEach((inst, i) => { if (c.checked[i] == null) return; const q = byId[inst.id], s = q.s; bySkill[s] = bySkill[s] || [0, 0]; bySkill[s][1]++; if (c.checked[i] === 1) bySkill[s][0]++;
+      byDom[q.d] = byDom[q.d] || [0, 0]; byDom[q.d][1]++; if (c.checked[i] === 1) byDom[q.d][0]++; });
     root.innerHTML = back() + '<div class="dp-panel text-center dp-end"><div class="dp-ringwrap">' + ring(n ? right / n : 0, '<b>' + num(right) + '/' + num(n) + '</b><span>' + L('correct', 'صحيحة') + '</span>') + '</div>' +
       '<h2 class="h4 fw-bold mt-3">' + (n && right / n >= 0.8 ? L('Strong session', 'جلسة قوية') : L('Session complete', 'انتهت الجلسة')) + '</h2>' +
-      '<div class="dp-skilltable">' + Object.keys(bySkill).map((s) => '<div><span>' + skillName(s) + '</span>' + bar(bySkill[s][0] / bySkill[s][1]) + '<b>' + bySkill[s][0] + '/' + bySkill[s][1] + '</b></div>').join('') + '</div>' +
+      (Object.keys(byDom).length ? '<div class="dp-enddoms text-start"><span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' + Object.keys(DOM).filter((d) => byDom[d]).map((d) => domRow(d, byDom[d][0], byDom[d][1])).join('') + '</div>' : '') +
+      '<div class="dp-skilltable">' + Object.keys(bySkill).map((s) => '<div><span>' + skillName(s) + '</span>' + bar(bySkill[s][0] / bySkill[s][1], bySkill[s][0] / bySkill[s][1] >= 0.7 ? 'good' : 'warn') + '<b>' + bySkill[s][0] + '/' + bySkill[s][1] + '</b></div>').join('') + '</div>' +
       '<div class="dp-actions justify-content-center"><button type="button" class="btn btn-accent" data-a="again">' + L('Practice more', 'تدرّب أكثر') + '</button>' + (mistakes().length ? '<button type="button" class="tg-btn2" data-a="mist">' + L('Review mistakes', 'راجع الأخطاء') + ' (' + num(mistakes().length) + ')</button>' : '') + '</div></div>';
     bindBack();
+    root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'practice' })));
     root.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => (b.dataset.a === 'again' ? go('practiceSetup') : startSession(shuffle(mistakes()), 'mistakes'))));
   }
 
@@ -673,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<span class="tg-label">' + L('By renewal skill', 'حسب مهارة التجديد') + '</span>' +
       REN.topics.filter((t) => r.ren[t.k]).map((t) => { const v = r.ren[t.k], p = v[0] / v[1]; return '<div class="dp-domrow"><div class="dp-domtop"><span><bdi>' + esc(renName(t.k)) + '</bdi> <small><bdi>' + L(num(v[1]) + (v[1] === 1 ? ' question' : ' questions'), v[1] === 1 ? 'سؤال واحد' : v[1] === 2 ? 'سؤالان' : num(v[1]) + ' أسئلة') + '</bdi></small></span><b>' + Math.round(p * 100) + '%</b></div>' + bar(p, p >= 0.7 ? 'good' : 'warn') + (p < 0.7 ? '<div class="dp-domsub"><a href="' + esc(t.learn) + '" target="_blank" rel="noopener" data-learn><i class="bi bi-book"></i> ' + L('Study: Microsoft Learn module', 'ذاكر: وحدة Microsoft Learn') + '</a></div>' : '') + '</div>'; }).join('') :
       '<span class="tg-label">' + L('By exam area', 'حسب محور الاختبار') + '</span>' +
-      Object.keys(DOM).map((d) => { const v = r.dom[d]; const p = v[1] ? v[0] / v[1] : 0; return '<div class="dp-domrow"><div class="dp-domtop"><span>' + domName(d) + ' <small>' + DOM[d].w + '</small></span><b>' + (v[1] ? Math.round(p * 100) + '%' : '·') + '</b></div>' + bar(p, p >= 0.7 ? 'good' : 'warn') + '</div>'; }).join('')) +
+      Object.keys(DOM).map((d) => domRow(d, r.dom[d][0], r.dom[d][1])).join('')) +
       '<span class="tg-label mt-3">' + L('By skill', 'حسب المهارة') + '</span><div class="dp-skilltable">' + Object.keys(r.sk).map((s) => { const v = r.sk[s]; return '<div><span>' + skillName(s) + '</span>' + bar(v[0] / v[1], v[0] / v[1] >= 0.7 ? 'good' : 'warn') + '<b>' + Math.round(v[0] / v[1] * 100) + '%</b></div>'; }).join('') + '</div></div></div></div>' +
       '<div class="dp-panel mt-4"><div class="dp-revhead"><span class="tg-label mb-0">' + L('Review answers', 'مراجعة الإجابات') + '</span><div class="mb-seg">' +
       [['all', L('All', 'الكل')], ['wrong', L('Incorrect', 'الخاطئة')], ['flag', L('Flagged', 'المعلّمة')]].map((x) => '<button type="button" data-f="' + x[0] + '" class="' + (f === x[0] ? 'active' : '') + '">' + x[1] + '</button>').join('') + '</div></div>' +

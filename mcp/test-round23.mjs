@@ -12,6 +12,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { tableProblems, sortProblems, rowLabelProblems } from '../scripts/tests/report-check.mjs';
 import { checkReportClean } from './test-validator.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { keepEnglish } from './test-plan.mjs';
 
 export async function round23({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -71,7 +73,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   // 4. Names that need escaping: the DAX quotes the table and closes the column's bracket, as the "No data" measures do
   {
     model('r23-esc', [{ name: "Sa'les", partitions: mp("Sa'les"), columns: [col('Amount', 'double'), col('Re]gion', 'string')], measures: [{ name: 'Total', expression: "SUM ( 'Sa''les'[Amount] )", formatString: '#,0' }] }]);
-    const x = await ask('create_report', { path: 'r23-esc', name: 'R23 esc', lang: 'ar', rtl: true, noDataMessage: false, fields: { kpis: ["Sa'les[Total]"], measure: "Sa'les[Total]", table: ["Sa'les[Re]gion]", "Sa'les[Total]"] }, pages: page([tableSlot]) });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r23-esc', name: 'R23 esc', lang: 'ar', rtl: true, noDataMessage: false, displayNames: keepEnglish("Sa'les[Total]", "Sa'les[Re]gion]"), fields: { kpis: ["Sa'les[Total]"], measure: "Sa'les[Total]", table: ["Sa'les[Re]gion]", "Sa'les[Total]"] }, pages: page([tableSlot]) });
     const m = ext(x, 'r23-esc').find((e) => /^Row label: /.test(e.name));
     chk(() => m && m.expression === "IF ( NOT ISBLANK ( 'Sa''les'[Total] ), IF ( ISINSCOPE ( 'Sa''les'[Re]]gion] ), SELECTEDVALUE ( 'Sa''les'[Re]]gion] ), \"الإجمالي\" ) )", () => `4. escaped DAX: ${JSON.stringify(m || ext(x, 'r23-esc'))} ${short(x)}`);
   }
@@ -79,7 +82,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   //    last, no hidden column), told in the notes
   {
     model('r23-cc', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Re\tgion', 'string')], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
-    const x = await ask('create_report', { path: 'r23-cc', name: 'R23 cc', lang: 'ar', rtl: true, noDataMessage: false, fields: { kpis: ['Sales[Total]'], measure: 'Sales[Total]', table: ['Sales[Re\tgion]', 'Sales[Total]'] }, pages: page([tableSlot]) });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r23-cc', name: 'R23 cc', lang: 'ar', rtl: true, noDataMessage: false, displayNames: keepEnglish('Sales[Total]'), fields: { kpis: ['Sales[Total]'], measure: 'Sales[Total]', table: ['Sales[Re\tgion]', 'Sales[Total]'] }, pages: page([tableSlot]) });
     const t = tables(x, 'r23-cc')[0];
     chk(() => t && JSON.stringify(refs(t)) === JSON.stringify(['Sales.Total', 'Sales.Re\tgion']) && !width0(t).length && !ext(x, 'r23-cc').some((e) => /^Row label/.test(e.name)) && /control character/.test(notes(x)) && /الإجمالي|Total/.test(notes(x)),
       () => `5. a control character keeps today's table, told: ${t ? JSON.stringify(refs(t)) : 'no table'} ${notes(x).slice(0, 800)} ${short(x)}`);
@@ -182,14 +186,14 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const t1 = tables(ar, d)[0], t2 = tables(lt, d)[0];
     chk(() => t1 && refs(t1)[refs(t1).length - 1] === 'Sales.Row label: Region' && t2 && refs(t2)[0] === 'Sales.Region' && !width0(t2).length, () => `4. lang ar hand page right to left by default, rtl false left to right: ${t1 ? refs(t1) : short(ar)} | ${t2 ? refs(t2) : short(lt)}`);
   }
-  // 5. A theme made for 1920 x 1080 on a 1280 x 720 hand-placed page: its text sizes follow the page (x 720/1080), as a
-  //    plan_layout page's theme does
+  // 5. A theme made for 1920 x 1080 on a 1280 x 720 hand-placed page: its text sizes follow the page, as a
+  //    plan_layout page's theme does ((0.3.1 TS1, on purpose: x 1 / 1.25, the text factors; the 1080 table text 12.5, was 15)
   {
     const th = await ask('generate_theme', { name: 'R23 big', preset: 'DataArcus', folder: 'r23-themes' });
     const x = th.err ? th : await ask('create_report', { path: d, name: 'R23 theme small', theme: th.j.path, noDataMessage: false, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', table: ['Sales[Region]', 'Sales[Total Sales]'] }, pages: page([tableSlot]) });
     const tf = x.err ? null : Object.entries(filesOf(x, d)).find(([k]) => /RegisteredResources\/[^/]+\.json$/.test(k)), T = tf ? JSON.parse(String(tf[1])) : null;
     const size = T ? T.visualStyles.tableEx['*'].values[0].fontSize : null, big = th.err ? null : JSON.parse(fs.readFileSync(path.join(ROOT, th.j.path), 'utf8')).visualStyles.tableEx['*'].values[0].fontSize;
-    chk(() => big === 15 && size === 10 && /text sizes/.test(notes(x)), () => `5. the theme's table text 15 at 1920 x 1080 becomes 10 on a 1280 x 720 page, told: ${big} -> ${size} ${notes(x).slice(0, 400)} ${short(x)}`);
+    chk(() => big === 12.5 && size === 10 && /text sizes/.test(notes(x)), () => `5. the theme's table text 12.5 at 1920 x 1080 becomes 10 on a 1280 x 720 page, told: ${big} -> ${size} ${notes(x).slice(0, 400)} ${short(x)}`);
   }
   // 6. A measure that reaches no calendar: the line chart is left out with the true reason, and the visual beside it
   //    takes its room (no empty slot)
@@ -336,13 +340,14 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // F6. A column the visual counts (Function 2, a distinct count) is DISTINCTCOUNT in the row label's DAX
   {
+    // (0.3.1 FX2, A-1: the columns counted or summed, Order Id and Qty, are drafted like any field: their approved names here)
     modelR('r23-nomeas', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Qty', 'double')] }]);
-    const x = await auto('r23-nomeas', 'R23 nomeas', 'ar', { noDataMessage: false }), m = ext(x, 'r23-nomeas').find((e) => /^Row label: /.test(e.name));
+    const x = await auto('r23-nomeas', 'R23 nomeas', 'ar', { noDataMessage: false, displayNames: { 'Sales[Order Id]': 'رقم الطلب', 'Sales[Qty]': 'الكمية' } }), m = ext(x, 'r23-nomeas').find((e) => /^Row label: /.test(e.name));
     chk(() => m && /DISTINCTCOUNT \( 'Sales'\[Order Id\] \)/.test(m.expression) && !/COUNTA/.test(m.expression), () => `F6. a distinct count is DISTINCTCOUNT: ${m && m.expression} ${short(x)}`);
   }
   // F7. One implementation of the room rule: the server's text slots use lib/slots.mjs's absorb (no copy of its own)
   {
-    const srv = fs0.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs'), 'utf8');
+    const srv = serverSource();
     chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use the one absorb (the design engine\'s since 0.2.9 A2-3) for text slots, not its own copy');
   }
 

@@ -30,6 +30,60 @@
     }
     return em * t * 4 / 3 * 1.03;
   }
-  const api = { textWidth, LETTER, TAHOMA_LATIN };
+  // ---- bidi isolation (0.3.0 J18, B-171 item 5; moved here from the MCP's terminology.mjs by SQ15b, J18-S2, so the
+  // website's own Arabic download isolates by the same rule) ----
+  // Power BI draws a title as a left-to-right paragraph (DESKTOP-TESTS.md, round 13: a "…" after Arabic words went to the
+  // reading start of the line). A Latin run anywhere in Arabic text can swap the Arabic around it (BD1, Desktop 2.159,
+  // 26 Oct: a run between Arabic words too). Each Latin run (letters, with the digits and the signs between them:
+  // "KPI 2024", "Q1/2024") inside Arabic text is wrapped in a first-strong isolate (U+2068 ... U+2069), and a run at
+  // either end of the text gets a right-to-left mark (U+200F) beside it (isolateRuns, BD1's lab variant V1); then
+  // (0.3.1 BD2, the lab measured in Desktop 2.159, 27 Oct: V1 drew right except where Desktop cuts a text with "...", a
+  // card's "..." landed at the wrong end; V1 wrapped whole in a right-to-left isolate, V3, drew right on every canvas
+  // kind, cut card texts included) the whole text is wrapped in U+2067 ... U+2069 (isolateLatin). No mark helps the page
+  // tab strip: page names lay out left to right whatever they hold. Numbers alone and {n} placeholders are left as they
+  // are; a text with no Arabic letter or no Latin letter is unchanged; a text already wrapped is not wrapped again, and
+  // one an older build isolated (V1) gets the wrap round its isolates. The marks come from the writer only: a name a
+  // person gives with one is refused (the MCP's display-names.mjs, writtenName). textWidth counts them 0 wide.
+  const ARABIC = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/, ISOLATED = /[\u2066-\u2069]/;
+  const RUN = /[A-Za-z0-9](?:[A-Za-z0-9_%]|[ .,'&+#/\-](?=[A-Za-z0-9]))*/g;
+  const FSI = '\u2068', PDI = '\u2069', RLM = '\u200F', RLI = '\u2067';
+  const runs = (t) => t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run));
+  const ends = (t) => t.replace(/^(\s*)\u2068/, '$1' + RLM + FSI).replace(/\u2069(\s*)$/, PDI + RLM + '$1');
+  const mixed = (t) => ARABIC.test(t) && /[A-Za-z]/.test(t);
+  const wrapped = (t) => t.startsWith(RLI) && t.endsWith(PDI);
+  const wrap = (t) => (wrapped(t) ? t : RLI + t + PDI);
+  // V1: each Latin run isolated, a right-to-left mark beside a run at an end (the inside of the wrap; the lab's V1)
+  function isolateRuns(s) {
+    const t = String(s == null ? '' : s);
+    if (!mixed(t) || ISOLATED.test(t)) return t;
+    return ends(runs(t));
+  }
+  // V3, the rule: V1 wrapped whole in U+2067 ... U+2069
+  function isolateLatin(s) {
+    const t = String(s == null ? '' : s);
+    if (!mixed(t)) return t;
+    return wrap(ISOLATED.test(t) ? t : ends(runs(t)));
+  }
+  // (0.3.1 TT1, the owner, 27 Oct: a title is wholly Arabic or wholly English) an English title in an Arabic report is
+  // isolated as a whole where the writer places it, by the rule above (V3) with the whole title as its one run: V1's
+  // marks (U+200F, U+2068 ... U+2069, U+200F) wrapped in U+2067 ... U+2069, so it reads as one run; a text with an Arabic
+  // letter, without a Latin letter, or already isolated is unchanged
+  function isolateWhole(s) {
+    const t = String(s == null ? '' : s);
+    if (ARABIC.test(t) || !/[A-Za-z]/.test(t) || ISOLATED.test(t)) return t;
+    return wrap(ends(FSI + t + PDI));
+  }
+  // (the full run's test.mjs, e/h and P3-2: isolating every mixed text changed Arabic titles that keep a model name in
+  // English, outside what a person approved: the owner decided that one, F1) a text with an approved name in it: that
+  // name's Latin runs isolated where the text holds it, and a right-to-left mark at an end the name's run reaches; the
+  // whole text then wrapped, as isolateLatin (BD2)
+  function isolateNames(s, names) {
+    let t = String(s == null ? '' : s);
+    if (ISOLATED.test(t)) return t;
+    let hit = false;
+    for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
+    return hit ? wrap(ends(t)) : t;
+  }
+  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames, isolateRuns, wrapped, isolateWhole };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DataArcusTextMeasure = api;
 })(typeof self !== 'undefined' ? self : this);

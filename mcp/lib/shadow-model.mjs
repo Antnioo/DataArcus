@@ -9,6 +9,8 @@
 // same plan are the same picture. Keys match (one pool a connected key group), a date table gets a year of days and
 // its year, month and day columns follow the date, every sort-by column gives one sort value per value.
 // The copy is written to a temporary folder on the user's machine and opened there; nothing of it goes to the AI app.
+import { createRequire } from 'node:module';
+
 // ---- sizes (chosen, not measured: small enough for Desktop to load in a second, big enough for a chart's shape) ----
 export const ROWS = { dim: 8, fact: 120, date: 365, alone: 120, max: 400 };
 const YEAR = 2025, DAY = 86400000, BASE = Date.UTC(YEAR, 0, 1), TODAY = Date.UTC(YEAR, 11, 31);
@@ -19,7 +21,7 @@ const WORDS = ['Amber', 'Birch', 'Cedar Point', 'Dune', 'Ember Valley', 'Fjord',
 const WORDS_AR = ['العنبر', 'الأرز', 'وادي الندى', 'الكثبان', 'المرجان', 'الفيروز', 'سهل الزيتون', 'المرفأ', 'النخيل', 'الساحل الشرقي', 'اللؤلؤ',
   'الواحة', 'المنارة', 'الربوة الخضراء', 'السوسن', 'القمة'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+export const MONTHS_AR = createRequire(import.meta.url)('../../assets/js/arabic-calendar.js').MONTHS;   // (0.3.1 SQ14) the one Arabic month list
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const AR = /[؀-ۿ]/;

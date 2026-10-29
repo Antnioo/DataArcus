@@ -85,10 +85,10 @@
     const hasModel = !!(model && model.length);
     const findings = [];
     // (o.titles false: the visual by its type and place only; check_report's lint never returns a report's text, the owner's
-    // decision R5 of 11 Oct)
+    // decision R5 of 11 Oct) (o.places: each finding also gives its visual's place in plain words, placeOf; SQ5)
     // (R4: the type through the reading block's screen, never raw; the place rounded)
     const where = (x) => `${typeName(x.type)}${x.title && o.titles !== false ? ` "${x.title}"` : ''} at ${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.w)}x${Math.round(x.h)}`;
-    const add = (rule, severity, p, x, why, fix, guess) => findings.push({ rule, severity, guess: !!guess, page: { n: p.n, name: p.name }, visual: x ? where(x) : null, why, fix });
+    const add = (rule, severity, p, x, why, fix, guess) => findings.push(Object.assign({ rule, severity, guess: !!guess, page: { n: p.n, name: p.name }, visual: x ? where(x) : null, why, fix }, x && o.places ? { place: placeOf(x, p) } : {}));
     const typeOf = (f) => { const k = keyOf(f), m = k && cols[k]; return m ? m.type : null; };
     const isText = (f) => { if (!f || f.kind !== 'column') return false; const t = typeOf(f); return t == null || t === 'unknown' || t === 'string'; };
     for (const p of inv.pages) {
@@ -108,7 +108,7 @@
             add('AXIS_TEXT_TIME_UNSORTED', many(f.name) ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is sorted by this text itself)' : ''}${many(f.name) ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
               'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', true);   // (R7: a time field known by the words of its name: a guess)
           else if (m && m.type === 'unknown' && !m.sortBy)
-            add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `${refOf(f)} has no type in the model's files (a column of a DAX table) and no sort-by column: if it holds text, the axis runs in alphabetical order`, 'check its type; order the chart by the earliest date of each label, or give the column a sort-by column in the model', true);
+            add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `If ${refOf(f)} holds text, the chart shows it in alphabetical order (April, August, December...), not in time order`, 'in Power BI Desktop, check that the chart runs in time order; if not, select the column and choose Column tools > Sort by column, then its date or month number', true);   // (R4A, round 4: a column of a DAX table has no type in the model's files; said plainly)
           else if (!m && !hasModel) add('AXIS_TIME_UNKNOWN', 'note', p, x, `${refOf(f)} is named like a time field, and without the model its type and sort-by column cannot be known`, 'make sure it is a date, or a text column with a sort-by column', true);
         }
         // (a2) a blank on the axis (O-3): only when the blank count is known (facts), never guessed
@@ -158,7 +158,8 @@
         const share = ox * oy / Math.max(1, Math.min(A.w * A.h, B.w * B.h));
         if (share > V('OVERLAP_SHARE')) add('OVERLAP', share > V('OVERLAP_HIGH') ? 'high' : 'medium', p, A, `covers ${Math.round(share * 100)}% of the smaller of it and ${where(B)}`, 'move one of the two, or show them one at a time with bookmarks when they are alternatives', false);
       }
-      if (covers) add('COVER_CARDS', 'note', p, null, `${covers} card(s) sit on another visual at the same place (the "no data" message pattern), not counted as overlaps`, 'none, when that is meant', false);
+      // (0.3.1 R4A, round 4's problem 8: "the 'no data' message pattern" read as a fault) said as what it is: meant
+      if (covers) add('COVER_CARDS', 'note', p, null, covers === 1 ? 'a card laid over a chart shows a message when the chart has no data: this is meant' : `${covers} cards laid over charts each show a message when their chart has no data: this is meant`, 'nothing to do', false);
     }
     const rank = { high: 0, medium: 1, note: 2 };
     findings.sort((a, b) => rank[a.severity] - rank[b.severity]);
@@ -276,6 +277,25 @@
     return { R, versions: inv.versions, texts, customVisuals, unreadable: inv.unreadable, bookmarks: inv.bookmarkFiles, bookmarkNames: (inv.bookmarks || []).map((b) => ({ file: b.file, name: b.rawName })) };
   }
 
+  // ---------- a visual's place in plain words ----------
+  // (0.3.1 SQ5, T1-S7: an item "worth a look" named its visual "clusteredBarChart at 12,92 296x320") its kind in words
+  // and the third of the page its middle is in: "the bar chart, top left of the page". Never its title or any text of
+  // the report (the owner's decision R5: type and place only); a custom or unknown type is "a visual". x: { type, x, y,
+  // w, h }; page: { w, h } (without its size, the kind alone)
+  const KINDS = [[/^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/, 'bar chart'], [/^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart)$/, 'column chart'],
+    [/^(lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart)$/, 'line chart'], [/ComboChart$/, 'combo chart'], [/^waterfallChart$/, 'waterfall chart'], [/^(donutChart|pieChart)$/, 'donut chart'],
+    [/^scatterChart$/, 'scatter chart'], [/^tableEx$/, 'table'], [/^pivotTable$/, 'matrix'], [/^(card|cardVisual|multiRowCard)$/, 'card'], [/^kpi$/, 'KPI'], [/^gauge$/, 'gauge'],
+    [/^(map|filledMap|azureMap|shapeMap)$/, 'map'], [/^treemap$/, 'treemap'], [/^funnel$/, 'funnel'], [/^ribbonChart$/, 'ribbon chart'], [/^slicer$|Slicer$/, 'slicer'], [/^textbox$/, 'text box'], [/^actionButton$/, 'button'],
+    [/^pageNavigator$/, 'page navigator'], [/^bookmarkNavigator$/, 'bookmark navigator'], [/^image$/, 'picture'], [/^(shape|basicShape)$/, 'shape'], [/^group$/, 'group'], [/Chart$/, 'chart']];
+  function placeOf(x, page) {
+    const t = String((x && x.type) || ''), k = VT.isNative(t) || t === 'group' ? KINDS.find(([re]) => re.test(t)) : null;
+    const kind = k ? `the ${k[1]}` : 'a visual', W = page && +page.w, H = page && +page.h;
+    if (!(W > 0 && H > 0)) return kind;
+    const third = (mid, len) => (mid < len / 3 ? 0 : mid < 2 * len / 3 ? 1 : 2);
+    const v = ['top', 'middle', 'bottom'][third(+x.y + +x.h / 2, H)], h = ['left', 'centre', 'right'][third(+x.x + +x.w / 2, W)];
+    return `${kind}, ${v === 'middle' && h === 'centre' ? 'in the middle' : v === 'middle' ? `middle ${h}` : `${v} ${h}`} of the page`;
+  }
+
   // ---------- the check before a write or a download ----------
   // A problem "Power BI Desktop would show": a measured rule's warning or error (each measured in Desktop, its source in
   // DESKTOP-TESTS.md), or a layout finding that is not a guess and not a note (a visual off the page, two visuals
@@ -291,24 +311,28 @@
 
   /** The check of a generated project: files [{ path, data }] (the writer's). opts: { model (the model's tables, for
    *  the column types and sort-by columns; none: those findings are notes), lang ('en' | 'ar'), names, clean (how
-   *  the MCP shows names), titles }. Returns { pages, visuals (what was read), desktop, worth, summary, problems, worthALook, counts, ran }:
-   *  findings as { origin: rule | lint, rule, severity, guess, page, visual, what, fix }. Nothing is written. */
+   *  the MCP shows names), titles }. Returns { pages, visuals (what was read), desktop, worth, summary, problems, worthALook, meant (R4A: DataArcus's own "no data" cards), counts, ran }:
+   *  findings as { origin: rule | lint, rule, severity, guess, page, visual, place, what, fix }. Nothing is written. */
   function checkProject(files, opts) {
     const o = opts || {}, lang = o.lang === 'ar' ? 'ar' : 'en', inv = inventoryOf(files, o);
     const { R } = rulesInput(inv), RL = Rules();
     RL.normalize(R); R.lang = lang; R.dir = lang === 'ar' ? 'rtl' : 'ltr';
     const ruled = RL.check(R, { groups: RL.GROUPS });
-    const L = lint(inv, o.model || null, null, { names: o.names, titles: o.titles });
-    const pageNo = new Map(inv.pages.map((p) => [p.id, p.n]));
-    const rules = ruled.findings.map((f) => ({ origin: 'rule', rule: f.rule, severity: f.severity, guess: false, page: f.page ? { n: pageNo.get(f.page.id) || null, name: f.page.name } : null,
-      visual: f.visual ? `${f.visual.type} at ${Math.round(f.visual.x)},${Math.round(f.visual.y)} ${Math.round(f.visual.w)}x${Math.round(f.visual.h)}` : null, what: f.what, fix: f.fix }));
-    const lints = L.findings.map((f) => ({ origin: 'lint', rule: f.rule, severity: f.severity, guess: f.guess, page: f.page, visual: f.visual, what: f.why, fix: f.fix }));
-    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f));
+    const L = lint(inv, o.model || null, null, { names: o.names, titles: o.titles, places: true });
+    const pageNo = new Map(inv.pages.map((p) => [p.id, p.n])), pageOf = new Map(inv.pages.map((p) => [p.id, p]));
+    // (visual: its type and box, which plan-lint matches the preview's flags by; place: the same visual in plain words)
+    const rules = ruled.findings.map((f) => Object.assign({ origin: 'rule', rule: f.rule, severity: f.severity, guess: false, page: f.page ? { n: pageNo.get(f.page.id) || null, name: f.page.name } : null,
+      visual: f.visual ? `${f.visual.type} at ${Math.round(f.visual.x)},${Math.round(f.visual.y)} ${Math.round(f.visual.w)}x${Math.round(f.visual.h)}` : null, what: f.what, fix: f.fix },
+      f.visual ? { place: placeOf(f.visual, f.page && pageOf.get(f.page.id)) } : {}));
+    const lints = L.findings.map((f) => Object.assign({ origin: 'lint', rule: f.rule, severity: f.severity, guess: f.guess, page: f.page, visual: f.visual, what: f.why, fix: f.fix }, f.place ? { place: f.place } : {}));
+    // (0.3.1 R4A, round 4's problem 8) a generated project's cards over its charts are DataArcus's own "no data" pattern:
+    // counted, never listed as worth a look
+    const all = rules.concat(lints), problems = all.filter(isDesktopProblem), worthALook = all.filter((f) => !isDesktopProblem(f) && f.rule !== 'COVER_CARDS'), meant = all.filter((f) => !isDesktopProblem(f) && f.rule === 'COVER_CARDS');
     const counts = {}; all.forEach((f) => { counts[f.rule] = (counts[f.rule] || 0) + 1; });
-    const r = { pages: inv.pages.length, visuals: inv.pages.reduce((n, p) => n + p.visuals.length, 0), desktop: problems.length, worth: worthALook.length, problems, worthALook, counts, ran: ruled.ran.concat(Object.keys(LINT_RULES)), failed: ruled.failed, modelRead: L.modelRead };
+    const r = { pages: inv.pages.length, visuals: inv.pages.reduce((n, p) => n + p.visuals.length, 0), desktop: problems.length, worth: worthALook.length, problems, worthALook, meant, counts, ran: ruled.ran.concat(Object.keys(LINT_RULES)), failed: ruled.failed, modelRead: L.modelRead };
     r.summary = summaryOf(r, lang);
     return r;
   }
-  const api = { LINT_RULES, MEASURED, lint, inventoryOf, rulesInput, checkProject, DESKTOP_RULES, isDesktopProblem, summaryOf };
+  const api = { LINT_RULES, MEASURED, lint, inventoryOf, rulesInput, checkProject, DESKTOP_RULES, isDesktopProblem, summaryOf, placeOf };
   if (node) module.exports = api; else root.DALayoutCheck = api;
 })(typeof self !== 'undefined' ? self : this);

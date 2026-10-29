@@ -35,11 +35,27 @@ import { rgate } from './test-r.mjs';
 import { approvalWindow } from './test-approval.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v029sweep } from './test-0.2.9-sweep.mjs';
-import { withPlans } from './test-plan.mjs';
+import { withPlans, keepEnglish } from './test-plan.mjs';
 import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
+import { inventory, diskSource } from './lib/read-report.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
+// (SQ15c, 0.2.9-reader-S21) a written report read as the product reads it: lib/read-report.mjs's inventory through its
+// disk source (its path checks and caps kept), never a reader of this file's own. A file it could not read, a link or a
+// cap fails the read, so no check runs on a report read in part. Each page: { name (as written), w, h, hidden, visuals }
+// in pageOrder; each visual: its box on the page (a group's offset added), type ('group' for a group), hidden, json,
+// mobile (its phone file or null), text (its JSON as one string, for the checks that search it)
+const reportOf = (dir) => {
+  const sk = { big: [], deep: 0 }, inv = inventory(diskSource({ reportDir: dir }, sk), path.basename(dir));
+  const left = inv.unreadableFiles.concat(sk.big.map((b) => b.file), sk.links || []);
+  if (left.length || sk.capped) throw new Error(`the reader left part of ${path.basename(dir)} unread: ${left.slice(0, 5).join(', ') || 'capped'}`);
+  return inv.pages.map((p) => ({ name: p.rawName, w: p.w, h: p.h, hidden: p.hidden, raw: p.raw,
+    visuals: p.visuals.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h, type: x.type, hidden: x.hidden, json: x.json, mobile: x.mobile, text: JSON.stringify(x.json) })) }));
+};
+// every visual.json of a written report, parsed (through reportOf)
+const visualJsons = (dir) => reportOf(dir).flatMap((p) => p.visuals.map((v) => v.json));
 // Round 23 (the owner's go, 8 Oct 2026; way 4, measured in Desktop 2.158.1304): an Arabic table with a total row has its
 // name column first in the file at width 0 (hidden) and shows it through a report-level row-label measure at the right.
 // shownOf gives a table's projections as the reader sees them: the hidden column left out, the row label read as the
@@ -284,8 +300,7 @@ if (!r.err) {
   // entities are the field's own)
   const has = (k, t, n) => model.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
   const refs = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
-  walk(dir);
+  visualJsons(dir).forEach((j) => JSON.stringify(j, (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }));
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
   const { PNG } = (await import('node:module')).createRequire(import.meta.url)('pngjs');   // the MCP's own dev dependency
@@ -299,8 +314,7 @@ fs.writeFileSync(path.join(ROOT, 'dark.json'), JSON.stringify({ name: 'Dark', fo
   visualStyles: { page: { '*': { background: [{ color: { solid: { color: '#0a0f1c' } }, transparency: 0 }] } } } }));
 r = await call('create_report', { path: 'bim-project', name: 'Dark Test', theme: 'dark.json', pages: [page] });
 if (!r.err) {
-  const titles = []; const walkT = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walkT(f); else if (e.name === 'visual.json') { const t = fs.readFileSync(f, 'utf8'); if (/"textRuns"/.test(t) && /Dark Test/.test(t)) titles.push(t); } });
-  walkT(path.join(ROOT, 'bim-project', r.j.report));
+  const titles = reportOf(path.join(ROOT, 'bim-project', r.j.report)).flatMap((p) => p.visuals.map((v) => v.text)).filter((t) => /"textRuns"/.test(t) && /Dark Test/.test(t));
   check(titles.length && titles.every((t) => /#f8fafc/i.test(t) && !/#1f2937/i.test(t)), 'dark theme: the title does not use the theme text colour');
 } else check(false, `dark theme report: ${r.t}`);
 r = await call('create_report', { path: 'sample.pbit', name: 'X', pages: [page] });
@@ -320,7 +334,9 @@ check(DESIGNS.length === 54, `design fixtures: ${DESIGNS.length}`);
 
 // generate_theme: every fixture's saved design, given through the tool's own inputs, writes the website's theme JSON
 // byte for byte, under the website's file name (the PNG's name without -background-<layout>.png, plus .json)
-const themeInput = (c) => { const s = c.state, l = s.layout; return { name: s.name, palette: { data: s.data, ui: s.ui }, font: s.font, ...(s.chart ? { chart: s.chart } : {}),
+// (0.3.1 GD1: the tools' default look is glass; a design saved without a look is plain, as the website opens it, so its
+// look is given as saved: "auto" when it has none)
+const themeInput = (c) => { const s = c.state, l = s.layout; return { name: s.name, palette: { data: s.data, ui: s.ui }, font: s.font, chart: Object.assign({ look: 'auto' }, s.chart),
   layout: { page: l.page === 'custom' ? { w: l.pageW, h: l.pageH } : l.page, radius: l.radius, shadow: l.shadow, transparent: l.transparent, ...(l.dir ? { dir: l.dir } : {}) },
   lang: c.lang, folder: `themes/${c.id}` }; };
 let themeOk = 0; const themeBad = [];
@@ -359,10 +375,11 @@ for (const [w, h] of [[3840, 2160], [640, 360]]) {
   check(!r.err && sizes.length && sizes.every((s) => s >= 8 && s <= 60), `generate_theme ${w}x${h} font sizes: ${r.err ? r.t.slice(0, 100) : sizes}`);
 }
 // no layout, or only part of one: the engine's current defaults (1920 x 1080 and its text sizes), never an old save's
+// (0.3.1 TS1, on purpose: 1920 x 1080's text x 1.25 of the 720 sizes, the owner's D-1027-16; was 15,18,27,42 at x 1.5)
 const themeSizes = (file) => { const s = new Set(); JSON.stringify(JSON.parse(fs.readFileSync(file, 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') s.add(v); return v; }); return [...s].sort((a, b) => a - b).join(); };
 for (const [tag, extra] of [['no layout', {}], ['only radius', { layout: { radius: 4 } }]]) {
   r = await tryCall('generate_theme', Object.assign({ name: 'Default ' + tag }, extra));
-  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.page === '1920x1080' && themeSizes(r.j.path) === '15,18,27,42' && (!extra.layout || r.j.design.layout.radius === 4),
+  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.page === '1920x1080' && themeSizes(r.j.path) === '12.5,15,22.5,35' && (!extra.layout || r.j.design.layout.radius === 4),
     `generate_theme ${tag}: page ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ', text sizes ' + themeSizes(r.j.path)}`);
 }
 // the contrast checks come back, with a warning for each one that fails
@@ -406,27 +423,14 @@ for (const [tag, dz] of [['partial layout', { name: 'P', layout: { preset: 'anal
 }
 }
 // ---------- create_report with a design: the website's project pages, positions exactly as planned ----------
-// a written report read back: its visible pages in order, each with its size and every visual's absolute box (a visual in
+// a written report read back (reportOf): its pages in order, each with its size and every visual's absolute box (a visual in
 // a group stores its position relative to the group), type, hidden flag and text
-const readReport = (dir) => {
-  const D = path.join(dir, 'definition'), order = JSON.parse(fs.readFileSync(path.join(D, 'pages/pages.json'), 'utf8')).pageOrder;
-  return order.map((id) => {
-    const P = path.join(D, 'pages', id), pj = JSON.parse(fs.readFileSync(path.join(P, 'page.json'), 'utf8')), vs = {};
-    const vdir = path.join(P, 'visuals');
-    if (fs.existsSync(vdir)) fs.readdirSync(vdir).forEach((n) => { const t = fs.readFileSync(path.join(vdir, n, 'visual.json'), 'utf8'), v = JSON.parse(t); vs[v.name] = { v, t }; });
-    const abs = (v) => { const p = v.position, g = v.parentGroupName && vs[v.parentGroupName] ? abs(vs[v.parentGroupName].v) : { x: 0, y: 0 }; return { x: p.x + g.x, y: p.y + g.y }; };
-    const visuals = Object.values(vs).map(({ v, t }) => Object.assign(abs(v), { w: v.position.width, h: v.position.height, type: v.visual ? v.visual.visualType : 'group', hidden: !!v.isHidden, text: t }));
-    return { name: pj.displayName, w: pj.width, h: pj.height, hidden: pj.visibility === 'HiddenInViewMode', visuals };
-  });
-};
+const readReport = (dir) => reportOf(dir).map(({ name, w, h, hidden, visuals }) => ({ name, w, h, hidden, visuals }));
 // (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
-const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
+const boundFields = (dir) => { const refs = []; visualJsons(dir).forEach((j) => JSON.stringify(j, (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; })); return refs; };
 if (part('design-report')) {
 const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
-const besideRail = (got, wp, s, v) => { const r = wp.slots.find((x) => x.rail), sl = got.visuals.filter((x) => x.type === 'slicer');
-  if (!r || !sl.length || s.y < Math.max(...sl.map((x) => x.y + x.h))) return false;
-  return v.x === Math.min(s.x, r.x) && v.x + v.w === Math.max(s.x + s.w, r.x + r.w); };
 const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
   const bad = [];
   want.forEach((wp, i) => {
@@ -440,14 +444,17 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
       // (0.2.9, the design block's S7: a slot wholly under the shortened filter rail takes the rail's column: the same row,
       // one edge kept, wider)
-      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.3.1 TS1, on purpose: the owner's yes to 0.2.9-writer-S10, REFLOW_KEEP 0.45: on the details page the chart beside
+      // the shortened rail ends with it, keeping REFLOW_KEEP of its height at least, and the rows under it move up, their
+      // bottoms kept, one edge kept, as wide or wider)
+      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && !got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w && v.y === s.y && v.h < s.h && v.h >= E.REFLOW_KEEP * s.h) || (v.y < s.y && v.w >= s.w && (v.x === s.x || v.x + v.w === s.x + s.w) && s.y + s.h - (v.y + v.h) >= 0 && s.y + s.h - (v.y + v.h) < (v.type === 'tableEx' ? 30 : 1)))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
 };
 const gs = await tryCall('generate_theme', { name: 'Gulf Sales', brand: '#0F4C5C', harmony: 'analogous', lang: 'ar', font: 'Tahoma', folder: 'themes/cr' });
 const gp = gs.err ? gs : await tryCall('plan_layout', { design: gs.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
-r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar' });
+r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar', displayNames: keepEnglish('_Measures[Total]', 'Sales[Note]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
 if (!r.err) {
   // (round 4, owner 2026-10-03: this model has 2 measures a card can show, so every page has 2 KPI cards, not the
   // design's 3 and 4 with the extra ones empty)
@@ -556,12 +563,14 @@ if (part('quality')) {
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
     // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
     // where it has them, so the labels stay level; it was Calendar[Month Name])
-    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
+    // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], in time order by its month's first date; Month Short added up the same month of six years)
+    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Year Month]') && !cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
       `fields: ${[...new Set(cols)].join(', ')}`);
     // 5. the model's own issues are told, with the fix, and the model is not changed
     const notes = (q.j.modelNotes || []).map((n) => n.field);
     // (round 12, #16: the note is on the short month names the report now shows; it was on Calendar[Month Name])
-    check(notes.includes('Calendar[Month Short]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
+    // (FX4b, D-1028-07: the note is on Year Month, the axis now; it has no sort-by column in the model either)
+    check(notes.includes('Calendar[Year Month]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
 // tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since round 14 with the text column last, at the right edge;
@@ -569,7 +578,7 @@ if (part('quality')) {
 {
   const t1 = await tryCall('generate_theme', { name: 'Quality AR', brand: '#0F4C5C', folder: 'themes/q' });
   const en = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table EN', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'en' });
-  const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
+  const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
   const tables = (res) => res.err ? [] : readReport(path.join(ROOT, 'dax-project', res.j.report)).flatMap((p) => p.visuals).filter((v) => v.type === 'tableEx').map((v) => JSON.parse(v.text).visual);
   // (round 12, #17: a day or month name without a sort-by column is followed by a helper column, the minimum of its
   //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
@@ -592,14 +601,12 @@ if (part('quality')) {
 // and no inner outline, each on the "default" selector; padding set; the height they need fits their box (Microsoft's
 // card sizing: text takes 1.5 x its size); the title follows the reading direction; on the phone, their own sizes
 const cardProblems = (dir, rtl) => {
-  const files = [], bad = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (/^(visual|mobile)\.json$/.test(e.name)) files.push(f); });
-  walk(dir);
+  const bad = [];
   const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), n = (p) => parseFloat(lit(p));
   const def = (list) => (list || []).find((x) => x.selector && x.selector.id === 'default'), props = (list) => ((list || [])[0] || {}).properties || {};
   let cards = 0;
-  files.filter((f) => f.endsWith('visual.json')).forEach((f) => {
-    const j = JSON.parse(fs.readFileSync(f, 'utf8')), v = j.visual, id = j.name;
+  reportOf(dir).flatMap((p) => p.visuals).forEach(({ json: j, mobile: m }) => {
+    const v = j.visual, id = j.name;
     if (!v) return;
     if (v.visualType === 'card' || v.visualType === 'multiRowCard') { bad.push(`${id}: legacy ${v.visualType}`); return; }
     if (v.visualType !== 'cardVisual' || isMessageCard(v)) return;   // (round 22: a "No data" message card is not a KPI card)
@@ -619,9 +626,7 @@ const cardProblems = (dir, rtl) => {
     // (5 Oct: a KPI title too long for one line at 8pt may wrap to two, titleWrap; then it needs two lines)
     const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? (lit(t.titleWrap) === 'true' ? 2 : 1) * Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
     if (!(need <= j.position.height)) bad.push(`${id}: needs ${need} high, box ${j.position.height}`);
-    const mf = path.join(path.dirname(f), 'mobile.json');
-    if (fs.existsSync(mf)) {
-      const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
+    if (m) {
       if (n((def((m.objects || {}).value) || { properties: {} }).properties.fontSize) !== 20 || n(props((m.visualContainerObjects || {}).title).fontSize) !== 10) bad.push(`${id}: phone sizes ${JSON.stringify(m.objects)} ${JSON.stringify(m.visualContainerObjects)}`);
     }
   });
@@ -661,7 +666,6 @@ const cardProblems = (dir, rtl) => {
   const filesOf = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(path.dirname(dir), f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
   // Microsoft's validator on a report folder: { errors, what } (warnings are not errors)
   const validate = (dir) => {
-    const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
     // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
     const r = validatorCounts(dir);
     return r.ran ? { errors: r.errorCount, what: r.errors.map((e) => `${e.code}: ${e.message}`).join('; ') } : { errors: -1, what: 'the validator did not run: ' + r.why };
@@ -696,7 +700,8 @@ const cardProblems = (dir, rtl) => {
     // (round 12, #16, the owner's go 6 Oct: the charts' time axis is the model's short month names, Calendar[Month Short],
     // so their labels stay level; the checks below named Calendar[Month Name] before)
     const sp = sortProblems(files), byOf = (cat) => [...new Set(sp.sorted.filter((x) => x.category === cat).map((x) => x.by))].join();
-    check(!sp.bad.length && byOf('Calendar.Month Short') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Short') && sp.sorted.some((x) => x.type === 'lineChart'),
+    // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], sorted by Min of the calendar's Year Month Sort (YEAR * 100 + MONTH; the round 2 way, measured in Desktop), its trend tooltip too; Month Short added up the same month of six years)
+    check(!sp.bad.length && byOf('Calendar.Year Month') === 'Calendar.Year Month Sort' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Year Month') && sp.sorted.some((x) => x.type === 'lineChart' && x.category === 'Calendar.Year Month'),
       `${name}: months not put in order: ${JSON.stringify(sp.sorted).slice(0, 300)} ${sp.bad.slice(0, 2).join('; ')}`);
     check(byOf('Calendar.Day Name') === 'Calendar.Day of Week', `${name}: the chart by Day Name is sorted by "${byOf('Calendar.Day Name')}", want Calendar.Day of Week`);
     // round 2: display names. Without the input nothing carries one; an Arabic report lists the fields it shows under
@@ -709,28 +714,43 @@ const cardProblems = (dir, rtl) => {
     // plan and pinned with it: a displayName here is only that, the field's own name made readable)
     // (changed 19 Oct 2026, 0.3.0 R2, the owner's must-fix: an Arabic plan pins the fixed list's Arabic names too, named in
     // the plan and approved with it: «إجمالي المبيعات» for Total Sales here; before, an Arabic report wrote none without input)
-    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)); };
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
-      `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
+    // (changed 28 Oct 2026, 0.3.1 CX1, Codex's F01: "Table AR" above keeps this model's Month Short English on purpose (its
+    // model name as displayNames, keepEnglish), and the plan reuses a choice the person confirmed on the same model (the
+    // terminology sheet): here it shows its model name as a kept term, not missing)
+    // (changed 28 Oct 2026, 0.3.1 FX3, Codex's delta finding D03: CX1's exception took ANY field shown under its model
+    // name; only the fields kept English on purpose take it: the three "Table AR" kept on this model (keepEnglish there),
+    // the person's earlier choice the plan remembers: Month Short and the two Last Ramadan measures)
+    const KEPT_EN = new Set(['Calendar.Month Short', 'Sales.Total Sales vs Last Ramadan %', 'Sales.Total Sales Last Ramadan (old)']);
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return f && (p.displayName === (rtl ? proposeArabic(f.Property) : readableName(f.Property)) || (rtl && KEPT_EN.has(p.queryRef) && p.displayName === f.Property)); };
+    // (FX3, D03) the check fails a translated field shown in English: Total Sales under "Total Sales"
+    if (rtl) { const ts = projections(files).find((p) => p.queryRef === 'Sales.Total Sales'); check(ts && !planName(Object.assign({}, ts, { displayName: 'Total Sales' })), `${name}: a translated field shown under its English name (Total Sales as "Total Sales") must fail the display-name check (D03): ${JSON.stringify(ts || null).slice(0, 200)}`); }
+    const keptMonth = projections(files).some((p) => p.queryRef === 'Calendar.Month Short' && p.displayName === 'Month Short');
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && !res.j.arabicNames.missing.includes('Sales[Total Sales]') && (res.j.arabicNames.missing.includes('Calendar[Month Short]') || keptMonth || (!projections(files).some((p) => p.queryRef === 'Calendar.Month Short') && !res.j.arabicNames.missing.includes('Calendar[Year Month]'))) : !res.j.arabicNames),   /* (FX4b, D-1028-07: Month Short is no longer shown; Year Month, shown in its place, has its Arabic plan name) */
+      `${name}: without displayNames: a displayName written (${JSON.stringify(projections(files).filter((p) => !(p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p))).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}), or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
-      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
-      const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: given });
+      // (FX4b, D-1028-07: the axis is Calendar[Year Month] now, so the month's given name is given to it; it was Calendar[Month Short])
+      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Year Month]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
+      // (0.3.1 CX1, F01: the two fields given no Arabic name here are kept English on purpose, as a person says it)
+      const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: Object.assign({}, given, keepEnglish('Sales[Total Sales vs Last Ramadan %]', 'Sales[Total Sales Last Ramadan (old)]')) });
       if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
       else {
         const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
-        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
+        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Year Month').length >= 2 && of('Calendar.Year Month').every((p) => p.displayName === 'الشهر')
           && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === proposeArabic('Total Sales Last Ramadan')),   // (changed 19 Oct 2026, R2: the plan's pinned name; was none)
-          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
+          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Year Month|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
-        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
+        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'") && !txt.includes("'Total Sales حسب Year Month'"), 'display names: titles still use the model names');
         // the table's column formatting still points at the field (its queryRef), not at the name
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && an.missing.includes('Sales[Total Sales vs Last Ramadan %]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
-          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 6, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
+        // (changed 27 Oct 2026, CX1, F01: the fields of English titles kept English on purpose (keepEnglish), so
+        // "vs Last Ramadan %" shows its model name, given, and 2 more names are used: 8, was 6)
+        const keptPct = ps.some((p) => p.queryRef === 'Sales.Total Sales vs Last Ramadan %' && p.displayName === 'Total Sales vs Last Ramadan %');
+        check(Array.isArray(an.missing) && !an.missing.includes('Sales[Total Sales Last Ramadan]') && (an.missing.includes('Sales[Total Sales vs Last Ramadan %]') || keptPct) && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Year Month]') && !an.missing.includes('Calendar[Quarter]')
+          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === (keptPct ? 8 : 6), `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
       }
@@ -787,7 +807,8 @@ const cardProblems = (dir, rtl) => {
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
   // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
-  check(!r.err && f(r.j.date) === 'Calendar[Month Short]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+  // (changed 28 Oct 2026, 0.3.1 FX4b, the owner's D-1028-07: the Ramadan calendar's own DAX runs 2022 to 2027, so the time axis is Calendar[Year Month], in time order by its month's first date; Month Short added up the same month of six years)
+  check(!r.err && f(r.j.date) === 'Calendar[Year Month]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
 }
 
 // ---------- round 3: safety before the first beta build ----------
@@ -884,7 +905,7 @@ if (part('round3')) {
 
   // 6. the version is in one place: mcp/package.json
   {
-    const pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')), src = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')), src = serverSource();
     check((client.getServerVersion() || {}).version === pkg.version, `the server's version ${(client.getServerVersion() || {}).version} is not package.json's ${pkg.version}`);
     check(!/version:\s*['"]\d/.test(src) && /package\.json/.test(src), 'server.mjs still holds a version of its own (it must read mcp/package.json)');
   }
@@ -1038,7 +1059,6 @@ if (part('round4')) {
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
   fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'plain'), { recursive: true });
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
@@ -1074,7 +1094,7 @@ if (part('round4')) {
   chk(() => !noFocus.err && noFocus.j.needsFocus === true && !noFocus.j.kpis && noFocus.j.areas.some((a) => a.area === 'Logistics') && /focus/.test(noFocus.j.why), () => `suggest_fields on a large model without a focus must pick nothing and ask for one: ${noFocus.t.slice(0, 240)}`);
   const lg = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
   // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
-  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Short]' && f(lg.j.cats.bar) === 'Hub[Hub Region]' && f(lg.j.cats.column) === 'Lane[Lane Region]'   /* round 22: lookups the main measure's table (Shipments) is related to; they were Carrier and Route, which only Deliveries is related to (the same total on every bar in Desktop) */
+  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Year Month]' /* (FX4b, D-1028-07: the large model's calendar runs over several years by its own DAX; was Calendar[Month Short]) */ && f(lg.j.cats.bar) === 'Hub[Hub Region]' && f(lg.j.cats.column) === 'Lane[Lane Region]'   /* round 22: lookups the main measure's table (Shipments) is related to; they were Carrier and Route, which only Deliveries is related to (the same total on every bar in Desktop) */
     && lg.j.slicers.map(f).join() === 'Calendar[Year],Hub[Hub Region],Lane[Lane Region]' && lg.j.scope.tables === 23 && lg.j.scope.focus === 'logistics', () => `suggest_fields with focus "logistics": ${lg.err ? lg.t.slice(0, 200) : JSON.stringify({ kpis: lg.j.kpis.map(f), date: f(lg.j.date), bar: f(lg.j.cats.bar), column: f(lg.j.cats.column), slicers: lg.j.slicers.map(f), scope: lg.j.scope })}`);
   const zz = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'zzz' });
   chk(() => !zz.err && zz.j.needsFocus === true && !zz.j.kpis && /zzz/.test(zz.j.why) && zz.j.areas.length > 5, () => `suggest_fields with a focus that matches nothing: ${zz.t.slice(0, 240)}`);
@@ -1210,7 +1230,7 @@ if (part('round5')) {
     chk(() => !cr.err && cr.j.report !== 'Linked Five.Report' && fs.lstatSync(cr.j.open).isFile() && fs.lstatSync(path.join(d, 'Linked Five.pbip')).isSymbolicLink() && fs.readdirSync(OUT).length === 0,
       () => `create_report at a name held by a dangling ${kind}: ${cr.err ? cr.t.slice(0, 200) : cr.j.report}; outside now holds ${fs.readdirSync(OUT)}`);
     // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server  (B-153: the one new-file writer is lib/write-io.mjs)
-    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+    const src = [serverSource()].concat(['lib/design.mjs', 'lib/model.mjs', 'lib/write-io.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8'))).join('\n');
     chk(() => !/fs\.writeFileSync\(/.test(src.replace(/fs\.writeFileSync\([^;]*flag: 'wx'[^;]*;/g, '')) && /flag: 'wx'/.test(src) && !/existsSync\(f\)\) return f/.test(src),
       () => 'a new file is still written without the wx flag, or a free name is still picked with existsSync');
     unlink(path.join(ROOT, 'dangling-theme.json')); unlink(path.join(d, first)); unlink(path.join(d, 'Linked Five.pbip'));
@@ -1283,10 +1303,8 @@ if (part('round6')) {
   const f = (x) => (x ? `${x.t}[${x.c != null ? x.c : x.m}]` : null);
   const plan = await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end' }), design = plan.j && plan.j.design;
   // every visual of a written report: page name, type, and the fields of its query in role order
-  const visualsOf = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
-    return order.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
-      return fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual && v.visual.query)
-        .map((v) => ({ page: pg.displayName, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })); }); };
+  const visualsOf = (dir) => reportOf(dir).flatMap((pg) => pg.visuals.map((x) => x.json).filter((v) => v.visual && v.visual.query)
+        .map((v) => ({ page: pg.name, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })));
   const SALES = (m) => `Sales[${m}]`, RAM = { kpis: ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'].map(SALES) };
 
   // 1. create_report takes the approved plan's fields: bound as given, nothing re-picked, and the answer says what was bound
@@ -1381,7 +1399,7 @@ if (part('round6')) {
 
   // 5c. a long report name is cut at a space, never in the middle of a word
   {
-    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar' });
+    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar', displayNames: keepEnglish('Sales[Sales YoY %]') });   // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
     chk(() => !x.err && x.j.report === 'التقرير التنفيذي للمبيعات.Report', () => `a long Arabic name must end at a whole word: ${x.err ? x.t.slice(0, 200) : x.j.report}`);
     const en = await ask('create_report', { path: 'tmdl-project', name: 'Quarterly Executive Sales Overview Northern Region', design });
     chk(() => !en.err && en.j.report === 'Quarterly Executive Sales.Report', () => `a long English name must end at a whole word: ${en.err ? en.t.slice(0, 200) : en.j.report}`);
@@ -1542,7 +1560,6 @@ if (part('round8')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   // every page.json of a written report: { tooltip, filters }
@@ -1632,16 +1649,13 @@ if (part('round9')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   // every page of a written report: { name, tooltip, filters, visuals }
-  const report = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
-    return order.map((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
-      return { name: pg.displayName, tooltip: pg.type === 'Tooltip', filters: (pg.filterConfig && pg.filterConfig.filters) || [],
-        visuals: fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual) }; }); };
+  const report = (dir) => reportOf(dir).map((pg) => ({ name: pg.name, tooltip: pg.raw.type === 'Tooltip', filters: (pg.raw.filterConfig && pg.raw.filterConfig.filters) || [],
+    visuals: pg.visuals.map((x) => x.json).filter((v) => v.visual) }));
   const reportsIn = (proj) => fs.readdirSync(path.join(ROOT, proj)).filter((n) => /\.Report$/.test(n)).length;
   const hashDir = (dir) => { const h = crypto.createHash('sha256'); const walk = (d) => fs.readdirSync(d).sort().forEach((n) => { const f = path.join(d, n); if (fs.statSync(f).isDirectory()) walk(f); else { h.update(n); h.update(fs.readFileSync(f)); } }); walk(dir); return h.digest('hex'); };
   const lit = (s) => ({ expr: { Literal: { Value: s } } });
@@ -1712,7 +1726,8 @@ if (part('round9')) {
     const svgProj = tables.length ? tables[0].visual.query.queryState.Values.projections.filter((p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) : [];
     const plain = await ask('create_report', { path: 'dax-project', name: 'R9 No SVG', design: exec });
     // 1. the files are D-P1's: one report-level measure per column (Text, ImageUrl) on the entity of its first measure, the last columns of the first table
-    chk(() => ext.$schema === 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json' && ext.name === 'extension' && ext.entities.length === 1 && ext.entities[0].name === 'Sales'
+    chk(() => ext.$schema === 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json' && ext.name === 'extension' && ext.entities.filter((e) => e.name !== 'Calendar').length === 1 && ext.entities[0].name === 'Sales'   /* (FX4b, D-1028-07: the Year Month axis's order measure, "Month start (sort)", lives on the Calendar entity of the same file) */
+      && ext.entities.filter((e) => e.name === 'Calendar').every((e) => e.measures.every((m) => !/ImageUrl/.test(m.dataCategory || '')))
       && ms.length === 2 && ms[0].name === 'Progress' && ms[1].name === 'Day' && ms.every((m) => m.dataType === 'Text' && m.dataCategory === 'ImageUrl' && Object.keys(m).sort().join() === 'dataCategory,dataType,expression,name')
       && svgProj.length === 2 && JSON.stringify(svgProj[0]) === JSON.stringify({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Progress' } }, queryRef: 'Sales.Progress', nativeQueryRef: 'Progress' })
       && tables[0].visual.query.queryState.Values.projections.slice(-2).map((p) => p.queryRef).join() === 'Sales.Progress,Sales.Day' && tables.slice(1).every((t) => !/extension/.test(JSON.stringify(t)))
@@ -1782,7 +1797,8 @@ if (part('round9')) {
     }
     // 8. Microsoft's validator: 0 errors with two SVG columns, also in an Arabic right-to-left report; the expression is the Designer's own DAX without its comment lines
     {
-      const ar = await ask('create_report', { path: 'dax-project', name: 'R9 SVG AR', design: exec, lang: 'ar', svgColumns: [{ label: 'التقدم', design: bar('Total Sales Last Ramadan') }, { label: 'اليوم', design: day('Calendar[Day Name]') }] });
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+      const ar = await ask('create_report', { path: 'dax-project', name: 'R9 SVG AR', design: exec, lang: 'ar', displayNames: keepEnglish('Sales[Total Sales vs Last Ramadan % (old)]'), svgColumns: [{ label: 'التقدم', design: bar('Total Sales Last Ramadan') }, { label: 'اليوم', design: day('Calendar[Day Name]') }] });
       const adir = ar.err ? null : path.join(ROOT, 'dax-project', ar.j.report), d0 = bar('Total Sales Last Ramadan');
       const own = Svg.toDax(d0).dax.split('\n').slice(1).filter((l) => !/^--/.test(l)).join('\n');
       chk(() => dir && errors(dir) === '0' && adir && errors(adir) === '0' && extOf(adir).entities[0].measures[0].name === 'التقدم'
@@ -1805,7 +1821,9 @@ if (part('gulf-calendar')) {
   // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
   check(!g.err && path.basename(file) === 'Health Test - add Gulf calendar.tmdl' && path.dirname(path.join(ROOT, file)) === path.join(ROOT, 'bim-project'), `add_gulf_calendar file: ${short(g)}`);
   check((sc.match(/^createOrReplace$/gm) || []).length === 1 && (sc.match(/^\ttable /gm) || []).length === 1 && /^\ttable 'Gulf Calendar'$/m.test(sc), `add_gulf_calendar script: one createOrReplace and one table 'Gulf Calendar': ${sc.slice(0, 200)}`);
-  check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
+  // (0.3.1 GC3, the laptop's tour step 3: Sales[Date] already relates to the fixture's Calendar[Date], so the Gulf calendar
+  // is related to Calendar[Date] instead: never a second active relationship from Sales[Date]; it was fromColumn: Sales.Date)
+  check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Calendar\.Date$/m.test(sc) && !/isActive/.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
   // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
   check(!g.err && g.j.rows === 4748 && g.j.columns.length === 51 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column; 40 -> 51: 0.3.0 C1 (the owner, 21 Oct): the shared builder's Arabic twins */
@@ -1842,6 +1860,14 @@ if (part('gulf-calendar')) {
   const rBefore = filesIn('dax-project');
   const ranges = await Promise.all([[1900, 1910], [9990, 10000], [2000, 2060], [2027, 2022]].map(([firstYear, lastYear]) => add({ path: 'dax-project', firstYear, lastYear, name: 'Range Calendar' })));
   check(ranges.every((x) => x.err) && ranges.filter((x) => /Nothing was written/.test(x.t)).length >= 3 && filesIn('dax-project') === rBefore, `add_gulf_calendar ranges: ${ranges.map(short).join(' | ')}`);
+  // (0.3.1 GC, the outside audit) Sharjah's government weekend, Friday to Sunday from 2022, and Oman's note: the dates are the
+  // UAE's, Oman announced some a day later, and the check lists a difference only as a note
+  const sh = await add({ path: 'dax-project', firstYear: 2021, lastYear: 2022, weekend: 'shj', announced: false, arabicNames: false, name: 'Sharjah Calendar' });
+  const shDax = sh.err ? '' : daxOf(fs.readFileSync(sh.j.scriptFile, 'utf8'));
+  check(!sh.err && sh.j.weekend === 'Sharjah govt: Fri-Sun since 2022' && /"Is Weekend", IF \( \[Date\] >= DATE \( 2022, 1, 1 \), WEEKDAY \( \[Date\], 1 \) IN \{ 6, 7, 1 \}, WEEKDAY \( \[Date\], 1 \) IN \{ 6, 7 \} \)/.test(shDax),
+    `add_gulf_calendar weekend "shj": ${short(sh)} ${(shDax.match(/"Is Weekend".*/) || [''])[0]}`);
+  const om = await add({ path: 'dax-project', firstYear: 2019, lastYear: 2020, country: 'omn', arabicNames: false, name: 'Oman Calendar' });
+  check(!om.err && (om.j.notes || []).some((n) => /announced 11 of them a day later/.test(n) && /only as a note/.test(n) && !/it shows in check_model_health/.test(n)), `add_gulf_calendar Oman note: ${JSON.stringify(om.j && om.j.notes)}`);
   // check_model_health reads the calendar the script makes as the DataArcus one (the model.bim with the table added)
   const bim = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8').replace(/^﻿/, ''));
   bim.model.tables.push({ name: 'Gulf Calendar', columns: (g.err ? [] : g.j.columns).map((name) => ({ name, sourceColumn: name, type: 'calculatedTableColumn', isNameInferred: true })),
@@ -1886,8 +1912,8 @@ if (part('check-report')) {
     measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )', formatString: '#,0.00' }] }] } }));
   fs.copyFileSync(path.join(REPO, 'scripts/tests/fixtures/logos/wide.png'), path.join(ROOT, 'cr-project/logo.png'));
   const plan = async (lang) => (await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end', lang })).j.design;
-  const goldEn = await ask('create_report', { path: 'cr-project', name: 'CR Gold EN', design: await plan('en'), logo: 'cr-project/logo.png' });
-  const goldAr = await ask('create_report', { path: 'cr-project', name: 'CR Gold AR', lang: 'ar', design: await plan('ar') });
+  await ask('create_report', { path: 'cr-project', name: 'CR Gold EN', design: await plan('en'), logo: 'cr-project/logo.png' });
+  await ask('create_report', { path: 'cr-project', name: 'CR Gold AR', lang: 'ar', design: await plan('ar') });
   const RP = (name) => path.join(ROOT, 'cr-project', name + '.Report');
   const measured = (a) => (a.j.findings || []).filter((f) => /^measured:/.test(f.source));
 
@@ -2086,15 +2112,16 @@ if (part('check-report-2')) {
     const r = await one(dir, 'SORT_IN_VISUAL', rel(dir, x.f));
     chk(() => r.ok, () => `SORT_IN_VISUAL: a sort by a field not in the chart must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))}`);
   }
-  // 7. TOOLTIP_SCROLL (round 0, 2.158: a bar chart without its value axis needs about 22 a row plus 46): how many rows a
-  //    tooltip page's bar chart shows depends on the data, which check_report never reads, so the finding is a note
-  //    with the rows that fit: floor((height - 46) / 22)
+  // 7. TOOLTIP_SCROLL: how many rows a tooltip page's bar chart shows depends on the data, which check_report never
+  //    reads, so the finding is a note with the rows that fit: floor((height - 45 - 8) / 22.2) without its value axis
+  //    (changed in 0.3.1 SQ5, 0.2.9-writer-S12: was round 0's floor((height - 46) / 22), 3 rows at 112; the measurement in
+  //    force is the night of 6-7 Oct, Desktop 2.158: 22.2 a row, 45 above, 8 under, so 112 holds 2)
   {
     const dir = copyOf('CR Gold EN', 'CR2 Tooltip'), tip = path.dirname(pageOf(dir, true).f);
     const x = tree(tip).filter((f) => f.endsWith('visual.json')).map((f) => ({ f, j: J(f) })).find((v) => v.j.visual && v.j.visual.visualType === 'clusteredBarChart');
     x.j.position.height = 112; W(x.f, x.j);
     const a = await ask('check_report', { path: path.relative(ROOT, dir) }), mine = a.err ? [] : a.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === rel(dir, x.f));
-    chk(() => mine.length === 1 && mine[0].severity === 'note' && /\b3 rows\b/.test(mine[0].what) && /scrollbar/.test(mine[0].what), () => `TOOLTIP_SCROLL: a 112-high tooltip bar chart must give a note that 3 rows fit: ${JSON.stringify(mine).slice(0, 400)} ${a.err ? short(a) : ''}`);
+    chk(() => mine.length === 1 && mine[0].severity === 'note' && /\b2 rows\b/.test(mine[0].what) && /scrollbar/.test(mine[0].what), () => `TOOLTIP_SCROLL: a 112-high tooltip bar chart must give a note that 2 rows fit: ${JSON.stringify(mine).slice(0, 400)} ${a.err ? short(a) : ''}`);
   }
 }
 
@@ -2107,7 +2134,6 @@ if (part('round10')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -2170,7 +2196,8 @@ if (part('round10')) {
     const fits = async (mode) => { const bad = []; let n = 0;
       for (const page of ['1920x1080', '1280x720', '960x720']) for (const lang of ['en', 'ar']) for (const k of [3, 4, 5, 6]) {
         const design = await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang });
-        const r = await ask('create_report', { path: 'r10-project', name: `R10 fit ${mode} ${page} ${lang} ${k}`, design, lang, secondPage: false, fields: { kpis: SIX.slice(0, k) }, ...(mode === 'full' ? { kpiValues: 'full' } : {}) });
+        // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+        const r = await ask('create_report', { path: 'r10-project', name: `R10 fit ${mode} ${page} ${lang} ${k}`, design, lang, secondPage: false, fields: { kpis: SIX.slice(0, k) }, ...(mode === 'full' ? { kpiValues: 'full' } : {}), ...(lang === 'ar' ? { displayNames: keepEnglish('Sales[No Format]') } : {}) });
         if (r.err) { bad.push(`${page} ${lang} ${k}: ${r.t.slice(0, 120)}`); continue; }
         report(path.join(ROOT, 'r10-project', r.j.report)).filter((p) => !p.tooltip).flatMap(cards).forEach((v) => { n++;
           const V = N(v.visual.objects.value[0].properties.fontSize), I = N(v.visual.objects.padding[0].properties.paddingUniform), pad = (v.visual.visualContainerObjects.padding || [{ properties: {} }])[0].properties;
@@ -2209,7 +2236,6 @@ if (part('round10')) {
     const many = {};
     for (const [tag, names, lang] of [['EN 4', NAMES.slice(0, 4), 'en'], ['EN 8', NAMES, 'en'], ['AR 4', AR.slice(0, 4), 'ar'], ['AR 8', AR, 'ar']]) many[tag] = await ask('create_report', { path: 'r10-project', name: 'R10 Nav ' + tag, lang, rtl: lang === 'ar', font: lang === 'ar' ? 'Tahoma' : 'Segoe UI', pages: handPages(names, lang === 'ar') });
     const read = (x) => (x.err ? [] : report(path.join(ROOT, 'r10-project', x.j.report)).filter((p) => !p.tooltip));
-    const accentOf = (x) => String(JSON.parse(fs.readFileSync(path.join(ROOT, 'r10-project', x.j.report, 'definition', 'report.json'), 'utf8')).themeCollection ? '' : '');
     // 1. the look: no page navigator; one button per page on every page; no fill and no outline; the current page's name bold in the accent colour with a line under it; the others not bold
     chk(() => { const pgs = read(two); return pgs.length === 2 && pgs.every((pg, pi) => { const b = navOf(pg), line = pg.visuals.filter((v) => type(v) === 'shape');
       const cur = b.filter((v) => L(lookOf(v, 'text').bold) === 'true');
@@ -2219,7 +2245,6 @@ if (part('round10')) {
       () => `the navigator must be tabs without boxes, the current page bold in the accent colour with a line under it: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => [textOf(v), L(lookOf(v, 'text').bold), L(lookOf(v, 'fill').show), L(lookOf(v, 'outline').show)]))).slice(0, 500)} ${short(two)}`);
     // 2. no name is cut: every button is at least its (bold) text's width + 10; the buttons don't overlap each other, the title's text or the logo, and stay on the page; 2, 4 and 8 pages, both languages
     const widthBad = (x, tag) => read(x).flatMap((pg) => { const b = navOf(pg).sort((p, q) => p.at.x - q.at.x), bad = [];
-      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"')), logo = pg.visuals.filter((v) => type(v) === 'textbox' || type(v) === 'image').sort((p, q) => p.at.x - q.at.x);
       if (b.length !== read(x).length) bad.push(`${tag} ${pg.name}: ${b.length} buttons`);
       b.forEach((v, i) => { const t = lookOf(v, 'text'), need = tw(textOf(v), N(t.fontSize), true, String(L(t.fontFamily)).slice(1, -1)) + 10;
         if (v.at.w < need) bad.push(`${tag} ${pg.name}: "${textOf(v)}" ${v.at.w} wide, needs ${need.toFixed(0)}`);
@@ -2229,6 +2254,23 @@ if (part('round10')) {
       return bad; });
     const allBad = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : widthBad(x, t)));
     chk(() => allBad.length === 0 && read(many['EN 8']).length === 8 && read(many['AR 8']).length === 8, () => `no page name may be cut and no button may overlap (2, 4, 8 pages, English and Arabic): ${allBad.slice(0, 6).join(' | ')}`);
+    // (Q1 T-2, 0.3.1: the comment above promised it; the title box is wider than its text by design, so a button may sit
+    // in the box but not on the title's own text (its measured width at its size, from the side it is aligned to, plus 16),
+    // nor on an image (the logo))
+    const coverBad = (x, tag) => read(x).flatMap((pg) => {
+      const b = navOf(pg), bad = [], hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+      const title = pg.visuals.find((v) => type(v) === 'textbox' && v.at.h >= 20 && JSON.stringify(v.visual.objects).includes('"bold"'));
+      const para = title && (((title.visual.objects.general || [])[0] || {}).properties || {}).paragraphs, run = para && para[0] && para[0].textRuns && para[0].textRuns[0];
+      if (!run) bad.push(`${tag} ${pg.name}: no title text found`);
+      else {
+        const st = run.textStyle || {}, tl = tw(String(run.value), parseFloat(st.fontSize) || 20, st.fontWeight === 'bold', st.fontFamily || 'Segoe UI') + 16;
+        const right = para[0].horizontalTextAlignment === 'right', text = { x: right ? title.at.x + title.at.w - tl : title.at.x, y: title.at.y, w: tl, h: title.at.h };
+        b.forEach((v) => { if (hit(v.at, text)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the title's text (${Math.round(text.x)}-${Math.round(text.x + text.w)})`); });
+      }
+      pg.visuals.filter((v) => type(v) === 'image').forEach((im) => b.forEach((v) => { if (hit(v.at, im.at)) bad.push(`${tag} ${pg.name}: "${textOf(v)}" on the logo`); }));
+      return bad; });
+    const covered = [[two, 'EN 2'], [twoAr, 'AR 2']].concat(Object.entries(many).map(([t, x]) => [x, t])).flatMap(([x, t]) => (x.err ? [`${t}: ${x.t.slice(0, 200)}`] : coverBad(x, t)));
+    chk(() => covered.length === 0, () => `no page button may sit on the title's text or the logo (2, 4, 8 pages, English and Arabic): ${covered.slice(0, 6).join(' | ')}`);
     // 3. mirrored: English first page leftmost, Arabic first page rightmost (rows of a wrapped navigator each in that order)
     const order = (x) => read(x).map((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.slice().sort((p, q) => (Math.abs(p.at.y - q.at.y) > 2 ? p.at.y - q.at.y : p.at.x - q.at.x)).map((v) => names.indexOf(textOf(v))); });
     const rowsOk = (x, rtl) => read(x).every((pg) => { const b = navOf(pg), names = read(x).map((p) => p.name); return b.every((p) => b.every((q) => Math.abs(p.at.y - q.at.y) > 2 || p === q || ((names.indexOf(textOf(p)) < names.indexOf(textOf(q))) === (rtl ? p.at.x > q.at.x : p.at.x < q.at.x)))); });
@@ -2392,9 +2434,10 @@ if (part('round10')) {
     // 3. the server's rule 3 covers a page filter
     const info = client.getInstructions ? client.getInstructions() : '';
     chk(() => /page filter/i.test(info) && /3\. /.test(info) && !/with no filter added: never label/.test(info), () => `the server's rule 3 must say a card follows the page filters: ${String(info).slice(0, 700)}`);
-    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version
+    // 4. the pages of the SVG KPI Designer and the Calendar Generator load their scripts with a version (a stamp as
+    // the site writes them: 8 digits, then letters or digits, such as 20261025a or 20261025gc2; check:min holds the rest)
     const html = (f) => fs.readFileSync(path.join(REPO, 'tools', f), 'utf8');
-    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => new RegExp(`${s}\\.min\\.js\\?v=\\d{8}[a-z]?"`).test(html('svg-kpi-designer.html'))) && /calendar-generator\.min\.js\?v=\d{8}[a-z]?"/.test(html('dax-calendar-table-generator.html')),
+    chk(() => ['svg-kpi-compiler', 'svg-kpi-templates', 'svg-kpi-designer'].every((s) => new RegExp(`${s}\\.min\\.js\\?v=\\d{8}[a-z0-9]*"`).test(html('svg-kpi-designer.html'))) && /calendar-generator\.min\.js\?v=\d{8}[a-z0-9]*"/.test(html('dax-calendar-table-generator.html')),
       () => 'the SVG KPI Designer page and the Calendar Generator page must load their scripts with ?v=');
     // 5. a column bound to a size or a colour rule of an SVG design must be a number column
     const badCol = { w: 160, h: 24, values: [{ id: 'c', label: 'Region', kind: 'column', column: 'Sales[Region]' }], layers: [{ type: 'rect', x: 0, y: 6, w: 0, h: 12, fill: '#0f6cbd', bind: { w: { v: 'c', d0: 0, d1: 1, r0: 0, r1: 160 } } }] };
@@ -2600,7 +2643,8 @@ if (part('round10-choices')) {
     const lines = (text, size, avail, font) => { const out = []; let cur = ''; for (const w of text.split(' ')) { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } } out.push(cur); return out; };
     const SIX = ['Total Sales', LONG, 'Orders', LONGER, 'Margin %', 'Avg Price'].map((m) => `Sales[${m}]`);
     for (const page of ['1920x1080', '1280x720', '960x720']) for (const lang of ['en', 'ar']) for (const k of [3, 4, 6]) {
-      const x = await ask('create_report', { path: 'd5-project', name: `D5 titles ${page} ${lang} ${k}`, lang, secondPage: false, design: await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang }), fields: { kpis: SIX.slice(0, k) } });
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+      const x = await ask('create_report', { path: 'd5-project', name: `D5 titles ${page} ${lang} ${k}`, lang, secondPage: false, design: await planOf({ layout: 'exec', kpis: k, filters: 'end', page, lang }), fields: { kpis: SIX.slice(0, k) }, ...(lang === 'ar' ? { displayNames: keepEnglish('Sales[Total Sales vs Last Ramadan (same days)]', 'Sales[Total Sales of the Same Ramadan Days Last Year in All Regions and Channels]') } : {}) });
       if (x.err) { bad.push(`${page} ${lang} ${k}: ${x.t.slice(0, 160)}`); continue; }
       told.wrapped += ((x.j.kpiTitles || {}).wrapped || []).length; told.shortened += ((x.j.kpiTitles || {}).shortened || []).length;
       const font = 'Segoe UI';
@@ -2611,7 +2655,11 @@ if (part('round10-choices')) {
           return { wrap: t.wrap, from: N(pad.top) + (t.wrap ? 2 : 1) * Math.ceil(1.5 * t.size) + I, to: v.at.h - N(pad.bottom) - I }; });
         if (row.some((r) => r.wrap)) { rows++; if (new Set(row.map((r) => r.from + ':' + r.to)).size !== 1) uneven.push(`${page} ${lang} ${k}: ${row.map((r) => (r.wrap ? 'w' : '') + r.from + '-' + r.to).join(' ')}`); } }
       pageVisuals(x, 'd5-project').filter(isKpi).forEach((v) => {
-        const t = titleOf(v), full = altOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
+        // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: an English title in an Arabic report is isolated whole by
+        // the writer, U+200F U+2068 ... U+2069 U+200F, zero wide: measured and compared without those marks, each checked there)
+        const W = req(path.join(REPO, 'assets/js/text-measure.js')).isolateWhole, strip = (x) => String(x).replace(/[\u200e\u200f\u2066-\u2069]/g, ''), own = (x) => (lang === 'ar' && String(x) === W(strip(x)) ? strip(x) : x), t0 = titleOf(v);   // (the shared rule's marks, BD2's V3)
+        const t = Object.assign({}, t0, { text: own(t0.text) }), full = own(altOf(v)), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
+        if (lang === 'ar' && /^[^\u0600-\u06FF]*[A-Za-z][^\u0600-\u06FF]*$/.test(t0.text) && t0.text === t.text) bad.push(`${page} ${lang} ${k}: the English title "${t0.text}" is not isolated whole`);
         const I = N(lookOf(v, 'padding').paddingUniform), V = N(valueOf(v).fontSize), room = v.at.h - N(pad.top) - N(pad.bottom) - 2 * I;
         const where = `${page} ${lang} ${k} "${full}" ${t.size}pt`;
         if (tw(t.text, t.size, true, font) <= avail + 0.5 && !t.wrap && t.text === full) { seen.one++; return; }
@@ -2746,7 +2794,6 @@ if (part('round11')) {
     const all = reps.flatMap(vis).concat(site), types = new Set(all.map((v) => v.visual.visualType));
     const show = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; return t && t.properties && t.properties.show && t.properties.show.expr ? t.properties.show.expr.Literal.Value : null; };
     const loose = all.filter((v) => show(v) !== 'true' && show(v) !== 'false');
-    const titled = all.filter((v) => ['tableEx', 'cardVisual', 'pivotTable'].includes(v.visual.visualType) && v.parentGroupName !== undefined);
     chk(() => reps.every((x) => !x.err) && ['tableEx', 'cardVisual', 'slicer', 'gauge', 'treemap', 'map', 'funnel', 'donutChart', 'textbox', 'actionButton'].every((t) => types.has(t)) && all.length > 150 && loose.length === 0
         && all.filter((v) => v.visual.visualType === 'tableEx').every((v) => show(v) === 'true') && all.filter((v) => v.visual.visualType === 'cardVisual' && !isMessageCard(v)).every((v) => show(v) === 'true') && all.filter(isMessageCard).every((v) => show(v) === 'false'),   /* round 22: a message card writes its title off */
       () => `every visual must set its title on or off explicitly (tables and cards on): ${loose.length} without: ${[...new Set(loose.map((v) => v.visual.visualType))].join(', ')}; types ${[...types].join(', ')} ${reps.filter((x) => x.err).map(short).join(' | ')}`);
@@ -2935,7 +2982,6 @@ if (part('round13')) {
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   const errors = validatorErrors;
   const P = 'r13-project';
@@ -3032,7 +3078,10 @@ if (part('round13')) {
     // the right); time categories keep the sorts below)
     const byY = (v, dir) => { const s = sortOf(v), y = qs(v).Y && qs(v).Y.projections[0]; return !!s && !!y && s.direction === dir && JSON.stringify(s.field) === JSON.stringify(y.field) && vt(v) !== 'lineChart'; };
     const mirroredUp = (v) => { const s = sortOf(v), want = qs(v).Tooltips ? qs(v).Tooltips.projections[0].field : qs(v).Category.projections[0].field;
-      return on(P1(v, 'valueAxis').switchAxisPosition) && on(P1(v, 'categoryAxis').invertAxis) && !!s && ((s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want)) || byY(v, 'Ascending')); };
+      // (0.3.1 M1, changed on purpose: the writer follows the twin's rules, report-mirror.js: categoryAxis.invertAxis only on
+      // a continuous axis (a date column here, Sales[Date]); a categorical axis, which ignores it, has none)
+      const dateAxis = qs(v).Category.projections[0].queryRef === 'Sales.Date';
+      return on(P1(v, 'valueAxis').switchAxisPosition) && (dateAxis ? on(P1(v, 'categoryAxis').invertAxis) : !on(P1(v, 'categoryAxis').invertAxis)) && !!s && ((s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want)) || byY(v, 'Ascending')); };
     const mirroredBar = (v) => on(P1(v, 'valueAxis').invertAxis) && on(P1(v, 'categoryAxis').switchAxisPosition) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
     const plain = (v) => !/invertAxis|switchAxisPosition/.test(JSON.stringify(v.visual.objects || {})) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
     const tellM = (r) => JSON.stringify(r.vis.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), v.tooltipPage ? 'tip' : 'page', Object.keys(v.visual.objects || {}).join('+'), sortOf(v) && sortOf(v).direction])).slice(0, 800);
@@ -3161,7 +3210,8 @@ if (part('round13')) {
       const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') (fs.readFileSync(p, 'utf8').match(/'[^'\n]*\u2026[^'\n]*'/g) || []).forEach((s) => out.push(s.slice(1, -1))); }); walk(dir); return out; };
     // (round 14: the charts are given the Arabic columns; a title of the Arabic measure by the English column is the
     // measure's name alone since round 14's item 2, which fits, so fewer Arabic titles were shortened)
-    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design, fields: { category: `Sales[${C1}]`, category2: `Sales[${C2}]` } });
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', displayNames: keepEnglish('Sales[Total net sales after discounts, returns and all the taxes that are due]'), design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design, fields: { category: `Sales[${C1}]`, category2: `Sales[${C2}]` } });
     const en = await ask('create_report', { path: 'r13-long', name: 'R13 Long en', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { kpis: ['Sales[Total net sales after discounts, returns and all the taxes that are due]'], measure: 'Sales[Total net sales after discounts, returns and all the taxes that are due]', category: 'Sales[Region with a very long English name that cannot fit]', category2: 'Sales[Region with a very long English name that cannot fit]' } });
     const isAr = (s) => /[\u0600-\u06FF]/.test(s);
     chk(() => { const a = texts(ar).filter(isAr); return a.length >= 2 && a.every((s) => /\u2026\u200f$/.test(s)); }, () => `every shortened Arabic text must end with "…" and a right-to-left mark: ${ar.err ? short(ar) : JSON.stringify(texts(ar).map((s) => s.slice(-12).split('').map((ch) => ch.charCodeAt(0).toString(16)).slice(-3)))}`);
@@ -3245,9 +3295,9 @@ if (part('round13')) {
   }
 }
 
-// ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------
-// The design findings of round 11 (WORK.md "Round 11, design findings", by number) and the eight accepted
-// recommendations, each with its check written before the code. What Desktop must confirm is listed in WORK.md,
+// ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; mcp/work/archive/WORK-2026-10-05-09.md "Round 12") ----------
+// The design findings of round 11 (the same file, "Round 11, design findings", by number) and the eight accepted
+// recommendations, each with its check written before the code. What Desktop must confirm is listed there,
 // "Round 12, for the laptop to prove".
 if (part('round12')) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -3310,8 +3360,17 @@ if (part('round12')) {
       // end and not at its start: seen in Desktop 2.158 on 6 Oct, DESKTOP-TESTS.md round 13; the words before it are unchanged)
       if (!full.startsWith(t.text.replace(/…\u200f?$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
     });
-    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, size = 10, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      seen.push(`slicer "${shown}"`); });
+    // (Q1 T-1, 0.3.1: the size and room were computed and never checked) each slicer's header, as the writer sizes it
+    // (pbip-page slicerHeader: bold, its own font, 10pt down to 8, one line in the slicer's width less 8 a side, scaled): it
+    // fits on one line, and a shortened one (header.text) is the start of the field's name and ends in "…"
+    const headBad = [];
+    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
+      const lit = (x) => (x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value) : null), h = (((v.visual.objects || {}).header || [])[0] || {}).properties || {};
+      const size = parseFloat(lit(h.textSize)) || 10, hf = (lit(h.fontFamily) || "'Segoe UI'").replace(/^'|'$/g, ''), cut = lit(h.text), text = cut != null ? cut.replace(/^'|'$/g, '') : shown;
+      seen.push(`slicer "${shown}"${cut != null ? ` as "${text}"` : ''} ${size}pt`);
+      if (size < 8 || tw(text, size, true, hf) > room + 0.5) headBad.push(`slicer "${text}" ${Math.round(tw(text, size, true, hf))} wide at ${size}pt, room ${room}`);
+      if (cut != null && !(/…\u200f?$/.test(text) && shown.startsWith(text.replace(/…\u200f?$/, '').trim()))) headBad.push(`slicer "${text}" is not the start of "${shown}" ending in "…"`); });
+    chk(() => !ar.err && vs.some((v) => type(v) === 'slicer') && headBad.length === 0, () => `#24: each slicer's header fits its slicer on one line (smaller or shortened at its end): ${headBad.join(' | ')} [${seen.join('; ')}]`);
     chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…‏?$/.test(titleOf(v).text))),
       () => `#24: long titles must wrap or end in "…", never be cut at their start: ${bad.slice(0, 5).join(' | ')} [${seen.join('; ')}] ${short(ar)}`);
   }
@@ -3331,7 +3390,8 @@ if (part('round12')) {
   //      aligned at the left end) never sit against the first number; text stays right-aligned. English unchanged.
   const enD = await planOf({ layout: 'exec', kpis: 4, filters: 'end' });
   const en = await ask('create_report', { path: 'r12-project', name: 'R12 EN', design: enD, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
-  const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
+  // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+  const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]'), design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
   {
     const fmt = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
     chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right | Sales.Row label: Region=Right') /* (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf); the row label right-aligned as its column */ /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */ && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
@@ -3435,7 +3495,8 @@ if (part('round12')) {
   const kpiRow = (vs) => vs.filter(isKpi);
   const LTR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720' }), secondPage: false,
     fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
-  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
+  // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', displayNames: keepEnglish('Sales[Conversion Rate]'), design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
     fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
   // #15: a chart and the table beside it never carry the same title
   {
@@ -3555,7 +3616,7 @@ if (part('round12')) {
   // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
   //   in the theme's text colour on the phone; the current tab's line under it on the phone too
   {
-    const vs = pageVisuals(en, 'r12-project').filter((v) => v.pg === pagesOf(en, 'r12-project')[0] || true), p1 = pagesOf(en, 'r12-project')[0];
+    const p1 = pagesOf(en, 'r12-project')[0];
     const tabs = p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])) && v.mobile).sort((a, b) => a.mobile.position.x - b.mobile.position.x);
     const need = (v) => Math.ceil(tw(S(v.visual.objects.text.find((e) => e.selector).properties.text), 10, true, 'Segoe UI') + 10);
     const line = p1.visuals.find((v) => type(v) === 'shape' && v.mobile), cur = tabs.find((v) => /'bold'|true/.test(JSON.stringify(v.visual.objects.text.find((e) => e.selector).properties.bold || '')));
@@ -3743,9 +3804,12 @@ if (part('round12b')) {
     chk(() => !h.err && JSON.stringify(to(hf.fields)) === JSON.stringify(Object.fromEntries(Object.entries(want).sort())) && /formatString: 0\.0%/.test(sc) && /measure Orders = [\s\S]*?formatString: #,0\n/.test(sc) && !/Revenue/.test(sc),
       () => `check_model_health fixes.FORMATS: ${h.err ? h.t.slice(0, 300) : JSON.stringify(hf)}`);
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r12b-fmt', fields: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'] });
-    // (0.2.9, the gate: plan_layout names the health check's own file, which create_report writes after the user's go)
+    // (0.2.9, the gate: plan_layout names the file create_report writes after the user's go. 0.3.1 AF2, the release
+    // audit's F09: the report's script covers its own fields only, so it is not the health check's text; the plan now
+    // names the free name the write will write, the health check's file left as it is, where it named the health check's
+    // file and the write then wrote "... 2.tmdl")
     chk(() => !pl.err && Object.keys(pl.j)[0] === 'formats' && JSON.stringify(to(pl.j.formats.fields)) === JSON.stringify({ 'Sales[Orders]': '#,0', 'Sales[Return Rate]': '0.0%' })
-        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile) && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
+        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile).replace(/\.tmdl$/, ' 2.tmdl') && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
       () => `plan_layout with the model must say the formats first, with the health check's own file: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.formats)}`);
     const cr = await ask('create_report', { path: 'r12b-fmt', name: 'Fmt', design: (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design,
       fields: { kpis: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'], table: ['Sales[Order Date]', 'Sales[Orders]', 'Sales[Return Rate]', 'Sales[Qty]'] } });
@@ -3828,7 +3892,7 @@ if (part('round14')) {
   }
 
   // 3. (Slicers with softer borders: removed after the laptop's proof of 6 Oct. Desktop drew the dropdown box as before
-  // with general.outlineColor written, and nothing the validator accepts reaches the box: mcp/WORK.md, round 14.)
+  // with general.outlineColor written, and nothing the validator accepts reaches the box: mcp/work/archive/WORK-2026-10-05-09.md, round 14.)
   const tplCount = (T) => T.TEMPLATES.length;
   // 4. The SVG ring's label (owner, 6 Oct: the card read 33.8%, its ring's label "0", dark grey on the dark card): a
   // text that shows a ratio (a ratio or % value, or a measure the shared format rule calls a percent) in a number format
@@ -3912,7 +3976,8 @@ if (part('round14')) {
     const src = path.join(REPO, 'scripts/tests/fixtures/model-health/tmdl-ramadan/definition'), dst = path.join(ROOT, 'r14-sample/Ramadan Test.SemanticModel');
     fs.mkdirSync(dst, { recursive: true }); fs.cpSync(src, path.join(dst, 'definition'), { recursive: true }); fs.writeFileSync(path.join(dst, 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
     const dz = (await ask('plan_layout', { layout: 'exec', kpis: 3, lang: 'ar' })).j.design;
-    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample', lang: 'ar', design: dz, secondPage: false,
+    // (0.3.1 CX1, F01: these fields' titles stay English on purpose: the check is not about names)
+    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample', lang: 'ar', displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]'), design: dz, secondPage: false,
       fields: { kpis: ['Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales vs Last Ramadan %]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] } });
     const vs = x.err ? [] : (() => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r14-sample', x.j.report, 'definition', 'pages')); return out; })();
     const tableFmt = vs.filter((v) => v.visual && v.visual.visualType === 'tableEx').flatMap((v) => v.visual.query.queryState.Values.projections.filter((p) => p.queryRef === 'Sales.Total Sales').map((p) => p.format || null));
@@ -3960,7 +4025,6 @@ if (part('round15')) {
     { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Quarter', 'string'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
     { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Region', 'string'), col('Channel', 'string')],
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
-  const lit = (x) => x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null;
 
   // Round 13, recommendation 3: a brand colour too dark to fade on its card (under the 3:1 floor) fades the other way:
   // the smallest bar the brand colour, the largest a brighter tint towards the text colour, told in the answer
@@ -4119,7 +4183,7 @@ if (part('round16')) {
       const vd = path.join(pagesDir, order[0], 'visuals'), vs = fs.readdirSync(vd).map((n) => JSON.parse(fs.readFileSync(path.join(vd, n, 'visual.json'), 'utf8')));
       const btns = vs.filter((v) => v.visual && v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects || {})))
         .map((v) => { const t = (v.visual.objects.text || []).find((e) => e.selector) || {}; const pr = t.properties || {}; return { x: v.position.x, y: v.position.y, w: v.position.width, size: parseFloat(pr.fontSize.expr.Literal.Value), name: String(pr.text.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") }; });
-      const logo = slots[1], rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
+      const rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
       const fitText = btns.every((b) => b.w >= Px.textWidth(b.name, b.size, true, rtl ? 'Tahoma' : 'Segoe UI') + 10);
       // (positions inside the header group are relative to the group: the logo's own visual is in the same frame)
       const lv = vs.find((v) => v.visual && v.visual.visualType === 'image'), lp = lv ? lv.position : null;
@@ -4223,7 +4287,6 @@ if (part('round17')) {
 
 // G-13: every report created above still passes the validator: 0 errors each
 {
-  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
   partTime(); timing = null; const g13t = Date.now();
   const errors = validatorErrors;
@@ -4372,7 +4435,8 @@ if (part('round18')) {
       const all = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
         const vs = fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')));
         return vs.map((v) => { const g = v.parentGroupName && vs.find((q) => q.name === v.parentGroupName); return { t: v.visual ? v.visual.visualType : 'group', x: Math.round(v.position.x + (g ? g.position.x : 0)), w: Math.round(v.position.width), y: Math.round(v.position.y + (g ? g.position.y : 0)), ext: JSON.stringify(v.visual && v.visual.query || '').includes('"Schema":"extension"'), v }; }); };
-      const rep = async (dir, lang, page, kpis, extra) => { const plan = await ask('plan_layout', { layout: 'exec', kpis, filters: 'none', page, lang }); const x = await ask('create_report', Object.assign({ path: dir, name: `N1 ${dir} ${lang} ${page} ${kpis}`, lang, secondPage: false, design: plan.j.design }, extra || {})); return { x, vs: all(dir, x) }; };
+      // (0.3.1 CX1, F01: these fields' titles stay English on purpose in the Arabic reports: the check is not about names)
+      const rep = async (dir, lang, page, kpis, extra) => { const plan = await ask('plan_layout', { layout: 'exec', kpis, filters: 'none', page, lang }); const x = await ask('create_report', Object.assign({ path: dir, name: `N1 ${dir} ${lang} ${page} ${kpis}`, lang, secondPage: false, design: plan.j.design }, lang === 'ar' ? { displayNames: keepEnglish('Calendar[Month Short]', 'Sales[Total Sales vs Last Ramadan %]') } : {}, extra || {})); return { x, vs: all(dir, x) }; };
       for (const lang of ['en', 'ar']) {
         const one = await rep('n1-one', lang, '1920x1080', 4), cards = one.vs.filter((v) => v.t === 'cardVisual' && !v.ext), line = one.vs.find((v) => v.t === 'lineChart'), others = one.vs.filter((v) => /Chart$/.test(v.t) && line && v.y === line.y);
         const x0 = Math.min(...others.map((v) => v.x)), x1 = Math.max(...others.map((v) => v.x + v.w)), gap = others.length === 2 ? Math.max(...others.map((v) => v.x)) - Math.min(...others.map((v) => v.x + v.w)) : 0;
@@ -4536,7 +4600,8 @@ if (part('round20')) {
   //    ("Count of Order Id (Region)"), English and Arabic alike; a title already unique is not changed
   {
     fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'r20-plain'), { recursive: true });
-    const titles = async (lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 4, lang }); const x = await ask('create_report', { path: 'r20-plain', name: 'R20 plain ' + lang, lang, design: pl.j.design });
+    // (0.3.1 FX2, A-1: the column the Arabic report counts, Order Id, is drafted like any field: its approved name here)
+    const titles = async (lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 4, lang }); const x = await ask('create_report', Object.assign({ path: 'r20-plain', name: 'R20 plain ' + lang, lang, design: pl.j.design }, lang === 'ar' ? { displayNames: { 'Orders[Order Id]': 'رقم الطلب' } } : {}));
       if (x.err) return { err: x.t.slice(0, 200) };
       const def = path.join(ROOT, 'r20-plain', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
       return order.map((pg) => fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')))
@@ -4551,7 +4616,7 @@ if (part('round20')) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
       // (changed 19 Oct 2026, 0.3.0 R2: the Arabic plan pins the fixed list's names of the columns, «المنطقة», «المنتج»,
-      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs keeps the brackets' case)
+      // so the Arabic titles carry «حسب <column>» and are their own too; test-round22.mjs pins the titles wholly in one language, no bracket: LR2, TT1)
       chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && !pages.flat().some((t) => / \([^)]+\)$/.test(t)),
         () => `${lang}: every chart title of a page must be its own, a repeated one with its grouping column in brackets: ${JSON.stringify(pages)}`);
     }

@@ -11,6 +11,8 @@ import './test-env.mjs';
 //   T09 the actual approval HTML: every file a report writes, grouped and counted; the measured why of a kind change; the
 //       overwrite sentence true for each plan kind; the native copy's every loss; the redesign's every copied file;
 //       a long answers list in full; hostile names escaped and shown as text
+//   A2-S10 (SQ11) made-up data values in the new report's project (DATATABLE, M #table and query rows, a saved filter):
+//       none on any approval page nor in any answer; T08's sentinels not on the redesign's page either
 //   T13 a low-contrast first colour: the page shows the approved colour, the written colour and why, before the click;
 //       the written theme has exactly the shown colour
 //   node test-0.3.0-approval-disclosure.mjs
@@ -74,6 +76,23 @@ const HOSTILE = '<script>alert(1)</script> "q" \'s <b>bold</b>';
 // ---- the format script (hp): a percentage measure without a format ----
 { const f = path.join(ROOT, 'hp/Health Test.SemanticModel/model.bim'), j = rd(f), t = j.model.tables.find((x) => x.name === '_Measures');
   t.measures.push({ name: 'Margin %', expression: 'DIVIDE ( [Total], [Total] + 1 )' }); wr(f, j); }
+// ---- (SQ11, A2-S10) made-up data values in hp, the new report's project: rows of a DATATABLE and of an M #table, a row
+// of the Sales query's own M, and a saved filter value of its existing report. None may reach the report plan's approval
+// page or any answer (the page says "never returns data values": now asserted, not only said) ----
+const HP_DATA = { datatable: 'R6_HP_DATATABLE_VALUE_91', mtable: 'R6_HP_MTABLE_VALUE_92', query: 'R6_HP_QUERY_VALUE_93', filter: 'R6_HP_FILTER_VALUE_94' };
+{
+  const f = path.join(ROOT, 'hp/Health Test.SemanticModel/model.bim'), j = rd(f);
+  j.model.tables.push({ name: 'Targets', columns: [{ name: 'Region', dataType: 'string', isDataTypeInferred: true, sourceColumn: '[Region]', type: 'calculatedTableColumn' }],
+    partitions: [{ name: 'Targets', mode: 'import', source: { type: 'calculated', expression: `DATATABLE ( "Region", STRING, { { "${HP_DATA.datatable}" } } )` } }] });
+  j.model.tables.push({ name: 'Regions', columns: [{ name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
+    partitions: [{ name: 'Regions', mode: 'import', source: { type: 'm', expression: `let\n    Source = #table(type table [Region = text], {{"${HP_DATA.mtable}"}})\nin\n    Source` } }] });
+  const sales = j.model.tables.find((x) => x.name === 'Sales'), src = sales.partitions[0].source;
+  src.expression = String(src.expression).replace(/^let\n/, `let\n    Seed = "${HP_DATA.query}",\n`);
+  wr(f, j);
+  const P = path.join(ROOT, 'hp/Health Test Report.Report/definition/pages/1191ff80f72c1a663a1b/page.json'), pg = rd(P);
+  pg.filterConfig = { filters: [{ name: 'hpf1', field: colOf('Sales', 'Note'), type: 'Categorical', filter: inFilter('Sales', 'Note', HP_DATA.filter) }] }; wr(P, pg);
+}
+const pagesSeen = [];   // every approval page's HTML, as the browser gets it
 
 const Plans = await import('./lib/plans.mjs');
 const log = path.join(ROOT, 'links.txt'), links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
@@ -87,6 +106,7 @@ const call = async (srv, name, args) => { const r = await srv.call(name, args); 
 const pageOf = async (planId, approve) => {
   const n = links().length; await call(w, 'approve_plan', { planId }); const url = await linkAt(n), html = url ? await req(url, 'GET') : '';
   if (approve && url) { await req(url, 'POST', 'decision=approve'); await call(w, 'approve_plan', { planId }); }
+  if (html) pagesSeen.push(html);
   return html;
 };
 const added = (before) => rels(ROOT).filter((r) => !before.includes(r) && r !== 'links.txt');
@@ -169,10 +189,15 @@ try {
       () => `T09-2. the files are grouped and counted (visuals ${count(/\/visual\.json$/)}, phone layouts ${count(/\/mobile\.json$/)}, pages ${count(/\/page\.json$/)}): ${PAGE.slice(PAGE.indexOf('Files that will be written'), PAGE.indexOf('Files that will be written') + 600)}`);
     const script = reportPlan.j.formats && reportPlan.j.formats.scriptAfterGo;
     chk(() => script && new RegExp(`Format script \\(1\\)`).test(PAGE) && PAGE.includes(script), () => `T09-3. the format script is named in the file list: ${script}`);
-    const why = reportPlan.j.kindChanges && reportPlan.j.kindChanges.slots[0].why;
-    chk(() => why && PAGE.includes(why), () => `T09-4. a kind change shows the lint's measured why, not a rebuilt reason: ${why}`);
+    // (0.3.1 R4A, round 4's problem 1: the person's page holds no pixels) the lint's own reason in plain words (said); its
+    // measured why stays in the plan answer, for the agent
+    const why = reportPlan.j.kindChanges && reportPlan.j.kindChanges.slots[0].said;
+    chk(() => why && PAGE.includes(why) && !PAGE.includes(reportPlan.j.kindChanges.slots[0].why), () => `T09-4. a kind change shows the lint's own reason (in plain words), not a rebuilt one: ${why}`);
     chk(() => !/Nothing is overwritten or deleted\./.test(PAGE) && /nothing is overwritten/i.test(PAGE) && /removes what this call created/.test(PAGE), () => `T09-5. the report page's overwrite sentence is true (new files only; a failed write removes what this call created): ${(PAGE.match(/<p class="note">[^<]*overwrit[^<]*/) || [''])[0]}`);
     chk(() => !/DataArcus never reads the model's rows/.test(PAGE) && /never returns data values/.test(PAGE), () => 'T09-6. the preview note says what the code does: the files are read on this machine, no data value is returned');
+    // (SQ11, A2-S10) and it is true: hp's made-up data values are in its files on disk, and nowhere on the page
+    const onDisk = fs.readFileSync(path.join(ROOT, 'hp/Health Test.SemanticModel/model.bim'), 'utf8') + fs.readFileSync(path.join(ROOT, 'hp/Health Test Report.Report/definition/pages/1191ff80f72c1a663a1b/page.json'), 'utf8');
+    Object.entries(HP_DATA).forEach(([k, v]) => chk(() => onDisk.includes(v) && reportPage.length > 1000 && !reportPage.includes(v) && !PAGE.includes(v), () => `T09-6-${k}. the ${k} value (a data value of the model or a saved filter) is on the report plan's approval page`));
   }
   // T13: the low-contrast first colour, before the click; the written theme has exactly that colour
   {
@@ -199,6 +224,9 @@ try {
     // T08: none of the sentinels is in any answer of the redesign path; a visual is named by kind, fields and place
     const all = answers.join('\n');
     Object.entries(SENT).forEach(([k, v]) => chk(() => !all.includes(v), () => `T08-${k}. the ${k} sentinel is in a tool answer of the redesign path`));
+    // (SQ11, A2-S10) nor on the redesign's approval page: the data values (filter, slicer, bookmark, DATATABLE row) and
+    // the static title (named by kind, fields and place there too)
+    Object.entries(SENT).forEach(([k, v]) => chk(() => html.length > 1000 && !html.includes(v) && !H.includes(v), () => `T08-page-${k}. the ${k} sentinel is on the redesign's approval page`));
     const changes = ((pl.j && pl.j.redesign && pl.j.redesign.pages) || []).flatMap((p) => (p.changes || []).concat(p.notChanged || []));
     chk(() => changes.length > 5 && changes.every((c) => c.title === undefined && c.type && c.place && Array.isArray(c.fields)), () => `T08-6. each visual is named by its kind, its fields and its place, never its title: ${JSON.stringify(changes.slice(0, 3))}`);
     const copied = path.join(ROOT, 'rd/Twin Sales redesigned.Report/definition/pages/p1overview/visuals/lineMonth/visual.json');
@@ -225,6 +253,12 @@ try {
     const shown = items.filter((q, i) => H.includes(q.object) && new RegExp(`${q.object.replace(/[[\]().*+?^$|\\]/g, '\\$&')}[^<]*</td><td[^>]*>[^<]*${i % 2 ? 'a mistake' : 'intended'}`).test(H));
     chk(() => items.length === 30 && id && shown.length === 30 && !/…/.test(H.slice(H.indexOf('Answers'))), () => `T09-12. every answered question is shown with its answer (${shown.length} of ${items.length}), never cut: ${H.slice(H.indexOf('Answers'), H.indexOf('Answers') + 400)}`);
     chk(() => /This plan writes a new answers file|replaces the answers file DataArcus wrote/.test(H) && !/Nothing is overwritten or deleted\./.test(H), () => 'T09-13. the answers plan says what it writes and whether it replaces anything');
+  }
+  // (SQ11, A2-S10) no answer and no approval page of the whole run holds one of hp's data values
+  {
+    const all = answers.join('\n'), pages = pagesSeen.map(unesc).join('\n') + pagesSeen.join('\n');
+    chk(() => pagesSeen.length >= 4 && answers.length > 20, () => `A2-S10 setup: ${pagesSeen.length} pages, ${answers.length} answers read`);
+    Object.entries(HP_DATA).forEach(([k, v]) => chk(() => !all.includes(v) && !pages.includes(v), () => `A2-S10-${k}. the ${k} value is in ${all.includes(v) ? 'a tool answer' : 'an approval page'}`));
   }
 } finally {
   await s.close(); await w.close();

@@ -8,6 +8,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { checkReportClean } from './test-validator.mjs';
+import { serverSource } from './test-source.mjs';   // (0.3.1 S9: the server's code is server.mjs, tools/ and the lib/ modules it shared)
 
 export async function round22({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -26,7 +27,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   // (design round 8, N2: a measure title reads as its plain title, the last text of its DAX: "Top N of M: ..." is shown only
   // when the chart leaves categories out)
   // (design round 10: the plain title is the text right after IF ( _s = _n, )
-  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+  // (BD2) the text at run time: inside the expression's whole wrap (UNICHAR ( 8295 ) & ( ... ) & UNICHAR ( 8297 )) when it has one
+  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : [];
+    const w = m && /^UNICHAR \( 8295 \) & \(.* \) & UNICHAR \( 8297 \)$/s.test(m.expression), t = p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; return t != null && w ? '\u2067' + t + '\u2069' : t; };
   const titleOf = (v) => { const t = vco(v, 'title'), e = t && t.properties.text && t.properties.text.expr; return !t ? null : e && e.Measure ? plainOf(v, e.Measure) : lit(t.properties.text); }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
   const subs = (x) => vis(x).filter((v) => vco(v, 'subTitle')).map((v) => [v.visual.visualType, lit(vco(v, 'subTitle').properties.text)]);
   const notes = (x) => JSON.stringify(x.err ? x.t : x.j.reportNotes || []);
@@ -157,16 +160,22 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     model('r22-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'string'), col('Region', 'string'), col('Channel', 'string')] }]);
     // (changed 19 Oct 2026, 0.3.0 R2: an Arabic plan pins the fixed list's names, «المنطقة» and «القناة» here, and the titles
     // are then their own; this case is the English names', so it keeps them through displayNames, the plan's way to keep them)
-    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
+    // (0.3.1 FX2, A-1: the column counted, Order Id, is a field its titles name: kept English on purpose too)
+    const mk = (name, w) => ask('create_report', { path: 'r22-nm', name, lang: 'ar', displayNames: { 'Orders[Region]': 'Region', 'Orders[Channel]': 'Channel', 'Orders[Order Id]': 'Order Id' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w, h: 300 }, { kind: 'column', x: 640, y: 100, w, h: 300 }] }] });
     const x = await mk('R22 same title', 470), xn = await mk('R22 same title narrow', 110);
     const pick = (r, w) => vis(r, 'r22-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === w), narrow = pick(xn, 110), wide = pick(x, 470);
     chk(() => narrow.length === 2 && narrow.every((v) => !/… \(/.test(titleOf(v))), () => `e. a bracket never follows a shortened title: ${JSON.stringify(narrow.map((v) => [titleOf(v), JSON.stringify(vco(v, 'title').properties.titleWrap || null)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
     // (changed 20 Oct 2026, F1: the owner's decision, every mixed Arabic/Latin text isolated: the names compared without
     // the marks, and each Latin name checked isolated)
-    const bare = (t) => String(t || '').replace(/[\u2066-\u2069\u200e\u200f]/g, ''), iso = (t) => /\u2068(Region|Channel)\u2069/.test(String(t || ''));
-    chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/\((Region|Channel)\)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => iso(titleOf(v))), () => `e. the wide charts end with "(Region)" and "(Channel)", the names isolated: ${JSON.stringify(wide.map(titleOf))}`);
+    const bare = (t) => String(t || '').replace(/[\u2066-\u2069\u200e\u200f]/g, '');
+    // (changed 26 Oct 2026, 0.3.1 LR2, the owner's "Use «حسب»": an Arabic report joins the English names with «حسب», so the
+    // two charts' titles differ by their column and need no bracket: "عدد Order Id حسب Region")
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title is wholly Arabic or wholly English: a count of an
+    // English column is "Count of Order Id" and its titles "Count of Order Id by Region", isolated whole, still no bracket)
+    const W = createRequire(import.meta.url)('../assets/js/text-measure.js').isolateWhole, whole = (t) => !/[\u0600-\u06FF]/.test(String(t || '')) && String(t || '') !== bare(t) && String(t || '') === W(bare(t));   // (the shared rule's marks, BD2's V3)
+    chk(() => wide.length === 2 && wide.map((v) => (bare(titleOf(v)).match(/^Count of Order Id by (Region|Channel)$/) || [])[1]).sort().join() === 'Channel,Region' && wide.every((v) => whole(titleOf(v)) && !/[()]/.test(titleOf(v))), () => `e. the wide charts read "Count of Order Id by Region" and "… by Channel", no bracket, isolated whole: ${JSON.stringify(wide.map(titleOf))}`);
     const four = narrow.concat(wide);
-    chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(bare(altOf(v))) && iso(altOf(v))), () => `h. each chart's alt text carries its bracketed name, isolated: ${JSON.stringify(four.map(altOf))}`);
+    chk(() => four.length === 4 && four.every((v) => / by (Region|Channel)$/.test(bare(altOf(v))) && !/[()]/.test(altOf(v)) && whole(altOf(v))), () => `h. each chart's alt text carries its full title, "by" and its column, isolated whole: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
     // (changed in 0.2.9 rc1, item 4: a bar chart by a category that is not time shows its top N, its title starts
     // "Top N: "; the numbering is of the title without that prefix, so the prefix is left out of the comparison)
@@ -249,14 +258,14 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const pn = mkReport('r22b-cc', { name: 'Page\u0007one​two' }), x = await ask('check_report', { path: pn, checks: ['schemas'] });
     const names = x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.report.pageNames);
     chk(() => !x.err && x.j.report.pageNames[0] === 'Page\\u0007one\\u200btwo', () => `9. a page name's control and format characters are written as code points: ${names}`);
-    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = serverSource();
     chk(() => !/const visible\s*=/.test(src) && !/const visible\s*=/.test(srv), () => '9. check-report.mjs and server.mjs share one visible() (no copy of their own)');
   }
   // 5. one tool's dependency cannot stop the server: Microsoft's report CLI (Node 20 or later, its schema package 20.10
   //    or later) is loaded by check_report when it runs, never when the server starts; and package.json's engines say
   //    the real minimum, the highest of the packages the MCP ships with
   {
-    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = serverSource();
     const statics = (s) => (s.match(/^import [^;]*;/gm) || []).join('\n');
     chk(() => !/powerbi-report-authoring-cli/.test(statics(src)) && !/powerbi-report-authoring-cli/.test(statics(srv)), () => `5. no static import of Microsoft's report CLI: ${statics(src).split('\n').filter((l) => /cli/.test(l)).join(' | ')}`);
     const pkg = JSON.parse(fs0.readFileSync(path.join(HERE, 'package.json'), 'utf8')), lock = JSON.parse(fs0.readFileSync(path.join(HERE, 'package-lock.json'), 'utf8'));
@@ -287,8 +296,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   //    the group share the column too, a short number after it ("(Region 2)"), fitted, with the same alt text
   {
     // (two text columns for three charts: the pool gives one of them twice; Order Id is a number, counted)
+    // (0.3.1 FX2, A-1: the column counted, Order Id, is drafted like any field: its approved name here)
     model('r22b-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Channel', 'string')] }]);
-    const x = await ask('create_report', { path: 'r22b-nm', name: 'R22b three charts', lang: 'ar', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 },
+    const x = await ask('create_report', { path: 'r22b-nm', name: 'R22b three charts', lang: 'ar', displayNames: { 'Orders[Order Id]': 'رقم الطلب' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 },
       { kind: 'bar', x: 36, y: 100, w: 380, h: 300 }, { kind: 'column', x: 440, y: 100, w: 380, h: 300 }, { kind: 'bar', x: 860, y: 100, w: 380, h: 300 }] }] });
     const cs = vis(x, 'r22b-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === 380), ts = cs.map(titleOf);
     chk(() => cs.length === 3 && new Set(ts).size === 3 && cs.every((v) => altOf(v) === titleOf(v)), () => `10. three charts, three titles, each alt text its title: ${JSON.stringify(cs.map((v) => [titleOf(v), altOf(v)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
@@ -422,7 +432,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   //    started with the CLI's import failing, the server lists its 8 tools and check_report says the validator is not
   //    available, and why
   {
-    const docs = ['README.md', 'PRIVACY.md', 'PRODUCT_SPEC.md', '../README.md'].map((f) => path.join(HERE, f)).filter((f) => fs0.existsSync(f));
+    const docs = ['README.md', 'TOOLS.md', 'PRIVACY.md', 'PRODUCT_SPEC.md', '../README.md'].map((f) => path.join(HERE, f)).filter((f) => fs0.existsSync(f));
     const old = docs.filter((f) => /node(\.js)?\s*(v)?18\b|node\s*>=\s*18/i.test(fs0.readFileSync(f, 'utf8')));
     chk(() => !old.length, () => `X-03. no document says Node 18: ${old.join(', ')}`);
     const tmp = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-nocli-'));

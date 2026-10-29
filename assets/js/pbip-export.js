@@ -14,8 +14,10 @@
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
   // the visual gallery (0.3, J8: combo, waterfall, small multiples, behind the design's gallery flag); optional in the browser
   const Gallery = (typeof module !== 'undefined' && module.exports ? require('./visual-gallery.js') : root.DAGallery || null);
+  // (SQ15b, J18-S2: the isolate rule, text-measure.js, loaded first on the website)
+  const Measure = (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure);
   const {
-    AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
+    AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
   const { barNameShare, cellRoom, columnRoom, textWidth } = Sizing;
@@ -211,6 +213,7 @@
    * @property {boolean} [gallery]  true: slots of kind combo, waterfall and multiples are written as Power BI's combo,
    *   waterfall and small-multiples column charts where their fields fit (visual-gallery.js, 0.3 J8); off by default
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
+   * @property {string} [namesNote]  (0.3.1 TT2) the README's section on the Arabic names the person approved (arabic-names.js note)
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
    *   { page, ... } entries unless said)
@@ -258,7 +261,7 @@
     const bad = [], isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x), num = (x) => typeof x === 'number' && Number.isFinite(x);
     const opt = (k, test, what) => { if (o[k] != null && !test(o[k])) bad.push(k + ' must be ' + what); };
     if (!isObj(o)) throw new TypeError('build(o): o must be an object');
-    ['name', 'title', 'font', 'pageName'].forEach((k) => opt(k, (x) => typeof x === 'string', 'a text'));
+    ['name', 'title', 'font', 'pageName', 'namesNote'].forEach((k) => opt(k, (x) => typeof x === 'string', 'a text'));
     opt('lang', (x) => x === 'en' || x === 'ar', "'en' or 'ar'");
     if (!isObj(o.ui) || !['text', 'card', 'background'].every((k) => HEX6.test(String(o.ui[k])))) bad.push('ui must hold the colours text, card and background as #rrggbb');
     opt('theme', isObj, 'an object (a Power BI theme)');
@@ -356,6 +359,14 @@
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0, keys: {} };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
+    // (0.3.1 M1: the twin's rules, report-mirror.js) the columns a chart's axis is continuous on, "Table.Column": a date or a
+    // number, from the model's types (o.model.columns, the MCP's) and the bound fields' own; such an axis ignores the sort
+    // and is reversed by categoryAxis.invertAxis
+    const CONTINUOUS = (() => { const out = new Set(), num = (t) => /^(dateTime|date|int64|double|decimal)$/i.test(String(t || ''));
+      Object.entries((o.model || {}).columns || {}).forEach(([t, cs]) => Object.entries(cs || {}).forEach(([cn, x]) => { if (x && num(x.type)) out.add(t + '.' + cn); }));
+      const walk = (x, depth) => { if (!x || typeof x !== 'object' || depth > 4) return; if (Array.isArray(x)) return x.forEach((y) => walk(y, depth + 1));
+        if (typeof x.t === 'string' && typeof x.c === 'string' && x.agg == null && (num(x.type) || x.num)) out.add(x.t + '.' + x.c); Object.values(x).forEach((y) => walk(y, depth + 1)); };
+      walk(B, 0); return [...out]; })();
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
     // axis's gridlines were near-white lines across the panel, louder than the data; with valueAxis.gridlineColor written
     // on the chart they are quiet): the text colour mixed 85% into the card, on the report's line, bar and column
@@ -455,7 +466,7 @@
     // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
     // report's settings, its files, and its notes; then the report's own measures and the visuals' look
     const c = Object.assign({
-      B, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
+      B, CONTINUOUS, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
       chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
       tipFor, tipName, tipPages, trend, u, n
     }, n);
@@ -508,12 +519,19 @@
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
+    // (0.3.1 TT2) o.namesNote: the Arabic names the person approved before the website's Arabic download, and each kept
+    // English by their choice (arabic-names.js note), after the README's own text; next to their project, where a README
+    // would replace theirs, in the report's own <report>.README.md
     if (!theirs) {
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
-      add('README.md', (W.readme || '').replace(/\{name\}/g, base));
-    }
+      add('README.md', (W.readme || '').replace(/\{name\}/g, base) + (o.namesNote || ''));
+    } else if (o.namesNote) add(base + '.README.md', '# ' + base + o.namesNote);
     // (0.3, J7) alt text from each data visual's role and fields, tab stops in reading order, decorative parts out of it
     const a11y = Object.assign(A11y.apply(files.filter((f) => typeof f.data === 'string'), { lang, rtl }), { colours: readable.changed, card: readable.card || null });
+    // (SQ15b, J18-S2) an Arabic report's texts, the alt texts above included: each Latin run inside Arabic text (an
+    // acronym, a code, a model name kept in English) isolated, as the MCP's create_report has done since J18 (F1: every
+    // mixed text), so the website's Arabic download reads in the same order
+    if (lang === 'ar') isolateFiles(files, [], { all: true });
     const out = Notes.result(n, { a11y, base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
     if (n.waterfallRtl.length) out.waterfallRtl = n.waterfallRtl;
     // (0.3.0 L2) the look options asked: each slicer's style with why; the charts given the gridlines asked
@@ -523,7 +541,63 @@
   }
 
 
+  // A report's visible texts isolated (0.3.0 J18; moved here from the MCP's terminology.mjs by SQ15b, J18-S2, so the
+  // website's Arabic download is isolated as the MCP's report), in its files ({ path, data }) as the writer built them: the
+  // formatting literals of pages, visuals and phone layouts (titles, alt texts, text boxes, button texts and tooltips), text
+  // box runs, the display names of projections, page and bookmark names, and the texts of the report's Text measures
+  // (their DAX string literals). Never a filter's values, a measure's or visual's name, or anything else. names: the
+  // approved Arabic names whose Latin runs are isolated (isolateNames); o.all (F1, the owner's decision of 20 Oct: the
+  // held-back line): EVERY mixed Arabic/Latin text (isolateLatin), a name kept in English inside an Arabic text too, page
+  // and tooltip tab names included (the proof: the Arabic tooltip tab "Tooltip · Month Short" read with the English
+  // first). Returns how many texts changed.
+  const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
+  // (0.3.1 TT1) whole: a visual's title text and alt text (its title, said whole) that are English, isolated as a whole
+  // (isolateWhole); parent: the object the properties belong to ('title', 'general')
+  const TITLED = { title: 'text', general: 'altText' };
+  function walkVisual(o, change, whole, parent) {
+    if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change, whole, parent)); return; }
+    if (!o || typeof o !== 'object') return;
+    for (const [k, v] of Object.entries(o)) {
+      if (k === 'filterConfig' || k === 'selector') continue;
+      if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.entries(v).forEach(([pk, p]) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = (whole && TITLED[parent] === pk ? whole(change(raw)) : change(raw)); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
+      if (k === 'textRuns' && Array.isArray(v)) v.forEach((r) => { if (r && typeof r.value === 'string') { const out = change(r.value); if (out !== r.value) r.value = out; } });
+      if (k === 'projections' && Array.isArray(v)) v.forEach((p) => { if (p && typeof p.displayName === 'string') { const out = change(p.displayName); if (out !== p.displayName) p.displayName = out; } });
+      walkVisual(v, change, whole, k);
+    }
+  }
+  // (0.3.1 BD2) a Text measure's literals take the isolates (V1) and, where one did, the whole text is wrapped at run time
+  // in U+2067 ... U+2069 (the measured rule, text-measure.js isolateLatin), once: a text joined from parts at run time
+  // is wrapped whole, never each part
+  const WRAP_OPEN = 'UNICHAR ( 8295 ) & ( ', WRAP_CLOSE = ' ) & UNICHAR ( 8297 )';
+  const daxTexts = (expr, change) => {
+    let hit = false;
+    const out = String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), o = change(raw); if (o === raw) return m; hit = true; return '"' + o.replace(/"/g, '""') + '"'; });
+    return hit && !(out.startsWith(WRAP_OPEN) && out.endsWith(WRAP_CLOSE)) ? WRAP_OPEN + out + WRAP_CLOSE : out;
+  };
+  function isolateFiles(files, names, o) {
+    // names: the approved Arabic names with a Latin run (the others need nothing), longest first
+    const list = [...new Set((names || []).map(String).filter((x) => Measure.ARABIC.test(x) && /[A-Za-z]/.test(x) && !Measure.ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
+    const all = !!(o && o.all);
+    if (!list.length && !all) return 0;
+    let n = 0; const change = (s) => { const out = all ? Measure.isolateLatin(s) : Measure.isolateNames(s, list); if (out !== s) n++; return out; };
+    // (0.3.1 TT1, the owner's rule of 27 Oct) an Arabic build (all): an English title or alt text isolated as a whole
+    const whole = all ? (s) => { const out = Measure.isolateWhole(s); if (out !== s) n++; return out; } : null;
+    // a DAX literal is a part of its measure's text: its isolates only, the wrap goes round the whole expression (daxTexts)
+    const part = (s) => { let out = all ? Measure.isolateRuns(s) : Measure.isolateNames(s, list); if (out !== s && !all && Measure.wrapped(out)) out = out.slice(1, -1); if (out !== s) n++; return out; };
+    for (const f of files || []) {
+      if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
+      const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
+      if (!j || typeof j !== 'object') continue;
+      const before = n;
+      if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change, whole); }
+      else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
+      else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, part); }));
+      if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');
+    }
+    return n;
+  }
+
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, isolateFiles, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

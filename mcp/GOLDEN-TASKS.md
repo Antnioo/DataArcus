@@ -20,7 +20,7 @@ the owner's go and a reason written here.
    the plan was shown and "go" waited for, and what the agent told the user.
 3. **Desktop (the owner's laptop):** open the written `.pbip` in Power BI Desktop (2.158.1177 or the release's
    version), judge from full-size crops, list everything visibly wrong under "Seen, not in scope"
-   (rule 9, `mcp/CLAUDE.md`). Data: only the models below; for Desktop the Ramadan Test model with data
+   (rule 10, `mcp/docs/OWNER-RULES.md`). Data: only the models below; for Desktop the Ramadan Test model with data
    (`<tests folder>\5-tmdl-sample`); the made-up models have no rows, so their visuals are empty and only layout,
    text and titles are judged.
 

@@ -184,6 +184,11 @@ const CVCHECKS = `<div class="card" style="padding:16px 22px">${pill('4 checks b
   .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:9px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:20px;font-weight:700">${t}</span></div>`).join('')}</div>
   <div class="card" style="padding:14px 20px;font-size:17px;font-weight:600;text-align:center;color:#cbd5e1">Each one from Microsoft's own pages</div>`;
 
+// the Arabic-readiness article: the six groups of what reads wrong, and the three kinds of answer
+const RTLREADY = `<div class="card" style="padding:16px 22px">${pill('19 things to check, in 6 groups')}${['Where the eye starts', 'Text', 'Charts', 'Tables and the matrix', 'Month and day names', 'Slicers']
+  .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:6px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:19px;font-weight:700">${t}</span></div>`).join('')}</div>
+  <div class="card" style="padding:12px 20px;font-size:16px;font-weight:600;text-align:center;color:#cbd5e1">Each fix: DataArcus, a Desktop setting, or no setting</div>`;
+
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['7 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI for Gulf teams', 'The Power BI Playbook', { sub: 'Gulf calendars and Ramadan, Copilot-ready models, report design, DAX and licensing.' }, BLOG, '500px 1fr'],
@@ -195,10 +200,11 @@ const PAGES = [
   ['report-styles', 'Report design · 7 styles', 'One Design Doesn’t Fit All: 7 Power BI Report Styles', { size: 44, sub: 'Every department asks a different question.' }, STYLES, '470px 1fr'],
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
   ['custom-visual-ai-checks', 'AI agents · Power BI', 'Before an AI Builds Your Power BI Custom Visual', { size: 44, sub: 'Four checks before you rely on one at work.' }, CVCHECKS, '470px 1fr'],
+  ['report-ready-for-arabic', 'Arabic reports · Power BI', 'Is Your Power BI Report Ready for Arabic?', { size: 44, sub: 'What reads wrong from the right, and what fixes each.' }, RTLREADY, '470px 1fr'],
   ['best-practice-exceptions', 'Best practice · Power BI', 'Power BI Best Practices Have Exceptions: 5 We Missed', { size: 44, sub: 'Our own tool was wrong 206 times, each where a rule does not fit.' }, EXCEPTIONS, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 85.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],
-  ['gulf-calendar', 'Gulf calendar · DAX · Free tool', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid, and the right weekend for each country and year.' }, GULF, '470px 1fr'],
+  ['gulf-calendar', 'Gulf calendar · DAX · Hijri calendar', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid days, each country\'s weekend and the 2022 UAE change.' }, GULF, '470px 1fr'],
   ['copilot-audit', 'Service · Power BI · Copilot', 'Copilot Readiness Audit for Your Power\u00a0BI Model', { size: 44, sub: 'One model, a written report with the exact fixes, within 5 business days.' }, AUDIT, '470px 1fr']
 ];
 

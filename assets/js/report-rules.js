@@ -36,10 +36,29 @@
     tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)'),
     round10: M('2026-10-04', '2.158.1177', 'round 10 (overnight): measurements before the code'),
     textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font'),
-    headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")')
+    headers: M('2026-10-19', '2.159', 'B-173: Arabic table headers in the twin, whole and cut (the laptop, golden twin "Teal Exec")'),
+    // (0.3.1 SQ5, 0.2.9-writer-S12) the bar chart's rows the report writer and the design engine use (its Lessons line:
+    // "Night of 6-7 Oct"; RULES-POWERBI.md, "Night of 6-7 October")
+    // (0.3.1 FX3) the laptop part 3, A1: Desktop composes an automatic title or subtitle from the field names with its own "by"
+    autoTitle: M('2026-10-28', '2.159.883.0', 'Power BI\'s automatic titles and subtitles on an Arabic page: the field names joined by Desktop\'s own English "by"'),
+    barRows: M('2026-10-06', '2.158.1177', 'the laptop sitting: a bar chart at the theme\'s 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more for its value axis')
   };
   // (0.3.0 X1) not measured, so not in SRC (every SRC entry is a section of DESKTOP-TESTS.md): what the PBIR format says
   const LINKS_SRC = { format: true, section: 'a visualLink\'s navigationSection is the name of a page of the same report (visualConfiguration schema, bundled in mcp/schemas)' };
+  // (0.3.1 R1) the rows of a table, measured for the report writer (Desktop 2.158, 13 Oct: N21-LAB); not a section of
+  // DESKTOP-TESTS.md, so not in SRC. The one copy of the numbers is the writer's sizing module, loaded when the rule runs
+  const TABLE_ROWS_SRC = { file: 'assets/js/pbip-sizing.js (TABLE_ROWS)', date: '2026-10-13', desktop: '2.158', section: 'a table\'s title, header, rows and total, measured for the report writer (N21-LAB)' };
+  const Sizing = () => { try { return typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing || null; } catch (e) { return null; } };
+  // (0.3.1 TS1) the design engine, for the theme's text size on a page (sizeAt: the one place, x 1.25 on 1920 x 1080)
+  const Engine = () => { try { return typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine || null; } catch (e) { return null; } };
+  // (0.3.1 FX3b) each visual type's default title, from Microsoft's catalog (@microsoft/powerbi-core-visual-schema 0.1.3,
+  // capabilities.json): these types are marked suppressDefaultTitle, their title is off unless switched on; every other
+  // type of the catalog shows its default title (composed from the field names); a type outside it (a custom visual) is
+  // not known. Copied here for the browser (mcp/test-0.3.1-fx3b.mjs K1 compares it with the catalog)
+  const DEFAULT_TITLE_OFF = Object.freeze(['actionButton', 'aiNarratives', 'basicShape', 'bookmarkNavigator', 'card', 'cardVisual', 'decompositionTreeVisual', 'filterSlicer', 'ganttChart', 'image', 'keyDriversVisual',
+    'matrix', 'multiRowCard', 'pageNavigator', 'pivotTable', 'qnaVisual', 'rdlVisual', 'scorecard', 'shape', 'slicer', 'table', 'tableEx', 'textbox']);
+  const VisualTypes = () => { try { return typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes || null; } catch (e) { return null; } };
+  const defaultTitle = (type) => { const V = VisualTypes(); return DEFAULT_TITLE_OFF.includes(type) ? 'off' : V && V.NATIVE_TYPES && V.NATIVE_TYPES.includes(type) ? 'on' : 'not known'; };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
   const measuredFont = (f) => !f || MEASURED_FONTS.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
@@ -62,7 +81,10 @@
   const PAGE_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   // a text box's text middle below its top, by the font (SRC.textMid: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt)
   const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
-  const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
+  // (0.3.1 SQ5, 0.2.9-writer-S12: was round 0's 22 a row + 46, which was a tooltip chart without its value axis) a bar
+  // chart at the theme's 10pt: 22.2 a row, 45 above the first row and 8 under the last, 38 more with its value axis
+  // (SRC.barRows; the writer's tooltip charts and the design engine's categoryFit count the same)
+  const TIP_ROWS = (h, axis) => Math.floor((h - 45 - 8 - (axis ? 38 : 0)) / 22.2);
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
   const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const ps1 = (x, c) => entries(((((x.json.visual || {}).query || {}).queryState || {}).Values || {}).projections).indexOf(c.p) + 1;
@@ -171,6 +193,29 @@
           });
         });
       } },
+    // (0.3.1 R1: a real user's matrix showed about half its rows, the last cut by its Total row, and its table 12 rows of
+    // about 30, its names on two lines) a table or matrix whose text is larger than Power BI's label size for its page
+    // shows fewer rows in its box: counted by the report writer's measured rows (pbip-sizing.js TABLE_ROWS, the one copy;
+    // its title, header, rows and total), at its own size and at the label size. A note: the rows a person needs are theirs
+    { id: 'TABLE_ROWS_SHOWN', group: 'sizes', severity: 'note', source: TABLE_ROWS_SRC,
+      about: 'a table or matrix at a text size larger than Power BI\'s label size for its page (10pt at 720 high) shows fewer rows in its box than at that size (the rows measured for the report writer: title, header, rows and total); values set to wrap put a long name on two lines',
+      run(R, out) {
+        const Z = Sizing(), En = Engine(); if (!Z || !En) return;
+        const VS = ((R.theme || {}).json || {}).visualStyles || {}, TC = ((R.theme || {}).json || {}).textClasses || {};
+        const themed = (type, card, k) => { const one = (t) => ((((VS[t] || {})['*'] || {})[card] || [])[0] || {})[k]; const v = one(type); return +(v !== undefined ? v : one('*')) || NaN; };
+        R.visuals.filter((x) => x.type === 'tableEx' || x.type === 'pivotTable').forEach((x) => {
+          const o = (x.json.visual || {}).objects || {}, vco = (x.json.visual || {}).visualContainerObjects || {}, pg = (R.pages || []).find((p) => x.page && p.id === x.page.id);
+          const H = pg && pg.h > 0 ? pg.h : 720, c = En.sizeAt(10, H);
+          const t = num(plain(o.values).fontSize) || themed(x.type, 'values', 'fontSize') || R.labelSize || 10, ht = num(plain(o.columnHeaders).fontSize) || themed(x.type, 'columnHeaders', 'fontSize') || t;
+          const tl = plain(vco.title), title = lit(tl.show) === 'false' ? 0 : num(tl.fontSize) || themed(x.type, 'title', 'fontSize') || +((TC.title || {}).fontSize) || 12;
+          const rows = (s, hs) => { let k = 0; while (k < 500 && Z.tableHeight(k + 1, s, title, 1, hs, R.font) <= x.h + 0.5) k++; return k; };
+          const n = rows(t, ht), m = rows(c, c), wrap = lit(plain(o.values).wordWrap) === 'true' || (x.type === 'pivotTable' && lit(plain(o.rowHeaders).wordWrap) === 'true');
+          if (!(t > c + 0.25 && m > n)) return;
+          const kind = x.type === 'pivotTable' ? 'matrix' : 'table';
+          out(x, `at ${t}pt the ${kind} shows about ${n} row${n === 1 ? '' : 's'} in its box (${x.h} high, under its title and header, over its total); at ${c}pt, Power BI's label size for this page, about ${m}${wrap ? '; its values are set to wrap, so a long name takes two lines and fewer show' : ''}`,
+            `Set its text to ${c}pt (Format > Values, Column headers${kind === 'matrix' ? ', Row headers' : ''}, Totals) and Word wrap off (Format > Values) so each name stays on one line, or make the box taller.`, measuredFont(R.font) ? null : { estimate: true });
+        });
+      } },
     { id: 'SLICER_FITS', group: 'sizes', severity: 'warning', source: SRC.heights,
       about: 'a dropdown slicer (its title and its box) needs 16 + 4 x pt in height',
       run(R, out) {
@@ -275,11 +320,11 @@
           if (missing) out(x, `${missing} of its ${sorts.length} sort field${sorts.length === 1 ? ' is' : 's are'} not in the visual, so Desktop ignores ${missing === 1 ? 'it' : 'them'}`, 'Put the sort field in the visual (for a month or day name: Min of its number column in the Tooltips role), or sort by a field the chart shows.');
         });
       } },
-    { id: 'TOOLTIP_SCROLL', group: 'tooltips', severity: 'note', source: SRC.round0,
-      about: 'a bar chart on a tooltip page needs about 22 a row plus 46 (title and padding) without its value axis; rows past its height go behind a scrollbar no one can use in a tooltip',
+    { id: 'TOOLTIP_SCROLL', group: 'tooltips', severity: 'note', source: SRC.barRows,
+      about: 'a bar chart on a tooltip page needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more with its value axis (measured at the theme\'s 10pt labels); rows past its height go behind a scrollbar no one can use in a tooltip',
       run(R, out) {
         R.pages.filter((p) => p.tooltip).forEach((pg) => pg.visuals.filter((x) => x.type === 'clusteredBarChart').forEach((x) => {
-          const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h));
+          const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h, axis));
           // (A4-12, audit 4: a Top N filter on the visual that keeps no more rows than fit leaves no scrollbar: nothing to say)
           const top = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'TopN').map((g) => n((((((g.filter || {}).From || [])[0] || {}).Expression || {}).Subquery || { Query: {} }).Query.Top)).filter(Number.isFinite);
           // (rc.22, B-142: flagged on DataArcus's own month tooltip page, whose trend is kept to its last 6 months) a time axis
@@ -289,9 +334,9 @@
             .map((g) => { const c = ((((g.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison || {}, p = ((c.Left || {}).Measure || {}).Property, mm = /^Last (\d+) months?:/.exec(String(p || '')); return mm && ((c.Right || {}).Literal || {}).Value === '1L' ? +mm[1] : NaN; }).filter(Number.isFinite);
           top.push(...last);
           if (top.length && Math.min(...top) <= rows) return;
-          // the 22 a row was measured with 8pt category labels; another size makes the row count an estimate
-          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 8;
-          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}${other ? `; its labels are ${pt}pt, and the 22 a row was measured at 8pt` : ''}.`, axis || other ? { estimate: true } : null);
+          // the rows were measured at the theme's 10pt labels; another size makes the row count an estimate
+          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 10;
+          out(x, `about ${rows} rows fit in its ${x.h} height${axis ? ' with its value axis on' : ''}; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22.2 a row, 45 above the first row and 8 under the last${axis ? ', 38 more for the value axis, or switch it off' : ''})${other ? `; its labels are ${pt}pt, and the rows were measured at 10pt` : ''}.`, other ? { estimate: true } : null);
         }));
       } },
     { id: 'RTL_MIRROR', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.round2,
@@ -303,11 +348,34 @@
           if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) ? (word(str(t.alignment)) ? str(t.alignment) : 'by a value that is not a plain word') : 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
         });
       } },
+    // (0.3.1 FX3, the laptop part 3's A1: the twin of a report with automatic subtitles showed «الشريحة by إجمالي الربح»)
+    // a data visual of two fields or more whose title or subtitle is switched on with no text of its own: Desktop composes
+    // it from the field names with its own English "by" and "and", whatever the page's language (the file can't show it)
+    { id: 'AUTO_TITLE', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.autoTitle,
+      about: 'Power BI composes a title or subtitle switched on with no text of its own from the field names, joined by its own English "by" and "and": on a right-to-left page, Arabic names give a half Arabic, half English title',
+      run(R, out) {
+        const NOT_DATA = ['textbox', 'actionButton', 'shape', 'basicShape', 'image', 'pageNavigator', 'bookmarkNavigator'];
+        R.visuals.forEach((x) => {
+          const v = x.json.visual || {}, qs = (v.query || {}).queryState || {};
+          const fields = Object.keys(qs).filter((r) => r !== 'Tooltips').reduce((n, r) => n + entries((qs[r] || {}).projections).length, 0);
+          if (NOT_DATA.includes(x.type) || fields < 2) return;
+          [['title', 'title'], ['subTitle', 'subtitle']].forEach(([card, said]) => {
+            const t = entries((v.visualContainerObjects || {})[card]).filter((e) => e && !e.selector && e.properties);
+            const noText = !t.some((e) => e.properties.text !== undefined && !(lit(e.properties.text) !== undefined && !str(e.properties.text).trim()));
+            const shown = t.filter((e) => e.properties.show !== undefined), on = shown.length ? lit(shown[shown.length - 1].properties.show) === 'true' : null;
+            // (FX3b) no "show" set (a missing title card, the owner's hand-made charts): the type's default title, from the
+            // catalog; a subtitle is off unless switched on
+            const fix = `Give the ${said} its own text, wholly Arabic (or wholly English): create_arabic_twin lists it with an Arabic draft from the approved field names and writes the approved text.`;
+            if (noText && on === true) out(x, `its ${said} is automatic (switched on, no text of its own) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, fix);
+            else if (noText && on === null && card === 'title' && defaultTitle(x.type) === 'on') out(x, `its title has no text of its own and its type shows Power BI's default title (Microsoft's visual catalog) on a right-to-left page: Power BI composes it from the ${fields} field names with its own English "by" and "and"`, fix);
+          });
+        });
+      } },
     { id: 'THEME_NAME', group: 'theme', severity: 'warning', source: SRC.round0,
       about: 'a theme inside a project has its own "name" equal to the file name report.json references (with .json), and the report folder has a .platform file',
       run(R, out) {
         if (!R.hasPlatform) out(null, 'the report folder has no .platform file', 'Add the .platform file (Power BI Desktop writes it when it saves the project).', { file: '.platform' });
-        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
+        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator and Fabric reject it (Power BI Desktop opens it: measured 2026-10-10, DESKTOP-TESTS.md).', { file: R.theme.file });
       } }
   ];
   // (0.3, J7) Power BI's accessibility basics, the family "a11y": report-a11y.js, sourced to Microsoft's guidance (not
@@ -328,25 +396,39 @@
     (R.visuals || []).forEach((x) => { x.x = fin(x.x); x.y = fin(x.y); x.w = fin(x.w); x.h = fin(x.h); });
     return R;
   }
+  // (0.3.1 S1: a report holding both languages, an EN-AR copy, was judged all Arabic: its English pages told to put
+  // their titles right and their Tab order right to left) R.pageDir: { <page id>: 'rtl' | 'ltr' }, each page's own
+  // direction. A rule that keys on the direction (dir: 'rtl', or byDir) then runs once per direction, on that
+  // direction's pages and their visuals; the others run on the whole report. Without pageDir: R.dir for every page.
+  function byDirection(R, dir) {
+    const pd = R.pageDir && typeof R.pageDir === 'object' ? R.pageDir : null;
+    if (!pd) return [{ dir, R }];
+    const of = (p) => (pd[p.id] === 'rtl' || pd[p.id] === 'ltr' ? pd[p.id] : dir), dirs = [...new Set((R.pages || []).map(of))];
+    if (dirs.length < 2) return [{ dir: dirs[0] || dir, R }];
+    return dirs.map((d) => { const pages = R.pages.filter((p) => of(p) === d), ids = new Set(pages.map((p) => p.id));
+      return { dir: d, R: Object.assign({}, R, { pages, visuals: (R.visuals || []).filter((x) => x.page && ids.has(x.page.id)), dir: d, lang: d === 'rtl' ? (R.lang === 'he' ? 'he' : 'ar') : 'en' }) }; });
+  }
   function check(R, opts) {
     normalize(R);
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
-    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.dir || r.dir === dir)).forEach((rule) => {
+    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr'), parts = byDirection(R, dir);
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+      const runs = rule.dir || rule.byDir ? parts.filter((v) => !rule.dir || rule.dir === v.dir) : [{ dir, R }];
+      if (!runs.length) return;
       ran.push(rule.id);
       const mine = [];
-      try { rule.run(R, (x, what, fix, extra, src) => {
+      try { runs.forEach(({ R }) => rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
         mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : e.severity || rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : e.page || null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: source.guide ? `Microsoft's guidance: ${source.title}, "${source.section}": ${source.url}` : source.format ? `Microsoft's PBIR format: ${source.section}` : `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
-      }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
+      })); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, buttonNeed, headerNeed, tableHeaders };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize, byDirection, buttonNeed, headerNeed, tableHeaders, DEFAULT_TITLE_OFF, defaultTitle };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);

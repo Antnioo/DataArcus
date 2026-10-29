@@ -3,7 +3,7 @@ window.toolsHubTranslations = {
   "en": {
     "hub": {
       "badge": "Free · No sign-up · Runs in your browser",
-      "title": "Free Power BI & Fabric Tools",
+      "title": "Power BI & Fabric Tools",
       "subtitle": "Small tools that save Power BI and Fabric developers hours, built from real client work. Nothing you enter leaves your browser.",
       "cards": {
         "theme": {
@@ -101,23 +101,23 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "Free Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, Hijri DAX calendar, measure builder, model health check, licensing calculator, exam practice."
+      "title": "Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, Hijri DAX calendar, measure builder, model health check, licensing calculator, exam practice."
     }
   },
   "ar": {
     "hub": {
       "badge": "مجانية · بدون تسجيل · تعمل في متصفحك",
-      "title": "أدوات Power BI و Fabric مجانية",
+      "title": "أدوات Power BI و Fabric",
       "subtitle": "أدوات صغيرة توفر على مطوري Power BI و Fabric ساعات من العمل، مبنية من مشاريع حقيقية مع العملاء. لا شيء مما تدخله يغادر متصفحك.",
       "cards": {
         "theme": {
           "title": "مولّد السمات والتخطيطات لـ Power BI",
-          "desc": "حوّل ألوان علامتك التجارية إلى ملف سمة JSON، ثم احصل على خلفية صفحة مطابقة بموضع دقيق لكل عنصر مرئي.",
+          "desc": "حوّل ألوان علامتك التجارية إلى ملف سمة JSON، ثم احصل على خلفية صفحة مطابقة بموضع دقيق لكل مرئي.",
           "tag1": "ملف سمة JSON",
           "tag2": "تخطيطات الصفحة"
         },
         "calendar": {
-          "title": "مولّد جدول التقويم في DAX",
+          "title": "مولّد جدول التاريخ في DAX",
           "desc": "جدول تواريخ كامل بلصقة واحدة، مع السنة المالية وعطلات نهاية الأسبوع الخليجية والتاريخ الهجري وعلامات رمضان والعيد.",
           "tag1": "هجري",
           "tag2": "رمضان",
@@ -157,7 +157,7 @@ window.toolsHubTranslations = {
           "tag3": "منهج أبريل 2026"
         },
         "svgkpi": {
-          "title": "مصمم بطاقات KPI بصيغة SVG",
+          "title": "مصمم بطاقات المؤشرات (KPI) بصيغة SVG",
           "desc": "ارسم بطاقات مؤشرات وحلقات تقدم وخطوط اتجاه وأسهم، واربطها بمقاييسك وانسخ DAX الذي يرسمها.",
           "tag1": "جديد",
           "tag2": "بدون custom visual",
@@ -181,7 +181,7 @@ window.toolsHubTranslations = {
       },
       "cta": {
         "title": "تحتاج شيئًا لا تستطيع هذه الأدوات فعله؟",
-        "desc": "تبني داتا أركوس حلول Power BI متكاملة: نماذج بيانات ومقاييس ولوحات تحكم للشركات في منطقة الشرق الأوسط وشمال أفريقيا.",
+        "desc": "تبني DataArcus حلول Power BI متكاملة: نماذج بيانات ومقاييس ولوحات معلومات للشركات في منطقة الشرق الأوسط وشمال أفريقيا.",
         "suggest": "اقترح أداة"
       },
       "open": "افتح الأداة",
@@ -205,7 +205,7 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "أدوات Power BI و Fabric مجانية - داتا أركوس", "description": "أدوات Power BI و Fabric مجانية: مولّد السمات والتخطيطات، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات تجريبية."
+      "title": "أدوات Power BI و Fabric - DataArcus", "keywords": "داتا أركوس, DataArcus, Power BI", "description": "أدوات Power BI و Fabric: مولّد السمات والتخطيطات، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات تجريبية."
     }
   }
 };

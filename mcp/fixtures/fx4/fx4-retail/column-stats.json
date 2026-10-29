@@ -1,0 +1,13 @@
+{
+  "note": "Made-up counts in the shape of UCI's Online Retail II (2009-2011). Counts only, never values.",
+  "rows": {
+    "Online Retail": 1067371
+  },
+  "distinct": {
+    "Online Retail[Invoice]": 53628,
+    "Online Retail[StockCode]": 5305,
+    "Online Retail[Basket Label]": 1031200,
+    "Online Retail[Description]": 5698,
+    "Online Retail[Country]": 43
+  }
+}

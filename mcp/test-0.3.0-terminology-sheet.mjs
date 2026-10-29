@@ -23,6 +23,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -38,7 +39,7 @@ const short = (x) => (x && x.err ? String(x.t).slice(0, 400) : JSON.stringify(x 
 const uniq = (a) => [...new Set(a)];
 const Memory = req0('../assets/js/confirm-memory.js'), TM = req0('../assets/js/text-measure.js');
 let TL = null; try { TL = await import('./lib/terminology.mjs'); } catch (e) { TL = null; }
-const FSI = '⁨', PDI = '⁩', RLM = '‏';
+const FSI = '⁨', PDI = '⁩', RLM = '‏', RLI = '⁧';   // (BD2) RLI: the whole text's wrap
 
 // ---- a report's files and what a viewer reads in them ----
 const readReport = (dir) => { const out = {}; if (!fs.existsSync(dir)) return out; const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else if (f.endsWith('.json')) { try { out[path.relative(dir, f).split(path.sep).join('/')] = rd(f); } catch (x) { /* not JSON */ } } }); rec(dir); return out; };
@@ -105,15 +106,15 @@ const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARC
 // the terms of the golden model's Web Orders report (made up); one with a Latin acronym and digits
 const KPI = 'مؤشر KPI 2024';
 const DN = { 'Coupon[Coupon Region]': 'منطقة القسيمة', 'Plan[Plan Group]': 'مجموعة الخطة', 'Web Orders[Web Orders Total Score]': KPI, 'Web Orders[Web Orders Count]': 'عدد الطلبات',
-  'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Average Score]': 'متوسط الدرجة', 'Calendar[Month Short]': 'الشهر' };
+  'Web Orders[Web Orders Total Value]': 'إجمالي القيمة', 'Web Orders[Web Orders Average Score]': 'متوسط الدرجة', 'Calendar[Year Month]': 'الشهر' };   // (FX4b, D-1028-07: the axis is Calendar[Year Month] now; was Calendar[Month Short])
 const EN_OF = (k) => k.replace(/^.*?\[(.*)\]$/, '$1');
 const rowOf = (sheet, k) => (Array.isArray(sheet) ? sheet.find((r) => r && r.field === k) : null);
 
 try {
   // ---------- TS-4 (engine): isolation and its width ----------
-  chk(() => TL && TL.isolateLatin(KPI) === 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM, () => `TS-4a. "${KPI}" written with its Latin run isolated (and a right-to-left mark after the run that ends it): ${TL ? JSON.stringify(TL.isolateLatin(KPI)) : 'lib/terminology.mjs missing'}`);
-  chk(() => TL && TL.isolateLatin('مؤشر KPI 2024 حسب الشهر') === 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' && TL.isolateLatin('KPI المبيعات') === RLM + FSI + 'KPI' + PDI + ' المبيعات'
-    && TL.isolateLatin('Q1/2024 الربع') === RLM + FSI + 'Q1/2024' + PDI + ' الربع', () => `TS-4b. a run inside, at the start, with a slash: ${TL ? JSON.stringify(['مؤشر KPI 2024 حسب الشهر', 'KPI المبيعات', 'Q1/2024 الربع'].map(TL.isolateLatin)) : 'missing'}`);
+  chk(() => TL && TL.isolateLatin(KPI) === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + RLM + PDI, () => `TS-4a. "${KPI}" written with its Latin run isolated (and a right-to-left mark after the run that ends it): ${TL ? JSON.stringify(TL.isolateLatin(KPI)) : 'lib/terminology.mjs missing'}`);
+  chk(() => TL && TL.isolateLatin('مؤشر KPI 2024 حسب الشهر') === RLI + 'مؤشر ' + FSI + 'KPI 2024' + PDI + ' حسب الشهر' + PDI && TL.isolateLatin('KPI المبيعات') === RLI + RLM + FSI + 'KPI' + PDI + ' المبيعات' + PDI
+    && TL.isolateLatin('Q1/2024 الربع') === RLI + RLM + FSI + 'Q1/2024' + PDI + ' الربع' + PDI, () => `TS-4b. a run inside, at the start, with a slash: ${TL ? JSON.stringify(['مؤشر KPI 2024 حسب الشهر', 'KPI المبيعات', 'Q1/2024 الربع'].map(TL.isolateLatin)) : 'missing'}`);
   chk(() => TL && ['المبيعات', 'Total Sales', 'أعلى 6 من 10', 'أعلى {1} من {2}: المبيعات', ''].every((x) => TL.isolateLatin(x) === x) && TL.isolateLatin(TL.isolateLatin(KPI)) === TL.isolateLatin(KPI),
     () => `TS-4c. Arabic only, English only, numbers alone and placeholders unchanged; isolating twice changes nothing`);
   chk(() => TM.textWidth(FSI + PDI + RLM, 10) === 0 && Math.abs(TM.textWidth('مؤشر ' + FSI + 'KPI' + PDI, 10) - TM.textWidth('مؤشر KPI', 10)) < 1e-9, () => `TS-4d. the isolates have no width (text-measure): ${TM.textWidth(FSI + PDI, 10)}`);
@@ -213,22 +214,26 @@ try {
   const p0 = await twinPlan({}), T0 = (p0.j && p0.j.texts) || [];
   const L = {}; T0.filter((t) => t.draftArabic && t.kind !== 'field').forEach((t) => { L[t.id] = t.draftArabic; });
   T0.filter((t) => t.text === 'Orders EN').forEach((t) => { L[t.id] = 'تقرير الطلبات'; });
-  // (Month Short is left out: the twin takes the term the person confirmed on the Arabic report, unchanged since)
-  const TERMS = Object.assign({}, DN); delete TERMS['Calendar[Month Short]'];
+  // (Year Month is left out: the twin takes the term the person confirmed on the Arabic report, unchanged since)
+  // (FX4b, D-1028-07: Year Month, the axis now; was Month Short)
+  const TERMS = Object.assign({}, DN); delete TERMS['Calendar[Year Month]'];
   {
     const p1 = await twinPlan({ labels: L, terms: TERMS }), J = p1.j || {}, T1 = J.texts || [];
     const fieldsOf = (k) => T1.filter((t) => t.kind === 'field' && (t.field === k));
     chk(() => !p1.err && Object.keys(DN).every((k) => fieldsOf(k).length && fieldsOf(k).every((t) => t.label === DN[k] && /term/i.test(String(t.labelFrom || '')))),
       () => `TS-2a. each field header of the twin takes its term (field, labelFrom): ${p1.err ? short(p1) : JSON.stringify(T1.filter((t) => t.kind === 'field').map((t) => [t.id, t.field, t.label, t.labelFrom]).slice(0, 8))}`);
-    chk(() => !J.truncated, () => `TS-2 the twin's plan is answered whole (no cut), the sheet in it: ${JSON.stringify(J.truncated)}`);
+    // (0.3.1 TW1: TS-2b reads its titles from the first page of texts; when the list paged (moreTexts), which titles were
+    // left for the next page followed the visuals' random ids, and TS-2b failed now and then. Every text on this page,
+    // said here, so a list that pages fails here, by name, every time)
+    chk(() => !J.truncated && !J.moreTexts, () => `TS-2 the twin's plan is answered whole (no cut, every text listed: no moreTexts), the sheet in it: ${JSON.stringify([J.truncated, J.moreTexts])}`);
     const tm = T1.find((t) => t.kind === 'titleMeasure' && t.text === 'Top {1} of {2}: Web Orders Total Score by Coupon Region'), al = T1.find((t) => t.kind === 'altText' && t.text === 'Web Orders Total Score by Plan Group: detail');
     chk(() => tm && tm.label === `أعلى {1} من {2}: ${KPI} حسب منطقة القسيمة` && al && al.label === `${KPI} حسب مجموعة الخطة: التفاصيل` && /term/i.test(String(tm.labelFrom || '')),
       () => `TS-2b. a title and an alt text made of the fields' names take the terms (derived): ${JSON.stringify([tm, al].map((t) => t && [t.text, t.label, t.labelFrom]))}`);
     const sh = (J.terminology && J.terminology.sheet) || [], cr = rowOf(sh, 'Coupon[Coupon Region]');
-    const ms = rowOf(sh, 'Calendar[Month Short]'), yr = rowOf(sh, 'Calendar[Year]');
-    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => String(x).replace(/: .*$/, ''))).length >= 3 && ms && ms.status === 'approved' && ms.earlier === true && ms.ar === DN['Calendar[Month Short]']
+    const ms = rowOf(sh, 'Calendar[Year Month]'), yr = rowOf(sh, 'Calendar[Year]');
+    chk(() => cr && cr.status === 'approved' && cr.ar === DN['Coupon[Coupon Region]'] && uniq((cr.where || []).map((x) => String(x).replace(/: .*$/, ''))).length >= 3 && ms && ms.status === 'approved' && ms.earlier === true && ms.ar === DN['Calendar[Year Month]']
       && yr && yr.status === 'draft' && !yr.earlier,
-      () => `TS-2c. the twin's sheet: the given terms, the term the person confirmed on the Arabic report (Month Short, earlier), and a draft approved only with that plan still a draft (Year): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
+      () => `TS-2c. the twin's sheet: the given terms, the term the person confirmed on the Arabic report (Year Month, earlier), and a draft approved only with that plan still a draft (Year): ${JSON.stringify(sh.map((r) => [r.field, r.status, r.ar, r.earlier]))}`);
     // TS-7b: the twin's plan pins its terms
     const id = J.plan && J.plan.planId;
     if (id) await s.call('approve_plan', { planId: id });
@@ -282,14 +287,17 @@ try {
   // ---------- TS-8: the approval page shows the sheet, escaped ----------
   {
     const k1 = `Sales[${BAD_COL}]`, k2 = `Sales[${BAD_M}]`, alias = 'منطقة <b>عريضة</b> & "ج"';
-    const p = await w.call('plan_layout', { path: 'bad/M.SemanticModel', lang: 'ar', layout: 'analysis', name: 'سيئ', planFields: { kpis: [k2], category: k1 }, displayNames: { [k1]: alias } });
+    // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the person keeps the hostile measure
+    // English on purpose (its model name): the sheet then shows it as kept in English
+    const p = await w.call('plan_layout', { path: 'bad/M.SemanticModel', lang: 'ar', layout: 'analysis', name: 'سيئ', planFields: { kpis: [k2], category: k1 }, displayNames: Object.assign({ [k1]: alias }, keepEnglish(k2)) });
     const pid = p.j && p.j.plan && p.j.plan.planId; let html = '';
     if (pid) { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? await req(url, 'GET') : ''; if (url) await req(url, 'POST', 'decision=decline'); }
     const text = unesc(html.replace(/<[^>]+>/g, ' '));
-    chk(() => /Terminology/.test(html) && text.includes(BAD_COL) && text.includes(alias) && text.includes(BAD_M),
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /ورقة المصطلحات/.test(html) && text.includes(BAD_COL) && text.includes(alias) && text.includes(BAD_M),
       () => `TS-8a. the approval page shows the sheet (EN | AR): ${pid ? text.replace(/\s+/g, ' ').slice(0, 300) : short(p)}`);
     chk(() => html && !html.includes('<img src=x') && !html.includes('<script>alert(2)') && !html.includes('<b>عريضة'), () => `TS-8b. hostile names and aliases escaped on the page`);
-    chk(() => /approved/.test(text) && /kept in English|draft/.test(text), () => `TS-8c. each term's status on the page: ${text.replace(/\s+/g, ' ').slice(0, 200)}`);
+    chk(() => /معتمد/.test(text) && /يبقى بالإنجليزية|مسودة/.test(text), () => `TS-8c. each term's status on the page: ${text.replace(/\s+/g, ' ').slice(0, 200)}`);
   }
 
   // ---------- TS-5 (server): reuse, and a changed description or DAX drops it ----------
@@ -314,12 +322,13 @@ try {
   // ---------- TS-10b (last: the term kept in English stays in the session's memory) ----------
   {
     // the proof's tab (20 Oct): a field kept in English on a tooltip page, «تلميح · Month Short»
-    const DNm = Object.assign({}, DN, { 'Calendar[Month Short]': 'Month Short' });   // (the person keeps it in English)
+    const DNm = Object.assign({}, DN, { 'Calendar[Year Month]': 'Year Month' });   // (the person keeps it in English; FX4b, D-1028-07: Year Month, the axis now, was Month Short)
     const pm = await plan({ displayNames: DNm, name: 'تقرير مختلط' }), mid = pm.j && pm.j.plan && pm.j.plan.planId;
     if (mid) await s.call('approve_plan', { planId: mid });
     const rm = mid ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير مختلط', planId: mid, design: pm.j.design }) : pm;
     const M = readReport(path.join(ROOT, 'large/تقرير مختلط.Report')), tips = shownTexts(M).filter((t) => t.what === 'page name' && (M[t.where] || {}).type === 'Tooltip'), mixM = notIsolated(shownTexts(M));
-    chk(() => !rm.err && tips.some((t) => /Month Short/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · Month Short» and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
+    // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the tab strip) the trend's tab is «تلميح · الشهر», no Latin run
+    chk(() => !rm.err && tips.some((t) => t.s === 'تلميح · الشهر') && !tips.some((t) => /[A-Za-z]/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · الشهر» (no Latin run in a tab, BD2) and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);
     if (!rm.err) { const c = await s.call('check_report', { path: 'large/تقرير مختلط.pbip' }); chk(() => !c.err && c.j.validator.errors === 0 && c.j.impact.kinds.canBreak.count === 0, () => `TS-10b: validator 0, check_report 0 "can break": ${short(c)}`); }
   }
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }

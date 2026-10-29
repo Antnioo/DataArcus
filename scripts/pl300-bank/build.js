@@ -157,7 +157,7 @@ const RENEWAL = {
       tags: ['Properties', 'Relationships', 'Cross-filter direction', 'Hierarchies', 'Quick measures', 'Field parameters', 'Many-to-many', 'Role-playing dimension', 'Date table', 'Star schema', 'Dimensions', 'Calculated tables', 'Calculated columns'] },
     { k: 'time', en: 'Use DAX time intelligence functions in semantic models', ar: 'دوال الذكاء الزمني في DAX', learn: M + 'dax-power-bi-time-intelligence/',
       tags: ['Time intelligence', 'Semi-additive'] },
-    { k: 'filter', en: 'Modify DAX filter context in semantic models', ar: 'تعديل سياق الفلترة في DAX', learn: M + 'dax-power-bi-modify-filter/',
+    { k: 'filter', en: 'Modify DAX filter context in semantic models', ar: 'تعديل سياق التصفية في DAX', learn: M + 'dax-power-bi-modify-filter/',
       tags: ['CALCULATE', 'Filter functions', 'Iterators', 'Calculated column vs measure', 'Measures', 'Calculation groups'] },
     { k: 'perf', en: 'Optimize a model for performance in Power BI', ar: 'تحسين أداء النموذج في Power BI', learn: M + 'optimize-model-power-bi/',
       tags: ['Reduce data', 'Performance Analyzer', 'Storage mode', 'Aggregation', 'DAX query view', 'Variables', 'Composite model'] },
@@ -186,12 +186,14 @@ const EXAM = {
   renewal: RENEWAL,
   data: 'PL300', code: 'PL-300', store: 'dataarcus-pl300-v1', ev: 'pl300', outline: '/assets/data/pl300-outline.json',
   page: 'https://dataarcus.com/tools/pl-300-practice-exam.html',
-  dom: {
-    prep: { en: 'Prepare the data', ar: 'تجهيز البيانات', w: '25–30%', wt: 27.5 },
-    model: { en: 'Model the data', ar: 'نمذجة البيانات', w: '25–30%', wt: 27.5 },
-    viz: { en: 'Visualize and analyze the data', ar: 'التصور والتحليل', w: '25–30%', wt: 27.5 },
-    manage: { en: 'Manage and secure Power BI', ar: 'إدارة Power BI وتأمينه', w: '15–20%', wt: 17.5 }
-  },
+  // each area's `study`: its section of Microsoft's study guide (read 25 Oct 2026: the anchor is the id of the area's
+  // heading, whose text is the area's name and weight; the page title is "Study guide for Exam PL-300: ...")
+  dom: ((G) => ({
+    prep: { en: 'Prepare the data', ar: 'تجهيز البيانات', w: '25–30%', wt: 27.5, study: G + '#prepare-the-data-2530' },
+    model: { en: 'Model the data', ar: 'نمذجة البيانات', w: '25–30%', wt: 27.5, study: G + '#model-the-data-2530' },
+    viz: { en: 'Visualize and analyze the data', ar: 'التصور والتحليل', w: '25–30%', wt: 27.5, study: G + '#visualize-and-analyze-the-data-2530' },
+    manage: { en: 'Manage and secure Power BI', ar: 'إدارة Power BI وتأمينه', w: '15–20%', wt: 17.5, study: G + '#manage-and-secure-power-bi-1520' }
+  }))('https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300'),
   skill: {
     get: { d: 'prep', en: 'Get or connect to data', ar: 'الحصول على البيانات والاتصال بها' },
     clean: { d: 'prep', en: 'Profile and clean the data', ar: 'فحص البيانات وتنظيفها' },

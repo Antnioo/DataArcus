@@ -172,7 +172,7 @@ try {
     const navButtons = (p1.j && p1.j.texts || []).filter((t) => t.kind === 'button' && t.goesTo);
     chk(() => buttons.length >= 2 && navButtons.length >= 2 && navButtons.every((t) => t.label === labels[t.goesTo] && /page/i.test(t.labelFrom || '')), () => `B-138. each page button takes its page's approved Arabic name in the plan: ${JSON.stringify((p1.j && p1.j.texts || []).filter((t) => t.kind === 'button'))}`);
     const n = links().length; await w.call('approve_plan', { planId: p1.j.plan.planId }); const page = await get(await linkAt(n));
-    chk(() => !/button:[A-Za-z0-9]|page:[A-Za-z0-9]{6}/.test(page) && /الصفحة الأولى/.test(page) && /Page button/i.test(page), () => `B-139. the twin's approval page names each text by what it is, not by internal ids: ${(/Arabic texts[\s\S]{0,400}/.exec(page) || [''])[0]}`);
+    chk(() => !/button:[A-Za-z0-9]|page:[A-Za-z0-9]{6}/.test(page) && /الصفحة الأولى/.test(page) && /زر صفحة/.test(page), () => `B-139. the twin's approval page names each text by what it is (in Arabic: FX1, changed on purpose from "Page button"), not by internal ids: ${(/النصوص العربية[\s\S]{0,400}/.exec(page) || [''])[0]}`);
   }
 
   // ---------- B-135: colours as swatches on the approval page ----------

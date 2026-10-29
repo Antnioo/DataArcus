@@ -67,9 +67,9 @@ const ND_COL = () => card('ndCol', pos(40, 250, 600, 430, 9500));            // 
 const ND_LINE = (extra) => card('ndLine', pos(660, 250, 580, 430, 12000), extra);   // above its chart, the same box
 const TTL_LINE = () => textbox('ttlLine', pos(676, 258, 240, 36, 13000));    // a title box inside the chart, above it
 const ov = project('ov', [ND_COL(), ND_LINE(), TTL_LINE()]);
-const neg = project('neg', [card('cardBeside', pos(660, 20, 200, 50, 500)), column2('chartIn', pos(100, 300, 200, 200, 9000)), shape('bgShape', pos(30, 240, 1220, 450, 100))]);
-const hid = project('hid', [ND_COL(), ND_LINE({ isHidden: true })]);
-const tbl = project('tbl', [Object.assign(textbox('panelTbl', pos(60, 120, 900, 940, 1500)), { page: 'p2details' })]);
+project('neg', [card('cardBeside', pos(660, 20, 200, 50, 500)), column2('chartIn', pos(100, 300, 200, 200, 9000)), shape('bgShape', pos(30, 240, 1220, 450, 100))]);
+project('hid', [ND_COL(), ND_LINE({ isHidden: true })]);
+project('tbl', [Object.assign(textbox('panelTbl', pos(60, 120, 900, 940, 1500)), { page: 'p2details' })]);
 const ORIG = path.join(ov, 'Twin Sales.Report'), OUT = path.join(ov, 'Twin Sales redesigned.Report');
 const MODEL = (n) => `${n}/Twin Sales.SemanticModel`, FROM = (n) => `${n}/Twin Sales.pbip`;
 
@@ -94,7 +94,9 @@ try {
   const P = {}; (R.patches || []).filter((x) => x.page === 'p1overview').forEach((x) => { (P[x.visual] = P[x.visual] || {})[x.pointer.split('/').pop()] = x.to; });
   const at = (v, o) => Object.assign({}, o, P[v] || {}), O = { colRegion: [40, 250, 600, 430], ndCol: [40, 250, 600, 430], lineMonth: [660, 250, 580, 430], ndLine: [660, 250, 580, 430], ttlLine: [676, 258, 240, 36] };
   const B = (v) => { const o = O[v], b = at(v, { x: o[0], y: o[1], width: o[2], height: o[3] }); return [b.x, b.y, b.width, b.height]; };
-  const want = { colRegion: [40, 248, 602, 432], ndCol: [40, 248, 602, 432], lineMonth: [658, 248, 582, 432], ndLine: [658, 248, 582, 432], ttlLine: [674, 256, 240, 36] };
+  // (0.3.1 RD1, changed on purpose: the row sits 16 below what stays above it, the group grpKpi ending at 230, so y 246
+  // (was 248: 18 from it), and keeps its own height 430 (was rounded up to 432); the title box follows, 254)
+  const want = { colRegion: [40, 246, 602, 430], ndCol: [40, 246, 602, 430], lineMonth: [658, 246, 582, 430], ndLine: [658, 246, 582, 430], ttlLine: [674, 254, 240, 36] };
   Object.entries(want).forEach(([v, b]) => chk(() => JSON.stringify(B(v)) === JSON.stringify(b), () => `O2. ${v} is planned at ${b.join(', ')}: ${B(v).join(', ')}`));
   // ---------- O3: no chart narrower without a why ----------
   const narrow = p1.changes.filter((c) => c.from && c.to && c.to.w < c.from.w && !c.narrower);

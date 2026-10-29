@@ -3,13 +3,8 @@
 // Written red first. Synthetic models only (shops, clinics, call desks, projects with ordinary names).
 // test.mjs runs it with its own client (import { v029q }); run alone it starts the server itself:
 //   node test-0.2.9q.mjs
-import fs0 from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import { serverClient } from './test-0.2.9.mjs';
-import { withPlans } from './test-plan.mjs';
 
 const req = createRequire(import.meta.url);
 

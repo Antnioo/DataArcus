@@ -11,76 +11,37 @@ import { visible, shownName } from './model.mjs';
 const require = createRequire(import.meta.url);
 const Memory = require('../../assets/js/confirm-memory.js');
 export const SCOPE = 'ar';
+// (0.3.1 E) DataArcus's own Arabic vocabulary: one term per concept (the sheet's `concepts` in the fixed list), and the
+// check of a text against it
+export { CONCEPTS, termHits } from './arabic-terms.mjs';
 
 // ---- bidi isolation (B-171 item 5) ----
-// Power BI draws a title as a left-to-right paragraph (DESKTOP-TESTS.md, round 13: a "…" after Arabic words went to the
-// reading start of the line). A Latin run between Arabic words is read in the right place, but one at either end of
-// the text, or one with signs inside it ("Q1/2024"), is not. Each Latin run (letters, with the digits and the signs
-// between them: "KPI 2024", "Q1/2024") inside Arabic text is wrapped in a first-strong isolate (U+2068 ... U+2069), and
-// a run at either end of the text gets a right-to-left mark (U+200F) beside it, so the reading order is mirrored, never
-// the run's own characters. Numbers alone and {n} placeholders are left as they are (they read right in Arabic text);
-// a text with no Arabic letter, or already isolated, is unchanged. The isolates come from the writer only: a name a
-// person gives with one is refused (display-names.mjs, writtenName).
-const ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/, ISOLATED = /[⁦-⁩]/;
-const RUN = /[A-Za-z0-9](?:[A-Za-z0-9_%]|[ .,'&+#/\-](?=[A-Za-z0-9]))*/g;
-const FSI = '⁨', PDI = '⁩', RLM = '‏';
-const runs = (t) => t.replace(RUN, (run) => (/[A-Za-z]/.test(run) ? FSI + run + PDI : run));
-const ends = (t) => t.replace(/^(\s*)\u2068/, `$1${RLM}${FSI}`).replace(/\u2069(\s*)$/, `${PDI}${RLM}$1`);
-export function isolateLatin(s) {
-  const t = String(s == null ? '' : s);
-  if (!ARABIC.test(t) || !/[A-Za-z]/.test(t) || ISOLATED.test(t)) return t;
-  return ends(runs(t));
-}
-// (the full run's test.mjs, e/h and P3-2: isolating every mixed text changed Arabic titles that keep a model name in
-// English, outside what a person approved: the owner decides that one) a text with an approved name in it: that name's
-// Latin runs isolated where the text holds it, and a right-to-left mark at an end the name's run reaches
-export function isolateNames(s, names) {
-  let t = String(s == null ? '' : s);
-  if (ISOLATED.test(t)) return t;
-  let hit = false;
-  for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
-  return hit ? ends(t) : t;
-}
+// (SQ15b, J18-S2) the rule is the shared engines' since 0.3.1, so the website's Arabic download isolates as the MCP's
+// report: isolateLatin and isolateNames in assets/js/text-measure.js, isolateFiles (a report's visible texts) in
+// assets/js/pbip-export.js, which isolates an Arabic build itself. Re-exported here for the MCP's callers.
+const TextMeasure = require('../../assets/js/text-measure.js'), Pbip = require('../../assets/js/pbip-export.js');
+// (0.3.1 BD2) isolateLatin is the measured rule (the isolates, the whole text in U+2067 ... U+2069); isolateRuns its inside
+export const { isolateLatin, isolateNames, isolateRuns } = TextMeasure;
+// (0.3.1 TB1, the laptop's part 4: «مقارنة بالشهر الماضي» beside its value read "7.34- ... %") an Arabic text Desktop
+// draws beside a value (a card's reference label, a KPI's goal text, a data label's title): the V3 rule's wrap,
+// RLI ... PDI, its Latin runs isolated (isolateLatin), a wholly Arabic one wrapped too, so the number keeps its order
+export const isolateBeside = (s) => { const t = isolateLatin(s); return TextMeasure.ARABIC.test(t) && !TextMeasure.wrapped(t) ? '\u2067' + t + '\u2069' : t; };
+export const { isolateFiles } = Pbip;
 // the text without the marks the writer adds (to compare a written text with the name a person approved)
 export const plain = (s) => String(s == null ? '' : s).replace(/[⁦-⁩‎‏]/g, '');
-
-// A report's visible texts with an approved name in them isolated (isolateNames), in its files ({ path, data }) as the writer built them: the formatting literals of
-// pages, visuals and phone layouts (titles, alt texts, text boxes, button texts and tooltips), text box runs, the
-// display names of projections, page and bookmark names, and the texts of the report's Text measures (their DAX string
-// literals). Never a filter's values, a measure's or visual's name, or anything else. Returns how many texts changed.
-const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
-function walkVisual(o, change) {
-  if (Array.isArray(o)) { o.forEach((x) => walkVisual(x, change)); return; }
-  if (!o || typeof o !== 'object') return;
-  for (const [k, v] of Object.entries(o)) {
-    if (k === 'filterConfig' || k === 'selector') continue;
-    if (k === 'properties' && v && typeof v === 'object' && !Array.isArray(v)) Object.values(v).forEach((p) => { const L = lit(p); if (L) { const raw = L.slice(1, -1).replace(/''/g, "'"), out = change(raw); if (out !== raw) p.expr.Literal.Value = "'" + out.replace(/'/g, "''") + "'"; } });
-    if (k === 'textRuns' && Array.isArray(v)) v.forEach((r) => { if (r && typeof r.value === 'string') { const out = change(r.value); if (out !== r.value) r.value = out; } });
-    if (k === 'projections' && Array.isArray(v)) v.forEach((p) => { if (p && typeof p.displayName === 'string') { const out = change(p.displayName); if (out !== p.displayName) p.displayName = out; } });
-    walkVisual(v, change);
-  }
-}
-const daxTexts = (expr, change) => String(expr).replace(/"((?:[^"]|"")*)"/g, (m, inner) => { const raw = inner.replace(/""/g, '"'), out = change(raw); return out === raw ? m : '"' + out.replace(/"/g, '""') + '"'; });
-// o.all (F1, the owner's decision of 20 Oct: the held-back line): EVERY mixed Arabic/Latin text isolated (isolateLatin),
-// a name kept in English inside an Arabic text too, page and tooltip tab names included (the proof: «تلميح · Month Short»
-// read with the English first)
-export function isolateFiles(files, names, o) {
-  // names: the approved Arabic names with a Latin run (the others need nothing), longest first
-  const list = [...new Set((names || []).map(String).filter((x) => ARABIC.test(x) && /[A-Za-z]/.test(x) && !ISOLATED.test(x)))].sort((a, b) => b.length - a.length);
-  const all = !!(o && o.all);
-  if (!list.length && !all) return 0;
-  let n = 0; const change = (s) => { const out = all ? isolateLatin(s) : isolateNames(s, list); if (out !== s) n++; return out; };
+// (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the page tab strip) an Arabic report's page and tooltip page
+// names that keep a Latin run, from its files ({ path, data }), with what the plan says about them
+export const TABS_LTR = 'Power BI lays page tabs out left to right whatever marks a name holds (measured in Desktop 2.159, 27 Oct)';
+export function pageNamesOf(files) {
+  const latin = [];
   for (const f of files || []) {
-    if (typeof f.data !== 'string' || !/\.Report\/.+\.json$/.test(String(f.path))) continue;
-    const p = String(f.path); let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
-    if (!j || typeof j !== 'object') continue;
-    const before = n;
-    if (/\/(page|visual|mobile)\.json$/.test(p)) { if (/\/page\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName); walkVisual(/\/page\.json$/.test(p) ? j.objects : j, change); }
-    else if (/\.bookmark\.json$/.test(p) && typeof j.displayName === 'string') j.displayName = change(j.displayName);
-    else if (/\/reportExtensions\.json$/.test(p) && Array.isArray(j.entities)) j.entities.forEach((e) => (e && Array.isArray(e.measures) ? e.measures : []).forEach((m) => { if (m && m.dataType === 'Text' && typeof m.expression === 'string') m.expression = daxTexts(m.expression, change); }));
-    if (n !== before) f.data = JSON.stringify(j, null, 2) + (/\n$/.test(f.data) ? '\n' : '');
+    if (typeof f.data !== 'string' || !/\.Report\/.+\/page\.json$/.test(String(f.path))) continue;
+    let j; try { j = JSON.parse(f.data); } catch (e) { continue; }
+    const name = plain(j && j.displayName);
+    if (TextMeasure.ARABIC.test(name) && /[A-Za-z]/.test(name)) latin.push({ page: name, tooltip: j.type === 'Tooltip' });
   }
-  return n;
+  return latin.length ? { latin, sayInPlan: `Say in the plan: ${latin.length === 1 ? 'this Arabic page name keeps' : 'these Arabic page names keep'} an English word (latin). ${TABS_LTR}, so on the tab the English word can read first; an Arabic word in its place reads right.` }
+    : { latin, note: `Every Arabic page and tooltip page name is in Arabic only: ${TABS_LTR}, so DataArcus keeps English words out of them.` };
 }
 
 // ---- where each field shows (B-171 item 1) ----
@@ -103,6 +64,7 @@ export function reportOf(files) {
   return { pages, ext: measuresOf(ext) };
 }
 export const measuresOf = (ext) => new Map((isObj(ext) && Array.isArray(ext.entities) ? ext.entities : []).flatMap((e) => (isObj(e) && Array.isArray(e.measures) ? e.measures : []).filter(isObj).map((m) => [e.name + '\u0000' + m.name, String(m.expression || '')])));
+const lit = (v) => (v && v.expr && v.expr.Literal && typeof v.expr.Literal.Value === 'string' && /^'.*'$/s.test(v.expr.Literal.Value) ? v.expr.Literal.Value : null);
 const litText = (v) => { const L = lit(v); return L ? L.slice(1, -1).replace(/''/g, "'") : null; };
 // the texts a container property shows: its literal, or the DAX texts of the report measure it names
 function shown(v, ext) {
@@ -117,13 +79,15 @@ const props = (vis, card, key) => { const es = isObj(vis) && isObj(vis.visualCon
  *  chart, tooltip, title, alt text), with the display names its projections carry (names: Set), every text a title or
  *  alt text of a visual showing it holds (texts), and the names it is said by: words (a Set of the field's English and
  *  written names, to find titles by). */
-export function placesOf(report) {
+// (0.3.1 TB1) own: the keys "<page id>/<visual>/<queryRef>" of a visual's own name for a field (the twin's fieldAt
+// texts): that projection is its own text, not one of the field's headers
+export function placesOf(report, own) {
   const out = new Map(), get = (k) => { if (!out.has(k)) out.set(k, { where: [], names: [], texts: [] }); return out.get(k); };
   for (const pg of report.pages || []) {
     for (const v of pg.visuals) {
       const vis = isObj(v.visual) ? v.visual : null; if (!vis || !isObj(vis.query)) continue;
       const keys = new Map();
-      const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && fieldKeyOf(p.field); if (k) { if (!keys.has(k)) keys.set(k, []); keys.get(k).push(typeof p.displayName === 'string' ? p.displayName : null); } }); Object.values(o).forEach(walk); };
+      const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && !(own && own.has(`${pg.id}/${v.name}/${p.queryRef}`)) && fieldKeyOf(p.field); if (k) { if (!keys.has(k)) keys.set(k, []); keys.get(k).push(typeof p.displayName === 'string' ? p.displayName : null); } }); Object.values(o).forEach(walk); };
       walk(vis.query);
       const titles = [].concat(...props(vis, 'title', 'text').map((x) => shown(x, report.ext))), alts = [].concat(...props(vis, 'general', 'altText').map((x) => shown(x, report.ext)));
       const place = (role) => ({ page: String(pg.name), visual: String(v.name), role });

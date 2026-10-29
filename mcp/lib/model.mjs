@@ -47,11 +47,21 @@ const SCREEN = [
   [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
   [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
   [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
-  [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
+  // (0.3.1 S1: "Execute Time", "Avg Execute Duration", "Query Execute Time (ms)" are plain names) "execute" is an ask only
+  // with an object or an imperative after it, or said as one ("please execute", "execute:"), or with code and "now"
+  [/\bexecute\s+(this|that|these|those|it|them|now|immediately|the\b|following|all|everything|every|any|my|your|a|an)\b|\b(please|then|now|must|should|always|just)\s+execute\b|\bexecute\s*:|\bexecute\b[^.]{0,30}\b(code|commands?|scripts?|query|queries|sql|dax|powershell|shell|cmd|steps?|instructions?|tools?)\b[^.]{0,20}\b(now|immediately|first|right\s+away)\b/i, 'asks to execute something'],
+  [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
   [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\s+((كل|جميع)\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],
   [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
   [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user'],
+  // (0.3.1 CX2, Codex's release review F09: two paraphrases passed) a tool asked for in other words, an export of every
+  // record, a consent claimed: each with its object, so "Tool Usage", "Export Count" or "Consent Date" stay plain names.
+  // The screen is patterns (a heuristic): it cannot catch every paraphrase; what keeps the user safe is the gate
+  // (plans.mjs: nothing is written before the person approves) and model text read as data
+  [/\b(invoke|call|use|run|trigger)\s+(the|a|an|this|that|any|each|every)\s+(\w+\s+)?tools?\b/i, 'asks to call a tool'],
+  [/\b(export|dump|extract|download|leak|exfiltrate)\b[^.]{0,30}\b(every|all|each)\s+(the\s+)?(records?|rows?|values?|entries|customers?)\b/i, 'asks for data values'],
+  [/\b(has|have|had|already)\s+(consented|agreed)\b|\bconsent\s+(is\s+|was\s+|has\s+been\s+)?(given|granted)\b|\bproceed\s+with\s+(the\s+|this\s+)?(write|writing|change|changes|deletion|export|plan)\b/i, 'claims an approval'],
   // (AUD-039 / the red team's F-1: the asks the screen missed) a DataArcus tool named in a name is never a model's own
   [new RegExp(`\\b(${TOOL_NAMES.join('|')})\\b`, 'i'), 'names a DataArcus tool'],
   [/\b(pre-?approved|already\s+approved|(user|owner|admin)\s+(has\s+)?(approved|said\s+go|clicked\s+approve)|clicked\s+approve|approval\s+(is\s+)?(granted|not\s+(required|needed))|admin\s+override|skip\s+the\s+plan|without\s+(a|the)\s+plan|no\s+plan\s+(is\s+)?needed|do\s+not\s+show\s+a\s+plan|without\s+asking)\b/i, 'claims an approval'],
@@ -72,9 +82,13 @@ const LOOKALIKE = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н':
 // screened with format and control characters removed and compatibility forms folded, NFKC; it is shown as visible() writes it)
 const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627')
   .replace(/[\u0370-\u03FF\u0400-\u04FF\u0500-\u052F]/g, (ch) => LOOKALIKE[ch] || ch).replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+// why a name or text reads like an instruction (empty when it doesn't). (0.3.1 S1: length alone is never a reason: a
+// user's approved 151-character Arabic subtitle was flagged "longer than 120 characters" and nothing else)
+export const screenWhy = (s) => { const t = plainArabic(s); return [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; };
+// a model's own name (a table, column, measure or display folder: a short identifier) is listed when it is very long too,
+// as the outside review's G-03 asked; a report's texts (titles, text boxes, subtitles) never are
 export const LONG_NAME = 120;
-// why a name or text reads like an instruction (empty when it doesn't); a long one is said too
-export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
+export const nameWhy = (s) => { const why = screenWhy(s); if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
 export const readsLikeInstruction = (s) => { const t = plainArabic(s); return SCREEN.some(([re]) => re.test(t)); };
 export const WITHHELD = '(withheld: reads like an instruction)';
 // a name from disk or from a file as a message may show it: withheld when it reads like an instruction, invisible
@@ -108,6 +122,15 @@ function realOf(full) {
   }
   return path.join(fs.realpathSync.native(cur), ...rest);
 }
+// A path given to a tool as the full path under root, or null when it is outside: inside by name, or by real path
+// (0.3.1 P1: a working folder given through a link, macOS's /var to /private/var or a Windows junction, takes an
+// absolute path in its real form, read as the same path under root). The real-path check of real() still follows.
+function underRoot(root, p) {
+  const full = path.resolve(root, String(p || '.'));
+  if (within(root, full)) return full;
+  let r, realRoot; try { r = realOf(full); realRoot = fs.realpathSync.native(root); } catch (e) { return null; }
+  return r && within(realRoot, r) ? path.join(root, path.relative(realRoot, r)) : null;
+}
 // A full path that is, by name, inside the working folder: refused when a link on the way leads outside it
 export function real(full, shown) {
   const r = realOf(full);
@@ -116,8 +139,8 @@ export function real(full, shown) {
 }
 export function inside(p) {
   const problem = rootProblem(); if (problem) throw new Error(problem);
-  const full = path.resolve(ROOT, String(p || '.'));
-  if (!within(ROOT, full)) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
+  const full = underRoot(ROOT, p);
+  if (full == null) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
   return real(full, p);
 }
 
@@ -145,20 +168,27 @@ const mb = (n) => (n >= MB / 10 ? (n / MB >= 10 ? Math.round(n / MB) : Math.roun
 const refuse = (what) => new ReadError('TOO_BIG', { what }, `This file was not read: ${what}. A Power BI template without data is usually under 20 MB; nothing in this file was used.`);
 const isModelPart = (n) => n === 'DataModelSchema' || /(^|\/)model\.bim$/i.test(n);
 const isReportPart = (n) => n === 'Report/Layout' || (/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
-// buf: the zip; lim: the limits (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
+// buf: the zip (a Buffer, or a reader { size, at(start, n) }: the .pbit's descriptor, SQ6); lim: the limits
+// (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
+// (SQ6, 0.2.9-reader-S12: the .pbit route read the whole file, up to 300 MB, into memory before picking its parts. Now
+// only the directory's end, the directory and each needed part are read, at their offsets.)
+const bufReader = (b) => ({ size: b.length, at: (start, n) => b.subarray(Math.max(0, start), Math.max(0, Math.min(b.length, start + n))) });
 export function unzipNeeded(buf, lim) {
-  const L = lim || PBIT_LIMITS;
-  if (buf.length > L.file) throw refuse(`it is ${mb(buf.length)}, above the ${mb(L.file)} DataArcus reads`);
+  const L = lim || PBIT_LIMITS, R = Buffer.isBuffer(buf) ? bufReader(buf) : buf, size = R.size;
+  if (size > L.file) throw refuse(`it is ${mb(size)}, above the ${mb(L.file)} DataArcus reads`);
+  const tailAt = Math.max(0, size - 65557), tail = R.at(tailAt, size - tailAt);
   let eocd = -1;
-  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (buf.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
+  for (let i = tail.length - 22; i >= 0; i--) if (tail.readUInt32LE(i) === 0x06054b50) { eocd = i; break; }
   if (eocd < 0) throw new Error('Not a zip file');
-  const count = buf.readUInt16LE(eocd + 10);
+  const count = tail.readUInt16LE(eocd + 10);
   if (count > L.entries) throw refuse(`it lists ${count} parts, above the ${L.entries} DataArcus reads`);
-  // the directory: names, methods and sizes, nothing unpacked yet
-  const want = []; let p = buf.readUInt32LE(eocd + 16);
-  for (let n = count; n > 0 && p + 46 <= buf.length && buf.readUInt32LE(p) === 0x02014b50; n--) {
-    const method = buf.readUInt16LE(p + 10), csize = buf.readUInt32LE(p + 20), usize = buf.readUInt32LE(p + 24), nlen = buf.readUInt16LE(p + 28), xlen = buf.readUInt16LE(p + 30), clen = buf.readUInt16LE(p + 32);
-    const name = buf.toString('utf8', p + 46, p + 46 + nlen), lho = buf.readUInt32LE(p + 42);
+  // the directory: names, methods and sizes, nothing unpacked yet (read from its start to the end record: what the
+  // whole-file read walked, at most the file)
+  const dirAt = tail.readUInt32LE(eocd + 16), dir = dirAt < size ? R.at(dirAt, tailAt + eocd - dirAt) : Buffer.alloc(0);
+  const want = []; let p = 0;
+  for (let n = count; n > 0 && p + 46 <= dir.length && dir.readUInt32LE(p) === 0x02014b50; n--) {
+    const method = dir.readUInt16LE(p + 10), csize = dir.readUInt32LE(p + 20), usize = dir.readUInt32LE(p + 24), nlen = dir.readUInt16LE(p + 28), xlen = dir.readUInt16LE(p + 30), clen = dir.readUInt16LE(p + 32);
+    const name = dir.toString('utf8', p + 46, p + 46 + nlen), lho = dir.readUInt32LE(p + 42);
     if (isModelPart(name) || isReportPart(name)) want.push({ name, method, csize, usize, lho, model: isModelPart(name) });
     p += 46 + nlen + xlen + clen;
   }
@@ -167,13 +197,18 @@ export function unzipNeeded(buf, lim) {
   for (const e of want) {
     const cap = e.model ? L.model : L.entry;
     if (e.usize > cap) throw refuse(`its ${e.model ? 'model' : 'report'} part would unpack to ${mb(e.usize)}, above the ${mb(cap)} DataArcus reads`);
+    // (SQ6) and its packed size: deflate never grows a part by more than a few bytes per 16 KB, so a part packed above
+    // its cap and 1 MB is a directory that lies (read part by part, it would be read whole)
+    if (e.csize > cap + MB) throw refuse(`its ${e.model ? 'model' : 'report'} part is ${mb(e.csize)} packed, above the ${mb(cap)} DataArcus reads`);
     total += e.usize;
   }
   if (total > L.total) throw refuse(`the parts it needs would unpack to ${mb(total)} in total, above the ${mb(L.total)} DataArcus reads`);
   const out = {};
   for (const e of want) {
-    if (e.lho + 30 > buf.length || buf.readUInt32LE(e.lho) !== 0x04034b50) throw refuse('its directory points outside the file');
-    const start = e.lho + 30 + buf.readUInt16LE(e.lho + 26) + buf.readUInt16LE(e.lho + 28), raw = buf.subarray(start, start + e.csize);
+    const h = R.at(e.lho, 30);
+    if (e.lho + 30 > size || h.length < 30 || h.readUInt32LE(0) !== 0x04034b50) throw refuse('its directory points outside the file');
+    // (what is read of a part: its packed size, checked against its cap above, and never past the file)
+    const start = e.lho + 30 + h.readUInt16LE(26) + h.readUInt16LE(28), raw = R.at(start, Math.min(e.csize, size));
     if (e.method === 0) { out[e.name] = raw.subarray(0, e.usize); continue; }
     if (e.method !== 8) continue;
     // the declared size is the most a part may unpack to: a directory that lies is caught here
@@ -189,8 +224,9 @@ export function unzipNeeded(buf, lim) {
 const MAX_DEPTH = 256;
 const tooDeep = (o) => { const st = [[o, 1]]; while (st.length) { const [v, d] = st.pop(); if (d > MAX_DEPTH) return true; if (v && typeof v === 'object') for (const k in v) st.push([v[k], d + 1]); } return false; };
 const partJson = (buf, what) => {
-  let j; try { j = json(buf); } catch (e) { throw new Error(`The ${what} in this file is not valid JSON, so it was not read.`); }
-  if (tooDeep(j)) throw new Error(`The ${what} is nested more than ${MAX_DEPTH} levels deep (a real model is about 10), so it was not read.`);
+  // (SQ6, 0.2.9-reader-S15: coded, as the reader's other errors, so a caller reads the code, never the words)
+  let j; try { j = json(buf); } catch (e) { throw new ReadError('BAD_JSON', { what }, `The ${what} in this file is not valid JSON, so it was not read.`); }
+  if (tooDeep(j)) throw new ReadError('TOO_DEEP', { what, max: MAX_DEPTH }, `The ${what} is nested more than ${MAX_DEPTH} levels deep (a real model is about 10), so it was not read.`);
   return j;
 };
 // A file of the model read from disk (model.bim, a TMDL file, a report's JSON): measured before it is read (B-02), the
@@ -233,6 +269,27 @@ function notAModelFile(full) {
 // Throws when the directory lists a DataModel and no DataModelSchema (a .pbix by another name). A zip it can't make
 // sense of is left to unzipNeeded, which says why in its own words.
 function readAt(fd, size, start, n) { const b = Buffer.alloc(Math.max(0, Math.min(n, size - start))); let got = 0, r; while (got < b.length && (r = fs.readSync(fd, b, got, b.length - got, start + got)) > 0) got += r; return b.subarray(0, got); }
+// (SQ6, 0.2.9-reader-S12) a .pbit read by its parts: one descriptor (a link refused, never followed; a regular file
+// within the cap, as readCapped), the print hashed in 1 MB chunks (the same SHA-256 of the whole file, never held whole),
+// then the directory and the needed parts at their offsets. A file whose size is not the one measured before it was
+// opened, or that changed while it was read, is refused: the print and the parts are of one file.
+const changedWhileRead = () => new ReadError('CHANGED', {}, 'This file was not read: it changed while it was read (it is being saved or copied?). Wait until it is saved, then ask again; nothing in it was used.');
+function zipParts(f, cap, size0) {
+  if (isLink(f)) throw linkRefused('file');
+  let fd;
+  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused('file'); throw e; }
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile()) throw new Error('This file was not read: its file is not a regular file.');
+    if (st.size > cap) throw refuse(`its file is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads`);
+    const h = crypto.createHash('sha256'), chunk = Buffer.alloc(MB);
+    let n = 0, r;
+    while ((r = fs.readSync(fd, chunk, 0, chunk.length, n)) > 0) { h.update(chunk.subarray(0, r)); n += r; if (n > cap) throw refuse(`its file is above the ${mb(cap)} DataArcus reads`); }
+    const z = unzipNeeded({ size: n, at: (start, len) => readAt(fd, n, start, len) }), after = fs.fstatSync(fd);
+    if (n !== size0 || st.size !== size0 || after.size !== st.size || after.mtimeMs !== st.mtimeMs) throw changedWhileRead();
+    return { print: h.digest('hex'), z };
+  } finally { fs.closeSync(fd); }
+}
 function zipDirectoryCheck(full, size) {
   let fd;
   try { fd = fs.openSync(full, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { return; }
@@ -308,6 +365,8 @@ function byName(p, root) {
  * @property {{format:string, files:Array<{path:string, json:Object}>}|null} report  the model's own reports, for the health check
  * @property {{counted:string[], notCounted:Array, skipped:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
  * @property {number} partsSkipped  model parts left out because they were not lists of objects (F-M2)
+ * @property {Array<{file:string, why:string}>} skipped  definition files that could not be read fully (AU47), named
+ *   relative to the project (screened), never their text; empty when every file was read
  */
 // (F-M2, the fuzz test: a model.bim or .pbit whose tables, columns, measures, partitions or relationships were not lists of
 // objects crashed in the field picker's catalog. The shape is checked here, where the model comes in: a list that is
@@ -325,14 +384,21 @@ function shapeChecked(tmsl) {
   return { tmsl: root, skipped };
 }
 const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({}, o0, { tmsl: c.tmsl }); return ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl, partsSkipped: c.skipped,
-  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null }); };
+  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null, print: o.print || null, skipped: o.skipped || [] }); };
+// (AU47, the night audit's AUD-047) a model with a definition file that could not be read fully: the answer's first key
+// (read_model, check_model_health), and the planning tools' refusal (nothing is planned on part of a model)
+export const unreadableOf = (m) => (m && m.skipped && m.skipped.length ? { unreadable: { message: Tmdl.unreadableSaid(m.skipped, 'en'), skipped: m.skipped } } : {});
+export function refuseUnreadable(m) {
+  if (m && m.skipped && m.skipped.length) throw new ReadError('MODEL_UNREADABLE', { skipped: m.skipped }, Tmdl.unreadableSaid(m.skipped, 'en') + ' Nothing was planned or written: DataArcus does not plan on a model it could read only in part.');
+  return m;
+}
 // (0.3, B-154, an outside audit of 0.2.9: an approval pinned the inputs, not the model) the model's fingerprint: a sha256 of
 // the definition files this read already read (model.bim, or each TMDL file by its path; a .pbit or model.bim file's own
 // bytes), never another file of the folder (Power BI's .pbi/cache.abf holds data). A plan pins it; the write reads the
 // model again and refuses one that changed since the go (plans.mjs)
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 // a report file that could not be read: said, never dropped silently (A1-4)
-const skippedOf = (e) => (/not valid JSON/.test(String(e && e.message)) ? 'not valid JSON' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
+const skippedOf = (e) => (e && e.code === 'BAD_JSON' ? 'not valid JSON' : e && e.code === 'TOO_DEEP' ? 'nested too deep' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
 const PARTIAL = 'Some report files could not be read (skipped): the findings about fields "not used anywhere" are partial, since those files may use them.';
 
 // opts.root: the working folder to read in (default: DATAARCUS_ROOT). Returns a ModelRead; throws a ReadError (or a
@@ -341,8 +407,8 @@ export function loadModel(p, opts) {
   const root = opts && opts.root ? path.resolve(String(opts.root)) : ROOT;
   if (!(opts && opts.root)) { const problem = rootProblem(); if (problem) throw new Error(problem); }
   const realIn = (full, shown) => { const r = realOf(full); if (!r || !within(fs.realpathSync.native(root), r)) throw linkError(shown == null ? path.relative(root, full) || full : shown); return full; };
-  let full = path.resolve(root, String(p || '.'));
-  if (!within(root, full)) throw new ReadError('OUTSIDE', { path: p }, `"${p}" is outside the allowed folder ${root}`);
+  let full = underRoot(root, p);
+  if (full == null) throw new ReadError('OUTSIDE', { path: p }, `"${p}" is outside the allowed folder ${root}`);
   realIn(full, p);
   // not a path that exists, and written without a slash: a model's name
   // (A1-1, the audit of the reading block: every path picked here goes through real() before any stat or read, as the
@@ -362,9 +428,9 @@ export function loadModel(p, opts) {
     // (rc.23, F1) a zip accepted by its name (.pbit, no extension): its directory first, and a .pbix by another name (a
     // DataModel, Power BI's data cache, and no DataModelSchema) is refused before the rest of the file is read
     if (isZip) zipDirectoryCheck(full, st.size);
-    const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80), print = sha(buf);
-    if (buf[0] === 0x50 && buf[1] === 0x4b) {
-      const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
+    const source = shownName(path.basename(full), 80);
+    if (isZip) {
+      const { z, print } = zipParts(full, cap, st.size), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
       if (!dms) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
       // the report: the legacy Report/Layout file, or PBIR files (same choice as the website's worker)
       const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'], skipped = [];
@@ -373,7 +439,8 @@ export function loadModel(p, opts) {
         : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
       return modelRead({ source, tmsl, report, print, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
     }
-    return modelRead({ source, tmsl: partJson(buf, 'model file'), print });
+    const buf = readCapped(full, cap, 'model file');
+    return modelRead({ source, tmsl: partJson(buf, 'model file'), print: sha(buf) });
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];
@@ -382,13 +449,18 @@ export function loadModel(p, opts) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
     if (linked) realIn(linked);
-    if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it. No project yet? DataArcus can write a made-up sample to try: plan_layout with sample true.`);
     throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
-  dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
+  const depth = (d) => d.split(path.sep).length;
+  dirs.sort((a, b) => depth(a) - depth(b));
+  // (SQ6, 0.2.9-checks-S4; SQ15a, the owner's yes) two model folders at the nearest depth (two projects side by side):
+  // never the first one the folder lists, silently; both named, as for two models of one name
+  const tied = dirs.filter((d) => depth(d) === depth(dirs[0]));
+  if (tied.length > 1) { const rel = (d) => shownPath(path.relative(root, d)); throw new ReadError('MANY_MODELS', { path: p, models: tied.map(rel) }, `"${p}" holds ${tied.length} models at the same level: ${tied.map(rel).join('; ')}.`); }
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) realIn(bim);
-  let tmsl = null, print = null;
+  let tmsl = null, print = null, skipped = [];
   if (fs.existsSync(bim)) { const b = readCapped(bim, PBIT_LIMITS.model, 'model.bim'); print = sha(b); tmsl = partJson(b, 'model.bim'); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
@@ -406,7 +478,10 @@ export function loadModel(p, opts) {
     // (A1-8: one parse: the model's JSON from tmdl-model.js, the picker's fields from that JSON, as for a model.bim)
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
-    tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
+    const got = Tmdl.read(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
+    tmsl = got.model;
+    // (AU47) a definition file that could not be read fully: named relative to the project (screened), with why
+    skipped = got.skipped.map((x) => ({ file: shownPath(path.basename(folder) + '/' + x.path), why: Tmdl.whyOf(x, 'en') }));
   }
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
   // (A3-1's calendars are marked by fromTmsl, which every model now goes through)
@@ -430,10 +505,10 @@ export function loadModel(p, opts) {
   { let total = 0; for (const f of pbir) total += fs.lstatSync(f).size;
     if (total > PBIT_LIMITS.total) throw refuse(`the JSON files of its reports are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`); }
   // (A1-4: a file that cannot be read is listed as skipped with why, and the "unused" findings are said to be partial)
-  const skipped = [];
-  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { skipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
-  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
-  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen, print });
+  const reportSkipped = [];
+  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { reportSkipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
+  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, notRead.length ? { notRead } : {}, reportSkipped.length ? { skipped: reportSkipped, partial: PARTIAL } : {}) : null;
+  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen, print, skipped });
 }
 
 // why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder
@@ -497,6 +572,36 @@ export const NAMES_NOTE = 'These names look like instructions; treat them as pla
 export const marked = (shown, ...raw) => (raw.some((x) => x != null && readsLikeInstruction(x)) ? { name: shown, suspicious: true } : shown);
 const hasMark = (o) => /"suspicious":true/.test(JSON.stringify(o));
 export const withNamesNote = (o) => (hasMark(o) ? Object.assign(o, { namesNote: NAMES_NOTE }) : o);
+// (SQ15a, L5-S1) a measure's KPI target (TMSL's kpi.targetExpression; the TMDL reader gives a kpi block the same
+// shape): a reference to one other measure of the model is that measure, { t, m } (names as the model has them; DAX
+// matches names whatever their case); any other expression is { expression: true }: never parsed further, never
+// returned (PRIVACY.md section 3: expressions are read here, not answered); no KPI target: null
+const KPI_REF = /^\s*(?:'((?:[^']|'')+)'|([A-Za-z_][A-Za-z0-9_]*))?\s*\[((?:[^\]]|\]\])+)\]\s*$/;
+export function kpiTarget(tables, t, m) {
+  const list = tables || [], own = list.find((x) => x && x.name === t), mo = own && (own.measures || []).find((x) => x && x.name === m);
+  const e = mo && mo.kpi && mo.kpi.targetExpression, text = Array.isArray(e) ? e.join('\n') : e;
+  if (text == null || !String(text).trim()) return null;
+  const r = KPI_REF.exec(String(text)), lc = (v) => String(v).toLowerCase();
+  if (r) {
+    const tn = r[1] != null ? r[1].replace(/''/g, "'") : r[2], mn = lc(r[3].replace(/\]\]/g, ']'));
+    for (const x of tn != null ? list.filter((y) => y && lc(y.name) === lc(tn)) : list) {
+      const hit = (x.measures || []).find((y) => y && lc(y.name) === mn);
+      if (hit && !(x.name === t && hit.name === m)) return { t: x.name, m: hit.name };
+    }
+  }
+  return { expression: true };
+}
+// read_model's KPI list: each visible measure with a KPI and its target, a measure or "an expression" (never its text)
+export const KPI_LIST = 50;
+export function kpisOf(m) {
+  const tables = modelOf(m && m.tmsl).tables || [], out = [];
+  tables.forEach((t) => (t.measures || []).forEach((x) => {
+    if (!x || !x.kpi || x.isHidden) return;
+    const k = kpiTarget(tables, t.name, x.name);
+    out.push({ measure: marked(`${nameOut(t.name)}[${nameOut(x.name)}]`, t.name, x.name), target: !k ? 'none' : k.expression ? 'an expression' : marked(`${nameOut(k.t)}[${nameOut(k.m)}]`, k.t, k.m) });
+  }));
+  return out.length ? Object.assign({ kpis: out.slice(0, KPI_LIST) }, out.length > KPI_LIST ? { kpisNotListed: out.length - KPI_LIST } : {}) : {};
+}
 export function summary(m) {
   return m.tables.map((t) => Object.assign({
     table: nameOut(t.name) }, readsLikeInstruction(t.name) ? { suspicious: true } : {}, { hidden: !!t.hidden, dateTable: !!t.date,

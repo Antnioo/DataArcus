@@ -14,7 +14,7 @@
 
   <title>DataArcus لـ Power BI: نسخة تجريبية عامة</title>
   <meta name="description" content="وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية عامة لنظام Windows.">
-  <meta name="author" content="داتا أركوس">
+  <meta name="author" content="DataArcus">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="DataArcus لـ Power BI: نسخة تجريبية عامة">
@@ -77,7 +77,7 @@
     .beta-tree { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 1rem 1.25rem; color: #cbd5e1; font-size: .9rem; overflow-x: auto; }
     .beta-steps li { margin-bottom: .75rem; }
   </style>
-</head>
+<meta name="keywords" content="داتا أركوس, DataArcus, Power BI"></head>
 <body class="rtl">
 
   <div class="interactive-bg" id="interactiveBg"></div>
@@ -124,18 +124,34 @@
             <article class="article-body">
               <p class="small text-white-50 mt-4" data-i18n-html="beta.hero.ga">Microsoft: <em>"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available."</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href="https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing" class="text-accent" target="_blank" rel="noopener">Microsoft Learn</a>)</p>
 
+              <!-- RELEASE 0.3.1: at the release remove "hidden" below, set beta.new31.date (EN and AR, assets/js/translations/beta-page.js) to the release day and change the download to 0.3.1; scripts/test-whats-new.mjs checks the three agree -->
+              <section id="new-031" hidden="">
+                <h2 class="mt-5 mb-3" data-i18n="beta.new31.title">الجديد في الإصدار 0.3.1</h2>
+                <p class="small text-white-50" data-i18n="beta.new31.date">صدر في [يوم الإصدار].</p>
+                <ul class="beta-steps">
+                  <li data-i18n-html="beta.new31.l1"><strong>جرّبه دون نموذج خاص بك.</strong> اطلب: «أرني ما يستطيع DataArcus فعله»، وبعد موافقتك يكتب في مجلد جديد مشروعًا تجريبيًا لسلسلة متاجر خليجية (نموذج فيه بيانات مبيعات تجريبية لـ 18 شهرًا، وجدول التاريخ، وتقرير فارغ)، ثم يقترح عليك أربع خطوات تالية عليه.</li>
+                  <li data-i18n-html="beta.new31.l2"><strong>هل تقريرك جاهز للعربية؟</strong> تقرأ <code translate="no">check_report</code> بعدستها العربية أي تقرير، أيًّا كان من بناه، وتقول صفحةً صفحة ما يُقرأ خطأً بالعربية. ومع كل ملاحظة علاجها: طلب من DataArcus توافق عليه، أو إعداد تغيّره في Power BI Desktop، أو بيان واضح بأن Power BI لا يوفّر إعدادًا لذلك. وهي تقرأ فقط.</li>
+                  <li data-i18n-html="beta.new31.l3"><strong>تقرير واحد بالإنجليزية والعربية من الخطة مباشرة.</strong> اطلب تقريرًا واحدًا باللغتين: تبني الخطة الصفحات الإنجليزية ولكل صفحة صفحتها العربية معكوسة، مع زر للغة في كل صفحة، ويبقى كل زوج من المقسمات (Slicers) متزامنًا. وتوافق أنت أولًا على النصوص العربية وأسماء الحقول.</li>
+                  <li data-i18n-html="beta.new31.l4"><strong>شاهد الصفحات العربية قبل أن توافق.</strong> صارت صفحة الموافقة للنسخة العربية ولنسخة EN-AR ترسم الصفحات العربية كما ستُكتب، وفي نسخة EN-AR كل صفحة إنجليزية بجانب صفحتها العربية: حتى 12 صفحة أو 12 زوجًا من الصفحات (ويُذكر عدد الباقي، ولا تُرسم صفحات التلميح (Tooltip)). والعنوان الذي لن يتسع له إطاره يُعلَّم لتراجعه، وإذا تعذّر رسم الصفحات قالت صفحة الموافقة ذلك.</li>
+                  <li data-i18n-html="beta.new31.l5"><strong>نسخة EN-AR أفضل.</strong> في تقرير بلا أزرار للصفحات صارت أزرار اللغة تُظهر نصوصها؛ ويتنقل لوح المفاتيح في الصفحات العربية من اليمين إلى اليسار؛ ويُوسَّع العنوان العربي الذي يحتاج مساحة أكبر في المكان الفارغ، ولم يعد العنوان العربي والعنوان الفرعي يُرسمان كبطاقتين بإطار؛ وتبقى مقسمات الأزرار متزامنة بين اللغتين. وصار التقرير العربي المكتوب من البداية والنسخة العربية من تقرير إنجليزي يعكسان مخططاتهما بالقواعد المشتركة نفسها، وصار الفحص يحكم على كل صفحة في التقرير ذي اللغتين بلغتها هي.</li>
+                  <li data-i18n-html="beta.new31.l7"><strong>كلمة عربية واحدة لكل مفهوم.</strong> تكتب التقارير وصفحة الموافقة وفحوص الصحة وهذا الموقع اسم DataArcus بالحروف اللاتينية، وتستخدم المصطلح العربي نفسه لكل مفهوم من مفاهيم Power BI وأدواتنا.</li>
+                  <li data-i18n-html="beta.new31.l8"><strong>فحص الأسماء بحثًا عن التعليمات.</strong> يفحص DataArcus الأسماء في النموذج أو المجلد بأنماط محددة: الاسم الذي يطلب من الذكاء الاصطناعي استدعاء أداة، أو يدّعي أنك وافقت، أو يطلب قيم بياناتك، يُعلَّم، حتى لو كُتب بحروف متشابهة. هذا الفحص تقديري وقد يفوته طلب مكتوب بصياغة أخرى؛ ويتعامل DataArcus مع كل اسم على أنه بيانات، ومهما فعل تطبيق الذكاء الاصطناعي فلا يُكتب شيء قبل موافقتك. ولم تعد الأسماء العادية مثل "Execute Time" تُخفى.</li>
+                  <li data-i18n-html="beta.new31.l9"><strong>الشكل الزجاجي افتراضيًا.</strong> تبدأ التقارير الجديدة التي يخطط لها DataArcus والسمات الجديدة ببطاقات شفافة فوق صورة صفحة ناعمة مصنوعة من ألوان سمتك، حيث تبقى كل النصوص مقروءة فقط (وتقول الخطة متى لا يمكن ذلك ولماذا). أما الصفحات التي تضعها بنفسك فتأخذ السمة التي تعطيها دون صورة الصفحة، والسمة المستخدمة وحدها تحمل الصورة خلفيةً لصفحاتها، ولم نقس بعد هل يرسمها Power BI Desktop. والشكل العادي على بُعد طلب واحد؛ والتقرير الموجود لديك يحتفظ بشكله.</li>
+                </ul>
+              </section>
+
               <section id="new">
                 <h2 class="mt-5 mb-3" data-i18n="beta.new.title">الجديد في الإصدار 0.3.0</h2>
                 <p data-i18n="beta.new.version">ما يضيفه الإصدار 0.3.0:</p>
                 <ul class="beta-steps">
-                  <li data-i18n-html="beta.new.l1"><strong>تقارير عربية بلا عناوين إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات والنصوص البديلة وتخطيط الهاتف. وقبل موافقتك تذكر الخطة كل حقل يبقى بالإنجليزية وسبب بقائه.</li>
-                  <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس مقسّم وتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
+                  <li data-i18n-html="beta.new.l1"><strong>عناوين عربية في التقارير العربية، حتى من نموذج بأسماء إنجليزية.</strong> التقرير العربي المبني على نموذج بأسماء إنجليزية، والنسخة العربية من تقرير موجود، تظهر فيهما بالعربية العناوين ورؤوس الجداول والتلميحات والنصوص البديلة وتخطيط الهاتف. وكل ما يبقى بالإنجليزية تذكره الخطة، مع السبب، قبل موافقتك.</li>
+                  <li data-i18n-html="beta.new.l2"><strong>قائمة مصطلحات عربية.</strong> لكل حقل اسم عربي واحد توافق عليه أنت، يُكتب في كل عنوان ورأس جدول ورأس المقسم والتلميح ونص بديل. وتعرض صفحة الموافقة القائمة جنبًا إلى جنب: الإنجليزية والعربية.</li>
                   <li data-i18n-html="beta.new.l3"><strong>تقرير واحد باللغتين.</strong> تستطيع <code translate="no">create_arabic_twin</code> أن تكتب نسخة باسم "(EN-AR)" فيها الصفحات الإنجليزية وما يقابلها بالعربية، وزر للتبديل بين اللغتين في كل صفحة يتسع له رأسها (وعلى الهاتف أيضًا حين يتسع له)، وتذكر الخطة كل صفحة تبقى دونه. ويبقى تقريرك الأصلي كما هو.</li>
                   <li data-i18n-html="beta.new.l4"><strong>مخطط الشلال والمخطط المركّب والمخططات المتعددة الصغيرة.</strong> عناصر Power BI المرئية نفسها (waterfall وcombo وsmall multiples)، حين تطلبها وتناسبها الحقول. وفي التقرير العربي يُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI، وتبقى بقية الصفحة معكوسة.</li>
-                  <li data-i18n-html="beta.new.l5"><strong>صفحة موافقة تستطيع مراجعتها.</strong> تعرض المعاينة كل عنوان كما سيُكتب في التقرير، وتعلّم العنوان بأنه مقطوع حيث تقول القاعدة التي قيست في Power BI Desktop إن Desktop يقطعه، وترسم كل مقسّم مع رأسه. وتسرد الصفحة كل ملف ستكتبه الخطة، مجمّعًا ومعدودًا.</li>
-                  <li data-i18n-html="beta.new.l6"><strong>أشكال أكثر تختارها في الخطة.</strong> خطوط منحنية بنقطة عند كل قيمة، ومقسّمات بأزرار مستديرة (لحقل له من 2 إلى 6 قيم)، وخطوط شبكة منقّطة أو بلا خطوط، وبطاقات تنقلب، وأيقونات حالة تختلف في الشكل لا في اللون وحده، وصفحة تبدّل بين 2 إلى 5 مقاييس. البطاقات المنقلبة ومبدّل المقاييس وأيقونات الحالة المبنية على هدف تأتي مع نص برمجي للنموذج تطبّقه أنت في TMDL view: لا يغيّر DataArcus نموذجك.</li>
-                  <li data-i18n-html="beta.new.l7"><strong>التواريخ والوحدات تُسأل ولا تُخمَّن.</strong> يسألك أي تاريخ يعتمد عليه التقرير (تاريخ الطلب أو تاريخ الشحن أو غيرهما)، وبأي تقويم (ميلادي أو هجري)، وفي صفحة رمضان أو العيد: سنة هجرية واحدة أم كل المواسم. ولا يتشارك مقياسان بوحدتين مختلفتين محورًا واحدًا، كالريال السعودي والدرهم أو النسبة والعدد: لكل منهما عنصر مرئي خاص به.</li>
-                  <li data-i18n-html="beta.new.l8"><strong>تحديث Power BI لشهر أكتوبر 2026.</strong> تفحص <code translate="no">check_report</code> التقارير وفق مخططات تقارير Microsoft لشهر سبتمبر 2026 وكتالوج العناصر المرئية الصادر في 19 أكتوبر.</li>
+                  <li data-i18n-html="beta.new.l5"><strong>صفحة موافقة تستطيع مراجعتها.</strong> تعرض المعاينة كل عنوان كما سيُكتب في التقرير، وتعلّم العنوان بأنه مقطوع حيث تقول القاعدة التي قيست في Power BI Desktop إن Desktop يقطعه، وترسم كل مقسم مع رأسه. وتسرد الصفحة كل ملف ستكتبه الخطة، مجمّعًا ومعدودًا.</li>
+                  <li data-i18n-html="beta.new.l6"><strong>أشكال أكثر تختارها في الخطة.</strong> خطوط منحنية بنقطة عند كل قيمة، ومقسمات بأزرار مستديرة (لحقل له من 2 إلى 6 قيم)، وخطوط شبكة منقّطة أو بلا خطوط، وبطاقات تنقلب، وأيقونات حالة تختلف في الشكل لا في اللون وحده، وصفحة تبدّل بين 2 إلى 5 مقاييس. البطاقات المنقلبة ومبدّل المقاييس وأيقونات الحالة المبنية على هدف تأتي مع نص برمجي للنموذج تطبّقه أنت في TMDL view: لا يغيّر DataArcus نموذجك.</li>
+                  <li data-i18n-html="beta.new.l7"><strong>التواريخ والوحدات تُسأل ولا تُخمَّن.</strong> يسألك أي تاريخ يعتمد عليه التقرير (تاريخ الطلب أو تاريخ الشحن أو غيرهما)، وبأي تقويم (ميلادي أو هجري)، وفي صفحة رمضان أو العيد: سنة هجرية واحدة أم كل المواسم. ولا يتشارك مقياسان بوحدتين مختلفتين محورًا واحدًا، كالريال السعودي والدرهم أو النسبة والعدد: لكل منهما مرئي خاص به.</li>
+                  <li data-i18n-html="beta.new.l8"><strong>تحديث Power BI لشهر أكتوبر 2026.</strong> تفحص <code translate="no">check_report</code> التقارير وفق مخططات تقارير Microsoft لشهر سبتمبر 2026 وكتالوج المرئيات الصادر في 19 أكتوبر.</li>
                 </ul>
                 <h3 class="h5 mt-4 mb-3" data-i18n="beta.new.try">جرّب هذه أولًا</h3>
                 <ol class="beta-steps">
@@ -150,26 +166,27 @@
               <ol class="beta-steps">
                 <li data-i18n-html="beta.how.s1"><strong>احفظ التقرير كمشروع.</strong> في Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).</li>
                 <li data-i18n-html="beta.how.s2"><strong>اطلب من Claude.</strong> مثلًا: "اقرأ النموذج في مجلد Sales واقترح تقريرًا".</li>
-                <li data-i18n-html="beta.how.s3"><strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك.</li>
+                <li data-i18n-html="beta.how.s3"><strong>راجع الخطة ووافق عليها.</strong> تفتح نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه؛ ولا يُكتب شيء من التقرير قبل موافقتك.</li>
+                <li data-i18n-html="beta.how.s4"><strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك.</li>
               </ol>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.tools.title">الأدوات: 11 أداة</h2>
               <ul class="list-unstyled">
                 <li class="mb-2"><code translate="no">read_model</code>: <span data-i18n="beta.tools.read_model">تقرأ الجداول، والأعمدة بأنواعها، والمقاييس بتنسيقاتها، وجداول التاريخ. لا تغيّر شيئًا.</span></li>
-                <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسّم.</span></li>
+                <li class="mb-2"><code translate="no">suggest_fields</code>: <span data-i18n="beta.tools.suggest_fields">تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسم.</span></li>
                 <li class="mb-2"><code translate="no">check_model_health</code>: <span data-i18n="beta.tools.check_model_health">فحص صحة النموذج: درجة وكل ملاحظة، مع نصوص إصلاح تراجعها أنت (لا تُطبَّق أبدًا).</span></li>
-                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">الموضع الدقيق لكل عنصر مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار (ويُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI). لا تكتب شيئًا.</span></li>
+                <li class="mb-2"><code translate="no">plan_layout</code>: <span data-i18n="beta.tools.plan_layout">الموضع الدقيق لكل مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار (ويُقرأ مخطط الشلال من اليسار إلى اليمين كما يرسمه Power BI). لا تكتب شيئًا. ابتداءً من الإصدار 0.3.1: تقرير واحد بالإنجليزية والعربية، ومشروع ببيانات تجريبية لتجربة DataArcus دون نموذج خاص بك.</span></li>
                 <li class="mb-2"><code translate="no">approve_plan</code>: <span data-i18n="beta.tools.approve_plan">تطلب موافقتك في نافذة الموافقة من DataArcus في متصفحك، وفيها الخطة وكل ملف ستكتبه (وفي تطبيق له نافذة موافقة خاصة به تسألك تلك النافذة بدلًا منها): لا تكتب أي أداة إلا بعد موافقتك، ولا تكتب أي أداة ملفًا في مجلدك دون خطة موافَق عليها. (يمكن لبرنامج يعمل على جهازك ويتحكم في المتصفح أو الفأرة أن ينقر عليها: راجع ملاحظات الخصوصية.)</span></li>
-                <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">تقرير جديد بجانب نموذجك، كل عنصر مرئي في مكانه ومربوط بحقولك.</span></li>
-                <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا.</span></li>
-                <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">تقرأ تقريرًا موجودًا لديك، سطرًا لكل عنصر مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.</span></li>
+                <li class="mb-2"><code translate="no">create_report</code>: <span data-i18n="beta.tools.create_report">تقرير جديد بجانب نموذجك، كل مرئي في مكانه ومربوط بحقولك.</span></li>
+                <li class="mb-2"><code translate="no">check_report</code>: <span data-i18n="beta.tools.check_report">تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا. ابتداءً من الإصدار 0.3.1، تقول عدستها العربية صفحةً صفحة هل التقرير جاهز للعربية، مع علاج كل ملاحظة.</span></li>
+                <li class="mb-2"><code translate="no">read_report</code>: <span data-i18n="beta.tools.read_report">تقرأ تقريرًا موجودًا لديك، سطرًا لكل مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.</span></li>
                 <li class="mb-2"><code translate="no">create_arabic_twin</code>: <span data-i18n="beta.tools.create_arabic_twin">نسخة عربية من تقرير موجود، من اليمين إلى اليسار، بجانبه، بنصوص عربية توافق عليها أنت؛ أو نسخة واحدة فيها الصفحات الإنجليزية والعربية مع زر للتبديل بينهما. لا يتغيّر التقرير الأصلي أبدًا.</span></li>
                 <li class="mb-2"><code translate="no">generate_theme</code>: <span data-i18n="beta.tools.generate_theme">سمة لتقارير Power BI، تمامًا كما يصنعها مولّد السمات من DataArcus.</span></li>
                 <li class="mb-2"><code translate="no">add_gulf_calendar</code>: <span data-i18n="beta.tools.add_gulf_calendar">جدول تاريخ خليجي (الهجري ورمضان والعيد وعطلة نهاية الأسبوع في بلدك) كنص برمجي تراجعه وتطبّقه أنت.</span></li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.run.title">تشغيل حقيقي</h2>
-              <p data-i18n="beta.run.intro">قيس في 8 أكتوبر 2026 بالإصدار 0.2.8 من DataArcus، على نموذج مختلَق لمبيعات أدوات منزلية (Marsa Home):</p>
+              <p data-i18n="beta.run.intro">قيس في 8 أكتوبر 2026 بالإصدار 0.2.8 من DataArcus، على نموذج تجريبي لمبيعات أدوات منزلية (Marsa Home):</p>
               <pre class="beta-tree" dir="ltr" translate="no">./
 ├── Marsa Home.SemanticModel/
 ├── RC 028 Chat.pbip
@@ -178,7 +195,7 @@
         ├── report.json
         └── pages/</pre>
               <ul>
-                <li data-i18n="beta.run.files">كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح، و45 عنصرًا مرئيًا.</li>
+                <li data-i18n="beta.run.files">كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح، و45 مرئيًا.</li>
                 <li data-i18n="beta.run.validator">مدقّق التقارير من Microsoft: 0 أخطاء، 0 تحذيرات. (يتحقق من أن الملفات تتبع تنسيق Microsoft، لا من أن التقرير يجيب عن السؤال الصحيح.)</li>
                 <li data-i18n="beta.run.model">ملفات النموذج مطابقة بايتًا ببايت قبل التشغيل وبعده.</li>
               </ul>
@@ -188,14 +205,15 @@
                 <li data-i18n="beta.safe.model">لا يغيّر نموذجك أبدًا ولا يكتب فوق ملفاتك: كل تقرير جديد، بجانب نموذجك. الملف الوحيد الذي يستبدله هو ملف إجاباته الخاص، وبعد موافقتك فقط.</li>
                 <li data-i18n="beta.safe.ask">يكتب فقط داخل المجلد الذي تختاره (ونسخة فحص خاصة في المجلد المؤقت لجهازك، تُحذف عند انتهاء الفحص).</li>
                 <li data-i18n="beta.safe.validator">تفحص أداة check_report أي تقرير بصيغة PBIR دون اتصال بمدقّق التقارير من Microsoft.</li>
-                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها، ولا يُرسل أي قيمة من بيانات نموذجك إلى Claude أبدًا: ما يرسله هو بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، ومن التقرير النصوص المكتوبة فيه: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية (فإن كُتب فيها رقم أو اسم يُرسل أيضًا). ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>.</li>
+                <li data-i18n-html="beta.safe.data">يقرأ الملفات على جهازك ليفحصها ويأخذ بصمتها. وما يرسله إلى Claude هو أسماء نموذجك وتقريرك وبنيتهما (الجداول والأعمدة والمقاييس والتنسيقات والصفحات والمرئيات)، والنصوص القصيرة المكتوبة في صفحات التقرير: أسماء الصفحات ومربعات النص القصيرة، وعناوينه أيضًا عند إنشاء النسخة العربية، وقد تحمل رقمًا أو اسمًا. ولا يرسل أبدًا صفوف الجداول ولا قيم الفلاتر أو المقسمات ولا حالات الإشارات المرجعية. ما يراه تطبيق الذكاء الاصطناعي: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#3-metadata-only-no-data-values" class="text-accent" target="_blank" rel="noopener">PRIVACY.md</a>. الحدود الثلاثة في صفحة واحدة: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md#on-one-page" class="text-accent" target="_blank" rel="noopener">ملخص الخصوصية</a>.</li>
               </ul>
 
               <h2 class="mt-5 mb-3" data-i18n="beta.req.title">المتطلبات والحدود</h2>
               <ul>
-                <li data-i18n="beta.req.windows">Windows فقط.</li>
+                <li data-i18n="beta.req.windows">Windows للتثبيت بنقرة واحدة؛ وPower BI Desktop، الذي يفتح التقارير، لا يعمل إلا على Windows.</li>
                 <li data-i18n="beta.req.desktop">Power BI Desktop بالإصدار 2.159.883.0 (أكتوبر 2026) أو أحدث: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.</li>
                 <li data-i18n="beta.req.claude">Claude Desktop.</li>
+                <li data-i18n-html="beta.req.clients">ويمكن للمطورين أيضًا تشغيله من نسخة من المستودع في Claude Code أو VS Code (وضع الوكيل) أو Cursor، على Windows أو macOS أو Linux: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md#other-mcp-clients-and-platforms-developers" class="text-accent" target="_blank" rel="noopener">ملاحظات الإعداد</a> (جُرّب Claude Code على Linux، ولم يُجرَّب VS Code وCursor بعد). أما ملف .mcpb للتثبيت بنقرة واحدة فهو لـ Windows.</li>
                 <li data-i18n="beta.req.beta">نسخة تجريبية عامة: الحزمة غير موقّعة بعد، فتحقّق من بصمتها SHA-256 (أدناه وفي ملاحظات الإصدار) قبل تثبيتها.</li>
                 <li data-i18n="beta.req.large">النماذج التي تتجاوز نحو 50 جدولًا تجريبية.</li>
               </ul>
@@ -203,7 +221,7 @@
 
             <div id="join" class="glass-card p-4 p-md-5 mt-5">
               <h2 class="mb-3" data-i18n="beta.join.title">التنزيل والتثبيت</h2>
-              <div class="text-white-50" data-i18n-html="beta.join.next"><ol class="mb-3"><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0" class="text-accent">صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir="ltr" class="d-block my-1">certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir="ltr" class="d-block text-break my-1">aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md" class="text-accent">دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا. دون أي دفع.</div>
+              <div class="text-white-50" data-i18n-html="beta.join.next"><ol class="mb-3"><li>نزّل <code>dataarcus-0.3.0.mcpb</code> من <a href="https://github.com/Antnioo/dataarcus-releases/releases/tag/v0.3.0" class="text-accent">صفحة الإصدار 0.3.0</a>.</li><li>تحقّق من بصمته SHA-256 قبل تثبيته. شغّل: <code dir="ltr" class="d-block my-1">certutil -hashfile dataarcus-0.3.0.mcpb SHA256</code>ويجب أن يطبع: <code dir="ltr" class="d-block text-break my-1">aa23ace80d6777df5dcf47a0847ae8b96783034b2e1e0466625cae579704f9cb</code></li><li>بعد تثبيت Claude Desktop، انقر الملف نقرًا مزدوجًا واختر Install. كل الخطوات: <a href="https://github.com/Antnioo/DataArcus/blob/main/mcp/README.md" class="text-accent">دليل التثبيت</a>.</li></ol>أسئلة أو مشكلات أو ملاحظات؟ اكتب لنا هنا، أو راجع <a href="https://github.com/Antnioo/DataArcus/blob/main/SUPPORT.md" class="text-accent">كيف تحصل على المساعدة</a>. دون أي دفع.</div>
               <form id="beta-form" action="https://api.web3forms.com/submit" method="POST" class="row g-4" data-bs-theme="dark"> <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
                 <input type="hidden" name="subject" value="DataArcus for Power BI feedback">
                 <div class="col-12">
@@ -219,7 +237,8 @@
                 </div>
                 <div class="col-12">
                   <label for="beta-model" class="form-label" data-i18n="beta.join.model">عن ماذا يتحدث نموذجك؟ *</label>
-                  <textarea id="beta-model" name="model" class="form-control" rows="3" required=""></textarea>
+                  <textarea id="beta-model" name="model" class="form-control" rows="3" required="" aria-describedby="beta-model-hint"></textarea>
+                  <div id="beta-model-hint" class="form-text" data-i18n="beta.join.modelHint">بكلمات عامة، مثل «المبيعات حسب الفرع»: بلا أرقام ولا أسماء عملاء ولا أسماء جداول خاصة.</div>
                 </div>
                 <div class="col-12">
                   <label for="beta-linkedin" class="form-label" data-i18n="beta.join.linkedin">LinkedIn (اختياري)</label>
@@ -294,9 +313,9 @@
       </div>
   </footer>
 
-  <script src="/assets/js/translations/common.min.js?v=20261009h" defer=""></script>
-  <script src="/assets/js/translations/beta-page.min.js?v=20261022p3" defer=""></script>
-  <script src="/assets/js/lang-manager.min.js?v=20261023a" defer=""></script>
+  <script src="/assets/js/translations/common.min.js?v=20261025f" defer=""></script>
+  <script src="/assets/js/translations/beta-page.min.js?v=20261028fx3" defer=""></script>
+  <script src="/assets/js/lang-manager.min.js?v=20261025a" defer=""></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer=""></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer=""></script>

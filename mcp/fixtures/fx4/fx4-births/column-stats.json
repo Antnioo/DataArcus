@@ -1,0 +1,15 @@
+{
+  "note": "Made-up counts in the shape of Bayanat's UAE births 2005-2024 (years only). Counts only, never values.",
+  "rows": {
+    "Births": 1120
+  },
+  "distinct": {
+    "Births[Country]": 1,
+    "Births[Unit]": 1,
+    "Births[Geo Point]": 7,
+    "Births[Emirate]": 7,
+    "Births[Nationality]": 2,
+    "Births[Gender]": 2,
+    "Births[Year]": 20
+  }
+}

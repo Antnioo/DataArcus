@@ -22,6 +22,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
+import { keepEnglish } from './test-plan.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..'), req0 = createRequire(import.meta.url);
 const problems = []; let checks = 0;
@@ -77,11 +78,15 @@ const s = await serverClient(ROOT, {});
 const w = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' });
 
 try {
+  // (0.3.1 CX1, F01: an Arabic plan whose titles would be English gets no plan id) the Arabic report keeps these fields
+  // English on purpose: TC-2d checks the fixed texts the writer writes, not the field names
+  const KEPT = keepEnglish('Calendar[Month Short]', 'Web Orders[Web Orders Total Score]', 'Web Orders[Web Orders Total Value]', 'Web Orders[Web Orders Count]', 'Web Orders[Web Orders Average Score]', 'Coupon[Coupon Region]', 'Plan[Plan Group]');
   const write = async (lang, name) => {
-    const pl = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang, layout: 'exec', name, secondPage: true });
+    const dn = lang === 'ar' ? { displayNames: KEPT } : {};
+    const pl = await s.call('plan_layout', Object.assign({ path: MP, focus: 'Web Orders', lang, layout: 'exec', name, secondPage: true }, dn));
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (!id) return { err: 'no plan: ' + String(pl.t).slice(0, 300) };
     await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', { path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design });
+    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, dn));
     return r.err ? { err: String(r.t).slice(0, 300) } : { r };
   };
   const en = await write('en', 'Orders EN');
@@ -148,7 +153,8 @@ try {
   // TC-4: the approval page lists it
   const pid = J2.plan && J2.plan.planId;
   let html = ''; { const n = links().length; await w.call('approve_plan', { planId: pid }); const url = await linkAt(n); html = url ? unesc(await req(url, 'GET')) : '';
-    chk(() => /Shown in English \(2/.test(html) && KEEP.every((x) => html.includes(`"${x}"`)), () => `TC-4a. the approval page says what stays English: ${html.length ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300) : 'no page'}`);
+    // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
+    chk(() => /تظهر بالإنجليزية \(2/.test(html) && KEEP.every((x) => html.includes(`«${x}»`)), () => `TC-4a. the approval page says what stays English: ${html.length ? html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 300) : 'no page'}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
   const wr = await w.call('create_arabic_twin', { path: 'large/Orders EN.pbip', planId: pid });
   chk(() => !wr.err && wr.j.written === true && fs.existsSync(TWIN), () => `TC-3e. the twin is written: ${short(wr)}`);
@@ -158,7 +164,10 @@ try {
     const stray = shownTexts(TW).filter((t) => words(t.s).some((x) => !ok.has(x.toLowerCase())));
     chk(() => Object.keys(TW).length && !stray.length, () => `TC-3f. ${stray.length} English texts in the twin that its plan did not list as kept: ${JSON.stringify(uniq(stray.map((t) => `${t.what} "${t.s.slice(0, 60)}" (${t.where.replace(/^.*definition\//, '').slice(0, 50)})`)).slice(0, 16))}`);
     const kept = shownTexts(TW).filter((t) => /[A-Za-z]/.test(t.s));
-    chk(() => kept.length && kept.every((t) => KEEP.includes(t.s.trim())), () => `TC-3g. only the two kept fields' names are English in the twin: ${JSON.stringify(uniq(kept.map((t) => t.s)))}`);
+    // (changed 27 Oct 2026, 0.3.1 TT1, the owner's new rule: a title the person leaves English is isolated whole in the
+    // twin by the shared rule, text-measure.js isolateWhole: the kept name as written, or isolated whole)
+    const TMw = req0('../assets/js/text-measure.js');
+    chk(() => kept.length && kept.every((t) => KEEP.includes(t.s.trim()) || KEEP.some((k) => t.s === TMw.isolateWhole(k))), () => `TC-3g. only the two kept fields' names are English in the twin: ${JSON.stringify(uniq(kept.map((t) => t.s)))}`);
   }
   // TC-4: the original's title measures the twin's charts no longer use: listed, left byte for byte
   {

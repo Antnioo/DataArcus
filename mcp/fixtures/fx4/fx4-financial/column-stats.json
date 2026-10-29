@@ -1,0 +1,16 @@
+{
+  "note": "Made-up counts in the shape of Microsoft's Financial Sample (700 rows, 2013-2014). Counts only, never values.",
+  "rows": {
+    "Financials": 700,
+    "Calendar": 730
+  },
+  "distinct": {
+    "Financials[Segment]": 5,
+    "Financials[Country]": 5,
+    "Financials[Product]": 6,
+    "Financials[Discount Band]": 4,
+    "Calendar[Year]": 2,
+    "Calendar[Month Name]": 12,
+    "Calendar[Year Month]": 24
+  }
+}

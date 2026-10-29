@@ -21,7 +21,7 @@
   // the names of the axes whose names are known (the calendar generator's, and Power BI's short forms)
   const NAMES = {
     month: { en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-      ar: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'] },
+      ar: (typeof module !== 'undefined' && module.exports ? require('./arabic-calendar.js') : root.DataArcusArabicCalendar).MONTHS },   // (0.3.1 SQ14) the one Arabic month list
     monthShort: { en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] },
     day: { en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ar: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] },
     dayShort: { en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
@@ -56,7 +56,8 @@
   //   count     the categories the chart shows; null when not known: the table's worst row (12), said in why
   //   noun      what the categories are, for why ('months'); else the axis's, else 'categories'
   //   axis      'month', 'monthShort', 'day', 'dayShort', 'quarter': names known; else names, or nameLength, or the stand-in
-  // returns { kind: 'column' | 'bar' | null, why, limit, nameLength, count, width } (kind null: outside the table)
+  // returns { kind: 'column' | 'bar' | null, why, said, saidAr, limit, nameLength, count, width } (kind null: outside the
+  // table, no said)
   function decide(o) {
     o = o || {};
     const width = Math.round((+o.width || 0) * PAGE / (+o.pageWidth || PAGE));
@@ -91,7 +92,13 @@
       : `${at.room} px a category; measured ${who}: ${limit ? `names up to ${limit} letters stay uncut${known ? '' : ' on one line'}` : 'even 4-letter names slant'} ${at.width ? `at ${Math.round(at.width / at.count)} px a category (${at.width} px with ${at.count})` : 'with less room than any measured chart'}`;
     const why = kind === 'column' ? `column: ${what} at ${width} px stay uncut (${named}; ${measured})`
       : `bar: ${what} at ${width} px would slant or be cut (${named}; ${measured})`;
-    return Object.assign(base, { kind, limit, why });
+    // (0.3.1 R4A, round 4's problem 1: "42 px a category", "17 letters" in the person's text) said: the same decision in
+    // the person's words, no pixels or letter widths (why keeps the measured numbers, for the agent); saidAr its Arabic
+    const n = base.assumedCount ? '' : count + ' ', plainNoun = noun === 'categories' ? 'names' : noun;
+    const namesAr = `أسماء ${{ months: 'الأشهر', weekdays: 'الأيام' }[noun] || 'الفئات'}${n ? ` (${count})` : ''}`;
+    const said = kind === 'column' ? `Columns: the ${n}${plainNoun} fit under them, level.` : `A bar chart, not columns: ${n ? n + plainNoun : 'the ' + plainNoun} would be cut or slanted under columns.`;
+    const saidAr = kind === 'column' ? `مخطط أعمدة: ${namesAr} تظهر كاملة ومستقيمة تحت الأعمدة.` : `مخطط شريطي أفقي لا أعمدة: ${namesAr} ستُقص أو تميل تحت الأعمدة.`;
+    return Object.assign(base, { kind, limit, why, said, saidAr });
   }
 
   const api = { MEASURED, WIDTHS, COUNTS, PAGE, LABEL_PT, RULE, STAND_IN, NAMES, limitAt, decide, len };
