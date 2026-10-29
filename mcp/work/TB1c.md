@@ -24,7 +24,7 @@
   field's text "Female", as the laptop saw; F2, F4, C1-C3, W1, V1, V2); 1 guard green there (F3 the five visuals).
   Areas: twin 19, arabic 15, checker 7 suites pass; lint 0; check-min 75 match. One other suite changed on purpose:
   arabic-sweep 255 = 255 (see Risky changes). mcp 1594 = 1594; mutation 198 (76 mutants, all killed).
-- **State: DONE.** Full run on b7cf34c3: "run-tests: 127 suites passed" (the base's 126 + tb1c). CI started after this line.
+- **State: DONE.** Full run on b7cf34c3: "run-tests: 127 suites passed" (the base's 126 + tb1c). CI started after this line: run 40834973091 green (Linux, Windows, macOS).
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
