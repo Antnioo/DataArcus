@@ -2516,6 +2516,18 @@ So these ten codes are what Desktop opens a report with: `check_report`'s `opene
 visual missing a required role was seen to draw empty once (11 Oct 2026, `mcp/work/0.2.9-custom-visuals.md`, Z1).
 Any other code stays "can break" until a Desktop proof like this one says otherwise.
 
+## 2026-10-29: where Desktop places a page picture, Normal, Fit and Fill (the laptop part 6, block B, MP1), Power BI Desktop 2.159
+(Recorded 29 Oct 2026 for MP1b from the laptop's results, engine `lab/rc031-part6` 07f18d0,
+`business/beta/rc031-part6/RESULTS.md`, shots `mp1-p1..p4-en-ar-p6.png`.) MP1's made-up pages (a 640 x 360 page, a
+green page colour behind the picture, the picture's edges found by pixel runs calibrated on the text boxes):
+- **Normal is centred at scale 1**, not at (0,0): a 520 x 360 picture's left edge at page x 60; a 400 x 250 one at
+  x 120-520, y 44-294 (about (H - ih) / 2 down).
+- **Fit is stretched to the whole page** (x 0-640): its proportions are not kept, it is not centred at the smaller scale.
+- **Fill is centred at the larger scale**, as modelled.
+So every fit is placed symmetrically about the page's centre line, and the twin flips a page picture as it is, its size
+and fit kept: `placement` and `flippedFor` (`mcp/lib/page-picture.mjs`). MP1's Normal pages, padded to the page at
+(0,0), were off by (W - iw) / 2 across and (H - ih) / 2 down; its Fit and Fill pages passed.
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.

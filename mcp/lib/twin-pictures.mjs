@@ -19,7 +19,7 @@ const FIT_AR = { Normal: 'بحجمها الأصلي', Fit: 'ملاءمة', Fill:
 export const WORDS_SAID = 'This picture may contain words or a logo that will read backwards';
 const WORDS_SAID_AR = 'قد تحتوي هذه الصورة على كلمات أو شعار سيُقرأ معكوسًا';
 export function pictureSaid(x, mirrorPictures) {
-  if (x.picture === 'flipped') return { en: `picture flipped (${x.padded ? 'Normal, drawn on the page first' : x.fit}) and the visuals mirrored onto it`, ar: `الصورة معكوسة أفقيًا (${FIT_AR[x.fit] || FIT_AR.Normal}${x.padded ? '، بعد رسمها على حجم الصفحة' : ''}) والمرئيات معكوسة فوقها` };
+  if (x.picture === 'flipped') return { en: `picture flipped (${x.fit}) and the visuals mirrored onto it`, ar: `الصورة معكوسة أفقيًا (${FIT_AR[x.fit] || FIT_AR.Normal}) والمرئيات معكوسة فوقها` };
   if (x.picture === 'asked') return mirrorPictures ? { en: `asked: ${WORDS_SAID}. Mirrored as asked (mirrorPicturePages); its picture is not flipped, so the visuals leave its panels`, ar: `${WORDS_SAID_AR}. عُكست الصفحة كما طُلب، أما صورتها فلم تُعكس، فتخرج المرئيات عن ألواحها` }
     : { en: `asked: ${WORDS_SAID}. The page stays left to right until the user approves its flip (flipPictures)`, ar: `${WORDS_SAID_AR}. تبقى الصفحة من اليسار إلى اليمين حتى توافق على عكس صورتها` };
   if (x.wallpaper) return { en: 'kept: its wallpaper picture (outside the page, placed by the window) stays as it is; the page is mirrored', ar: 'تبقى صورة ما حول الصفحة كما هي (خارج الصفحة)، والصفحة معكوسة' };
@@ -41,7 +41,7 @@ export function picturesOf(R, loc, blank, flip) {
     if (!(Number.isFinite(W) && Number.isFinite(H) && W > 0 && H > 0)) return info.set(String(pg.id), Object.assign(out, { picture: 'kept', why: 'its page size is not a number' }));
     let P; try { P = pagePicture(new Uint8Array(bytesAt(loc, rel)), fit, W, H); } catch (e) { P = { why: 'its picture could not be read' }; }
     if (P.why) return info.set(String(pg.id), Object.assign(out, { picture: 'kept', why: P.why }));
-    info.set(String(pg.id), Object.assign(out, { picture: P.words && !approved.has(String(pg.id)) ? 'asked' : 'flipped', padded: P.padded, words: P.words > 0, size: `${P.iw} x ${P.ih}`, W, H }));
+    info.set(String(pg.id), Object.assign(out, { picture: P.words && !approved.has(String(pg.id)) ? 'asked' : 'flipped', words: P.words > 0, size: `${P.iw} x ${P.ih}`, W, H }));
   });
   return info;
 }
@@ -77,7 +77,7 @@ export function picturePagesSaid(R, info, mirrorPictures) {
   return R.pages.filter((pg) => info.has(String(pg.id))).map((pg) => {
     const x = info.get(String(pg.id)), s = pictureSaid(x, mirrorPictures);
     const name = typeof pageOf(pg).displayName === 'string' ? safeName(pageOf(pg).displayName) : '';
-    return Object.assign({ page: safeName(pg.id) }, name ? { name } : {}, { picture: x.picture }, x.fit && !x.wallpaper ? { fit: x.fit } : {}, x.picture === 'flipped' ? { padded: !!x.padded } : {},
+    return Object.assign({ page: safeName(pg.id) }, name ? { name } : {}, { picture: x.picture }, x.fit && !x.wallpaper ? { fit: x.fit } : {},
       x.picture === 'asked' ? { flipWith: `flipPictures: ["${safeName(pg.id)}"] once the user has looked at the picture and approves its flip` } : {}, x.wallpaperToo ? { wallpaper: 'its wallpaper picture (outside the page) stays as it is' } : {}, { what: s.en, whatAr: s.ar });
   });
 }
