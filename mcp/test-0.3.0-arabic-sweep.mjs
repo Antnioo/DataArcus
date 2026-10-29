@@ -259,6 +259,9 @@ try {
         if (cannot.some((c) => /metric switcher's choices/.test(c))) cats.push({ name: "cannot: the metric switcher's choices", test: (t) => t.what === 'switcher label' });
         const titled = (J.cannot || []).find((c) => /title measures/.test(c.what));
         if (titled && (titled.where || []).some((w) => /Title\]$/.test(w))) cats.push({ name: 'cannot: chart titles from title measures', test: (t) => t.what === 'switcher title' });
+        // (0.3.1 TB1c) a title measure every title of the twin replaced by its approved fixed Arabic (titleMeasures.fixed)
+        // is shown nowhere in the twin: its script's texts are not on the Arabic pages
+        if (((J.titleMeasures || {}).fixed || []).some((x) => /Title\]$/.test(x.measure))) cats.push({ name: 'titleMeasures.fixed: shown nowhere in the twin', test: (t) => t.what === 'switcher title' });
         const r = classify(fx, mode, texts, kept, cats);
         structure(fx, mode, F, pages, null);
         chk(() => !r.unlisted.length, () => `${fx.id} ${mode}: ${r.unlisted.length} English runs the plan does not list as kept: ${JSON.stringify(uniq(r.unlisted).slice(0, 12))}`);
