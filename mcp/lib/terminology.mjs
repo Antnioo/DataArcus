@@ -22,6 +22,10 @@ export { CONCEPTS, termHits } from './arabic-terms.mjs';
 const TextMeasure = require('../../assets/js/text-measure.js'), Pbip = require('../../assets/js/pbip-export.js');
 // (0.3.1 BD2) isolateLatin is the measured rule (the isolates, the whole text in U+2067 ... U+2069); isolateRuns its inside
 export const { isolateLatin, isolateNames, isolateRuns } = TextMeasure;
+// (0.3.1 TB1, the laptop's part 4: «مقارنة بالشهر الماضي» beside its value read "7.34- ... %") an Arabic text Desktop
+// draws beside a value (a card's reference label, a KPI's goal text, a data label's title): the V3 rule's wrap,
+// RLI ... PDI, its Latin runs isolated (isolateLatin), a wholly Arabic one wrapped too, so the number keeps its order
+export const isolateBeside = (s) => { const t = isolateLatin(s); return TextMeasure.ARABIC.test(t) && !TextMeasure.wrapped(t) ? '\u2067' + t + '\u2069' : t; };
 export const { isolateFiles } = Pbip;
 // the text without the marks the writer adds (to compare a written text with the name a person approved)
 export const plain = (s) => String(s == null ? '' : s).replace(/[⁦-⁩‎‏]/g, '');
@@ -75,13 +79,15 @@ const props = (vis, card, key) => { const es = isObj(vis) && isObj(vis.visualCon
  *  chart, tooltip, title, alt text), with the display names its projections carry (names: Set), every text a title or
  *  alt text of a visual showing it holds (texts), and the names it is said by: words (a Set of the field's English and
  *  written names, to find titles by). */
-export function placesOf(report) {
+// (0.3.1 TB1) own: the keys "<page id>/<visual>/<queryRef>" of a visual's own name for a field (the twin's fieldAt
+// texts): that projection is its own text, not one of the field's headers
+export function placesOf(report, own) {
   const out = new Map(), get = (k) => { if (!out.has(k)) out.set(k, { where: [], names: [], texts: [] }); return out.get(k); };
   for (const pg of report.pages || []) {
     for (const v of pg.visuals) {
       const vis = isObj(v.visual) ? v.visual : null; if (!vis || !isObj(vis.query)) continue;
       const keys = new Map();
-      const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && fieldKeyOf(p.field); if (k) { if (!keys.has(k)) keys.set(k, []); keys.get(k).push(typeof p.displayName === 'string' ? p.displayName : null); } }); Object.values(o).forEach(walk); };
+      const walk = (o) => { if (Array.isArray(o)) return o.forEach(walk); if (!isObj(o)) return; if (Array.isArray(o.projections)) o.projections.forEach((p) => { const k = isObj(p) && !(own && own.has(`${pg.id}/${v.name}/${p.queryRef}`)) && fieldKeyOf(p.field); if (k) { if (!keys.has(k)) keys.set(k, []); keys.get(k).push(typeof p.displayName === 'string' ? p.displayName : null); } }); Object.values(o).forEach(walk); };
       walk(vis.query);
       const titles = [].concat(...props(vis, 'title', 'text').map((x) => shown(x, report.ext))), alts = [].concat(...props(vis, 'general', 'altText').map((x) => shown(x, report.ext)));
       const place = (role) => ({ page: String(pg.name), visual: String(v.name), role });

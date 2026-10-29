@@ -67,7 +67,8 @@ const EXACT = {
 };
 // where a text is (twin-texts.mjs KIND_SAID), in Arabic
 const WHERE_AR = { 'page name': 'اسم صفحة', button: 'زر', text: 'نص', 'field name': 'اسم حقل', title: 'عنوان', 'text box': 'مربع نص', bookmark: 'إشارة مرجعية', 'bookmark group': 'مجموعة إشارات مرجعية',
-  'alt text': 'نص بديل', tooltip: 'تلميح', 'measure text': 'نص من مقياس', 'language button': 'زر اللغة', 'chart title': 'عنوان مخطط', 'text for no data': 'النص عند عدم وجود بيانات', 'button tooltip': 'تلميح زر', 'axis title': 'عنوان محور', 'legend title': 'عنوان وسيلة الإيضاح', subtitle: 'عنوان فرعي', 'slicer header': 'عنوان مقسم', 'phone layout': 'تخطيط الهاتف', header: 'ترويسة' };
+  'alt text': 'نص بديل', tooltip: 'تلميح', 'measure text': 'نص من مقياس', 'language button': 'زر اللغة', 'chart title': 'عنوان مخطط', 'text for no data': 'النص عند عدم وجود بيانات', 'button tooltip': 'تلميح زر', 'axis title': 'عنوان محور', 'legend title': 'عنوان وسيلة الإيضاح', subtitle: 'عنوان فرعي', 'slicer header': 'عنوان مقسم', 'phone layout': 'تخطيط الهاتف', header: 'ترويسة',
+  'field name on one visual': 'اسم حقل في مرئي واحد', 'title that changes with the selection': 'عنوان يتغير مع التحديد' };
 const whereAr = (w) => String(w).split(', ').map((p) => { const m = /^(phone layout: )?(.+?)(?: \((\d+)\))?$/.exec(p); if (!m) return null; const k = m[2].split(', ').map((x) => WHERE_AR[x] || null);
   return k.some((x) => x == null) ? null : `${m[1] ? 'تخطيط الهاتف: ' : ''}${k.join('، ')}${m[3] ? ` (${m[3]})` : ''}`; });
 // the terminology sheet's status (approval-window.mjs TERM_STATUS)
