@@ -30,9 +30,10 @@
 - **Got:** tb2 17 checks, red on cbdbbc7 (= 694aa8a's code) first: 15 of 17 (B1 and B13 are guards, green there by design)
   -> 17 PASS. checker area the same numbers as on cbdbbc7: check 31, test-0.3.1-checker 23, arabic-lens 31, p3a 21 (P2
   changed on purpose, below), validator-gap 5, sq5 22. Mutation: 78 -> 79 mutants (C-opened, guarded by tb2 and p3a).
-- MUTATION_LINE
-- FULL_RUN_LINE
-- **Resume:** done after the full run and CI; then the reviewer.
+- Mutation on 7361178: "PASS  mutation  198 checks (76 mutants, all killed, 41 guard suites)".
+- Full run on 7361178: "run-tests: 124 suites passed"
+- Sitemap: no change (lastmod already matches). CI: tests.yml started on fix/0.3.1-tb2 (workflow_dispatch, 29 Oct).
+- **Resume:** done; CI on the branch, then the reviewer.
 
 ## Before -> after
 - check_report on a report with only the ten measured codes (the made-up fixture, B14): "10 findings can break the
