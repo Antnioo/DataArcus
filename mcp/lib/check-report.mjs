@@ -148,15 +148,28 @@ export const DESKTOP_OPENS_SOURCE = { file: 'scripts/tests/DESKTOP-TESTS.md', da
 // same files) warnings of Microsoft's validator that Power BI Desktop was measured to draw: the validator itself says
 // "may" ("may be too small ... to avoid scrollbar", "may be clipped ... verify in Desktop"), and Desktop drew the text and
 // the slicers whole where our writer puts them. Only these codes, only as warnings (the validator's error for a slicer
-// too low to draw, PBIR_SLICER_HEIGHT_BELOW_FLOOR, stays "can break"): an unmeasured warning (an unknown visual type, a
+// too low to draw, PBIR_SLICER_HEIGHT_BELOW_FLOOR, is openedInDesktop since TB2, below): an unmeasured warning (an unknown visual type, a
 // drillthrough without its filter) can stop a visual or a page, so Microsoft's severity alone never moves a code here.
 export const DESKTOP_DRAWS = {
   PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR: { evidence: 'scripts/tests/DESKTOP-TESTS.md: 2026-10-01 (Desktop 2.157 and 2.158.1177): 20pt whole in a 44-high text box, 8pt in 24; round 11, item 7 (2.158.1177): the 46-high 20pt Arabic title and the 31-32-high titles at 1280 x 720 and 960 x 720 whole (a scroll thumb only at 640 x 360)' },
   PBIR_SLICER_HEADER_MAY_CLIP: { evidence: 'scripts/tests/DESKTOP-TESTS.md: 2026-10-01 (Desktop 2.157 and 2.158.1177): a dropdown slicer needs 16 + 4 x its text size (76 only at 15pt); round 11, item 7 (2.158.1177): the 56-high slicers whole at 1280 x 720 and 960 x 720' }
 };
+// (0.3.1 TB2, the laptop part 4, blocks C1, C5, C6: check_report said "can break" on hand-built reports that open in
+// Desktop and are published) validator codes counted on reports that Power BI Desktop 2.159 opened with no error banner
+// (28 Oct 2026): Microsoft's validator flags the file shape (an error or a warning), Desktop opened the report with it.
+// Only these codes, each with its count; any code not measured stays "can break". The measurement is of the report opening,
+// not of each part drawing, so the sentence says to look at the part in Desktop. PBIR_SLICER_HEIGHT_BELOW_FLOOR: P3A kept
+// it "can break" on the validator's own text ("the selector will be clipped") with no Desktop proof; this measurement wins
+// (two such slicers opened with no error): Desktop opens the report, the slicer may still look clipped.
+const OPENED_IN = 'scripts/tests/DESKTOP-TESTS.md: 2026-10-28, Power BI Desktop 2.159, "Microsoft\'s validator on six hand-built reports that open"';
+export const DESKTOP_OPENED = Object.fromEntries([['PBIR_FORMATTING_PROP_NESTED', 76], ['PBIR_FILTER_NAME_DUPLICATE_GLOBAL', 14], ['PBIR_BOOKMARK_ACTION_TARGET_MISSING', 6],
+  ['PBIR_ROLE_REQUIRED_MISSING', 3], ['PBIR_SLICER_HEIGHT_BELOW_FLOOR', 2], ['PBIR_ROLE_MAX_EXCEEDED', 1], ['PBIR_SCATTER_NO_GROUPING', 1],
+  ['PBIR_DRILLTHROUGH_BACK_BUTTON_MISSING', 1], ['PBIR_VISUAL_TYPE_DEPRECATED', 1], ['PBIR_THEME_VISUAL_UNKNOWN', 1]]
+  .map(([code, n]) => [code, { evidence: `${OPENED_IN}: ${n} on reports that opened with no error${code === 'PBIR_ROLE_REQUIRED_MISSING' ? '; an earlier laptop proof (11 Oct 2026, mcp/work/0.2.9-custom-visuals.md, Z1) saw a donut written with no value draw empty: the report opens, the visual may show nothing' : ''}` }]));
 export const IMPACT = {
   desktopOpens: 'Power BI Desktop opens the report with these (seen on a working hand-built report): only Microsoft\'s strict validation, and Fabric when the report is published through it, would refuse them. Fix them before publishing through Fabric or Git; the report is not broken in Desktop.',
   canBreak: 'These can break the report in Power BI Desktop: a page or visual that does not open, or shows an error or nothing. Fix these first.',
+  openedInDesktop: 'Microsoft\'s validator flags this file shape (an error or a warning); Power BI Desktop 2.159 opened reports with it with no error (measured 28 Oct 2026), and saving the report in Desktop may rewrite it. The report opens; look at the part in Desktop, which may still not draw as meant (each code\'s measurement says what was seen).',
   mayLook: 'Warnings of Microsoft\'s validator that Power BI Desktop was measured to draw (a text box\'s height, a dropdown slicer\'s header): the report opens and the part shows, but it may not look as meant at this size (a scroll thumb, a header tight against the box). Look at the part in Power BI Desktop; nothing to fix unless it shows there.',
   dataarcusRule: 'DataArcus\'s own rules, measured in Power BI Desktop, and Power BI\'s accessibility basics from Microsoft\'s guidance (the a11y rules): the report opens, but a part may not look or work as meant (cut text, a setting Desktop ignores, a scrollbar in a tooltip, a chart a screen reader or a keyboard cannot reach).'
 };
@@ -204,7 +217,7 @@ export function knownGap(code, object, visualJson, caps = getCapabilities) {
 // its source text. Every finding: { origin: validator | schema | rule | instruction (| lint, in the lint section),
 // rule, severity error | warning | note, file, page, visual, what, fix, source, impact } (CHECK-REPORT.md, "Finding shape"))
 export const impactOf = (f) => {
-  if (f.origin === 'validator') { if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
+  if (f.origin === 'validator') { if (Object.hasOwn(DESKTOP_OPENED, f.rule)) return 'openedInDesktop'; if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
   if (f.origin === 'schema') return 'canBreak';
   return 'dataarcusRule';
 };
@@ -216,9 +229,12 @@ export const impactOf = (f) => {
 // not readable), desktopOpensErrors, known, checks: the groups that ran (CHECKS when absent) }. Pure: the same counts
 // and context give the same sentence.
 export function impactSummary(n, ctx) {
-  const L = +((n || {}).mayLook) || 0;
-  return impactCore(n, ctx) + (L ? ' ' + mayLookLine(L) : '');
+  const L = +((n || {}).mayLook) || 0, O = +((n || {}).openedInDesktop) || 0;
+  return impactCore(n, ctx) + (O ? ' ' + openedLine(O) : '') + (L ? ' ' + mayLookLine(L) : '');
 }
+/** (0.3.1 TB2) the sentence for the validator's codes measured on reports Desktop opened: the same words in check_report's
+ *  summary and create_report's check */
+export const openedLine = (O) => `${O} ${O === 1 ? 'finding' : 'findings'} of Microsoft's validator ${O === 1 ? 'is a file shape' : 'are file shapes'} it flags that Power BI Desktop 2.159 opened reports with, with no error (measured 28 Oct 2026); saving the report in Desktop may rewrite ${O === 1 ? 'it' : 'them'}; look at ${O === 1 ? 'the part' : 'the parts'} in Desktop.`;
 /** (0.3.1 P3A) the sentence for Microsoft's validator's warnings that Desktop was measured to draw: the same words in
  *  check_report's summary and create_report's check */
 export const mayLookLine = (L) => `${L} ${L === 1 ? 'warning' : 'warnings'} of Microsoft's validator ${L === 1 ? 'is' : 'are'} a part that may not look as meant (a text box's or a dropdown slicer's height), not a break: Power BI Desktop was measured to draw ${L === 1 ? 'it' : 'them'}; look at ${L === 1 ? 'it' : 'them'} in Desktop.`;
@@ -226,12 +242,14 @@ export const mayLookLine = (L) => `${L} ${L === 1 ? 'warning' : 'warnings'} of M
  *  checkArtifact's checks.validator.kinds), as one sentence in the answer's language; '' when nothing. create_report's
  *  check and plan_layout's exactCheck say it, so the two tools give one verdict on the same files. */
 export function validatorVerdict(kinds, lang) {
-  const k = kinds || {}, B = +k.canBreak || 0, L = +k.mayLook || 0, ar = lang === 'ar';
+  const k = kinds || {}, B = +k.canBreak || 0, L = +k.mayLook || 0, O = +k.openedInDesktop || 0, ar = lang === 'ar';
   const brk = !B ? '' : ar ? `${B} من نتائج مدقق Microsoft قد تعطل التقرير في Power BI Desktop (validator.byRule): أصلحها أولًا.`
     : `${B} ${B === 1 ? 'finding' : 'findings'} of Microsoft's validator can break the report in Power BI Desktop (validator.byRule): fix ${B === 1 ? 'it' : 'these'} first.`;
   const look = !L ? '' : ar ? `${L} من تحذيرات مدقق Microsoft عن أجزاء قد لا تظهر كما يُراد (ارتفاع مربع نص أو رأس مقسم منسدل)، لا عن عطل: ثبت بالقياس أن Power BI Desktop يرسمها؛ انظر إليها في Desktop.`
     : mayLookLine(L);
-  return [brk, look].filter(Boolean).join(' ');
+  const opened = !O ? '' : ar ? `${O} من نتائج مدقق Microsoft عن أشكال ملفات يرفضها أو يحذر منها، وقد فتح Power BI Desktop 2.159 تقارير فيها هذه الأشكال بلا خطأ (قياس 28 أكتوبر 2026)؛ قد يعيد Desktop كتابتها عند الحفظ؛ انظر إلى الأجزاء في Desktop.`
+    : openedLine(O);
+  return [brk, opened, look].filter(Boolean).join(' ');
 }
 function impactCore(n, ctx) {
   const c = ctx || {}, v = c.validator || {}, unread = +c.unread || 0, E = +c.desktopOpensErrors || 0, K = +c.known || 0;
@@ -533,7 +551,7 @@ export async function checkReport(p, opts) {
   all.forEach((f) => { f.impact = impactOf(f); delete f._base; });
   // (0.3.1 S1) a DataArcus report: each rule finding names its approved route (a key of fixRoutes)
   if (routes) all.forEach((f) => { if (f.origin === 'rule') { const k = fixWithOf(B, PL, f); if (k && routes[k]) f.fixWith = k; } });
-  const byImpact = { desktopOpens: 0, canBreak: 0, mayLook: 0, dataarcusRule: 0 }; all.forEach((f) => { byImpact[f.impact]++; });
+  const byImpact = { desktopOpens: 0, canBreak: 0, openedInDesktop: 0, mayLook: 0, dataarcusRule: 0 }; all.forEach((f) => { byImpact[f.impact]++; });
   const rank = { error: 0, warning: 1, note: 2 };
   all.sort((a, b) => rank[a.severity] - rank[b.severity]);
   const byRule = {}; all.forEach((f) => { byRule[f.rule] = (byRule[f.rule] || 0) + 1; });
@@ -564,8 +582,8 @@ export async function checkReport(p, opts) {
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: B.said },
     lang, ...(mixed ? { pageLanguages: pageLanguagesOut(PLg) } : {}), validator, schemas, rulesRun: ruled.ran,
-    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length, checks }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : k === 'mayLook' ? { measured: Object.fromEntries(Object.entries(DESKTOP_DRAWS).map(([c, x]) => [c, x.evidence])) } : {})])),
-      tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop, nor does a mayLook warning (Desktop was measured to draw it); check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
+    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length, checks }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : k === 'mayLook' ? { measured: Object.fromEntries(Object.entries(DESKTOP_DRAWS).map(([c, x]) => [c, x.evidence])) } : k === 'openedInDesktop' ? { measured: Object.fromEntries(Object.entries(DESKTOP_OPENED).map(([c, x]) => [c, x.evidence])) } : {})])),
+      tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: what only strict validation or Fabric would refuse does not break a report in Desktop, nor does a mayLook warning (Desktop was measured to draw it), nor an openedInDesktop finding (Desktop was measured to open reports with it); check_report never opens Desktop, so say what ran, not that the report opens. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
     ...(fieldParameters ? { fieldParameters } : {}),
     ...(lintSection ? { lint: lintSection } : {}),

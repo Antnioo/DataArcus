@@ -54,7 +54,7 @@ async function validate(files, mem) {
     const reportDir = path.join(dir, base), pbip = files.some((f) => f.path === base.replace(/\.Report$/, '') + '.pbip') ? path.join(dir, base.replace(/\.Report$/, '') + '.pbip') : undefined;
     const s = await runReportValidation({ reportDir, defDir: path.join(reportDir, 'definition'), provider: await getMetadataProvider(), skipSchema: true, pbipPath: pbip });
     // (0.3.1 P3A) each finding's kind as check_report gives it (impactOf, one copy): create_report says the same verdict
-    const out = { ran: true, errors: 0, warnings: 0, known: 0, byRule: {}, files: [], kinds: { canBreak: 0, mayLook: 0, desktopOpens: 0 }, said: {} };
+    const out = { ran: true, errors: 0, warnings: 0, known: 0, byRule: {}, files: [], kinds: { canBreak: 0, openedInDesktop: 0, mayLook: 0, desktopOpens: 0 }, said: {} };
     for (const [code, d] of Object.entries(s.diagnostics || {})) for (const it of (d.items || [])) {
       const file = it.file && path.isAbsolute(String(it.file)) ? path.relative(reportDir, String(it.file)).split(path.sep).join('/') : null, inside = file && !file.startsWith('..') ? file : null;
       let known = null; if (inside && /visual\.json$/.test(inside)) { try { known = knownGap(code, it.path, JSON.parse(mem.get(inside))); } catch (e) { known = null; } }

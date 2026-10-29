@@ -118,6 +118,8 @@ const MUTANTS = [
   { id: 'C-known', file: CR, edits: [["if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS", 'const t = DESKTOP_OPENS']], guards: ['test-0.3.1-validator-gap.mjs', 'test-0.2.9-a4.mjs', 'test-0.2.9-checks.mjs', 'test-0.3.0-check.mjs'] },
   // (0.3.1 P3A) the two validator warnings Desktop was measured to draw: back to "can break"
   { id: 'C-maylook', file: CR, edits: [["if (f.severity === 'warning' && Object.hasOwn(DESKTOP_DRAWS, f.rule)) return 'mayLook'; ", '']], guards: ['test-0.3.1-p3a.mjs'] },
+  // (0.3.1 TB2) the validator codes measured on reports Desktop opened: back to "can break"
+  { id: 'C-opened', file: CR, edits: [["if (Object.hasOwn(DESKTOP_OPENED, f.rule)) return 'openedInDesktop'; ", '']], guards: ['test-0.3.1-tb2.mjs', 'test-0.3.1-p3a.mjs'] },
   { id: 'C-image', file: CR, edits: [["rule: 'IMAGE_MEASURE_PENDING', severity: 'note'", "rule: 'IMAGE_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-flip-cards.mjs', 'test-0.3.1-dax-functions.mjs'] },
   { id: 'C-icon', file: CR, edits: [["rule: 'ICON_MEASURE_PENDING', severity: 'note'", "rule: 'ICON_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.0-theme-icons.mjs', 'test-0.3.0-flip-cards.mjs'] },
   { id: 'C-dax', file: CR, edits: [["rule: 'DAX_MEASURE_PENDING', severity: 'note'", "rule: 'DAX_MEASURE_PENDING', severity: 'error'"]], guards: ['test-0.3.1-dax-functions.mjs'] },

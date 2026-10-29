@@ -2500,6 +2500,22 @@ field names joined by its own English "by", whatever the page's language. The fi
 switch (show on, no text) can be checked: `AUTO_TITLE` (`assets/js/report-rules.js`). DataArcus's twin, EN-AR copy and
 bilingual Arabic half write such a title as the visual's own text: its approved Arabic, else its English (FX3).
 
+## 2026-10-28: Microsoft's validator on six hand-built reports that open (the laptop part 4, C1, C5, C6), Power BI Desktop 2.159
+(Recorded 29 Oct 2026 for TB2 from the laptop's results, engine `lab/rc031-part4` 6caf204,
+`business/beta/rc031-part4/RESULTS.md`; 0.3.1-rc.3 = integration 694aa8a7.) The reports are six hand-built
+dashboards, the ones live on dataarcus.com, read only; nothing of them is in this repo. `check_report` said "can break
+the report in Power BI Desktop" on each (67, 21, 4, 5, 1 and 8 findings), and each report opened in Power BI Desktop
+2.159 with no error banner (C5). The codes counted on them (the validator's severity in brackets):
+- `PBIR_FORMATTING_PROP_NESTED` 76 (error), `PBIR_FILTER_NAME_DUPLICATE_GLOBAL` 14 (warning),
+  `PBIR_BOOKMARK_ACTION_TARGET_MISSING` 6 (error), `PBIR_ROLE_REQUIRED_MISSING` 3 (error),
+  `PBIR_SLICER_HEIGHT_BELOW_FLOOR` 2 (error), `PBIR_ROLE_MAX_EXCEEDED` 1 (error), `PBIR_SCATTER_NO_GROUPING` 1 (warning),
+  `PBIR_DRILLTHROUGH_BACK_BUTTON_MISSING` 1 (warning), `PBIR_VISUAL_TYPE_DEPRECATED` 1 (warning),
+  `PBIR_THEME_VISUAL_UNKNOWN` 1 (warning).
+So these ten codes are what Desktop opens a report with: `check_report`'s `openedInDesktop` kind
+(`mcp/lib/check-report.mjs`, `DESKTOP_OPENED`). What was measured is the report opening, not each part drawing: a
+visual missing a required role was seen to draw empty once (11 Oct 2026, `mcp/work/0.2.9-custom-visuals.md`, Z1).
+Any other code stays "can break" until a Desktop proof like this one says otherwise.
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.
