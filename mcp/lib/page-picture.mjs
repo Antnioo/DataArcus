@@ -28,7 +28,9 @@ function readPng(b) {
   const ch = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[type];
   if (!ch || ![1, 2, 4, 8, 16].includes(depth) || (type === 3 && !palette)) return { why: 'a PNG of a kind not expected' };
   if (tooBig(w, h)) return { why: `too large to read (${w} x ${h}; at most ${MAX_SIDE} a side)` };
-  let raw; try { raw = zlib.inflateSync(Buffer.concat(parts.map((p) => Buffer.from(p)))); } catch (e) { return { why: 'its PNG data could not be read' }; }
+  // (the data can't inflate past what the picture needs: a crafted file is refused, not let fill the memory)
+  const most = h * (1 + Math.ceil((w * ch * depth) / 8)) + 8 * h + 64;
+  let raw; try { raw = zlib.inflateSync(Buffer.concat(parts.map((p) => Buffer.from(p))), { maxOutputLength: most }); } catch (e) { return { why: 'its PNG data could not be read' }; }
   const rgba = new Uint8Array(w * h * 4), bpp = Math.max(1, (ch * depth) >> 3), max = (1 << Math.min(depth, 8)) - 1;
   const key = trns && type === 0 ? u16(trns, 0) : null, keyRgb = trns && type === 2 ? [u16(trns, 0), u16(trns, 2), u16(trns, 4)] : null;
   let at = 0;
@@ -73,7 +75,7 @@ function huffman(lengths, values) {
   return { maxcode, valptr, mincode, values };
 }
 function readJpeg(b) {
-  const q = [], dc = [], ac = []; let frame = null, adobe = null, resetInterval = 0, eobrun = 0;
+  const q = [], dc = [], ac = []; let frame = null, adobe = null, resetInterval = 0, eobrun = 0, scans = 0;
   let i = 2;
   const segment = () => { const n = u16(b, i); const d = b.subarray(i + 2, i + n); i += n; return d; };
   const decodeScan = (comps, ss, se, ah, al) => {
@@ -154,6 +156,8 @@ function readJpeg(b) {
     } else if (m >= 0xc3 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { why: 'a JPEG of a kind DataArcus does not read (lossless or arithmetic coding)' };
     else if (m === 0xda) {
       if (!frame) return { why: 'a JPEG with no frame' };
+      // (a progressive JPEG has about 10 scans; a crafted one with thousands would take minutes)
+      if (++scans > 64) return { why: 'a JPEG with more scans than a picture has (over 64)' };
       const d = segment(), n = d[0], comps = [];
       for (let k = 0; k < n; k++) { const c = frame.comps.find((x) => x.id === d[1 + k * 2]); if (!c) return { why: 'a JPEG not as expected' }; c.dcT = dc[d[2 + k * 2] >> 4]; c.acT = ac[d[2 + k * 2] & 15]; comps.push(c); }
       const ss = d[1 + n * 2], se = d[2 + n * 2], ah = d[3 + n * 2] >> 4, al = d[3 + n * 2] & 15;
@@ -302,7 +306,7 @@ function wordsIn(R) {
 
 // ---------- the last few pictures looked at, by their bytes ----------
 const lru = (max) => { const m = new Map(); return { get: (k) => { if (!m.has(k)) return undefined; const v = m.get(k); m.delete(k); m.set(k, v); return v; }, set: (k, v) => { m.delete(k); if (m.size >= max) m.delete(m.keys().next().value); m.set(k, v); } }; };
-const kept = lru(6);
+const kept = lru(32);
 const keyOf = (b) => crypto.createHash('sha256').update(b).digest('hex') + ':' + b.length;
 /** A page picture for the Arabic page: { why } when it can't be read, else { iw, ih, png (the Arabic page's picture,
  *  the caller's own copy), padded, words (lines that look like words), same (the flip is the picture itself),
@@ -314,7 +318,9 @@ export function pagePicture(bytes, fit, W, H) {
   if (img.why) { kept.set(key, img); return img; }
   const f = flippedFor(img, fit, W, H), R = regions(f.unflipped), words = wordsIn(R);
   let same = !f.padded; if (same) for (let i = 0; i < f.rgba.length; i++) if (f.rgba[i] !== img.rgba[i]) { same = false; break; }
-  const r = { iw: img.w, ih: img.h, w: f.w, h: f.h, padded: f.padded, words, same, png: writePng(f.w, f.h, f.rgba), regions: R };
+  // (kept: the panels' bounds only, never the label of every pixel; a 14-picture report stays in the cache)
+  const big = R.w * R.h / 1000, regionsKept = { k: R.k, w: R.w, h: R.h, list: R.list.filter((x) => x.area >= big && x.x1 - x.x0 >= 8 && x.y1 - x.y0 >= 8) };
+  const r = { iw: img.w, ih: img.h, w: f.w, h: f.h, padded: f.padded, words, same, png: writePng(f.w, f.h, f.rgba), regions: regionsKept };
   kept.set(key, r);
   return Object.assign({}, r, { png: r.png.slice() });
 }
@@ -347,11 +353,11 @@ export function newOverlaps(enVisuals, arVisuals) {
  *  points; P: pagePicture's result; place: where that picture lands; mirrored: the Arabic page (its picture flipped:
  *  each region's bounds taken mirrored) */
 function panelAt(P, box, place, mirrored) {
-  const R = P.regions, k = R.k, slack = 2, big = R.w * R.h / 1000;
+  const R = P.regions, k = R.k, slack = 2;
   const x0 = (box.x - place.ox) / place.s / k, x1 = (box.x + box.w - place.ox) / place.s / k, y0 = (box.y - place.oy) / place.s / k, y1 = (box.y + box.h - place.oy) / place.s / k;
   let best = null;
   R.list.forEach((r) => {
-    if (r.area < big || r.x1 - r.x0 < 8 || r.y1 - r.y0 < 8 || (r.x0 === 0 && r.y0 === 0 && r.x1 === R.w && r.y1 === R.h)) return;
+    if ((r.x0 === 0 && r.y0 === 0 && r.x1 === R.w && r.y1 === R.h)) return;
     const rx0 = mirrored ? R.w - r.x1 : r.x0, rx1 = mirrored ? R.w - r.x0 : r.x1;
     if (x0 >= rx0 - slack && x1 <= rx1 + slack && y0 >= r.y0 - slack && y1 <= r.y1 + slack && (!best || (r.x1 - r.x0) * (r.y1 - r.y0) < (best.x1 - best.x0) * (best.y1 - best.y0))) best = r;
   });

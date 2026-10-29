@@ -4,7 +4,8 @@
 // another encoder): never a real report, never data values.
 //   D1-D8  the picture reader (lib/page-picture.mjs): PNG as pngjs writes it (RGBA, RGB, grey, grey and alpha, palette,
 //          16 bits, interlaced), a baseline JPEG of the website (within a few levels of Pillow's reading), a
-//          progressive one and one with restart markers (within a few levels of the drawing)
+//          progressive one and one with restart markers (within a few levels of the drawing); D10 a PNG that
+//          inflates far past its size refused
 //   P      18 made-up pages (a left rail and 2 panels; 3 card columns; a header band) x (Normal narrower than the page,
 //          Fit, Fill) x (PNG, JPEG): each Arabic page on a new PNG, the English picture flipped (Normal: drawn on the
 //          page first), and every visual mirrored onto the same panel (the JPEG report asked with mirrorPicturePages,
@@ -24,6 +25,7 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
@@ -72,6 +74,10 @@ let PP = null; try { PP = await import('./lib/page-picture.mjs'); } catch (e) { 
   const prog = rd(fs.readFileSync(path.join(FIX, 'rail-wide-progressive.jpg'))), rst = rd(fs.readFileSync(path.join(FIX, 'cols-wide-restart.jpg')));
   chk(() => og && og.w === 1200 && og.h === 630 && [71.66, 84.37, 95.99].every((m, c) => Math.abs(mean(og, c) - m) < 0.6) && ogPts.every(([x, y, r, g2, b]) => { const i = (y * 1200 + x) * 4; return Math.abs(og.rgba[i] - r) <= 8 && Math.abs(og.rgba[i + 1] - g2) <= 8 && Math.abs(og.rgba[i + 2] - b) <= 8; }),
     () => `D8: the website's baseline JPEG (4:2:0) read as Pillow reads it: ${og ? JSON.stringify([0, 1, 2].map((c) => mean(og, c).toFixed(2))) : 'not read'}`);
+  // a crafted PNG (100 x 100) whose data inflates to 50 MB: refused, the memory never filled
+  const be = (v) => [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255], ck = (t, d) => { const c = Buffer.alloc(12 + d.length); c.set(be(d.length)); c.write(t, 4, 'latin1'); c.set(d, 8); return c; };
+  const bomb = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]), ck('IHDR', Buffer.from(be(100).concat(be(100), [8, 2, 0, 0, 0]))), ck('IDAT', zlib.deflateSync(Buffer.alloc(50e6))), ck('IEND', Buffer.alloc(0))]);
+  chk(() => { const r = rd(bomb); return r && r.why && !r.rgba; }, () => 'D10: a PNG whose data inflates far past its size is refused');
   chk(() => prog && rst && inside(prog, 'rail') <= 12 && inside(rst, 'cols') <= 16, () => `D9: a progressive JPEG and one with restart markers read: worst ${prog ? inside(prog, 'rail') : 'not read'}, ${rst ? inside(rst, 'cols') : 'not read'}`);
 }
 
