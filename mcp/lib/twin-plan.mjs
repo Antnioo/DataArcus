@@ -22,6 +22,7 @@ const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
+import { picturesOf, flipPicturesOf, picturePagesSaid } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
 
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
@@ -96,8 +97,13 @@ export function planTwin(a) {
   // (0.3.1 GD1: glass is the default of a new report) DataArcus's own glass picture (the engine's mark in the PNG) has
   // soft colour fields and no panels, so its page is mirrored as a page without a picture
   const blank = (n) => { const rel = 'StaticResources/RegisteredResources/' + n; if (!R.files.includes(rel)) return false; try { const b = bytesAt(loc, rel); return b.equals(blankBytes) || isGlassPng(b); } catch (e) { return false; } };
-  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank })).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
-  const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
+  // (0.3.1 MP1, D-1029-03: every page of the twin right to left) a page drawn on a picture is mirrored with its picture
+  // flipped (lib/twin-pictures.mjs); kept left to right only when its picture can't be read, or may hold words and the
+  // user has not approved its flip (flipPictures); mirrorPicturePages still mirrors those (the picture as it is)
+  const pictures = picturesOf(R, loc, blank, a.flipPictures), mirrorPictures = a.mirrorPicturePages === true;
+  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page, { blank }) && !(pictures.get(String(pg.id)) || {}).wallpaper).map((pg) => pg.id));
+  const keepLtr = (pg) => pictureIds.has(pg.id) && (pictures.get(String(pg.id)) || {}).picture !== 'flipped' && !mirrorPictures;
+  const pagesKept = R.pages.filter(keepLtr).length;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
   // (0.3.1 X2) the Arabic of a text by the text itself, as the plan shows it (a report built again draws new ids): every
@@ -149,7 +155,7 @@ export function planTwin(a) {
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
-    if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: 'drawn on a background picture: kept left to right' };
+    if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
@@ -172,7 +178,9 @@ export function planTwin(a) {
   if (where.waterfallKept.length) cannot.push({ what: 'waterfall charts the running total can\'t follow', why: Mirror.KIND_WHAT.waterfallKept, where: where.waterfallKept.slice(0, 30) });
   // (0.3.1 R1: a real user's Arabic matrix read left to right, its first column at the left) said plainly, nothing faked
   if (where.matrix.length) cannot.push({ what: 'matrices', why: MATRIX_SAID, where: where.matrix.slice(0, 30) });
-  if (pictureIds.size) cannot.push({ what: 'pages drawn on a background picture', why: mirrorPictures ? 'mirrored as asked (mirrorPicturePages), but the picture is not: its panels stay where they are, so the visuals no longer sit on them' : 'kept left to right: Power BI has no setting that mirrors a page picture, and the visuals would leave its panels. To mirror them anyway (the picture stays as it is), ask again with mirrorPicturePages true', where: [...pictureIds].map((x) => safeName(x)).slice(0, 30) });
+  // (MP1) the pages whose picture is not flipped: kept left to right, or mirrored as asked over the picture as it is
+  const notFlipped = [...pictureIds].filter((x) => (pictures.get(String(x)) || {}).picture !== 'flipped');
+  if (notFlipped.length) cannot.push({ what: 'pages drawn on a background picture', why: mirrorPictures ? 'mirrored as asked (mirrorPicturePages), but their picture is not flipped (it may hold words, or it can\'t be read): its panels stay where they are, so the visuals no longer sit on them' : 'kept left to right: their picture may hold words (asked: flipPictures flips it once the user approves) or can\'t be read (picturePages says which and why). To mirror them anyway (the picture as it is), ask again with mirrorPicturePages true', where: notFlipped.map((x) => safeName(x)).slice(0, 30) });
   // (T-4: data bars inside a table or a matrix have no proven direction setting)
   if (R.pages.some((pg) => pg.visuals.some((v) => ['table', 'matrix'].includes(Mirror.kindOf(v.json))))) cannot.push({ what: 'data bars inside tables and matrices', why: 'they keep their direction (no right-to-left setting is proven for them); the columns themselves are reversed' });
   cannot.push({ what: 'Power BI\'s own words', why: '"All", "Select all", "Total", "(Blank)", the visual header menu, the filter pane, date and number formats follow the viewer\'s Power BI language and regional settings, not the report: an Arabic viewer sees them in Arabic' });
@@ -216,6 +224,9 @@ export function planTwin(a) {
     let b = null; try { b = flipGlassPng(new Uint8Array(bytesAt(loc, rel))); } catch (e) { b = null; }
     if (b) built.pictures.set(rel, Buffer.from(b));
   }));
+  // (0.3.1 MP1) a page drawn on a picture: its picture flipped, a new PNG of the Arabic page's own (built.addedPictures),
+  // and the boxes checked after mirroring and the text fitting (built.pictureChecks)
+  flipPicturesOf(R, loc, pictures, built, keepLtr);
   // (X1) the copy, built in memory from the twin's pages: the plan shows it, the write writes exactly it
   // (0.3.1 K2) the .platform logical id, chosen once here (the write builds again with the plan's: the approved bytes hold it)
   const logicalId = typeof a.logicalId === 'string' && a.logicalId ? a.logicalId : crypto.randomUUID();
@@ -238,7 +249,7 @@ export function planTwin(a) {
   if (toEnglish) notTranslated.push({ text: LANG.ar.text, where: `language button (${toEnglish})`, why: 'the button on each Arabic page that opens its English page: a language switch names the language it opens in that language, as the English pages\' button reads «العربية»', ids: [] });
   // (0.3.0 J18) the terminology sheet: each field's places on the twin's own pages, as built
   const termRows = Terms.sheetOf(T.keys, T.term, Terms.placesOf({ pages: built.pages.filter((x) => isObj(x.page)).map((x) => ({ id: x.pg.id, name: Terms.plain(typeof x.page.displayName === 'string' ? x.page.displayName : x.pg.id), type: x.page.type, visuals: x.visuals })), ext: Terms.measuresOf(built.ext || R.ext) }, new Set(texts.filter((t) => t.kind === 'visualField').map((t) => t.rawId.slice('fieldAt:'.length)))), Terms.isolateLatin);
-  const PH = built.phone, phone = R.phone ? { mirrored: pictureIds.size && !mirrorPictures ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
+  const PH = built.phone, phone = R.phone ? { mirrored: pagesKept ? 'mirrored like its page (a page kept left to right keeps its phone layout as it is)' : true, pages: PH.pages,
     how: 'The phone layout (mobile.json) is mirrored like the pages: every box on the 323-wide phone canvas, the KPI cards\' order reversed, text boxes to the right, and its texts are the approved Arabic. Each page tab there is as wide as its Arabic name on one line (the writer\'s phone rule), the first page at the right.',
     ...(PH.tabs.length ? { tabs: PH.tabs.slice(0, 60) } : {}), ...(PH.tabsCut.length ? { tabsCut: PH.tabsCut.slice(0, 60) } : {}) } : { mirrored: false, why: 'the report has none' };
   const FK = ['buttons', 'buttonsCut', 'headers', 'headersCut', 'textboxes', 'textboxesCut'];
@@ -252,7 +263,7 @@ export function planTwin(a) {
     if (ti && !altUnder.has(ti.id) && ti.raw.trim() === t.raw.trim() && labels[t.id] == null && labels[ti.id] == null) altUnder.set(ti.id, t.id); });
   const under = new Set(altUnder.values()), listed = texts.filter((t) => !under.has(t.id)).map((t) => (altUnder.has(t.id) ? Object.assign({}, t, { altTextToo: altUnder.get(t.id) }) : t));
   // (0.3, B-154) the model's fingerprint, pinned by the plan (null: no model read)
-  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
+  return { loc, R, logicalId, labels, texts, mixedTitles, textsUnknown, notTranslated, month, dateTables, dateColumns, pictureIds, pictures, keepLtr, built, copy, same, outBase, modelPrint: model.m ? model.m.print : null, model: model.m, terms: T.given, termRows, answer: capAnswer(twinFit({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
@@ -260,7 +271,8 @@ export function planTwin(a) {
     // (TW1, M1-S2: the tables that say «الإجمالي» on their total row are said in mirrors, Mirror.KIND_WHAT.table: the
     // answer's size is shared with the texts list, twinFit)
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), ...(built.titleMeasures.fixed ? { fixed: built.titleMeasures.fixed.slice(0, 30) } : {}), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
-    ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
+    ...(pictures.size ? { picturePages: picturePagesSaid(R, pictures, mirrorPictures) } : {}),
+    ...(built.pictureChecks ? { pictureChecks: Object.assign({}, built.pictureChecks, { offPanel: built.pictureChecks.offPanel.slice(0, 30), newOverlaps: built.pictureChecks.newOverlaps.slice(0, 30), sayInPlan: 'After mirroring onto the flipped picture: offPanel names each visual that no longer sits on the panel it sat on in English, newOverlaps the visuals that now overlap. Say each one in the plan by page and visual; the user looks at those in Desktop (the twin moves nothing more).' }) } : {}),
     keptForNavigation: same ? 'The English pages keep their page ids, visual names and bookmarks; the Arabic pages get their own (new ids), and their page, tooltip and bookmark links go to the Arabic pages.' : 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
     // (D7) the waterfalls: Power BI's own, left to right ("native", the default), or the look-alike read from the right

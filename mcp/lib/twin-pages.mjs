@@ -295,6 +295,21 @@ function rowLabelTable(vj, isText, extMeasure) {
 // ---- the twin's pages, built in memory (the plan shows what they fit; the write writes exactly them) ----
 // labels: by the mirror engine's ids (the report's own names). Returns { pages: [{ rel, page, visuals: [json] }],
 // applied, ext (the twin's reportExtensions.json or null), titleMeasures, fitted }
+// (0.3.1 MP1, the laptop's part 4b: a KPI icon landed on its own title «المكالمات») a small visual on a text box is kept
+// at its place on it (Mirror's units: what a bigger visual draws inside does not flip), but a text box's text does turn
+// right (Mirror.mirrorVisual): there the small visual goes to the other end of the text box, so the text and it swap
+// sides together, as the box's own padding does. A text box whose paragraphs are all centred keeps it where it is.
+const textTurns = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.objects) && Array.isArray(v.visual.objects.general) ? v.visual.objects.general : [])
+  .some((e) => isObj(e) && isObj(e.properties) && Array.isArray(e.properties.paragraphs) && e.properties.paragraphs.some((pa) => isObj(pa) && pa.horizontalTextAlignment !== 'center'));
+const boxOk = (v) => isObj(v) && isObj(v.position) && ['x', 'width'].every((k) => Number.isFinite(v.position[k]));
+function badgesWithText(pg, r) {
+  const en = new Map(pg.visuals.filter((v) => isObj(v.json)).map((v) => [String(v.json.name), v.json])), ar = new Map((r.visuals || []).filter(isObj).map((v) => [String(v.name), v]));
+  ((r.units && r.units.on) || []).forEach((u) => {
+    const h0 = en.get(String(u.host)), b0 = en.get(String(u.visual)), h1 = ar.get(String(u.host)), b1 = ar.get(String(u.visual));
+    if (![h0, b0, h1, b1].every(boxOk) || Mirror.kindOf(h0) !== 'textbox' || !textTurns(h0)) return;
+    b1.position.x = Mirror.round(h1.position.x + h0.position.width - (b0.position.x - h0.position.x) - b0.position.width);
+  });
+}
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns };
   // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
@@ -362,6 +377,7 @@ export function buildTwin(P, labels) {
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
     // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
+    if (!P.keepLtr(pg)) badgesWithText(pg, r);
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);

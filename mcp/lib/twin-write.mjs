@@ -14,6 +14,7 @@ import { modelOf } from './twin-model.mjs';
 import { digestOf } from './artifact.mjs';
 import { newPlatform } from './twin-copy.mjs';
 import { planTwin } from './twin-plan.mjs';
+import { RES, registered } from './twin-pictures.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -47,6 +48,9 @@ export function twinTree(P) {
     (mobiles || []).forEach((m, i) => { if (m) out.set(pg.visuals[i].mobile.rel, json(m)); });
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
+  // (0.3.1 MP1) the Arabic pages' flipped pictures, registered in the twin's report.json (the original's picture stays too)
+  const added = (!P.copy && P.built.addedPictures) || [], RJ = 'definition/report.json';
+  if (added.length && R.files.includes(RJ)) { try { const j = registered(jsonAt(loc, RJ), added.map((x) => x.name)); if (j) out.set(RJ, json(j)); } catch (e) { /* not JSON: copied as it is */ } }
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
   // (SQ4, X1-S2) the bookmark groups' approved names, in the twin's bookmarks.json
   if (!P.copy && (R.bookmarkGroups || []).some((g) => labels['bookmarkGroup:' + g.name] != null)) { const j = jsonAt(loc, BOOKMARKS);
@@ -65,6 +69,7 @@ export function twinTree(P) {
   // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
   if (!P.copy && out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
   if (!P.copy && !R.hasPlatform) tree.push({ path: path.basename(twinDir) + '/.platform', data: out.get('.platform') });
+  added.forEach((x) => tree.push({ path: path.basename(twinDir) + '/' + RES + x.name, data: x.data }));
   let month = { written: false, why: P.month.why };
   if (P.month.offered) {
     const f = scriptName(loc.project, `${P.outBase} - Arabic calendar`, P.month.script);
@@ -89,12 +94,14 @@ export function writeTwin(a, plan, art) {
   if ((a.into != null && (a.into === 'same') !== (d.into === 'same')) || (a.tabsShown != null && d.into === 'same' && a.tabsShown !== (d.tabsShown || 'en'))) throw new Error('Nothing was written: into or tabsShown differ from the approved plan\'s. Make the plan again with the options the user wants, show it and wait for their go.');
   // (D7) the waterfall's choice is the plan's too
   if (a.waterfallRtl != null && Gallery.waterfallRtlOf(a.waterfallRtl) !== Gallery.waterfallRtlOf(d.waterfallRtl)) throw new Error('Nothing was written: waterfallRtl differs from the approved plan\'s. Make the plan again with the waterfall the user wants, show it and wait for their go.');
+  // (0.3.1 MP1) the pictures the user approved to flip are the plan's too
+  if (a.flipPictures != null && JSON.stringify([...a.flipPictures].map(String).sort()) !== JSON.stringify([...(d.flipPictures || [])].map(String).sort())) throw new Error('Nothing was written: flipPictures differs from the approved plan\'s. Make the plan again with the pictures the user approved to flip, show it and wait for their go.');
   // (0.3.0 J18) the plan's terms: a call with planId that gives other ones is refused
   if (a.terms && JSON.stringify(normTerms(a.terms)) !== JSON.stringify(d.terms || {})) throw new Error('Nothing was written: these terms differ from the terms of the approved plan. Show the user the new terminology sheet, get a new plan id for it (call this tool without planId), and wait for the user\'s go.');
   // (K2) the plan's exact files: kept in this session only (a restart, or more than the newest 64 plans, drops them)
   if (!art || !Array.isArray(art.files)) throw new Error('Nothing was written: the files kept for this plan are gone (DataArcus keeps a plan\'s exact files in this session of the server only). Make the plan again (call this tool without planId), show it to the user and wait for their go.');
   // (K2) built again with the plan's inputs and its logical id, for comparison only: what is written is the kept files
-  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, into: d.into, tabsShown: d.tabsShown, logicalId: art.logicalId });
+  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, flipPictures: d.flipPictures, into: d.into, tabsShown: d.tabsShown, logicalId: art.logicalId });
   // (B-154) the model the plan read (for the month column and the dates), as it was at the go
   if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P;
@@ -111,7 +118,7 @@ export function writeTwin(a, plan, art) {
   // (0.3.0 J18) the terms of the written plan are confirmed for this model (this session only)
   if (Array.isArray(d.terminology)) Terms.remember(P.model, d.terminology);
   const extAdded = !P.copy && !!P.built.ext && !R.files.includes(EXT), month = art.month;
-  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (extAdded ? 1 : 0) + (R.hasPlatform ? 0 : 1), pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
+  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: P.copy ? P.copy.files.length + 1 : R.files.length + 1 + (extAdded ? 1 : 0) + (R.hasPlatform ? 0 : 1) + (P.built.addedPictures || []).length, pages: P.copy ? P.copy.pairs.length * 2 : P.answer.pages.length,
     ...(P.answer.languages ? { languages: P.answer.languages } : {}), mirrors: P.answer.mirrors, cannot: P.answer.cannot, ...(P.answer.notFullyArabic ? { notFullyArabic: P.answer.notFullyArabic } : {}),
     labelsApplied: art.applied, textsWithoutLabel: P.answer.labels.withoutLabel, notTranslated: P.answer.notTranslated, phone: P.answer.phone, original: 'only read: not changed', arabicMonth: month,
     ...(P.answer.fitted ? { fitted: P.answer.fitted } : {}), ...(P.answer.titleMeasures ? { titleMeasures: P.answer.titleMeasures } : {}),
