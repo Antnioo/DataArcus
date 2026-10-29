@@ -23,7 +23,8 @@
   card's label text wrapped RLI ... PDI with Latin runs isolated; a title beside no value unchanged: about 5).
   Other suites: a report whose field shows under two names on two visuals lists one more text per visual's name
   (said per test if any moves). Full run: the base's suites + 1 (tb1).
-- **State:** planned. **Resume:** the red tests (test-0.3.1-tb1.mjs), then items 1-4.
+- **State:** planned.
+- **Resume:** the red tests (test-0.3.1-tb1.mjs), then items 1-4.
 
 ## The plan
 1. **Paging.** twinFit fits the texts first; when fewer than 20 texts (or all there are) fit, the terminology sheet
