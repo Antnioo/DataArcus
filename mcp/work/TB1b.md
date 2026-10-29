@@ -24,7 +24,7 @@
   approved fixed title: both a plan id). Areas: twin 18 suites pass (tb1 24 = 24), arabic 15 pass; lint 0; check-min
   75 match, stamps new since main; result-lines, changelog-words, agent-memory PASS. No other suite's number changed
   (mcp 1594; mutation 198: 76 mutants, all killed).
-- **State: DONE.** Full run on 8f538855: "run-tests: 126 suites passed" (the base's 125 + tb1b). CI started after this line.
+- **State: DONE.** Full run on 8f538855: "run-tests: 126 suites passed" (the base's 125 + tb1b). CI started after this line: run 40817812539 green (Linux, Windows, macOS).
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
