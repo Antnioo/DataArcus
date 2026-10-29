@@ -4,6 +4,10 @@
 - **Approval:** the reviewer's brief "Round 2 as MP1b" (29 Oct), from laptop part 6 block B (Desktop 2.159, shots
   mp1-p1..p4-en-ar-p6.png): Normal is centred at scale 1, Fit is stretched to the page, Fill centred at max scale.
   MP1's padded Normal flip is off by (W - iw)/2 across and (H - ih)/2 down. The owner: D-1029-03, D-1027-12.
+- **Round 2 (the reviewer's message of 11:45, laptop part 6 on the owner's 6 dashboards, RESULTS.md block C):** 1. the
+  picture file is never found (Desktop's two names); 2. an emptied picture; 3. Call Center's bar chart and ratings table
+  kept in English order; 4. KPI icons on their titles, Fintech's «فهمت» over its text; 5. ER p1's weekday bars. Added to
+  this job, red first: R1-R7 (the made-up shapes of each).
 - **Base:** `fix/0.3.1-mp1b` from `origin/integration/0.3.1` at d9d3ae98. Push only this branch.
 - **Scope:** `mcp/lib/page-picture.mjs` (placement as measured; the flip without padding; the box check on the measured
   placement), `mcp/lib/twin-pictures.mjs` (no "padded", no "drawn on the page first"), `mcp/TOOLS.md`,
@@ -21,6 +25,10 @@
   F1, F2). Changed on purpose, per check: P (18, same number) tests Desktop's placement; A1 says no page padded; A2
   counts 0 "drawn on the page first" rows (was 3); V3 (MP1's tight Normal page) now red on the old code, which padded
   it. Areas: twin 20 suites, arabic 15; lint 0; agent-memory PASS. No other suite's number moved.
+- **Got, round 2:** `mp1` 78 checks (70 + R1-R7 + O4), red on 783ccba (the round 1 code; d9d3ae98 the same for these):
+  6 of 78 failed (R1-R3, R5-R7); R4 (a nested group, W - x - w at every level) a guard, green there: groups were not
+  the cause. Engine change: `assets/js/report-mirror.js` (build:min; new stamps report-mirror 20261029mp1b in
+  theme-generator.js, theme-generator 20261029mp1b in its 3 pages).
 - **State:** FULL_RUN_LINE
 - **Resume:** none; the reviewer's merge.
 
@@ -44,9 +52,25 @@
 - `picturePages[].padded` is gone (no page is padded); nothing reads it (grep: create_arabic_twin, approval-window).
 - The CHANGELOG's MP1 bullet never said padding: unchanged.
 
+## Round 2: the causes found in the files
+| Item | Cause | Fix | Test |
+|---|---|---|---|
+| 1 | twin-pictures.mjs read the file from `image.name`, the label Desktop shows; the file is `url`'s ResourcePackageItem.ItemName | the file from ItemName (the name only when there is none); the Arabic page's ItemName the new file, its label kept when it differs | R1 |
+| 2 | an image with name and url '' counted as a picture (Mirror.pageHasPicture reads names only) | no file, no picture: the picture pages are picturesOf's (`picturePageIds`) | R2 |
+| 3 | NOT the group (R4: groups mirror right at every level). T-6's rule "a bar list with hidden names and a visual of names beside it, kept as one block in its order" took the ratings table (other fields) for the bar chart's names: the made-up pair gives exactly the laptop's 21 and 393 | the names visual must show the bars' own category field (a text box, with no field, still can) | R3; T-6 (v030twin) still green |
+| 4 | Mirror keeps a small visual at its place on its host (T-3); badgesWithText only acted when the HOST was a text box | it turns with a text box it lies on (host or not), with its host's turned title, and is mirrored on its own when kept it would lie on a visual it did not touch in English | R5 (icon beside a title on a card), R6 (icon on a card with a title), R7 (a button under a help text box) |
+
 ## Seen, not in scope
 - Running `npm test -s -- twin` from the repo root runs the website's runner ("Unknown test: twin"): the MCP's runner
   is `mcp/run-tests.mjs`. Nothing to change; said for the next builder.
 
 ## For the laptop
 - Re-run part 6's block B on the new build: all four pages PASS (every visual on its panel, Normal included).
+- Re-run block C on the owner's 6 dashboards: the 14 picture pages flipped (none "kept: its picture file is not in the
+  report"); AdventureWorks p1 mirrored as a plain page; Call Center Overview's "Calls by Department" and the ratings
+  table each at its own mirror (21 and 372), the agent card off the heatmap; the 4 KPI icons off their titles;
+  Fintech's «فهمت» off its text.
+- 5 (ER p1, the weekday bars over the heatmap's weekday names "un", "lon"): not the group cause, and not reproduced from
+  the description. If it stays after this build, send the two visuals' visual.json `position` and `visual.visualType`
+  (and whether the bar chart's category axis is hidden): a bar chart paired with a matrix's row headers keeps its
+  English order (T-6), which a matrix's headers staying at its left (no right-to-left setting) may not suit.
