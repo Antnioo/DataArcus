@@ -20,6 +20,8 @@
 //          the placement as Desktop 2.159 measured it; the box check on a stretched Fit picture
 //   R1-R7  (MP1b) laptop part 6's real shapes: a picture with a label and a file name, an emptied picture, a bar chart
 //          beside a table of other fields, nested groups, KPI icons beside and on titles, a help box's button
+//   MC     (MP1c) laptop part 7's shapes: a tab-indented KPI title, a bar chart on a matrix's margin, a small bar chart
+//          over a table, help lines with neutral ends (V3 wrap), and the overlap check naming such pairs
 //   V1-V3  a badge on a text box mirrored within it (no new overlap with its text); a new overlap named; a text box the
 //          fitting widens off its panel named by page and visual
 //   node test-0.3.1-mp1.mjs
@@ -169,7 +171,18 @@ const RR = report('Real Shapes', [
     vis('ncard', 'cardVisual', { x: 20, y: 140, w: 280, h: 100, z: 1000 }, { query: { queryState: { Data: { projections: [Me('All Measures', 'Visits')] } } }, visualContainerObjects: { title: [{ properties: { show: L('true'), text: S('Resolution') } }] } }),
     vis('nicon', 'image', { x: 260, y: 150, w: 30, h: 30, z: 3000 })] },
   { id: 'help', name: 'Help', visuals: [vis('box', 'shape', { x: 140, y: 100, w: 360, h: 200, z: 1000 }), vis('gotit', 'actionButton', { x: 400, y: 250, w: 70, h: 30, z: 2000 }), vis('helptext', 'textbox', { x: 160, y: 110, w: 320, h: 180, z: 3000 }, text('Pick a branch to see its calls'))] }], REAL);
-const before = [RP, RJ, RW, RN, RR].map((r) => filesOf(r.dir));
+// (MP1c, laptop part 7 on the owner's dashboards, made up here in their shapes) a KPI title indented by a tab run under
+// its icon; a bar chart overlapping a matrix's right margin; a small bar chart over a one-column table; help lines
+// with a digit and a full stop at their ends
+const runs = (...vs) => ({ objects: { general: [{ properties: { paragraphs: [{ textRuns: vs.map((value) => ({ value })) }] } }] } });
+const RC = report('Part Seven', [
+  { id: 'kpiTab', name: 'KPI tab', visuals: [vis('ktab', 'textbox', { x: 20, y: 20, w: 200, h: 40, z: 1000 }, runs('\t\t\t\t\t', 'Calls')), vis('ticon', 'image', { x: 22, y: 25, w: 30, h: 30, z: 2000 })] },
+  { id: 'erRow', name: 'ER row', visuals: [vis('heat', 'pivotTable', { x: 20, y: 20, w: 300, h: 200, z: 1000 }, { query: { queryState: { Rows: { projections: [C('Branches', 'Country')] }, Values: { projections: [Me('All Measures', 'Visits')] } } } }),
+    vis('wk', 'clusteredBarChart', { x: 296, y: 20, w: 200, h: 200, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } }, objects: hidden })] },
+  { id: 'ratings', name: 'Ratings', visuals: [vis('rt', 'tableEx', { x: 20, y: 260, w: 300, h: 80, z: 1000 }, { query: { queryState: { Values: { projections: [Me('All Measures', 'Repeat Rate')] } } } }),
+    vis('rb', 'clusteredBarChart', { x: 170, y: 265, w: 140, h: 70, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } }, objects: hidden })] },
+  { id: 'helpLines', name: 'Help lines', visuals: [vis('h1', 'textbox', { x: 20, y: 20, w: 400, h: 40 }, runs('1 Pick an order to see its status.')), vis('h2', 'textbox', { x: 20, y: 80, w: 400, h: 40 }, runs('Pick an order'))] }], {});
+const before = [RP, RJ, RW, RN, RR, RC].map((r) => filesOf(r.dir));
 
 const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' }), call = s.call;
@@ -278,6 +291,33 @@ chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width
   chk(() => at('kpi', 'nicon').x === W - 260 - 30, () => `R6: an icon on a card whose own title turns right goes to the card's other end (${W - 290}): ${at('kpi', 'nicon').x}`);
   chk(() => at('help', 'gotit').x === W - 400 - 70, () => `R7: a help box's button under its text box goes to the text box's other end with the text (${W - 470}), not its English x 400: ${at('help', 'gotit').x}`);
   chk(() => JSON.stringify(filesOf(RR.dir)) === JSON.stringify(before[4]), () => 'O4: the real-shapes report\'s files byte-identical');
+}
+
+// ---------- P7: laptop part 7's last collisions (MP1c, each red on 4d1aaff8 first) ----------
+{
+  const labels = { 'textbox:kpiTab/ktab/0.1': 'المكالمات', 'textbox:helpLines/h1/0.0': '1 صفّ الطلب لترى حالته.', 'textbox:helpLines/h2/0.0': 'صفّ الطلب' };
+  const w = await write({ path: RC.pbip, arabicMonth: false, labels }), V = (pg, n) => (w.dir ? rd(path.join(w.dir, 'definition/pages', pg, 'visuals', n, 'visual.json')) : null);
+  const runsOf = (v) => (v ? v.visual.objects.general[0].properties.paragraphs[0].textRuns.map((r) => r.value) : []);
+  chk(() => !w.err && JSON.stringify(runsOf(V('kpiTab', 'ktab'))) === JSON.stringify(['المكالمات', '\t\t\t\t\t']), () => `MC-a: a title indented by a tab run, turned right: the tabs move to its end, the word clear of the mirrored icon: ${JSON.stringify(runsOf(V('kpiTab', 'ktab')))} ${w.err ? short(w) : ''}`);
+  const hp = V('erRow', 'heat') && V('erRow', 'heat').position, wp = V('erRow', 'wk') && V('erRow', 'wk').position;
+  chk(() => hp.x === 320 && wp.x === 144 && wp.x + wp.width <= hp.x, () => `MC-b: a bar chart that overlapped a matrix's right margin no longer lies on its row headers in the twin (matrix at 320, chart from 144 ending by 320): ${JSON.stringify([hp, wp])}`);
+  const rb = V('ratings', 'rb'), rt = V('ratings', 'rt');
+  chk(() => rt.position.x === 320 && rb.position.x === 320 + 150, () => `MC-c1: a small bar chart over a one-column table keeps its place on it (table at 320, chart at 470): ${rt && rt.position.x}, ${rb && rb.position.x}`);
+  chk(() => !((rb.visual.objects.valueAxis || []).some((e) => e.properties && e.properties.invertAxis)) && !((rb.visual.objects.categoryAxis || []).some((e) => e.properties && e.properties.switchAxisPosition)), () => `MC-c2: its bars keep their direction (no invertAxis, no switchAxisPosition), as the table stays left to right inside: ${JSON.stringify(rb && rb.visual.objects)}`);
+  const h1 = runsOf(V('helpLines', 'h1'))[0] || '', h2 = runsOf(V('helpLines', 'h2'))[0] || '';
+  chk(() => h1 === '\u2067' + '1 صفّ الطلب لترى حالته.' + '\u2069', () => `MC-e1: a text box's Arabic line with a digit and a full stop at its ends wrapped whole RLI ... PDI (V3): ${JSON.stringify(h1)}`);
+  chk(() => h2 === 'صفّ الطلب', () => `MC-e2 (guard): Arabic letters at both ends: unchanged: ${JSON.stringify(h2)}`);
+  chk(() => JSON.stringify(filesOf(RC.dir)) === JSON.stringify(before[5]), () => 'O5: the part-7 report\'s files byte-identical');
+}
+// MC-d: the overlap check names a pair that overlapped in English too when, in the twin, the overlap moved onto a
+// matrix's row headers, or a bar chart over a table had its bars turned (the shapes as the old twin wrote them)
+{
+  const box = (name, type, x, y, w, h, z, extra) => ({ name, position: { x, y, z, width: w, height: h }, visual: Object.assign({ visualType: type }, extra || {}) });
+  const en = [box('heat', 'pivotTable', 20, 20, 300, 200, 1), box('wk', 'clusteredBarChart', 296, 20, 200, 200, 2), box('rt', 'tableEx', 20, 260, 300, 80, 1), box('rb', 'clusteredBarChart', 170, 265, 140, 70, 2)];
+  const ar = [box('heat', 'pivotTable', 320, 20, 300, 200, 1), box('wk', 'clusteredBarChart', 144, 20, 200, 200, 2), box('rt', 'tableEx', 320, 260, 300, 80, 1), box('rb', 'clusteredBarChart', 330, 265, 140, 70, 2, { objects: { valueAxis: [{ properties: { invertAxis: L('true') } }] } })];
+  const o = PP ? PP.newOverlaps(en, ar) : [], names = o.map((x) => x.visuals.join());
+  chk(() => names.includes('heat,wk') && o.find((x) => x.visuals.join() === 'heat,wk').why === 'rowHeaders', () => `MC-d1: an overlap moved onto a matrix's row headers is named: ${JSON.stringify(o)}`);
+  chk(() => names.includes('rb,rt') && o.find((x) => x.visuals.join() === 'rb,rt').why === 'barsTurned', () => `MC-d2: a bar chart over a table whose bars turned is named: ${JSON.stringify(o)}`);
 }
 
 // ---------- X: the copy holding both languages ----------
