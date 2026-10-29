@@ -64,6 +64,10 @@ export function register(server, ctx) {
     }
     const P = planTwin(a);
     if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
+    // (0.3.1 TB1b, D-1027-03) a kept title Power BI would compose mixed: no plan id, said in English and Arabic
+    if (P.mixedTitles.length) return compact(Object.assign(P.answer, { planProblems: [`${P.mixedTitles.length === 1 ? 'A title' : `${P.mixedTitles.length} titles`} on a field parameter would be mixed, Arabic and English (mixedTitles): ${P.mixedTitles.slice(0, 5).map((x) => `"${x.text}"`).join(', ')}. ${P.mixedTitles[0].how}`],
+      planProblemsAr: [`${P.mixedTitles.length === 1 ? 'عنوان' : `عناوين (${P.mixedTitles.length})`} على معلمة حقول ${P.mixedTitles.length === 1 ? 'سيكون مختلطًا' : 'ستكون مختلطة'} بين العربية والإنجليزية (mixedTitles). ${P.mixedTitles[0].howAr}`],
+      sayFirst: 'No plan id: Power BI would compose a title here from Arabic and English names (mixedTitles says each and why). Show the user mixedTitles; draft a fixed Arabic title for each (approved as a label) or keep the names it names English, then call this tool again. Nothing was written.' }), TWIN_CAP);
     const LG = P.answer.languages;
     // (SQ3, T1-S8: "0 Arabic texts as approved" before any text was approved) the count, or that none is approved yet
     const given = P.answer.labels.arabic, texts = given ? `${given} Arabic texts as approved` : 'no Arabic text approved yet: every text stays as it is';

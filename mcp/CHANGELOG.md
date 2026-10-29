@@ -347,6 +347,11 @@ package's manifest; this file says what is in it.
   An Arabic label beside a number (a card's reference label, a KPI's goal text, a data label's title) is now written so
   the number's signs stay where an Arabic reader expects them, and a KPI's goal text and a data label's own title are
   listed for their Arabic too.
+- **No mixed titles in the Arabic twin:** a chart on a field parameter whose title Power BI composes, kept as it is
+  while another of its fields gets an Arabic name, would read half Arabic, half English: the twin now gives no plan
+  for it and says why, in English and Arabic, until you approve a fixed Arabic title or keep those names English too.
+  A subtitle given by a measure is now listed like such a title, and a reference line's own label (a target line, for
+  example) is listed and written in the Arabic you approve.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
