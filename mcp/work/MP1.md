@@ -23,9 +23,12 @@
   the English ones untouched: 2). V (a badge on a text box mirrored within it, no new overlap: 1; a new overlap named
   by page and visual: 1). Other suites: a picture page that was kept left to right is now mirrored (said per test if
   a number moves). Full run: the base's suites + 1 (mp1).
-- **Got:** (after the work)
-- **State:** plan pushed; the work next.
-- **Resume:** write `mcp/test-0.3.1-mp1.mjs`, see it red on 115db29f, then the code.
+- **Got:** `mp1` 63 checks (the estimate about 50: P took 36 as planned, D 10, V 3), red on 115db29f first: 56 of 62
+  failed there, the 6 green are guards (both twins written, O1-O3, X2); D10 (the inflate cap) red on f1dd798 first.
+  Areas: twin 19 suites pass (no other number moved), arabic 15, report 42; lint 0; changelog-words, agent-memory,
+  result-lines PASS; no `assets/js/` change (no build:min). mcp 1594, mutation 198 (76 mutants, all killed): unchanged.
+- **State: DONE.** Full run on 7ad8c53: "run-tests: 127 suites passed" (the base's 126 + mp1). CI: see below.
+- **Resume:** none; the reviewer's merge (TB1c first; integration was still 115db29 at the full run).
 
 ## The plan
 1. **Read the page picture.** For each page: `objects.background`'s image (name, scaling Normal / Fit / Fill,
@@ -115,3 +118,6 @@
 - `Mirror.pageImages` reads `wallpaper`, a key PBIR's page schema does not have (`outspace` is the schema's).
 
 ## Lessons for the reviewer
+- The twin's approval page is wholly Arabic (FX1): a brief's "the approval page (EN and AR)" is met by the Arabic rows
+  there and the English in the plan's answer; a test that greps the page for English finds nothing.
+- A panel threshold of 1 % of the picture missed a KPI-sized tile (the first V3 run): 0.1 % and 8 x 8 now.
