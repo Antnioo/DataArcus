@@ -27,8 +27,10 @@
   failed there, the 6 green are guards (both twins written, O1-O3, X2); D10 (the inflate cap) red on f1dd798 first.
   Areas: twin 19 suites pass (no other number moved), arabic 15, report 42; lint 0; changelog-words, agent-memory,
   result-lines PASS; no `assets/js/` change (no build:min). mcp 1594, mutation 198 (76 mutants, all killed): unchanged.
-- **State: DONE.** Full run on 7ad8c53: "run-tests: 127 suites passed" (the base's 126 + mp1). CI on 7ad8c53: run 40835247944 green (Linux, Windows, macOS); a run on the note's commit queued after it.
-- **Resume:** none; the reviewer's merge (TB1c first; integration was still 115db29 at the full run).
+- **State: DONE.** Full run on 7ad8c53: "run-tests: 127 suites passed" (CI run 40835247944 green, Linux, Windows,
+  macOS). Integration (TB1c, e45ae5aa) merged in at 7b0b438, both sides kept in twin-plan.mjs, tests.json, CHANGELOG.
+  Full run on 7b0b438: "run-tests: 128 suites passed" (integration's 127 + mp1; tb1c 10, mp1 63). CI: below.
+- **Resume:** none; the reviewer's merge.
 
 ## The plan
 1. **Read the page picture.** For each page: `objects.background`'s image (name, scaling Normal / Fit / Fill,
