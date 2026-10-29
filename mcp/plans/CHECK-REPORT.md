@@ -142,7 +142,9 @@ It is the product of the Position in `mcp/ROADMAP.md`: "Knowing that it is right
   the finding is made; `impact` is read from it, never from the `source` text.
 - `severity`: `error`, `warning` or `note`, one scale for every origin.
 - `impact`: `desktopOpens` (only validator codes seen on a working report, in the files where they were seen),
-  `canBreak` (any other validator code, any schema error), `mayLook` (0.3.1 P3A: the validator's warnings
+  `canBreak` (any other validator code, any schema error), `openedInDesktop` (0.3.1 TB2: ten validator codes counted
+  on hand-built reports Power BI Desktop 2.159 opened with no error, 28 Oct 2026: `DESKTOP_OPENED`, each with its
+  measurement), `mayLook` (0.3.1 P3A: the validator's warnings
   PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR and PBIR_SLICER_HEADER_MAY_CLIP, which Desktop was measured to draw: `DESKTOP_DRAWS`)
   or `dataarcusRule`. The answer's `impact` gives a summary
   and one sentence per kind; "opens in Power BI Desktop" is said only when the validator ran offline and every file

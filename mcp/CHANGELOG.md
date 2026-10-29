@@ -329,6 +329,15 @@ package's manifest; this file says what is in it.
   text answer cut at 40,000 characters never ends in half of a hidden character's code. suggest_fields no longer takes
   a column named "Notes", "Comments" or "Description" with a capital for a category. The weekly Microsoft watch, on an
   issue too long to read whole (over 100,000 comments), now posts nothing and says so.
+- **"Can break" only for what was not seen to open:** check_report no longer says that ten kinds of finding of
+  Microsoft's validator "can break the report in Power BI Desktop" (a property written inside another, one filter name
+  on two pages, a bookmark button with no bookmark, a visual missing a field its type needs or holding one too many, a
+  dropdown slicer lower than the validator wants, a scatter chart with nothing to plot each point by, a drillthrough page
+  with no back button, a retired visual type, a theme style for a visual Power BI does not list): Power BI Desktop opened
+  hand-built reports with each of them, with no error. They now have a kind of their own that says so, that saving the
+  report in Desktop may rewrite them, and to look at the part there (a visual missing a field its type needs may still
+  show nothing). Every other finding keeps its kind, and the check that runs before a report is written uses the same
+  kinds.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop

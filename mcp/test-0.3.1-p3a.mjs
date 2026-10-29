@@ -34,9 +34,9 @@ const CODES = ['PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR', 'PBIR_SLICER_HEADER_MAY_CLIP']
 // ---------- P1-P3: the grouping ----------
 const v = (rule, severity, file) => ({ origin: 'validator', rule, severity, file: file || 'definition/pages/p/visuals/v/visual.json', _base: 'visual.json' });
 chk(() => CODES.every((c) => CR.impactOf(v(c, 'warning')) === 'mayLook'), () => `P1. the two measured validator warnings are mayLook: ${CODES.map((c) => CR.impactOf(v(c, 'warning'))).join(', ')}`);
-chk(() => CR.impactOf(v('PBIR_VISUAL_TYPE_UNKNOWN', 'warning')) === 'canBreak' && CR.impactOf(v('PBIR_SLICER_HEIGHT_BELOW_FLOOR', 'error')) === 'canBreak' && CR.impactOf(v('PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR', 'error')) === 'canBreak'
+chk(() => CR.impactOf(v('PBIR_VISUAL_TYPE_UNKNOWN', 'warning')) === 'canBreak' && CR.impactOf(v('PBIR_SLICER_HEIGHT_BELOW_FLOOR', 'error')) === 'openedInDesktop' && CR.impactOf(v('PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR', 'error')) === 'canBreak'
   && CR.impactOf(v('PBIR_THEME_FILE_NAME_MISMATCH', 'error', 'StaticResources/x.json')) === 'desktopOpens' && CR.impactOf({ origin: 'schema', rule: 'SCHEMA', severity: 'error' }) === 'canBreak',
-() => 'P2. every other validator finding keeps its kind: an unmeasured warning, the slicer\'s clip error and any error stay canBreak; the Desktop-opens codes stay desktopOpens');
+() => 'P2. every other validator finding keeps its kind: an unmeasured warning and any other error stay canBreak (the slicer\'s clip error is openedInDesktop since TB2: measured on reports Desktop 2.159 opened); the Desktop-opens codes stay desktopOpens');
 chk(() => CR.IMPACT.mayLook && /may not look/.test(CR.IMPACT.mayLook) && !/can break/i.test(CR.IMPACT.mayLook) && CODES.every((c) => CR.DESKTOP_DRAWS[c] && /DESKTOP-TESTS\.md/.test(CR.DESKTOP_DRAWS[c].evidence))
   && /may not look as meant/.test(CR.impactSummary({ desktopOpens: 0, canBreak: 0, dataarcusRule: 0, mayLook: 2 }, { validator: { ran: true, mode: 'offline' } })),
 () => `P3. the kind's sentence and each code's measured evidence; the summary says it: ${JSON.stringify(CR.IMPACT.mayLook)} ${JSON.stringify(CR.DESKTOP_DRAWS)}`);

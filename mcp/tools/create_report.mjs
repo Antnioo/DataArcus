@@ -108,7 +108,7 @@ function writeApproved(a, art) {
     const vv = validatorVerdict(V.kinds, a.lang);
     done.check = Object.assign({}, done.check, { tellUser: 'Checked before it was written (Microsoft\'s validator offline, the measured rules of what Power BI Desktop draws, and the layout check). Tell the user the summary; when it lists problems, say each one with its fix.',
       summary: vv ? `${String(done.check.summary || '').replace(/\.?\s*$/, '')}. ${vv}` : done.check.summary,
-      validator: Object.assign({ ran: true, canBreak: +V.kinds.canBreak || 0, mayLook: +V.kinds.mayLook || 0, desktopOpens: +V.kinds.desktopOpens || 0 }, V.byRule ? { byRule: V.byRule } : {}) });
+      validator: Object.assign({ ran: true, canBreak: +V.kinds.canBreak || 0, openedInDesktop: +V.kinds.openedInDesktop || 0, mayLook: +V.kinds.mayLook || 0, desktopOpens: +V.kinds.desktopOpens || 0 }, V.byRule ? { byRule: V.byRule } : {}) });
   }
   // (0.3.0 J18) the terms of a written Arabic plan are confirmed for this model (this session only)
   { const pd = Plans.planOf(a.planId); if (pd && pd.data && Array.isArray(pd.data.terminology)) Terms.remember(m, pd.data.terminology); }

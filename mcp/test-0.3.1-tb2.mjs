@@ -5,7 +5,8 @@
 // plan_layout say) counts the same kinds from the same table (impactOf).
 //   B1      the made-up fixture gives each of the ten codes (and the unmeasured control, PBIR_VISUAL_TYPE_UNKNOWN)
 //   B2-B11  check_report: each measured code's findings are openedInDesktop, never canBreak
-//   B12     the kind's sentence and each code's measurement (Desktop version, date, "opened with no error")
+//   B12     the kind's sentence and each code's measurement (Desktop version, date, "opened with no error"; a missing
+//           required role also names the 11 Oct proof of an empty visual)
 //   B13     the unmeasured control and a schema error stay canBreak
 //   B14-B15 the summary: the measured fixture says no "can break"; the control's says "can break" for the control only
 //   B16     the plan's check (checkArtifact) counts the same kinds as check_report on the same files
@@ -92,7 +93,7 @@ try {
   // B12: the kind's sentence and the measurement of each code
   const K = m.j && m.j.impact.kinds.openedInDesktop;
   chk(() => K && K.count === F(m).filter((f) => MEASURED.includes(f.rule)).length && /opened/.test(K.means) && /saving/i.test(K.means) && !/can break/i.test(K.means)
-    && MEASURED.every((k) => K.measured && /DESKTOP-TESTS\.md/.test(K.measured[k]) && /2026-10-28/.test(K.measured[k]) && /2\.159/.test(K.measured[k]) && /opened with no error/.test(K.measured[k])),
+    && MEASURED.every((k) => K.measured && /DESKTOP-TESTS\.md/.test(K.measured[k]) && /2026-10-28/.test(K.measured[k]) && /2\.159/.test(K.measured[k]) && /opened with no error/.test(K.measured[k])) && /may show nothing/.test(K.measured.PBIR_ROLE_REQUIRED_MISSING),
   () => `B12. the kind openedInDesktop: its count, its sentence, each code's measurement (Desktop 2.159, 2026-10-28, "opened with no error"): ${JSON.stringify(K)}`);
   // B13: a code not measured stays canBreak (never loosened without a measurement)
   chk(() => F(c).filter((f) => f.rule === CONTROL).every((f) => f.impact === 'canBreak') && CR.impactOf({ origin: 'schema', rule: 'SCHEMA', severity: 'error' }) === 'canBreak'
