@@ -19,9 +19,11 @@
   unfixed shapes, as the check's own unit input); E1 (a text box's Arabic line "1 صفّ ... حالته." written wrapped
   RLI ... PDI; one with Arabic letters at both ends unchanged: a guard). Other suites: none expected to move. Full
   run: the base's 128 suites.
-- **Got:** (after the work)
-- **State:** plan pushed; the work next.
-- **Resume:** the red checks in `mcp/test-0.3.1-mp1.mjs`, then the code.
+- **Got:** `mp1` 87 checks (78 + 9: MC-a, b, c1, c2, d1, d2, e1, e2, O5; the estimate said about 7: c and d took 2
+  each, plus the e2 guard and O5), red on 4d1aaff8 first: 7 of 87 failed there (MC-a, b, c1, c2, d1, d2, e1); e2 and
+  O5 guards. AREAS_LINE
+- **State:** FULL_RUN_LINE
+- **Resume:** none; the reviewer's merge.
 
 ## The plan
 a. On a text box paragraph the twin turns right, whole runs of only tabs or spaces at its start (indentation) move to
@@ -37,6 +39,22 @@ d. The overlap check also names a pair that overlapped in English when, in the t
 e. A text box's approved Arabic whose first or last character is not an Arabic letter (a digit, an emoji, a full
    stop) is wrapped whole in RLI ... PDI (BD2's V3, measured right on text boxes): isolateLatin wraps only a text with
    a Latin letter, so these lines got no mark and their neutral ends took the box's left-to-right order.
+
+## Decisions I made
+- e: the cause was the rule, not a missing call: rawLabels already runs every text box's Arabic through isolateLatin,
+  which wraps only a text holding a Latin letter. The wrap is now also given to a text box's Arabic (the
+  page's text boxes and the phone's) whose first or last character is not an Arabic letter. Other kinds of text keep V3 as it
+  was (their neutral ends were not seen wrong).
+- b: the visual is narrowed (its far edge kept), not moved: moved, it would leave the box it had on the picture.
+- c: "stays left to right inside" is a matrix, or a table of one column (the mirror reverses a table of two or more,
+  so its columns follow the bars). The bar chart must lie three quarters or more on it and above it.
+- d: the check now names three kinds (why: new, rowHeaders, barsTurned), each said in English and Arabic; after b and c
+  the twin no longer makes the last two, so on the owner's pages they should read none.
+- a: only whole runs of tabs or spaces at a paragraph's start move, and only where the twin turned it right (a
+  centred or right-aligned paragraph is left alone); the phone layout's text boxes too.
+
+## Seen, not in scope
+- Not this job (the brief): RepeatIQ KPI titles cut at their left edge, Fintech "..." labels, model values in English.
 
 ## For the laptop
 - Re-run part 7's block C1: Call Center's 4 KPI titles clear of their icons; ER's weekday bars off the matrix's row

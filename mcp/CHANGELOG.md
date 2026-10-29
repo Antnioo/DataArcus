@@ -363,6 +363,10 @@ package's manifest; this file says what is in it.
   sits on the same panel (the original picture is not changed). A picture that may hold words or a logo, which would
   read backwards, is shown in the plan and flipped only when you approve it. A picture around the page (its wallpaper)
   stays as it is. The plan and the approval page say it for each page, and name any visual that leaves its panel.
+- **The Arabic twin on real dashboards:** a page picture is found under the file name Power BI gives it and placed as
+  Power BI Desktop places it; a title indented with tabs keeps its room on the icon's side; a chart drawn over a table
+  or matrix keeps its place on it, and no visual lands on a matrix's row headers; an Arabic help line that starts with
+  a number or ends with a full stop reads in the right order.
 
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
