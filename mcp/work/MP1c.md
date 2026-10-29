@@ -24,7 +24,7 @@
   O5 guards. Areas on fe62655b: twin 20, arabic 15, report 42; lint 0; changelog-words, agent-memory PASS. No
   other suite's number moved; no `assets/js/` change.
 - **State: DONE.** Full run on fe62655b: "run-tests: 128 suites passed" (mp1 87, mcp 1594, mutation 198, 76 mutants all
-  killed). CI: below.
+  killed). CI on 03e200c8: run 40933812422 green.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
