@@ -423,9 +423,17 @@ export function buildTwin(P, labels) {
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
     return { pg, page, visuals: r.visuals, mobiles };
   });
-  const notTranslated = tms.filter((x) => !x.pd.branches).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
+  // (0.3.1 TB1c, the laptop's part 5: the write said "translated: 0 ... stays as the model gives it" of two measure
+  // titles written as approved fixed Arabic) a title measure no title of the twin's pages still shows was replaced by
+  // approved fixed Arabic titles: fixed, not "not translated"
+  const shownTitle = new Set(); pages.forEach((x) => x.visuals.forEach((vj) => { const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
+    t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
+      if (src) shownTitle.add((src.Schema === 'extension' ? 'ext' : 'model') + '\u0000' + src.Entity + '\u0000' + ms.Property); }); }));
+  const stillShown = (x) => shownTitle.has((x.own ? 'ext' : 'model') + '\u0000' + x.entity + '\u0000' + x.name);
+  const notTranslated = tms.filter((x) => !x.pd.branches && stillShown(x)).map((x) => ({ what: 'Chart title (from a title measure)', measure: safeName(x.entity + '[' + x.name + ']'), why: x.pd.why }));
+  const fixedTitles = tms.filter((x) => !x.pd.branches && !stillShown(x)).map((x) => ({ measure: safeName(x.entity + '[' + x.name + ']'), why: 'every title it gave is written as its approved fixed Arabic title (it no longer changes with the selection)' }));
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? { measures: tms.length, translated: written.length, written, notTranslated } : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }

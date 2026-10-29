@@ -352,6 +352,12 @@ package's manifest; this file says what is in it.
   for it and says why, in English and Arabic, until you approve a fixed Arabic title or keep those names English too.
   A subtitle given by a measure is now listed like such a title, and a reference line's own label (a target line, for
   example) is listed and written in the Arabic you approve.
+- **The Arabic twin keeps each field's meaning:** a field's Arabic is now given for the field's own name, never for a
+  name one visual gives it, so approving it changes only the visuals that show the field as it is (a card renamed
+  "Female" keeps its own Arabic). A title given by a column (the value chosen in a field parameter, say) is now listed
+  like a title given by a measure, and it is never kept English beside Arabic names. The written twin's answer no longer
+  says a title measure stayed English when its titles were written as approved Arabic, and check_report's fix for a
+  file shape Desktop was measured to open says only what was measured.
 - **Every page of the Arabic twin right to left, pages drawn on a picture too:** the page's picture (PNG or JPEG) is
   flipped left to right into a new picture of the Arabic page's own, and the visuals are mirrored onto it, so each one
   sits on the same panel (the original picture is not changed). A picture that may hold words or a logo, which would
