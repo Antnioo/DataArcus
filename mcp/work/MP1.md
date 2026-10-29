@@ -29,7 +29,7 @@
   result-lines PASS; no `assets/js/` change (no build:min). mcp 1594, mutation 198 (76 mutants, all killed): unchanged.
 - **State: DONE.** Full run on 7ad8c53: "run-tests: 127 suites passed" (CI run 40835247944 green, Linux, Windows,
   macOS). Integration (TB1c, e45ae5aa) merged in at 7b0b438, both sides kept in twin-plan.mjs, tests.json, CHANGELOG.
-  Full run on 7b0b438: "run-tests: 128 suites passed" (integration's 127 + mp1; tb1c 10, mp1 63). CI: below.
+  Full run on 7b0b438: "run-tests: 128 suites passed" (integration's 127 + mp1; tb1c 10, mp1 63). CI on b56c503: run 40846497446 green.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
