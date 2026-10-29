@@ -54,7 +54,7 @@
 ## Before -> after
 | Item | Before | After | Where | Test |
 |---|---|---|---|---|
-| 1 | on a report of 85 fields the sheet (~25,000 characters) and notTranslated filled the answer: "Only 0 texts (from 0) fit" on every call, textsFrom never moved | fewer than 20 texts fit: the sheet is cut to make room (and only when it would keep under 10 rows, notTranslated with it, Q1's rule kept) (`terminology.moreTerms` with `from`, `termsFrom` to page it; notTranslated as before, whole in the approval window). The fixture: 20 texts and 34 sheet rows in 33,613 characters; all 200 texts and 85 terms reached | twin-plan.mjs twinFit; create_arabic_twin.mjs input | tb1 P1-P7 |
+| 1 | on a report of 85 fields the sheet (~25,000 characters) and notTranslated filled the answer: "Only 0 texts (from 0) fit" on every call, textsFrom never moved | fewer than 20 texts fit: the sheet is cut to make room (and only when it would keep no row at all, notTranslated with it, Q1's rule kept) (`terminology.moreTerms` with `from`, `termsFrom` to page it; notTranslated as before, whole in the approval window). The fixture: 20 texts and 34 sheet rows in 33,613 characters; all 200 texts and 85 terms reached | twin-plan.mjs twinFit; create_arabic_twin.mjs input | tb1 P1-P7 |
 | 2 | `field:<queryRef>` took the first visual's name; the field's label or term was written on every visual (both cards «المرضى»), "Male"/"Female" never listed | the field's name is the model's when shown so (else the most common); another name is `fieldAt:<page>/<visual>/<queryRef>` (kind visualField), approved on its own; with no label it stays as it is (said in notTranslated); the sheet's places skip it | report-mirror.js labelVisual; twin-texts.mjs textsOf, rawLabels; terminology.mjs placesOf; twin-plan.mjs | tb1 V1-V6 |
 | 3 | a title bound to a model measure (or a report measure not of fixed texts) was never a text; a field-parameter chart's title was written as fixed English (two fields) or never listed (one) | kind dynamicTitle (`title:<page>/<visual>`), what / whatAr: it changes with the selection; approved: written as a fixed Arabic title (`approved` / `approvedAr` say it no longer changes); not approved: left as it is, in notTranslated by name with why and whyAr (shown in the approval page's language) | twin-texts.mjs autoTitlesOf, textsOf, notTranslatedOf; twin-pages.mjs; twin-plan.mjs; approval-window.mjs; approval-ar.mjs | tb1 D1-D6 |
 | 4 | an Arabic label beside a value was written bare (isolateLatin leaves a wholly Arabic text as it is): Desktop's paragraph moved the value's signs; a KPI's goal text and a data label's own title were not listed | the beside-a-value properties (catalog: cardVisual referenceLabelTitle.titleText, label.text; kpi goals.goalText; labels.dynamicLabelTitle, dynamicLabelDetail) written RLI ... PDI (isolateBeside: isolateLatin, then a wholly Arabic one wrapped); goalText, dynamicLabelTitle, dynamicLabelDetail added to the engine's TEXT_PROPS | terminology.mjs isolateBeside; twin-texts.mjs rawLabels; report-mirror.js TEXT_PROPS | tb1 B1-B5 |
@@ -64,8 +64,9 @@
 that change with the selection, an Arabic label beside a number).
 
 ## Decisions I made
-- The texts' room: 20 (or all there are); below it the sheet alone is cut; only if it would keep under 10 rows are the
-  sheet and notTranslated cut to the same number of rows (Q1: notTranslated whole while the texts can make room).
+- The texts' room: 20 (or all there are); below it the sheet alone is cut; only if it would keep no row at all are the
+  sheet and notTranslated cut to the same number of rows (Q1: notTranslated whole while the texts can make room). A
+  threshold of 10 rows failed large-model-caps C-2 in the mutation suite's copy (a longer folder, a longer answer).
 - A field's name: the model's when any visual shows it so; else the name most visuals give it (a tie: the first).
   So a DataArcus report that names a field the same everywhere lists nothing new.
 - A dynamic title's text is the measure's name (the title's words are computed: never run, metadata only); no draft.
@@ -102,4 +103,5 @@ that change with the selection, an Arabic label beside a number).
 ## Lessons for the reviewer
 - The answer's room is shared by three lists (texts, the sheet, notTranslated); a fit that cuts only one starves the
   others: the sheet alone went to 0 rows on the fixture, and cutting notTranslated with it broke Q1's large-model rule
-  (large-model-caps C-2, caught by the full run). A paging test should walk every list to its end.
+  (large-model-caps C-2, caught by the full run, and again in the mutation suite's copy: a longer folder name makes a
+  longer answer, so a fit's margin is path-dependent). A paging test should walk every list to its end.

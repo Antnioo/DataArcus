@@ -53,13 +53,13 @@ const PLAN_ROOM = 2500;
 // terminology sheet of 25,004 characters filling the answer) the texts always get room: when fewer than TEXTS_ROOM of
 // them (or all there are) fit, the sheet is cut to make room for them, from termsFrom, with where it goes on
 // (terminology.moreTerms); askNext stays the whole sheet's
-const TEXTS_ROOM = 20, SHEET_ROOM = 10;
+const TEXTS_ROOM = 20, SHEET_ROOM = 1;
 function twinFit(a, from, termsFrom) {
   const size = (x) => JSON.stringify(out(x)).length, before = { texts: a.textsNotListed || 0, notTranslated: a.notTranslatedNotListed || 0 }, all = a.texts, aim = AIM - PLAN_ROOM;
   let t = fitLists(a, () => [[a, 'texts']], size, aim);
   const sheet = a.terminology && Array.isArray(a.terminology.sheet) ? a.terminology : null, room = Math.min(TEXTS_ROOM, all.length);
   if (t && t.k < room && sheet && sheet.sheet.length) {
-    // (the sheet alone first: notTranslated stays whole while the sheet keeps SHEET_ROOM rows; else notTranslated, which
+    // (the sheet alone first: notTranslated stays whole (Q1) while the sheet keeps a row; else notTranslated, which
     // the approval window always shows whole, is cut with it, as many rows as the sheet keeps)
     a.texts = all.slice(0, room);
     const rows = sheet.sheet.slice(), nt = a.notTranslated;
