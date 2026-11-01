@@ -377,6 +377,11 @@ package's manifest; this file says what is in it.
 ## [0.3.0]: 2026-10-21 (the version for testers)
 Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 passed on the laptop (Desktop
 2.159.883.0, build 332beac). In short:
+- **The Arabic twin beside the English, page by page:** a card's values listed top to bottom keep their order; every
+  chart over time runs from the right, whatever its kind and its date field; month buttons in one row start at the
+  right; a card per person shows its picture and name on the right; values padded into a column stay in a column;
+  text cards line up like the number cards, and centred cards stay centred. Choices that come from the model (a field
+  parameter's) are named in the plan as staying English.
 - **See it before you approve it:** the approval window draws the planned pages, and every report is checked (the
   measured rules, the layout, accessibility) before it is written.
 - **Arabic:** an Arabic copy of a report (`create_arabic_twin`), or one report with an EN-AR language button

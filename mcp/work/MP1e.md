@@ -23,8 +23,12 @@
   A1 (a card's text value with its own value entry: right-aligned like the numbers); A2 (centred KPI values stay
   centred); F1 (a field parameter's choices on a slicer: named in cannot with the step that would make them Arabic).
   mp1, mp1-shapes and MD-e stay green. Full run: the base's suites + 1 (mp1e).
-- **State:** plan pushed; the work next.
-- **Resume:** the red checks in `mcp/test-0.3.1-mp1e.mjs`, then the code.
+- **Got:** `mp1e` 13 checks (C1, C2, T1-T4, S1, K1, K2, R1, A1, A2, F1; the estimate said about 14), red on the
+  merged base 6bbcaec4 first: 12 of 13 failed there; C2 (a one-row grid still reversed) a guard. mp1 100, mp1-shapes
+  10 (the never-shrink guard), mx1 41, mirror-parity 62 (MX1's own number), v030twin 117: unchanged. lint 0; check-min
+  75 match; new stamps report-mirror 20261101mp1e (theme-generator.js), theme-generator 20261101mp1e (its 3 pages).
+- **State:** FULL_RUN_LINE
+- **Resume:** none; the reviewer's merge.
 
 ## The causes, found in the real files
 1. Fintech p3 (card b21f11f3): `layout.orientation` "1D", `rowCount` 4: a vertical list; mirrorVisual reverses any new
@@ -51,5 +55,35 @@
    measures have their own value entries (textWrap, size). Fix: every value entry right-aligned (centred kept).
 8. RepeatIQ (8886cd92): the English values are centred; a card of several values got the default entry set to right
    unconditionally. Fix: centred stays centred (the container's padding already swaps sides).
-## For the laptop
-- (to fill per item, with its page, for part 9)
+## Decisions I made
+- 1: only "1D" (vertical) keeps its order; a "2D" grid of one row, and a card with no orientation, reverse as before.
+  A grid of several rows is not changed (whole reversal is wrong for it too, but no shape of the owner's has one).
+- 2: invertAxis is now written on any time category: a date hierarchy level, or a date table's column the model does
+  not type as text (RepeatIQ's StartOfMonth read untyped). A text month name stays turned by the sort alone (T6 of
+  v030twin holds it: the model's text columns, `textColumnsOf`, are passed to the mirror). Every sort key that is a
+  category level turns with the first; a missing sort on a hierarchy gets one descending key per level.
+- 3: "one row" is rowCount 1 or a slicer no higher than 64 px (Call Center's: 50); a taller grid is left alone.
+- 4: the photo (image.position) and the small multiples' header turn Left <-> Right; the cards' ORDER in a grid of
+  several rows cannot turn (no setting): named in cannot ("card visuals in a grid of several rows").
+- 5: the padding is "space + RLM" pairs inside the title's RLI ... PDI wrap, counted from text-measure.js widths at
+  one size (the titles share one font); the widest title gets one pair too. The "contact line reaching the card's
+  edge" (the same card) is not changed here: no text in the card's files says which line it is; for the laptop.
+- 6: not fixed in the twin, named: the choices are the model's field parameter table's rows (the English report's
+  too); an Arabic field parameter table is a model step for the owner to decide (said in cannot, with the slicer named).
+- 7, 8: every value entry right-aligned, a centred one kept; the container's padding already swaps sides (MP1d).
+
+## For the laptop (part 9)
+- Fintech p3 (Project Detail): the four status lines top to bottom Overall, Schedule, Cost, Delivery.
+- Time right to left: Consumer Complaints p2 (Issues, Resolution Outcome Trends), p4 (Regional), AdventureWorks p3
+  (Product Detail, both lines) and p4 (Customer Detail, the customer line), RepeatIQ p1 (Executive Summary, Monthly
+  Sales) and p5 (Operation & Risk, small multiples): latest month at the left, as CC p1 and AW p1.
+- Call Center p1 and p2: the month buttons Mar, Feb, Jan from the left (Jan at the right).
+- Call Center p2 (Agent Performance): each agent's photo and name at the card's right; the cards' order stays (said).
+- Call Center p1 (Overview): Dan's card values in one column; look whether the contact line still reaches the edge.
+- AdventureWorks p4: "Total Customers" / "Revenue per Customer" stay English (said in the plan: the model's field
+  parameter rows; the owner's decision).
+- Consumer Complaints p2: "Banking" and "Managing an account" right-aligned like the numbers.
+- RepeatIQ (every page with KPI cards): titles and values centred, no letter cut.
+
+## Seen, not in scope
+- Items 5 (the donut's cut legend labels), 9 (legend titles) and 10 (the wide watchlist) of the review are MX2's.
