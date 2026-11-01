@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
+  (no longer narrowed for a longer Arabic header), the first column stays the rightmost one in view, a matrix with row
+  levels can be written flat when you choose it, and a heatmap by weekday shows its day names beside its grid.
 - **More of the Arabic twin like the English:** more matrices that are lists are written as tables, so their first column
   reads on the right; a column the English hides stays hidden; a table wider than its box shows the same columns as
   the English, its first column at the right; the plan names legends whose Arabic may be cut, and says on its own line
