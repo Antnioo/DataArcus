@@ -334,8 +334,9 @@ function badgesWithText(pg, r) {
 // direction (as Mirror keeps a badge on its host, and T-6 a bar list's direction); a visual that overlapped a matrix on
 // its right part (away from its row headers) is narrowed on its side facing the matrix by the overlap in the twin, so
 // it does not lie on the row headers (inside its own mirrored box: it stays on its panel)
-const valuesOf = (v) => (isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.length : 0);
-const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || (Mirror.kindOf(v) === 'table' && valuesOf(v) <= 1);
+// (0.3.1 MP1d, laptop part 8: Desktop keeps a table's columns at its left edge in the twin too, whatever their number)
+// a matrix, or a table of any number of columns, as page-picture.mjs's check decides it
+const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || Mirror.kindOf(v) === 'table';
 function aroundTables(pg, r, opts) {
   const list = pg.visuals.map((v) => v.json), byName = new Map(list.filter(isObj).map((v) => [String(v.name), v])), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
   const widthOf = (v) => { const g = v.parentGroupName != null ? byName.get(String(v.parentGroupName)) : null; return g && boxOk(g) ? g.position.width : pageOf(pg).width; };
@@ -350,9 +351,14 @@ function aroundTables(pg, r, opts) {
       }
       // (a matrix only: its row headers are at its left in both languages)
       if (Mirror.kindOf(m0) !== 'matrix') return;
-      const mid = (p, q) => (Math.max(p.x, q.x) + Math.min(p.x + p.width, q.x + q.width)) / 2;
-      const p1 = v1.position, q1 = m1.position;
-      if (mid(a, b) > b.x + b.width / 2 && overlapOf(p1, q1) > 0 && mid(p1, q1) < q1.x + q1.width / 2 && p1.x < q1.x && q1.x - p1.x > 0) p1.width = Mirror.round(q1.x - p1.x);
+      // (0.3.1 MP1d, laptop part 8: a column chart under the heatmap, overlapping only its bottom, was cut to 6.67 wide, a
+      // card behind a matrix of its own box to 0.92) only a visual in the matrix's side margin: its left edge in the
+      // matrix's right half, its right edge past the matrix's, its overlap a strip (a third of its own width at most, a
+      // quarter of the matrix's) beside the matrix's rows for half its height or more; never one that covers the
+      // matrix, lies under or behind it, or touches only its top or bottom edge
+      const p1 = v1.position, q1 = m1.position, ow = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x), oh = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      const margin = a.x > b.x + b.width / 2 && a.x + a.width > b.x + b.width && ow > 0 && ow <= a.width / 3 && ow <= b.width / 4 && oh >= a.height / 2;
+      if (margin && overlapOf(p1, q1) > 0 && p1.x < q1.x) p1.width = Mirror.round(q1.x - p1.x);
     });
   });
 }
@@ -368,6 +374,24 @@ function indentToEnd(en, ar) {
     if (!isObj(pa) || pa.horizontalTextAlignment !== 'right' || was === 'right' || was === 'center' || !Array.isArray(pa.textRuns)) return;
     let k = 0; while (k < pa.textRuns.length - 1 && isObj(pa.textRuns[k]) && typeof pa.textRuns[k].value === 'string' && /^[ \t\u00A0]+$/.test(pa.textRuns[k].value)) k++;
     if (k && pa.textRuns.slice(k).some((x) => isObj(x) && typeof x.value === 'string' && x.value.trim())) pa.textRuns = pa.textRuns.slice(k).concat(pa.textRuns.slice(0, k));
+  });
+}
+// (0.3.1 MP1d, laptop part 8: «متوسط مدة المكالمة (بالثواني)» touched its clock icon: the Arabic, wider than the
+// English, outgrew the tab stops that kept the icon's room) where a small visual lies, after the mirror and the text
+// fitting, on the end of a text box its text runs to (its paragraphs right-aligned: its right end), the text box ends
+// ICON_GAP before it: its width reduced on that side, whatever the text's width
+const ICON_GAP = 4;
+function iconRoom(visuals) {
+  const list = (visuals || []).filter((v) => boxOk(v) && !v.visualGroup);
+  list.filter((t) => Mirror.kindOf(t) === 'textbox').forEach((t) => {
+    const ps = paragraphsIn(t);
+    if (!ps.length || !ps.every((pa) => isObj(pa) && pa.horizontalTextAlignment === 'right')) return;
+    const tp = t.position;
+    list.forEach((i) => {
+      const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapOf(ip, tp) < ip.width * ip.height / 2) return;
+      const w = ip.x - ICON_GAP - tp.x;
+      if (ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width) tp.width = Mirror.round(w);
+    });
   });
 }
 export function buildTwin(P, labels) {
@@ -470,6 +494,7 @@ export function buildTwin(P, labels) {
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
         const t = fitTextboxes(page, r.visuals, c, pg.id, keep, kept); fitted.textboxes.push(...t.textboxes); fitted.textboxesCut.push(...t.textboxesCut); } catch (e) { /* a shape not expected: left as it is */ }
+      if (!P.keepLtr(pg)) iconRoom(r.visuals);
     }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
