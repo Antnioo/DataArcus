@@ -58,9 +58,11 @@
 ## Decisions I made
 - 1: only "1D" (vertical) keeps its order; a "2D" grid of one row, and a card with no orientation, reverse as before.
   A grid of several rows is not changed (whole reversal is wrong for it too, but no shape of the owner's has one).
-- 2: invertAxis is now written on any time category: a date hierarchy level, or a date table's column the model does
-  not type as text (RepeatIQ's StartOfMonth read untyped). A text month name stays turned by the sort alone (T6 of
-  v030twin holds it: the model's text columns, `textColumnsOf`, are passed to the mirror). Every sort key that is a
+- 2: invertAxis is now written on a date hierarchy level, and on a date table's column the model did not type a date
+  when its name reads as a date (StartOfMonth, Start of Month, Order Date, Month Start, Day) and the model does not
+  type it text. Only in the twin (the model read there: textColumns); create_report's writer keeps its own rule. A
+  month name or a year-month stays turned by the sort alone: Desktop ignores invertAxis on a categorical axis, and the
+  writer and the twin stay identical (mirror-parity, gallery and v030twin's T6 hold it). Every sort key that is a
   category level turns with the first; a missing sort on a hierarchy gets one descending key per level.
 - 3: "one row" is rowCount 1 or a slicer no higher than 64 px (Call Center's: 50); a taller grid is left alone.
 - 4: the photo (image.position) and the small multiples' header turn Left <-> Right; the cards' ORDER in a grid of
