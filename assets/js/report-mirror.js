@@ -141,6 +141,9 @@
   // the right). Changes v in place; what it changed is pushed to changes ----
   // (0.3.1 MP1e) a button slicer no higher than this holds one row of buttons (Call Center's months: 50)
   const ONE_ROW_H = 64;
+  // (0.3.1 MP1e) a date table's column whose name reads as a date (its type unknown to the model read): RepeatIQ's
+  // StartOfMonth, "Start of Month", "Order Date", "Month Start", "Day"
+  const DATE_LIKE = /(?:^|[\s_])(?:date|day)$|^date|start ?of ?[a-z]+$|startof[a-z]*$|(?:^|[\s_])[a-z]* ?start$/i;
   function chartRtl(v, kind, o, changes, kept0) {
     const kept = kept0 || [];
     const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
@@ -189,7 +192,8 @@
       // Desktop ignores invertAxis on a categorical axis (T-2), where the sort above turns it
       // (opts.textColumns: the model's text columns, a month name: categorical, turned by the sort alone)
       // (only where the model's text columns are known, as in the twin: create_report's writer keeps its rule)
-      const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && !(cref && o.textColumns.includes(cref));
+      // a column by a name that reads as a date (StartOfMonth, Date, Month Start), not a month name or a year-month)
+      const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && (!cf || (DATE_LIKE.test(String(cf.Property || '')) && !o.textColumns.includes(cref)));
       if (((cref && (o.dateColumns || []).includes(cref)) || timeCat) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
