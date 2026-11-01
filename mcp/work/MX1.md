@@ -20,8 +20,8 @@
   page's text; B1-B4 the lab writes into an empty folder only, validator 0 errors, B1/B2/B3 as described.
   Other suites: `mirror-parity` and the M1 lab may move where they run a matrix with no Columns field through the
   twin (create_report's English matrix has none): each said per test below. Full run: the base's suites + 1.
-- **State:** plan written; tests next.
-- **Resume:** the tests red on 7c54e918, then the engine.
+- **State:** A and B built (`mx1` 31 checks); the add-on C and D planned, tests next.
+- **Resume:** C and D red on 7c54e918, then the code.
 
 ## The plan
 
@@ -58,6 +58,35 @@ the matrix's header row: a table's header cannot be turned off, tableEx has no c
 engine's `rowNamesBeside`; it is not wired behind an option in this job (it adds a visual to a page, and the twin's
 build pairs visuals by index): wired after the laptop's yes.
 
+### C. A grouped matrix (Rows hierarchy, stepped, scrolls): written as a flat table only when the user picks it
+(The reviewer's add-on of 1 Nov, 04:08, from the owner's Fintech p1 twin: "project delivery task matrix", Rows
+Department then Project, 7 values, a vertical scrollbar.) Default: kept a matrix (A would lose the grouping; B2 cannot
+follow a scroll), said in the plan with why. The plan offers a per-visual choice, `matrixAsTable: [visual ids]`
+(`planTwin` reads it): the chosen matrix is written as a flat table, one column per Rows level (Department repeated on
+each row, then Project), then the values, reversed by the table's mirror so the names read at the right; the plan says
+what is lost: the +/- grouping and the group subtotal rows (the grand total stays as the matrix shows it). The engine:
+`tableOf` with `{ levels: true }` (per-level subtotal settings dropped). The conversion is made on the twin's in-memory
+copy of the English visual before mirroring (the plan and the write build the same; the copy's English page keeps the
+file on disk, a matrix). Wiring: the tool's input (zod) and its pin are in `mcp/tools/create_arabic_twin.mjs`, MR1's file:
+not touched here; the reviewer adds the two lines after MR1 merges (said in "For the reviewer").
+Expected: C1-C5 in `mx1` red on 7c54e918 first (kept by default with the offer; chosen: a tableEx, Department then
+Project last after the reversal, the 7 values reversed before them, the loss said; the copy's English page a matrix).
+
+### D. A reversed table wider than its box: named in the plan
+(Fintech p1 "project roadmap": a horizontal scrollbar, a Total row; after the reversal the English first column is cut
+at the right edge, behind the scroll.) The plan sums each Arabic table's columns: its own column widths (columnWidth by
+queryRef) or, without one, the Arabic header's width (report-rules.js headerNeed, never data) as a lower bound; the room
+is the box less 36 (the scrollbar and margins, as fitHeaders counts it). Wider: named in the plan's cannot, "this table
+is wider than its box: in Arabic its first column is reached by scrolling right". Not narrowed: how wide its values are
+is data, which the twin never reads, so narrowing could cut them (no safe check); the lab's D2 (widths scaled to the box)
+lets the laptop judge. Expected: D1-D3 in `mx1` red first (named when wider by its widths; by its headers alone; a table
+that fits not named).
+
+Lab page 3 (1280): C1 the grouped matrix as the twin writes it today, C2 written as the flat table; D1 the wide table as
+the twin writes it, D2 its widths scaled to the box. `mx1`'s B4 then counts 3 pages (my own suite: said).
+
 ## For the laptop
 - ER p2 twin: Patient ID at the right, every column and header as in English reversed, nothing cut.
 - The lab B1-B3 in Desktop at 1280 and 1920: does B2 line up row by row; how narrow the row header column gets.
+- Fintech p1 twin: the grouped matrix (C, kept a matrix by default) and the roadmap table (D) as written; the lab's C1-C2
+  (does the flat table read as the matrix did, names at the right) and D1-D2 (D2: is any value cut).
