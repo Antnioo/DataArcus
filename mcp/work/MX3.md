@@ -29,9 +29,7 @@
   check that moves said per check.
 - **Got:** `mx3` 24 checks, red on b40cb786 first: 19 of 24 failed there (guards: T0, T3, R2, R3, P2). Moved on
   purpose: `mx1` P2 and `mx2` W3 (below). mp1-shapes 10, mr1 26, mirror-parity 62 unchanged; lint 0; build:min.
-- **State: DONE.** Areas twin + arabic + report + core: 88 suites passed before my run's 40-minute limit stopped it
-  (exit 124), rc24's T-4 the one change (said below). Full run on 3eb6adc5 (after it only this note): "run-tests: 134
-  suites passed". CI: run 41318169454 started.
+- **State:** the fx1 follow-up below; the full run after it below.
 - **Resume:** the reviewer's merge; the laptop's part 10 (below).
 
 ## Before -> after, per item
@@ -61,6 +59,22 @@
 
 - `rc24` T-4 ("the plan lists the widened columns"): its table's header was widened by narrowing a text column; now
   nothing is narrowed for a header, so it is listed cut instead: the check takes either (widened, or listed cut).
+
+## Follow-up: fx1 flaky on the branch (the reviewer, 1 Nov 15:23)
+- Base: merged `origin/integration/0.3.1` 43bc41bc (MP1f) into the branch: one conflict, the built
+  `assets/js/report-mirror.min.js` (rebuilt from the merged source, `npm run build:min`); `mcp/lib/twin-pages.mjs`,
+  `mcp/tests.json` and `mcp/WORK.md` merged without conflict; tests.json 135 suites, no duplicate.
+- Cause: the copy's plan (into "same") lists its texts in pages of one answer (40,000 characters); `fx1` approves the
+  drafted Arabic of the first page only. MX3's header fitting (no column narrowed) listed more cut headers, each with a
+  long why, so `fitted` grew from 1,268 to 2,575 characters and the first page held 59 or 60 texts instead of 67. The
+  Arabic page's second "Reset filters" button (the sample's page ids are random, so its place in the list moves: 48 to
+  66) fell past it sometimes and kept its English text: only one Arabic Reset, `arResets.length >= 2` failed.
+- Fix (code): each cut header says its why in a few words, the measure once in `sayInPlan` (`fitted` 2,002 -> ~1,500,
+  64 to 65 texts); and the cause behind the margin: a button's approved Arabic is shared with buttons of the same
+  text (`twin-texts.mjs SHARED`, as text boxes' texts are), so a second Reset takes it wherever the paging falls.
+  Test: `mx3` S1, red on 1a355b92 first. After the first fix alone: 19 of 20; after both: 20 of 20.
+- Command: `cd mcp && for i in $(seq 1 20); do node test-0.3.1-fx1.mjs | tail -1; done | sort | uniq -c`
+  -> "20 PASS  fx1  22 checks".
 
 ## CHANGELOG line
 - **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
