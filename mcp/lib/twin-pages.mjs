@@ -394,6 +394,26 @@ function iconRoom(visuals) {
     });
   });
 }
+// (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
+// the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
+// fitting): a visual narrower or lower than KEEP_MIN of its English size, or a bar or column chart under CHART_MIN px
+// wide or high that was not (part 8: Desktop drew no bars there), goes back to its plain mirrored box (W - x - w, its
+// English size) and is named. enVisuals, arVisuals: the page's English and Arabic visuals (arVisuals changed in place);
+// W: the page's width. Returns [{ visual, what }]
+export const KEEP_MIN = 0.75, CHART_MIN = 60;
+export function keepSize(enVisuals, arVisuals, W) {
+  const en = new Map((enVisuals || []).filter((v) => boxOk(v) && !v.visualGroup).map((v) => [String(v.name), v])), by = new Map((enVisuals || []).filter((v) => isObj(v) && v.name != null).map((v) => [String(v.name), v])), out = [];
+  const chart = (v) => ['bar', 'column'].includes(Mirror.kindOf(v));
+  (arVisuals || []).forEach((v) => {
+    const e = isObj(v) ? en.get(String(v.name)) : null; if (!e || !boxOk(v)) return;
+    const a = v.position, b = e.position, small = (k) => a[k] < b[k] * KEEP_MIN || (chart(e) && a[k] < CHART_MIN && b[k] >= CHART_MIN);
+    if (!small('width') && !small('height')) return;
+    const g = e.parentGroupName != null ? by.get(String(e.parentGroupName)) : null, Wp = g && boxOk(g) ? g.position.width : W;
+    out.push({ visual: String(v.name), what: `kept its English size: a rule would have shrunk it to ${Mirror.round(a.width)} px wide and ${Mirror.round(a.height)} px high (English ${Mirror.round(b.width)} x ${Mirror.round(b.height)})` });
+    Object.assign(a, { x: Mirror.round(Wp - b.x - b.width), y: b.y, width: b.width, height: b.height });
+  });
+  return out;
+}
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns };
   // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
@@ -455,7 +475,7 @@ export function buildTwin(P, labels) {
     const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
     const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
     e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
+  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -496,6 +516,8 @@ export function buildTwin(P, labels) {
         const t = fitTextboxes(page, r.visuals, c, pg.id, keep, kept); fitted.textboxes.push(...t.textboxes); fitted.textboxesCut.push(...t.textboxesCut); } catch (e) { /* a shape not expected: left as it is */ }
       if (!P.keepLtr(pg)) iconRoom(r.visuals);
     }
+    // (MP1d) last, on every mirrored page: no visual comes out smaller than the guard allows
+    if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
@@ -522,5 +544,5 @@ export function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, sizeKept, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }

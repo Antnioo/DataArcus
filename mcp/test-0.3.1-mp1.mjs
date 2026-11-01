@@ -24,6 +24,7 @@
 //          over a table, help lines with neutral ends (V3 wrap), and the overlap check naming such pairs
 //   MD     (MP1d) laptop part 8's shapes: visuals that only touch a matrix keep their widths, a bar chart over a
 //          2-column table, 4 KPI titles ending before their icons, a run's leading space kept
+//          MD-e1..e3: the guard, the twin never shrinks a visual (under 75 %, or a bar or column chart under 60 px)
 //   V1-V3  a badge on a text box mirrored within it (no new overlap with its text); a new overlap named; a text box the
 //          fitting widens off its panel named by page and visual
 //   node test-0.3.1-mp1.mjs
@@ -350,6 +351,20 @@ chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width
   const pm = w.dir ? rd(path.join(w.dir, 'definition/pages/vsPm/visuals/pm/visual.json')).visual.objects.general[0].properties.paragraphs[0].textRuns.map((r) => r.value) : [];
   chk(() => pm[1] === ' شهريًا', () => `MD-d: a run " vs PM" approved «شهريًا» keeps its leading space: ${JSON.stringify(pm)}`);
   chk(() => JSON.stringify(filesOf(RD.dir)) === JSON.stringify(before[6]), () => 'O6: the part-8 report\'s files byte-identical');
+}
+
+// MD-e (the owner's question, part 7 vs part 8: why nothing caught a heatmap row cut to a sliver): the twin never shrinks
+// a visual. The guard alone, fed the boxes MP1c's matrix rule wrote (item a's fix not involved): each comes back whole
+let TP = null; try { TP = await import('./lib/twin-pages.mjs'); } catch (e) { TP = null; }
+{
+  const box = (name, type, x, y, w, h) => ({ name, position: { x, y, z: 1, width: w, height: h }, visual: { visualType: type } });
+  const W2 = 1280, en = [box('c52c', 'clusteredColumnChart', 558, 400, 310, 120), box('b125', 'clusteredBarChart', 800, 200, 61.82, 180), box('f3f9', 'cardVisual', 100, 300, 1035, 300), box('ok', 'shape', 20, 20, 140, 100)];
+  // (as MP1c's rule left them: 310 -> 6.67, 61.82 -> 53.72, 1035 -> 0.92; ER's 140 -> 115.97 kept, 83 %)
+  const ar = [box('c52c', 'clusteredColumnChart', W2 - 558 - 310, 400, 6.67, 120), box('b125', 'clusteredBarChart', W2 - 800 - 61.82, 200, 53.72, 180), box('f3f9', 'cardVisual', W2 - 100 - 1035, 300, 0.92, 300), box('ok', 'shape', W2 - 160, 20, 115.97, 100)];
+  const kept = TP && TP.keepSize ? TP.keepSize(en, ar, W2) : null, at = (n) => ar.find((v) => v.name === n).position;
+  chk(() => kept && at('c52c').width === 310 && at('c52c').x === W2 - 558 - 310 && at('f3f9').width === 1035 && at('f3f9').x === W2 - 100 - 1035, () => `MD-e1: a visual a rule cut under 75 % of its English size goes back to its plain mirrored box (310 and 1035 wide): ${JSON.stringify(ar.map((v) => [v.name, v.position.x, v.position.width]))}`);
+  chk(() => kept && at('b125').width === 61.82, () => `MD-e2: a bar chart cut under 60 px (61.82 -> 53.72, 87 %: Desktop draws no bars there) goes back whole: ${JSON.stringify(at('b125'))}`);
+  chk(() => kept && at('ok').width === 115.97 && kept.map((x) => x.visual).sort().join() === 'b125,c52c,f3f9' && kept.every((x) => /kept its English size: a rule would have shrunk it to [0-9.]+ px/.test(x.what)), () => `MD-e3: a shrink of 75 % or more stays (ER's 83 %), and each one put back is named, with the width it would have had: ${JSON.stringify(kept)}`);
 }
 
 // ---------- X: the copy holding both languages ----------
