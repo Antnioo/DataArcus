@@ -26,8 +26,13 @@
   value entry with no alignment: left without one, so it stays centred); K2 (Fintech p2: 6 values centred, two own
   entries: none set right); K3 (guard: MP1e A1's shape, a default not centred: every entry right). mp1, mp1-shapes
   (MD-c, the never-shrink guard), mp1e: green; mp1e R1 changes (said in Risky changes). Full run: the base's suites + 1.
-- **State:** plan written; next: the red tests.
-- **Resume:** write `mcp/test-0.3.1-mp1f.mjs`, run it on b40cb786 (red), then the fixes.
+- **Got:** `mp1f` 17 checks (the estimate said about 15), red on b40cb786 first: 11 of 17 failed there (I1-I5: the
+  boxes cut to 162.9, 162.35, 210.29, 194.1, as part 9 measured; L1, R1-R3, K1, K2); guards I6, I7, L2, L3, R4, K3.
+  mp1e R1 rewritten (Risky changes); mp1 100, mp1-shapes 10, mp1e 13, mx1 41, mx2 26, mirror-parity 62: green. lint 0;
+  check-min 75 match; stamps report-mirror 20261101mp1f (theme-generator.js), theme-generator 20261101mp1f (3 pages).
+- **State: DONE.** Full run on 2a180d32: "run-tests: 134 suites passed" (the base's 133 + mp1f; mcp 1594, mutation
+  198, 76 mutants all killed). CI: see below.
+- **Resume:** none; the reviewer's merge.
 
 ## The causes and the plan
 1. (regression) MP1d's iconRoom narrows the whole box (Call Center: by 52.6 page px, x kept), so every right-aligned
