@@ -36,8 +36,12 @@ export const columnStatsShape = () => z.object({ rows: z.record(z.string(), z.nu
 // (0.3.1 MR1, B-270: the MCP review) a tool's inputs as a strict object: an input the tool does not have (a misspelled
 // option) is refused and named, never stripped silently (the agent would believe its option applied). zod's own words
 // ("Unrecognized key") do not say what to do; these do. Every tools/*.mjs registers its inputSchema through it.
-export const unknownKeysSaid = (what, keys, known) => `Unrecognized key${keys.length === 1 ? '' : 's'} ${keys.map((k) => `'${String(k).slice(0, 60)}'`).join(', ')}; ${what} are: ${known.join(', ')}. Call again without ${keys.length === 1 ? 'it' : 'them'} (or with the input you meant).`;
-const strictAs = (what, shape) => z.strictObject(shape, { error: (iss) => (iss.code === 'unrecognized_keys' ? unknownKeysSaid(what, iss.keys, Object.keys(shape)) : undefined) });
+// (0.3.2 TK1, B-281) at most KEYS_SHOWN keys named, and how many more
+const KEYS_SHOWN = 20;
+export const keysSaid = (keys) => keys.slice(0, KEYS_SHOWN).map((k) => `'${String(k).slice(0, 60)}'`).join(', ') + (keys.length > KEYS_SHOWN ? ` and ${keys.length - KEYS_SHOWN} more` : '');
+export const unknownKeysSaid = (what, keys, known) => `Unrecognized key${keys.length === 1 ? '' : 's'} ${keysSaid(keys)}; ${what} are: ${known.join(', ')}. Call again without ${keys.length === 1 ? 'it' : 'them'} (or with the input you meant).`;
+const strictAs = (what, shape, said) => z.strictObject(shape, { error: (iss) => (iss.code === 'unrecognized_keys' ? (said || ((keys) => unknownKeysSaid(what, keys, Object.keys(shape))))(iss.keys) : undefined) });
 // a tool's whole inputs; and an option object inside them that a person types by hand (MR1.md "Decisions")
-export const strictInputs = (tool, shape) => strictAs(`the inputs of ${tool}`, shape);
+// (0.3.2 TK1) said(keys): a tool's own words for its unknown keys (create_report: the ones the approved plan holds)
+export const strictInputs = (tool, shape, said) => strictAs(`the inputs of ${tool}`, shape, said);
 export const strictObject = (option, shape) => strictAs(`the keys of ${option}`, shape);

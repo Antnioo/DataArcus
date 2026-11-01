@@ -181,6 +181,10 @@ export function gate(tool, id, model0, pin, opts) {
  *  read only, the gate still checks the write */
 export function pinned(id, tool, key) { const p = plans.get(String(id)), w = p && p.data && p.data.pins && p.data.pins[tool]; return w ? w[key] : undefined; }
 
+/** (0.3.2 TK1, B-272) the inputs a live plan holds for a tool (data.inputs[tool], stored with the proposal), or null:
+ *  create_report takes path and planId and writes from these; the gate still compares their pin with the plan's (read only) */
+export function inputsOf(id, tool) { const p = plans.get(String(id)); return p && alive(p) && p.data && p.data.inputs && p.data.inputs[tool] ? JSON.parse(JSON.stringify(p.data.inputs[tool])) : null; }
+
 /** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
 export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } artifacts.delete(String(id)); }
 

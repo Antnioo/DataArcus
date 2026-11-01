@@ -13,20 +13,16 @@ export function withPlans(call) {
     }
     if (name === 'create_report') {
       // (audit 6, A6-1 and A6-2: a report plan pins the write's inputs and is used once, so every write gets its own plan
-      // from plan_layout with the same inputs, as an agent must; a plan that plan_layout refuses (planProblems) falls back
-      // to the model's plain plan, so create_report's own refusals stay tested)
-      const pin = Object.fromEntries(['design', 'layout', 'kpis', 'filters', 'header', 'page', 'dir', 'lang', 'focus', 'tables', 'displayNames', 'pages', 'pageFilters', 'text', 'subtitles', 'svgColumns', 'svgCards',
-        // (A-02) the report's look and options, pinned with the plan too
-        'name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines',
-        // (B-01) and font, rtl
-        'font', 'rtl']
-        .filter((k) => args[k] !== undefined).map((k) => [k, args[k]]));
-      // (F1, STRICT: a seasonal page's answers, gulfDates, are plan_layout's input only: given to the plan, not the write)
-      const { gulfDates, ...writeArgs } = args;
-      let pl = await call('plan_layout', Object.assign({ path: args.path }, pin, args.fields ? { planFields: args.fields } : {}, gulfDates ? { gulfDates } : {}));
-      if (!(pl.j && pl.j.plan && pl.j.plan.planId)) pl = await call('plan_layout', { path: args.path });
-      const id = pl.j && pl.j.plan && pl.j.plan.planId ? await approve(pl.j.plan.planId) : null;
-      return call(name, Object.assign({}, writeArgs, id ? { planId: id } : {}));
+      // from plan_layout with the same inputs, as an agent must)
+      // (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds every other input) every option of the
+      // call goes to plan_layout (its fields as planFields), then create_report gets the model and the approved plan id.
+      // A plan that plan_layout refuses (planProblems, no plan id) is that call's refusal: nothing can be written
+      const { fields, ...rest } = args;
+      const pl = await call('plan_layout', Object.assign({}, rest, fields ? { planFields: fields } : {}));
+      if (pl.err) return pl;
+      if (!(pl.j && pl.j.plan && pl.j.plan.planId)) return { err: true, t: 'Nothing was written: plan_layout gave no plan id. ' + pl.t, j: null, plan: pl };
+      const id = await approve(pl.j.plan.planId);
+      return call(name, Object.assign({ path: args.path }, id ? { planId: id } : {}));
     }
     // the others: their own proposal first (it writes nothing), then the same call with the approved plan
     const first = await call(name, args);

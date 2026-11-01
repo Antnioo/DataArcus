@@ -9,7 +9,7 @@ import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
 import { USES as DAX_USES } from './dax-functions.mjs';
 import { readUserFile } from './files.mjs';
 import { GALLERY_KINDS, LIMITS } from './tool-limits.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject } from './tool-inputs.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject, keysSaid, unknownKeysSaid } from './tool-inputs.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -112,6 +112,24 @@ export const CREATE_REPORT_INPUTS = {
     // (0.3.1 C) the sample project: a plan of its own kind (sample), written by create_report with the same inputs
     sample: z.boolean().optional().describe('No model yet (a new user: "show me what DataArcus can do", "try the sample"): true writes a made-up Gulf retail project to try DataArcus on, after approval. In plan_layout: sample true (and lang, the user\'s language) alone, no model input: the plan says what it holds and every file. In create_report: sample true, path (the plan\'s sample.folder), lang and the approved planId, nothing else. Its answer has the tour: the next requests, each a real call on the sample'),
     restyle: z.object({ preset: z.string().max(40), brand: z.string().max(20), harmony: z.string().max(20), mode: z.enum(['light', 'dark']) }).partial().strict().optional().describe('With redesignFrom: new theme colours from the design engine (a preset, or a brand colour with a harmony; light or dark): only the colour tokens of the original\'s custom theme change (data colours, foreground, background, table accent, good, neutral, bad)'),
+};
+// (0.3.2 TK1, B-272: create_report repeated plan_layout's 55 options, about 30,000 characters of tools/list sent in every
+// conversation, though it filled every left-out one from the approved plan) create_report takes the model (path, read
+// again and compared with the plan's print) and the approved planId; the plan holds every other input (heldInputs, kept
+// with the proposal) and create_report writes from them. The gate compares their pin with the plan's as before, and the
+// files they name are read and hashed again, so what is written is still exactly what was approved
+export const WRITE_KEYS = ['path', 'planId'];
+export const CREATE_REPORT_WRITE = {
+  path: modelPath.describe('The model the approved plan was made with: its project folder or .SemanticModel folder (for the sample, the plan\'s sample.folder)'),
+  planId: planIdInput.describe('The approved plan id from plan_layout, after approve_plan with the user\'s go. It holds every other input (pages or design, fields, names, theme, logo, options): nothing else is passed. Without it nothing is written')
+};
+// what a plan keeps for create_report: the inputs it pinned from, the plan's fields as fields, never the model or the plan id
+export const heldInputs = (a, fields) => Object.assign(Object.fromEntries(Object.entries(a).filter(([k, v]) => v !== undefined && !['path', 'planId', 'planFields'].includes(k))), fields !== undefined ? { fields } : {});
+// create_report's words for an input it no longer takes: one the plan holds is said as such (never a bare "Unrecognized key")
+export const heldSaid = (keys) => {
+  const held = keys.filter((k) => Object.prototype.hasOwnProperty.call(CREATE_REPORT_INPUTS, k) && !WRITE_KEYS.includes(k)), other = keys.filter((k) => !held.includes(k)), one = held.length === 1;
+  return [held.length ? `${keysSaid(held)}: the approved plan holds ${one ? 'this input' : 'these inputs'} (plan_layout's), so create_report takes only path and planId: call it with those two. To change ${one ? 'it' : 'them'}, call plan_layout again with the new value${one ? '' : 's'}, show the user the new plan and wait for their go.` : '',
+    other.length ? unknownKeysSaid('the inputs of create_report', other, WRITE_KEYS) : ''].filter(Boolean).join(' ');
 };
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
 // language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores

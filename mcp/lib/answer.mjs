@@ -22,6 +22,8 @@ export function out(o) {
 // A6-8: no answer passes 40,000 characters (scope.mjs's large-model line; check_model_health at maxItems 200 on the
 // 300-table model answered 166,053). Over it, the longest list is halved until the answer fits, each cut list named in
 // truncated.cut with what was kept, and truncated.how says how to get the rest.
+// (0.3.2 TK1, B-283) the one answer limit: scope.mjs's LIMIT and AIM, read-report.mjs's READ_CAP and tool-answer.mjs
+// read it here (test-0.3.2-tk1 L1 fails on a new literal elsewhere in lib/ or tools/)
 export const ANSWER_MAX = 40000;
 // (0.3.0 A3) opts.last: top-level lists cut only when no other list is left to cut (the Arabic twin's texts: a text cut
 // from its plan could not be given an Arabic label, so it stayed English)

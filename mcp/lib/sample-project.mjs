@@ -1,7 +1,7 @@
 // 0.3.1 C (time to first value): the sample project a new user with no model can try DataArcus on. A made-up Gulf retail
 // chain: a PBIP project with a TMDL model (four tables of typed rows, the labs' way: Desktop shows the data after one
 // Refresh; X2's demo model, lab/bilingual-demo.mjs, widened) and an empty report. plan_layout with sample true proposes
-// it (a plan of its own kind), create_report with sample true writes it after the person's approval, and its answer is
+// it (a plan of its own kind), create_report with its planId writes it after the person's approval, and its answer is
 // the tour: the next requests, each one real DataArcus call on the sample.
 // Every name and number is made up: no real company, mall, person or vehicle trade (test-0.3.1-sample-project C18).
 // The rows are written into the model's files only; no answer holds them (the MCP never returns data values).
@@ -147,7 +147,7 @@ const ASKS = {
   ar: ['صمّم أول تقرير على المثال: ملخص تنفيذي للمبيعات حسب الشهر والمدينة والفئة.', 'اجعل هذا التقرير بالإنجليزية والعربية: تقرير واحد، مع زر للغة في كل صفحة.',
     'أضف تقويم الخليج إلى المثال: الأشهر الهجرية ورمضان والعيد وعطلة نهاية الأسبوع في الإمارات.', 'هل التقرير جاهز للعربية؟ افحصه صفحة صفحة.']
 };
-const THEN = ['plan_layout shows the plan; after the user\'s go: approve_plan, then create_report with the planId and the plan\'s fields.', 'The same plan with languages "en+ar": the Arabic names and texts are approved in the plan.',
+const THEN = ['plan_layout shows the plan; after the user\'s go: approve_plan, then create_report with path and the planId (the plan holds the rest).', 'The same plan with languages "en+ar": the Arabic names and texts are approved in the plan.',
   'add_gulf_calendar answers what it would write; after the go it writes a script the user applies in TMDL view.', 'Read-only: the report from step 1, page by page, each finding with its fix.'];
 export function tour(folder, lang) {
   const model = `${folder}/${SAMPLE_NAME}.SemanticModel`, first = { path: model, layout: 'exec', filters: 'top', name: SAMPLE_REPORT, planFields: PLAN_FIELDS }, A = ASKS[lang === 'ar' ? 'ar' : 'en'];

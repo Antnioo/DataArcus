@@ -14,19 +14,24 @@ import { text, safe } from '../lib/tool-answer.mjs';
 import { ADDS, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
 import { axesOf } from '../lib/report-fields.mjs';
-import { CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly } from '../lib/report-inputs.mjs';
+import { CREATE_REPORT_WRITE, heldSaid, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly } from '../lib/report-inputs.mjs';
 import { reportRun } from '../lib/report-run.mjs';
 
 export function register(server, ctx) {
   server.registerTool('create_report', {
     title: 'Create a report project for an existing model',
-    description: 'Writes only with an approved planId from plan_layout for the same model: without one it refuses and writes nothing. Before calling this, call plan_layout with the model and the plan\'s fields (planFields), show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan with the user\'s reply, and pass the planId and the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
-    inputSchema: strictInputs('create_report', CREATE_REPORT_INPUTS), annotations: ADDS
-  }, safe(async (a) => {
+    description: 'Writes the report of an approved plan, exactly as the user approved it: call it with path (the model) and planId only. The plan holds every other input (pages or a design, the fields, names, theme, logo, page filters and options), so none is passed here; to change one, call plan_layout again, show the user the new plan and wait for their "go". Without an approved planId it refuses and writes nothing. Before calling this: plan_layout with the model, the plan\'s fields (planFields) and options; show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed and bound to the model\'s fields, theme applied, a hidden tooltip page; the model and any existing report are never touched, and the new report gets a free name. The same call writes a plan\'s native copy (customVisualsFrom), redesign (redesignFrom) or the sample project. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). Say any difference the answer lists in boundFields.' + UNTRUSTED,
+    inputSchema: strictInputs('create_report', CREATE_REPORT_WRITE, heldSaid), annotations: ADDS
+  }, safe(async (call) => {
+    // (0.3.2 TK1, B-272) the inputs are the plan's own (heldInputs, kept with its proposal), with the model and the plan id
+    // of this call; a plan that holds none (unknown, expired, of another kind) is refused with the gate's own words
+    const held = call.planId != null ? Plans.inputsOf(call.planId, 'create_report') : null;
+    if (!held) { const why = Plans.approvalProblem('create_report', call.planId); throw new Error(why || `Nothing was written: plan ${call.planId} holds no inputs for create_report. Make the plan with plan_layout, show it to the user and wait for their go.`); }
+    let a = Object.assign(held, { path: call.path, planId: call.planId });
     // (0.3.1 C) the sample project: only with its own approved plan, only into the folder the plan named, never over anything
     if (a.sample || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'sample')) {
       const other = Object.keys(a).filter((k) => !['sample', 'path', 'lang', 'planId'].includes(k) && a[k] !== undefined);
-      if (!a.sample || other.length) throw new Error(`Nothing was written: this is the sample project's plan. Call create_report with sample true, path (the plan's sample.folder), lang and the approved planId${other.length ? `; leave ${other.join(', ')} out` : ''}.`);
+      if (!a.sample || other.length) throw new Error(`Nothing was written: this is the sample project's plan. Call create_report with path (the plan's sample.folder) and the approved planId.`);
       Plans.gate('create_report', a.planId, { key: inside(a.path), print: null }, samplePin(a));
       const folder = String(a.path), n = withPlan(a.planId, 'create_report', () => writeSample(folder));
       return text(writtenSaid(folder, n, a.lang));
@@ -40,17 +45,17 @@ export function register(server, ctx) {
     a = withLookDefaults(a);
     // (0.3, J13 redesign step 2) a redesign is a copy of the original with the approved patches only (lib/redesign.mjs)
     if (a.redesignFrom != null || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'redesign')) {
-      if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Call create_report with redesignFrom (the original), path and the approved planId, and the plan\'s titles, restyle, consistentText and keepPositions if it has them.');
-      if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Call create_report with redesignFrom, path, the approved planId, and the plan\'s titles, restyle, consistentText and keepPositions if it has them.');
+      if (a.redesignFrom == null) throw new Error('Nothing was written: this plan is a redesign. Make it again with plan_layout and redesignFrom (the original), show it to the user and wait for their go.');
+      if (a.pages || a.design || a.customVisualsFrom != null) throw new Error('Nothing was written: redesignFrom writes a copy of that report with the approved changes alone. Make the plan again with plan_layout and redesignFrom, show it to the user and wait for their go.');
       const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), redesignPin(a));
       const art = keptCopy(a.planId);
       return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeRedesign(a.redesignFrom, mm, p, { titles: a.titles, restyle: a.restyle, consistentText: a.consistentText, keepPositions: a.keepPositions }, art); }));
     }
     // (0.3.1 SF1) a redesign's option outside a redesign: refused, never dropped (plan_layout refuses it at the plan too)
-    { const only = redesignOnly(a); if (only.length) throw new Error(`Nothing was written: ${only.join(', ')} ${only.length === 1 ? 'works' : 'work'} on a redesign only (redesignFrom)${a.customVisualsFrom != null ? '; for a native copy with one text set, write the native copy first, then plan its redesign with ' + only.join(', ') : ''}. Call create_report without ${only.length === 1 ? 'it' : 'them'} and the approved planId.`); }
+    { const only = redesignOnly(a); if (only.length) throw new Error(`Nothing was written: ${only.join(', ')} ${only.length === 1 ? 'works' : 'work'} on a redesign only (redesignFrom)${a.customVisualsFrom != null ? '; for a native copy with one text set, write the native copy first, then plan its redesign with ' + only.join(', ') : ''}. Make the plan again with plan_layout without ${only.length === 1 ? 'it' : 'them'}, show it to the user and wait for their go.`); }
     // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
     if (a.customVisualsFrom != null) {
-      if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
+      if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Make the plan again with plan_layout, show it to the user and wait for their go.');
       const mm = refuseUnreadable(loadModel(a.path)), p = Plans.gate('create_report', a.planId, modelRef(mm, a.path), reportPin(a, a.fields));
       const art = keptCopy(a.planId);
       return text(withPlan(a.planId, 'create_report', () => { sameModelBeforeWrite(a.planId, () => modelPrintOf(loadModel(a.path)), modelPrintOf(mm)); return writeNative(a.customVisualsFrom, mm, p, axesOf(mm, a.sharedAxes), art, { second: a.customVisualsSecond }); }));
@@ -60,7 +65,10 @@ export function register(server, ctx) {
     // the write
     a = listedSlicers(a);
     const art = a.planId != null ? Plans.artifactOf(a.planId) : null;
-    if (art && art.copy) throw new Error(`Nothing was written: plan ${a.planId} is the ${art.copy === 'native' ? 'native copy of a report (customVisualsFrom)' : 'redesign of a report (redesignFrom)'}. Call create_report with ${art.copy === 'native' ? 'customVisualsFrom' : 'redesignFrom'}, path and the approved planId.`);
+    if (art && art.copy) throw new Error(`Nothing was written: plan ${a.planId} is the ${art.copy === 'native' ? 'native copy of a report (customVisualsFrom)' : 'redesign of a report (redesignFrom)'}. Make it again with plan_layout, show it to the user and wait for their go.`);
+    // (0.3.2 TK1) a plan whose exact report is not kept (none was built) is built from its inputs; a plan made with layout
+    // inputs alone holds the design it resolved (the pin's), as the agent passed it before
+    if (!art && !a.pages && !a.design) { const d = Plans.pinned(a.planId, 'create_report', 'design'); if (d) a = Object.assign({}, a, { design: d }); }
     return text(art ? writeApproved(a, art) : reportRun(a, 'write'));
   }));
 }
@@ -92,7 +100,7 @@ function keptCopy(planId) {
 function writeApproved(a, art) {
   const notReady = Plans.approvalProblem('create_report', a.planId);
   const input = (ok, msg) => { if (!ok) throw new Error(notReady ? `${notReady} Also: ${msg}` : msg); };
-  input(!a.pages !== !a.design, 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
+  input(!a.pages !== !(a.design || Plans.pinned(a.planId, 'create_report', 'design')), 'Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   input(!!a.name, 'Give create_report a name for the new report (Report name).');
   const m = refuseUnreadable(loadModel(a.path));
   { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
