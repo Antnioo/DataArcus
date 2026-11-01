@@ -58,6 +58,17 @@
 | 3 | titles padded with space + RLM, values ragged in Desktop; the name (the card's value) left, the photo right | referenceLabelLayout style "tabular", titles whole; a card whose image goes right gets its unset value alignment right | twin-pages.mjs cardColumn; twin-texts.mjs (no padding); report-mirror.js newCard | mp1f R1-R4; mp1e R1 |
 | 4, 5 | an own value entry with no alignment set right under a centred default | left without one (stays centred); a default not centred: every entry right as before | report-mirror.js newCard | mp1f K1-K3 |
 
+## Fixed or named (the owner's rule D-1101-04, 1 Nov: fix every general rule; name a one-dashboard trick)
+- Fixed, general: 1 (any text box with an icon at its end and more than its title: width kept, the title makes room),
+  2 (any donut or pie whose shown legend lists its measures), 4 and 5 (any card value entry with no alignment of its own
+  under a centred default).
+- Fixed by the card's own settings, so not named: 3. The column is Power BI's reference label layout "Table"
+  (referenceLabelLayout.style "tabular"), the padding dropped (spaces and marks are not robust); the agent's name beside
+  the photo by the card's value alignment. If the laptop finds that Desktop ignores "tabular", the next step is the
+  owner's sentence in the plan ("this card's values stand after their labels: Power BI's card has no right-to-left
+  column", English and Arabic), not padding again.
+- Named: none in this job.
+
 ## Decisions I made
 - 1: "other paragraphs" are paragraphs with text; the title's paragraph is the one whose runs end with spaces or tabs
   (English indented it under the icon; MP1c moved them to its end), else the first with text. The room is the box's
