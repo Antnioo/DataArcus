@@ -22,6 +22,9 @@
 //          beside a table of other fields, nested groups, KPI icons beside and on titles, a help box's button
 //   MC     (MP1c) laptop part 7's shapes: a tab-indented KPI title, a bar chart on a matrix's margin, a small bar chart
 //          over a table, help lines with neutral ends (V3 wrap), and the overlap check naming such pairs
+//   MD     (MP1d) laptop part 8's shapes: visuals that only touch a matrix keep their widths, a bar chart over a
+//          2-column table, 4 KPI titles ending before their icons, a run's leading space kept
+//          MD-e1..e3: the guard, the twin never shrinks a visual (under 75 %, or a bar or column chart under 60 px)
 //   V1-V3  a badge on a text box mirrored within it (no new overlap with its text); a new overlap named; a text box the
 //          fitting widens off its panel named by page and visual
 //   node test-0.3.1-mp1.mjs
@@ -182,7 +185,21 @@ const RC = report('Part Seven', [
   { id: 'ratings', name: 'Ratings', visuals: [vis('rt', 'tableEx', { x: 20, y: 260, w: 300, h: 80, z: 1000 }, { query: { queryState: { Values: { projections: [Me('All Measures', 'Repeat Rate')] } } } }),
     vis('rb', 'clusteredBarChart', { x: 170, y: 265, w: 140, h: 70, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } }, objects: hidden })] },
   { id: 'helpLines', name: 'Help lines', visuals: [vis('h1', 'textbox', { x: 20, y: 20, w: 400, h: 40 }, runs('1 Pick an order to see its status.')), vis('h2', 'textbox', { x: 20, y: 80, w: 400, h: 40 }, runs('Pick an order'))] }], {});
-const before = [RP, RJ, RW, RN, RR, RC].map((r) => filesOf(r.dir));
+// (MP1d, laptop part 8 on the owner's dashboards, made up here in their shapes at half size) visuals that only touch a
+// matrix (a column chart under the heatmap overlapping its bottom, a bar chart over its right part ending 27 past it, a
+// card behind a matrix of almost the same box), a bar chart over a 2-column table, 4 tab-indented KPI titles under their icons, a run " vs PM"
+const T4 = [['Calls', 'المكالمات'], ['Resolution Rate', 'نسبة الحل'], ['Avg Call Duration (sec)', 'متوسط مدة المكالمة (بالثواني)'], ['Avg Speed of Answer', 'متوسط سرعة الرد']];
+const RD = report('Part Eight', [
+  { id: 'heatRow', name: 'Heat row', visuals: [vis('heatm', 'pivotTable', { x: 272, y: 100, w: 159, h: 200, z: 1000 }, { query: { queryState: { Rows: { projections: [C('Branches', 'Country')] }, Values: { projections: [Me('All Measures', 'Visits')] } } } }),
+    vis('colU', 'clusteredColumnChart', { x: 279, y: 291, w: 155, h: 60, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } } }),
+    vis('barL', 'clusteredBarChart', { x: 355, y: 110, w: 103, h: 180, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } } })] },
+  { id: 'project', name: 'Project', visuals: [vis('projm', 'pivotTable', { x: 100, y: 50, w: 300, h: 200, z: 2000 }, { query: { queryState: { Rows: { projections: [C('Branches', 'Country')] }, Values: { projections: [Me('All Measures', 'Visits')] } } } }),
+    vis('projc', 'cardVisual', { x: 101, y: 50, w: 300, h: 200, z: 1000 }, { query: { queryState: { Data: { projections: [Me('All Measures', 'Visits')] } } } })] },
+  { id: 'ratings2', name: 'Ratings two', visuals: [vis('rt2', 'tableEx', { x: 20, y: 260, w: 300, h: 80, z: 1000 }, { query: { queryState: { Values: { projections: [Me('All Measures', 'Repeat Rate'), Me('All Measures', 'Visits')] } } } }),
+    vis('rb2', 'clusteredBarChart', { x: 170, y: 265, w: 140, h: 70, z: 2000 }, { query: { queryState: { Category: { projections: [C('Branches', 'Country')] }, Y: { projections: [Me('All Measures', 'Visits')] } } }, objects: hidden })] },
+  { id: 'kpi4', name: 'KPI four', visuals: T4.flatMap(([en], i) => [vis('t' + i, 'textbox', { x: 20, y: 20 + i * 60, w: 200, h: 40, z: 1000 }, runs('\t\t\t\t\t', en)), vis('i' + i, 'image', { x: 22, y: 25 + i * 60, w: 30, h: 30, z: 2000 })]) },
+  { id: 'vsPm', name: 'Vs PM', visuals: [vis('pm', 'textbox', { x: 20, y: 20, w: 300, h: 40 }, runs('-8.80 %', ' vs PM'))] }], {});
+const before = [RP, RJ, RW, RN, RR, RC, RD].map((r) => filesOf(r.dir));
 
 const links = () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : []);
 const s = await serverClient(ROOT, { DATAARCUS_TEST_CLICK: 'log:' + log, DATAARCUS_APPROVAL_WAIT_MS: '200' }), call = s.call;
@@ -318,6 +335,36 @@ chk(() => { const o = PP.newOverlaps([{ name: 'a', position: { x: 0, y: 0, width
   const o = PP ? PP.newOverlaps(en, ar) : [], names = o.map((x) => x.visuals.join());
   chk(() => names.includes('heat,wk') && o.find((x) => x.visuals.join() === 'heat,wk').why === 'rowHeaders', () => `MC-d1: an overlap moved onto a matrix's row headers is named: ${JSON.stringify(o)}`);
   chk(() => names.includes('rb,rt') && o.find((x) => x.visuals.join() === 'rb,rt').why === 'barsTurned', () => `MC-d2: a bar chart over a table whose bars turned is named: ${JSON.stringify(o)}`);
+}
+
+// ---------- P8: laptop part 8's regression and its last three (MP1d, red on 7c54e918 first except guards) ----------
+{
+  const labels = Object.assign({ 'textbox:vsPm/pm/0.1': 'شهريًا' }, ...T4.map(([, ar], i) => ({ [`textbox:kpi4/t${i}/0.1`]: ar })));
+  const w = await write({ path: RD.pbip, arabicMonth: false, labels }), P = (pg, n) => (w.dir ? rd(path.join(w.dir, 'definition/pages', pg, 'visuals', n, 'visual.json')).position : {});
+  chk(() => !w.err && P('heatRow', 'colU').x === 206 && P('heatRow', 'colU').width === 155, () => `MD-a1: a column chart under the heatmap, overlapping only its bottom, keeps its English width, mirrored (206, 155): ${JSON.stringify(P('heatRow', 'colU'))} ${w.err ? short(w) : ''}`);
+  chk(() => P('heatRow', 'barL').x === 182 && P('heatRow', 'barL').width === 103, () => `MD-a2: a bar chart over the heatmap's right part, ending past it (at the heatmap's left in the twin), keeps its English width, mirrored (182, 103): ${JSON.stringify(P('heatRow', 'barL'))}`);
+  chk(() => P('project', 'projc').x === 239 && P('project', 'projc').width === 300, () => `MD-a3: a card behind a matrix of (almost) the same box keeps its English width, mirrored (239, 300): ${JSON.stringify(P('project', 'projc'))}`);
+  const rb2 = w.dir ? rd(path.join(w.dir, 'definition/pages/ratings2/visuals/rb2/visual.json')) : null;
+  chk(() => P('ratings2', 'rt2').x === 320 && rb2.position.x === 470 && !((rb2.visual.objects.valueAxis || []).some((e) => e.properties && e.properties.invertAxis)), () => `MD-b: a bar chart over a 2-column table keeps its place on it (470) and its bars' direction: ${JSON.stringify(rb2 && rb2.position)} ${JSON.stringify(rb2 && rb2.visual.objects.valueAxis)}`);
+  T4.forEach(([en], i) => { const t = P('kpi4', 't' + i), ic = P('kpi4', 'i' + i);
+    chk(() => t.x + t.width <= ic.x - 4 && ic.x === 588, () => `MD-c${i + 1}: the title "${en}" in Arabic ends 4 px before its icon (icon at 588): text box ${JSON.stringify(t)}, icon ${JSON.stringify(ic)}`); });
+  const pm = w.dir ? rd(path.join(w.dir, 'definition/pages/vsPm/visuals/pm/visual.json')).visual.objects.general[0].properties.paragraphs[0].textRuns.map((r) => r.value) : [];
+  chk(() => pm[1] === ' شهريًا', () => `MD-d: a run " vs PM" approved «شهريًا» keeps its leading space: ${JSON.stringify(pm)}`);
+  chk(() => JSON.stringify(filesOf(RD.dir)) === JSON.stringify(before[6]), () => 'O6: the part-8 report\'s files byte-identical');
+}
+
+// MD-e (the owner's question, part 7 vs part 8: why nothing caught a heatmap row cut to a sliver): the twin never shrinks
+// a visual. The guard alone, fed the boxes MP1c's matrix rule wrote (item a's fix not involved): each comes back whole
+let TP = null; try { TP = await import('./lib/twin-pages.mjs'); } catch (e) { TP = null; }
+{
+  const box = (name, type, x, y, w, h) => ({ name, position: { x, y, z: 1, width: w, height: h }, visual: { visualType: type } });
+  const W2 = 1280, en = [box('c52c', 'clusteredColumnChart', 558, 400, 310, 120), box('b125', 'clusteredBarChart', 800, 200, 61.82, 180), box('f3f9', 'cardVisual', 100, 300, 1035, 300), box('ok', 'shape', 20, 20, 140, 100)];
+  // (as MP1c's rule left them: 310 -> 6.67, 61.82 -> 53.72, 1035 -> 0.92; ER's 140 -> 115.97 kept, 83 %)
+  const ar = [box('c52c', 'clusteredColumnChart', W2 - 558 - 310, 400, 6.67, 120), box('b125', 'clusteredBarChart', W2 - 800 - 61.82, 200, 53.72, 180), box('f3f9', 'cardVisual', W2 - 100 - 1035, 300, 0.92, 300), box('ok', 'shape', W2 - 160, 20, 115.97, 100)];
+  const kept = TP && TP.keepSize ? TP.keepSize(en, ar, W2) : null, at = (n) => ar.find((v) => v.name === n).position;
+  chk(() => kept && at('c52c').width === 310 && at('c52c').x === W2 - 558 - 310 && at('f3f9').width === 1035 && at('f3f9').x === W2 - 100 - 1035, () => `MD-e1: a visual a rule cut under 75 % of its English size goes back to its plain mirrored box (310 and 1035 wide): ${JSON.stringify(ar.map((v) => [v.name, v.position.x, v.position.width]))}`);
+  chk(() => kept && at('b125').width === 61.82, () => `MD-e2: a bar chart cut under 60 px (61.82 -> 53.72, 87 %: Desktop draws no bars there) goes back whole: ${JSON.stringify(at('b125'))}`);
+  chk(() => kept && at('ok').width === 115.97 && kept.map((x) => x.visual).sort().join() === 'b125,c52c,f3f9' && kept.every((x) => /kept its English size: a rule would have shrunk it to [0-9.]+ px/.test(x.what)), () => `MD-e3: a shrink of 75 % or more stays (ER's 83 %), and each one put back is named, with the width it would have had: ${JSON.stringify(kept)}`);
 }
 
 // ---------- X: the copy holding both languages ----------

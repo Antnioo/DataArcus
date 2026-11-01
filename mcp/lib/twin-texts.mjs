@@ -311,7 +311,11 @@ const besideOf = (rawId) => { const m = /^(?:phone:)?text:.+\/o\.([^./]+)\.\d+\.
 const ARABIC_END = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]$/;
 const neutralEnds = (rawId, v) => { if (!/^(?:phone:)?textbox:/.test(String(rawId))) return false; const t = String(v == null ? '' : v).trim(), a = [...t];
   return a.length > 0 && /[\u0600-\u06FF]/.test(t) && (!ARABIC_END.test(a[0]) || !ARABIC_END.test(a[a.length - 1])); };
-export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = (besideOf(by.get(k)) || neutralEnds(by.get(k), labels[k]) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k]); });
+// (0.3.1 MP1d, laptop part 8: «-8.80 %شهريًا», the run " vs PM" approved «شهريًا») a text box run whose English starts
+// or ends with spaces keeps them around its approved Arabic (outside any wrap), so it stays apart from the runs beside it
+const spacedLike = (rawId, raw, v) => { if (!/^(?:phone:)?textbox:/.test(String(rawId)) || raw == null || v == null) return v; const m = /^(\s*)[\s\S]*?(\s*)$/.exec(String(raw)), s = String(v);
+  return (m[1] && !/^\s/.test(s) ? m[1] : '') + s + (m[2] && !/\s$/.test(s) ? m[2] : ''); };
+export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), raw = new Map(texts.map((t) => [t.id, t.raw])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = spacedLike(by.get(k), raw.get(k), (besideOf(by.get(k)) || neutralEnds(by.get(k), labels[k]) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k])); });
   texts.forEach((t) => { if (t.kind === 'visualField' && !Object.prototype.hasOwnProperty.call(out, t.rawId)) out[t.rawId] = null; }); return out; };
 
 // ---- the plan ----
