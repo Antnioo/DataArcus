@@ -20,6 +20,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
+const Rules = require('../../assets/js/report-rules.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
 import { picturesOf, flipPicturesOf, picturePagesSaid, picturePageIds } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
@@ -104,6 +105,15 @@ export function planTwin(a) {
   // (MP1b) the pages on a picture, as picturesOf read them (the file by its ItemName; an emptied picture is none)
   const pictureIds = picturePageIds(R, pictures);
   const keepLtr = (pg) => pictureIds.has(pg.id) && (pictures.get(String(pg.id)) || {}).picture !== 'flipped' && !mirrorPictures;
+  // (0.3.1 MX1 C, the reviewer's add-on of 1 Nov: Fintech's grouped matrix) a matrix the user chose (matrixAsTable: its
+  // visual names, or page/visual) is written flat, as a table, on the twin's in-memory copy of the English visual before
+  // mirroring (the plan and the write build the same; the copy's English page keeps its file, the matrix)
+  const chosen = new Set((Array.isArray(a.matrixAsTable) ? a.matrixAsTable : []).slice(0, 200).map(String)), flattened = [], flatRefused = [];
+  R.pages.filter((pg) => !keepLtr(pg)).forEach((pg) => pg.visuals.forEach((v) => {
+    const n = isObj(v.json) ? String(v.json.name) : ''; if (!chosen.has(n) && !chosen.has(pg.id + '/' + n)) return;
+    const f = Mirror.flatTable(v.json), at = safeName(pg.id) + '/' + safeName(n);
+    if (f.ok) { v.json = f.json; flattened.push(at); } else flatRefused.push(at + ' (' + f.why + ')');
+  }));
   const pagesKept = R.pages.filter(keepLtr).length;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
@@ -154,21 +164,30 @@ export function planTwin(a) {
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
+    (r.asTables || []).forEach((n) => where.asTables.push(safeName(pg.id) + '/' + safeName(n)));
     (r.kept || []).forEach((x) => where.kept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.what + ' ' + safeName(x.value) + ')'));
     // (T-3, T-6 of rc.5: the pairs mirrored as one)
     const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
     u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
-    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
+    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return; if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
-  const mirrors = Object.keys(kinds).map((k) => ({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }));
+  // (0.3.1 MX1) the matrices written as tables named, page/visual
+  const mirrors = Object.keys(kinds).map((k) => Object.assign({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }, k === 'matrixAsTable' ? { where: where.asTables.slice(0, 30) } : {}));
+  // (MX1 C) the matrices written flat as chosen (counted with the tables above too: they are tables now)
+  if (flattened.length) mirrors.push({ kind: 'matrixFlattened', what: Mirror.KIND_WHAT.matrixFlattened, count: flattened.length, where: flattened.slice(0, 30) });
+  // (MX1 C) the matrices kept that the user could choose to write flat, and what that loses
+  const flatOffer = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'matrix' && !Mirror.flatMatrix(v.json).ok && Mirror.flatTable(v.json).ok).map((v) => safeName(String(v.json.name))));
+  const matrixChoices = flatOffer.length || flatRefused.length ? Object.assign({ option: 'matrixAsTable',
+    how: 'Each of these matrices stays a matrix (its row headers at the left). On the user\'s choice, matrixAsTable with its visual names writes it as a flat table: one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right.',
+    lost: 'What a flat table loses: ' + Mirror.FLAT_LOST + '. Ask the user before choosing it.', visuals: flatOffer.slice(0, 30) }, flatRefused.length ? { notWritten: flatRefused.slice(0, 30) } : {}) : null;
   const cannot = [];
   if (where.custom.length) cannot.push({ what: 'custom visuals', why: 'moved only: no report setting reaches inside a custom visual (its labels, sides and menus stay as they are; a licensed one may ask for a sign-in when its page opens)', where: where.custom.slice(0, 30) });
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
@@ -215,6 +234,21 @@ export function planTwin(a) {
   const ref = byPathOf(R.pbir);
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
   const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
+  // (0.3.1 MX1 D, the reviewer's add-on of 1 Nov: Fintech's roadmap table) a reversed table wider than its box: Power BI
+  // lays a table from its left edge and scrolls to the right, so the English first column (now the last) is behind the
+  // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a
+  // lower bound; never data); the room is the box less 36 (the scrollbar and margins, as the header fitting counts it).
+  // Named, not narrowed: its values' widths are data, which the twin never reads
+  const wideTables = [];
+  (built.pages || []).filter((x) => x && x.pg && !keepLtr(x.pg)).forEach((x) => { const sc = isObj(x.page) && Number.isFinite(x.page.height) ? x.page.height / 1080 : 1;
+    (x.visuals || []).forEach((v) => { if (!isObj(v) || !isObj(v.visual) || v.visual.visualType !== 'tableEx' || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
+      const ps = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((q) => isObj(q) && typeof q.queryRef === 'string') : [];
+      if (ps.length < 2) return;
+      const cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [], T = Rules.tableHeaders(v, R.theme, 'Segoe UI', sc), wrapHead = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnHeaders) ? v.visual.objects.columnHeaders : []).some((e) => isObj(e) && !e.selector && isObj(e.properties) && litStr(e.properties.wordWrap) === 'true');   // (a header that wraps takes a second line, not more width)
+      const own = (r) => { const e = cw.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === r && isObj(y.properties)); const n = e && isObj(e.properties.value) && isObj(e.properties.value.expr) && isObj(e.properties.value.expr.Literal) ? parseFloat(String(e.properties.value.expr.Literal.Value)) : NaN; return Number.isFinite(n) ? n : null; };
+      const need = ps.reduce((n, q) => n + (own(q.queryRef) != null ? own(q.queryRef) : wrapHead ? 0 : Rules.headerNeed(String(q.displayName != null ? q.displayName : q.nativeQueryRef || ''), T.t, T.font, sc).needW), 0), room = Math.floor(v.position.width - 36 * sc);
+      if (need > room) wideTables.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (its columns ${Math.ceil(need)} wide${ps.some((q) => own(q.queryRef) == null) ? ' at least' : ''}, its box ${room})`); }); });
+  if (wideTables.length) cannot.push({ what: 'tables wider than their box', why: 'this table is wider than its box: in Arabic its first column is reached by scrolling right (Power BI lays a table from its left edge and scrolls to the right; the twin reverses its columns, so the English first column is the last, at the right). It is not narrowed: how wide its values are is data, which the twin never reads, so narrowing could cut them. To keep it in view, widen the table or narrow its columns in the original', where: wideTables.slice(0, 30) });
   // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") a mirrored page drawn on DataArcus's glass picture
   // gets that picture flipped left to right, pixel by pixel (built.pictures: its file -> the flipped bytes); the twin
   // writes it under the same name, the copy holding both languages as a picture of the Arabic page's own
@@ -268,7 +302,7 @@ export function planTwin(a) {
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    pages, mirrors, cannot, ...(matrixChoices ? { matrixChoices } : {}), ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     // (TW1, M1-S2: the tables that say «الإجمالي» on their total row are said in mirrors, Mirror.KIND_WHAT.table: the
     // answer's size is shared with the texts list, twinFit)
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), ...(built.titleMeasures.fixed ? { fixed: built.titleMeasures.fixed.slice(0, 30) } : {}), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),

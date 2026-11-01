@@ -7,6 +7,10 @@ package's manifest; this file says what is in it.
 ## [Unreleased]: 0.3.1
 - **Two answers that misled the assistant:** a misspelled option is refused and named, not ignored; a mistyped model
   path lists the models.
+- **A matrix's first column at the right in the Arabic twin:** a matrix with one row field and no column field (a list
+  such as patients by ID) is written in the twin as a table, so its first column reads on the right, with its fields,
+  names, widths, colours, sort, totals and styles; a matrix with a column field keeps its row headers at the left, as
+  the plan says, because Power BI's matrix has no right-to-left setting.
 - **What a test run in Power BI Desktop found:** the Arabic twin now turns a chart's legend and a visual's shadow only into
   positions Power BI has (a legend at the top right went to a "top left" Power BI does not know, and Microsoft's
   validator refused it); a position Power BI does not list is kept and named in the plan. On a page with a filter

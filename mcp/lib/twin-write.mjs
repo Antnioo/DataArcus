@@ -96,12 +96,15 @@ export function writeTwin(a, plan, art) {
   if (a.waterfallRtl != null && Gallery.waterfallRtlOf(a.waterfallRtl) !== Gallery.waterfallRtlOf(d.waterfallRtl)) throw new Error('Nothing was written: waterfallRtl differs from the approved plan\'s. Make the plan again with the waterfall the user wants, show it and wait for their go.');
   // (0.3.1 MP1) the pictures the user approved to flip are the plan's too
   if (a.flipPictures != null && JSON.stringify([...a.flipPictures].map(String).sort()) !== JSON.stringify([...(d.flipPictures || [])].map(String).sort())) throw new Error('Nothing was written: flipPictures differs from the approved plan\'s. Make the plan again with the pictures the user approved to flip, show it and wait for their go.');
+  // (0.3.1 MX1 C) the matrices the user chose to write flat are the plan's too
+  const flatOf = (x) => JSON.stringify([...(Array.isArray(x) ? x : [])].map(String).sort());
+  if (a.matrixAsTable != null && flatOf(a.matrixAsTable) !== flatOf(d.matrixAsTable)) throw new Error('Nothing was written: matrixAsTable differs from the approved plan\'s. Make the plan again with the matrices the user chose, show it and wait for their go.');
   // (0.3.0 J18) the plan's terms: a call with planId that gives other ones is refused
   if (a.terms && JSON.stringify(normTerms(a.terms)) !== JSON.stringify(d.terms || {})) throw new Error('Nothing was written: these terms differ from the terms of the approved plan. Show the user the new terminology sheet, get a new plan id for it (call this tool without planId), and wait for the user\'s go.');
   // (K2) the plan's exact files: kept in this session only (a restart, or more than the newest 64 plans, drops them)
   if (!art || !Array.isArray(art.files)) throw new Error('Nothing was written: the files kept for this plan are gone (DataArcus keeps a plan\'s exact files in this session of the server only). Make the plan again (call this tool without planId), show it to the user and wait for their go.');
   // (K2) built again with the plan's inputs and its logical id, for comparison only: what is written is the kept files
-  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, flipPictures: d.flipPictures, into: d.into, tabsShown: d.tabsShown, logicalId: art.logicalId });
+  const P = planTwin({ path: a.path, labels: d.labels || {}, terms: d.terms || {}, memory: false, timeRightToLeft: d.timeRightToLeft, waterfallRtl: d.waterfallRtl, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages, flipPictures: d.flipPictures, matrixAsTable: d.matrixAsTable, into: d.into, tabsShown: d.tabsShown, logicalId: art.logicalId });
   // (B-154) the model the plan read (for the month column and the dates), as it was at the go
   if ('modelPrint' in d && (P.modelPrint || null) !== (d.modelPrint || null)) throw new Error(modelChanged(plan.id));
   const { loc, R } = P;
