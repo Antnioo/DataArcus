@@ -99,6 +99,10 @@
 - The header fitting no longer narrows a text column: a long Arabic header that has no spare room is cut (said in
   `headersCut`) where before the names were narrowed.
 - The heatmap rule adds a visual to a page (a new file in the twin, a new visual on the copy's Arabic page).
+- A button's approved Arabic is now shared with every button of the same English text (`twin-texts.mjs SHARED`), so
+  one approval labels several buttons: the plan's texts give each the shared Arabic with `labelFrom` ("the approved
+  Arabic of the same text (button)"), and the approval page lists each button on its own row in "Arabic texts", the
+  same Arabic on each; a label given for one button still wins for it.
 
 ## For the laptop (part 10)
 - Fintech p3 tasks and milestones (flat): names at their English width, no wrap, rows in view as in English.
