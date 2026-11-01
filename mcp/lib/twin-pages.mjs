@@ -224,8 +224,9 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
       const w = widthOf(x.queryRef), what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: w };
       if (got) out.headers.push(what);
       if (short <= 0) return;
-      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide by our measure, and the table's other columns can give no more (numbers are never narrowed); Desktop 2.159 drew Arabic headers whole in about 0.7 of our measure (from ${m(x).lowW} here), so Power BI may cut it: look at it in Desktop, or give a shorter Arabic name` }));
-      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide; the table's other columns can give no more (numbers are never narrowed): give a shorter Arabic name, or Power BI cuts the header` }));
+      // (MX3: one short why per column, the measure said once in the plan's sayInPlan: the plan's texts keep their room)
+      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: 'Power BI may cut it: look in Desktop' }));
+      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: 'Power BI cuts it: a shorter Arabic name' }));
     });
   });
   return out;
