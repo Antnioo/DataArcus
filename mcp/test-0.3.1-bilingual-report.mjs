@@ -83,7 +83,8 @@ async function planBilingual(c, a0) {
   }
   return { pl, args, declined };
 }
-const withoutDesign = (a) => { const x = Object.assign({}, a); delete x.planFields; return x; };
+// (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
+const withoutDesign = (a) => { const x = Object.assign({}, a); delete x.planFields; delete x.gulfDates; return x; };
 
 try {
   const before = hashes(MODEL);

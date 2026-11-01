@@ -28,7 +28,7 @@ const { LIMITS } = await import('./lib/tool-limits.mjs');
 const H = {}, S = {};
 for (const t of ['plan_layout', 'create_report', 'suggest_fields']) {
   const { register } = await import(`./tools/${t}.mjs`);
-  register({ registerTool: (name, def, h) => { H[name] = h; S[name] = def.inputSchema; } }, { LIMITS });
+  register({ registerTool: (name, def, h) => { H[name] = h; S[name] = def.inputSchema.shape; } }, { LIMITS });
 }
 const call = async (tool, a) => { try { const r = await H[tool](a), t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* words */ } return { err: !!r.isError, t, j }; } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
 const short = (x) => (x.err ? x.t.slice(0, 400) : J(x.j));
