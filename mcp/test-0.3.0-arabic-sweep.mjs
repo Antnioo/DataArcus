@@ -164,7 +164,8 @@ try {
       const { pl, args } = await plan(a); const id = pl.j && pl.j.plan && pl.j.plan.planId;
       if (!id) return { err: `no plan id: ${JSON.stringify((pl.j || {}).planProblems || (pl.j || {}).gulfDates || pl.t).slice(0, 600)}`, pl };
       await ask('approve_plan', { planId: id });
-      const send = Object.assign({}, args, { planId: id, design: pl.j.design }); delete send.__declined; delete send.displayNames;   // the plan pins the approved names (with the fixed list's)
+      // (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
+      const send = Object.assign({}, args, { planId: id, design: pl.j.design }); delete send.__declined; delete send.displayNames; delete send.gulfDates;   // the plan pins the approved names (with the fixed list's)
       if (send.planFields) { send.fields = send.planFields; delete send.planFields; }
       const r = await ask(tool, send);
       return r.err ? { err: String(r.t).slice(0, 500), pl } : { r, pl, args };

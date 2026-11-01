@@ -12,7 +12,7 @@ import { twinKey, writeTwin, planTwin, twinOutputs, twinTree, MATRIX_SAID } from
 import { bindingOf } from '../lib/artifact.mjs';
 import { twinPreview } from '../lib/arabic-twin.mjs';
 import { text, compact, safe } from '../lib/tool-answer.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, ADDS } from '../lib/tool-inputs.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, ADDS, strictInputs } from '../lib/tool-inputs.mjs';
 import { pageNamesOf } from '../lib/terminology.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -39,7 +39,7 @@ export function register(server, ctx) {
   server.registerTool('create_arabic_twin', {
     title: 'Create the Arabic twin of a report',
     description: 'Makes the right-to-left Arabic twin of an existing PBIR report: a new "<name> AR" report and .pbip next to the original (or, with into "same", one copy "<name> (EN-AR)" holding the English pages and their Arabic pages, with a language button on each page to its counterpart and the slicers of each pair in sync), on the same model, every page mirrored in place (each visual\'s place mirrored, groups included; bar charts growing from the right; column, line and area charts with the value axis at the right and their order reversed by the sort; legends, titles, text boxes and table columns to the right), page ids, visual names and bookmarks kept so navigation keeps working. The original is only read, never changed; nothing is ever written over. Without planId it writes nothing and answers the plan: the pages, what mirrors, what cannot (custom visuals, the page navigator\'s order, Power BI\'s own words, data values), every text of the report with an id for its Arabic (the phone layout, alt texts and the empty state too; the phone layout is mirrored like the pages), what stays English and why (notTranslated), and the Arabic month column offered as a TMDL script the user applies. The Arabic texts are DRAFTS for the user to approve: pass the approved ones as labels to get a plan id for exactly those; never translate silently. After the user\'s go: approve_plan, then this tool with planId.' + REPORT_UNTRUSTED + UNTRUSTED,
-    inputSchema: {
+    inputSchema: strictInputs('create_arabic_twin', {
       path: z.string().describe('The original report: its .pbip file or its .Report folder, inside the working folder'),
       labels: z.record(z.string().max(200), z.string().max(200)).optional().describe('The Arabic texts the user approved, by the text ids of the plan ({ "page:<id>": "...", "title:<page>/<visual>": "...", "field:<queryRef>": "..." }). A text without a label stays as it is'),
       terms: z.record(z.string().max(300), z.string().max(200)).optional().describe('The terminology sheet\'s terms the user approved, one Arabic name per field: { "Table[Field]": "الاسم" }, or the field\'s English name to keep it in English. A term is written on every header of its field and every title, tooltip and alt text made of its name, the same word everywhere (terminology in the answer: ask its askNext, one at a time)'),
@@ -53,7 +53,7 @@ export function register(server, ctx) {
       textsFrom: z.number().int().min(0).max(100000).optional().describe('The plan only: list the texts from this one on (moreTexts.from in an answer that could not list them all); the plan and what is written stay the same'),
       termsFrom: z.number().int().min(0).max(100000).optional().describe('The plan only: list the terminology sheet from this row on (terminology.moreTerms.from in an answer whose sheet was cut to give the texts room); the plan and what is written stay the same'),
       planId: planIdInput
-    }, annotations: ADDS
+    }), annotations: ADDS
   }, safe(async (a) => {
     if (a.labels && Object.keys(a.labels).length > 400) throw new Error('At most 400 labels in one plan.');
     const key = twinKey(a.path);

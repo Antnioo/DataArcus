@@ -5,6 +5,8 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **Two answers that misled the assistant:** a misspelled option is refused and named, not ignored; a mistyped model
+  path lists the models.
 - **What a test run in Power BI Desktop found:** the Arabic twin now turns a chart's legend and a visual's shadow only into
   positions Power BI has (a legend at the top right went to a "top left" Power BI does not know, and Microsoft's
   validator refused it); a position Power BI does not list is kept and named in the plan. On a page with a filter

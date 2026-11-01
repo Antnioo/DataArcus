@@ -6,6 +6,8 @@ export function wordOf(e) {
     case 'MANY_MODELS_NAMED': return `${e.message} Give read_model the path of the one you mean.`;
     case 'MANY_MODELS': return `${e.message} Give read_model the path of the one you mean.`;
     case 'NO_MODEL_NAMED': return `${e.message} ${(d.models || []).length ? 'Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`;
+    // (0.3.1 MR1, B-271) a model path that does not exist: as a bare wrong name, the tool called again with one listed
+    case 'NO_MODEL_AT': return `${e.message} ${(d.models || []).length ? 'Call the tool again with one of these paths (relative to the working folder), or "." for the working folder itself.' : 'Call the tool again with the path of a project folder, or "." for the working folder itself.'}`;
     default: return String((e && e.message) || e);
   }
 }

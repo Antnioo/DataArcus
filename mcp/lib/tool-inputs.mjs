@@ -33,3 +33,11 @@ export const slot = z.object({
 // (0.3.1 FX5b) the model's own counts as suggest_fields takes them (FX4's columnStats, the same shape), for create_report
 // and plan_layout: whole numbers only, so no data value can be passed
 export const columnStatsShape = () => z.object({ rows: z.record(z.string(), z.number().int().min(0)).optional(), distinct: z.record(z.string(), z.number().int().min(0)).optional() }).strict();
+// (0.3.1 MR1, B-270: the MCP review) a tool's inputs as a strict object: an input the tool does not have (a misspelled
+// option) is refused and named, never stripped silently (the agent would believe its option applied). zod's own words
+// ("Unrecognized key") do not say what to do; these do. Every tools/*.mjs registers its inputSchema through it.
+export const unknownKeysSaid = (what, keys, known) => `Unrecognized key${keys.length === 1 ? '' : 's'} ${keys.map((k) => `'${String(k).slice(0, 60)}'`).join(', ')}; ${what} are: ${known.join(', ')}. Call again without ${keys.length === 1 ? 'it' : 'them'} (or with the input you meant).`;
+const strictAs = (what, shape) => z.strictObject(shape, { error: (iss) => (iss.code === 'unrecognized_keys' ? unknownKeysSaid(what, iss.keys, Object.keys(shape)) : undefined) });
+// a tool's whole inputs; and an option object inside them that a person types by hand (MR1.md "Decisions")
+export const strictInputs = (tool, shape) => strictAs(`the inputs of ${tool}`, shape);
+export const strictObject = (option, shape) => strictAs(`the keys of ${option}`, shape);

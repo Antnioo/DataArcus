@@ -60,7 +60,8 @@ export async function approvalWindow({ check, ROOT, fs = fs0 }) {
     chk(() => /^plan-/.test(pid), () => `W setup. plan_layout gives a plan id: ${short(pl)}`);
 
     // ---------- W-01: no click: waiting, nothing approved, no link in the answer; a typed go approves nothing ----------
-    const w = await s.call('approve_plan', { planId: pid, userReply: 'go' });
+    // (0.3.1 MR1, B-270: userReply is no input since 14 Oct; it was dropped silently, now it is refused: test-0.3.1-mr1.mjs S6)
+    const w = await s.call('approve_plan', { planId: pid });
     const link = await linkAt(0);
     chk(() => !w.err && w.j.status === 'waiting' && w.j.approvedBy === null && /click Approve/.test(w.j.sayFirst), () => `W-01. no click yet: status waiting, not approved, says to click Approve: ${short(w)}`);
     chk(() => /^http:\/\/127\.0\.0\.1:\d+\/approve\/[A-Za-z0-9_-]{30,}$/.test(link), () => `W-01. the window was opened on 127.0.0.1 with a secret link: ${link}`);
