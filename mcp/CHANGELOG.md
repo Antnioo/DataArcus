@@ -386,6 +386,10 @@ Given to testers on 21 Oct 2026, after the last Power BI Desktop proof of rc.3 p
   right; a card per person shows its picture and name on the right; values padded into a column stay in a column;
   text cards line up like the number cards, and centred cards stay centred. Choices that come from the model (a field
   parameter's) are named in the plan as staying English.
+- **KPI boxes and cards in the Arabic twin:** a KPI text box keeps its width beside its icon (only the title makes room
+  for the icon, so the value and comparison lines stay clear of the sparkline); a donut's legend reads from the right
+  over the values it names; a card's reference values make one column by the card's own table layout; a person's name
+  stands beside their picture; values centred in English stay centred, each one.
 - **See it before you approve it:** the approval window draws the planned pages, and every report is checked (the
   measured rules, the layout, accessibility) before it is written.
 - **Arabic:** an Arabic copy of a report (`create_arabic_twin`), or one report with an EN-AR language button
