@@ -250,7 +250,7 @@ const HEAD_AR = [['Report', 'التقرير'], ['Layout', 'التخطيط'], ['F
   ['Flip cards', 'البطاقات القابلة للقلب'], ['Status icons', 'أيقونات الحالة'], ['Waterfalls, right to left', 'الشلالات من اليمين إلى اليسار'], ['Metric switcher', 'مبدّل المقاييس'], ['Thinner bars', 'أشرطة أرفع'], ['Visual gallery', 'معرض المرئيات'],
   ['Custom visuals replaced', 'المرئيات المخصصة المستبدلة'],
   // (FX1) the rest an Arabic page shows
-  ['Not fully Arabic', 'ليست عربية بالكامل'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
+  ['Not fully Arabic', 'ليست عربية بالكامل'], ['Matrices written as tables', 'المصفوفات المكتوبة جداول'], ['More', 'المزيد'], ['Already there, not written again', 'موجود من قبل، لا يُكتب مرة أخرى'], ['Answers to record', 'الإجابات التي ستُسجَّل']];
 // (0.3.1 LR1) the sample section's row names in Arabic
 const SAMPLE_AR = { 'What it is': 'ما هو', 'Made up': 'بيانات تجريبية', Folder: 'المجلد', 'To open': 'للفتح', 'Date table': 'جدول التاريخ', Report: 'التقرير', Relationships: 'العلاقات', 'The rows': 'الصفوف' };
 // (SQ3, T1-S9: «تظهر بالإنجليزية · Shown in English (21, no Arabic text)» kept the count's words English only) a count
@@ -673,6 +673,10 @@ function summaryOf(kind, data) {
     // (0.3.0 D3) every text the twin shows in English, with why, before the click
     // (TB1) a why the plan gives in both languages (a title that changes with the selection) shown in the page's
     if (Array.isArray(d.notTranslated) && d.notTranslated.length) sections.push({ heading: `Shown in English (${d.notTranslated.length}, no Arabic text)`, rows: d.notTranslated.map((x) => [String(x.field), x.whyAr ? { en: String(x.why || ''), ar: String(x.whyAr) } : String(x.why || '')]) });
+    // (0.3.1 MX1) each matrix written as a table (its first column at the right), named with why (the plan's preview lists them)
+    const AT = d.preview && Array.isArray(d.preview.asTables) ? d.preview.asTables.slice(0, 30) : [];
+    if (AT.length) sections.push({ heading: `Matrices written as tables (${AT.length})`, rows: AT.map((x) => [{ en: `Page "${String(x.page)}": ${x.title ? `"${String(x.title)}" ` : ''}(${String(x.visual)})`, ar: `صفحة «${String(x.pageAr || x.page)}»: ${x.titleAr || x.title ? `«${String(x.titleAr || x.title)}» ` : ''}(${String(x.visual)})` },
+      { en: 'written as a table so its first column reads on the right: Power BI\'s matrix has no right-to-left setting', ar: 'كُتبت جدولًا ليُقرأ عمودها الأول من اليمين: لا يوجد في مصفوفة Power BI إعداد من اليمين إلى اليسار' }]) });
     // (0.3.1 K2) what stays English or unmirrored in this report, in one line (Arabic first: the page is Arabic)
     const NF = d.notFullyArabic && typeof d.notFullyArabic === 'object' ? d.notFullyArabic : null;
     if (NF && NF.en) sections.push({ heading: 'Not fully Arabic', rows: [[{ en: 'In short', ar: 'باختصار' }, { en: String(NF.en), ar: String(NF.ar || NF.en) }]] });

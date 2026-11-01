@@ -154,21 +154,23 @@ export function planTwin(a) {
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [] }, together = { on: [], bars: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
+    (r.asTables || []).forEach((n) => where.asTables.push(safeName(pg.id) + '/' + safeName(n)));
     (r.kept || []).forEach((x) => where.kept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.what + ' ' + safeName(x.value) + ')'));
     // (T-3, T-6 of rc.5: the pairs mirrored as one)
     const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
     u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
-    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
+    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return; if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
-  const mirrors = Object.keys(kinds).map((k) => ({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }));
+  // (0.3.1 MX1) the matrices written as tables named, page/visual
+  const mirrors = Object.keys(kinds).map((k) => Object.assign({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }, k === 'matrixAsTable' ? { where: where.asTables.slice(0, 30) } : {}));
   const cannot = [];
   if (where.custom.length) cannot.push({ what: 'custom visuals', why: 'moved only: no report setting reaches inside a custom visual (its labels, sides and menus stay as they are; a licensed one may ask for a sign-in when its page opens)', where: where.custom.slice(0, 30) });
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });

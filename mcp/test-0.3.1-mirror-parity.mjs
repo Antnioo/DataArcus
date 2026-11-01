@@ -89,6 +89,8 @@ const OWN = [
   { $schema: S_VIS, name: 'ownGroup', position: { x: 980, y: 730, z: 51000, height: 120, width: 280 }, visualGroup: { displayName: 'Note', groupMode: 'ScaleMode' } },
   vc('ownGroupText', 10, 10, 200, 40, { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: 'A note' }], horizontalTextAlignment: 'left' }] } }] } }, { parentGroupName: 'ownGroup' }),
   vc('ownGroupCard', 10, 60, 120, 50, { visualType: 'card', query: { queryState: { Values: { projections: [proj(mref(T, 'Open Orders'), T + '.Open Orders', 'Open Orders')] } } } }, { parentGroupName: 'ownGroup' }),
+  // (0.3.1 MX1) a person's own heatmap (a Columns field): a matrix the twins keep a matrix (INTENDED.matrixAsTable)
+  vc('ownMatrix', 160, 850, 400, 120, { visualType: 'pivotTable', query: { queryState: { Rows: { projections: [proj(ref(T, 'Technician'), T + '.Technician', 'Technician')] }, Columns: { projections: [proj(ref('Dim Date', 'Month'), 'Dim Date.Month', 'Month')] }, Values: { projections: [proj(mref(T, 'Total Cost'), T + '.Total Cost', 'Total Cost'), proj(mref(T, 'Total Labour'), T + '.Total Labour', 'Total Labour')] } } } }),
   vc('ownImage', 20, 850, 120, 60, { visualType: 'image', objects: { general: [{ properties: { imageUrl: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: 'parity-background.png' } } } } }] } })];
 
 // ---------- what is meant to differ, with why (taken out before comparing) ----------
@@ -107,6 +109,8 @@ const INTENDED = {
   copyIds: 'the copy\'s own references: its bookmarks, each Arabic slicer synced with its English one (a sync group, R1/X1), and an Arabic copy of each text measure ("No data AR: ...") so the English pages keep theirs',
   noDataCard: 'the "No data" card over a table names the table\'s first measure: the writer\'s table order (INTENDED.table)',
   zOrder: 'z: each path numbers the layers; compared as an order',
+  // (0.3.1 MX1, the owner 1 Nov: "the patient id in page 2 in er still shows it on the left")
+  matrixAsTable: 'a matrix with one row field and no column field (as create_report writes one): the twins write it as a table, its first column at the right (report-mirror.js tableOf); create_report\'s own Arabic matrix stays a matrix, its measures in order (INTENDED.matrix). A matrix with a column field stays a matrix in the twins (the person\'s own heatmap, compared C against T)',
   bilingual: 'the bilingual report (B) against the copy (C) of the same English report: the report\'s own name (its .platform\'s displayName, and a new logicalId as every report gets; the folder and the .pbip named without " (EN-AR)": it is a new report, not a copy). Nothing else: the same engine builds both'
 };
 // ---------- the comparison ----------
@@ -220,12 +224,14 @@ chk(() => { const ps = pair(PT, PC, 0.5).filter((p) => p.b && p.a.v.position.tab
 // ---------- W against T: what create_report writes in Arabic is what the twin makes of its English ----------
 // (the person's own visuals are not the writer's: the stacked bar, the card, the shape, the image, the button and the
 // group are compared C against T above, and against the engine's rule below)
-const W_KINDS = ['bar', 'column', 'combo', 'donut', 'line', 'matrix', 'newCard', 'pills', 'slicer', 'table', 'textbox', 'waterfall'];
+// (INTENDED.matrixAsTable: the writer's matrix is a table in the twin, checked apart below, "W matrix as table")
+const W_KINDS = ['bar', 'column', 'combo', 'donut', 'line', 'newCard', 'pills', 'slicer', 'table', 'textbox', 'waterfall'];
+const EN_MATRICES = new Set(get(() => (pageVisuals(EN)[firstPage(EN)] || []).filter((v) => v.visual && v.visual.visualType === 'pivotTable').map((v) => v.name)) || []);
 W_KINDS.forEach((kind) => {
   // pills: one each, compared without the place (the writer's pill and the person's copy of it sit apart)
   // (the person's own visuals are not the writer's; the pills: the person's copy of the writer's English pill)
-  const tables = PT.filter((x) => x.kind === 'table'), onTable = (x) => tables.some((t) => Math.abs(t.x - x.x) <= 1 && Math.abs(t.y - x.y) <= 1 && Math.abs(t.w - x.w) <= 1);
-  const tl = PT.filter((x) => x.kind === kind && (kind === 'pills' ? x.v.name === 'ownPills' : x.v.name.indexOf('own') !== 0) && !(kind === 'newCard' && onTable(x))), wl = PWr.filter((x) => x.kind === kind);
+  const tables = PT.filter((x) => x.kind === 'table' && !EN_MATRICES.has(x.v.name)), onTable = (x) => tables.some((t) => Math.abs(t.x - x.x) <= 1 && Math.abs(t.y - x.y) <= 1 && Math.abs(t.w - x.w) <= 1);
+  const tl = PT.filter((x) => x.kind === kind && !EN_MATRICES.has(x.v.name) && (kind === 'pills' ? x.v.name === 'ownPills' : x.v.name.indexOf('own') !== 0) && !(kind === 'newCard' && onTable(x))), wl = PWr.filter((x) => x.kind === kind);
   const fieldOf = (x) => JSON.stringify((((((x.v.visual || {}).query || {}).queryState || {}).Values || {}).projections || []).map((p) => p.field));
   // pills and slicers: by their field, without the place (INTENDED.slicerBar); a table: its height fitted (INTENDED.textSize)
   const ps = kind === 'pills' || kind === 'slicer' ? tl.map((a) => ({ a, b: wl.find((b) => fieldOf(b) === fieldOf(a)) || null }))
@@ -280,7 +286,12 @@ const mobileW = (v) => { const f = AR.files && AR.files.find((g) => g.path.endsW
   // (TW1, M1-S2: before, the twin reversed the columns and lost "Total"; now the writer's order, its row label last)
   chk(() => t && refs(t.b.v, 'Values')[0] === T + '.Technician' && JSON.stringify(refs(t.a.v, 'Values')) === JSON.stringify(refs(t.b.v, 'Values')) && /^Row label: /.test(t.a.v.visual.query.queryState.Values.projections.slice(-1)[0].field.Measure.Property),
     () => `W table order: the twin's table is the writer's, the name column first and hidden, the row label last (INTENDED.table): ${t && JSON.stringify([refs(t.b.v, 'Values'), refs(t.a.v, 'Values')])}`);
-  chk(() => m && JSON.stringify(refs(m.b.v, 'Values')) === JSON.stringify(refs(m.a.v, 'Values').slice().reverse()), () => `W matrix order: the twin reverses the measures, the writer keeps them (INTENDED.matrix): ${m && JSON.stringify([refs(m.b.v, 'Values'), refs(m.a.v, 'Values')])}`);
+  // (INTENDED.matrixAsTable) the writer's matrix in the twin: a table at the writer's Arabic matrix's place, its row field
+  // last (or the twin's row label over it), its measures reversed before it; the writer's own Arabic matrix keeps them in order
+  const tm = PT.find((x) => x.kind === 'table' && EN_MATRICES.has(x.v.name)), wm = tm && PWr.find((b) => b.kind === 'matrix' && Math.abs(b.x - tm.x) <= 1 && Math.abs(b.y - tm.y) <= 1);
+  const tr = tm ? refs(tm.v, 'Values') : [], wr = wm ? refs(wm.v, 'Values').concat(refs(wm.v, 'Rows')) : [];
+  chk(() => tm && wm && tm.v.visual.visualType === 'tableEx' && JSON.stringify(tr.filter((q) => wr.slice(0, -1).includes(q))) === JSON.stringify(wr.slice(0, -1).reverse()) && (tr[tr.length - 1] === wr[wr.length - 1] || /Row label: /.test(JSON.stringify(tm.v.visual.query.queryState.Values.projections.slice(-1)[0]))),
+    () => `W matrix as table: the twin writes the writer's English matrix as a table at the Arabic matrix's place, its measures reversed before its row field (INTENDED.matrixAsTable): ${JSON.stringify([tr, wr, tm && tm.v.visual.visualType, !!wm])}`);
 }
 
 // ---------- the person's own visuals: the engine's rules, as the twin wrote them ----------

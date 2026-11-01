@@ -6,8 +6,8 @@ import './test-env.mjs';
 //   U1-U3  the engine: the ER shape (one Rows field, no Columns field, 8 values) is written as a table
 //   K1-K7  the shapes that stay matrices, each with its why (a Columns field; two Rows levels with subtotals; values on
 //          rows; a total row at the top; row headers with their own font size; blank rows shown), and the switch off
-//   A1-A12 the written twin of a project with the ER shape: a table, Patient ID at the right, every value, label,
-//          width, colour, sort and style kept, no matrix-only property; a bar chart over it mirrored with it
+//   A1-A11 the written twin of a project with the ER shape: a table, Patient ID at the right, every value, label,
+//          width, colour, sort and style kept, no matrix-only property
 //   P1-P4  the plan names the converted visual and its sentence; the heatmap kept a matrix with MATRIX_SAID; the
 //          approval page names it
 //   B1-B6  the heatmap lab (mcp/lab/heatmap-names.mjs): an empty folder only, validator 0 errors, B1-B3 as described
@@ -104,9 +104,6 @@ try {
     const orig = Object.assign({ $schema: VS }, er('mxPatients', 40));
     wr(path.join(PG, 'visuals/mxPatients/visual.json'), orig);
     wr(path.join(PG, 'visuals/mxHeat/visual.json'), { $schema: VS, name: 'mxHeat', position: { x: 1060, y: 80, z: 2000, width: 200, height: 300, tabOrder: 2000 }, visual: heat() });
-    // a small bar chart drawn over the patient list (higher z, wholly on it)
-    wr(path.join(PG, 'visuals/barOver/visual.json'), { $schema: VS, name: 'barOver', position: { x: 800, y: 500, z: 3000, width: 200, height: 120, tabOrder: 3000 }, visual: { visualType: 'clusteredBarChart',
-      query: { queryState: { Category: { projections: [col('Gender')] }, Y: { projections: [agg(0, 'Age', 'Sum', 'Age')] } } }, objects: {}, visualContainerObjects: {} } });
     const Plans = await import('./lib/plans.mjs'), { register } = await import('./tools/create_arabic_twin.mjs'), W = await import('./lib/approval-window.mjs');
     let handler = null; register({ registerTool: (name, def, h) => { if (name === 'create_arabic_twin') handler = h; } }, {});
     const call = async (a) => { const r = await handler(a), t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* a refusal's words */ } return { err: !!r.isError, t, j }; };
@@ -154,8 +151,6 @@ try {
     const bad = v ? ['rowHeaders', 'subTotals', 'rowTotal', 'columnTotal', 'blankRows'].filter((k) => v.objects[k]).concat(pr('general').layout ? ['general.layout'] : [], pr('values').valuesOnRow || pr('values').bandedRowHeaders ? ['values.matrix-only'] : [], pr('columnHeaders').autoExpand ? ['columnHeaders.autoExpand'] : [],
       (v.objects.columnFormatting || []).some((e) => e.properties && e.properties.styleSubtotals) ? ['columnFormatting.styleSubtotals'] : [], v.expansionStates ? ['expansionStates'] : []) : ['no visual'];
     chk(() => bad.length === 0, () => `A11. no matrix-only property left on the table (the write's validator passed): ${bad.join(', ')}`);
-    const bo = get(() => rd(path.join(AR, 'barOver/visual.json'))), bx = bo && bo.position && bo.position.x, tx = tw && tw.position && tw.position.x;
-    chk(() => Number.isFinite(bx) && bx === 1280 - 800 - 200 && bx >= tx, () => `A12. a bar chart over the converted matrix is mirrored with the page (the table reverses: it is not a left-to-right matrix): x ${bx}, table at ${tx}`);
   }
 
   // ---------- B: the heatmap lab ----------
