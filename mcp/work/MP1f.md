@@ -31,7 +31,7 @@
   mp1e R1 rewritten (Risky changes); mp1 100, mp1-shapes 10, mp1e 13, mx1 41, mx2 26, mirror-parity 62: green. lint 0;
   check-min 75 match; stamps report-mirror 20261101mp1f (theme-generator.js), theme-generator 20261101mp1f (3 pages).
 - **State: DONE.** Full run on 2a180d32: "run-tests: 134 suites passed" (the base's 133 + mp1f; mcp 1594, mutation
-  198, 76 mutants all killed). CI: see below.
+  198, 76 mutants all killed). CI on 61d48731: run 41314317938 green (Linux, Windows, macOS; the website suites too).
 - **Resume:** none; the reviewer's merge.
 
 ## The causes and the plan
