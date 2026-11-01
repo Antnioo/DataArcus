@@ -7,7 +7,7 @@
   (clean), `origin/fix/0.3.1-mp1d` (conflict in `mcp/tests.json`: both suite lines kept, mr1 and mp1-shapes),
   `origin/fix/0.3.1-mx1` (conflicts in `mcp/tests.json` and `mcp/CHANGELOG.md`: both sides kept). On the merged base:
   mx1 41, mp1-shapes 10, mr1 26, mp1 100, mirror-parity 62, all PASS.
-- **Scope (planned):** 1 every part-8 matrix classified from its real JSON (flat: MX1's A; grouped: MX1's C offer);
+- **Scope:** (planned) 1 every part-8 matrix classified from its real JSON (flat: MX1's A; grouped: MX1's C offer);
   2 Arabic legends that are cut or made identical (`twin-pages.mjs` fitting, a new function, not MP1d's); 3 a reversed
   table wider than its box fixed where safe (`twin-pages.mjs`, the header fitting's rule: no text cut); 4 one plain plan
   line per visual Power BI cannot mirror (`twin-plan.mjs`).
