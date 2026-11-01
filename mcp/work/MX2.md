@@ -27,7 +27,7 @@
 - **Got:** `mx2` 26 checks, red on the merged base 7e885a2d first: 21 of 26 failed there (guards: M1, M2, M8, M10, W0).
   `mx1` D1 moved on purpose (below). mp1-shapes 10, mp1 100, mirror-parity 62 unchanged; lint 0; build:min.
 - **State: DONE.** Areas twin + arabic + report: "run-tests: 80 suites passed". Full run on bccd67a8 (after it only
-  this note): "run-tests: 132 suites passed". CI: started on the branch.
+  this note): "run-tests: 132 suites passed". CI: run 41295149892 started.
 - **Resume:** the reviewer's merge; the laptop's part 9 (below).
 
 ## What the code shows today (read on the merged base)
