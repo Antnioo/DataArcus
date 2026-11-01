@@ -10,7 +10,8 @@ import './test-env.mjs';
 //          width, colour, sort and style kept, no matrix-only property
 //   P1-P4  the plan names the converted visual and its sentence; the heatmap kept a matrix with MATRIX_SAID; the
 //          approval page names it
-//   C1-C5  Fintech's grouped matrix: kept by default and offered (matrixAsTable), written flat when chosen, the loss said
+//   C1-C6  Fintech's grouped matrix: kept by default and offered (matrixAsTable), written flat when chosen, the loss said
+//          in the plan and on the approval page
 //   D1-D3  a reversed table wider than its box named in the plan (by its widths, by its headers)
 //   B1-B6  the heatmap lab (mcp/lab/heatmap-names.mjs): an empty folder only, validator 0 errors, B1-B3 as described
 //   node test-0.3.1-mx1.mjs
@@ -213,6 +214,8 @@ try {
       .filter((x) => x.j.visual && /"Min\(Projects\.Status\)"/.test(JSON.stringify(x.j.visual.query)) && /Projects\.Department/.test(JSON.stringify(x.j.visual.query))).map((x) => ({ rel: x.rel, t: x.j.visual.visualType })));
     const enT = Array.isArray(types) ? types.filter((x) => x.rel.startsWith('definition/pages/p5fintech/')) : [], arT = Array.isArray(types) ? types.filter((x) => !x.rel.startsWith('definition/pages/p5fintech/')) : [];
     chk(() => enT.length === 1 && enT[0].t === 'pivotTable' && arT.length === 1 && arT[0].t === 'tableEx', () => `C5. in one report with both languages the English page keeps its matrix, the Arabic page has the flat table: ${JSON.stringify(types)}`);
+    const W2 = await import('./lib/approval-window.mjs'), row = get(() => W2.summary('twin', { matrixAsTable: ['mxGroup'], labels: {} }).sections[0].rows.find((r) => r[0].en === 'Matrices written flat'));
+    chk(() => row && /mxGroup/.test(row[1].en) && /\+\/- grouping/.test(row[1].en) && /التجميع/.test(row[1].ar), () => `C6. the approval page names the matrices chosen flat and what is lost, in English and Arabic: ${JSON.stringify(row)}`);
     // D: the reversed tables wider than their box
     const wide = get(() => d0.p.j.cannot.find((x) => x.what === 'tables wider than their box'));
     chk(() => wide && /in Arabic its first column is reached by scrolling right/.test(wide.why) && wide.where.some((w) => /^p5fintech\/tblRoadmap/.test(w)), () => `D1. a table wider than its box by its own widths is named: ${JSON.stringify(wide)}`);
