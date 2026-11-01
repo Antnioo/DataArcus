@@ -281,7 +281,7 @@ const mobileW = (v) => { const f = AR.files && AR.files.find((g) => g.path.endsW
 }
 // the meant differences, said where they show: the table's column order and the matrix's measures
 {
-  const t = PT.filter((x) => x.kind === 'table').map((a) => ({ a, b: PWr.find((b) => b.kind === 'table' && Math.abs(b.x - a.x) <= 1 && Math.abs(b.y - a.y) <= 1) })).find((p) => p.b), m = pair(PT.filter((x) => x.kind === 'matrix'), PWr, 1).find((p) => p.b);
+  const t = PT.filter((x) => x.kind === 'table').map((a) => ({ a, b: PWr.find((b) => b.kind === 'table' && Math.abs(b.x - a.x) <= 1 && Math.abs(b.y - a.y) <= 1) })).find((p) => p.b);
   const refs = (v, r) => v.visual.query.queryState[r].projections.map((p) => p.queryRef);
   // (TW1, M1-S2: before, the twin reversed the columns and lost "Total"; now the writer's order, its row label last)
   chk(() => t && refs(t.b.v, 'Values')[0] === T + '.Technician' && JSON.stringify(refs(t.a.v, 'Values')) === JSON.stringify(refs(t.b.v, 'Values')) && /^Row label: /.test(t.a.v.visual.query.queryState.Values.projections.slice(-1)[0].field.Measure.Property),
