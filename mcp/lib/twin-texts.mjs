@@ -315,7 +315,22 @@ const neutralEnds = (rawId, v) => { if (!/^(?:phone:)?textbox:/.test(String(rawI
 // or ends with spaces keeps them around its approved Arabic (outside any wrap), so it stays apart from the runs beside it
 const spacedLike = (rawId, raw, v) => { if (!/^(?:phone:)?textbox:/.test(String(rawId)) || raw == null || v == null) return v; const m = /^(\s*)[\s\S]*?(\s*)$/.exec(String(raw)), s = String(v);
   return (m[1] && !/^\s/.test(s) ? m[1] : '') + s + (m[2] && !/\s$/.test(s) ? m[2] : ''); };
+// (0.3.1 MP1e, laptop part 8: Call Center's agent card, its English reference label titles padded with "space + LRM"
+// runs so their values make a column; the Arabic titles, written whole, lost it) the titles of one visual whose English
+// ends in such a padding: each Arabic padded with "space + RLM" (inside its wrap) to the widest one's measured width
+const TextMeasure = require('../../assets/js/text-measure.js');
+const PAD_END = /(?:[ \u00A0][\u200E\u200F]?){2,}[\s\u200E\u200F\u00A0]*$/, REF_TITLE = /^((?:phone:)?text:.+\/o\.referenceLabelTitle\.)\d+\.titleText$/;
+function padColumns(texts, out) {
+  const groups = new Map();
+  texts.forEach((t) => { const m = REF_TITLE.exec(String(t.rawId)); if (!m || t.raw == null || !PAD_END.test(String(t.raw)) || out[t.rawId] == null) return; if (!groups.has(m[1])) groups.set(m[1], []); groups.get(m[1]).push(t.rawId); });
+  const space = TextMeasure.textWidth(' ', 10), wrapEnd = '\u2069';
+  groups.forEach((ids) => { if (ids.length < 2) return;
+    const w = new Map(ids.map((id) => [id, TextMeasure.textWidth(String(out[id]), 10)])), most = Math.max(...w.values());
+    ids.forEach((id) => { const n = Math.round((most - w.get(id)) / space) + 1, padding = ' \u200F'.repeat(n), v = String(out[id]);
+      out[id] = v.endsWith(wrapEnd) ? v.slice(0, -1) + padding + wrapEnd : v + padding; }); });
+}
 export const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), raw = new Map(texts.map((t) => [t.id, t.raw])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = spacedLike(by.get(k), raw.get(k), (besideOf(by.get(k)) || neutralEnds(by.get(k), labels[k]) ? Terms.isolateBeside : Terms.isolateLatin)(labels[k])); });
+  padColumns(texts, out);
   texts.forEach((t) => { if (t.kind === 'visualField' && !Object.prototype.hasOwnProperty.call(out, t.rawId)) out[t.rawId] = null; }); return out; };
 
 // ---- the plan ----

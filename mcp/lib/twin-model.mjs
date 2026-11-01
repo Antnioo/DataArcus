@@ -55,6 +55,9 @@ export const dateColumnsOf = (m) => (m ? [...new Set([].concat(...(m.tables || [
 // writer's (pbip-export.js CONTINUOUS); the mirror reverses such an axis by categoryAxis.invertAxis. (The waterfall reads
 // a column's type from the model first, so a number here is never read as a date.)
 const NUMBER = /^(int64|double|decimal)$/i;
+// (0.3.1 MP1e) the columns the model types as text ("Table.Column"): a date table's text column (a month name) is
+// categorical, so the mirror turns it by the sort alone, never by invertAxis
+export const textColumnsOf = (m) => (m ? (m.tables || []).flatMap((t) => (t.columns || []).filter((c) => /^(string|text)$/i.test(String(c.dataType || ''))).map((c) => t.name + '.' + c.name)) : []);
 export const continuousColumnsOf = (m) => (m ? [...new Set(dateColumnsOf(m).concat(...(m.tables || []).map((t) => (t.columns || []).filter((c) => NUMBER.test(String(c.dataType || ''))).map((c) => t.name + '.' + c.name))))] : []);
 
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
