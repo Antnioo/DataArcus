@@ -91,7 +91,7 @@
     pills: 'button slicers on one row: their buttons read from the right (sorted descending by their field)',
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
-    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
+    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side); a donut whose legend lists its measures lists them in reverse, its first at the right',
     other: 'other visuals (scatter...): moved only; no right-to-left setting is proven for them',
     unreadable: 'visuals whose file has an unexpected shape: copied as they are, not mirrored'
   };
@@ -257,6 +257,14 @@
     const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
     const objects = () => bagOf('objects');
     const vco = () => bagOf('visualContainerObjects');
+    // (0.3.1 MP1f, laptop part 9: Call Center's legend donut, two measures and no category, read «● مُجابة ● غير مُجابة»
+    // left to right while the mirrored value cards put the answered value at the right) a donut or pie whose legend lists
+    // its measures (two or more in Y, no category) and is shown: the measures in reverse order, so the first stands at
+    // the right, where the page now reads from; its slices, clockwise in reverse order, are the English ring in a mirror
+    if (kind === 'plain' && ['donutChart', 'pieChart'].includes(v.visualType) && !projections(v.query, 'Category')) {
+      const ys = projections(v.query, 'Y'), lg = entries(v.objects, 'legend'), hidden = (lg || []).some((e) => isObj(e.properties) && String(lit(e.properties.show)) === 'false');
+      if (ys && ys.length > 1 && lg && !hidden) { ys.reverse(); changes.push('legend order'); }
+    }
     // charts: the bar, column, line, area, combo charts' rules (chartRtl, shared with create_report's writer: mirrorChart)
     // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
     // (D7) opts.waterfallRtl "native" (visual-gallery.js WATERFALL_RTL_DEFAULT): Power BI's own waterfall kept as the
@@ -338,12 +346,25 @@
         if (e && e.properties === undefined) e.properties = {};
         // (MP1e: RepeatIQ's centred KPI values were set right and their first letter cut; Consumer Complaints' text values
         // kept their own entries, left) every value entry right-aligned, a centred one kept centred
-        (es || []).forEach((y) => { if (isObj(y) && isObj(y.properties) && strOf(y.properties.horizontalAlignment) !== 'center') y.properties.horizontalAlignment = str('right'); });
+        // (0.3.1 MP1f, laptop part 9: RepeatIQ p4's refund rate and Fintech p2's 54 and 44.4% went right: their own entries,
+        // with no alignment, take the centred default) under a centred default, an entry with no alignment of its own stays so
+        const centred = !!e && strOf(e.properties.horizontalAlignment) === 'center';
+        (es || []).forEach((y) => { if (!isObj(y) || !isObj(y.properties)) return; const a = strOf(y.properties.horizontalAlignment); if (a === 'center' || (a == null && centred && y !== e)) return; y.properties.horizontalAlignment = str('right'); });
         changes.push('values');
       }
       // (MP1e, laptop part 8: Call Center's agent cards, one card visual of small multiples, kept each photo and name at
       // the left) the card image and the small multiples' header go to the other side
-      (entries(v.objects, 'image') || []).forEach((y) => { const q = isObj(y.properties) ? strOf(y.properties.position) : null; if (q === 'Left' || q === 'Right') { y.properties.position = str(q === 'Left' ? 'Right' : 'Left'); changes.push('image'); } });
+      let toRight = false;
+      (entries(v.objects, 'image') || []).forEach((y) => { const q = isObj(y.properties) ? strOf(y.properties.position) : null; if (q === 'Left' || q === 'Right') { y.properties.position = str(q === 'Left' ? 'Right' : 'Left'); toRight = toRight || q === 'Left'; changes.push('image'); } });
+      // (0.3.1 MP1f, laptop part 9: Call Center p2's agent name, the card's value, stood at the card's far left, its photo
+      // now at the right) a card whose image goes right: its value with no alignment set beside it, right (centred kept)
+      if (toRight && !(ps && ps.length > 1)) {
+        const es = listIn(objects(), 'value');
+        let e = es ? es.find((y) => isObj(y) && isObj(y.selector) && y.selector.id === 'default') : null;
+        if (es && !e) { e = { properties: {}, selector: { id: 'default' } }; es.push(e); }
+        if (e && !isObj(e.properties)) e.properties = {};
+        if (e && strOf(e.properties.horizontalAlignment) == null) { e.properties.horizontalAlignment = str('right'); changes.push('value'); }
+      }
       (entries(v.objects, 'smallMultiplesLayout') || []).forEach((y) => { const q = isObj(y.properties) ? strOf(y.properties.headerPosition) : null; if (q === 'Left' || q === 'Right') { y.properties.headerPosition = str(q === 'Left' ? 'Right' : 'Left'); changes.push('header'); } });
       // (rc.24, the laptop's proof of rc.23: a card with one value, as DataArcus writes its KPI cards, kept its value
       // left-aligned under its right-aligned title) a value aligned left goes right (centred kept), and the card's inner

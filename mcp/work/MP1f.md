@@ -49,3 +49,57 @@
 4, 5. MP1e set "right" on every value entry not centred, also an entry with no alignment of its own that takes the
    centred default: RepeatIQ p4's refund rate and Fintech p2's 54 and 44.4% (a count and a percentage: own entries, the
    likely shapes; not in the evidence). Plan: an entry with no alignment under a centred default is left as it is.
+
+## Before and after
+| Item | Before (rc.8) | After | Where | Test |
+|---|---|---|---|---|
+| 1 | a KPI text box beside its icon narrowed whole (215.71 -> 162.9, as part 9 measured): every right-aligned line 52.6 px left | a box with other lines keeps its width; the title's paragraph ends with no-break spaces as wide as the icon's room (52.8 for Calls), its tabs gone; a one-line box narrows as before | twin-pages.mjs iconRoom, titleRoom | mp1f I1-I7 |
+| 2 | the legend donut listed Answered, Unanswered left to right; the answered value at the right | its measures in reverse: «مُجابة» at the right over 1,298 | report-mirror.js mirrorVisual (plain) | mp1f L1-L3 |
+| 3 | titles padded with space + RLM, values ragged in Desktop; the name (the card's value) left, the photo right | referenceLabelLayout style "tabular", titles whole; a card whose image goes right gets its unset value alignment right | twin-pages.mjs cardColumn; twin-texts.mjs (no padding); report-mirror.js newCard | mp1f R1-R4; mp1e R1 |
+| 4, 5 | an own value entry with no alignment set right under a centred default | left without one (stays centred); a default not centred: every entry right as before | report-mirror.js newCard | mp1f K1-K3 |
+
+## Decisions I made
+- 1: "other paragraphs" are paragraphs with text; the title's paragraph is the one whose runs end with spaces or tabs
+  (English indented it under the icon; MP1c moved them to its end), else the first with text. The room is the box's
+  end less the icon's start plus 4 px; the spaces are counted at the run's own size (12pt default). The spaces take the
+  replaced run's style. Not a right indent: a PBIR text box paragraph has none. Not "narrow when the lines fit": the
+  value lines fit and still moved onto the sparkline (Talk Time's «3m 46s»), so any other line keeps the width.
+- 2: the legend's order, not the cards: the page reads from the right and the cards are mirrored with it; the first
+  legend item (Answered, the English first) stands at the right over its value. Only a donut or pie with a shown legend
+  and no category (a category's legend follows the data's order: not seen in a part 9 shape; left as it is).
+- 3: "tabular" is Power BI's own "Table" style for reference labels (theme schema 2.149, referenceLabelLayout.style);
+  the card's titles and values in two columns, so no measured padding is needed. Written only where the English pads
+  its titles into a column (two or more). The value alignment: only when the image goes from left to right and the card
+  has one value (the agents' name); a value already aligned is kept.
+- 4, 5: the cause is a shape the evidence does not hold (p4's strip, Fintech p2's cards): a value entry of its own
+  (a percentage's precision, a count's display units) with no alignment, under the centred default entry. If the real
+  entries carry their own "left", this rule does not reach them: the laptop says.
+
+## Risky changes
+- mp1e R1 asserted the padding this job replaces (the brief: the padding does not make a column in Desktop); it now
+  asserts the titles whole and the table layout. No other test's expectation changed.
+- "tabular" has not been drawn in Desktop here: if Desktop ignores it, the titles are whole (no padding) and the values
+  ragged as in rc.8; the laptop decides (block "For the laptop").
+
+## For the laptop (part 10)
+- Call Center p1 (Overview), the four KPI boxes (Calls, Resolution Rate, Avg Call Duration, Avg Speed of Answer): each
+  box as wide as English; the title clear of its icon by about 4 px; «3m 46s» and «67» clear of their sparklines; the
+  comparison lines («1,772 | ▼ -8.80 % شهريًا») on one line, no scrollbar; the Calls legend shows «الأعلى».
+- Call Center p1: the donut legend «● غير مُجابة ● مُجابة» left to right, «مُجابة» over 1,298 / 80.3 %.
+- Call Center p1, Dan's card: the four values in one column (the card's table layout); say if Desktop ignores it.
+- Call Center p2 (Agent Performance): each agent's name beside the photo at the card's right.
+- RepeatIQ p4: the refund-rate card's title whole and its value centred as in English; if not, its value entry's own
+  alignment (the shape is not in the evidence: send the card's visual.json).
+- Fintech p2: all six KPI values centred, "54" and "44.4%" too.
+
+## Seen, not in scope
+- A one-value card with no image keeps an unset alignment (left in Desktop?) under a right-aligned title: rc.24 turns
+  only an explicit "left". Not asked; no shape here.
+- The phone layouts' text boxes keep their tabs (iconRoom works on the page's boxes only), as before.
+
+## Lessons for the reviewer
+- Why MP1d's checks and mp1-shapes passed with item 1's regression in: their KPI boxes were the title alone (one
+  paragraph), the part 8 shape quoted then; the real boxes hold four lines, and no check looked at the lines under the
+  title. A rule that changes a box must be tested on the real box's whole content, not the one line the report named.
+- The never-shrink guard measures the box (162.9 is 75.5 % of 215.71, over its 75 %); a narrowing that keeps the box
+  but moves its text needs the text's own check, now in the rule itself.
