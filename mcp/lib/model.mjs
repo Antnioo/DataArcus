@@ -350,7 +350,17 @@ function byName(p, root) {
   if (hits.size === 1) return [...hits][0];
   const all = models.map(rel);
   if (hits.size > 1) throw new ReadError('MANY_MODELS_NAMED', { name: p, hits: [...hits].map(rel) }, `More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}.`);
-  throw new ReadError('NO_MODEL_NAMED', { name: p, root, models: all.slice(0, 12), more: Math.max(0, all.length - 12) }, `No model named "${p}" in the working folder ${root}.${all.length ? ' Models there: ' + all.slice(0, 12).join('; ') + (all.length > 12 ? '; and ' + (all.length - 12) + ' more' : '') + '.' : ''}`);
+  throw new ReadError('NO_MODEL_NAMED', { name: p, root, models: all.slice(0, 12), more: Math.max(0, all.length - 12) }, `No model named "${p}" in the working folder ${root}.${modelsThere(all)}`);
+}
+const modelsThere = (all) => (all.length ? ' Models there: ' + all.slice(0, 12).join('; ') + (all.length > 12 ? '; and ' + (all.length - 12) + ' more' : '') + '.' : '');
+// (0.3.1 MR1, B-271: the MCP review) a path with a folder part that does not exist ("twin-project/Twin Sale.SemanticModel"):
+// the models in the working folder listed as for a bare wrong name (byName's search: relative, screened, capped at 12),
+// never an internal error, and never a guess at the model meant
+function noModelAt(p, root) {
+  let models = [], more = 0;
+  try { byName('\u0000', root); } catch (e) { if (e && e.code === 'NO_MODEL_NAMED') { models = e.data.models; more = e.data.more; } else throw e; }
+  const shown = shownPath(String(p));
+  return new ReadError('NO_MODEL_AT', { path: shown, models, more }, `Nothing at "${shown}" in the working folder ${root}.${modelsThere(models.concat(Array(more).fill('')))}`);
 }
 
 /**
@@ -416,6 +426,7 @@ export function loadModel(p, opts) {
   if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = realIn(byName(p, root), p);
   // a .pbip file is the project's shortcut, not a model: the model folder of its name beside it, else its folder
   else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = realIn(nothingAt(beside) ? path.dirname(full) : beside, p); }
+  else if (!fs.existsSync(full)) throw noModelAt(p, root);
   const st = fs.statSync(full);
   if (st.isFile()) {
     // (rc.23, F1, an outside audit of 0.2.9) a .pbix holds Power BI's data cache and a data file holds data: both are

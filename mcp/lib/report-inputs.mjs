@@ -9,7 +9,7 @@ import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
 import { USES as DAX_USES } from './dax-functions.mjs';
 import { readUserFile } from './files.mjs';
 import { GALLERY_KINDS, LIMITS } from './tool-limits.mjs';
-import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape } from './tool-inputs.mjs';
+import { WATERFALL_RTL_INPUT, planIdInput, focusInput, tablesInput, modelPath, pageInput, slot, columnStatsShape, strictObject } from './tool-inputs.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const Gallery = require('../../assets/js/visual-gallery.js');
@@ -98,7 +98,7 @@ export const CREATE_REPORT_INPUTS = {
     metricSwitcher: z.array(z.string().max(300)).min(SWITCH_MIN).max(SWITCH_MAX).optional().describe('(Default off.) Only when the user asks for it: 2 to 5 of the model\'s measures, as Table[Measure] exactly as read_model lists them, that one slicer switches between. The report gets a page of its own ("Metric", Arabic «المؤشر») with a single-select slicer and a bar chart by the main category (and a line chart by month when the month has an order) whose values come from a field parameter: each chart shows the chosen measure in its own format, its title follows the metric. The model is never changed: the field parameter (a new table and its title measure) comes as a TMDL script file next to the project, which the user applies in TMDL view; until then only that page shows Power BI\'s error. The labels are the plan\'s display names for the measures (Arabic ones in an Arabic report). A name that is not a measure of the model refuses the plan'),
     noDataMessage: z.boolean().optional().describe('(Default true.) ' + 'Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
-    colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
+    colors: strictObject('colors', { text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
     // (0.2.9, custom visuals, step C: lib/native-copy.mjs)
     customVisualsFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) whose custom visuals are replaced by native Power BI visuals in a NEW report "<name> native" next to it (the original is only read). In plan_layout: lists each replacement and what it loses, for the user\'s go. In create_report: with the approved planId, path (the model) and no pages or design, writes exactly the approved replacements'),
     // (0.3.1 NC2) where the plan offers a closer native first (a bullet, a calendar heatmap), the user's choice of the second

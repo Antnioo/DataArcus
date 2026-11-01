@@ -224,7 +224,8 @@ try {
     // (F1, STRICT: a Ramadan page needs the person's grain and scope)
     const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF, gulfDates: { dateRole: 'Web Orders[Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' } });
     const F = await planAndWrite(fa);
-    const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design })) : F.pl;
+    // (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
+    const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design, gulfDates: undefined })) : F.pl;
     const fdir = path.join(ROOT, 'large', 'L3 Filtered.Report'), pgs = pagesOf(fdir).filter((p) => p.json.type !== 'Tooltip'), mpF = metricPage(fdir);
     const fields = (p) => ((p.json.filterConfig || {}).filters || []).map((x) => (x.field.Column || {}).Property + '=' + JSON.stringify(x.filter.Where[0].Condition.In.Values)).sort().join();
     const own = pgs.filter((p) => !mpF || p.id !== mpF.id);

@@ -42,7 +42,7 @@ const ok = (schema, v) => !!(schema && schema.safeParse(v).success);
 try {
   // ---------- H: check_report's lang ----------
   {
-    const lang = D.check_report.inputSchema.lang;
+    const lang = D.check_report.inputSchema.shape.lang;
     chk(() => ok(lang, 'he') && ['auto', 'en', 'ar'].every((v) => ok(lang, v)), () => 'H1. check_report\'s lang takes "he" (the checker reads it as right to left), besides auto, en and ar');
     chk(() => /Hebrew/.test(lang.description || ''), () => `H2. check_report's lang says what "he" is: ${lang.description}`);
     fresh('h', 'fixtures/twin-project');
@@ -84,7 +84,7 @@ try {
     const n = LIMITS.tables, names = Array.from({ length: (n || 0) + 1 }, (_, i) => 'T' + i);
     chk(() => Number.isInteger(n) && n > 0, () => `T1. LIMITS.tables is the tools' one table limit: ${n}`);
     for (const t of ['read_model', 'suggest_fields', 'plan_layout', 'create_report']) {
-      const s = D[t].inputSchema.tables;
+      const s = D[t].inputSchema.shape.tables;
       chk(() => ok(s, names.slice(0, n)) && !ok(s, names), () => `T2. ${t}: tables takes ${n} names and refuses ${n + 1}`);
     }
     // measured: the most tables, on the 300-table model, each answer under the cap with a 10% margin
