@@ -15,7 +15,9 @@
 - **Got:** `mx1` 41 checks (A1-A11, U1-U3, K1-K7, P1-P4, C1-C6, D1-D3, B1-B7), red on 7c54e918 first: 28 of the 35
   that run there failed (the lab's B2-B7 need the lab); guards passing there: A3-A8, K7. `mirror-parity` 63 -> 62 on
   purpose (below). Lint 0; build:min (report-mirror.min.js); changelog-words PASS.
-- **State:** AREAS and FULL RUN below.
+- **State: DONE.** Areas twin + arabic + report on 8f691ad: 78 suites, all PASS (glass-tables needed the clone's
+  history for its base commit cba24a5: 113 checks once fetched). Full run on ab668e3: "run-tests: 129 suites passed"
+  (mx1 41, mcp 1594, mirror-parity 62, mutation 198, 76 mutants all killed). CI: started on the branch.
 - **Resume:** the reviewer: the 3 tool lines after MR1; merge after MP1d; the laptop's part 9.
 
 ## The plan
