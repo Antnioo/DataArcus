@@ -34,7 +34,8 @@ const C = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t }
 const Me = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
 const HL = (t, h, level) => ({ field: { HierarchyLevel: { Expression: { Hierarchy: { Expression: { SourceRef: { Entity: t } }, Hierarchy: h } }, Level: level } }, queryRef: `${t}.${h}.${level}`, nativeQueryRef: `${h} ${level}` });
 const vis = (name, type, box, visual) => ({ name, position: { x: box[0], y: box[1], z: 1000, width: box[2], height: box[3], tabOrder: 1000 }, visual: Object.assign({ visualType: type }, visual) });
-const mir = (v, o) => M.mirrorVisual(v, 1280, Object.assign({ dateTables: ['Dates'], dateColumns: [] }, o || {})).json;
+// (as the twin calls it: the model read, Dates a date table, StartOfMonth not typed a date, no text column among these)
+const mir = (v, o) => M.mirrorVisual(v, 1280, Object.assign({ dateTables: ['Dates'], dateColumns: [], textColumns: [] }, o || {})).json;
 const refs = (v, role) => v.visual.query.queryState[role].projections.map((p) => p.queryRef);
 
 // ---------- C: a new card's values (Fintech p3: the 4 status lines, layout orientation 1D, rowCount 4) ----------

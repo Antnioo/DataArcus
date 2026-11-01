@@ -188,7 +188,8 @@
       // type a date, stayed left to right) any time category: a date table's column not typed text, or a date hierarchy level (isTime);
       // Desktop ignores invertAxis on a categorical axis (T-2), where the sort above turns it
       // (opts.textColumns: the model's text columns, a month name: categorical, turned by the sort alone)
-      const timeCat = c0 && isTime(c0.field, o.dateTables) && !(cref && (o.textColumns || []).includes(cref));
+      // (only where the model's text columns are known, as in the twin: create_report's writer keeps its rule)
+      const timeCat = Array.isArray(o.textColumns) && c0 && isTime(c0.field, o.dateTables) && !(cref && o.textColumns.includes(cref));
       if (((cref && (o.dateColumns || []).includes(cref)) || timeCat) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
