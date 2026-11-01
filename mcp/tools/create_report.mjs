@@ -11,7 +11,7 @@ import * as Terms from '../lib/terminology.mjs';
 import { UNTRUSTED } from '../lib/agent-text.mjs';
 import { writeSample, writtenSaid } from '../lib/sample-project.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
-import { ADDS } from '../lib/tool-inputs.mjs';
+import { ADDS, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite } from '../lib/plan-keys.mjs';
 import { axesOf } from '../lib/report-fields.mjs';
 import { CREATE_REPORT_INPUTS, REPORT_LOOK, withLookDefaults, reportPin, redesignPin, samplePin, redesignOnly } from '../lib/report-inputs.mjs';
@@ -21,7 +21,7 @@ export function register(server, ctx) {
   server.registerTool('create_report', {
     title: 'Create a report project for an existing model',
     description: 'Writes only with an approved planId from plan_layout for the same model: without one it refuses and writes nothing. Before calling this, call plan_layout with the model and the plan\'s fields (planFields), show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan with the user\'s reply, and pass the planId and the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
-    inputSchema: CREATE_REPORT_INPUTS, annotations: ADDS
+    inputSchema: strictInputs('create_report', CREATE_REPORT_INPUTS), annotations: ADDS
   }, safe(async (a) => {
     // (0.3.1 C) the sample project: only with its own approved plan, only into the folder the plan named, never over anything
     if (a.sample || (a.planId != null && (Plans.planOf(a.planId) || {}).kind === 'sample')) {

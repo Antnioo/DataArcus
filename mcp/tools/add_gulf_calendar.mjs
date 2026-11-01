@@ -12,7 +12,7 @@ import { columnsByKind } from '../lib/gulf-calendar.mjs';
 import { scriptIs as scriptIsSaid, APPLY_STEPS, whereSaid, NEVER_APPLIED, NEVER_APPLIED_AR } from '../lib/plain-words.mjs';
 import { monthOffer as calendarOffer } from '../lib/arabic-twin.mjs';
 import { text, safe } from '../lib/tool-answer.mjs';
-import { planIdInput, ADDS_SAME, modelPath } from '../lib/tool-inputs.mjs';
+import { planIdInput, ADDS_SAME, modelPath, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef, sameModelBeforeWrite, inputsPin } from '../lib/plan-keys.mjs';
 import { freeScriptName, writePlannedScript } from '../lib/fix-scripts.mjs';
 import { createRequire } from 'node:module';
@@ -35,7 +35,7 @@ export function register(server, ctx) {
   server.registerTool('add_gulf_calendar', {
     title: 'Add a Gulf calendar table',
     description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project, only with an approved planId: called without one it checks everything, says what it would write and gives a proposed planId (show the user, wait for go, approve_plan, then call again with planId). The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool returns no data values). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); a relateTo column that already has an active relationship to a date table never gets a second one: the new table is related to that date table\'s Date instead, or the relationship is added inactive (relationshipsWhy says which and why); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
-    inputSchema: {
+    inputSchema: strictInputs('add_gulf_calendar', {
       path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
       firstYear: z.number().int().optional().describe('First year of the calendar (1 January). Ask the user: the years their data covers. Needed unless arabicColumnsOnly'),
       lastYear: z.number().int().optional().describe('Last year of the calendar (31 December); at most 60 years in all. Needed unless arabicColumnsOnly'),
@@ -51,7 +51,7 @@ export function register(server, ctx) {
       relateTo: z.array(z.string()).max(5).optional().describe('Date columns of the user\'s fact tables to relate to the new table\'s Date, as "Table[Column]" (many to one, single direction). Only columns the user names'),
       asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the self-check counts as today (YYYY-MM-DD; default: today). For tests'),
       planId: planIdInput
-    }, annotations: ADDS_SAME
+    }), annotations: ADDS_SAME
   }, safe(async (a) => {
     const m = refuseUnreadable(loadModel(a.path));   // (AU47) nothing is planned on part of a model
     if (a.arabicColumnsOnly) return arabicColumnsOnly(m, a);

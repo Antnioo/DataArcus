@@ -26,7 +26,7 @@ import { planTwin, monthOffer as calendarOffer, twinPreview } from '../lib/arabi
 import { freeFolder, sampleFiles, sampleSaid, sampleSaidAr, sampleWrites, sampleWritesAr } from '../lib/sample-project.mjs';
 import { out, fitLists } from '../lib/answer.mjs';
 import { pretty, text, safe } from '../lib/tool-answer.mjs';
-import { READS, focusInput, tablesInput, modelPath, pageInput, langInput } from '../lib/tool-inputs.mjs';
+import { READS, focusInput, tablesInput, modelPath, pageInput, langInput, strictInputs } from '../lib/tool-inputs.mjs';
 import { modelRef } from '../lib/plan-keys.mjs';
 import { formatsAnswer } from '../lib/fix-scripts.mjs';
 import { relsOf, fieldsAndProblems, axesProblems, axesOf } from '../lib/report-fields.mjs';
@@ -179,7 +179,7 @@ export function register(server, ctx) {
   server.registerTool('plan_layout', {
     title: 'Plan a report page layout',
     description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Give here, too, the report\'s name, title, theme, logo, colours and options as create_report will write them: they are approved with the plan (reportLook in the answer; show them), and create_report writes only those. Show the user the plan, wait for go, call approve_plan, then create_report with planId (a separate theme file has its own plan: generate_theme proposes it). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames gives an Arabic display name for each field without one (from a fixed list of report words) and lists the rest for you to propose: show every suggestion beside the model\'s name for the user to approve or edit before create_report, and pass only the approved ones as displayNames. The plan pins the fixed list\'s names (inThePlan) and lists every field that stays in English with why (notTranslated): say both in the plan (sayInPlan). forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. With languages "en+ar" (only when the user asks for one report in English and Arabic) the plan builds both halves and bilingual says how to approve their Arabic (arabicTerms, arabicTexts). No model yet: sample true (with lang) plans a made-up Gulf retail project to try DataArcus on (sample in the answer). Nothing else is written.' + UNTRUSTED,
-    inputSchema: {
+    inputSchema: strictInputs('plan_layout', {
       design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
       layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
       kpis: z.number().int().min(0).max(6).optional().describe('KPI cards in the top row (0-6; the layouts are made for 3-6, fewer cards share the row, 0 leaves the row out)'),
@@ -206,7 +206,7 @@ export function register(server, ctx) {
       redesignPages: z.array(z.string().max(200)).min(1).max(50).optional().describe('With redesignFrom: list only these pages (redesign.pages[].id or its name) in full, when the plan\'s answer shortened its lists (listsCut); the plan is the same'),
       // (A-02: the report's look and options, pinned with the plan and shown in it; create_report's own definitions)
       ...Object.fromEntries(REPORT_LOOK.map((k) => [k, CREATE_REPORT_INPUTS[k]]))
-    }, annotations: READS
+    }), annotations: READS
   }, safe(async (a) => {
     // (0.3, J13 redesign step 2) a redesign of an existing report is a plan of its own: a copy with allowlisted patches
     if (a.redesignFrom != null) return text(redesignPlan(a));
