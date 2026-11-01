@@ -73,7 +73,9 @@
   64 to 65 texts); and the cause behind the margin: a button's approved Arabic is shared with buttons of the same
   text (`twin-texts.mjs SHARED`, as text boxes' texts are), so a second Reset takes it wherever the paging falls.
   Test: `mx3` S1, red on 1a355b92 first. After the first fix alone: 19 of 20; after both: 20 of 20.
-- Command: `cd mcp && for i in $(seq 1 20); do node test-0.3.1-fx1.mjs | tail -1; done | sort | uniq -c`
+- `sayInPlan` kept as it was: a longer sentence there pushed one text of `terminology-sheet`'s plan past one answer
+  (TS-2, 81 of 82 listed: seen in the full run, fixed in a1a2721b, its 48 checks PASS).
+- Command, on a1a2721b: `cd mcp && for i in $(seq 1 20); do node test-0.3.1-fx1.mjs | tail -1; done | sort | uniq -c`
   -> "20 PASS  fx1  22 checks".
 
 ## CHANGELOG line
