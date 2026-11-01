@@ -416,7 +416,7 @@ export function keepSize(enVisuals, arVisuals, W) {
   return out;
 }
 export function buildTwin(P, labels) {
-  const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns };
+  const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns, textColumns: P.textColumns };
   // (D1) a waterfall's measures go into the twin's own reportExtensions.json (the original's copied, or a new one), each
   // name free of the model's and the report's; the same DAX in the same table is one measure
   const wfWritten = [];

@@ -13,7 +13,7 @@ import { DAX_MEASURE } from './dax-functions.mjs';
 import { TEXTS_MAX, pathOut, locate, memoryLoc, bytesAt, readOriginal, isObj, byPathOf, pageOf, sizeOf } from './twin-read.mjs';
 import { litStr } from './twin-visuals.mjs';
 import { placeholderProblem, textsOf, rawLabels, cleanLabel, sameTextLabels, notTranslatedOf, termsOf, autoSentence } from './twin-texts.mjs';
-import { modelOf, dateTablesOf, continuousColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
+import { modelOf, dateTablesOf, continuousColumnsOf, textColumnsOf, monthOffer, waterfallFacts } from './twin-model.mjs';
 import { COPY_TAG, LANG, languageCopy } from './twin-copy.mjs';
 import { buildTwin } from './twin-pages.mjs';
 import { createRequire } from 'node:module';
@@ -90,7 +90,7 @@ export function planTwin(a) {
   const same = a.into === 'same' || !!a.inMemory, outBase = a.inMemory ? loc.base : loc.base + (same ? COPY_TAG : ' AR');
   const twinDir = path.join(loc.project, outBase + '.Report'), twinPbip = path.join(loc.project, outBase + '.pbip');
   const free = a.inMemory ? true : nothingAt(twinDir) && nothingAt(twinPbip);
-  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = continuousColumnsOf(model.m);   // (TW1, M1-S3: numbers too)
+  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = continuousColumnsOf(model.m), textColumns = textColumnsOf(model.m);   // (TW1, M1-S3: numbers too)
   // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
   // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
   // (rc.22, B-137: an image that is DataArcus's own transparent placeholder, byte for byte, is no picture)
@@ -167,7 +167,7 @@ export function planTwin(a) {
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
-    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
+    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, textColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     (r.waterfallsKept || []).forEach((x) => where.waterfallKept.push(safeName(pg.id) + '/' + safeName(x.name) + ' (' + x.why + ')'));
     (r.asTables || []).forEach((n) => where.asTables.push(safeName(pg.id) + '/' + safeName(n)));
@@ -212,7 +212,16 @@ export function planTwin(a) {
   // (0.3.0 A3) the metric switcher's choices are the rows of a field parameter table of the model (its script, made for
   // the English report, names them): the twin's slicer still switches, and its choices read as that table names them
   const switchers = fieldParametersOf(R.pages.flatMap((pg) => pg.visuals.map((v) => ({ file: safeName(pg.id) + '/' + safeName(isObj(v.json) ? v.json.name : ''), json: v.json }))));
-  if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (as that table names them; DataArcus's metric switcher script, made for the English report, names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher`, where: [...new Set(switchers.map((x) => x.file))].slice(0, 30) });
+  // (0.3.1 MP1e, laptop part 8: AdventureWorks' "Total Customers" and "Revenue per Customer" stayed English) the slicers
+  // that show a field parameter's choices are named too: their words are that table's rows, not a text of the visual
+  const fpTables = new Set(switchers.map((x) => String(x.table))), choiceSlicers = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, ps = isObj(vis.query) && isObj(vis.query.queryState) && isObj(vis.query.queryState.Values) && Array.isArray(vis.query.queryState.Values.projections) ? vis.query.queryState.Values.projections : [];
+    return Mirror.kindOf(v.json) === 'slicer' && ps.some((x) => isObj(x) && isObj(x.field) && isObj(x.field.Column) && isObj(x.field.Column.Expression) && isObj(x.field.Column.Expression.SourceRef) && fpTables.has(String(x.field.Column.Expression.SourceRef.Entity))); }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+  if (switchers.length) cannot.push({ what: 'the metric switcher\'s choices', why: `they are the rows of the field parameter table ${[...new Set(switchers.map((x) => JSON.stringify(safeName(x.table))))].join(', ')} of the model (as that table names them; DataArcus's metric switcher script, made for the English report, names them in English): the twin's slicer and charts still switch, but the choices read as that table names them; for Arabic choices, make the report in Arabic with create_report and metricSwitcher; for a field parameter of the report's own, an Arabic field parameter table in the model would be needed (DataArcus does not change the model in the twin: the English report uses the same model)`, where: [...new Set(switchers.map((x) => x.file).concat(choiceSlicers))].slice(0, 30) });
+  // (0.3.1 MP1e, laptop part 8: Call Center's four agent cards, one card visual of small multiples in 2 rows) Power BI
+  // has no right-to-left order for a grid of several rows: each card's photo and name turn, their order stays
+  const cardGrids = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, q = isObj(vis.query) && isObj(vis.query.queryState) ? vis.query.queryState : {}, sm = isObj(vis.objects) && Array.isArray(vis.objects.smallMultiplesLayout) ? vis.objects.smallMultiplesLayout : [];
+    return vis.visualType === 'cardVisual' && isObj(q.Rows) && sm.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.rowCount) && isObj(e.properties.rowCount.expr) && isObj(e.properties.rowCount.expr.Literal) && parseInt(e.properties.rowCount.expr.Literal.Value, 10) > 1); }).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+  if (cardGrids.length) cannot.push({ what: 'card visuals in a grid of several rows', why: 'a card visual of small multiples in two or more rows (one card per agent, say): Power BI has no right-to-left order for its grid, so the cards keep their English places; each card\'s picture and name move to its right side', where: cardGrids.slice(0, 30) });
   // (0.3.1 L6) the DAX function library's pictures and titles are measures of the model (its DAX functions script, made
   // for the English report): the twin shows them as those measures draw them
   const daxShown = R.pages.flatMap((pg) => pg.visuals.filter((v) => { const hit = []; const seek = (o) => { if (!isObj(o) && !Array.isArray(o)) return; if (isObj(o) && isObj(o.Measure) && typeof o.Measure.Property === 'string' && DAX_MEASURE.test(o.Measure.Property)) hit.push(1); Object.values(o).forEach(seek); };
@@ -233,7 +242,7 @@ export function planTwin(a) {
   if (monthShown.scriptAfterGo) monthShown.scriptAfterGo = safeName(monthShown.scriptAfterGo);
   const ref = byPathOf(R.pbir);
   // (rc.24) the twin built in memory with the labels: its title measures and what its Arabic texts need
-  const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
+  const built = buildTwin({ R, model: model.m, keepLtr, dateTables, dateColumns, textColumns, timeRightToLeft: a.timeRightToLeft, waterfallRtl: a.waterfallRtl, same }, rawLabels(texts, labels));
   // (0.3.1 MX1 D, the reviewer's add-on of 1 Nov: Fintech's roadmap table) a reversed table wider than its box: Power BI
   // lays a table from its left edge and scrolls to the right, so the English first column (now the last) is behind the
   // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a

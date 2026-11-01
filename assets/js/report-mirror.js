@@ -139,6 +139,8 @@
   // 0.3.1 M1, the owner: "make sure the AR and twin are using the same engine"). v: the visual (visual.json's "visual"),
   // kind: kindOf's ('bar', 'column', 'waterfallKept' or 'waterfallTime': a waterfall that stays one gets its value axis at
   // the right). Changes v in place; what it changed is pushed to changes ----
+  // (0.3.1 MP1e) a button slicer no higher than this holds one row of buttons (Call Center's months: 50)
+  const ONE_ROW_H = 64;
   function chartRtl(v, kind, o, changes, kept0) {
     const kept = kept0 || [];
     const objects = () => (v.objects === undefined ? (v.objects = {}) : isObj(v.objects) ? v.objects : {});
@@ -162,9 +164,18 @@
         const ref = (f) => { const x = entityOf(f); return isObj(x) && isObj(x.Expression) && isObj(x.Expression.SourceRef) ? x.Expression.SourceRef.Entity : null; };
         const orderKey = c0 && ref(s.field) != null && ref(s.field) === ref(c0.field) && (projections(q, 'Tooltips') || []).some((t) => isObj(t) && sameField(t.field, s.field));
         const byCategory = c0 && (sameField(s.field, c0.field) || orderKey);
-        if (!(keepTime && byCategory)) { s.direction = s.direction === 'Descending' ? 'Ascending' : 'Descending'; changes.push('sort'); }
+        if (!(keepTime && byCategory)) {
+          s.direction = s.direction === 'Descending' ? 'Ascending' : 'Descending';
+          // (0.3.1 MP1e, laptop part 8: AdventureWorks' lines on a 4-level date hierarchy kept the months inside a year
+          // left to right) every further sort key that is a category level turns with the first
+          const cats = projections(q, 'Category') || [];
+          sd.sort.slice(1).forEach((x) => { if (isObj(x) && cats.some((c) => isObj(c) && sameField(c.field, x.field))) x.direction = x.direction === 'Descending' ? 'Ascending' : 'Descending'; });
+          changes.push('sort');
+        }
       } else if (c0 && c0.field !== undefined && !keepTime && (q.sortDefinition === undefined)) {
-        q.sortDefinition = { sort: [{ field: clone(c0.field), direction: 'Descending' }], isDefaultSort: true };
+        // (MP1e: Consumer Complaints' Year and Month, sorted by the year alone) every level of the category descending
+        const levels = (projections(q, 'Category') || []).filter((c) => isObj(c) && c.field !== undefined && isObj(c.field.HierarchyLevel));
+        q.sortDefinition = { sort: (levels.length > 1 ? levels : [c0]).map((c) => ({ field: clone(c.field), direction: 'Descending' })), isDefaultSort: true };
         changes.push('sort');
       }
       // (T-2 of the laptop's rc.2 twins: a continuous date axis ignores the sort, so time stayed left to right; on such
@@ -173,7 +184,12 @@
       const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
       const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
       const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
-      if (cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
+      // (0.3.1 MP1e, laptop part 8: RepeatIQ's Monthly Sales on DateTable.StartOfMonth, a column the model read did not
+      // type a date, stayed left to right) any time category: a date table's column not typed text, or a date hierarchy level (isTime);
+      // Desktop ignores invertAxis on a categorical axis (T-2), where the sort above turns it
+      // (opts.textColumns: the model's text columns, a month name: categorical, turned by the sort alone)
+      const timeCat = c0 && isTime(c0.field, o.dateTables) && !(cref && (o.textColumns || []).includes(cref));
+      if (((cref && (o.dateColumns || []).includes(cref)) || timeCat) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
     // (charts only: the labs saw it there; a donut's or a map's legend is left as it is)
@@ -269,7 +285,10 @@
     // its field (a sort it already has is turned round); one of several rows moves only
     if (kind === 'slicer' && v.visualType === 'advancedSlicerVisual') {
       const lay = (entries(v.objects, 'layout') || []).find((e) => !e.selector && isObj(e.properties)), f0 = first(projections(v.query, 'Values'));
-      if (lay && String(lit(lay.properties.rowCount)) === '1L' && f0 && isObj(f0.field) && isObj(v.query)) {
+      // (0.3.1 MP1e, laptop part 8: Call Center's months, a 3 x 3 grid 50 px high, kept Jan at the left) one row of
+      // buttons: rowCount 1, or a layout too low for a second row (ONE_ROW_H)
+      const oneRow = lay && (String(lit(lay.properties.rowCount)) === '1L' || (Number.isFinite(p.height) && p.height <= ONE_ROW_H));
+      if (oneRow && f0 && isObj(f0.field) && isObj(v.query)) {
         const sd = isObj(v.query.sortDefinition) && Array.isArray(v.query.sortDefinition.sort) && isObj(v.query.sortDefinition.sort[0]) ? v.query.sortDefinition.sort[0] : null;
         if (sd) sd.direction = sd.direction === 'Descending' ? 'Ascending' : 'Descending'; else v.query.sortDefinition = { sort: [{ field: clone(f0.field), direction: 'Descending' }] };
         kind = 'pills'; changes.push('order');
@@ -302,15 +321,25 @@
     if (kind === 'matrix') matrixRtl(v, o.matrixRtl, changes);
     if (kind === 'newCard') {
       const ps = projections(v.query, 'Data');
+      // (0.3.1 MP1e, laptop part 8: Fintech's four status lines, orientation "1D", came out bottom to top) only values
+      // that run left to right are reversed: a vertical list ("1D") keeps its order
+      const lay = (entries(v.objects, 'layout') || []).find((e) => !e.selector && isObj(e.properties) && e.properties.orientation !== undefined);
+      const vertical = !!lay && String(lit(lay.properties.orientation)) === '1D';
       if (ps && ps.length > 1) {
-        ps.reverse();
+        if (!vertical) ps.reverse();
         const es = listIn(objects(), 'value');
         let e = es ? es.find((y) => isObj(y) && isObj(y.selector) && y.selector.id === 'default') : null;
         if (es && !e) { e = { properties: {}, selector: { id: 'default' } }; es.push(e); }
         if (e && e.properties === undefined) e.properties = {};
-        if (e && isObj(e.properties)) e.properties.horizontalAlignment = str('right');
+        // (MP1e: RepeatIQ's centred KPI values were set right and their first letter cut; Consumer Complaints' text values
+        // kept their own entries, left) every value entry right-aligned, a centred one kept centred
+        (es || []).forEach((y) => { if (isObj(y) && isObj(y.properties) && strOf(y.properties.horizontalAlignment) !== 'center') y.properties.horizontalAlignment = str('right'); });
         changes.push('values');
       }
+      // (MP1e, laptop part 8: Call Center's agent cards, one card visual of small multiples, kept each photo and name at
+      // the left) the card image and the small multiples' header go to the other side
+      (entries(v.objects, 'image') || []).forEach((y) => { const q = isObj(y.properties) ? strOf(y.properties.position) : null; if (q === 'Left' || q === 'Right') { y.properties.position = str(q === 'Left' ? 'Right' : 'Left'); changes.push('image'); } });
+      (entries(v.objects, 'smallMultiplesLayout') || []).forEach((y) => { const q = isObj(y.properties) ? strOf(y.properties.headerPosition) : null; if (q === 'Left' || q === 'Right') { y.properties.headerPosition = str(q === 'Left' ? 'Right' : 'Left'); changes.push('header'); } });
       // (rc.24, the laptop's proof of rc.23: a card with one value, as DataArcus writes its KPI cards, kept its value
       // left-aligned under its right-aligned title) a value aligned left goes right (centred kept), and the card's inner
       // left and right margins (its padding card, as the writer sets them) swap sides with it
