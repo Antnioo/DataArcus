@@ -19,7 +19,9 @@
   `mcp/test-0.3.1-mp1.mjs` or a new suite from the real shapes. Not MX2's ground (legends, table widths, matrices).
 - **Expected checks:** not written yet: each item's red checks come from its real visual.json, about 2 per item
   (16), and mp1, mp1-shapes and MD-e (the never-shrink guard) stay green.
-- **State:** base merged and pushed; the work waits for the shapes.
+- **State:** base merged and pushed; the work waits for the shapes. (08:02: the reviewer says they landed on the engine,
+  lab/dashboard-shapes af1d3ee; this session still cannot read the engine, so nothing changes until access is given
+  or the needed shapes are extracted into a branch of this repo.)
 - **Resume:** fetch the shapes, then the plan below, red first from each real visual.json.
 
 ## What the code shows already (before the shapes)
