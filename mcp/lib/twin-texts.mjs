@@ -333,7 +333,9 @@ export const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice
 // plan (labelFrom) and pinned with it, as a page button takes its page's (B-138): a phone copy the label of the page's
 // same text on the same visual, an alt text, a card's blank text or a tooltip that of any listed text with exactly
 // its words (a chart's alt text is its title). A label given for it wins; a text with {n} is never shared
-const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text']);
+// (0.3.1 MX3: the copy's plan lists its texts in pages of one answer; a page's "Reset filters" button past the first
+// one stayed English though the same button text was approved on another page) a button's text is shared too
+const SHARED = new Set(['altText', 'blankText', 'buttonTooltip', 'text', 'button']);
 const KIND_SAID = { visualField: 'field name on one visual', dynamicTitle: 'title that changes with the selection', page: 'page name', title: 'title', textbox: 'text box', button: 'button', field: 'field name', bookmark: 'bookmark', bookmarkGroup: 'bookmark group', titleMeasure: 'chart title', measureText: 'measure text', altText: 'alt text', blankText: 'text for no data', buttonTooltip: 'button tooltip', text: 'text' };
 export function sameTextLabels(texts, labels) {
   const key = (t) => (t.text != null && !/\{\d+\}/.test(t.raw) ? t.raw.trim() : null), byText = new Map();
