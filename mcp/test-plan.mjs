@@ -20,7 +20,8 @@ export function withPlans(call) {
       const { fields, ...rest } = args;
       const pl = await call('plan_layout', Object.assign({}, rest, fields ? { planFields: fields } : {}));
       if (pl.err) return pl;
-      if (!(pl.j && pl.j.plan && pl.j.plan.planId)) return { err: true, t: 'Nothing was written: plan_layout gave no plan id. ' + pl.t, j: null, plan: pl };
+      // planProblems: that refusal; another answer without a plan id (a working folder not there yet): create_report's own
+      if (!(pl.j && pl.j.plan && pl.j.plan.planId)) return pl.j && pl.j.planProblems ? { err: true, t: 'Nothing was written: plan_layout gave no plan id. ' + pl.t, j: null, plan: pl } : call(name, { path: args.path });
       const id = await approve(pl.j.plan.planId);
       return call(name, Object.assign({ path: args.path }, id ? { planId: id } : {}));
     }

@@ -160,9 +160,7 @@ const write = async (args) => {
   const id = pl.j && pl.j.plan && pl.j.plan.planId;
   if (!id) return { pl, err: 'no plan id: ' + short(pl) };
   const html = await approve(id);
-  const cr = Object.assign({ path: 'g', planId: id }, args);
-  if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', cr);
+  const r = await w.call('create_report', { path: 'g', planId: id });   // (0.3.2 TK1: the plan holds the rest)
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 const written = [];   // every report this suite wrote, for X

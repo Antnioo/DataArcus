@@ -519,8 +519,11 @@ for (const [w, h] of [[3840, 2160], [640, 360]]) {
 // pages or a design, never both or neither
 r = await tryCall('create_report', { path: 'bim-project', name: 'Both', pages: [page], design: gp.err ? {} : gp.j.design });
 check(r.err && /pages or a design/.test(r.t), `create_report with both: ${r.t.slice(0, 120)}`);
-r = await tryCall('create_report', { path: 'bim-project', name: 'Neither' });
-check(r.err && /pages or a design/.test(r.t), `create_report with neither: ${r.t.slice(0, 120)}`);
+// (0.3.2 TK1, B-272: a plan always holds its pages or the design it resolved; plan_layout without either plans the
+// default layout) create_report given neither, only a name, is refused at its inputs and writes nothing
+{ const before = fs.readdirSync(path.join(ROOT, 'bim-project')).join('|');
+  r = await rawCall('create_report', { path: 'bim-project', name: 'Neither' });
+  check(r.err && /Nothing was written/.test(r.t) && fs.readdirSync(path.join(ROOT, 'bim-project')).join('|') === before, `create_report with neither: ${r.t.slice(0, 120)}`); }
 
 // a design from generate_theme passes straight through: same colours, same page, positions for that page
 const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', harmony: 'analogous', layout: { page: '1280x720' } });
@@ -1078,7 +1081,9 @@ if (part('round4')) {
   // (sample.pbit moved 11 Oct 2026, the audit of the reading block's A1-5: a .pbit's three hidden automatic date tables,
   // LocalDateTable_*, were listed on the file route while the folder route left them out; one result now leaves them
   // out on every route. Before: '7d20d9242374:4518'; the other nine tables unchanged)
-  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '2063aaafa581:4008' };
+  // (0.3.2 TK1, B-273: every answer flat JSON, the same content. Before: '63cfd0805729:893', 'ccbcc917fc9e:1344',
+  // '4502344299d5:2099', '2063aaafa581:4008')
+  const SMALL_ANSWERS = { 'tmdl-project': 'fb33c3957b46:577', 'bim-project': '7f931e2ea8c6:903', 'dax-project': 'bba7e87d2c43:1494', 'sample.pbit': '982d08f5abdc:2642' };
   const small = {};
   for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
   chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);
@@ -1348,7 +1353,8 @@ if (part('round6')) {
     const ins = String(client.getInstructions() || ''), tl = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t]));
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
-    chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
+    // (0.3.2 TK1, B-272) the plan's fields go to plan_layout (planFields); create_report takes path and the approved planId
+    chk(() => /`planFields`/.test(skill) && /`create_report` with `path` and the approved `planId` only/.test(skill), () => 'the skill must say the plan\'s fields go in `planFields` and create_report takes path and the approved planId');
     chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && /plan holds/.test(tl.create_report.description) && !!tl.plan_layout.inputSchema.properties.planFields, () => `create_report's description must say the approved plan holds the fields (planFields, plan_layout) (0.3.2 TK1): ${tl.create_report.description.slice(0, 200)}`);
     chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
@@ -3722,8 +3728,9 @@ if (part('round12b')) {
   // round 9's seen-not-in-scope: create_report's description said a KPI card shows its measure "(no filter is added)";
   // with a page filter the card is filtered, as the same description says two sentences later
   {
-    const d = ((await client.listTools()).tools.find((t) => t.name === 'create_report') || {}).description || '';
-    chk(() => !/no filter is added/.test(d) && /page filter/i.test(d) && /cards included/.test(d), () => `create_report's description must not say a card gets no filter: ${d.slice(0, 900)}`);
+    // (0.3.2 TK1, B-272: the page filters are plan_layout's input; the card rule moved there with them)
+    const tl2 = (await client.listTools()).tools, d = (tl2.find((t) => t.name === 'plan_layout') || {}).description || '', dc = (tl2.find((t) => t.name === 'create_report') || {}).description || '';
+    chk(() => !/no filter is added/.test(d + dc) && /page filter/i.test(d) && /cards included/.test(d), () => `create_report's description must not say a card gets no filter: ${d.slice(0, 900)}`);
   }
   // round 12: a table is put in calendar order by the report now; modelNotes said "tables and slicers still show months
   // in alphabetical order": only slicers do
