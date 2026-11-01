@@ -169,6 +169,30 @@ function fitTextboxes(page, visuals, ctx, at, reserved, skip) {
 // width from its text columns down to their own need; a number column is never narrowed. What can't fit is said in
 // headersCut: cut: 'cut' under the share of the measure Desktop has drawn an Arabic header whole in, else 'may be cut'
 // (0.2.9.1, B-173: Desktop 2.159 drew one whole that the measure called cut). Headers set to wrap: none.
+const HIDDEN_W = 10;
+// (0.3.1 MX2, laptop part 8: Fintech's task matrix, written as a table, and its roadmap) a reversed table wider than its
+// box: Power BI lays a table from its left edge and scrolls to the right, so the English first columns (now the last)
+// were behind the scroll. When every column has its own width, the columns English shows are put first (at the left),
+// still reversed, so its key column ends at the box's right edge, and the ones English hides behind its own scroll go
+// after them (behind the scroll); a hidden column (narrower than HIDDEN_W) stays first. No width is changed. The room
+// is the box less 36 (the scrollbar and margins, as the header fitting counts it). Returns [{ page, visual, shown, behind }]
+function keepView(page, visuals, at) {
+  const out = [], sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
+  visuals.forEach((v) => {
+    const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
+    const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
+    if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
+    const w = (x) => { const e = v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties)); return e ? num(e.properties.value) : null; };
+    if (!ps.every((x) => Number.isFinite(w(x)))) return;
+    const room = Math.floor(p.width - 36 * sc); if (ps.reduce((n, x) => n + w(x), 0) <= room) return;
+    let i = ps.length, used = 0; while (i > 0 && used + w(ps[i - 1]) <= room) { used += w(ps[i - 1]); i--; }
+    const shown = ps.slice(i), before = ps.slice(0, i), hidden = before.filter((x) => w(x) < HIDDEN_W), behind = before.filter((x) => w(x) >= HIDDEN_W);
+    if (!shown.length || !behind.length) return;
+    qs.projections = hidden.concat(shown, behind);
+    out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: shown.length, behind: behind.length });
+  });
+  return out;
+}
 function fitHeaders(page, visuals, origByName, ctx, at) {
   const out = { headers: [], headersCut: [] }, sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
   visuals.forEach((v) => {
@@ -189,7 +213,9 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
     const cols = H.cols.map((c) => c.p);
     const ownNeed = (x) => Math.max(need(x), Math.ceil(12 * 0.55 * T * 4 / 3 + 24 * sc));
     let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
-    cols.filter((x) => widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
+    // (0.3.1 MX2, Fintech p1's watchlist: its first column, 4 wide in English, came out a cut sliver «القسم») a column
+    // the original hides (narrower than HIDDEN_W) stays hidden: never widened for its header
+    cols.filter((x) => widthOf(x.queryRef) >= HIDDEN_W && widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
       let short = need(x) - Math.floor(widthOf(x.queryRef)), got = 0;
       const take = Math.min(short, Math.max(0, spare)); spare -= take; got += take; short -= take;
       cols.filter((d) => d !== x && isText(d)).forEach((d) => { if (short <= 0) return; const give = Math.min(short, Math.floor(widthOf(d.queryRef) - ownNeed(d))); if (give > 0) { setW(d.queryRef, Math.floor(widthOf(d.queryRef)) - give); got += give; short -= give; } });
@@ -476,7 +502,7 @@ export function buildTwin(P, labels) {
     const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
     const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
     e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
+  const keptInView = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -512,6 +538,8 @@ export function buildTwin(P, labels) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
       try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
+      // (0.3.1 MX2) after the headers' widths: a wide table keeps the English view
+      if (c.rtl) { try { keptInView.push(...keepView(page, r.visuals, pg.id)); } catch (e) { /* a shape not expected: left as it is */ } }
       // (0.3.1 R1) the text boxes; in one report with both languages, the box the language button will take is kept free
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
@@ -547,5 +575,5 @@ export function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, sizeKept, ruleMoves, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }

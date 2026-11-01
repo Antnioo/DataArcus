@@ -218,7 +218,8 @@ try {
     chk(() => row && /mxGroup/.test(row[1].en) && /\+\/- grouping/.test(row[1].en) && /التجميع/.test(row[1].ar), () => `C6. the approval page names the matrices chosen flat and what is lost, in English and Arabic: ${JSON.stringify(row)}`);
     // D: the reversed tables wider than their box
     const wide = get(() => d0.p.j.cannot.find((x) => x.what === 'tables wider than their box'));
-    chk(() => wide && /in Arabic its first column is reached by scrolling right/.test(wide.why) && wide.where.some((w) => /^p5fintech\/tblRoadmap/.test(w)), () => `D1. a table wider than its box by its own widths is named: ${JSON.stringify(wide)}`);
+    // (0.3.1 MX2: one with its own widths for every column now keeps the English view instead, said in keptInView)
+    chk(() => wide && /in Arabic its first column is reached by scrolling right/.test(wide.why) && !wide.where.some((w) => /tblRoadmap/.test(w)) && (d0.p.j.keptInView || []).some((x) => x.visual === 'tblRoadmap'), () => `D1. a table wider than its box by its own widths keeps the English view (MX2), not named: ${JSON.stringify([wide, d0.p.j.keptInView])}`);
     chk(() => wide && wide.where.some((w) => /^p5fintech\/tblHeads/.test(w)), () => `D2. one wider by its headers alone (no widths of its own) is named: ${JSON.stringify(wide && wide.where)}`);
     chk(() => wide && !wide.where.some((w) => /tblFits|tblProducts/.test(w)), () => `D3. guard: tables that fit are not named: ${JSON.stringify(wide && wide.where)}`);
   }
