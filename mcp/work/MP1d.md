@@ -15,9 +15,12 @@
   and its bars' direction); MD-c1..c4 (4 KPI titles, tab-indented, their Arabic, an icon on the end their text runs to:
   each text box ends before its icon, 4 px clear); MD-d (a text run " vs PM" approved «شهريًا»: written « شهريًا»).
   Other suites: none expected to move (V1, R5-R7, MC-a still green). Full run: the base's 128 suites.
-- **Got:** (after the work)
-- **State:** plan pushed; the work next.
-- **Resume:** the red checks, then the code.
+- **Got:** `mp1` 97 checks (87 + 10: MD-a1..a3, b, c1..c4, d, O6; the estimate said about 8: c took 4), red on
+  7c54e918 first: 9 of 97 failed there (MD-a1..a3, b, c1..c4, d); MC-b (ER's shape, still narrowed) and O6 guards.
+  MD-a2 and a3 first passed on the old code: my first shapes were not the real ones (see Lessons); reshaped from the
+  real cut widths, they reproduced the cuts at half size (3, 27, 1 against 6.67, 53.72, 0.92) before the fix. AREAS_LINE
+- **State:** FULL_RUN_LINE
+- **Resume:** none; the reviewer's merge.
 
 ## The plan
 a. MP1c's matrix rule narrows only a visual in the matrix's side margin: its left edge in the matrix's right half, its
@@ -31,8 +34,27 @@ c. Where a small visual lies, after the mirror and the text fitting, on the end 
    no longer the only keep (an Arabic title wider than the English outgrew its tab stops).
 d. A text box run whose English starts or ends with spaces keeps them around its approved Arabic (outside any wrap).
 
+## Decisions I made
+- a: the margin rule without a z test: the three real shapes are excluded by geometry alone (the bottom-edge chart by
+  its height beside the rows, the bar chart and the card by their overlap: 74 % and all of their width, not a strip),
+  and ER's z against its matrix is not known here; a z test could have dropped ER's case.
+- b: staysLtr is now any table (and a matrix) for the drawn-over bar chart rule; MP1c's matrix-margin rule stays
+  matrix only (a table has no row headers).
+- c: only an icon centred in the text box's last quarter on the side its text runs to (right-aligned paragraphs: the
+  right), 1/3 of its width at most, lying half on it; a centred text box, or an icon at the other end (V1, R7), is left
+  as it is. The text box keeps a width of 10 or more. Done after the text fitting, so the fitting can't undo it; the
+  tabs are still moved (MP1c), now a second keep.
+- d: the run's own spaces (or tabs) kept exactly, outside the V3 wrap; text box runs only (the brief's case).
+
 ## For the laptop
 - Re-run part 8's block C1: Call Center's heatmap row and Fintech's project card at their English widths; the ratings
   bars right of the stars as in English; «متوسط مدة المكالمة (بالثواني)» clear of its clock; «-8.80 % شهريًا».
 
 ## Lessons for the reviewer
+- Why MP1c's tests did not catch (a): MC-b tested only the shape the rule was made for (a margin chart), and no test
+  put a visual that merely touches or covers a matrix next to it: the rule's condition (the overlap's centre in the
+  matrix's right half in English, its left half in the twin) is also met by those. A narrowing or moving rule needs
+  guards on the neighbours it must NOT touch, from the real report's other visuals near the same shape.
+- The brief's word for a shape is not its geometry: "a bar chart at the heatmap's left" is at the left in the twin; in
+  English it lies over the heatmap's right part. Working back from the measured cut widths (53.72, 0.92) gave the real
+  geometry; my first made-up shapes passed on the old code and taught nothing.
