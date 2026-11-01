@@ -79,6 +79,8 @@
     bar: 'bar charts: names at the right, bars growing from the right',
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned; one led by a text column says «الإجمالي» on its total row, as create_report\'s (a "Row label" measure)',
     matrix: 'matrices: values in reverse order (rows keep their order)',
+    // (0.3.1 MX1 C) a matrix the user chose to write flat (matrixAsTable): mcp/lib/twin-plan.mjs counts these
+    matrixFlattened: 'matrices you chose to write flat (matrixAsTable): a table, one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right. Lost: its +/- grouping and its group subtotal rows (the grand total stays as the matrix shows it)',
     // (0.3.1 MX1) a matrix with one row field and no column field
     matrixAsTable: 'matrices with one row field and no column field: written as a table so its first column reads on the right: Power BI\'s matrix has no right-to-left setting. The table keeps the matrix\'s fields, names, widths, colours, sort, totals and styles, its columns in reverse order (the row field at the right)',
     newCard: 'new cards: values in reverse order, right-aligned (one value too), their inner margins swapped',
@@ -412,14 +414,17 @@
   // a table styles all its values alike: the row headers' own font must be the values' (or neither sets it)
   const ROW_FONT = ['fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'wordWrap'];
   const MATRIX_ONLY_DROP = ['columnTotal', 'blankRows'];
-  function tableOf(v0) {
-    const no = (why) => ({ ok: false, why });
+  // (MX1 C, the reviewer's add-on of 1 Nov: Fintech's grouped matrix) o.levels: two or more row levels too, written flat,
+  // one column per level (the user's choice, matrixAsTable: its +/- grouping and group subtotal rows are lost; its per-level
+  // subtotal settings dropped, the grand total kept as the matrix shows it)
+  function tableOf(v0, o0) {
+    const lv = !!(o0 && o0.levels), no = (why) => ({ ok: false, why });
     if (!isObj(v0) || v0.visualType !== 'pivotTable' || !isObj(v0.query) || !isObj(v0.query.queryState)) return no('its query has a shape not expected');
     const qs = v0.query.queryState, rows = projections(v0.query, 'Rows'), cols = projections(v0.query, 'Columns'), vals = qs.Values === undefined ? [] : projections(v0.query, 'Values');
     if (cols && cols.length) return no('a Columns field: its row headers cannot move');
     if (!rows || !rows.length) return no('no row field');
-    if (rows.length > 1) return no('two or more row levels: whether Desktop shows them flat (stepped layout, expand state, repeated headers) is not measured');
-    if (!vals || ![rows].concat([vals]).every((ps) => ps.every((x) => isObj(x) && isObj(x.field) && typeof x.queryRef === 'string'))) return no('its query has a shape not expected');
+    if (rows.length > 1 && !lv) return no('two or more row levels: whether Desktop shows them flat (stepped layout, expand state, repeated headers) is not measured');
+    if (!vals || ![rows, vals].every((ps) => ps.every((x) => isObj(x) && isObj(x.field) && typeof x.queryRef === 'string'))) return no('its query has a shape not expected');
     if (Object.keys(qs).some((r) => !['Rows', 'Columns', 'Values'].includes(r))) return no('a role a table does not have');
     if (v0.objects !== undefined && !isObj(v0.objects)) return no('its formatting has a shape not expected');
     const ob = isObj(v0.objects) ? v0.objects : {};
@@ -429,17 +434,17 @@
     if (own.length) return no(`a matrix-only setting (${own.slice(0, 3).join(', ')})`);
     if ((ob.values || []).some((e) => lit((e.properties || {}).valuesOnRow) === 'true')) return no('values shown on rows');
     if ((ob.blankRows || []).some((e) => lit((e.properties || {}).showBlankRows) === 'true')) return no('blank rows shown');
-    if (['rowHeaders', 'subTotals', 'rowTotal', 'total'].some((k) => (ob[k] || []).some((e) => e.selector))) return no('its row headers or totals are set per field or level');
+    if ((lv ? ['rowHeaders', 'rowTotal', 'total'] : ['rowHeaders', 'subTotals', 'rowTotal', 'total']).some((k) => (ob[k] || []).some((e) => e.selector))) return no('its row headers or totals are set per field or level');
     const rh = plain('rowHeaders'), st = plain('subTotals'), vp = plain('values');
     const apart = ROW_FONT.filter((p) => rh[p] !== undefined && JSON.stringify(rh[p]) !== JSON.stringify(vp[p]));
     if (apart.length) return no(`its row headers are styled apart from its values (${apart.join(', ')}): a table styles its values alike`);
-    if (lit(st.rowSubtotals) !== 'false' && strOf(st.rowSubtotalsPosition) === 'Top') return no('its total row is at the top: a table\'s is at the bottom');
-    if (['rowSubtotalsLabel', 'levelSubtotalLabel'].some((p) => st[p] !== undefined)) return no('its total row has a name of its own');
+    if (!lv && lit(st.rowSubtotals) !== 'false' && strOf(st.rowSubtotalsPosition) === 'Top') return no('its total row is at the top: a table\'s is at the bottom');
+    if (!lv && ['rowSubtotalsLabel', 'levelSubtotalLabel'].some((p) => st[p] !== undefined)) return no('its total row has a name of its own');
     // the table
     const v = clone(v0), o = {};
     v.visualType = 'tableEx';
-    const row = clone(rows[0]); delete row.active;
-    v.query.queryState = { Values: { projections: [row].concat(clone(vals)) } };
+    const levels = rows.map((x) => { const c = clone(x); delete c.active; return c; });
+    v.query.queryState = { Values: { projections: levels.concat(clone(vals)) } };
     delete v.expansionStates;
     Object.keys(ob).filter((k) => TABLE_CARDS.includes(k) && k !== 'total').forEach((k) => {
       o[k] = clone(ob[k]).map((e) => { const drop = TABLE_DROP[k] || []; if (isObj(e.properties)) drop.forEach((p) => { delete e.properties[p]; }); return e; })
@@ -452,12 +457,12 @@
     if (Object.keys(tot).length) o.total = [{ properties: tot }];
     // the row headers' colours and alignment: the row field's column (its values; its header is a column header)
     const cf = {}; ['fontColor', 'backColor', 'alignment'].forEach((p) => { if (rh[p] !== undefined) cf[p] = clone(rh[p]); });
-    if (Object.keys(cf).length) {
+    if (Object.keys(cf).length) levels.forEach((lev) => {
       if (!o.columnFormatting) o.columnFormatting = [];
-      const e = o.columnFormatting.find((x) => isObj(x.selector) && x.selector.metadata === row.queryRef);
-      const props = Object.assign({}, cf, { styleHeader: mk('false'), styleValues: mk('true'), styleTotal: mk('false') });
-      if (e) e.properties = Object.assign(props, e.properties || {}); else o.columnFormatting.push({ properties: props, selector: { metadata: row.queryRef } });
-    }
+      const e = o.columnFormatting.find((x) => isObj(x.selector) && x.selector.metadata === lev.queryRef);
+      const props = Object.assign({}, clone(cf), { styleHeader: mk('false'), styleValues: mk('true'), styleTotal: mk('false') });
+      if (e) e.properties = Object.assign(props, e.properties || {}); else o.columnFormatting.push({ properties: props, selector: { metadata: lev.queryRef } });
+    });
     if (Object.keys(o).length) v.objects = o; else delete v.objects;
     return { ok: true, visual: v };
   }
@@ -513,6 +518,15 @@
           columnFormatting: [{ properties: { alignment: str('Right'), styleHeader: mk('true'), styleValues: mk('true'), styleTotal: mk('true') }, selector: { metadata: row.queryRef } }] },
         visualContainerObjects: vco } };
     return { matrix: m, table };
+  }
+  // (MX1 C) a matrix written flat as the user chose (matrixAsTable): its visual.json with the table in place of the matrix
+  // (not mirrored), or { why } when a table cannot show it. Returns { ok, json } or { ok: false, why }
+  const FLAT_LOST = 'its +/- grouping and its group subtotal rows (the grand total stays as the matrix shows it)';
+  function flatTable(json) {
+    if (kindOf(json) !== 'matrix') return { ok: false, why: 'not a matrix' };
+    let t; try { t = tableOf(json.visual, { levels: true }); } catch (e) { t = { ok: false, why: 'its query has a shape not expected' }; }
+    if (!t.ok) return t;
+    const j = clone(json); j.visual = t.visual; return { ok: true, json: j };
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }
   function flatMatrix(json) {
@@ -762,6 +776,6 @@
   // twin of a report DataArcus wrote kept its pages left to right: their background is the transparent placeholder, not a
   // picture.) opts.blank(name): true for an image that is the placeholder (the twin checks its bytes); such a page has no picture
   const pageHasPicture = (page, opts) => { const names = pageImages(page), blank = opts && opts.blank; return names.length > 0 && names.some((n) => !(blank && n != null && blank(n))); };
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorChart, MATRIX_RTL, MATRIX_RTL_DEFAULT, flatMatrix, rowLabelStyle, rowNamesBeside, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorChart, MATRIX_RTL, MATRIX_RTL_DEFAULT, flatMatrix, flatTable, FLAT_LOST, rowLabelStyle, rowNamesBeside, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);

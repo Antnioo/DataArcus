@@ -10,6 +10,8 @@ import './test-env.mjs';
 //          width, colour, sort and style kept, no matrix-only property
 //   P1-P4  the plan names the converted visual and its sentence; the heatmap kept a matrix with MATRIX_SAID; the
 //          approval page names it
+//   C1-C5  Fintech's grouped matrix: kept by default and offered (matrixAsTable), written flat when chosen, the loss said
+//   D1-D3  a reversed table wider than its box named in the plan (by its widths, by its headers)
 //   B1-B6  the heatmap lab (mcp/lab/heatmap-names.mjs): an empty folder only, validator 0 errors, B1-B3 as described
 //   node test-0.3.1-mx1.mjs
 import fs from 'node:fs';
@@ -153,6 +155,71 @@ try {
     chk(() => bad.length === 0, () => `A11. no matrix-only property left on the table (the write's validator passed): ${bad.join(', ')}`);
   }
 
+  // ---------- C, D: Fintech's grouped matrix and wide table (the reviewer's add-on, 1 Nov) ----------
+  {
+    const D = path.join(ROOT, 'c'), DEF = path.join(D, 'Twin Sales.Report/definition'), PG = path.join(DEF, 'pages/p5fintech');
+    fs.cpSync(path.join(HERE, 'fixtures/twin-project'), D, { recursive: true });
+    const P2 = 'Projects', pc = (c) => ({ field: { Column: { Expression: { SourceRef: { Entity: P2 } }, Property: c } }, queryRef: P2 + '.' + c, nativeQueryRef: c });
+    const pa = (fn, c, name) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: P2 } }, Property: c } }, Function: fn } }, queryRef: `${name}(${P2}.${c})`, nativeQueryRef: c, displayName: c });
+    const COLS = [['Department', 'string'], ['Project', 'string'], ['Status', 'string'], ['Risk Level', 'string'], ['Planned Budget', 'double'], ['Budget Variance', 'double'], ['Completion', 'double'], ['CPI', 'double'], ['SPI', 'double'], ['Phase', 'string'], ['Owner', 'string'], ['Start Date', 'dateTime'], ['End Date', 'dateTime']];
+    const bimF = path.join(D, 'Twin Sales.SemanticModel/model.bim'), bim = rd(bimF);
+    bim.model.tables.push({ name: P2, columns: COLS.map(([name, dataType]) => ({ name, dataType, sourceColumn: name })) }); wr(bimF, bim);
+    const pj = path.join(DEF, 'pages/pages.json'), pages = rd(pj); pages.pageOrder.push('p5fintech'); wr(pj, pages);
+    wr(path.join(PG, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: 'p5fintech', displayName: 'Delivery', displayOption: 'FitToPage', width: 1280, height: 720 });
+    const VS = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
+    const GV = [pa(3, 'Status', 'Min'), pa(3, 'Risk Level', 'Min'), pa(0, 'Planned Budget', 'Sum'), pa(0, 'Budget Variance', 'Sum'), pa(1, 'Completion', 'Avg'), pa(1, 'CPI', 'Avg'), pa(1, 'SPI', 'Avg')];
+    // the project delivery task matrix: Rows Department > Project (stepped), 7 values, subtotals per level, it scrolls
+    wr(path.join(PG, 'visuals/mxGroup/visual.json'), { $schema: VS, name: 'mxGroup', position: { x: 20, y: 20, z: 1000, width: 800, height: 300, tabOrder: 1000 }, visual: { visualType: 'pivotTable',
+      query: { queryState: { Rows: { projections: [pc('Department'), pc('Project')] }, Values: { projections: clone(GV) } } },
+      objects: { rowHeaders: [{ properties: { stepped: L('true'), showExpandCollapseButtons: L('true') } }], subTotals: [{ properties: { rowSubtotals: L('true') } }, { properties: { rowSubtotals: L('true') }, selector: { metadata: P2 + '.Project' } }] },
+      visualContainerObjects: { title: [{ properties: { show: L('true'), text: S('Project delivery task matrix') } }] } } });
+    const tbl = (name, x, y, w, refs, widths) => ({ $schema: VS, name, position: { x, y, z: 2000, width: w, height: 200, tabOrder: 2000 }, visual: { visualType: 'tableEx', query: { queryState: { Values: { projections: refs.map(pc) } } },
+      objects: widths ? { columnWidth: refs.map((r, i) => ({ properties: { value: L(widths[i] + 'D') }, selector: { metadata: P2 + '.' + r } })) } : {} } });
+    // the project roadmap: 8 columns, 1,240 wide by its own widths, in a 900 box
+    wr(path.join(PG, 'visuals/tblRoadmap/visual.json'), tbl('tblRoadmap', 20, 340, 900, ['Project', 'Phase', 'Owner', 'Status', 'Risk Level', 'Start Date', 'End Date', 'Department'], [240, 140, 160, 120, 120, 150, 150, 160]));
+    // no widths of its own, its headers alone wider than its 200 box
+    wr(path.join(PG, 'visuals/tblHeads/visual.json'), tbl('tblHeads', 940, 340, 200, ['Project', 'Phase', 'Owner', 'Status', 'Risk Level', 'Department']));
+    wr(path.join(PG, 'visuals/tblFits/visual.json'), tbl('tblFits', 940, 560, 320, ['Project', 'Phase'], [120, 100]));
+    const { register } = await import('./tools/create_arabic_twin.mjs'), Plans = await import('./lib/plans.mjs'), { planTwin } = await import('./lib/arabic-twin.mjs');
+    let handler = null; register({ registerTool: (name, def, h) => { if (name === 'create_arabic_twin') handler = h; } }, {});
+    const call = async (a) => { const r = await handler(a), t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* a refusal's words */ } return { err: !!r.isError, t, j }; };
+    const write = async (a, out) => { const p = await call(a), id = p.j && p.j.plan && p.j.plan.planId; if (id) Plans.approve(id, 'user-in-browser'); const w = id ? await call(Object.assign({}, a, { planId: id })) : p;
+      const f = path.join(D, out, 'definition/pages/p5fintech/visuals/mxGroup/visual.json'); return { p, w, v: get(() => rd(f)) }; };
+    // C1 the default: kept a matrix, the choice offered with what it loses
+    const d0 = await write({ path: 'c/Twin Sales.pbip', arabicMonth: false }, 'Twin Sales AR.Report');
+    const cm = get(() => d0.p.j.cannot.find((x) => x.what === 'matrices')), off = get(() => d0.p.j.matrixChoices);
+    chk(() => !d0.w.err && d0.v.visual.visualType === 'pivotTable' && cm && cm.where.some((w) => /^p5fintech\/mxGroup \(.*row levels/.test(w)),
+      () => `C1. by default the grouped matrix stays a matrix, named with why: ${d0.w.err ? d0.w.t.slice(0, 300) : JSON.stringify([d0.v && d0.v.visual && d0.v.visual.visualType, cm])}`);
+    chk(() => off && off.option === 'matrixAsTable' && off.visuals.includes('mxGroup') && /\+\/- grouping/.test(off.lost) && /group subtotal rows/.test(off.lost) && /one column per row level/.test(off.how),
+      () => `C2. the plan offers matrixAsTable for it and says what is lost: ${JSON.stringify(off)}`);
+    // C3 chosen: a flat table, Department then Project at the right after the reversal, the values reversed before them
+    fs.rmSync(path.join(D, 'Twin Sales AR.Report'), { recursive: true, force: true }); fs.rmSync(path.join(D, 'Twin Sales AR.pbip'), { force: true });
+    // (the plan's exact files: the tool's matrixAsTable input and its pin are MR1's file, wired by the reviewer)
+    const { twinTree } = await import('./lib/arabic-twin.mjs');
+    const P1 = get(() => planTwin({ path: 'c/Twin Sales.pbip', arabicMonth: false, matrixAsTable: ['mxGroup'] })), T1 = get(() => twinTree(P1));
+    const f1 = get(() => T1.files.find((f) => /\/pages\/p5fintech\/visuals\/mxGroup\/visual\.json$/.test(f.path)));
+    const d1 = { w: { err: !f1 || !f1.data, t: JSON.stringify(P1 && P1.threw || T1 && T1.threw || 'no file') }, v: get(() => JSON.parse(String(f1.data))), p: { j: P1 && P1.answer } };
+    const ps = get(() => d1.v.visual.query.queryState.Values.projections), refs = Array.isArray(ps) ? ps.map((x) => x.queryRef) : [];
+    const lastIsDept = refs[refs.length - 1] === P2 + '.Department' || /Row label: Department/.test(JSON.stringify(Array.isArray(ps) ? ps[ps.length - 1] : null));
+    const shown = refs.filter((r) => !/Row label/.test(r) && !(r === P2 + '.Department' && refs.indexOf(r) === 0 && refs.length > 9));
+    chk(() => !d1.w.err && d1.v.visual.visualType === 'tableEx' && lastIsDept && JSON.stringify(shown.slice(0, 8)) === JSON.stringify(GV.map((x) => x.queryRef).reverse().concat([P2 + '.Project'])),
+      () => `C3. chosen, it is written as a flat table: the 7 values reversed, then Project, Department last (at the right): ${d1.w.err ? d1.w.t.slice(0, 300) : JSON.stringify(refs)}`);
+    const fl = get(() => d1.p.j.mirrors.find((x) => x.kind === 'matrixFlattened'));
+    chk(() => fl && fl.where.join() === 'p5fintech/mxGroup' && /\+\/- grouping/.test(fl.what) && !d1.p.j.cannot.some((x) => x.what === 'matrices' && x.where.some((w) => /mxGroup/.test(w))),
+      () => `C4. the plan names it as written flat, with the loss, and no longer among the matrices kept: ${JSON.stringify(fl)}`);
+    const P = get(() => planTwin({ path: 'c/Twin Sales.pbip', arabicMonth: false, into: 'same', matrixAsTable: ['mxGroup'] }));
+    // (the copy names its Arabic visuals anew: the matrix's copy found by its fields, Department and the Status value)
+    const types = get(() => P.copy.files.filter((f) => /\/visuals\/[^/]+\/visual\.json$/.test(f.rel)).map((f) => ({ rel: f.rel, j: f.data != null ? JSON.parse(String(f.data)) : rd(path.join(D, 'Twin Sales.Report', f.from)) }))
+      .filter((x) => x.j.visual && /"Min\(Projects\.Status\)"/.test(JSON.stringify(x.j.visual.query)) && /Projects\.Department/.test(JSON.stringify(x.j.visual.query))).map((x) => ({ rel: x.rel, t: x.j.visual.visualType })));
+    const enT = Array.isArray(types) ? types.filter((x) => x.rel.startsWith('definition/pages/p5fintech/')) : [], arT = Array.isArray(types) ? types.filter((x) => !x.rel.startsWith('definition/pages/p5fintech/')) : [];
+    chk(() => enT.length === 1 && enT[0].t === 'pivotTable' && arT.length === 1 && arT[0].t === 'tableEx', () => `C5. in one report with both languages the English page keeps its matrix, the Arabic page has the flat table: ${JSON.stringify(types)}`);
+    // D: the reversed tables wider than their box
+    const wide = get(() => d0.p.j.cannot.find((x) => x.what === 'tables wider than their box'));
+    chk(() => wide && /in Arabic its first column is reached by scrolling right/.test(wide.why) && wide.where.some((w) => /^p5fintech\/tblRoadmap/.test(w)), () => `D1. a table wider than its box by its own widths is named: ${JSON.stringify(wide)}`);
+    chk(() => wide && wide.where.some((w) => /^p5fintech\/tblHeads/.test(w)), () => `D2. one wider by its headers alone (no widths of its own) is named: ${JSON.stringify(wide && wide.where)}`);
+    chk(() => wide && !wide.where.some((w) => /tblFits|tblProducts/.test(w)), () => `D3. guard: tables that fit are not named: ${JSON.stringify(wide && wide.where)}`);
+  }
+
   // ---------- B: the heatmap lab ----------
   {
     let Lab = null; try { Lab = await import('./lab/heatmap-names.mjs'); } catch (e) { Lab = null; }
@@ -166,16 +233,20 @@ try {
       const DEF = path.join(path.dirname(r.pbip), 'Heatmap Names Lab.Report/definition'), order = rd(path.join(DEF, 'pages/pages.json')).pageOrder;
       const vis = (pg) => fs.readdirSync(path.join(DEF, 'pages', pg, 'visuals')).map((n) => rd(path.join(DEF, 'pages', pg, 'visuals', n, 'visual.json')));
       const all = order.map((pg) => ({ pg, page: rd(path.join(DEF, 'pages', pg, 'page.json')), vs: vis(pg) }));
-      chk(() => all.length === 2 && all.map((x) => x.page.width).join() === '1280,1920', () => `B4. two pages, 1280 and 1920 wide: ${all.map((x) => x.page.width)}`);
+      chk(() => all.length === 3 && all.map((x) => x.page.width).join() === '1280,1920,1280', () => `B4. three pages, 1280 and 1920 wide (B), and 1280 (C, D): ${all.map((x) => x.page.width)}`);
+      const p3 = all[2], v3 = (n) => p3.vs.find((v) => v.name === n), sumW = (v) => v.visual.objects.columnWidth.reduce((n, e) => n + parseFloat(e.properties.value.expr.Literal.Value), 0);
+      chk(() => v3('c1grouped').visual.visualType === 'pivotTable' && v3('c2flat').visual.visualType === 'tableEx' && v3('c2flat').visual.query.queryState.Values.projections.slice(-2).map((x) => x.queryRef).join() === 'Projects.Project,Projects.Department'
+        && sumW(v3('d1wide')) > v3('d1wide').position.width && sumW(v3('d2scaled')) <= v3('d2scaled').position.width - 36,
+        () => `B7. page 3: C1 the grouped matrix, C2 flat (Project then Department at the right), D1 wider than its box, D2 its widths within it: ${JSON.stringify(p3.vs.map((v) => [v.name, v.visual.visualType]))}`);
       const by = (x, id) => x.vs.filter((v) => v.name.startsWith(id.toLowerCase()));
-      const okB2 = all.every((x) => { const [mx] = by(x, 'b2m'), [tb] = by(x, 'b2t'); if (!mx || !tb) return false;
+      const okB2 = all.slice(0, 2).every((x) => { const [mx] = by(x, 'b2m'), [tb] = by(x, 'b2t'); if (!mx || !tb) return false;
         const rh = mx.visual.objects.rowHeaders[0].properties, rowRef = mx.visual.query.queryState.Rows.projections[0].queryRef, w = (mx.visual.objects.columnWidth || []).find((e) => e.selector && e.selector.metadata === rowRef);
         const tps = tb.visual.query.queryState.Values.projections, tf = (tb.visual.objects.values || [])[0].properties, mf = (mx.visual.objects.values || [])[0].properties;
         return JSON.stringify(rh.fontColor) === JSON.stringify(rh.backColor) && w && tb.visual.visualType === 'tableEx' && tps.length === 1 && tps[0].queryRef === rowRef
           && tb.position.x === mx.position.x + mx.position.width && tb.position.y === mx.position.y && tb.position.height === mx.position.height
           && lit(tf.fontSize) === lit(mf.fontSize) && lit(tb.visual.objects.grid[0].properties.rowPadding) === lit(mx.visual.objects.grid[0].properties.rowPadding); });
       chk(() => okB2, () => `B5. B2 on each page: the matrix's row header text the colour of its background, its row header column given a width by its Rows field's queryRef, a one-column table of that field at its right edge, same top, height, font size and row padding: ${JSON.stringify(all.map((x) => by(x, 'b2').map((v) => v.name)))}`);
-      const okB3 = all.every((x) => { const [b3] = by(x, 'b3'), [b1] = by(x, 'b1'); if (!b3 || !b1) return false; const q = b3.visual.query;
+      const okB3 = all.slice(0, 2).every((x) => { const [b3] = by(x, 'b3'), [b1] = by(x, 'b1'); if (!b3 || !b1) return false; const q = b3.visual.query;
         return q.queryState.Rows.projections[0].queryRef === b1.visual.query.queryState.Columns.projections[0].queryRef && q.queryState.Columns.projections[0].queryRef === b1.visual.query.queryState.Rows.projections[0].queryRef
           && q.sortDefinition.sort.some((s) => s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(q.queryState.Columns.projections[0].field)); });
       chk(() => okB3, () => 'B6. B3 transposed: hours as Rows, days as Columns sorted Descending; B1 the twin today (days as Rows, hours as Columns)');
