@@ -192,7 +192,8 @@ try {
     }));
     const cut = (p2.j.fitted && p2.j.fitted.headersCut) || [];
     chk(() => !bad.length || bad.length === cut.length, () => `T-4. every Arabic header fits its column within the table's width, or is listed in the plan: ${bad.join('; ')} | plan ${JSON.stringify(cut)}`);
-    chk(() => ((p2.j.fitted && p2.j.fitted.headers) || []).length >= 1, () => `T-4. the plan lists the widened columns: ${JSON.stringify(p2.j.fitted)}`);
+    // (0.3.1 MX3, laptop part 9: no column is narrowed for another's header any more: a header with no spare room is listed cut)
+    chk(() => ((p2.j.fitted && p2.j.fitted.headers) || []).length + cut.length >= 1, () => `T-4. the plan lists the widened columns, or the headers that stay cut: ${JSON.stringify(p2.j.fitted)}`);
     // numbers are never narrowed: each number column keeps at least its width in the original
     const onums = Object.fromEntries(origPages.flatMap((pg) => pg.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx').map((v) => [v.name, v])));
     const narrowed = [];

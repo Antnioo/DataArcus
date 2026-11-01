@@ -57,6 +57,9 @@
   the matrices kept. `mx2` W3: the room is now the box less 20 (measured), was 36. `mx3` itself: T2 reads the Arabic
   page (the approval page is Arabic); M1 tightened (the path's own echo hid the order); K checks use the twin's scale.
 
+- `rc24` T-4 ("the plan lists the widened columns"): its table's header was widened by narrowing a text column; now
+  nothing is narrowed for a header, so it is listed cut instead: the check takes either (widened, or listed cut).
+
 ## CHANGELOG line
 - **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
   (no longer narrowed for a longer Arabic header), the first column stays the rightmost one in view, a matrix with row
