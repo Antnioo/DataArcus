@@ -29,7 +29,8 @@
   check that moves said per check.
 - **Got:** `mx3` 24 checks, red on b40cb786 first: 19 of 24 failed there (guards: T0, T3, R2, R3, P2). Moved on
   purpose: `mx1` P2 and `mx2` W3 (below). mp1-shapes 10, mr1 26, mirror-parity 62 unchanged; lint 0; build:min.
-- **State:** the fx1 follow-up below; the full run after it below.
+- **State: DONE.** fx1 20 of 20 on a1a2721b (below). Full run on a1a2721b: "run-tests: 135 suites passed". CI on
+  b9d00951 green (the reviewer). After a1a2721b only this note changed.
 - **Resume:** the reviewer's merge; the laptop's part 10 (below).
 
 ## Before -> after, per item
