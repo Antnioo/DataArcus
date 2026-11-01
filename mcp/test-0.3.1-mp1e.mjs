@@ -6,7 +6,8 @@
 //          (invertAxis too), a line on a 4-level date hierarchy (every level's sort turned), one on 2 levels unsorted
 //   S1     a button slicer laid out as a grid, one row high: its buttons read from the right
 //   K1-K2  a card grid of agents: the photo and the name to the right; a grid of several rows named in cannot
-//   R1     reference label titles padded into a column in English: their Arabic padded to one width
+//   R1     reference label titles padded into a column in English: their Arabic whole, the column the card's table
+//          layout (MP1f: part 9 measured the padded Arabic ragged in Desktop; the padding replaced)
 //   A1-A2  a card's text value with its own value entry right-aligned like the numbers; centred values stay centred
 //   F1     a field parameter's choices on a slicer: named in cannot, with the step that would make them Arabic
 //   node test-0.3.1-mp1e.mjs
@@ -19,7 +20,7 @@ import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 
 const require = createRequire(import.meta.url);
-const M = require('../assets/js/report-mirror.js'), TM = require('../assets/js/text-measure.js');
+const M = require('../assets/js/report-mirror.js');
 const problems = []; let checks = 0;
 const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } catch (e) { err = ' (threw: ' + String(e && e.message || e).slice(0, 200) + ')'; } checks++; if (!ok) { let m = ''; try { m = msg(); } catch (e) { m = 'unexpected shape'; } problems.push(m + err); } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -126,9 +127,9 @@ chk(() => cannot.some((c) => /grid of several rows/.test(c.what) && (c.where || 
 chk(() => cannot.some((c) => /switcher|field parameter/.test(c.what) && (c.where || []).some((w) => /choice/.test(w)) && /Arabic field parameter table/.test(c.why)), () => `F1: a field parameter's choices on a slicer are named, with the step that would make them Arabic: ${JSON.stringify(cannot.filter((c) => /switcher|parameter/.test(c.what)))}`);
 let w = { err: true, t: 'no plan: ' + short(plan) };
 if (id) { const n = links().length; await call('approve_plan', { planId: id }); for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50); const url = links()[n] || ''; if (url) { await httpReq(url, 'POST', 'decision=approve'); await call('approve_plan', { planId: id }); } w = await call('create_arabic_twin', Object.assign({}, a, { planId: id })); }
-let widths = [];
-try { const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'S', 'Agents AR.Report/definition/pages/agentsPage/visuals/dan/visual.json'), 'utf8')); widths = d.visual.objects.referenceLabelTitle.map((e) => TM.textWidth(lit(e.properties.titleText), 10)); } catch (e) { widths = []; }
-chk(() => !w.err && widths.length === 4 && Math.max(...widths) - Math.min(...widths) <= TM.textWidth(' ', 10) + 0.01, () => `R1: the Arabic reference label titles padded to one width, so their values make a column as in English: ${JSON.stringify(widths.map((x) => Math.round(x * 10) / 10))} ${w.err ? short(w) : ''}`);
+let tts = [], style;
+try { const d = JSON.parse(fs.readFileSync(path.join(ROOT, 'S', 'Agents AR.Report/definition/pages/agentsPage/visuals/dan/visual.json'), 'utf8')); tts = d.visual.objects.referenceLabelTitle.map((e) => lit(e.properties.titleText)); style = lit(((d.visual.objects.referenceLabelLayout || [])[0] || { properties: {} }).properties.style); } catch (e) { tts = []; }
+chk(() => !w.err && tts.length === 4 && tts.every((t, i) => t === '\u2067' + AR[i] + '\u2069') && style === 'tabular', () => `R1 (MP1f): the Arabic reference label titles whole, their values in one column by the card's table layout: ${JSON.stringify(tts)} ${style} ${w.err ? short(w) : ''}`);
 
 await s.close();
 [ROOT, LOGS].forEach((d) => { try { fs.rmSync(d, { recursive: true, force: true }); } catch (e) { /* left for the OS */ } });

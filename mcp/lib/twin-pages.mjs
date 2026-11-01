@@ -4,7 +4,7 @@
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
+import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf, PAD_END } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
 import { createRequire } from 'node:module';
@@ -408,7 +408,24 @@ function indentToEnd(en, ar) {
 // English, outgrew the tab stops that kept the icon's room) where a small visual lies, after the mirror and the text
 // fitting, on the end of a text box its text runs to (its paragraphs right-aligned: its right end), the text box ends
 // ICON_GAP before it: its width reduced on that side, whatever the text's width
-const ICON_GAP = 4;
+// (0.3.1 MP1f, laptop part 9: Call Center's four KPI boxes narrowed by the icon's width, 52.6 px, so every right-aligned
+// line, not only the title, moved left: Talk Time's sparkline crossed «3m 46s», two comparison lines wrapped and the box
+// scrolled) the narrowing is checked against the box's other paragraphs: a box with any other line keeps its width, and
+// the icon's room goes to the title's paragraph only (the one English indented, else the first with text): its end
+// spaces or tabs become one run of no-break spaces as wide as the room, measured (text-measure.js, the run's size),
+// where tab stops gave a room the wider Arabic outgrew (part 8). A box of one paragraph still ends before the icon
+const ICON_GAP = 4, NBSP = '\u00A0', BLANK = /^[ \t\u00A0]+$/;
+const runText = (pa) => (isObj(pa) && Array.isArray(pa.textRuns) ? pa.textRuns.map((r) => (isObj(r) && typeof r.value === 'string' ? r.value : '')).join('') : '');
+function titleRoom(ps, room) {
+  let k = ps.findIndex((pa) => Array.isArray(pa.textRuns) && pa.textRuns.length > 1 && BLANK.test(String((pa.textRuns[pa.textRuns.length - 1] || {}).value || '')) && runText(pa).trim());
+  if (k < 0) k = ps.findIndex((pa) => runText(pa).trim());
+  if (k < 0) return;
+  const rs = ps[k].textRuns; let n = rs.length; while (n > 1 && isObj(rs[n - 1]) && BLANK.test(String(rs[n - 1].value || ''))) n--;
+  const like = rs[n] || [...rs.slice(0, n)].reverse().find((r) => isObj(r) && String(r.value || '').trim()) || {};
+  const pt = parseFloat(isObj(like.textStyle) ? like.textStyle.fontSize : '') || 12, space = TextMeasure.textWidth(' ', pt);
+  const run = Object.assign(JSON.parse(JSON.stringify(like)), { value: NBSP.repeat(Math.max(1, Math.ceil(room / space - 1e-9))) });
+  ps[k].textRuns = rs.slice(0, n).concat([run]);
+}
 function iconRoom(visuals, moved) {
   const list = (visuals || []).filter((v) => boxOk(v) && !v.visualGroup);
   list.filter((t) => Mirror.kindOf(t) === 'textbox').forEach((t) => {
@@ -418,9 +435,27 @@ function iconRoom(visuals, moved) {
     list.forEach((i) => {
       const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapOf(ip, tp) < ip.width * ip.height / 2) return;
       const w = ip.x - ICON_GAP - tp.x;
-      if (ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width) { tp.width = Mirror.round(w); if (moved) moved.push({ visual: String(t.name), rule: 'a text box ends before the icon on its end' }); }
+      if (!(ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width)) return;
+      if (ps.filter((pa) => runText(pa).trim()).length > 1) { titleRoom(ps, tp.width - w); return; }
+      tp.width = Mirror.round(w); if (moved) moved.push({ visual: String(t.name), rule: 'a text box ends before the icon on its end' });
     });
   });
+}
+// (0.3.1 MP1f, laptop part 9: Call Center's agent card, its Arabic reference label titles padded with "space + RLM" to
+// one measured width, still drew its values ragged in Desktop: about 200, 207, 207, 268 against one column in English)
+// a card whose English titles are padded into a column (twin-texts.mjs PAD_END, two or more) takes the card's own table
+// layout for its reference labels (referenceLabelLayout style "tabular", Power BI's "Table"); its Arabic titles carry
+// no padding (rawLabels)
+function cardColumn(en, ar) {
+  if (Mirror.kindOf(ar) !== 'newCard' || !isObj(en) || !isObj(en.visual) || !isObj(en.visual.objects) || !isObj(ar.visual.objects)) return false;
+  const padded = (en.visual.objects.referenceLabelTitle || []).filter((e) => isObj(e) && isObj(e.properties) && PAD_END.test(String(litStr(e.properties.titleText) || '')));
+  if (padded.length < 2) return false;
+  const list = Array.isArray(ar.visual.objects.referenceLabelLayout) ? ar.visual.objects.referenceLabelLayout : (ar.visual.objects.referenceLabelLayout = []);
+  let e = list.find((x) => isObj(x) && (!x.selector || (isObj(x.selector) && x.selector.id === 'default' && Object.keys(x.selector).length === 1)));
+  if (!e) { e = { properties: {}, selector: { id: 'default' } }; list.push(e); }
+  if (!isObj(e.properties)) e.properties = {};
+  e.properties.style = { expr: { Literal: { Value: "'tabular'" } } };
+  return true;
 }
 // (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
 // the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
@@ -539,6 +574,7 @@ export function buildTwin(P, labels) {
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
     });
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i] && Mirror.kindOf(vj) === 'textbox') indentToEnd(pg.visuals[i].json, vj); });
+    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i]) { try { cardColumn(pg.visuals[i].json, vj); } catch (e) { /* a shape not expected: left as it is */ } } });
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
