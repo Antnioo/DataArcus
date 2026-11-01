@@ -14,6 +14,11 @@
   `fix/0.3.1-mr1` (76d70767, clean), `fix/0.3.1-mp1d` (c8c90c9f: `mcp/tests.json`, both suites' lines kept),
   `fix/0.3.1-mx1` (f4ad3a86: `mcp/tests.json` and `mcp/CHANGELOG.md`, both sides kept, as each later branch intends:
   every line added, none dropped). After the merges: lint 0, check-min 75 match.
+- **Scope:** (once the shapes are read) `assets/js/report-mirror.js` (items 1, 2, 3, 7, 8: the mirror's card, chart,
+  slicer and alignment rules; build:min and new stamps), `mcp/lib/twin-pages.mjs` (4, 5), `mcp/lib/twin-texts.mjs` (6),
+  `mcp/test-0.3.1-mp1.mjs` or a new suite from the real shapes. Not MX2's ground (legends, table widths, matrices).
+- **Expected checks:** not written yet: each item's red checks come from its real visual.json, about 2 per item
+  (16), and mp1, mp1-shapes and MD-e (the never-shrink guard) stay green.
 - **State:** base merged and pushed; the work waits for the shapes.
 - **Resume:** fetch the shapes, then the plan below, red first from each real visual.json.
 
