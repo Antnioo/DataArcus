@@ -19,7 +19,8 @@
   and MP1d's never-shrink guard stay green. Full run: the merged base's suites + 1.
 - **State: BLOCKED** on the evidence: this session cannot read `Antnioo/dataarcus-engine` (attaching it was refused
   by the session's permission check), so neither `business/reviews/2026-11-01-part8-en-vs-ar.md`, the part-8 shots
-  nor branch `lab/dashboard-shapes` can be read here. Nothing beyond the base and this plan is done.
+  nor branch `lab/dashboard-shapes` can be read here (the reviewer, 08:02: the shapes landed at af1d3ee; still not
+  readable from this session). Nothing beyond the base and this plan is done.
 - **Resume:** the engine repo attached to this session (or its shapes copied into this repo's branch), then item 4
   (needs only the code), then 1-3 red first from the real shapes.
 
