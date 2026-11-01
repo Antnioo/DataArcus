@@ -71,7 +71,7 @@ const id = pl.j && pl.j.plan && pl.j.plan.planId;
 const pl2 = await ask(s, 'plan_layout', Object.assign({}, INPUTS, { planFields: FIELDS }));
 chk(() => pl2.j.exactCheck.digest !== ex.digest, () => `E-7 two builds of the same plan differ (each build draws new random ids), so a write that rebuilt could not match: ${pl2.j && pl2.j.exactCheck && pl2.j.exactCheck.digest} vs ${ex && ex.digest}`);
 await ask(s, 'approve_plan', { planId: id });
-const cr = await ask(s, 'create_report', Object.assign({}, INPUTS, { fields: FIELDS, planId: id, design: pl.j && pl.j.design }));
+const cr = await ask(s, 'create_report', { path: INPUTS.path, planId: id });
 chk(() => cr.j && cr.j.report, () => `E-8 create_report writes the approved plan: ${short(cr)}`);
 const base = cr.j && cr.j.report ? cr.j.report.replace(/\.Report$/, '') : 'Tiny AR';
 const written = fs.existsSync(path.join(PROJECT, base + '.pbip')) ? digestOfDisk(PROJECT, base) : null;
@@ -91,7 +91,7 @@ await ask(s, 'approve_plan', { planId: id3 });
 const changed = JSON.parse(JSON.stringify(bim)); changed.model.tables[0].measures.push({ name: 'Added Later', expression: '1' });
 fs.writeFileSync(MODEL, JSON.stringify(changed));
 const n3 = tree(ROOT).length;
-const cr3 = await ask(s, 'create_report', Object.assign({}, INPUTS, { name: 'Tiny Changed', fields: FIELDS, planId: id3, design: pl3.j && pl3.j.design }));
+const cr3 = await ask(s, 'create_report', { path: INPUTS.path, planId: id3 });
 chk(() => cr3.err && /make the plan again/i.test(cr3.t) && /Nothing was written/.test(cr3.t), () => `E-13 the model changed after the go: refused with "make the plan again": ${short(cr3)}`);
 chk(() => tree(ROOT).length === n3 && !fs.existsSync(path.join(PROJECT, 'Tiny Changed.pbip')), () => `E-14 zero writes after the refusal (${n3} -> ${tree(ROOT).length})`);
 fs.writeFileSync(MODEL, JSON.stringify(bim));
@@ -174,7 +174,7 @@ fs.writeFileSync(path.join(ROOT, 'items/M.SemanticModel/model.bim'), JSON.string
 const TWO = { measure: 'Items[Revenue]', category: 'Items[Size Band]', category2: 'Items[Region]' };
 const p5 = await ask(s, 'plan_layout', { path: 'items', name: 'Two', layout: 'exec', secondPage: false, planFields: TWO }), e5 = p5.j && p5.j.exactCheck;
 chk(() => p5.j.plan.planId && e5.status === 'pass' && e5.checks.validator.errors === 0, () => `E-23 a plan whose chart becomes a donut passes the exact check, 0 validator errors: ${JSON.stringify(e5 || null).slice(0, 500)}`);
-if (p5.j && p5.j.plan) { await ask(s, 'approve_plan', { planId: p5.j.plan.planId }); await ask(s, 'create_report', { path: 'items', name: 'Two', design: p5.j.design, secondPage: false, fields: TWO, planId: p5.j.plan.planId }); }
+if (p5.j && p5.j.plan) { await ask(s, 'approve_plan', { planId: p5.j.plan.planId }); await ask(s, 'create_report', { path: 'items', planId: p5.j.plan.planId }); }
 const donuts = tree(path.join(ROOT, 'items/Two.Report')).filter((f) => /visual\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).filter((j) => j.visual && j.visual.visualType === 'donutChart');
 chk(() => donuts.length && donuts.every((j) => !((j.visual.objects || {}).valueAxis)), () => `E-24 the written donuts have no valueAxis: ${donuts.map((j) => Object.keys(j.visual.objects || {}).join('+')).join(', ')}`);
 

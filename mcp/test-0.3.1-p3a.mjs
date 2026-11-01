@@ -60,7 +60,7 @@ async function laptopCase(lang, extra) {
   const p = await w.call('plan_layout', Object.assign({ sample: true }, lang === 'ar' ? { lang } : {})), pid = p.j && p.j.plan && p.j.plan.planId;
   if (!pid) return { why: 'no sample plan: ' + short(p) };
   await approve(pid);
-  const sw = await w.call('create_report', Object.assign({ sample: true, path: p.j.sample.folder, planId: pid }, lang === 'ar' ? { lang } : {}));
+  const sw = await w.call('create_report', { path: p.j.sample.folder, planId: pid });
   const t1 = ((sw.j || {}).tour || []).find((x) => x.call && x.call.tool === 'plan_layout' && !x.call.args.languages);
   if (!t1) return { why: 'no tour: ' + short(sw) };
   const args = Object.assign({}, t1.call.args, { layout: 'exec' }, lang === 'ar' ? { lang } : {}, extra);
@@ -78,7 +78,7 @@ async function laptopCase(lang, extra) {
   const rid = pl.j && pl.j.plan && pl.j.plan.planId;
   if (!rid) return { why: 'no report plan: ' + short(pl) };
   await approve(rid);
-  const send = Object.assign({}, args, { planId: rid, design: pl.j.design, fields: args.planFields }); delete send.planFields;
+  const send = { path: args.path, planId: rid };   // (0.3.2 TK1: the plan holds the rest)
   const rep = await w.call('create_report', send);
   if (rep.err) return { why: 'not written: ' + short(rep) };
   const cr = await s.call('check_report', { path: rep.j.open });

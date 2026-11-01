@@ -147,21 +147,24 @@ try {
   // name are kept English on purpose: these checks are about the slicers and the approval page, not the names
   const KEPT = keepEnglish('Sales[Units Sold]', 'Sales[Average Basket]');
   const plan = async (name, lang) => { const a = Object.assign({}, first, { name, lang: lang || 'en' }, lang === 'ar' ? { displayNames: KEPT } : {}); const pl = await w.call('plan_layout', a); return { a, pl, id: pl.j && pl.j.plan && pl.j.plan.planId, sl: (pl.j && pl.j.slicers) || {} }; };
-  const write = (p, slicers) => { const send = Object.assign({}, p.a, { planId: p.id, design: p.pl.j && p.pl.j.design, fields: Object.assign({}, p.a.planFields, { slicers }) }); delete send.planFields; return w.call('create_report', send); };
+  // (0.3.2 TK1, B-272: create_report takes path and planId, the plan holds the fields) write(p): the approved plan alone;
+  // write(p, slicers): an old-shape call with a slicer list, refused at the inputs
+  const write = (p, slicers) => { if (slicers === undefined) return w.call('create_report', { path: p.a.path, planId: p.id }); const send = Object.assign({}, p.a, { planId: p.id, design: p.pl.j && p.pl.j.design, fields: Object.assign({}, p.a.planFields, { slicers }) }); delete send.planFields; return w.call('create_report', send); };
 
-  // A1 the plan's text says which list create_report takes (English and Arabic)
+  // A1 the plan's text lists the slicers and the added one (English and Arabic); since 0.3.2 it no longer says what to
+  // pass to create_report (the plan holds the fields)
   const p1 = await plan('R4A One'), pAr = await plan('R4A Ar', 'ar'), added = p1.sl.added || [], listed = p1.sl.written || [];
-  chk(() => p1.id && added.length === 1 && listed.length === 3 && /create_report/.test(p1.sl.sayInPlan || '') && /fields\.slicers/.test(p1.sl.sayInPlan || '') && listed.every((f) => (p1.sl.sayInPlan || '').includes(f)),
-    () => `A1. the plan says which slicers to pass to create_report: ${J(p1.sl)} ${short(p1.pl)}`);
-  chk(() => /create_report/.test(pAr.sl.sayInPlan || '') && AR.test(pAr.sl.sayInPlanAr || ''), () => `A1ar. an Arabic plan too: ${J(pAr.sl)}`);
+  chk(() => p1.id && added.length === 1 && listed.length === 3 && !/create_report|fields\.slicers/.test(p1.sl.sayInPlan || '') && /planFields\.slicers/.test(p1.sl.sayInPlan || '') && listed.every((f) => (p1.sl.sayInPlan || '').includes(f)),
+    () => `A1. the plan lists the slicers and the added one, no create_report list to pass: ${J(p1.sl)} ${short(p1.pl)}`);
+  chk(() => !/create_report/.test(pAr.sl.sayInPlanAr || '') && AR.test(pAr.sl.sayInPlanAr || '') && /Branches/.test(pAr.sl.sayInPlanAr || ''), () => `A1ar. an Arabic plan too: ${J(pAr.sl)}`);
   // A2 the asked list writes the approved files
   if (p1.id) await approve(p1.id);
-  const w1 = p1.id ? await write(p1, asked) : { err: true, t: 'no plan' };
+  const w1 = p1.id ? await write(p1) : { err: true, t: 'no plan' };
   // A3 the listed three (the asked plus exactly the added one) write the approved files of their own plan
   const p2 = await plan('R4A Two'); if (p2.id) await approve(p2.id);
-  const w2 = p2.id ? await write(p2, asked.concat(p2.sl.added || [])) : { err: true, t: 'no plan' };
-  chk(() => !w1.err && w1.j.exact && w1.j.exact.digest === p1.pl.j.exactCheck.digest, () => `A2. the asked slicers write the approved files: ${short(w1)}`);
-  chk(() => !w2.err && w2.j.exact && w2.j.exact.digest === p2.pl.j.exactCheck.digest, () => `A3. the listed slicers (asked + added) write the approved files: ${short(w2)}`);
+  const w2 = p2.id ? await write(p2) : { err: true, t: 'no plan' };
+  chk(() => !w1.err && w1.j.exact && w1.j.exact.digest === p1.pl.j.exactCheck.digest, () => `A2. path and planId write the approved files: ${short(w1)}`);
+  chk(() => !w2.err && w2.j.exact && w2.j.exact.digest === p2.pl.j.exactCheck.digest, () => `A3. a second plan the same: its approved files: ${short(w2)}`);
   const s1 = slicersOf(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A One.Report')), s2 = slicersOf(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A Two.Report'));
   chk(() => s1.length === 3 && J(s1) === J(s2) && J(s1) === J(listed.slice().sort()), () => `A4. both reports bind the same 3 slicers, the plan's list: ${J(s1)} ${J(s2)} ${J(listed)}`);
   // A5 any other list is refused, nothing written (a fourth slicer: the schema's limit of 3 refuses it first)
@@ -169,7 +172,7 @@ try {
   const other = await write(p3, asked.concat(['Products[Category]'])), four = await write(p3, listed.concat(['Products[Category]'])), alone = await write(p3, added);
   chk(() => [other, alone].every((x) => x.err && /Nothing was written/.test(x.t)) && four.err && /Nothing was written|at most 3|<=3 items/.test(four.t) && !fs.existsSync(path.join(ROOT, S.SAMPLE_FOLDER, 'R4A Three.pbip')),
     () => `A5. another slicer, a fourth, the added one alone: refused, nothing written: ${short(other)} | ${short(four)} | ${short(alone)}`);
-  chk(() => /Products\[Category\]/.test(other.t) && /pass fields\.slicers/.test(other.t), () => `B4. the refusal names the slicer the plan doesn't hold and the list to pass: ${short(other)}`);
+  chk(() => /'fields'/.test(other.t) && /approved plan holds/.test(other.t) && /plan_layout again/.test(other.t), () => `B4. the refusal names fields as the plan's and says to plan again to change them (0.3.2 TK1): ${short(other)}`);
 
   // C5b the check of DataArcus's own report (as before a write) counts its "no data" cards and never lists them as worth a look
   const repFiles = []; { const top = path.join(ROOT, S.SAMPLE_FOLDER); const rec = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) rec(f); else repFiles.push({ path: path.relative(top, f).split(path.sep).join('/'), data: fs.readFileSync(f, 'utf8') }); }); if (fs.existsSync(path.join(top, 'R4A One.Report'))) rec(path.join(top, 'R4A One.Report')); }

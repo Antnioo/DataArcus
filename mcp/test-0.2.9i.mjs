@@ -99,9 +99,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   {
     const pl = await ask('plan_layout', { layout: 'exec', path: 'i-hr', planFields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, name: 'I same', noDataMessage: false, secondPage: false }, raw), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid }, raw);
-    const other = await ask('create_report', { path: 'i-hr', name: 'I other', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Leavers]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
+    const other = await ask('create_report', { path: 'i-hr', planId: pid }, raw);
     chk(() => other.err && /approved plan/.test(other.t) && /kpis/.test(other.t), () => `G5: create_report with fields other than the approved plan's must be refused, naming them: ${short(other)}`);
-    const same = await ask('create_report', { path: 'i-hr', name: 'I same', planId: pid, design: pl.j && pl.j.design, fields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]' }, noDataMessage: false, secondPage: false }, raw);
+    const same = await ask('create_report', { path: 'i-hr', planId: pid }, raw);
     chk(() => !same.err && same.j.report, () => `G5: the approved fields are written: ${short(same)}`);
   }
 

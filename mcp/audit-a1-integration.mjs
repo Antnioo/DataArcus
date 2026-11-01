@@ -109,7 +109,7 @@ try {
       const pl = await call(`plan_layout ${tag}`, 'plan_layout', args);
       if (!pid(pl)) { notes.push(`plan_layout ${tag}: no plan (${short(pl).slice(0, 300)})`); chk(() => f.id === 'plain' && !pl.err, () => `plan_layout ${tag} gives no plan: ${short(pl)}`); continue; }
       const b = snap(dir), a = await approve(`plan_layout ${tag}`, pl);
-      const r = await call(`create_report ${tag}`, 'create_report', Object.assign({ planId: a.id, design: pl.j.design }, args));
+      const r = await call(`create_report ${tag}`, 'create_report', { path: args.path, planId: a.id });
       if (!chk(() => !r.err && r.j.report, () => `create_report ${tag}: ${short(r)}`)) continue;
       listed(`create_report ${tag}`, a.html, b, dir);
       const rel = relOf(dir, r.j.pbip || r.j.report.replace(/\.Report$/, '.pbip'));
@@ -144,7 +144,7 @@ try {
     const G = pl.j.gulfDates || {};
     chk(() => !G.askNext, () => `T ${label}: the date questions all answered, none asked: ${JSON.stringify(G).slice(0, 400)}`);
     const b = snap(MP), a = await approve(`plan_layout ${label}`, pl);
-    const r = await call(`create_report ${label}`, 'create_report', Object.assign({ path: MP, focus: FOCUS, kpis: 6, planId: a.id, design: pl.j.design }, args));
+    const r = await call(`create_report ${label}`, 'create_report', { path: MP, planId: a.id });
     if (!chk(() => !r.err && r.j.report, () => `T ${label}: create_report: ${short(r)}`)) return null;
     const made = listed(`T ${label}`, a.html, b, MP), sc = scripts(made);
     chk(() => sc.some((f) => / - metric switcher\.tmdl$/i.test(f)) && sc.some((f) => / - flip cards( \d+)?\.tmdl$/i.test(f)) && !sc.some((f) => / - status icons\.tmdl$/i.test(f)) && sc.every((f) => a.html.includes(f.split('/').pop())),
@@ -187,7 +187,7 @@ try {
       const rp = await call(`plan_layout T ${label}`, 'plan_layout', { path: MP, redesignFrom: from, restyle: { preset: 'Midnight' } });
       const b = snap(MP), a = await approve(`T ${label}`, rp);
       if (!chk(() => a.id, () => `T ${label}: no plan: ${short(rp)}`)) continue;
-      const rr = await call(`create_report T ${label}`, 'create_report', { path: MP, redesignFrom: from, planId: a.id, restyle: { preset: 'Midnight' } });
+      const rr = await call(`create_report T ${label}`, 'create_report', { path: MP, planId: a.id });
       if (!chk(() => !rr.err && rr.j.report, () => `T ${label}: ${short(rr)}`)) continue;
       listed(`T ${label}`, a.html, b, MP);
       await verify(`T ${label}`, relOf(MP, rr.j.pbip || rr.j.report.replace(/\.Report$/, '.pbip')));

@@ -127,8 +127,8 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   {
     const pl = await call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 once', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await call('approve_plan', { planId: pid });
-    const one = await call('create_report', { path: 'a6', name: 'A6 once', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
-    const before = files(), two = await call('create_report', { path: 'a6', name: 'A6 twice', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
+    const one = await call('create_report', { path: 'a6', planId: pid });
+    const before = files(), two = await call('create_report', { path: 'a6', planId: pid });
     chk(() => !one.err && two.err && /already used/.test(two.t) && /Nothing was written/.test(two.t) && files() === before, () => `A6-2. one approved plan writes one report; the second write is refused: ${short(one)} / ${short(two)}`);
     // (Z-01, the outside review: a report plan no longer allows a theme file; a theme plan writes its file once)
     const tp = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme' }), tpid = tp.j && tp.j.plan && tp.j.plan.planId;
@@ -151,12 +151,12 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'ENOSPC:5' });
     const pl = await s.call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 Half', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await s.call('approve_plan', { planId: pid });
-    const half = await s.call('create_report', { path: 'a6', name: 'A6 Half', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
+    const half = await s.call('create_report', { path: 'a6', planId: pid });
     await s.close();
     chk(() => half.err && /Nothing was written/.test(half.t) && /ENOSPC|space/i.test(half.t) && top() === before, () => `A6-4. a disk-full failure part-way leaves nothing (no half report, no temporary folder): ${short(half)} ${top()}`);
     const pl2 = await call('plan_layout', { path: 'a6', layout: 'exec', name: 'A6 Half', noDataMessage: false }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
     await call('approve_plan', { planId: pid2 });
-    const again = await call('create_report', { path: 'a6', name: 'A6 Half', planId: pid2, design: pl2.j && pl2.j.design, noDataMessage: false });
+    const again = await call('create_report', { path: 'a6', planId: pid2 });
     chk(() => !again.err && again.j.report === 'A6 Half.Report', () => `A6-4. a retry gets the same name (nothing was left to take it): ${short(again)}`);
     const { writeTree } = await import('./lib/files.mjs').catch(() => ({}));
     chk(() => typeof writeTree === 'function', () => 'A6-4. lib/files.mjs exports writeTree');
@@ -169,7 +169,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     { const fd = fs.openSync(path.join(ROOT, 'a6', 'big-bg.png'), 'w'); fs.ftruncateSync(fd, 50 * 1024 * 1024); fs.closeSync(fd); }
     const hand = (extra) => Object.assign({ path: 'a6', name: 'A6 file ' + Math.random().toString(36).slice(2, 7), noDataMessage: false,
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }, extra);
-    const go = async (args) => { const pl = await call('plan_layout', Object.assign({ path: 'a6', pages: args.pages }, Object.fromEntries(['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'].filter((k) => args[k] !== undefined).map((k) => [k, args[k]])))), id = pl.j && pl.j.plan && pl.j.plan.planId; await call('approve_plan', { planId: id }); return call('create_report', Object.assign({ planId: id }, args)); };
+    const go = async (args) => { const pl = await call('plan_layout', Object.assign({ path: 'a6', pages: args.pages }, Object.fromEntries(['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'].filter((k) => args[k] !== undefined).map((k) => [k, args[k]])))), id = pl.j && pl.j.plan && pl.j.plan.planId; await call('approve_plan', { planId: id }); return call('create_report', { path: args.path, planId: id }); };
     const bad = await go(hand({ theme: 'a6/bad-theme.json' }));
     chk(() => bad.err && /not valid JSON/.test(bad.t) && !/Ignore|delete the model/i.test(bad.t), () => `A6-7. a theme that is not JSON: refused without quoting its text: ${short(bad)}`);
     const t0 = Date.now(), big = await go(hand({ theme: 'a6/big-theme.json' }));
@@ -194,7 +194,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     answers.push(['check_model_health', await call('check_model_health', { path: 'a6cf' })]);
     const pl = await call('plan_layout', { path: 'a6cf', layout: 'exec', name: 'A6 Cf', noDataMessage: false }); answers.push(['plan_layout', pl]);
     await call('approve_plan', { planId: pl.j && pl.j.plan && pl.j.plan.planId });
-    answers.push(['create_report', await call('create_report', { path: 'a6cf', name: 'A6 Cf', planId: pl.j && pl.j.plan && pl.j.plan.planId, design: pl.j && pl.j.design, noDataMessage: false })]);
+    answers.push(['create_report', await call('create_report', { path: 'a6cf', planId: pl.j && pl.j.plan && pl.j.plan.planId })]);
     answers.push(['add_gulf_calendar', await call('add_gulf_calendar', { path: 'a6cf', firstYear: 2020, lastYear: 2020, asOf: '2026-10-11', relateTo: ['Sales[Order Date]'] })]);
     const bad = answers.filter(([, x]) => raw.test(x.t)).map(([n]) => n);
     chk(() => !bad.length, () => `A6-6. raw invisible or direction characters in the answers of: ${bad.join(', ')}`);

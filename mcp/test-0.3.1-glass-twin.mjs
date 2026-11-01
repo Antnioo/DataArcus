@@ -88,7 +88,7 @@ try {
     const pl = await s.call('plan_layout', Object.assign({ planFields: FIELDS }, design ? { design } : {}, args)), pj = pl.j || {}, id = pj.plan && pj.plan.planId;
     chk(() => !!id && !/data:image/.test(pl.t), () => `P0-${nm}. the plan has an id, and no picture in the answer to Claude: ${cut(pl.err ? pl.t : (pl.t.match(/.{60}data:image.{20}/) || [''])[0])}`);
     if (!id) continue;
-    const html = await approve(id), r = await s.call('create_report', Object.assign({ planId: id, design: pj.design, fields: FIELDS }, args));
+    const html = await approve(id), r = await s.call('create_report', { path: args.path, planId: id });
     if (r.err) { chk(() => false, () => `setup-${nm}. create_report: ${cut(r.t)}`); continue; }
     const R = reportOf(path.join(ROOT, 'shop', 'Twin ' + nm + '.Report')), t = nm === 'plain' ? null : R.theme.visualStyles['*']['*'].background[0].transparency, F = figures(html);
     chk(() => F.length >= 2 && (nm === 'plain' ? F.every((f) => !f.img && !f.ops.length) : F.every((f) => f.img && f.ops.length && f.ops.every((o) => Math.abs(o - (1 - t / 100)) < 0.006))),
@@ -147,7 +147,7 @@ try {
     const id = pl.j && pl.j.plan && pl.j.plan.planId;
     if (!id) chk(() => false, () => `B0. the bilingual plan: ${cut(pl.t)}`);
     else {
-      const html = await approve(id), { planFields, ...rest } = args, r = await s.call('create_report', Object.assign({ planId: id, design: pl.j.design, fields: planFields }, rest));
+      const html = await approve(id), r = await s.call('create_report', { path: args.path, planId: id });
       const dir = r.err ? null : fs.readdirSync(path.join(ROOT, 'shop')).find((f) => /^Twin both.*\.Report$/.test(f));
       if (!dir) chk(() => false, () => `B0. the bilingual report is written: ${cut(r.t)}`);
       else {

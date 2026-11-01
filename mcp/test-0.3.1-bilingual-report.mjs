@@ -121,13 +121,13 @@ try {
     chk(() => (html.match(/class="pair"/g) || []).length === 2 && figs === 4 && caps.join('|') === 'English page 1|Arabic page 1|English page 2|Arabic page 2',
       () => `B3e. the approval page draws 2 page pairs (4 pictures, English beside Arabic): ${figs} figures, captions ${JSON.stringify(caps)}`);
     if (url) { await req(url, 'POST', 'decision=approve'); await w.call('approve_plan', { planId: pid }); } }
-  const wr = await call(w, 'create_report', Object.assign(withoutDesign(args), { planId: pid, design: pl.j.design }));
+  const wr = await call(w, 'create_report', { path: args.path, planId: pid });
   const REP = path.join(ROOT, 'large/Orders.Report');
   chk(() => !wr.err && fs.existsSync(REP) && wr.j.bilingual && wr.j.bilingual.pairs === 4, () => `B2c. one report written, the answer says its pairs: ${short(wr)}`);
   const added = filesOf(ROOT).filter((f) => !all0.has(f) && f !== 'links.txt');
   chk(() => added.length === B.__files && added.every((f) => /^large\/Orders(\.Report\/|\.pbip$| - [^/]+\.tmdl$)/.test(f)) && !fs.existsSync(path.join(ROOT, 'large/Orders (EN-AR).Report')),
     () => `B3c. exactly the files the approval page counted, all of this report (${added.length} vs ${B.__files}): ${JSON.stringify(added.filter((f) => !/^large\/Orders\.Report\//.test(f)))}`);
-  const again = await call(w, 'create_report', Object.assign(withoutDesign(args), { planId: pid, design: pl.j.design }));
+  const again = await call(w, 'create_report', { path: args.path, planId: pid });
   chk(() => again.err && filesOf(ROOT).length === all0.size + added.length + (fs.existsSync(log) && !all0.has('links.txt') ? 1 : 0), () => `B3d. one click writes once: the same planId again is refused, nothing written: ${short(again)}`);
   chk(() => JSON.stringify(hashes(MODEL)) === JSON.stringify(before), () => 'B2d. the model folder is untouched');
   const F = fs.existsSync(REP) ? readReport(REP) : {}, PJ = F['definition/pages/pages.json'] || {}, ord = PJ.pageOrder || [];
@@ -199,7 +199,7 @@ try {
     if (id) {
       await s.call('approve_plan', { planId: id });
       const send = withoutDesign(q.args); send.fields = q.args.planFields;
-      const r = await call(s, 'create_report', Object.assign(send, { planId: id, design: q.pl.j.design }));
+      const r = await call(s, 'create_report', { path: send.path, planId: id });
       const RA = path.join(ROOT, 'large/Orders All.Report'), FA = fs.existsSync(RA) ? readReport(RA) : {}, oa = (FA['definition/pages/pages.json'] || {}).pageOrder || [];
       const half = oa.length / 2, ENA = oa.slice(0, half), ARA = oa.slice(half), pj = (p) => FA[`definition/pages/${p}/page.json`] || {};
       const vA = (p) => Object.entries(FA).filter(([f]) => f.startsWith(`definition/pages/${p}/visuals/`) && f.endsWith('/visual.json')).map(([, j]) => j);
@@ -222,7 +222,7 @@ try {
   // ---------- B6: X1's copy syncs the pills too ----------
   {
     const q = await call(s, 'plan_layout', Object.assign({ name: 'Pills EN', slicerStyle: 'pills', planFields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] } }, base, { filters: 'top' })), id = q.j && q.j.plan && q.j.plan.planId;
-    if (id) { await s.call('approve_plan', { planId: id }); await s.call('create_report', Object.assign({ name: 'Pills EN', slicerStyle: 'pills', fields: { slicers: ['Calendar[Is Weekend]', 'Coupon[Coupon Region]'] }, planId: id, design: q.j.design }, base, { filters: 'top' })); }
+    if (id) { await s.call('approve_plan', { planId: id }); await s.call('create_report', { path: base.path, planId: id }); }
     const t = await call(s, 'create_arabic_twin', { path: 'large/Pills EN.pbip', into: 'same' }), tid = t.j && t.j.plan && t.j.plan.planId;
     if (tid) { await s.call('approve_plan', { planId: tid }); await s.call('create_arabic_twin', { path: 'large/Pills EN.pbip', into: 'same', planId: tid }); }
     const FP = fs.existsSync(path.join(ROOT, 'large/Pills EN (EN-AR).Report')) ? readReport(path.join(ROOT, 'large/Pills EN (EN-AR).Report')) : {};

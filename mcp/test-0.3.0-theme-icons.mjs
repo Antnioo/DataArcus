@@ -109,7 +109,7 @@ const write = async (args, crOver) => {
   const cr = Object.assign({ path: MP, planId: id }, args, args.pages ? {} : { design: pl.j.design });
   delete cr.statusIcons;
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', Object.assign(cr, crOver || {}));
+  const r = await w.call('create_report', Object.assign({ path: MP, planId: id }, crOver || {}));   // (0.3.2 TK1, B-272: path and planId; the plan holds the rest; crOver: a deliberate other value, refused at the inputs)
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 // the three icons' shape: the SVG with its colours taken out
@@ -245,7 +245,7 @@ try {
     const pl = await w.call('plan_layout', { path: MP, lang: 'en', ...DES, planFields: FIELDS, name: 'Icons Pinned', statusIcons: true });
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (id) await approve(id);
     for (const v of [false, [{ measure: 'Sales[Fill Rate]', good: '>= 0.97', bad: '< 0.94' }]]) {
-      const r = id ? await w.call('create_report', { path: MP, planId: id, lang: 'en', ...DES, design: pl.j.design, fields: FIELDS, name: 'Icons Pinned', statusIcons: v }) : null;
+      const r = id ? await w.call('create_report', { path: MP, planId: id, statusIcons: v }) : null;   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
       chk(() => r && r.err && !fs.existsSync(path.join(ROOT, 'g', 'Icons Pinned.Report')) && !fs.existsSync(scriptOf('Icons Pinned')), () => `PIN ${JSON.stringify(v)}: another statusIcons than the plan's is refused and nothing is written: ${short(r || pl)}`);
     }
   }

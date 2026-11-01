@@ -131,7 +131,7 @@ try {
     const n = links().length; await s.call('approve_plan', { planId: id });
     for (let k = 0; k < 100 && links().length <= n; k++) await sleep(50);
     await req(links()[n], 'decision=approve'); await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', Object.assign({ planId: id, design: pl.j.design, fields: FIELDS }, args));
+    const r = await s.call('create_report', { path: args.path, planId: id });
     chk(() => !r.err, () => `W1-${nm}. create_report writes the glass report: ${r.t.slice(0, 300)}`);
     if (r.err) continue;
     const RD = path.join(ROOT, 'shop', 'Glass ' + nm + '.Report'), P = path.join(RD, 'definition/pages'), RES = path.join(RD, 'StaticResources/RegisteredResources');

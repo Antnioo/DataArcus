@@ -58,7 +58,7 @@ try {
     const pl = await w.call('plan_layout', { path: rel, layout: 'exec', name: 'Paths' });
     const pid = pl.j && pl.j.plan && pl.j.plan.planId;
     if (pid) await w.call('approve_plan', { planId: pid });
-    const cr = pid ? await w.call('create_report', { path: rel, name: 'Paths', planId: pid, design: pl.j.design }) : pl;
+    const cr = pid ? await w.call('create_report', { path: rel, planId: pid }) : pl;
     chk(() => !cr.err && fs.existsSync(path.join(dir, 'Paths.pbip')), () => `${k}. create_report writes "Paths" in "${rel}": ${short(cr)}`);
     const tp = await w.call('create_arabic_twin', { path: rel + '/Twin Sales.pbip' });
     const tid = tp.j && tp.j.plan && tp.j.plan.planId;

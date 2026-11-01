@@ -119,7 +119,7 @@ const write = async (args, crOver, dir = 'g') => {
   const cr = Object.assign({ path: dir, planId: id }, args, args.pages ? {} : { design: pl.j.design });
   delete cr.daxFunctions;
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', Object.assign(cr, crOver || {}));
+  const r = await w.call('create_report', Object.assign({ path: dir, planId: id }, crOver || {}));   // (0.3.2 TK1, B-272: path and planId; the plan holds the rest; crOver: a deliberate other value, refused at the inputs)
   return { pl, html, r, id, beforeGo, dir: out, pbip: dir + '/' + args.name + '.pbip', script: scriptPath(dir, args.name) };
 };
 const SIG = {
@@ -329,7 +329,7 @@ try {
     const bc = (BI.cannot || []).find((x) => /DAX functions/.test(String(x.what) + String(x.why)));
     chk(() => bc && /create_report/.test(bc.why), () => `BI2. the bilingual plan says the Arabic pages' DAX pictures and titles stay English (cannot): ${JSON.stringify(BI.cannot || null).slice(0, 400)}`);
     let c = null;
-    if (id) { await approve(id); const cr = Object.assign({}, args, { planId: id, design: pl.j.design, fields: args.planFields }); delete cr.planFields; delete cr.daxFunctions; const r = await w.call('create_report', cr); if (!r.err) c = await check('g/Dax BI.pbip'); else c = r; }
+    if (id) { await approve(id); const r = await w.call('create_report', { path: args.path, planId: id }); if (!r.err) c = await check('g/Dax BI.pbip'); else c = r; }
     chk(() => clean(c) && noBreak(c) && fs.existsSync(scriptPath('g', 'Dax BI')), () => `BI3. the bilingual report: its script, validator 0 errors, 0 "can break": ${valErr(c)}`);
   }
 
@@ -347,7 +347,7 @@ try {
     const pl = await w.call('plan_layout', { path: 'g', lang: 'en', ...DES, planFields: FIELDS, name: 'Dax Pinned', daxFunctions: true });
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (id) await approve(id);
     for (const v of [false, ['sparkline']]) {
-      const r = id ? await w.call('create_report', { path: 'g', planId: id, lang: 'en', ...DES, design: pl.j.design, fields: FIELDS, name: 'Dax Pinned', daxFunctions: v }) : null;
+      const r = id ? await w.call('create_report', { path: 'g', planId: id, daxFunctions: v }) : null;   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
       chk(() => r && r.err && !fs.existsSync(path.join(ROOT, 'g', 'Dax Pinned.Report')) && !fs.existsSync(scriptPath('g', 'Dax Pinned')), () => `PIN ${JSON.stringify(v)}: another daxFunctions than the plan's is refused and nothing is written: ${short(r || pl)}`);
     }
     const fc = await w.call('plan_layout', { path: 'g', lang: 'en', ...DES, planFields: FIELDS, name: 'Dax Flip', daxFunctions: true, flipCards: true });

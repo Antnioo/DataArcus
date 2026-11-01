@@ -120,7 +120,7 @@ const write = async (args, crOver) => {
   const cr = Object.assign({ path: MP, planId: id }, args, args.pages ? {} : { design: pl.j.design });
   delete cr.flipCards; delete cr.metricSwitcher;
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', Object.assign(cr, crOver || {}));
+  const r = await w.call('create_report', Object.assign({ path: MP, planId: id }, crOver || {}));   // (0.3.2 TK1, B-272: path and planId; the plan holds the rest; crOver: a deliberate other value, refused at the inputs)
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 
@@ -129,7 +129,7 @@ try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
     const d = (t) => JSON.stringify((t.inputSchema.properties || {}).flipCards || null);
-    chk(() => d(pl) !== 'null' && d(pl) === d(cr) && /default/i.test(d(pl)) && /TMDL/i.test(d(pl)) && /1-6|one to six/i.test(d(pl)), () => `S1. plan_layout and create_report take flipCards (one definition: default off, 1-6 cards, the TMDL script): ${d(pl)}`);
+    chk(() => d(pl) !== 'null' && d(cr) === 'null' && /default/i.test(d(pl)) && /TMDL/i.test(d(pl)) && /1-6|one to six/i.test(d(pl)), () => `S1. plan_layout takes flipCards (default off, 1-6 cards, the TMDL script), create_report does not (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input): ${d(pl)}`);
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => /flipCards/.test(skill) && /script/i.test(skill), () => 'S2. the skill says when flip cards fit and that the script is applied first');
     chk(() => (w.c.getInstructions() || '').length <= 2200, () => 'S3. the instructions within their cap');
@@ -244,7 +244,7 @@ try {
     const pl = await w.call('plan_layout', { path: MP, lang: 'en', ...DES, planFields: FIELDS, name: 'Flip Pinned', flipCards: [1] });
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (id) await approve(id);
     for (const v of [true, [2], false]) {
-      const r = id ? await w.call('create_report', { path: MP, planId: id, lang: 'en', ...DES, design: pl.j.design, fields: FIELDS, name: 'Flip Pinned', flipCards: v }) : null;
+      const r = id ? await w.call('create_report', { path: MP, planId: id, flipCards: v }) : null;   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
       chk(() => r && r.err && !fs.existsSync(path.join(ROOT, 'g', 'Flip Pinned.Report')), () => `PIN ${JSON.stringify(v)}: another flipCards than the plan's is refused and nothing is written: ${short(r || pl)}`);
     }
   }

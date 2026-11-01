@@ -139,7 +139,7 @@ const added = (before) => all().filter((f) => !before.includes(f));
   const pl = await s.call('plan_layout', { path: 'r', name: 'Pinned' }), id = pl.j && pl.j.plan && pl.j.plan.planId;
   chk(() => /^plan-/.test(id || '') && /model/i.test(pl.j.plan.modelPinned || ''), () => `B154-4. the report's plan says the model is pinned: ${short(pl)}`);
   await approve(id); editBim(f);
-  const before = all(), r = await s.call('create_report', { path: 'r', name: 'Pinned', planId: id, design: pl.j && pl.j.design });
+  const before = all(), r = await s.call('create_report', { path: 'r', planId: id });
   chk(() => r.err && CHANGED.test(r.t) && added(before).length === 0, () => `B154-5. create_report after the model changed: refused, nothing written: ${short(r)} ${JSON.stringify(added(before))}`);
 }
 // B154-6: add_gulf_calendar
@@ -174,7 +174,7 @@ const added = (before) => all().filter((f) => !before.includes(f));
   const args = { path: 'twin', customVisualsFrom: 'twin/Twin Sales.Report' };
   const pl = await s.call('plan_layout', args), id = pl.j && pl.j.plan && pl.j.plan.planId;
   await approve(id); editBim(path.join(ROOT, 'twin/Twin Sales.SemanticModel/model.bim'));
-  const before = all(), y = await s.call('create_report', Object.assign({}, args, { planId: id }));
+  const before = all(), y = await s.call('create_report', { path: args.path, planId: id });
   chk(() => /^plan-/.test(id || '') && y.err && CHANGED.test(y.t) && added(before).length === 0, () => `B154-9. the native copy after its model changed: refused, nothing written: ${short(pl)} ${short(y)}`);
 }
 // B154-10: what is not the model's definition does not count: Power BI's local data cache changes, the write goes on

@@ -1262,8 +1262,9 @@ if (part('round5')) {
       chk(() => res.every((re) => re.test(ins)), () => `the server's instructions miss the rule "${what}": ${res.filter((re) => !re.test(ins))}`);
       chk(() => res.every((re) => re.test(skill)), () => `the report-design skill misses the rule "${what}": ${res.filter((re) => !re.test(skill))}`);
     }
-    const cr = tl.create_report.description, dn = tl.create_report.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
-    chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(cr) && /what (its|the) value (really )?is/i.test(cr), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
+    // (0.3.2 TK1, B-272: create_report takes path and planId; the plan's choices and their rules are plan_layout's, the same definitions)
+    const cr = tl.create_report.description, pl = tl.plan_layout.description, dn = tl.plan_layout.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
+    chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(pl) && /what (its|the) value (really )?is/i.test(pl), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
     chk(() => /only names the user gave or approved/i.test(dn) && /never show a name the user has not approved/i.test(dn) && /never renamed/i.test(dn), () => `displayNames must say only approved names are written (B-88): ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
@@ -1348,7 +1349,7 @@ if (part('round6')) {
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
     chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
-    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
+    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && /plan holds/.test(tl.create_report.description) && !!tl.plan_layout.inputSchema.properties.planFields, () => `create_report's description must say the approved plan holds the fields (planFields, plan_layout) (0.3.2 TK1): ${tl.create_report.description.slice(0, 200)}`);
     chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
 
@@ -1638,7 +1639,8 @@ if (part('round8')) {
 
   // 7. Microsoft's validator finds no error in the reports with page filters; the tool and the skill say when to pass one
   {
-    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    // (0.3.2 TK1, B-272) pageFilters is plan_layout's input (the same definition); create_report takes path and planId
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'plan_layout'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => ramDir && txtDir && errors(ramDir) === '0' && errors(txtDir) === '0' && /pageFilters/.test(cr.description) && cr.inputSchema.properties.pageFilters && /pageFilters/.test(skill),
       () => `Microsoft's validator on the reports with page filters: ${ramDir ? errors(ramDir) : 'not written'}, ${txtDir ? errors(txtDir) : 'not written'}; pageFilters in the tool's description ${/pageFilters/.test(cr.description)}, in its inputs ${!!cr.inputSchema.properties.pageFilters}, in the skill ${/pageFilters/.test(skill)}`);
   }
@@ -1707,7 +1709,8 @@ if (part('round9')) {
     chk(() => !one.err && (one.j.reportNotes || []).some((n) => /every Ramadan/i.test(n) && /Calendar\[Hijri Year\]/.test(n) && /ask the user/i.test(n)) && /every Ramadan/i.test(one.j.pageFilters[0].note),
       () => `a filter on Is Ramadan alone must say it keeps every Ramadan, name Calendar[Hijri Year] and say to ask the user for the year: ${JSON.stringify(one.j && [one.j.reportNotes, one.j.pageFilters])} ${short(one)}`);
     const other = await ask('create_report', { path: 'filter-project', name: 'R9 Open', design: focus, secondPage: false, pageFilters: [{ field: 'Shop Sales[Is Open]', values: [true] }] });
-    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    // (0.3.2 TK1, B-272) pageFilters is plan_layout's input (the same definition); create_report takes path and planId
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'plan_layout'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => !other.err && !(other.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)) && !('note' in other.j.pageFilters[0]) && /Hijri year/i.test(cr.inputSchema.properties.pageFilters.description) && /Hijri year/i.test(skill) && /ask the user/i.test(skill),
       () => `a flag that is not Ramadan gets no such note; the tool and the skill say one Ramadan needs the Hijri year, asked from the user: ${JSON.stringify(other.j && other.j.reportNotes)} ${short(other)}`);
   }
@@ -4243,7 +4246,7 @@ if (part('round17')) {
     const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop', name: 'R17', secondPage: false }); out.push(pl);
     // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
     await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId });
-    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));
+    out.push(await call2('create_report', { path: 'Shop', planId: JSON.parse(pl.t).plan.planId }));
     out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
     out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
     await c2.close();

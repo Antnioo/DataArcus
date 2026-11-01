@@ -32,7 +32,9 @@ try {
   const props = Object.keys(((cr || {}).inputSchema || {}).properties || {}).sort();
   chk(() => JSON.stringify(props) === '["path","planId"]', () => `K3. create_report's inputs are path and planId only: ${props.join(', ')}`);
   const listSize = JSON.stringify({ tools }).length;
-  chk(() => listSize < 70000, () => `K4. tools/list under 70,000 characters: ${listSize}`);
+  // (B-272's cause: create_report's own entry was 30,749 of 98,360 on b40cb78) its entry under 3,000, the list under 75,000
+  const crSize = JSON.stringify(cr || {}).length;
+  chk(() => crSize < 3000 && listSize < 75000, () => `K4. create_report's entry under 3,000 characters and tools/list under 75,000: ${crSize}, ${listSize}`);
 
   const base = { path: MODEL, layout: 'exec', name: 'TK One', lang: 'en', noDataMessage: false };
   const one = await planOf(base);

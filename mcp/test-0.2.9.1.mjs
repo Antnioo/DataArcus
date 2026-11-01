@@ -52,7 +52,7 @@ try {
     if (lang !== 'en' || !pl.j || !pl.j.plan) continue;
     // the written report: the Comparison chart's Keep: measure keeps what the plan says
     await ask('approve_plan', { planId: pl.j.plan.planId });
-    const made = await ask('create_report', { path: 'large', focus: 'Web Orders', name: 'Top en', planId: pl.j.plan.planId, design: pl.j.design });
+    const made = await ask('create_report', { path: 'large', planId: pl.j.plan.planId });
     chk(() => !made.err, () => `B-174 setup. the report is written: ${short(made)}`);
     const REP = path.join(ROOT, 'large/Top en.Report'), ext = fs.existsSync(path.join(REP, 'definition/reportExtensions.json')) ? rd(path.join(REP, 'definition/reportExtensions.json')) : { entities: [] };
     const measures = ext.entities.flatMap((e) => e.measures || []);
@@ -69,7 +69,7 @@ try {
   const TWO = { measure: 'Items[Revenue]', category: 'Items[Size Band]', category2: 'Items[Region]' };
   const p5 = await ask('plan_layout', { path: 'items', name: 'Two', layout: 'exec', secondPage: false, planFields: TWO });
   if (p5.j && p5.j.plan && p5.j.plan.planId) { await ask('approve_plan', { planId: p5.j.plan.planId }); }
-  const m5 = await ask('create_report', { path: 'items', name: 'Two', design: p5.j && p5.j.design, secondPage: false, fields: TWO, planId: p5.j && p5.j.plan && p5.j.plan.planId });
+  const m5 = await ask('create_report', { path: 'items', planId: p5.j && p5.j.plan && p5.j.plan.planId });
   chk(() => !m5.err, () => `D setup. the report whose chart becomes a donut is written: ${short(m5)}`);
   const donuts = tree(path.join(ROOT, 'items/Two.Report')).filter((f) => /visual\.json$/.test(f)).map(rd).filter((j) => j.visual && j.visual.visualType === 'donutChart');
   chk(() => donuts.length && donuts.every((j) => !((j.visual.objects || {}).valueAxis)), () => `D-1 (#69's E-24) the written donuts have no valueAxis: ${donuts.map((j) => Object.keys(j.visual.objects || {}).join('+')).join(', ') || 'no donut written'}`);

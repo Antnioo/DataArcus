@@ -120,15 +120,15 @@ export const CREATE_REPORT_INPUTS = {
 // files they name are read and hashed again, so what is written is still exactly what was approved
 export const WRITE_KEYS = ['path', 'planId'];
 export const CREATE_REPORT_WRITE = {
-  path: modelPath.describe('The model the approved plan was made with: its project folder or .SemanticModel folder (for the sample, the plan\'s sample.folder)'),
-  planId: planIdInput.describe('The approved plan id from plan_layout, after approve_plan with the user\'s go. It holds every other input (pages or design, fields, names, theme, logo, options): nothing else is passed. Without it nothing is written')
+  path: modelPath.describe('The model the plan was made with (the sample: its sample.folder)'),
+  planId: planIdInput.describe('The approved plan id (plan_layout, then approve_plan after the user\'s go). It holds every other input; without it nothing is written')
 };
 // what a plan keeps for create_report: the inputs it pinned from, the plan's fields as fields, never the model or the plan id
 export const heldInputs = (a, fields) => Object.assign(Object.fromEntries(Object.entries(a).filter(([k, v]) => v !== undefined && !['path', 'planId', 'planFields'].includes(k))), fields !== undefined ? { fields } : {});
 // create_report's words for an input it no longer takes: one the plan holds is said as such (never a bare "Unrecognized key")
 export const heldSaid = (keys) => {
   const held = keys.filter((k) => Object.prototype.hasOwnProperty.call(CREATE_REPORT_INPUTS, k) && !WRITE_KEYS.includes(k)), other = keys.filter((k) => !held.includes(k)), one = held.length === 1;
-  return [held.length ? `${keysSaid(held)}: the approved plan holds ${one ? 'this input' : 'these inputs'} (plan_layout's), so create_report takes only path and planId: call it with those two. To change ${one ? 'it' : 'them'}, call plan_layout again with the new value${one ? '' : 's'}, show the user the new plan and wait for their go.` : '',
+  return 'Nothing was written: ' + [held.length ? `${keysSaid(held)}: the approved plan holds ${one ? 'this input' : 'these inputs'} (plan_layout's), so create_report takes only path and planId: call it with those two. To change ${one ? 'it' : 'them'}, call plan_layout again with the new value${one ? '' : 's'}, show the user the new plan and wait for their go.` : '',
     other.length ? unknownKeysSaid('the inputs of create_report', other, WRITE_KEYS) : ''].filter(Boolean).join(' ');
 };
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
