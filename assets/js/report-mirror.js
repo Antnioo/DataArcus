@@ -91,7 +91,7 @@
     pills: 'button slicers on one row: their buttons read from the right (sorted descending by their field)',
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
-    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side); a donut whose legend lists its measures lists them in reverse, its first at the right',
+    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
     other: 'other visuals (scatter...): moved only; no right-to-left setting is proven for them',
     unreadable: 'visuals whose file has an unexpected shape: copied as they are, not mirrored'
   };

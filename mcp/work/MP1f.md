@@ -67,6 +67,8 @@
 - 2: the legend's order, not the cards: the page reads from the right and the cards are mirrored with it; the first
   legend item (Answered, the English first) stands at the right over its value. Only a donut or pie with a shown legend
   and no category (a category's legend follows the data's order: not seen in a part 9 shape; left as it is).
+  The plan's sentence for these visuals ("moved only") is unchanged: a longer one pushed terminology-sheet's plan
+  over the answer's cap by one text (TS-2, seen and reverted).
 - 3: "tabular" is Power BI's own "Table" style for reference labels (theme schema 2.149, referenceLabelLayout.style);
   the card's titles and values in two columns, so no measured padding is needed. Written only where the English pads
   its titles into a column (two or more). The value alignment: only when the image goes from left to right and the card
