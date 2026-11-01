@@ -66,9 +66,8 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   }
   // G4. create_report refuses without a plan id, with an unknown one, with one not approved, with a theme plan and with
   //     a plan for another model; nothing is written each time
-  const design = (await ask('plan_layout', { layout: 'exec', lang: 'en' })).j;
   {
-    const run = async (label, planId, dir, re) => { const before = all(), x = await ask('create_report', Object.assign({ path: dir || 'g', name: 'Gate ' + label, design: design && design.design, noDataMessage: false }, planId === undefined ? {} : { planId })), after = all();
+    const run = async (label, planId, dir, re) => { const before = all(), x = await ask('create_report', Object.assign({ path: dir || 'g' }, planId === undefined ? {} : { planId })), after = all();   // (0.3.2 TK1: path and planId, so the gate's own refusal is what is checked)
       chk(() => x.err && re.test(x.t) && !added(before, after).length, () => `G4 ${label}. create_report must refuse and write nothing: added ${JSON.stringify(added(before, after).slice(0, 3))} ${short(x)}`); return x; };
     const none = await run('no id', undefined, 'g', /approved plan id[\s\S]*plan_layout[\s\S]*approve_plan/);
     chk(() => /Nothing was written/.test(none.t), () => `G4. the refusal must say nothing was written: ${short(none)}`);

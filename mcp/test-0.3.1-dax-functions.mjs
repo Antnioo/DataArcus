@@ -136,7 +136,7 @@ try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
     const d = (t) => JSON.stringify((t.inputSchema.properties || {}).daxFunctions || null);
-    chk(() => d(pl) !== 'null' && d(pl) === d(cr) && /Default false/.test(d(pl)) && /1702/.test(d(pl)) && /cannot be undone/.test(d(pl)) && /TMDL/.test(d(pl)), () => `S1. plan_layout and create_report take daxFunctions (one definition: default off, 1702 that cannot be undone, the TMDL script): ${d(pl)}`);
+    chk(() => d(pl) !== 'null' && d(cr) === 'null' && /Default false/.test(d(pl)) && /1702/.test(d(pl)) && /cannot be undone/.test(d(pl)) && /TMDL/.test(d(pl)), () => `S1. plan_layout takes daxFunctions, create_report does not (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input) ( default off, 1702 that cannot be undone, the TMDL script): ${d(pl)}`);
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => /daxFunctions/.test(skill) && /1702/.test(skill) && /cannot be undone/.test(skill), () => 'S2. the skill says when the DAX functions fit and that they raise the compatibility level, which cannot be undone');
     chk(() => (w.c.getInstructions() || '').length <= 2200, () => 'S3. the instructions within their cap');

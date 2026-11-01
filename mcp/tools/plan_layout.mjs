@@ -190,7 +190,8 @@ export function register(server, ctx) {
       lang: langInput,
       path: modelPath.optional().describe('The model the report is for: its fields are checked for the right number and date formats, said first in the answer with a ready script file'),
       fields: z.array(z.string()).max(40).optional().describe('With path: the plan\'s fields as "Table[Field]" (default: the fields suggest_fields picks)'),
-      displayNames: z.record(z.string(), z.string()).optional().describe('With path and lang "ar": display names the user already gave, as { "Table[Field]": "الاسم" }; the others get a proposal'),
+      // (0.3.2 TK1, B-272: create_report's own words, B-88, moved here with the input: the plan holds it)
+      displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (Arabic names for an Arabic report: { "Table[Field]": "الاسم" }). Never show a name the user has not approved: only names the user gave or approved are written; with path and lang "ar" the others get a proposal (arabicNames) to approve or edit; without approval the model\'s names stay. The report shows the name wherever it shows the field (titles, axes, legends, headers, slicers, tooltips). The model is never renamed'),
       planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
         .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown'),
       focus: focusInput, tables: tablesInput,

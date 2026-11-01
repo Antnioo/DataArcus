@@ -101,7 +101,7 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
       const before = files(), x = await call('create_report', Object.assign({}, cr, { name: 'A6 ' + key }, change));
       chk(() => x.err && /Nothing was written/.test(x.t) && new RegExp('\\b' + key + '\\b').test(x.t) && files() === before, () => `A6-1. create_report with another ${key} than the approved plan's: refused, the key named, nothing written: ${short(x)}`);
     }
-    const ok = await call('create_report', cr);
+    const ok = await call('create_report', { path: cr.path, planId: cr.planId });   // (0.3.2 TK1: the plan holds the rest)
     chk(() => !ok.err && ok.j.report, () => `A6-1. the approved inputs are written: ${short(ok)}`);
   }
   {
@@ -215,9 +215,10 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   // ---------- A6-16: the visual kinds are one list (the tools' limits, create_report's schema, the instructions) ----------
   {
     const lim = (await call('plan_layout', { layout: 'exec' })).j.limits.visuals;
-    const cr = meta && meta.tools.find((t) => t.name === 'create_report');
+    // (0.3.2 TK1, B-272: the hand-placed pages are plan_layout's input, create_report's own definition; the plan holds them)
+    const cr = meta && meta.tools.find((t) => t.name === 'plan_layout');
     const kinds = cr && cr.inputSchema.properties.pages.items.properties.slots.items.properties.kind.enum;
-    chk(() => kinds && JSON.stringify([...kinds].sort()) === JSON.stringify([...lim].sort()) && lim.includes('matrix'), () => `A6-16. create_report's slot kinds are the limits' visuals (matrix included): ${JSON.stringify(kinds)} vs ${JSON.stringify(lim)}`);
+    chk(() => kinds && JSON.stringify([...kinds].sort()) === JSON.stringify([...lim].sort()) && lim.includes('matrix'), () => `A6-16. the pages' slot kinds (plan_layout) are the limits' visuals (matrix included): ${JSON.stringify(kinds)} vs ${JSON.stringify(lim)}`);
     const rule6 = ((meta && meta.instructions) || '').split('\n').find((l) => /^6\./.test(l)) || '';
     chk(() => lim.every((k) => new RegExp('\\b' + (k === 'kpi' ? 'KPI card' : k) + '\\b').test(rule6)), () => `A6-16. instruction 6 lists every supported visual: ${rule6.slice(0, 200)}`);
     chk(() => (meta.instructions || '').length <= 2500, () => `A6-16. the instructions stay within 2,500 characters: ${(meta.instructions || '').length}`);

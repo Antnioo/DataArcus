@@ -170,8 +170,8 @@ const written = [];   // every report this suite wrote, for X
 try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
-    chk(() => pl.inputSchema.properties.sharedAxes && cr.inputSchema.properties.sharedAxes && /comparable/.test(JSON.stringify(cr.inputSchema.properties.sharedAxes)),
-      () => 'M1: plan_layout and create_report take sharedAxes (the person\'s own answer: comparable or separate)');
+    chk(() => pl.inputSchema.properties.sharedAxes && !cr.inputSchema.properties.sharedAxes && /comparable/.test(JSON.stringify(pl.inputSchema.properties.sharedAxes)),
+      () => 'M1: plan_layout takes sharedAxes (the person\'s own answer: comparable or separate); create_report does not (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input)');
   }
   // an amount and a rate: two panels, each with its unit
   const EN = await write({ name: 'Amount and Rate', lang: 'en', pages: HAND, planFields: RATE });
