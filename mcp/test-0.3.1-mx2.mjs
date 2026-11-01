@@ -1,15 +1,15 @@
 import './test-env.mjs';
 // 0.3.1 MX2 (the owner's D-1101-03: every difference of laptop part 8 fixed in 0.3.1; mcp/work/MX2.md; written red
-// first on the merged base 0a7ce2dc). Each fixture is made up in the shape of a real visual of the owner's public
+// first on the merged base, 7e885a2d). Each fixture is made up in the shape of a real visual of the owner's public
 // dashboards (the evidence branch evidence/0.3.1-shapes, c9a151d9: its cards and entries as the real files have them,
 // made-up names, no data):
 //   M1-M10 the matrices: RepeatIQ p2 lifecycle and AdventureWorks p1 top 10 (flat already: guards); Fintech p3 tasks
 //          and milestones (per-level total entries with the row subtotals off), RepeatIQ p4 pricing and p5 refund risk
 //          (row headers not wrapped): now flat; Fintech p3 team and p1 delivery (row levels): kept, offered flat (p1
 //          with its blank rows, said lost); RepeatIQ p2 cohorts (a Columns field): kept
-//   W1-W5  the tables: Fintech p1 watchlist's hidden column stays hidden; a converted matrix wider than its box and a
-//          plain wide table keep the English view (the key column at the box's right edge); the roadmap (no widths)
-//          named; a table that fits reversed as before
+//   W1-W5  the tables: Fintech p1 watchlist's hidden column stays hidden; Fintech p3's converted task matrix (its
+//          widths over its box only by two for fields no longer in it) has its key column in view; a plain wide table keeps
+//          the English view (the key column at the box's right edge); the roadmap (no widths) named; one that fits as before
 //   L1-L4  the legends: Call Center p1's two items that read the same once cut named first; Consumer Complaints p3's
 //          legend titles named; a hidden legend not named; said as an estimate
 //   N1-N5  one plain plan line each: decomposition tree, treemap, Power BI's own waterfall, scatter, map
@@ -103,7 +103,7 @@ try {
     const cols = [['Department', 'string'], ['Project', 'string'], ['Task Name', 'string'], ['Task Status', 'string'], ['Priority', 'string'], ['Owner', 'string'], ['Hours', 'double'], ['Budget', 'double'], ['Phase', 'string'], ['Status', 'string'],
       ['Planned Start', 'dateTime'], ['Planned End', 'dateTime'], ['Actual Start', 'dateTime'], ['Actual End', 'dateTime'], ['Project ID', 'string'], ['Risk Level', 'string'], ['Segment', 'string'], ['Size Tier', 'string'], ['History', 'string'], ['Region', 'string'], ['Category', 'string'], ['Lat', 'double'], ['Lon', 'double'], ['City', 'string']];
     const bimF = path.join(D, 'Twin Sales.SemanticModel/model.bim'), bim = rd(bimF);
-    bim.model.tables.push({ name: T, columns: cols.map(([name, dataType]) => ({ name, dataType, sourceColumn: name })), measures: ['Completion', 'Days Late', 'Risk Score', 'Answered', 'Unanswered', 'Complaints', 'Revenue', 'Profit'].map((m) => ({ name: m, expression: '1' })) }); wr(bimF, bim);
+    bim.model.tables.push({ name: T, columns: cols.map(([name, dataType]) => ({ name, dataType, sourceColumn: name })), measures: ['Completion', 'Days Late', 'Risk Score', 'Calls Answered', 'Calls Unanswered', 'Complaints', 'Revenue', 'Profit'].map((m) => ({ name: m, expression: '1' })) }); wr(bimF, bim);
     const pj = path.join(DEF, 'pages/pages.json'), pages = rd(pj);
     const VS = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
     const page = (id, name) => { pages.pageOrder.push(id); wr(path.join(DEF, 'pages', id, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: id, displayName: name, displayOption: 'FitToPage', width: 1280, height: 720 }); };
@@ -124,9 +124,9 @@ try {
     // the legends: Call Center p1's small legend donut (two measures under their own short names), its hidden-legend
     // donut, Consumer Complaints p3's donuts (a category legend with its title)
     page('p8legends', 'Legends');
-    put('p8legends', { name: 'dnLegend', position: { x: 548, y: 20, z: 1000, width: 196, height: 40 }, visual: { visualType: 'donutChart', query: { queryState: { Y: { projections: [mea('Answered', 'Answered'), mea('Unanswered', 'Unanswered')] } } },
+    put('p8legends', { name: 'dnLegend', position: { x: 548, y: 20, z: 1000, width: 196, height: 40 }, visual: { visualType: 'donutChart', query: { queryState: { Y: { projections: [mea('Calls Answered', 'Answered'), mea('Calls Unanswered', 'Unanswered')] } } },
       objects: { legend: [{ properties: { position: S('TopCenter') } }], labels: [{ properties: { show: L('false') } }], dataPoint: [{ properties: {} }] } } });
-    put('p8legends', { name: 'dnHidden', position: { x: 548, y: 80, z: 2000, width: 151, height: 129 }, visual: { visualType: 'donutChart', query: { queryState: { Y: { projections: [mea('Answered'), mea('Unanswered')] } } },
+    put('p8legends', { name: 'dnHidden', position: { x: 548, y: 80, z: 2000, width: 151, height: 129 }, visual: { visualType: 'donutChart', query: { queryState: { Y: { projections: [mea('Calls Answered'), mea('Calls Unanswered')] } } },
       objects: { legend: [{ properties: { show: L('false') } }], labels: [{ properties: { show: L('false') } }] } } });
     put('p8legends', { name: 'dnHistory', position: { x: 977, y: 498, z: 3000, width: 291, height: 201 }, visual: { visualType: 'donutChart', query: { queryState: { Category: { projections: [col('History')] }, Y: { projections: [mea('Complaints')] } } }, objects: { labels: [{ properties: { show: L('true') } }] } } });
     put('p8legends', { name: 'dnTier', position: { x: 660, y: 498, z: 4000, width: 309, height: 201 }, visual: { visualType: 'donutChart', query: { queryState: { Category: { projections: [col('Size Tier')] }, Y: { projections: [mea('Complaints')] } } }, objects: { labels: [{ properties: { show: L('true') } }] } } });
@@ -143,7 +143,7 @@ try {
     const { planTwin, twinTree } = await import('./lib/arabic-twin.mjs');
     const labels = { 'field:Work.Department': 'القسم', 'field:Work.Project': 'المشروع', 'field:Work.Days Late': 'أيام التأخير المتوقعة', 'field:Work.Risk Score': 'مستوى المخاطر',
       'field:Work.History': 'سجل الإجراءات التنظيمية', 'field:Work.Size Tier': 'فئة حجم الشركة', 'field:Work.Complaints': 'إجمالي الشكاوى',
-      'fieldAt:p8legends/dnLegend/Work.Answered': 'المكالمات المجابة', 'fieldAt:p8legends/dnLegend/Work.Unanswered': 'المكالمات غير المجابة',
+      'fieldAt:p8legends/dnLegend/Work.Calls Answered': 'المكالمات المجابة', 'fieldAt:p8legends/dnLegend/Work.Calls Unanswered': 'المكالمات غير المجابة',
       'field:Work.Planned Start': 'تاريخ البدء المخطط', 'Max(Work.Planned End)': 'x', 'field:Max(Work.Planned End)': 'تاريخ الانتهاء المخطط', 'field:Work.Completion': 'نسبة الإنجاز', 'field:Work.Actual Start': 'تاريخ البدء الفعلي', 'field:Work.Actual End': 'تاريخ الانتهاء الفعلي', 'field:Work.Project ID': 'رقم المشروع', 'field:Work.Status': 'حالة المشروع' };
     delete labels['Max(Work.Planned End)'];
     const P = get(() => planTwin({ path: 'w/Twin Sales.pbip', arabicMonth: false, labels })), files = get(() => twinTree(P).files);
@@ -155,15 +155,16 @@ try {
     chk(() => w1w.length >= 4 && w1w.filter(([r]) => /Department/.test(r)).every(([, x]) => x != null && x < 10),
       () => `W1. Fintech p1 watchlist: the column the English hides (4 wide) stays hidden in the twin (no sliver «القسم» at its edge): ${JSON.stringify(w1w)}`);
     // W2, W3 the wide ones keep the English view: from the left, the English visible columns reversed, the key column in the box
-    const inView = (v, key) => { const ps = v.visual.query.queryState.Values.projections, w = cwOf(v); let x = 0; for (const p of ps) { const pw = w(p.queryRef) || 0; if (p.queryRef === key || (key && p.field.Measure && new RegExp('Row label: ' + key.split('.')[1]).test(p.field.Measure.Property))) return x + pw <= v.position.width - 36 && pw >= 10; x += pw; } return false; };
+    // (the key column as the reader sees it: the column itself, or the twin's row label over it; a hidden one, narrower than 10, skipped)
+    const inView = (v, key) => { const ps = v.visual.query.queryState.Values.projections, w = cwOf(v); let x = 0; for (const p of ps) { const pw = w(p.queryRef) || 0; if (pw >= 10 && (p.queryRef === key || (p.field.Measure && p.field.Measure.Property === 'Row label: ' + key.split('.')[1]))) return x + pw <= v.position.width - 36; x += pw; } return false; };
     const w2 = at('p6tables', 'mxTasks');
-    chk(() => w2 && w2.visual.visualType === 'tableEx' && inView(w2, T + '.Task Name'), () => `W2. Fintech p3 task delivery (a matrix wider than its box, now a table): its key column Task Name in view at the box's right edge: ${JSON.stringify(w2 && w2.visual && w2.visual.query.queryState.Values.projections.map((p) => [p.queryRef, cwOf(w2)(p.queryRef)]))}`);
+    chk(() => w2 && w2.visual.visualType === 'tableEx' && inView(w2, T + '.Task Name'), () => `W2. Fintech p3 task delivery (a matrix whose widths sum over its box, two of them for fields no longer in it; now a table that fits): its key column Task Name in view at the box's right edge: ${JSON.stringify(w2 && w2.visual && w2.visual.query.queryState.Values.projections.map((p) => [p.queryRef, cwOf(w2)(p.queryRef)]))}`);
     const w3 = at('p6tables', 'tblWide');
     chk(() => w3 && inView(w3, T + '.Project ID'), () => `W3. a table wider than its box by its own widths: its key column in view: ${JSON.stringify(w3 && w3.visual.query.queryState.Values.projections.map((p) => p.queryRef))}`);
     const wide2 = get(() => P.answer.cannot.find((x) => x.what === 'tables wider than their box'));
     chk(() => wide2 && wide2.where.some((w) => /^p7roadmap\/tblRoad/.test(w)) && !wide2.where.some((w) => /tblWide|mxTasks|tblFits/.test(w)), () => `W4. the roadmap (no widths of its own) named; the ones kept in view and the one that fits not: ${JSON.stringify(wide2)}`);
     const kept = get(() => (P.answer.keptInView || []).map((x) => x.visual));
-    chk(() => Array.isArray(kept) && kept.includes('tblWide') && kept.includes('mxTasks') && at('p7roadmap', 'tblFits').visual.query.queryState.Values.projections.map((p) => p.queryRef).join() === [T + '.Owner', T + '.Phase'].join(),
+    chk(() => Array.isArray(kept) && kept.join() === 'tblWide' && at('p7roadmap', 'tblFits').visual.query.queryState.Values.projections.map((p) => p.queryRef).join() === [T + '.Owner', T + '.Phase'].join(),
       () => `W5. the plan says which tables keep the English view (keptInView); a table that fits is reversed as before: ${JSON.stringify(kept)}`);
     // L the legends
     const lg = get(() => P.answer.cannot.find((x) => x.what === 'legends that may be cut'));

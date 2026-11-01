@@ -80,7 +80,7 @@
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned; one led by a text column says «الإجمالي» on its total row, as create_report\'s (a "Row label" measure)',
     matrix: 'matrices: values in reverse order (rows keep their order)',
     // (0.3.1 MX1 C) a matrix the user chose to write flat (matrixAsTable): mcp/lib/twin-plan.mjs counts these
-    matrixFlattened: 'matrices you chose to write flat (matrixAsTable): a table, one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right. Lost: its +/- grouping and its group subtotal rows (the grand total stays as the matrix shows it)',
+    matrixFlattened: 'matrices you chose to write flat (matrixAsTable): a table, one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right. Lost: its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom)',
     // (0.3.1 MX1) a matrix with one row field and no column field
     matrixAsTable: 'matrices with one row field and no column field: written as a table so its first column reads on the right: Power BI\'s matrix has no right-to-left setting. The table keeps the matrix\'s fields, names, widths, colours, sort, totals and styles, its columns in reverse order (the row field at the right)',
     newCard: 'new cards: values in reverse order, right-aligned (one value too), their inner margins swapped',
@@ -412,7 +412,9 @@
     values: ['bandedRowHeaders', 'valuesOnRow'], total: ['applyToHeaders'], columnFormatting: ['styleSubtotals'] };
   const TOTAL_STYLE = ['fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'fontColor', 'backColor'];
   // a table styles all its values alike: the row headers' own font must be the values' (or neither sets it)
-  const ROW_FONT = ['fontFamily', 'fontSize', 'bold', 'italic', 'underline', 'wordWrap'];
+  // (MX2, RepeatIQ p4 and p5: row headers not wrapped) the row headers' wordWrap is dropped, not a reason to keep a
+  // matrix: the table's values keep their own (a long name then wraps as the values do)
+  const ROW_FONT = ['fontFamily', 'fontSize', 'bold', 'italic', 'underline'];
   const MATRIX_ONLY_DROP = ['columnTotal', 'blankRows'];
   // (MX1 C, the reviewer's add-on of 1 Nov: Fintech's grouped matrix) o.levels: two or more row levels too, written flat,
   // one column per level (the user's choice, matrixAsTable: its +/- grouping and group subtotal rows are lost; its per-level
@@ -433,13 +435,16 @@
     const own = Object.keys(ob).filter((k) => !TABLE_CARDS.includes(k) && !['rowHeaders', 'subTotals', 'rowTotal', 'total'].concat(MATRIX_ONLY_DROP).includes(k));
     if (own.length) return no(`a matrix-only setting (${own.slice(0, 3).join(', ')})`);
     if ((ob.values || []).some((e) => lit((e.properties || {}).valuesOnRow) === 'true')) return no('values shown on rows');
-    if ((ob.blankRows || []).some((e) => lit((e.properties || {}).showBlankRows) === 'true')) return no('blank rows shown');
-    if ((lv ? ['rowHeaders', 'rowTotal', 'total'] : ['rowHeaders', 'subTotals', 'rowTotal', 'total']).some((k) => (ob[k] || []).some((e) => e.selector))) return no('its row headers or totals are set per field or level');
+    if (!lv && (ob.blankRows || []).some((e) => lit((e.properties || {}).showBlankRows) === 'true')) return no('blank rows shown');
+    // (MX2, Fintech p3: per-level total entries, and a style entry for the rows' totals, under row subtotals off: they
+    // show nothing, so they keep no matrix)
+    const totalsOff = lit(plain('subTotals').rowSubtotals) === 'false';
+    if ((lv || totalsOff ? ['rowHeaders', 'rowTotal', 'total'] : ['rowHeaders', 'subTotals', 'rowTotal', 'total']).some((k) => (ob[k] || []).some((e) => e.selector))) return no('its row headers or totals are set per field or level');
     const rh = plain('rowHeaders'), st = plain('subTotals'), vp = plain('values');
     const apart = ROW_FONT.filter((p) => rh[p] !== undefined && JSON.stringify(rh[p]) !== JSON.stringify(vp[p]));
     if (apart.length) return no(`its row headers are styled apart from its values (${apart.join(', ')}): a table styles its values alike`);
     if (!lv && lit(st.rowSubtotals) !== 'false' && strOf(st.rowSubtotalsPosition) === 'Top') return no('its total row is at the top: a table\'s is at the bottom');
-    if (!lv && ['rowSubtotalsLabel', 'levelSubtotalLabel'].some((p) => st[p] !== undefined)) return no('its total row has a name of its own');
+    if (!lv && !totalsOff && ['rowSubtotalsLabel', 'levelSubtotalLabel'].some((p) => st[p] !== undefined)) return no('its total row has a name of its own');
     // the table
     const v = clone(v0), o = {};
     v.visualType = 'tableEx';
@@ -521,7 +526,7 @@
   }
   // (MX1 C) a matrix written flat as the user chose (matrixAsTable): its visual.json with the table in place of the matrix
   // (not mirrored), or { why } when a table cannot show it. Returns { ok, json } or { ok: false, why }
-  const FLAT_LOST = 'its +/- grouping and its group subtotal rows (the grand total stays as the matrix shows it)';
+  const FLAT_LOST = 'its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom)';
   function flatTable(json) {
     if (kindOf(json) !== 'matrix') return { ok: false, why: 'not a matrix' };
     let t; try { t = tableOf(json.visual, { levels: true }); } catch (e) { t = { ok: false, why: 'its query has a shape not expected' }; }

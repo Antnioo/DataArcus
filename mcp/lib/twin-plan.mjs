@@ -21,10 +21,19 @@ const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 const Gallery = require('../../assets/js/visual-gallery.js');
 const Rules = require('../../assets/js/report-rules.js');
+const TextMeasure = require('../../assets/js/text-measure.js');
 const { isGlassPng } = require('../../assets/js/design-engine.js');   // (GD1: the glass picture, known by its mark)
 import { flipGlassPng } from './glass-picture.mjs';   // (GD2: the Arabic page's picture, the English page's flipped)
 import { picturesOf, flipPicturesOf, picturePagesSaid, picturePageIds } from './twin-pictures.mjs';   // (MP1: pages drawn on a picture)
 
+// (0.3.1 MX2, the owner's D-1101-03; laptop part 8: RepeatIQ p3 and p4, AdventureWorks p5) each kind of visual Power BI
+// cannot mirror, one plain line wherever the twin meets one (they move to their mirrored place, nothing inside turns)
+const KIND_LINE = [
+  { what: 'decomposition trees', types: ['decompositionTreeVisual'], why: 'a decomposition tree grows from left to right: Power BI has no setting to turn it, so it is moved only (its levels still open to the right)' },
+  { what: 'treemaps', types: ['treemap'], why: 'moved only: Power BI lays out a treemap\'s tiles itself (the largest at the top left); no setting turns them' },
+  { what: 'Power BI\'s own waterfalls', types: ['waterfallChart'], when: (a) => Gallery.waterfallRtlOf(a.waterfallRtl) === 'native', why: 'a waterfall reads left to right, as Power BI draws it (waterfallRtl "native", the default): only its place and its value axis are mirrored; waterfallRtl "mirror" writes a right-to-left copy drawn as a waterfall' },
+  { what: 'scatter charts', types: ['scatterChart'], why: 'moved only: their axes keep their sides (the value axis at the left, the X axis from left to right); no setting is proven to turn them' },
+  { what: 'maps', types: ['map', 'filledMap', 'azureMap', 'shapeMap'], why: 'moved only: a map shows places where they are; its legend and zoom buttons keep Power BI\'s places' }];
 // (0.3.1 R1) what the plan, the write and the approval page say of a matrix in the twin
 export const MATRIX_SAID = 'Power BI\'s matrix has no right-to-left setting: its row headers stay at the left and its columns (such as months) run left to right. The twin moves it to its mirrored place and reverses the order of its measures only; it fakes nothing. To read it from the right, show the same numbers as a table or a chart, which the twin mirrors; or keep it as it is.';
 // (0.3.1 K2, the outside review's point 5: say plainly what stays English or unmirrored) one short line, in English and
@@ -164,7 +173,7 @@ export function planTwin(a) {
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
+  const byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
@@ -176,7 +185,10 @@ export function planTwin(a) {
     const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
     u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
-    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return; if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
+    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return;
+      // (0.3.1 MX2) the kinds Power BI cannot mirror, each said on a line of its own (KINDS_SAID)
+      const own = isObj(v.json) && isObj(v.json.visual) ? KIND_LINE.find((x) => x.types.includes(v.json.visual.visualType) && (!x.when || x.when(a))) : null;
+      if (own) { (byKind[own.what] = byKind[own.what] || []).push(safeName(pg.id) + '/' + safeName(v.json.name)); return; } if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
   // (0.3.1 MX1) the matrices written as tables named, page/visual
@@ -192,7 +204,8 @@ export function planTwin(a) {
   if (where.custom.length) cannot.push({ what: 'custom visuals', why: 'moved only: no report setting reaches inside a custom visual (its labels, sides and menus stay as they are; a licensed one may ask for a sign-in when its page opens)', where: where.custom.slice(0, 30) });
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
-  if (where.other.length) cannot.push({ what: 'other visuals (scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
+  KIND_LINE.forEach((x) => { if (byKind[x.what]) cannot.push({ what: x.what, why: x.why, where: byKind[x.what].slice(0, 30) }); });
+  if (where.other.length) cannot.push({ what: 'other visuals (kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
   // (0.3.1 FX2, H-1) a legend position or a shadow preset outside Microsoft's catalog has no mirrored value: kept, said
   if (where.kept.length) cannot.push({ what: 'positions with no mirrored value', why: 'kept as they are: the value is not one Power BI lists for it (Microsoft\'s visual catalog), so it has no mirrored value', where: where.kept.slice(0, 30) });
   if (where.waterfallKept.length) cannot.push({ what: 'waterfall charts the running total can\'t follow', why: Mirror.KIND_WHAT.waterfallKept, where: where.waterfallKept.slice(0, 30) });
@@ -239,7 +252,7 @@ export function planTwin(a) {
   // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a
   // lower bound; never data); the room is the box less 36 (the scrollbar and margins, as the header fitting counts it).
   // Named, not narrowed: its values' widths are data, which the twin never reads
-  const wideTables = [];
+  const wideTables = [], inView = new Set((built.keptInView || []).map((x) => x.page + '/' + x.visual));
   (built.pages || []).filter((x) => x && x.pg && !keepLtr(x.pg)).forEach((x) => { const sc = isObj(x.page) && Number.isFinite(x.page.height) ? x.page.height / 1080 : 1;
     (x.visuals || []).forEach((v) => { if (!isObj(v) || !isObj(v.visual) || v.visual.visualType !== 'tableEx' || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
       const ps = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((q) => isObj(q) && typeof q.queryRef === 'string') : [];
@@ -247,7 +260,35 @@ export function planTwin(a) {
       const cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [], T = Rules.tableHeaders(v, R.theme, 'Segoe UI', sc), wrapHead = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnHeaders) ? v.visual.objects.columnHeaders : []).some((e) => isObj(e) && !e.selector && isObj(e.properties) && litStr(e.properties.wordWrap) === 'true');   // (a header that wraps takes a second line, not more width)
       const own = (r) => { const e = cw.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === r && isObj(y.properties)); const n = e && isObj(e.properties.value) && isObj(e.properties.value.expr) && isObj(e.properties.value.expr.Literal) ? parseFloat(String(e.properties.value.expr.Literal.Value)) : NaN; return Number.isFinite(n) ? n : null; };
       const need = ps.reduce((n, q) => n + (own(q.queryRef) != null ? own(q.queryRef) : wrapHead ? 0 : Rules.headerNeed(String(q.displayName != null ? q.displayName : q.nativeQueryRef || ''), T.t, T.font, sc).needW), 0), room = Math.floor(v.position.width - 36 * sc);
-      if (need > room) wideTables.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (its columns ${Math.ceil(need)} wide${ps.some((q) => own(q.queryRef) == null) ? ' at least' : ''}, its box ${room})`); }); });
+      if (need > room && !inView.has(safeName(x.pg.id) + '/' + safeName(String(v.name)))) wideTables.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (its columns ${Math.ceil(need)} wide${ps.some((q) => own(q.queryRef) == null) ? ' at least' : ''}, its box ${room})`); }); });
+  // (0.3.1 MX2, laptop part 8: Call Center p1's legend «المكالما...» twice, Consumer Complaints p3's titles «...حجم الشر»)
+  // a shown legend's Arabic that may be cut, by our estimate (Desktop has not measured a legend's room): its items when
+  // they are the visual's measures (texts the plan knows; category items are data, never read) and its title (the
+  // category or series field's name). A row legend (Top, Bottom and their centred or right forms) shares its width less
+  // 20; a side legend gets 40% of it. Each item takes a 12 marker and a 10 gap. The title gets a quarter of the row:
+  // measured on two Desktop renders of laptop part 8 (Consumer Complaints p3: Desktop showed «سجل الإجرا...» in a 291 wide
+  // donut and «فئة حجم الشر...» in a 309 one, 0.24 and 0.26 of the row by text-measure.js). Two items whose visible start
+  // would be the same once cut are said first
+  const TITLE_SHARE = 0.25, legends = [], LEGEND_KINDS = ['donutChart', 'pieChart', 'funnel', 'treemap', 'lineChart', 'areaChart', 'clusteredColumnChart', 'clusteredBarChart', 'stackedColumnChart', 'stackedBarChart', 'columnChart', 'barChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart', 'stackedAreaChart', 'scatterChart'];
+  (built.pages || []).filter((x) => x && x.pg && !keepLtr(x.pg)).forEach((x) => (x.visuals || []).forEach((v) => {
+    if (!isObj(v) || !isObj(v.visual) || !LEGEND_KINDS.includes(v.visual.visualType) || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
+    const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {}, ps = (r) => (isObj(qs[r]) && Array.isArray(qs[r].projections) ? qs[r].projections.filter(isObj) : []);
+    const lg = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.legend) ? v.visual.objects.legend : []).find((e) => isObj(e) && !e.selector && isObj(e.properties)) || { properties: {} }, P0 = lg.properties;
+    const pie = /^(donutChart|pieChart|funnel|treemap)$/.test(v.visual.visualType), byField = pie ? ps('Category')[0] || ps('Group')[0] : ps('Series')[0], measures = pie && !byField ? ps('Y').concat(ps('Values')) : !byField && ps('Y').length > 1 ? ps('Y') : [];
+    if (litStr(P0.show) === 'false' || (!byField && measures.length < 2)) return;
+    const pt = parseFloat(litStr(P0.fontSize)) || 8, font = litStr(P0.fontFamily) || 'Segoe UI', tw = (t) => TextMeasure.textWidth(t, pt, false, font);
+    const pos = litStr(P0.position) || 'Top', row = /^(Top|Bottom)/.test(pos), room = Math.floor(row ? v.position.width - 20 : v.position.width * 0.4);
+    const title = byField && litStr(P0.showTitle) !== 'false' ? String(litStr(P0.titleText) || byField.displayName || byField.nativeQueryRef || '') : '', titleRoom = Math.floor(room * TITLE_SHARE), titleW = title ? Math.min(tw(title), titleRoom) + 10 : 0, at = safeName(x.pg.id) + '/' + safeName(String(v.name));
+    if (title && tw(title) > titleRoom) legends.push({ first: false, line: `${at} (its title «${safeName(title)}» may be cut: about ${Math.ceil(tw(title))} wide, its room about ${titleRoom})` });
+    if (measures.length >= 2) {
+      const texts = measures.map((p) => String(p.displayName != null ? p.displayName : p.nativeQueryRef || '')), share = row ? (room - titleW) / texts.length - 22 : room - 22;
+      const seen = (t) => { if (tw(t) <= share) return t; let k = 0; while (k < t.length && tw(t.slice(0, k + 1) + '...') <= share) k++; return t.slice(0, k) + '...'; };
+      const shown = texts.map(seen), same = shown.some((t, i) => shown.indexOf(t) !== i), cut = texts.filter((t, i) => shown[i] !== t);
+      if (same) legends.push({ first: true, line: `${at} (its items ${texts.map((t) => '«' + safeName(t) + '»').join(' and ')} would read the same once cut: «${safeName(shown.find((t, i) => shown.indexOf(t) !== i))}»)` });
+      else if (cut.length) legends.push({ first: false, line: `${at} (its items ${cut.map((t) => '«' + safeName(t) + '»').join(', ')} may be cut: about ${Math.floor(share)} wide each)` });
+    }
+  }));
+  if (legends.length) cannot.push({ what: 'legends that may be cut', why: 'by our estimate (Desktop has not measured a legend\'s room yet), the Arabic in these legends is longer than its room, and Power BI cuts it with «...». Approve a shorter Arabic for each (on this visual, its own name for the field: the English names here may be short, as "Answered" and "Unanswered"), or move or widen the legend in the original; two items that would read the same are listed first', where: legends.filter((l) => l.first).concat(legends.filter((l) => !l.first)).map((l) => l.line).slice(0, 30) });
   if (wideTables.length) cannot.push({ what: 'tables wider than their box', why: 'this table is wider than its box: in Arabic its first column is reached by scrolling right (Power BI lays a table from its left edge and scrolls to the right; the twin reverses its columns, so the English first column is the last, at the right). It is not narrowed: how wide its values are is data, which the twin never reads, so narrowing could cut them. To keep it in view, widen the table or narrow its columns in the original', where: wideTables.slice(0, 30) });
   // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") a mirrored page drawn on DataArcus's glass picture
   // gets that picture flipped left to right, pixel by pixel (built.pictures: its file -> the flipped bytes); the twin
@@ -302,7 +343,7 @@ export function planTwin(a) {
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: twinShown.report, pbip: twinShown.pbip, folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(matrixChoices ? { matrixChoices } : {}), ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
+    pages, mirrors, cannot, ...(matrixChoices ? { matrixChoices } : {}), ...((built.keptInView || []).length ? { keptInView: built.keptInView.slice(0, 30).map((x) => Object.assign({}, x, { what: `wider than its box: it keeps the English view, the ${x.shown} columns English shows first (reversed: its first column at the box's right edge), the other ${x.behind} behind the scroll as in English; no width changed` })) } : {}), ...(notFullyArabic ? { notFullyArabic } : {}), phone, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}), ...fitted,
     // (TW1, M1-S2: the tables that say «الإجمالي» on their total row are said in mirrors, Mirror.KIND_WHAT.table: the
     // answer's size is shared with the texts list, twinFit)
     ...(built.titleMeasures ? { titleMeasures: Object.assign({}, built.titleMeasures, { notTranslated: built.titleMeasures.notTranslated.slice(0, 30), written: built.titleMeasures.written.slice(0, 30), ...(built.titleMeasures.fixed ? { fixed: built.titleMeasures.fixed.slice(0, 30) } : {}), how: 'A chart title given by a measure of the report: each of its texts is listed above (kind titleMeasure). The twin writes its own measures "Title AR: ..." with the approved Arabic texts, in its own reportExtensions.json, and its charts use them; the original report and the model are not changed.' }) } : {}),
