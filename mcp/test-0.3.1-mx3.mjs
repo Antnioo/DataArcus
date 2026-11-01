@@ -13,6 +13,7 @@ import './test-env.mjs';
 //   H1-H7  the heatmap (Call Center p1): its weekday names beside its grid in the twin (a names table at its right edge,
 //          as wide as the longest weekday, the grid growing to fit its box), the weekday bars not over them; one too
 //          short for its rows and one not by weekday stay as they are (said); the copy's Arabic page has the names
+//   S1     a button's approved Arabic shared with a button of the same text
 //   M1     a mistyped model path lists the named folder's models first
 //   node test-0.3.1-mx3.mjs
 import fs from 'node:fs';
@@ -169,6 +170,12 @@ try {
     () => `H6. the plan: the heatmap with its names beside it in mirrors, the other two kept (said): ${JSON.stringify([hcm && hcm.where, (p.j.mirrors || []).find((x) => x.kind === 'heatmapNames')])}`);
   const P2 = get(() => planTwin({ path: 'p/Twin Sales.pbip', arabicMonth: false, into: 'same' })), cf = get(() => P2.copy.files.filter((f) => f.data != null && /\/visual\.json$/.test(f.rel)).map((f) => JSON.parse(String(f.data))));
   chk(() => Array.isArray(cf) && cf.filter((v) => v.visual && v.visual.visualType === 'tableEx' && /Weekday/.test(JSON.stringify(v.visual.query))).length === 1, () => `H7. in one report with both languages the Arabic page has the names table: ${JSON.stringify(P2 && P2.threw || cf && cf.threw || '').slice(0, 300)}`);
+  // ---------- S: a button's approved Arabic shared with a button of the same text (fx1's copy: a second Reset past
+  // the plan's first answer stayed English) ----------
+  const { sameTextLabels } = await import('./lib/twin-texts.mjs');
+  const st = [{ id: 'button:p1/r1', rawId: 'button:p1/r1', kind: 'button', text: '  Reset filters', raw: '  Reset filters' }, { id: 'button:p2/r2', rawId: 'button:p2/r2', kind: 'button', text: '  Reset filters', raw: '  Reset filters' }], sl = { 'button:p1/r1': 'إعادة ضبط الفلاتر' };
+  get(() => sameTextLabels(st, sl));
+  chk(() => sl['button:p2/r2'] === 'إعادة ضبط الفلاتر', () => `S1. a button with the same text takes the approved Arabic of the other: ${JSON.stringify(sl)}`);
   // ---------- M: the path ----------
   fs.mkdirSync(path.join(ROOT, 'aa/Other.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'aa/Other.SemanticModel/model.bim'), JSON.stringify({ model: { tables: [] } }));
   const { loadModel } = await import('./lib/model.mjs');
