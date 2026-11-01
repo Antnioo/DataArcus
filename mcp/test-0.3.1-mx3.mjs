@@ -28,7 +28,6 @@ const chk = (cond, msg) => { let ok = false, err = ''; try { ok = !!cond(); } ca
 const get = (fn) => { try { return fn(); } catch (e) { return { threw: String(e && e.stack || e).slice(0, 400) }; } };
 const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const wr = (f, j) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n'); };
-const clone = (o) => JSON.parse(JSON.stringify(o));
 const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mx3-')));
 process.env.DATAARCUS_ROOT = ROOT;
 const L = (v) => ({ expr: { Literal: { Value: v } } }), S = (s) => L("'" + s + "'");
@@ -99,7 +98,7 @@ try {
   put('p5heat', heat('mxRegion', { x: 400, y: 20, width: 317.5, height: 188 }, [col('Region')]));
   wr(pj, pages);
 
-  const Plans = await import('./lib/plans.mjs'), { register } = await import('./tools/create_arabic_twin.mjs'), W = await import('./lib/approval-window.mjs'), { planTwin, twinTree } = await import('./lib/arabic-twin.mjs');
+  const Plans = await import('./lib/plans.mjs'), { register } = await import('./tools/create_arabic_twin.mjs'), W = await import('./lib/approval-window.mjs'), { planTwin } = await import('./lib/arabic-twin.mjs');
   let handler = null; register({ registerTool: (name, def, h) => { if (name === 'create_arabic_twin') handler = { h, def }; } }, {});
   const call = async (a) => { let r; try { r = await handler.h(a); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } const t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* words */ } return { err: !!r.isError, t, j }; };
   const labels = { 'field:Work.Task Name': 'اسم المهمة', 'field:Min(Work.Task ID)': 'رقم المهمة', 'field:Min(Work.Task Status)': 'حالة المهمة', 'field:Min(Work.Priority)': 'الأولوية', 'field:Sum(Work.Planned Hours)': 'الساعات المخططة', 'field:Sum(Work.Actual Hours)': 'الساعات الفعلية', 'field:Work.Hours Variance': 'فرق الساعات',
@@ -112,7 +111,7 @@ try {
   const a = { path: 'q/Twin Sales.pbip', arabicMonth: false, labels, matrixAsTable: ['mxTeam'] };
   const pq = await call(a), id = pq.j && pq.j.plan && pq.j.plan.planId, pl = id ? Plans.planOf(id) : null;
   const html = get(() => W.approvalHtml({ id, kind: pl.kind, writes: pl.writes }, W.summary(pl.kind, pl.data)));
-  chk(() => pl && JSON.stringify(pl.data.matrixAsTable) === '["mxTeam"]' && /Matrices written flat/.test(String(html)) && /mxTeam/.test(String(html)), () => `T2. the plan's data holds the choice and the approval page names it: ${pq.err ? pq.t.slice(0, 300) : JSON.stringify(pl && pl.data && pl.data.matrixAsTable)}`);
+  chk(() => pl && JSON.stringify(pl.data.matrixAsTable) === '["mxTeam"]' && /Matrices written flat|مصفوفات تُكتب جداول مسطحة/.test(String(html)) && /mxTeam/.test(String(html)), () => `T2. the plan's data holds the choice and the approval page names it: ${pq.err ? pq.t.slice(0, 300) : JSON.stringify(pl && pl.data && pl.data.matrixAsTable)}`);
   if (id) Plans.approve(id, 'user-in-browser');
   const bad = id ? await call(Object.assign({}, a, { planId: id, matrixAsTable: ['mxTop'] })) : { err: false, t: 'no plan' };
   chk(() => bad.err && /matrixAsTable differs/.test(bad.t), () => `T3. a write with another list is refused: ${bad.t.slice(0, 300)}`);
@@ -129,7 +128,8 @@ try {
   const names = (v, field) => { const ps = v.visual.query.queryState.Values.projections; return ps.find((x) => x.field.Measure && x.field.Measure.Property === 'Row label: ' + field) || ps.find((x) => x.queryRef === T + '.' + field && (cw(v)(x.queryRef) || 0) >= 10); };
   const tk = at('p1fin', 'mxTasks'), tn = tk && tk.visual ? names(tk, 'Task Name') : null;
   chk(() => tn && cw(tk)(tn.queryRef) === 327, () => `R1. Fintech p3 tasks: its names (the row label) keep the row field's English width 327: ${tn && cw(tk)(tn.queryRef)}`);
-  const room = (v) => v.position.width - 20, sum = (v) => v.visual.query.queryState.Values.projections.reduce((n, x) => n + (cw(v)(x.queryRef) || 0), 0);
+  const room = (v) => v.position.width - 20 * 720 / 1080,   // (the box less 20 at 1080 high, as the twin scales it: these pages are 720)
+   sum = (v) => v.visual.query.queryState.Values.projections.reduce((n, x) => n + (cw(v)(x.queryRef) || 0), 0);
   chk(() => tk && TASK_V.every((x) => cw(tk)(x.queryRef) >= TASK_W[x.queryRef]) && sum(tk) <= room(tk) + 0.5, () => `R2. Fintech p3 tasks: no value column narrower than in English, the table within its box (a header grows into spare room only): ${tk && JSON.stringify(tk.visual.query.queryState.Values.projections.map((x) => [x.queryRef, cw(tk)(x.queryRef)]))}`);
   const ml = at('p1fin', 'mxMiles'), mn = ml && ml.visual ? names(ml, 'Milestone') : null;
   chk(() => mn && cw(ml)(mn.queryRef) === 238 && MILE_V.every((x, i) => cw(ml)(x.queryRef) >= MILE_W[i + 1]), () => `R3. Fintech p3 milestones: its names 238, each value as wide as in English or more: ${ml && JSON.stringify(ml.visual.query.queryState.Values.projections.map((x) => [x.queryRef, cw(ml)(x.queryRef)]))}`);
@@ -173,7 +173,7 @@ try {
   fs.mkdirSync(path.join(ROOT, 'aa/Other.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'aa/Other.SemanticModel/model.bim'), JSON.stringify({ model: { tables: [] } }));
   const { loadModel } = await import('./lib/model.mjs');
   let msg = ''; try { await loadModel('p/Twin Sale.SemanticModel'); } catch (e) { msg = String(e && e.message || e); }
-  const iP = msg.indexOf('p/'), iA = msg.indexOf('aa/');
+  const there = msg.slice(msg.indexOf('Models there:')), iP = there.indexOf(' p/'), iA = there.indexOf(' aa/');
   chk(() => /Models there/.test(msg) && iP > 0 && (iA < 0 || iP < iA), () => `M1. a mistyped path in folder p lists p's models first: ${msg.slice(0, 300)}`);
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }
 

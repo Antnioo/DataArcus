@@ -329,7 +329,7 @@ const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(
 // spoke as the MCP tool). Its message is a plain fallback that names no tool.
 export class ReadError extends Error { constructor(code, data, message) { super(message); this.code = code; this.data = data || {}; } }
 
-function byName(p, root) {
+function byName(p, root, prefer) {
   const strip = (n) => String(n).replace(/\.(pbip|SemanticModel|Dataset)$/i, ''), want = strip(p).trim().toLowerCase(), isModel = (n) => /\.(SemanticModel|Dataset)$/i.test(n);
   const hits = new Set(), models = [];
   // (the audit's "seen": one folder that cannot be read never fails the whole search)
@@ -348,7 +348,8 @@ function byName(p, root) {
   // (A1-12, the audit of the reading block: folder names from disk are screened before they reach a message)
   const rel = (f) => shownPath(path.relative(root, f)) || '.';
   if (hits.size === 1) return [...hits][0];
-  const all = models.map(rel);
+  // (0.3.1 MX3, laptop part 9: a mistyped path listed the whole folder's models first) the named folder's models first
+  const all = models.map(rel).sort((x, y) => (prefer && !x.startsWith(prefer + '/') ? 1 : 0) - (prefer && !y.startsWith(prefer + '/') ? 1 : 0));
   if (hits.size > 1) throw new ReadError('MANY_MODELS_NAMED', { name: p, hits: [...hits].map(rel) }, `More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}.`);
   throw new ReadError('NO_MODEL_NAMED', { name: p, root, models: all.slice(0, 12), more: Math.max(0, all.length - 12) }, `No model named "${p}" in the working folder ${root}.${modelsThere(all)}`);
 }
@@ -358,7 +359,10 @@ const modelsThere = (all) => (all.length ? ' Models there: ' + all.slice(0, 12).
 // never an internal error, and never a guess at the model meant
 function noModelAt(p, root) {
   let models = [], more = 0;
-  try { byName('\u0000', root); } catch (e) { if (e && e.code === 'NO_MODEL_NAMED') { models = e.data.models; more = e.data.more; } else throw e; }
+  // the nearest folder of the path that is there (relative to the working folder): its models are listed first
+  let near = path.dirname(String(p)); while (near && near !== '.' && near !== path.dirname(near) && !fs.existsSync(path.resolve(root, near))) near = path.dirname(near);
+  const prefer = near && near !== '.' ? shownPath(path.relative(root, path.resolve(root, near))) : null;
+  try { byName('\u0000', root, prefer); } catch (e) { if (e && e.code === 'NO_MODEL_NAMED') { models = e.data.models; more = e.data.more; } else throw e; }
   const shown = shownPath(String(p));
   return new ReadError('NO_MODEL_AT', { path: shown, models, more }, `Nothing at "${shown}" in the working folder ${root}.${modelsThere(models.concat(Array(more).fill('')))}`);
 }

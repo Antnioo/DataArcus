@@ -118,8 +118,10 @@ try {
     chk(() => m && m.count === 1 && /written as a table so its first column reads on the right/.test(m.what) && Array.isArray(m.where) && m.where.join() === 'p4patients/mxPatients',
       () => `P1. the plan's mirrors name the converted matrix and say why: ${JSON.stringify(m)}${p.err ? ' ' + p.t.slice(0, 300) : ''}`);
     const cm = get(() => p.j.cannot.find((x) => x.what === 'matrices'));
-    chk(() => cm && /has no right-to-left setting/.test(cm.why) && cm.where.length === 1 && /^p4patients\/mxHeat \(.*Columns field/.test(cm.where[0]),
-      () => `P2. the heatmap (a Columns field) stays a matrix, said with MATRIX_SAID and its own why; the converted one not listed there: ${JSON.stringify(cm)}`);
+    // (0.3.1 MX3: a heatmap by weekday whose rows all fit gets its names beside its grid, said in mirrors, not among the matrices kept)
+    const hn = get(() => p.j.mirrors.find((x) => x.kind === 'heatmapNames'));
+    chk(() => !(cm && cm.where.some((w) => /mxHeat|mxPatients/.test(w))) && hn && hn.where.join() === 'p4patients/mxHeat',
+      () => `P2. the heatmap (a Columns field, by weekday, its rows in its box) gets its names beside it (MX3); the converted one not among the matrices kept: ${JSON.stringify([cm, hn])}`);
     const html = get(() => { const pl = Plans.planOf(id); return W.approvalHtml({ id, kind: pl.kind, writes: pl.writes }, W.summary(pl.kind, pl.data)); });
     const un = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     chk(() => typeof html === 'string' && /Matrices written as tables|المصفوفات المكتوبة جداول/.test(un(html)) && /mxPatients/.test(un(html)) && /قائمة المرضى|Patient list/.test(un(html)),

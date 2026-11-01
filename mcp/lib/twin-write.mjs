@@ -39,13 +39,15 @@ export function twinTree(P) {
   const { loc, R } = P;
   const twinDir = path.join(loc.project, P.outBase + '.Report'), twinPbip = path.join(loc.project, P.outBase + '.pbip');
   // everything is built in memory first (the plan's own build: buildTwin); then written, each file new
-  const out = new Map(), labels = rawLabels(P.texts, P.labels);
+  const out = new Map(), labels = rawLabels(P.texts, P.labels), added3 = [];
   let applied = P.built.applied;
-  P.built.pages.forEach(({ pg, page, visuals, mobiles }) => {
+  P.built.pages.forEach(({ pg, page, visuals, mobiles, extra }) => {
     // (a page.json that is not an object is copied as it is: there is nothing to label or mirror in it)
     if (isObj(page)) out.set(pg.rel, json(page));
     visuals.forEach((vj, i) => out.set(pg.visuals[i].rel, json(vj)));
     (mobiles || []).forEach((m, i) => { if (m) out.set(pg.visuals[i].mobile.rel, json(m)); });
+    // (0.3.1 MX3) a visual the twin adds to the page (a heatmap's names beside it), in the page's own folder
+    (extra || []).forEach((x) => { const rel = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1) + 'visuals/' + x.json.name + '/visual.json'; out.set(rel, json(x.json)); added3.push(rel); });
   });
   if (P.built.ext) out.set(EXT, json(P.built.ext));
   // (0.3.1 MP1) the Arabic pages' flipped pictures, registered in the twin's report.json (the original's picture stays too)
@@ -68,6 +70,8 @@ export function twinTree(P) {
     : R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : P.built.pictures && P.built.pictures.has(rel) ? P.built.pictures.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
   // (D1: the waterfall's measures, in a reportExtensions.json of the twin's own when the original has none)
   if (!P.copy && out.has(EXT) && !R.files.includes(EXT)) tree.push({ path: path.basename(twinDir) + '/' + EXT, data: out.get(EXT) });
+  // (0.3.1 MX3) the visuals the twin adds (a heatmap's names), new files of its own
+  if (!P.copy) added3.forEach((rel) => { if (!R.files.includes(rel)) tree.push({ path: path.basename(twinDir) + '/' + rel, data: out.get(rel) }); });
   if (!P.copy && !R.hasPlatform) tree.push({ path: path.basename(twinDir) + '/.platform', data: out.get('.platform') });
   added.forEach((x) => tree.push({ path: path.basename(twinDir) + '/' + RES + x.name, data: x.data }));
   let month = { written: false, why: P.month.why };

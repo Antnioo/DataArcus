@@ -163,7 +163,7 @@ export function languageCopy(P, built, labels) {
     if (isObj(im.url) && isObj(im.url.expr) && isObj(im.url.expr.ResourcePackageItem)) im.url.expr.ResourcePackageItem.ItemName = to;
   }));
   let n = 0;
-  built.pages.forEach(({ pg, page, visuals, mobiles }) => {
+  built.pages.forEach(({ pg, page, visuals, mobiles, extra }) => {
     const id = String(pg.id), arId = arOf.get(id), nm = names.get(id), folder = pg.rel.slice(0, pg.rel.lastIndexOf('/') + 1), arFolder = 'definition/pages/' + arId + '/';
     const P0 = pageOf(pg), tooltip = P0.type === 'Tooltip', drill = isObj(P0.pageBinding) && /drillthrough/i.test(String(P0.pageBinding.type || ''));
     // the English page: the original's, its page hidden when the Arabic tabs are the ones shown
@@ -229,6 +229,8 @@ export function languageCopy(P, built, labels) {
       else if (i >= 0 && pg.visuals[i].mobile && f === pg.visuals[i].mobile.rel && arM[i]) added.push({ rel, data: json(arM[i]) });
       else added.push({ rel, from: f });
     });
+    // (0.3.1 MX3) a visual the twin adds to the Arabic page (a heatmap's names), named after its matrix's new name
+    (extra || []).forEach((x) => { const j = clone(x.json); j.name = (nm.get(x.from) || x.from) + 'Names'; renameFilters(j, arId, x.from + 'Names'); added.push({ rel: arFolder + 'visuals/' + j.name + '/visual.json', data: json(j) }); });
     const shown = (pgj) => !(isObj(pgj) && pgj.visibility === hidden);
     pairs.push(Object.assign({ english: { id: safeName(id), name: safeName(typeof P0.displayName === 'string' ? P0.displayName : ''), hidden: !shown(enPage) },
       arabic: { id: arId, name: safeName(isObj(arPage) && typeof arPage.displayName === 'string' ? arPage.displayName : ''), hidden: !shown(arPage) } }, tooltip ? { tooltip: true } : {}, drill ? { drillthrough: true } : {}, bothShown.has(id) ? { bothShown: bothShown.get(id) } : {}));
