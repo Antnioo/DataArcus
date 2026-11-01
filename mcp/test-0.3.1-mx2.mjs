@@ -156,7 +156,7 @@ try {
       () => `W1. Fintech p1 watchlist: the column the English hides (4 wide) stays hidden in the twin (no sliver «القسم» at its edge): ${JSON.stringify(w1w)}`);
     // W2, W3 the wide ones keep the English view: from the left, the English visible columns reversed, the key column in the box
     // (the key column as the reader sees it: the column itself, or the twin's row label over it; a hidden one, narrower than 10, skipped)
-    const inView = (v, key) => { const ps = v.visual.query.queryState.Values.projections, w = cwOf(v); let x = 0; for (const p of ps) { const pw = w(p.queryRef) || 0; if (pw >= 10 && (p.queryRef === key || (p.field.Measure && p.field.Measure.Property === 'Row label: ' + key.split('.')[1]))) return x + pw <= v.position.width - 36; x += pw; } return false; };
+    const inView = (v, key) => { const ps = v.visual.query.queryState.Values.projections, w = cwOf(v); let x = 0; for (const p of ps) { const pw = w(p.queryRef) || 0; if (pw >= 10 && (p.queryRef === key || (p.field.Measure && p.field.Measure.Property === 'Row label: ' + key.split('.')[1]))) return x + pw <= v.position.width - 20 * 720 / 1080 + 0.5; x += pw; } return false; };   // (MX3: the room measured, the box less 20 at 1080 high)
     const w2 = at('p6tables', 'mxTasks');
     chk(() => w2 && w2.visual.visualType === 'tableEx' && inView(w2, T + '.Task Name'), () => `W2. Fintech p3 task delivery (a matrix whose widths sum over its box, two of them for fields no longer in it; now a table that fits): its key column Task Name in view at the box's right edge: ${JSON.stringify(w2 && w2.visual && w2.visual.query.queryState.Values.projections.map((p) => [p.queryRef, cwOf(w2)(p.queryRef)]))}`);
     const w3 = at('p6tables', 'tblWide');

@@ -79,6 +79,8 @@
     bar: 'bar charts: names at the right, bars growing from the right',
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned; one led by a text column says «الإجمالي» on its total row, as create_report\'s (a "Row label" measure)',
     matrix: 'matrices: values in reverse order (rows keep their order)',
+    // (0.3.1 MX3) a heatmap whose rows are the days of the week, all in its box
+    heatmapNames: 'heatmaps by weekday whose 7 rows all fit their box: their weekday names written beside the grid, at its right (a one-column table lined up row by row with the matrix, whose own row headers are hidden); Power BI\'s matrix has no right-to-left setting',
     // (0.3.1 MX1 C) a matrix the user chose to write flat (matrixAsTable): mcp/lib/twin-plan.mjs counts these
     matrixFlattened: 'matrices you chose to write flat (matrixAsTable): a table, one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right. Lost: its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom)',
     // (0.3.1 MX1) a matrix with one row field and no column field
@@ -497,7 +499,8 @@
     if ((lv || totalsOff ? ['rowHeaders', 'rowTotal', 'total'] : ['rowHeaders', 'subTotals', 'rowTotal', 'total']).some((k) => (ob[k] || []).some((e) => e.selector))) return no('its row headers or totals are set per field or level');
     const rh = plain('rowHeaders'), st = plain('subTotals'), vp = plain('values');
     const apart = ROW_FONT.filter((p) => rh[p] !== undefined && JSON.stringify(rh[p]) !== JSON.stringify(vp[p]));
-    if (apart.length) return no(`its row headers are styled apart from its values (${apart.join(', ')}): a table styles its values alike`);
+    // (MX3, ER p2: its row headers at their own size) in the chosen flat form they take the values' font (FLAT_LOST)
+    if (apart.length && !lv) return no(`its row headers are styled apart from its values (${apart.join(', ')}): a table styles its values alike`);
     if (!lv && lit(st.rowSubtotals) !== 'false' && strOf(st.rowSubtotalsPosition) === 'Top') return no('its total row is at the top: a table\'s is at the bottom');
     if (!lv && !totalsOff && ['rowSubtotalsLabel', 'levelSubtotalLabel'].some((p) => st[p] !== undefined)) return no('its total row has a name of its own');
     // the table
@@ -563,7 +566,7 @@
     m.position.width = round(m.position.width - W);
     const pick = (card, keys) => { const p = ((isObj(v.objects) && Array.isArray(v.objects[card]) ? v.objects[card] : []).find((e) => isObj(e) && !e.selector && isObj(e.properties)) || {}).properties || {}; const out = {}; keys.forEach((k) => { if (p[k] !== undefined) out[k] = clone(p[k]); }); return out; };
     const font = ['fontFamily', 'fontSize', 'bold', 'italic', 'underline'];
-    const vals = Object.assign(pick('values', font), pick('rowHeaders', font)), head = pick('columnHeaders', font.concat(['backColor', 'wordWrap'])), grid = pick('grid', ['rowPadding', 'gridHorizontal', 'gridHorizontalColor', 'gridHorizontalWeight', 'gridVertical']);
+    const vals = Object.assign(pick('values', font), pick('rowHeaders', font)), head = pick('columnHeaders', font.concat(['backColor', 'wordWrap'])), grid = pick('grid', ['rowPadding', 'textSize', 'gridHorizontal', 'gridHorizontalColor', 'gridHorizontalWeight', 'gridVertical']);
     const sub = pick('subTotals', ['rowSubtotals']);
     const vco = clone(isObj(v.visualContainerObjects) ? v.visualContainerObjects : {});
     // the same title height (its text the background's colour), no border of its own
@@ -581,12 +584,47 @@
   }
   // (MX1 C) a matrix written flat as the user chose (matrixAsTable): its visual.json with the table in place of the matrix
   // (not mirrored), or { why } when a table cannot show it. Returns { ok, json } or { ok: false, why }
-  const FLAT_LOST = 'its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom)';
+  const FLAT_LOST = 'its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom), and a font its row headers have of their own (its size, family or weight: a table has no per-column font, so they take the values\' font)';
   function flatTable(json) {
     if (kindOf(json) !== 'matrix') return { ok: false, why: 'not a matrix' };
     let t; try { t = tableOf(json.visual, { levels: true }); } catch (e) { t = { ok: false, why: 'its query has a shape not expected' }; }
     if (!t.ok) return t;
     const j = clone(json); j.visual = t.visual; return { ok: true, json: j };
+  }
+  // (0.3.1 MX3, laptop part 9: B2 lined up row by row in Desktop at 1280 and 1920) a heatmap's weekday names beside its
+  // grid, the twin's choice when its rows are the 7 days of the week and they all fit its box without a scroll: told
+  // from the row field's name (Weekday, Day Name, Day of Week) and the box's height, never from the data. A row is
+  // its text size in points x 4/3 x 1.5, plus 2 (measured: Call Center p1's 7 days and its header shown whole at 10 in
+  // 188); the header is one row more, a total one more, a shown title 1.6 rows, the box's own margins 10.
+  // Returns { ok: true, textSize } or { ok: false, why }
+  const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
+  const WEEKDAY_LONGEST = ['Wednesday', 'الأربعاء'];
+  function heatmapBeside(json) {
+    if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.height)) return { ok: false, why: 'not a matrix' };
+    const v = json.visual, rows = projections(v.query, 'Rows'), cols = projections(v.query, 'Columns');
+    if (!cols || !cols.length) return { ok: false, why: 'no Columns field' };
+    const f = rows && rows.length === 1 && isObj(rows[0]) && isObj(rows[0].field) ? rows[0].field : null, name = f && isObj(f.Column) ? f.Column.Property : null;
+    if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week' };
+    const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
+    const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
+    const rowH = Math.ceil(pt * 4 / 3 * 1.5) + 2, total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
+    const t = (entries(v.visualContainerObjects, 'title') || []).find((e) => !e.selector && isObj(e.properties)), titled = !!(t && lit(t.properties.show) === 'true');
+    const need = (7 + 1 + total) * rowH + (titled ? Math.ceil(rowH * 1.6) : 0) + 10;
+    if (need > json.position.height + 0.5) return { ok: false, why: `its 7 rows may not all fit its box (about ${need} high, its box ${Math.round(json.position.height)}): names beside it could not follow a scroll` };
+    return { ok: true, textSize: pt };
+  }
+  // the twin's heatmap (mirrored) and its names table: the names column as wide as the longest weekday name at its text
+  // size (WEEKDAY_LONGEST, English or Arabic: the model's own names), the grid growing to fill what is left of the box
+  // (columnHeaders.columnAdjustment "growToFit", Microsoft's capabilities 0.1.3), so the names stand at its right edge.
+  // Returns { matrix, table } or null
+  function heatmapNames(json, o) {
+    const h = heatmapBeside(json); if (!h.ok) return null;
+    const TMx = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
+    if (!TMx) return null;
+    const W = Math.ceil(Math.max(...WEEKDAY_LONGEST.map((t) => TMx.textWidth(t, h.textSize, false, 'Segoe UI'))) + 24);
+    const r = rowNamesBeside(json, Object.assign({}, o || {}, { width: W })); if (!r) return null;
+    plainEntry(r.matrix.visual.objects, 'columnHeaders').properties.columnAdjustment = str('growToFit');
+    return r;
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }
   function flatMatrix(json) {
@@ -836,6 +874,6 @@
   // twin of a report DataArcus wrote kept its pages left to right: their background is the transparent placeholder, not a
   // picture.) opts.blank(name): true for an image that is the placeholder (the twin checks its bytes); such a page has no picture
   const pageHasPicture = (page, opts) => { const names = pageImages(page), blank = opts && opts.blank; return names.length > 0 && names.some((n) => !(blank && n != null && blank(n))); };
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorChart, MATRIX_RTL, MATRIX_RTL_DEFAULT, flatMatrix, flatTable, FLAT_LOST, rowLabelStyle, rowNamesBeside, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorChart, MATRIX_RTL, MATRIX_RTL_DEFAULT, flatMatrix, flatTable, FLAT_LOST, rowLabelStyle, rowNamesBeside, heatmapBeside, heatmapNames, mirrorPage, unitsOf, textsOfVisual, labelVisual, textsOfMobile, labelMobile, mirrorMobile, PHONE_W, round, pageHasPicture, pageImages, BLANK_PNG };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);

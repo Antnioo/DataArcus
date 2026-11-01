@@ -173,9 +173,12 @@ const HIDDEN_W = 10;
 // (0.3.1 MX2, laptop part 8: Fintech's task matrix, written as a table, and its roadmap) a reversed table wider than its
 // box: Power BI lays a table from its left edge and scrolls to the right, so the English first columns (now the last)
 // were behind the scroll. When every column has its own width, the columns English shows are put first (at the left),
-// still reversed, so its key column ends at the box's right edge, and the ones English hides behind its own scroll go
-// after them (behind the scroll); a hidden column (narrower than HIDDEN_W) stays first. No width is changed. The room
-// is the box less 36 (the scrollbar and margins, as the header fitting counts it). Returns [{ page, visual, shown, behind }]
+// still reversed, and the ones English hides behind its own scroll go after them; a hidden column (narrower than
+// HIDDEN_W) stays first. (MX3, laptop part 9: Fintech's team showed a column after its names, half cut; RepeatIQ's
+// retention its ids at the left) the names (the last column shown) are widened to the room's edge, so what follows them
+// starts out of view: the names are always the rightmost column in view; no other width is changed, none narrowed. A
+// table that fits its box is left as reversed (its names already last). The room is the box less 20 (measured: laptop
+// part 4's AdventureWorks p1 top 10 shows its 526 of columns whole in a 547 box). Returns [{ page, visual, shown, behind }]
 function keepView(page, visuals, at) {
   const out = [], sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
   visuals.forEach((v) => {
@@ -184,11 +187,13 @@ function keepView(page, visuals, at) {
     if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
     const w = (x) => { const e = v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties)); return e ? num(e.properties.value) : null; };
     if (!ps.every((x) => Number.isFinite(w(x)))) return;
-    const room = Math.floor(p.width - 36 * sc); if (ps.reduce((n, x) => n + w(x), 0) <= room) return;
+    const room = p.width - 20 * sc; if (ps.reduce((n, x) => n + w(x), 0) <= room + 0.5) return;
     let i = ps.length, used = 0; while (i > 0 && used + w(ps[i - 1]) <= room) { used += w(ps[i - 1]); i--; }
     const shown = ps.slice(i), before = ps.slice(0, i), hidden = before.filter((x) => w(x) < HIDDEN_W), behind = before.filter((x) => w(x) >= HIDDEN_W);
     if (!shown.length || !behind.length) return;
     qs.projections = hidden.concat(shown, behind);
+    const last = shown[shown.length - 1], e = v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === last.queryRef && isObj(y.properties));
+    e.properties.value = { expr: { Literal: { Value: Mirror.round(w(last) + room - used) + 'D' } } };
     out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: shown.length, behind: behind.length });
   });
   return out;
@@ -204,27 +209,24 @@ function fitHeaders(page, visuals, origByName, ctx, at) {
     const setW = (ref, w) => { entry(ref).properties.value = { expr: { Literal: { Value: w + 'D' } } }; };
     const head = (x) => String(x.displayName != null ? x.displayName : x.nativeQueryRef || '');
     const m = (x) => Rules.headerNeed(head(x), T, font, sc), need = (x) => m(x).needW;
-    // a text column: a column of the model left-aligned in the original (DataArcus aligns its numbers right)
-    const ov = origByName[v.name], oAlign = (ref) => { const cf = ov && isObj(ov.visual) && isObj(ov.visual.objects) && Array.isArray(ov.visual.objects.columnFormatting) ? ov.visual.objects.columnFormatting : [], e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === ref && isObj(y.properties));
-      return e && e.properties.alignment && e.properties.alignment.expr ? String(e.properties.alignment.expr.Literal.Value).replace(/^'|'$/g, '') : null; };
-    // (TW1, M1-S2: the row label stands for the text column it shows, right-aligned as the writer writes it)
-    const rowLabel = (x) => isObj(x.field) && isObj(x.field.Measure) && typeof x.field.Measure.Property === 'string' && x.field.Measure.Property.startsWith(Q.ROW_LABEL);
-    const isText = (x) => rowLabel(x) || (isObj(x.field) && !!x.field.Column && !/^(Right|Center)$/i.test(String(oAlign(x.queryRef) || '')));
+    // (MX3: no column gives its width for another's header any more, so which are text columns no longer matters here)
     const cols = H.cols.map((c) => c.p);
-    const ownNeed = (x) => Math.max(need(x), Math.ceil(12 * 0.55 * T * 4 / 3 + 24 * sc));
     let spare = Math.floor(p.width - 36 * sc - o.columnWidth.filter((e) => isObj(e) && isObj(e.properties)).reduce((a, e) => a + (num(e.properties.value) || 0), 0));
     // (0.3.1 MX2, Fintech p1's watchlist: its first column, 4 wide in English, came out a cut sliver «القسم») a column
     // the original hides (narrower than HIDDEN_W) stays hidden: never widened for its header
     cols.filter((x) => widthOf(x.queryRef) >= HIDDEN_W && widthOf(x.queryRef) + 0.5 < need(x)).forEach((x) => {
       let short = need(x) - Math.floor(widthOf(x.queryRef)), got = 0;
       const take = Math.min(short, Math.max(0, spare)); spare -= take; got += take; short -= take;
-      cols.filter((d) => d !== x && isText(d)).forEach((d) => { if (short <= 0) return; const give = Math.min(short, Math.floor(widthOf(d.queryRef) - ownNeed(d))); if (give > 0) { setW(d.queryRef, Math.floor(widthOf(d.queryRef)) - give); got += give; short -= give; } });
+      // (0.3.1 MX3, laptop part 9: Fintech's task names narrowed 327 -> 134 and wrapped on three lines, the watchlist's
+      // project names cut "P054 - SEPA Pl...") no column is narrowed for another's header: each keeps its English width,
+      // a header grows only into the box's spare room; what still does not fit is said (headersCut)
       if (got) setW(x.queryRef, Math.floor(widthOf(x.queryRef)) + got);
       const w = widthOf(x.queryRef), what = { page: safeName(at), visual: safeName(String(v.name)), column: safeName(x.queryRef), needs: need(x), width: w };
       if (got) out.headers.push(what);
       if (short <= 0) return;
-      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide by our measure, and the table's other columns can give no more (numbers are never narrowed); Desktop 2.159 drew Arabic headers whole in about 0.7 of our measure (from ${m(x).lowW} here), so Power BI may cut it: look at it in Desktop, or give a shorter Arabic name` }));
-      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: `its Arabic header needs ${need(x)} wide; the table's other columns can give no more (numbers are never narrowed): give a shorter Arabic name, or Power BI cuts the header` }));
+      // (MX3: one short why per column, the measure said once in the plan's sayInPlan: the plan's texts keep their room)
+      if (w + 0.5 >= m(x).lowW) out.headersCut.push(Object.assign({}, what, { cut: 'may be cut', lowW: m(x).lowW, why: 'Power BI may cut it: look in Desktop' }));
+      else out.headersCut.push(Object.assign({}, what, { cut: 'cut', lowW: m(x).lowW, why: 'Power BI cuts it: a shorter Arabic name' }));
     });
   });
   return out;
@@ -461,13 +463,14 @@ function cardColumn(en, ar) {
 // fitting): a visual narrower or lower than KEEP_MIN of its English size, or a bar or column chart under CHART_MIN px
 // wide or high that was not (part 8: Desktop drew no bars there), goes back to its plain mirrored box (W - x - w, its
 // English size) and is named. enVisuals, arVisuals: the page's English and Arabic visuals (arVisuals changed in place);
-// W: the page's width. Returns [{ visual, what }]
+// W: the page's width; shared: the names of visuals that share their English box with a visual the twin adds (MX3: a
+// heatmap and its names), skipped. Returns [{ visual, what }]
 export const KEEP_MIN = 0.75, CHART_MIN = 60;
-export function keepSize(enVisuals, arVisuals, W) {
+export function keepSize(enVisuals, arVisuals, W, shared) {
   const en = new Map((enVisuals || []).filter((v) => boxOk(v) && !v.visualGroup).map((v) => [String(v.name), v])), by = new Map((enVisuals || []).filter((v) => isObj(v) && v.name != null).map((v) => [String(v.name), v])), out = [];
   const chart = (v) => ['bar', 'column'].includes(Mirror.kindOf(v));
   (arVisuals || []).forEach((v) => {
-    const e = isObj(v) ? en.get(String(v.name)) : null; if (!e || !boxOk(v)) return;
+    const e = isObj(v) ? en.get(String(v.name)) : null; if (!e || !boxOk(v) || (shared && shared.has(String(v.name)))) return;
     const a = v.position, b = e.position, small = (k) => a[k] < b[k] * KEEP_MIN || (chart(e) && a[k] < CHART_MIN && b[k] >= CHART_MIN);
     if (!small('width') && !small('height')) return;
     const g = e.parentGroupName != null ? by.get(String(e.parentGroupName)) : null, Wp = g && boxOk(g) ? g.position.width : W;
@@ -544,6 +547,10 @@ export function buildTwin(P, labels) {
     // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
     const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     if (!P.keepLtr(pg)) { badgesWithText(pg, r); aroundTables(pg, r, opts); }
+    // (0.3.1 MX3) a heatmap by weekday whose rows all fit: its names beside its grid, a table of their own (extra)
+    const extra = [];
+    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o).ok) return;
+      let hn = null; try { hn = Mirror.heatmapNames(vj); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);
@@ -584,7 +591,7 @@ export function buildTwin(P, labels) {
     }
     // (MP1d) last, on every mirrored page: no visual comes out smaller than the guard allows
     (r.moved || []).forEach((m) => ruleMoves.push({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }));
-    if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
+    if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width, new Set(extra.map((x) => x.from))).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
@@ -597,7 +604,7 @@ export function buildTwin(P, labels) {
       if (tx && isObj(m) && isObj(m.visualContainerObjects) && Array.isArray(m.visualContainerObjects.title)) m.visualContainerObjects.title.forEach((e) => { if (isObj(e) && !e.selector && isObj(e.properties) && e.properties.text === undefined) e.properties.text = tx; });
       if (isObj(m)) wholeTitles(m.visualContainerObjects); return m; });
     if (mobiles.some(Boolean)) { phone.pages++; if (!P.keepLtr(pg)) { try { fitPhoneTabs(pg, r.visuals, mobiles, ctx, phone); } catch (e) { /* a shape not expected: left as it is */ } } }
-    return { pg, page, visuals: r.visuals, mobiles };
+    return { pg, page, visuals: r.visuals, mobiles, extra };
   });
   // (0.3.1 TB1c, the laptop's part 5: the write said "translated: 0 ... stays as the model gives it" of two measure
   // titles written as approved fixed Arabic) a title measure no title of the twin's pages still shows was replaced by

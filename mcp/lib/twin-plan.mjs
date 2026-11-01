@@ -173,7 +173,7 @@ export function planTwin(a) {
       how: 'Approve a fixed Arabic title for it (its id in labels: it then no longer changes with the selection), or keep the names of those fields English too.',
       howAr: 'وافق على عنوان عربي ثابت له (بمعرّفه في labels: فلا يتغير بعد ذلك مع التحديد)، أو أبقِ أسماء تلك الحقول بالإنجليزية أيضًا' } : null; }).filter(Boolean);
   // what mirrors, counted per kind, and what cannot
-  const byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [] }, together = { on: [], bars: [] };
+  const byKind = {}, kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [], waterfallKept: [], kept: [], asTables: [], heatNames: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: (pictures.get(String(pg.id)) || {}).picture === 'asked' ? 'drawn on a picture that may hold words: kept left to right until its flip is approved (picturePages)' : 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, waterfallRtl: a.waterfallRtl, dateTables, dateColumns, textColumns, waterfall: Object.assign(waterfallFacts(model.m), { theme: R.theme }) });
@@ -187,12 +187,15 @@ export function planTwin(a) {
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return;
       // (0.3.1 MX2) the kinds Power BI cannot mirror, each said on a line of its own (KINDS_SAID)
+      if (k === 'matrix' && Mirror.heatmapBeside(v.json).ok) { where.heatNames.push(safeName(pg.id) + '/' + safeName(v.json.name)); return; }
       const own = isObj(v.json) && isObj(v.json.visual) ? KIND_LINE.find((x) => x.types.includes(v.json.visual.visualType) && (!x.when || x.when(a))) : null;
       if (own) { (byKind[own.what] = byKind[own.what] || []).push(safeName(pg.id) + '/' + safeName(v.json.name)); return; } if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
   // (0.3.1 MX1) the matrices written as tables named, page/visual
   const mirrors = Object.keys(kinds).map((k) => Object.assign({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }, k === 'matrixAsTable' ? { where: where.asTables.slice(0, 30) } : {}));
+  // (MX3) the heatmaps whose weekday names the twin writes beside their grid
+  if (where.heatNames.length) mirrors.push({ kind: 'heatmapNames', what: Mirror.KIND_WHAT.heatmapNames, count: where.heatNames.length, where: where.heatNames.slice(0, 30) });
   // (MX1 C) the matrices written flat as chosen (counted with the tables above too: they are tables now)
   if (flattened.length) mirrors.push({ kind: 'matrixFlattened', what: Mirror.KIND_WHAT.matrixFlattened, count: flattened.length, where: flattened.slice(0, 30) });
   // (MX1 C) the matrices kept that the user could choose to write flat, and what that loses
@@ -261,14 +264,21 @@ export function planTwin(a) {
   // scroll. Its columns summed: its own widths (columnWidth by queryRef) or, without one, its Arabic header's width (a
   // lower bound; never data); the room is the box less 36 (the scrollbar and margins, as the header fitting counts it).
   // Named, not narrowed: its values' widths are data, which the twin never reads
-  const wideTables = [], inView = new Set((built.keptInView || []).map((x) => x.page + '/' + x.visual));
+  // (MX3) a header that wraps still needs its longest word
+  const longestWord = (t) => String(t).split(/\s+/).reduce((m, x) => (x.length > m.length ? x : m), '');
+  const mayWide = [], wideTables = [], inView = new Set((built.keptInView || []).map((x) => x.page + '/' + x.visual));
   (built.pages || []).filter((x) => x && x.pg && !keepLtr(x.pg)).forEach((x) => { const sc = isObj(x.page) && Number.isFinite(x.page.height) ? x.page.height / 1080 : 1;
     (x.visuals || []).forEach((v) => { if (!isObj(v) || !isObj(v.visual) || v.visual.visualType !== 'tableEx' || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
       const ps = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((q) => isObj(q) && typeof q.queryRef === 'string') : [];
       if (ps.length < 2) return;
       const cw = isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnWidth) ? v.visual.objects.columnWidth : [], T = Rules.tableHeaders(v, R.theme, 'Segoe UI', sc), wrapHead = (isObj(v.visual.objects) && Array.isArray(v.visual.objects.columnHeaders) ? v.visual.objects.columnHeaders : []).some((e) => isObj(e) && !e.selector && isObj(e.properties) && litStr(e.properties.wordWrap) === 'true');   // (a header that wraps takes a second line, not more width)
       const own = (r) => { const e = cw.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === r && isObj(y.properties)); const n = e && isObj(e.properties.value) && isObj(e.properties.value.expr) && isObj(e.properties.value.expr.Literal) ? parseFloat(String(e.properties.value.expr.Literal.Value)) : NaN; return Number.isFinite(n) ? n : null; };
-      const need = ps.reduce((n, q) => n + (own(q.queryRef) != null ? own(q.queryRef) : wrapHead ? 0 : Rules.headerNeed(String(q.displayName != null ? q.displayName : q.nativeQueryRef || ''), T.t, T.font, sc).needW), 0), room = Math.floor(v.position.width - 36 * sc);
+      const need = ps.reduce((n, q) => n + (own(q.queryRef) != null ? own(q.queryRef) : Rules.headerNeed(wrapHead ? longestWord(String(q.displayName != null ? q.displayName : q.nativeQueryRef || '')) : String(q.displayName != null ? q.displayName : q.nativeQueryRef || ''), T.t, T.font, sc).needW), 0), room = Math.floor(v.position.width - 36 * sc);
+      // (0.3.1 MX3, laptop part 9: RepeatIQ p4 pricing, its first column out of view behind columns Power BI sized from
+      // the data) columns with no width of their own beside ones that have one: when what is known already takes half the
+      // room, its first column (now at the right) may be out of view: said, as the twin cannot tell
+      const unknown = ps.filter((q) => own(q.queryRef) == null).length, known = ps.length - unknown;
+      if (need <= room && unknown && known && need >= room * 0.5 && !inView.has(safeName(x.pg.id) + '/' + safeName(String(v.name)))) mayWide.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (${unknown} of its ${ps.length} columns sized by Power BI from the data)`);
       if (need > room && !inView.has(safeName(x.pg.id) + '/' + safeName(String(v.name)))) wideTables.push(safeName(x.pg.id) + '/' + safeName(String(v.name)) + ` (its columns ${Math.ceil(need)} wide${ps.some((q) => own(q.queryRef) == null) ? ' at least' : ''}, its box ${room})`); }); });
   // (0.3.1 MX2, laptop part 8: Call Center p1's legend «المكالما...» twice, Consumer Complaints p3's titles «...حجم الشر»)
   // a shown legend's Arabic that may be cut, by our estimate (Desktop has not measured a legend's room): its items when
@@ -298,6 +308,7 @@ export function planTwin(a) {
     }
   }));
   if (legends.length) cannot.push({ what: 'legends that may be cut', why: 'by our estimate (Desktop has not measured a legend\'s room yet), the Arabic in these legends is longer than its room, and Power BI cuts it with «...». Approve a shorter Arabic for each (on this visual, its own name for the field: the English names here may be short, as "Answered" and "Unanswered"), or move or widen the legend in the original; two items that would read the same are listed first', where: legends.filter((l) => l.first).concat(legends.filter((l) => !l.first)).map((l) => l.line).slice(0, 30) });
+  if (mayWide.length) cannot.push({ what: 'tables that may be wider than their box', why: 'some of their columns are sized by Power BI from the data, which the twin never reads, so it cannot tell if the table fits: if it does not, its first column (now at the right) is out of view, reached by scrolling right. Look at it in the twin; to keep it in view, give those columns a width in the original', where: mayWide.slice(0, 30) });
   if (wideTables.length) cannot.push({ what: 'tables wider than their box', why: 'this table is wider than its box: in Arabic its first column is reached by scrolling right (Power BI lays a table from its left edge and scrolls to the right; the twin reverses its columns, so the English first column is the last, at the right). It is not narrowed: how wide its values are is data, which the twin never reads, so narrowing could cut them. To keep it in view, widen the table or narrow its columns in the original', where: wideTables.slice(0, 30) });
   // (0.3.1 GD2, the owner, 27 Oct: "i want the twin to be identical") a mirrored page drawn on DataArcus's glass picture
   // gets that picture flipped left to right, pixel by pixel (built.pictures: its file -> the flipped bytes); the twin
