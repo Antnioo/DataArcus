@@ -28,7 +28,8 @@
   10 (the never-shrink guard), mx1 41, mirror-parity 62 (MX1's own number), v030twin 117: unchanged. lint 0; check-min
   75 match; new stamps report-mirror 20261101mp1e (theme-generator.js), theme-generator 20261101mp1e (its 3 pages).
 - **State: DONE.** Full run on 551b9907: "run-tests: 132 suites passed" (the base's 128 + mr1, mp1-shapes, mx1, mp1e;
-  mp1e 13, mp1 100, mp1-shapes 10, mx1 41, mr1 26, mcp 1594, mutation 198, 76 mutants all killed). CI: below.
+  mp1e 13, mp1 100, mp1-shapes 10, mx1 41, mr1 26, mcp 1594, mutation 198, 76 mutants all killed). CI on e4e32b21:
+  run 41296429437 green (Linux, Windows, macOS; the website suites too).
 - **Resume:** none; the reviewer's merge.
 
 ## The causes, found in the real files
