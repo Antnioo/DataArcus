@@ -26,7 +26,8 @@
   pages, Call Center, Fintech, ER, at their real coordinates), red on 7c54e918 (MP1c's code): 3 of 10 failed (the
   heatmap's under-chart cut to 7, the 61.82 margin bar to 53.72, ER's 115.97 change named by no rule). Areas on
   bcef59ff: twin 20, arabic 15, report 42.
-- **State:** FULL_RUN_LINE
+- **State: DONE.** Full run on 329242c6: "run-tests: 129 suites passed" (the base's 128 + mp1-shapes; mp1 100,
+  mp1-shapes 10, mcp 1594, mutation 198, 76 mutants all killed). CI: below.
 - **Resume:** none; the reviewer's merge.
 
 ## The plan
