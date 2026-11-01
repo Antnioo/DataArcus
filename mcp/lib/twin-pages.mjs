@@ -501,6 +501,7 @@ export function buildTwin(P, labels) {
       if (isObj(vj) && isObj(vj.visual)) wholeTitles(vj.visual.visualContainerObjects);
       if (textRename.size) rewireMeasures(vj, textRename);
       if (!P.keepLtr(pg)) { const rl = rowLabelTable(vj, isText, rowLabelMeasure); if (rl) tables.push({ page: safeName(pg.id), visual: safeName(String(vj.name)), measure: safeName(rl) }); }
+      if (!P.keepLtr(pg)) Mirror.rowLabelStyle(vj);   // (0.3.1 MX1) the row label column keeps its text column's colours
       const t = isObj(vj) && isObj(vj.visual) && isObj(vj.visual.visualContainerObjects) && Array.isArray(vj.visual.visualContainerObjects.title) ? vj.visual.visualContainerObjects.title : [];
       t.forEach((e) => { const ms = isObj(e) && isObj(e.properties) && isObj(e.properties.text) && isObj(e.properties.text.expr) && isObj(e.properties.text.expr.Measure) ? e.properties.text.expr.Measure : null, src = ms && isObj(ms.Expression) && isObj(ms.Expression.SourceRef) ? ms.Expression.SourceRef : null;
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
