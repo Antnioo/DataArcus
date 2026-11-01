@@ -17,7 +17,7 @@
   (fx5b 21, sq9 22, metric-switcher 60, arabic-sweep 255, bilingual-report 33, large-model-caps 217); approval window
   31 (its W-01 call).
 - **State: DONE.** Full run on 2789e32d: "run-tests: 129 suites passed" (mr1 26, mcp 1594, mutation 198, 76 mutants
-  all killed; the base's 128 plus mr1). CI on the branch: started after this line.
+  all killed; the base's 128 plus mr1). CI on 37e2d17b: run 41274963404 green (Linux, Windows, macOS).
 - **Resume:** none; the reviewer's merge.
 
 ## Before -> after
