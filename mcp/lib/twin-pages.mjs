@@ -321,11 +321,12 @@ function badgesWithText(pg, r) {
     const sib = [...en.entries()].filter(([n, v]) => n !== String(u.visual) && n !== String(u.host) && boxOk(v) && boxOk(ar.get(n)) && String(v.parentGroupName || '') === String(b0.parentGroupName || '') && !v.visualGroup);
     // a text box under it whose text turns right
     const t = sib.find(([, v]) => Mirror.kindOf(v) === 'textbox' && textTurns(v) && overlapOf(v.position, b0.position) >= b0.position.width * b0.position.height / 2);
-    if (t) { b1.position.x = within(b0, t[1], ar.get(t[0])); return; }
+    const moved = (x, rule) => { if (x !== b1.position.x) { b1.position.x = x; (r.moved = r.moved || []).push({ visual: String(u.visual), rule }); } };
+    if (t) { moved(within(b0, t[1], ar.get(t[0])), 'a small visual on a text box: to its other end with the text'); return; }
     // its host's text or title turns right
-    if ((Mirror.kindOf(h0) === 'textbox' && textTurns(h0)) || titleTurns(h0, h1)) { b1.position.x = within(b0, h0, h1); return; }
+    if ((Mirror.kindOf(h0) === 'textbox' && textTurns(h0)) || titleTurns(h0, h1)) { moved(within(b0, h0, h1), 'a small visual on a visual whose text or title turns right: to its other end'); return; }
     // kept, it would lie on another visual it did not touch in English
-    if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) b1.position.x = within(b0, h0, h1);
+    if (sib.some(([n, v]) => overlapOf(ar.get(n).position, b1.position) > 0 && overlapOf(v.position, b0.position) <= 0)) moved(within(b0, h0, h1), 'a small visual kept on its host would cover another: mirrored on its own');
   });
 }
 // (0.3.1 MP1c, laptop part 7: ER's weekday bars over the heatmap's row headers; Call Center's small bar chart over the
@@ -334,8 +335,9 @@ function badgesWithText(pg, r) {
 // direction (as Mirror keeps a badge on its host, and T-6 a bar list's direction); a visual that overlapped a matrix on
 // its right part (away from its row headers) is narrowed on its side facing the matrix by the overlap in the twin, so
 // it does not lie on the row headers (inside its own mirrored box: it stays on its panel)
-const valuesOf = (v) => (isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.length : 0);
-const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || (Mirror.kindOf(v) === 'table' && valuesOf(v) <= 1);
+// (0.3.1 MP1d, laptop part 8: Desktop keeps a table's columns at its left edge in the twin too, whatever their number)
+// a matrix, or a table of any number of columns, as page-picture.mjs's check decides it
+const staysLtr = (v) => Mirror.kindOf(v) === 'matrix' || Mirror.kindOf(v) === 'table';
 function aroundTables(pg, r, opts) {
   const list = pg.visuals.map((v) => v.json), byName = new Map(list.filter(isObj).map((v) => [String(v.name), v])), arAt = new Map((r.visuals || []).map((v, i) => [isObj(v) ? String(v.name) : '', i]));
   const widthOf = (v) => { const g = v.parentGroupName != null ? byName.get(String(v.parentGroupName)) : null; return g && boxOk(g) ? g.position.width : pageOf(pg).width; };
@@ -346,13 +348,18 @@ function aroundTables(pg, r, opts) {
       if (Mirror.kindOf(v0) === 'bar' && ov >= a.width * a.height * 0.75 && Number.isFinite(a.z) && Number.isFinite(b.z) && a.z > b.z) {
         let k; try { k = Mirror.mirrorVisual(v0, widthOf(v0), Object.assign({}, opts, { keepDirection: true })).json; } catch (e) { return; }
         if (!isObj(k) || !isObj(k.position)) return;
-        k.position.x = Mirror.round(m1.position.x + a.x - b.x); r.visuals[i] = k; return;
+        k.position.x = Mirror.round(m1.position.x + a.x - b.x); r.visuals[i] = k; (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'a bar chart over a table or matrix that stays left to right: kept on it, its bars\' direction kept' }); return;
       }
       // (a matrix only: its row headers are at its left in both languages)
       if (Mirror.kindOf(m0) !== 'matrix') return;
-      const mid = (p, q) => (Math.max(p.x, q.x) + Math.min(p.x + p.width, q.x + q.width)) / 2;
-      const p1 = v1.position, q1 = m1.position;
-      if (mid(a, b) > b.x + b.width / 2 && overlapOf(p1, q1) > 0 && mid(p1, q1) < q1.x + q1.width / 2 && p1.x < q1.x && q1.x - p1.x > 0) p1.width = Mirror.round(q1.x - p1.x);
+      // (0.3.1 MP1d, laptop part 8: a column chart under the heatmap, overlapping only its bottom, was cut to 6.67 wide, a
+      // card behind a matrix of its own box to 0.92) only a visual in the matrix's side margin: its left edge in the
+      // matrix's right half, its right edge past the matrix's, its overlap a strip (a third of its own width at most, a
+      // quarter of the matrix's) beside the matrix's rows for half its height or more; never one that covers the
+      // matrix, lies under or behind it, or touches only its top or bottom edge
+      const p1 = v1.position, q1 = m1.position, ow = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x), oh = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      const margin = a.x > b.x + b.width / 2 && a.x + a.width > b.x + b.width && ow > 0 && ow <= a.width / 3 && ow <= b.width / 4 && oh >= a.height / 2;
+      if (margin && overlapOf(p1, q1) > 0 && p1.x < q1.x) { p1.width = Mirror.round(q1.x - p1.x); (r.moved = r.moved || []).push({ visual: String(v0.name), rule: 'in a matrix\'s side margin: narrowed off its row headers' }); }
     });
   });
 }
@@ -369,6 +376,44 @@ function indentToEnd(en, ar) {
     let k = 0; while (k < pa.textRuns.length - 1 && isObj(pa.textRuns[k]) && typeof pa.textRuns[k].value === 'string' && /^[ \t\u00A0]+$/.test(pa.textRuns[k].value)) k++;
     if (k && pa.textRuns.slice(k).some((x) => isObj(x) && typeof x.value === 'string' && x.value.trim())) pa.textRuns = pa.textRuns.slice(k).concat(pa.textRuns.slice(0, k));
   });
+}
+// (0.3.1 MP1d, laptop part 8: «متوسط مدة المكالمة (بالثواني)» touched its clock icon: the Arabic, wider than the
+// English, outgrew the tab stops that kept the icon's room) where a small visual lies, after the mirror and the text
+// fitting, on the end of a text box its text runs to (its paragraphs right-aligned: its right end), the text box ends
+// ICON_GAP before it: its width reduced on that side, whatever the text's width
+const ICON_GAP = 4;
+function iconRoom(visuals, moved) {
+  const list = (visuals || []).filter((v) => boxOk(v) && !v.visualGroup);
+  list.filter((t) => Mirror.kindOf(t) === 'textbox').forEach((t) => {
+    const ps = paragraphsIn(t);
+    if (!ps.length || !ps.every((pa) => isObj(pa) && pa.horizontalTextAlignment === 'right')) return;
+    const tp = t.position;
+    list.forEach((i) => {
+      const ip = i.position; if (i === t || String(i.parentGroupName || '') !== String(t.parentGroupName || '') || ip.width > tp.width / 3 || ip.height > tp.height * 1.5 || overlapOf(ip, tp) < ip.width * ip.height / 2) return;
+      const w = ip.x - ICON_GAP - tp.x;
+      if (ip.x + ip.width / 2 > tp.x + tp.width * 3 / 4 && w >= 10 && w < tp.width) { tp.width = Mirror.round(w); if (moved) moved.push({ visual: String(t.name), rule: 'a text box ends before the icon on its end' }); }
+    });
+  });
+}
+// (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
+// the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
+// fitting): a visual narrower or lower than KEEP_MIN of its English size, or a bar or column chart under CHART_MIN px
+// wide or high that was not (part 8: Desktop drew no bars there), goes back to its plain mirrored box (W - x - w, its
+// English size) and is named. enVisuals, arVisuals: the page's English and Arabic visuals (arVisuals changed in place);
+// W: the page's width. Returns [{ visual, what }]
+export const KEEP_MIN = 0.75, CHART_MIN = 60;
+export function keepSize(enVisuals, arVisuals, W) {
+  const en = new Map((enVisuals || []).filter((v) => boxOk(v) && !v.visualGroup).map((v) => [String(v.name), v])), by = new Map((enVisuals || []).filter((v) => isObj(v) && v.name != null).map((v) => [String(v.name), v])), out = [];
+  const chart = (v) => ['bar', 'column'].includes(Mirror.kindOf(v));
+  (arVisuals || []).forEach((v) => {
+    const e = isObj(v) ? en.get(String(v.name)) : null; if (!e || !boxOk(v)) return;
+    const a = v.position, b = e.position, small = (k) => a[k] < b[k] * KEEP_MIN || (chart(e) && a[k] < CHART_MIN && b[k] >= CHART_MIN);
+    if (!small('width') && !small('height')) return;
+    const g = e.parentGroupName != null ? by.get(String(e.parentGroupName)) : null, Wp = g && boxOk(g) ? g.position.width : W;
+    out.push({ visual: String(v.name), what: `kept its English size: a rule would have shrunk it to ${Mirror.round(a.width)} px wide and ${Mirror.round(a.height)} px high (English ${Mirror.round(b.width)} x ${Mirror.round(b.height)})` });
+    Object.assign(a, { x: Mirror.round(Wp - b.x - b.width), y: b.y, width: b.width, height: b.height });
+  });
+  return out;
 }
 export function buildTwin(P, labels) {
   const { R } = P, opts = { timeRightToLeft: P.timeRightToLeft !== false, waterfallRtl: P.waterfallRtl, dateTables: P.dateTables, dateColumns: P.dateColumns };
@@ -431,7 +476,7 @@ export function buildTwin(P, labels) {
     const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
     const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
     e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 };
+  const fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -470,7 +515,11 @@ export function buildTwin(P, labels) {
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
         const t = fitTextboxes(page, r.visuals, c, pg.id, keep, kept); fitted.textboxes.push(...t.textboxes); fitted.textboxesCut.push(...t.textboxesCut); } catch (e) { /* a shape not expected: left as it is */ }
+      if (!P.keepLtr(pg)) iconRoom(r.visuals, (r.moved = r.moved || []));
     }
+    // (MP1d) last, on every mirrored page: no visual comes out smaller than the guard allows
+    (r.moved || []).forEach((m) => ruleMoves.push({ where: safeName(pg.id) + '/' + safeName(m.visual), rule: m.rule }));
+    if (!P.keepLtr(pg)) { try { keepSize(pg.visuals.map((v) => v.json), r.visuals, pageOf(pg).width).forEach((k) => sizeKept.push({ where: safeName(pg.id) + '/' + safeName(k.visual), what: k.what })); } catch (e) { /* a shape not expected: left as it is */ } }
     // (0.3.0 D3) the phone layout: mirrored as the page is (a page kept left to right keeps its phone layout too), its
     // texts as approved, each page tab as wide as its Arabic name by the writer's own rule
     const mobiles = pg.visuals.map((v, i) => { if (!v.mobile) return null;
@@ -497,5 +546,5 @@ export function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, sizeKept, ruleMoves, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }
