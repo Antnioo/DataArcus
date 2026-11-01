@@ -31,7 +31,7 @@
   purpose: `mx1` P2 and `mx2` W3 (below). mp1-shapes 10, mr1 26, mirror-parity 62 unchanged; lint 0; build:min.
 - **State: DONE.** Areas twin + arabic + report + core: 88 suites passed before my run's 40-minute limit stopped it
   (exit 124), rc24's T-4 the one change (said below). Full run on 3eb6adc5 (after it only this note): "run-tests: 134
-  suites passed". CI: started on the branch.
+  suites passed". CI: run 41318169454 started.
 - **Resume:** the reviewer's merge; the laptop's part 10 (below).
 
 ## Before -> after, per item
