@@ -125,10 +125,12 @@ try {
   const padOf = (v, side) => { const e = ((v.visual.visualContainerObjects || {}).padding || []).find((x) => !x.selector); return e && e.properties[side] ? num(e.properties[side]) : 0; };
   const enGrid = HB.width - 6 - STRIP_W, arGrid = hm ? hm.position.width - 1 - padOf(hm, 'left') - padOf(hm, 'right') : NaN;
   chk(() => nm && Math.abs(arGrid - enGrid) < 0.5, () => `H1. Call Center "Mon".."Sun" (English's strip set 36): the grid keeps English's width exactly (317.5 - 6 - 36 = ${enGrid}): ${arGrid} ${nm ? '' : '(no names table)'}`);
-  chk(() => nm && Math.abs(nm.position.width + 1 - STRIP_W) < 0.5 && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && padOf(nm, 'left') === 0 && padOf(nm, 'right') === 0, () => `H2. the names table takes the strip (35, and the matrix's hidden 1), at the grid's right, no padding of its own: ${JSON.stringify([hm && hm.position, nm && nm.position])}`);
-  const ch = at('ccP1', 'colHours'), gridC = (x, w, lead) => x + (lead + w) / 2;
-  const off = ch && hm ? (gridC(hm.position.x, hm.position.width, 1) - (ch.position.x + ch.position.width / 2)) + (gridC(HB.x, HB.width, STRIP_W) - (CB.x + CB.width / 2)) : NaN;
-  chk(() => nm && Math.abs(off) <= 3, () => `H3. the hour chart 52c8e333 under the grid's hours as in English (the grid's centre against the chart's, mirrored): ${off}`);
+  // (MX7, moved on purpose: 6 more for a table cell's padding, from the matrix's padding beside its grid; the hour chart
+  // keeps English's offset from the grid's left edge in place of the old centre against centre)
+  chk(() => nm && Math.abs(nm.position.width + 1 - 6 - STRIP_W) < 0.5 && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && padOf(nm, 'left') === 0 && padOf(nm, 'right') === 0, () => `H2. the names table takes the strip (35, and the matrix's hidden 1) and 6 for a table cell's padding, at the grid's right, no padding of its own: ${JSON.stringify([hm && hm.position, nm && nm.position])}`);
+  const ch = at('ccP1', 'colHours');
+  const off = ch && hm ? (ch.position.x - (hm.position.x + padOf(hm, 'left') + 1)) - (CB.x - (HB.x + STRIP_W)) : NaN;
+  chk(() => nm && Math.abs(off) <= 0.5, () => `H3. the hour chart 52c8e333 keeps English's offset from the grid's left edge (MX7): ${off}`);
   const mx = (p.j && Array.isArray(p.j.cannot) ? p.j.cannot : []).find((x) => x.what === 'matrices'), line = (n) => ((mx && mx.where) || []).find((x) => x.includes('/' + n)) || '';
   chk(() => tablesOn('ccReal').length === 0 && /width is not set/.test(line('heatReal')), () => `H4. the real Call Center file (its strip not set, sized by Desktop from the data): B1, the plan says why: ${tablesOn('ccReal').length} names tables, ${JSON.stringify(mx && mx.where)}`);
   chk(() => /days of the week/.test(line('heatRegion')) && !line('heatShort') && (p.j.mirrors || []).some((x) => x.kind === 'heatmapNames' && x.where.includes('ccP1/heatShort')), () => `H5 (guard). a heatmap by region (set) stays B1 for its rows; the one beside its names is not among the kept: ${JSON.stringify(mx && mx.where)}`);
