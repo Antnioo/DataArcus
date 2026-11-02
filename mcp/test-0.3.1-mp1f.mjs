@@ -4,7 +4,7 @@
 //   I1-I7  the four KPI text boxes beside their icons and sparklines (Call Center p1, at their real coordinates): each
 //          keeps its width; the icon's room goes to the title's paragraph only; a box of one paragraph still narrows
 //   L1-L3  a legend donut of two measures: the legend's order reversed so its first item stands at the right; guards
-//   R1-R4  the agent card's value column (the card's own table layout), its titles unpadded; the name beside the photo
+//   R1-R4  the agent card's value column (MX4: the sentence layout, its titles padded); the name beside the photo
 //   K1-K3  a value entry with no alignment of its own under a centred default stays centred (RepeatIQ p4, Fintech p2)
 //   node test-0.3.1-mp1f.mjs
 import './test-env.mjs';
@@ -138,9 +138,12 @@ chk(() => KPI.every(([k]) => { const ps = paras(V(k)); return ps.length === 4 &&
 const so = (V('solo') || {}).position || {}, si = (V('soloIcon') || {}).position || {};
 chk(() => so.x + so.width <= si.x - 4 && so.width < 200, () => `I7 (guard, MD-c): a box of one title paragraph still ends 4 px before its icon: ${JSON.stringify(so)} ${JSON.stringify(si)}`);
 const d = V('dan'), lay = d && (d.visual.objects.referenceLabelLayout || []).find((e) => !e.selector || e.selector.id === 'default');
-chk(() => lay && lit(lay.properties.style) === 'tabular', () => `R1: the agent card's values in one column by the card's own table layout (referenceLabelLayout style "tabular"): ${JSON.stringify(d && d.visual.objects.referenceLabelLayout)}`);
+// (MX4, laptop part 10: "tabular" cut the contact line and kept each label at the left; Microsoft's capabilities have no
+// setting that puts it at the right: the sentence layout, part 9's, keeps the line whole) R1, R2 moved on purpose
+chk(() => d && !(lay && lit(lay.properties.style) === 'tabular'), () => `R1 (MX4): the agent card keeps Power BI's sentence layout, where its contact line is whole (no "tabular"): ${JSON.stringify(d && d.visual.objects.referenceLabelLayout)}`);
 const tt = d ? d.visual.objects.referenceLabelTitle.filter((e) => e.properties.titleText).map((e) => lit(e.properties.titleText)) : [];
-chk(() => tt.length === 4 && tt.every((t, i) => t === '⁧' + AR[i] + '⁩'), () => `R2: its Arabic titles written whole, with no padding (the table makes the column): ${JSON.stringify(tt)}`);
+const tw = tt.map((t) => TM.textWidth(t, 10));
+chk(() => tt.length === 4 && tt.every((t, i) => t.startsWith('⁧' + AR[i])) && Math.max(...tw) - Math.min(...tw) <= TM.textWidth(' ', 10) + 0.01, () => `R2 (MX4): its Arabic titles padded to one width (MP1e's column, part 9): ${JSON.stringify(tt)}`);
 
 await s.close();
 [ROOT, LOGS].forEach((x) => { try { fs.rmSync(x, { recursive: true, force: true }); } catch (e) { /* left for the OS */ } });

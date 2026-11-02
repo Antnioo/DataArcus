@@ -187,9 +187,13 @@ export function planTwin(a) {
     u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json), f = k === 'matrix' ? Mirror.flatMatrix(v.json) : null; if (f && f.ok) return;
       // (0.3.1 MX2) the kinds Power BI cannot mirror, each said on a line of its own (KINDS_SAID)
-      if (k === 'matrix' && Mirror.heatmapBeside(v.json).ok) { where.heatNames.push(safeName(pg.id) + '/' + safeName(v.json.name)); return; }
+      const hb = k === 'matrix' ? Mirror.heatmapBeside(v.json) : null;
+      if (hb && hb.ok) { where.heatNames.push(safeName(pg.id) + '/' + safeName(v.json.name)); return; }
+      // (0.3.1 MX4, laptop part 10: ER p1's heatmap kept as it is, unsaid) a matrix with a Columns field (a heatmap) kept
+      // with its row headers at the left says why its names are not beside it
+      const why = hb && hb.why !== 'no Columns field' ? 'its names not beside its grid: ' + hb.why : f ? f.why : '';
       const own = isObj(v.json) && isObj(v.json.visual) ? KIND_LINE.find((x) => x.types.includes(v.json.visual.visualType) && (!x.when || x.when(a))) : null;
-      if (own) { (byKind[own.what] = byKind[own.what] || []).push(safeName(pg.id) + '/' + safeName(v.json.name)); return; } if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : f ? ' (' + f.why + ')' : '')); });
+      if (own) { (byKind[own.what] = byKind[own.what] || []).push(safeName(pg.id) + '/' + safeName(v.json.name)); return; } if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : why ? ' (' + why + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
   // (0.3.1 MX1) the matrices written as tables named, page/visual
@@ -266,7 +270,7 @@ export function planTwin(a) {
   // Named, not narrowed: its values' widths are data, which the twin never reads
   // (MX3) a header that wraps still needs its longest word
   const longestWord = (t) => String(t).split(/\s+/).reduce((m, x) => (x.length > m.length ? x : m), '');
-  const mayWide = [], wideTables = [], inView = new Set((built.keptInView || []).map((x) => x.page + '/' + x.visual));
+  const mayWide = [], wideTables = [], inView = new Set((built.keptInView || []).map((x) => x.page + '/' + x.visual).concat(built.laidOut || []));   // (MX4: a table the twin laid out by its widths, a fitting one too)
   (built.pages || []).filter((x) => x && x.pg && !keepLtr(x.pg)).forEach((x) => { const sc = isObj(x.page) && Number.isFinite(x.page.height) ? x.page.height / 1080 : 1;
     (x.visuals || []).forEach((v) => { if (!isObj(v) || !isObj(v.visual) || v.visual.visualType !== 'tableEx' || !isObj(v.position) || !Number.isFinite(v.position.width)) return;
       const ps = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) && Array.isArray(v.visual.query.queryState.Values.projections) ? v.visual.query.queryState.Values.projections.filter((q) => isObj(q) && typeof q.queryRef === 'string') : [];
