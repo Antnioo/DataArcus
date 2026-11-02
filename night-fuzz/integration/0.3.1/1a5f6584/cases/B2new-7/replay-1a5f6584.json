@@ -1,0 +1,75 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v13/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v14/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v13/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v14/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "existing overlap lost",
+        "files": [
+          "p0/v7",
+          "p0/v13"
+        ]
+      },
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v7",
+          "p0/v14"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v7",
+          "p0/v14",
+          "English [{\"x\":370,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":680,\"y\":498,\"width\":99,\"height\":273,\"z\":14000}]",
+          "Arabic [{\"x\":733,\"y\":632,\"width\":177,\"height\":168,\"z\":7000},{\"x\":448,\"y\":498,\"width\":355,\"height\":273,\"z\":14000}]",
+          "plan on v7: movedByRule: gave width to a button beside it",
+          "plan on v14: fitted.buttons",
+          "in pictureChecks.newOverlaps: true"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
