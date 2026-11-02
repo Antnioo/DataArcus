@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A fourth test run in Power BI Desktop:** a chart lined up under a heatmap's grid keeps its English padding, value
+  axis and sort as well as its place, so each bar stands under its own hour, and the day names beside a heatmap get room
+  for their last row, so no scrollbar covers them.
 - **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
   they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid
   stays under the same hours as in English.
