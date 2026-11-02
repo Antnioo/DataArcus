@@ -5,7 +5,7 @@ import './test-env.mjs';
 //   V1-V3  Microsoft's validator on a WRITTEN twin and its copy (into "same"): no code the English original does not
 //          have; every visual.json the twin and the copy write carries $schema (the heatmap's names table had none)
 //   H1-H4  Call Center p1's heatmap 9d8cf758: the grid keeps its English cells' width, the names take the hidden row
-//          headers' room, the hour chart 52c8e333 under it lines up; a row header set too narrow for the names: B1
+//          headers' room, the hour chart 52c8e333 under it lines up; a row header whose width is not set (MX5): B1
 //   L1-L3  the legend donut a28b4206 in the cards' order: each item keeps its English colour
 //   C1-C2  the agent card bae91c53: the layout that keeps its contact line whole (no "tabular"), its titles padded
 //   T1-T3  Fintech p3 73b90b71 and af02c108 (narrower than their box): the slack at the left, the names at the right
@@ -74,17 +74,18 @@ try {
   const page = (id, h) => { pages.pageOrder.push(id); wr(path.join(DEF, 'pages', id, 'page.json'), { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: id, displayName: id, displayOption: 'FitToPage', width: 1280, height: h || 720 }); };
   const put = (pg, j) => wr(path.join(DEF, 'pages', pg, 'visuals', j.name, 'visual.json'), Object.assign({ $schema: VS }, j, { position: Object.assign({ tabOrder: j.position.z }, j.position) }));
   // Call Center p1 (1280 x 800): the heatmap 9d8cf758 (weekdays down, hours across, text 10, its right padding 6), the
-  // hour chart 52c8e333 under its grid; one too short for its 7 rows, one by region, one whose row header is set at 40
+  // hour chart 52c8e333 under its grid; one too short for its 7 rows, one by region, one whose row header's width is not set
   page('p1heat', 800);
   const heat = (name, box, rows, more) => pivot(name, Object.assign({ z: 26000 }, box), rows, [col('Call Hour')], [mea('Calls')], Object.assign({ subTotals: [{ properties: { rowSubtotals: L('false'), columnSubtotals: L('false') } }], columnHeaders: [{ properties: { outlineStyle: L('0D') } }],
     rowHeaders: [{ properties: { outlineStyle: L('0D'), steppedLayoutIndentation: L('10D'), outlineWeight: L('1D') } }], grid: [{ properties: { gridHorizontal: L('true'), gridVertical: L('true'), gridHorizontalWeight: L('5D'), gridVerticalWeight: L('2D'), textSize: L('10D') } }] }, more || {}),
   { stylePreset: [{ properties: { name: S('None') } }], padding: [{ properties: { right: L('6D') } }] });
   const HB = { x: 543.33, y: 434.17, width: 317.5, height: 188.33 }, CB = { x: 557.5, y: 603.75, width: 310, height: 82.5 };
-  put('p1heat', heat('mxHeat', HB, [col('Weekday', ' ')]));
+  // (MX5, moved on purpose: names beside only when English sets its row header strip: mxHeat's set at R, mxNarrow's not set)
+  put('p1heat', heat('mxHeat', HB, [col('Weekday', ' ')], { columnWidth: widths([col('Weekday', ' ')], [Math.ceil(Math.max(TM.textWidth('Wednesday', 10, false, 'Segoe UI'), TM.textWidth('الأربعاء', 10, false, 'Segoe UI')) + 12)]) }));
   put('p1heat', { name: 'colHours', position: Object.assign({ z: 28000 }, CB), visual: { visualType: 'columnChart', query: { queryState: { Category: { projections: [col('Call Hour')] }, Y: { projections: [mea('Calls')] } } }, objects: { categoryAxis: [{ properties: { show: L('false') } }], valueAxis: [{ properties: { show: L('false') } }] } } });
   put('p1heat', heat('mxShort', { x: 20, y: 20, width: 317.5, height: 120 }, [col('Weekday')]));
   put('p1heat', heat('mxRegion', { x: 400, y: 20, width: 317.5, height: 188 }, [col('Region')]));
-  put('p1heat', heat('mxNarrow', { x: 20, y: 220, width: 317.5, height: 188 }, [col('Weekday')], { columnWidth: widths([col('Weekday')], [40]) }));
+  put('p1heat', heat('mxNarrow', { x: 20, y: 220, width: 317.5, height: 188 }, [col('Weekday')]));
   // Fintech p3 (720 high): the tasks 73b90b71 (its real widths, 1002 in 1098, two stale entries) and milestones af02c108
   page('p2fin');
   const TASK_R = [col('Task Name')], TASK_V = [agg(3, 'Task ID'), agg(3, 'Task Status'), agg(3, 'Priority'), agg(0, 'Planned Hours'), agg(0, 'Actual Hours'), mea('Hours Variance')], TASK_W = [327, 94, 130, 107, 114, 104, 126];
@@ -143,7 +144,7 @@ try {
   const off = ch && hm ? (gridC(hm.position.x, hm.position.width, 1) - (ch.position.x + ch.position.width / 2)) + (gridC(HB.x, HB.width, R) - (CB.x + CB.width / 2)) : NaN;
   chk(() => Math.abs(off) <= 3, () => `H3. the hour chart 52c8e333 under the grid lines up as in English (the grid's centre against the chart's, mirrored): ${off}`);
   const nnames = Array.isArray(names) ? names.length : -1;
-  chk(() => nnames === 1, () => `H4. a heatmap whose row header is set too narrow for the names (40), one too short, one by region: no names table (B1): ${nnames} names tables`);
+  chk(() => nnames === 1, () => `H4. a heatmap whose row header's width is not set (MX5), one too short, one by region: no names table (B1): ${nnames} names tables`);
   // ---------- B: the plan names each heatmap kept B1 with its reason ----------
   const mx = get(() => p.j.cannot.find((x) => x.what === 'matrices')), line = (n) => ((mx && mx.where) || []).find((x) => x.includes('/' + n)) || '';
   chk(() => /fit/.test(line('mxShort')) && /days of the week/.test(line('mxRegion')) && /row header/.test(line('mxNarrow')), () => `B1. each heatmap kept B1 named with its reason: ${JSON.stringify(mx && mx.where)}`);
@@ -151,7 +152,7 @@ try {
   // ---------- T: the slack at the left ----------
   const cwOf = (v) => (r) => { const e = (v.visual.objects.columnWidth || []).find((x) => x.selector && x.selector.metadata === r && x.properties && x.properties.value); return e ? num(e.properties.value) : null; };
   const lay = (v) => { let x = 0; return v.visual.query.queryState.Values.projections.map((q) => { const w0 = cwOf(v)(q.queryRef) || 0, r = { ref: q.queryRef, x, w: w0 }; x += w0; return r; }).filter((c) => c.w >= 10); };
-  const room = (v, sc) => v.position.width - 20 * sc, SC = 720 / 1080;
+  const room = (v, sc) => v.position.width - (20 + 12) * sc, SC = 720 / 1080;   // (MX5, moved on purpose: the room less the vertical scrollbar's 12)
   const slack = (v, field, enW) => { const l = lay(v), last = l[l.length - 1], end = last ? last.x + last.w : 0; return v && last && /Row label: |\./.test(last.ref) && last.ref.includes(field) && Math.abs(last.w - enW) < 0.5 && end <= room(v, SC) + 0.5 && end >= room(v, SC) - 1.5; };
   const tt = at('p2fin', 'mxTasks'), ml = at('p2fin', 'mxMiles');
   chk(() => slack(tt, 'Task Name', 327), () => `T1. Fintech p3 tasks (1002 in 1098): the names at the right of the room, the slack at the left: ${tt && JSON.stringify(lay(tt))}`);

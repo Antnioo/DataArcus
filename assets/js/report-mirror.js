@@ -80,7 +80,7 @@
     table: 'tables: columns in reverse order (the first at the right), text columns right-aligned; one led by a text column says «الإجمالي» on its total row, as create_report\'s (a "Row label" measure)',
     matrix: 'matrices: values in reverse order (rows keep their order)',
     // (0.3.1 MX3) a heatmap whose rows are the days of the week, all in its box
-    heatmapNames: 'heatmaps by weekday whose 7 rows all fit their box: their weekday names written beside the grid, at its right (a one-column table lined up row by row with the matrix, whose own row headers are hidden); Power BI\'s matrix has no right-to-left setting',
+    heatmapNames: 'heatmaps by weekday whose 7 rows all fit their box and whose row headers English sets a width for: their weekday names written beside the grid, at its right, in that width (a one-column table lined up row by row with the matrix, whose own row headers are hidden); Power BI\'s matrix has no right-to-left setting',
     // (0.3.1 MX1 C) a matrix the user chose to write flat (matrixAsTable): mcp/lib/twin-plan.mjs counts these
     matrixFlattened: 'matrices you chose to write flat (matrixAsTable): a table, one column per row level (the upper levels repeated on each row), then the values, its columns in reverse order so the names read at the right. Lost: its +/- grouping, its group subtotal rows and its blank rows between groups (a grand total the matrix shows is kept, at the bottom)',
     // (0.3.1 MX1) a matrix with one row field and no column field
@@ -618,9 +618,17 @@
   // set, else the longest weekday name, English or Arabic, at the text size + 12, a cell's padding of 5 to 6 a side,
   // measured in DESKTOP-TESTS "Item 3, the table"), less the 1 the twin's hidden row headers keep. Names that need more
   // than that room (a row header set narrower): B1, said.
+  // (0.3.1 MX5, laptop part 11: Call Center's weekdays are "Mon".."Sun", English's row headers about 36, so names 82 wide
+  // left the grid 42 short: hours 17-18 behind a scroll, the hour chart off its hours) the strip is English's own, read
+  // from the file: the row field's columnWidth. The names table takes it less the 1 the hidden row headers keep, so the
+  // grid is English's exactly (the box less its padding less the strip). Not set (Desktop sizes it from the data, which
+  // the twin never reads): B1, said. The rows (ER p1 f2c68e52: 7 rows whole in 188, where the old estimate said about
+  // 202; Call Center p1: 7 and a header whole in 188 at 10): a row is the line of its text, 1.887 x pt (15.1 at 8pt,
+  // DESKTOP-TESTS "Item 3, the table"), + 2 of padding; the header one row, a total one, a title 1.6 rows, the box's own
+  // margins 6 (ER p1: 8 rows of 11pt are 182 and were whole in 188, so the margins are at most 6).
   // Returns { ok: true, textSize, width (the names table's) } or { ok: false, why }
   const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
-  const WEEKDAY_LONGEST = ['Wednesday', 'الأربعاء'], CELL_PAD = 12;
+  const ROW_LINE = 15.1 / 8, ROW_PAD = 2, ROW_TITLE = 1.6, ROW_MARGINS = 6;
   function heatmapBeside(json) {
     if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.height)) return { ok: false, why: 'not a matrix' };
     const v = json.visual, rows = projections(v.query, 'Rows'), cols = projections(v.query, 'Columns');
@@ -629,16 +637,14 @@
     if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
     const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
     const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
-    const rowH = Math.ceil(pt * 4 / 3 * 1.5) + 2, total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
+    const rowH = ROW_LINE * pt + ROW_PAD, total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
     const t = (entries(v.visualContainerObjects, 'title') || []).find((e) => !e.selector && isObj(e.properties)), titled = !!(t && lit(t.properties.show) === 'true');
-    const need = (7 + 1 + total) * rowH + (titled ? Math.ceil(rowH * 1.6) : 0) + 10;
-    if (need > json.position.height + 0.5) return { ok: false, why: `its 7 rows may not all fit its box (about ${need} high, its box ${Math.round(json.position.height)}): names beside it could not follow a scroll` };
-    const TMx = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
-    if (!TMx) return { ok: false, why: 'the text measure is not loaded' };
-    const longest = Math.max(...WEEKDAY_LONGEST.map((x) => TMx.textWidth(x, pt, false, 'Segoe UI')));
+    const need = (7 + 1 + total) * rowH + (titled ? rowH * ROW_TITLE : 0) + ROW_MARGINS;
+    if (need > json.position.height + 0.5) return { ok: false, why: `its 7 rows may not all fit its box (about ${Math.round(need)} high, its box ${Math.round(json.position.height)}): names beside it could not follow a scroll` };
     const rq = rows[0].queryRef, set = (entries(ob, 'columnWidth') || []).find((e) => isObj(e.selector) && e.selector.metadata === rq && isObj(e.properties) && e.properties.value !== undefined);
-    const R = set ? parseFloat(String(lit(set.properties.value)).replace(/D$/, '')) : Math.ceil(longest + CELL_PAD), width = Math.ceil(longest + CELL_PAD - 1);
-    if (!Number.isFinite(R) || width > R - 1 + 0.5) return { ok: false, why: `its row header is set ${Number.isFinite(R) ? round(R) : '?'} wide in English, and the weekday names need ${width + 1} beside the grid: the grid would have to narrow` };
+    const R = set ? parseFloat(String(lit(set.properties.value)).replace(/D$/, '')) : NaN;
+    if (!set) return { ok: false, why: 'its row header\'s width is not set in English (Desktop sizes it from the data, never read): names beside it could not keep English\'s grid width' };
+    if (!Number.isFinite(R) || R < 2) return { ok: false, why: 'its row header\'s width in English is not a width the names can take' };
     if (json.position.width <= (R - 1) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
     return { ok: true, textSize: pt, width: round(R - 1) };
   }

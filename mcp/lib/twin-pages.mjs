@@ -185,6 +185,12 @@ const HIDDEN_W = 10;
 // fits: its slack goes to its leftmost column (the room less 1), never between the names and the box's right edge. The
 // room is the box less 20 (measured: laptop part 4's AdventureWorks p1 top 10 shows its 526 of columns whole in a 547
 // box). Returns [{ page, visual, shown, behind }] for each table it laid out (behind 0: it fits, its slack at the left)
+// (0.3.1 MX5, laptop part 11: Fintech p3's tasks filled to 1076.7 in a 1097.7 box, 10 rows of 9 shown: Desktop's
+// vertical scrollbar took its width and a horizontal one hid the names' end) a table's row count is data, so the twin
+// never knows whether that bar shows: the room always leaves it (SCROLLBAR_W, 12 at 1080 high, measured "about 12 page
+// px" in part 11 on Fintech p3 at 1920 x 1080; scaled as the 20). What English's own columns already take (its hidden
+// ones counted) is never grown past nor shrunk: AdventureWorks p1's top 10, 526.1 in 547.5, keeps its 526.1.
+const BOX_ROOM = 20, SCROLLBAR_W = 12;
 function keepView(page, visuals, at) {
   const out = [], sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
   visuals.forEach((v) => {
@@ -195,7 +201,8 @@ function keepView(page, visuals, at) {
     const w = (x) => { const e = entry(x); return e ? num(e.properties.value) : null; };
     const setW = (x, n) => { entry(x).properties.value = { expr: { Literal: { Value: Mirror.round(n) + 'D' } } }; };
     if (!ps.every((x) => Number.isFinite(w(x)))) return;
-    const room = p.width - 20 * sc, hidden = ps.filter((x) => w(x) < HIDDEN_W), vis = ps.filter((x) => w(x) >= HIDDEN_W);
+    const hidden = ps.filter((x) => w(x) < HIDDEN_W), vis = ps.filter((x) => w(x) >= HIDDEN_W);
+    const room = p.width - (BOX_ROOM + SCROLLBAR_W) * sc - hidden.reduce((a, x) => a + Math.max(0, w(x)), 0);
     if (!vis.length) return;
     // (English's order is the reversed one read from its end: its first column, the names, is the last)
     let i = vis.length, used = 0; while (i > 0 && used + w(vis[i - 1]) <= room + 0.5) { used += w(vis[i - 1]); i--; }

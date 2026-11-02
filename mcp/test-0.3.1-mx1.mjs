@@ -106,7 +106,7 @@ try {
     const VS = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
     const orig = Object.assign({ $schema: VS }, er('mxPatients', 40));
     wr(path.join(PG, 'visuals/mxPatients/visual.json'), orig);
-    wr(path.join(PG, 'visuals/mxHeat/visual.json'), { $schema: VS, name: 'mxHeat', position: { x: 1060, y: 80, z: 2000, width: 200, height: 300, tabOrder: 2000 }, visual: heat() });
+    wr(path.join(PG, 'visuals/mxHeat/visual.json'), { $schema: VS, name: 'mxHeat', position: { x: 1060, y: 80, z: 2000, width: 200, height: 300, tabOrder: 2000 }, visual: Object.assign(heat(), { objects: { columnWidth: [{ properties: { value: { expr: { Literal: { Value: '82D' } } } }, selector: { metadata: col('Weekday').queryRef } }] } }) });   // (MX5, moved on purpose: names beside only when English sets its row header strip)
     const Plans = await import('./lib/plans.mjs'), { register } = await import('./tools/create_arabic_twin.mjs'), W = await import('./lib/approval-window.mjs');
     let handler = null; register({ registerTool: (name, def, h) => { if (name === 'create_arabic_twin') handler = h; } }, {});
     const call = async (a) => { const r = await handler(a), t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* a refusal's words */ } return { err: !!r.isError, t, j }; };
