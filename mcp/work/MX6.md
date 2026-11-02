@@ -22,8 +22,9 @@
   the brief says). Unchanged: mx1..mx5, fx1 (5 of 5, 22), terminology-sheet 48 (see Decisions). Areas: twin 29,
   arabic 15, checker 7, report 42 (glass-tables rerun after unshallowing the clone: its N0 reads cba24a5), core 8 suites passed, all on 0d29d51c; see
   State; lint 0.
-- **State:** CI next (see the end of this note).
-- **Resume:** CI on the branch; then the reviewer's merge.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41426120419 on 369db4e9 (Linux,
+  Windows, macOS). After 369db4e9 only this note changed.
+- **Resume:** the reviewer's merge.
 
 ## Before -> after, per item
 1. B1-1: a button 326 wide beside a slicer (487) and a column chart (608) on a 1280 page; the slicer gave the button 59
