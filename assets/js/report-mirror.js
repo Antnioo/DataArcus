@@ -265,7 +265,17 @@
     // the right, where the page now reads from; its slices, clockwise in reverse order, are the English ring in a mirror
     if (kind === 'plain' && ['donutChart', 'pieChart'].includes(v.visualType) && !projections(v.query, 'Category')) {
       const ys = projections(v.query, 'Y'), lg = entries(v.objects, 'legend'), hidden = (lg || []).some((e) => isObj(e.properties) && String(lit(e.properties.show)) === 'false');
-      if (ys && ys.length > 1 && lg && !hidden) { ys.reverse(); changes.push('legend order'); }
+      // (0.3.1 MX4, laptop part 10: «غير مُجابة»'s legend dot navy while its arc is orange) each measure keeps its colour:
+      // one with no fill of its own took the theme's colour of its English place; that colour is written with it before
+      // the order turns (ThemeDataColor ColorId 2 + its place: 0 and 1 are the background and foreground, the data colours
+      // follow; part 9's evidence: Answered's own ColorId 2 and Unanswered's place 2 both the theme's first two colours)
+      if (ys && ys.length > 1 && lg && !hidden) {
+        const dp = listIn(objects(), 'dataPoint');
+        if (dp) ys.forEach((y, i) => { if (!isObj(y) || typeof y.queryRef !== 'string' || i > 7) return;
+          const own = dp.some((e) => isObj(e) && isObj(e.selector) && e.selector.metadata === y.queryRef && Object.keys(e.selector).length === 1 && isObj(e.properties) && e.properties.fill !== undefined);
+          if (!own) dp.push({ properties: { fill: { solid: { color: { expr: { ThemeDataColor: { ColorId: 2 + i, Percent: 0 } } } } } }, selector: { metadata: y.queryRef } }); });
+        ys.reverse(); changes.push('legend order');
+      }
     }
     // charts: the bar, column, line, area, combo charts' rules (chartRtl, shared with create_report's writer: mirrorChart)
     // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
@@ -319,7 +329,11 @@
       (vals || []).forEach((e) => { const ic = isObj(e) && isObj(e.properties) && isObj(e.properties.icon) ? e.properties.icon : null; if (ic && strOf(ic.layout) === 'After') { ic.layout = str('Before'); changes.push('status icons'); } });
       const ps = projections(v.query, 'Values');
       if (ps && ps.length > 1) { ps.reverse(); changes.push('columns'); }
-      (ps || []).filter((x) => isObj(x) && isObj(x.field) && x.field.Column && typeof x.queryRef === 'string').forEach((x) => {
+      // (0.3.1 MX4, laptop part 10: ER p2 flat, Full Name and Department read left-aligned while the plan said right) a
+      // flat matrix's Min or Max of a text column (the model's text columns, o.textColumns) is a text column too
+      const textAgg = (f) => { const a = isObj(f.Aggregation) ? f.Aggregation : null, c = a && isObj(a.Expression) && isObj(a.Expression.Column) ? a.Expression.Column : null;
+        return !!c && (a.Function === 3 || a.Function === 4) && isObj(c.Expression) && isObj(c.Expression.SourceRef) && Array.isArray(o.textColumns) && o.textColumns.includes(c.Expression.SourceRef.Entity + '.' + c.Property); };
+      (ps || []).filter((x) => isObj(x) && isObj(x.field) && (x.field.Column || textAgg(x.field)) && typeof x.queryRef === 'string').forEach((x) => {
         const cf = listIn(objects(), 'columnFormatting'); if (!cf) return;
         let e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef);
         if (!e) { e = { properties: {}, selector: { metadata: x.queryRef } }; cf.push(e); }
@@ -550,6 +564,7 @@
   // at its right edge (o.width wide, default 90), same top, height, title height, header, font, size and row padding,
   // its header text blank (a table's header cannot be turned off: tableEx has no columnHeaders.show), right-aligned.
   // json: the matrix's visual.json (as the twin wrote it). Returns { matrix, table } (two visual.json) or null
+  const VISUAL_SCHEMA = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
   function rowNamesBeside(json, opts) {
     const o = opts || {}, W = Number.isFinite(o.width) ? o.width : 90, bg = typeof o.background === 'string' ? o.background : '#FFFFFF';
     if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.width) || json.position.width <= W * 2) return null;
@@ -574,7 +589,9 @@
     vco.border = [{ properties: { show: mk('false') } }];
     const field = Object.assign(clone(row), { displayName: ' ' }); delete field.active;
     const sd = isObj(v.query.sortDefinition) && Array.isArray(v.query.sortDefinition.sort) ? v.query.sortDefinition.sort.filter((x) => isObj(x) && sameField(x.field, row.field)) : [];
-    const table = { name: String(json.name) + 'Names', position: Object.assign(clone(json.position), { x: round(m.position.x + m.position.width), width: W, z: (Number.isFinite(json.position.z) ? json.position.z : 0) + 1 }),
+    // (0.3.1 MX4, laptop part 10: Desktop refused the whole report, "Failed to load the report.", the validator's
+    // PBIR_JSON_FILE_NO_SCHEMA on this file) the one visual built here rather than cloned: the matrix's own $schema
+    const table = { $schema: typeof json.$schema === 'string' ? json.$schema : VISUAL_SCHEMA, name: String(json.name) + 'Names', position: Object.assign(clone(json.position), { x: round(m.position.x + m.position.width), width: W, z: (Number.isFinite(json.position.z) ? json.position.z : 0) + 1 }),
       visual: { visualType: 'tableEx', query: Object.assign({ queryState: { Values: { projections: [field] } } }, sd.length ? { sortDefinition: { sort: clone(sd), isDefaultSort: false } } : {}),
         objects: { values: [{ properties: Object.assign(vals, { backColorPrimary: clone(rh.backColor), backColorSecondary: clone(rh.backColor) }) }], columnHeaders: [{ properties: Object.assign(head, { fontColor: clone(head.backColor || fill(bg)) }) }],
           grid: [{ properties: grid }], total: [{ properties: { totals: sub.rowSubtotals !== undefined ? sub.rowSubtotals : mk('true') } }],
@@ -596,34 +613,45 @@
   // from the row field's name (Weekday, Day Name, Day of Week) and the box's height, never from the data. A row is
   // its text size in points x 4/3 x 1.5, plus 2 (measured: Call Center p1's 7 days and its header shown whole at 10 in
   // 188); the header is one row more, a total one more, a shown title 1.6 rows, the box's own margins 10.
-  // Returns { ok: true, textSize } or { ok: false, why }
+  // (0.3.1 MX4, laptop part 10: the matrix narrowed by 95 for the names, the grid behind a horizontal scroll) the grid
+  // keeps its English cells' width: the names take only the room the English row headers had (R: their own width when
+  // set, else the longest weekday name, English or Arabic, at the text size + 12, a cell's padding of 5 to 6 a side,
+  // measured in DESKTOP-TESTS "Item 3, the table"), less the 1 the twin's hidden row headers keep. Names that need more
+  // than that room (a row header set narrower): B1, said.
+  // Returns { ok: true, textSize, width (the names table's) } or { ok: false, why }
   const WEEKDAY = /^(week ?day|day ?name|day of (the )?week|dayofweek|week ?day name)$/i;
-  const WEEKDAY_LONGEST = ['Wednesday', 'الأربعاء'];
+  const WEEKDAY_LONGEST = ['Wednesday', 'الأربعاء'], CELL_PAD = 12;
   function heatmapBeside(json) {
     if (kindOf(json) !== 'matrix' || !isObj(json.position) || !Number.isFinite(json.position.height)) return { ok: false, why: 'not a matrix' };
     const v = json.visual, rows = projections(v.query, 'Rows'), cols = projections(v.query, 'Columns');
     if (!cols || !cols.length) return { ok: false, why: 'no Columns field' };
     const f = rows && rows.length === 1 && isObj(rows[0]) && isObj(rows[0].field) ? rows[0].field : null, name = f && isObj(f.Column) ? f.Column.Property : null;
-    if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week' };
+    if (typeof name !== 'string' || !WEEKDAY.test(name.trim())) return { ok: false, why: 'its rows are not the days of the week (told from the row field\'s name)' };
     const ob = isObj(v.objects) ? v.objects : {}, pv = (k, x) => { const e = (Array.isArray(ob[k]) ? ob[k] : []).find((y) => isObj(y) && !y.selector && isObj(y.properties) && y.properties[x] !== undefined); return e ? e.properties[x] : undefined; };
     const pt = parseFloat(String(lit(pv('grid', 'textSize')) || lit(pv('values', 'fontSize')) || lit(pv('rowHeaders', 'fontSize')) || '10').replace(/D$/, '')) || 10;
     const rowH = Math.ceil(pt * 4 / 3 * 1.5) + 2, total = lit(pv('subTotals', 'rowSubtotals')) !== 'false' ? 1 : 0;
     const t = (entries(v.visualContainerObjects, 'title') || []).find((e) => !e.selector && isObj(e.properties)), titled = !!(t && lit(t.properties.show) === 'true');
     const need = (7 + 1 + total) * rowH + (titled ? Math.ceil(rowH * 1.6) : 0) + 10;
     if (need > json.position.height + 0.5) return { ok: false, why: `its 7 rows may not all fit its box (about ${need} high, its box ${Math.round(json.position.height)}): names beside it could not follow a scroll` };
-    return { ok: true, textSize: pt };
+    const TMx = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
+    if (!TMx) return { ok: false, why: 'the text measure is not loaded' };
+    const longest = Math.max(...WEEKDAY_LONGEST.map((x) => TMx.textWidth(x, pt, false, 'Segoe UI')));
+    const rq = rows[0].queryRef, set = (entries(ob, 'columnWidth') || []).find((e) => isObj(e.selector) && e.selector.metadata === rq && isObj(e.properties) && e.properties.value !== undefined);
+    const R = set ? parseFloat(String(lit(set.properties.value)).replace(/D$/, '')) : Math.ceil(longest + CELL_PAD), width = Math.ceil(longest + CELL_PAD - 1);
+    if (!Number.isFinite(R) || width > R - 1 + 0.5) return { ok: false, why: `its row header is set ${Number.isFinite(R) ? round(R) : '?'} wide in English, and the weekday names need ${width + 1} beside the grid: the grid would have to narrow` };
+    if (json.position.width <= (R - 1) * 2) return { ok: false, why: 'its box is too narrow for the names beside its grid' };
+    return { ok: true, textSize: pt, width: round(R - 1) };
   }
-  // the twin's heatmap (mirrored) and its names table: the names column as wide as the longest weekday name at its text
-  // size (WEEKDAY_LONGEST, English or Arabic: the model's own names), the grid growing to fill what is left of the box
+  // the twin's heatmap (mirrored) and its names table: the names table in the room of the English row headers (no padding
+  // of its own at its sides, so its column is all of it), the matrix the rest of the box, its grid filling it
   // (columnHeaders.columnAdjustment "growToFit", Microsoft's capabilities 0.1.3), so the names stand at its right edge.
   // Returns { matrix, table } or null
   function heatmapNames(json, o) {
     const h = heatmapBeside(json); if (!h.ok) return null;
-    const TMx = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
-    if (!TMx) return null;
-    const W = Math.ceil(Math.max(...WEEKDAY_LONGEST.map((t) => TMx.textWidth(t, h.textSize, false, 'Segoe UI'))) + 24);
-    const r = rowNamesBeside(json, Object.assign({}, o || {}, { width: W })); if (!r) return null;
+    const r = rowNamesBeside(json, Object.assign({}, o || {}, { width: h.width })); if (!r) return null;
     plainEntry(r.matrix.visual.objects, 'columnHeaders').properties.columnAdjustment = str('growToFit');
+    const vco = r.table.visual.visualContainerObjects, pe = plainEntry(vco, 'padding').properties;
+    pe.left = mk('0D'); pe.right = mk('0D');
     return r;
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }

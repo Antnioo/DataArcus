@@ -4,7 +4,7 @@
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
-import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf, PAD_END } from './twin-texts.mjs';
+import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
 import { createRequire } from 'node:module';
@@ -176,24 +176,36 @@ const HIDDEN_W = 10;
 // still reversed, and the ones English hides behind its own scroll go after them; a hidden column (narrower than
 // HIDDEN_W) stays first. (MX3, laptop part 9: Fintech's team showed a column after its names, half cut; RepeatIQ's
 // retention its ids at the left) the names (the last column shown) are widened to the room's edge, so what follows them
-// starts out of view: the names are always the rightmost column in view; no other width is changed, none narrowed. A
-// table that fits its box is left as reversed (its names already last). The room is the box less 20 (measured: laptop
-// part 4's AdventureWorks p1 top 10 shows its 526 of columns whole in a 547 box). Returns [{ page, visual, shown, behind }]
+// starts out of view: the names are always the rightmost column in view.
+// (0.3.1 MX4, laptop part 10: RepeatIQ's names widened 93 -> 178.67, so English's second column went out of view;
+// Fintech p3's tables, 1002 of columns in 1098, left their blank at the right of the names) the names keep their English
+// width. A wider table: the columns English shows whole stay in view, the names last at the room's edge, and the column
+// English shows in part stays in view at the width English shows of it (the room less the whole ones; under HIDDEN_W it
+// goes behind and its room to the leftmost column); only what English keeps behind the scroll goes behind. A table that
+// fits: its slack goes to its leftmost column (the room less 1), never between the names and the box's right edge. The
+// room is the box less 20 (measured: laptop part 4's AdventureWorks p1 top 10 shows its 526 of columns whole in a 547
+// box). Returns [{ page, visual, shown, behind }] for each table it laid out (behind 0: it fits, its slack at the left)
 function keepView(page, visuals, at) {
   const out = [], sc = isObj(page) && Number.isFinite(page.height) ? page.height / 1080 : 1;
   visuals.forEach((v) => {
     const p = posOf(v); if (typeOf(v) !== 'tableEx' || !p || !isObj(v.visual.objects) || !Array.isArray(v.visual.objects.columnWidth)) return;
     const qs = isObj(v.visual.query) && isObj(v.visual.query.queryState) && isObj(v.visual.query.queryState.Values) ? v.visual.query.queryState.Values : null, ps = qs && Array.isArray(qs.projections) ? qs.projections : null;
     if (!ps || ps.length < 2 || !ps.every((x) => isObj(x) && typeof x.queryRef === 'string')) return;
-    const w = (x) => { const e = v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties)); return e ? num(e.properties.value) : null; };
+    const entry = (x) => v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef && isObj(y.properties));
+    const w = (x) => { const e = entry(x); return e ? num(e.properties.value) : null; };
+    const setW = (x, n) => { entry(x).properties.value = { expr: { Literal: { Value: Mirror.round(n) + 'D' } } }; };
     if (!ps.every((x) => Number.isFinite(w(x)))) return;
-    const room = p.width - 20 * sc; if (ps.reduce((n, x) => n + w(x), 0) <= room + 0.5) return;
-    let i = ps.length, used = 0; while (i > 0 && used + w(ps[i - 1]) <= room) { used += w(ps[i - 1]); i--; }
-    const shown = ps.slice(i), before = ps.slice(0, i), hidden = before.filter((x) => w(x) < HIDDEN_W), behind = before.filter((x) => w(x) >= HIDDEN_W);
-    if (!shown.length || !behind.length) return;
+    const room = p.width - 20 * sc, hidden = ps.filter((x) => w(x) < HIDDEN_W), vis = ps.filter((x) => w(x) >= HIDDEN_W);
+    if (!vis.length) return;
+    // (English's order is the reversed one read from its end: its first column, the names, is the last)
+    let i = vis.length, used = 0; while (i > 0 && used + w(vis[i - 1]) <= room + 0.5) { used += w(vis[i - 1]); i--; }
+    const whole = vis.slice(i);
+    if (!whole.length) return;
+    if (i === 0) { const slack = room - 1 - used; if (slack >= 0.5) { setW(vis[0], w(vis[0]) + slack); out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: vis.length, behind: 0 }); } return; }
+    const part = vis[i - 1], slice = room - used;
+    let shown, behind;
+    if (slice >= HIDDEN_W) { setW(part, slice); shown = [part].concat(whole); behind = vis.slice(0, i - 1); } else { setW(whole[0], w(whole[0]) + slice); shown = whole; behind = vis.slice(0, i); }
     qs.projections = hidden.concat(shown, behind);
-    const last = shown[shown.length - 1], e = v.visual.objects.columnWidth.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === last.queryRef && isObj(y.properties));
-    e.properties.value = { expr: { Literal: { Value: Mirror.round(w(last) + room - used) + 'D' } } };
     out.push({ page: safeName(at), visual: safeName(String(v.name)), shown: shown.length, behind: behind.length });
   });
   return out;
@@ -442,22 +454,6 @@ function iconRoom(visuals, moved) {
     });
   });
 }
-// (0.3.1 MP1f, laptop part 9: Call Center's agent card, its Arabic reference label titles padded with "space + RLM" to
-// one measured width, still drew its values ragged in Desktop: about 200, 207, 207, 268 against one column in English)
-// a card whose English titles are padded into a column (twin-texts.mjs PAD_END, two or more) takes the card's own table
-// layout for its reference labels (referenceLabelLayout style "tabular", Power BI's "Table"); its Arabic titles carry
-// no padding (rawLabels)
-function cardColumn(en, ar) {
-  if (Mirror.kindOf(ar) !== 'newCard' || !isObj(en) || !isObj(en.visual) || !isObj(en.visual.objects) || !isObj(ar.visual.objects)) return false;
-  const padded = (en.visual.objects.referenceLabelTitle || []).filter((e) => isObj(e) && isObj(e.properties) && PAD_END.test(String(litStr(e.properties.titleText) || '')));
-  if (padded.length < 2) return false;
-  const list = Array.isArray(ar.visual.objects.referenceLabelLayout) ? ar.visual.objects.referenceLabelLayout : (ar.visual.objects.referenceLabelLayout = []);
-  let e = list.find((x) => isObj(x) && (!x.selector || (isObj(x.selector) && x.selector.id === 'default' && Object.keys(x.selector).length === 1)));
-  if (!e) { e = { properties: {}, selector: { id: 'default' } }; list.push(e); }
-  if (!isObj(e.properties)) e.properties = {};
-  e.properties.style = { expr: { Literal: { Value: "'tabular'" } } };
-  return true;
-}
 // (0.3.1 MP1d, the owner, 1 Nov, on part 7 vs part 8: Call Center's heatmap row cut to a sliver and nothing caught it)
 // the twin never shrinks a visual. Run last on each page, after every rule (the mirror, the badges, the tables, the
 // fitting): a visual narrower or lower than KEEP_MIN of its English size, or a bar or column chart under CHART_MIN px
@@ -540,7 +536,7 @@ export function buildTwin(P, labels) {
     const had = rlWritten.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
     const names = takenAnywhere(); let m = want; for (let k = 2; names.has(m.toLowerCase()); k++) m = want + ' (' + k + ')';
     e.measures.push({ name: m, dataType: 'Text', expression }); rlWritten.push({ t, m, expression }); return m; };
-  const keptInView = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
+  const keptInView = [], laidOut = [], fitted = { buttons: [], buttonsCut: [], headers: [], headersCut: [], textboxes: [], textboxesCut: [] }, phone = { tabs: [], tabsCut: [], pages: 0 }, sizeKept = [], ruleMoves = [];
   const pages = R.pages.map((pg) => {
     let page = pg.page;
     if (isObj(pg.page)) { page = JSON.parse(JSON.stringify(pg.page)); if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; } }
@@ -575,14 +571,13 @@ export function buildTwin(P, labels) {
         if (src && src.Schema === 'extension' && rename.has(src.Entity + '\u0000' + ms.Property)) { ms.Property = rename.get(src.Entity + '\u0000' + ms.Property); applied++; } });
     });
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i] && Mirror.kindOf(vj) === 'textbox') indentToEnd(pg.visuals[i].json, vj); });
-    if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { if (pg.visuals[i]) { try { cardColumn(pg.visuals[i].json, vj); } catch (e) { /* a shape not expected: left as it is */ } } });
     // (the fitting reads and changes only the twin's copies)
     if (isObj(page)) {
       const c = Object.assign({}, ctx, { rtl: !P.keepLtr(pg), noButton: (x) => pageOf(x).type === 'Tooltip' || (isObj(pageOf(x).pageBinding) && /drillthrough/i.test(String(pageOf(x).pageBinding.type || ''))) }), origByName = Object.fromEntries(pg.visuals.map((v) => [v.json.name, v.json]));
       try { const b = fitButtons(page, r.visuals, c, pg.id); fitted.buttons.push(...b.buttons); fitted.buttonsCut.push(...b.buttonsCut); } catch (e) { /* a shape not expected: left as it is */ }
       try { const h = fitHeaders(page, r.visuals, origByName, c, pg.id); fitted.headers.push(...h.headers); fitted.headersCut.push(...h.headersCut); } catch (e) { /* a shape not expected: left as it is */ }
       // (0.3.1 MX2) after the headers' widths: a wide table keeps the English view
-      if (c.rtl) { try { keptInView.push(...keepView(page, r.visuals, pg.id)); } catch (e) { /* a shape not expected: left as it is */ } }
+      if (c.rtl) { try { keepView(page, r.visuals, pg.id).forEach((k) => { laidOut.push(k.page + '/' + k.visual); if (k.behind) keptInView.push(k); }); } catch (e) { /* a shape not expected: left as it is */ } }
       // (0.3.1 R1) the text boxes; in one report with both languages, the box the language button will take is kept free
       try { const lb = P.same && !c.noButton(pg) ? langButton(page, r.visuals, [], 'ar', '', 'reserved', R.theme) : null, keep = lb && lb.json ? [absBox(r.visuals.concat([lb.json]), lb.json)] : [];
         const u = r.units || { on: [], bars: [] }, kept = new Set(u.on.map((x) => String(x.visual)).concat(u.bars.map((x) => String(x.names))));
@@ -618,5 +613,5 @@ export function buildTwin(P, labels) {
   // (0.3.0 D3) the original's own title measures the twin's charts no longer use: left in the twin's file as they are
   // (X1: in one report the English pages still show them)
   const notShown = P.same ? [] : [...rename.keys()].map((k) => { const [entity, name] = k.split('\u0000'); return { measure: safeName(entity + '[' + name + ']'), now: safeName(entity + '[' + rename.get(k) + ']'), why: 'the original\'s title measure: the twin\'s charts use their own Arabic one instead; left in the twin\'s reportExtensions.json as it is, and no visual of the twin shows it' }; });
-  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
+  return { pages, applied, phone, notShown, sizeKept, ruleMoves, keptInView, laidOut, ext: written.length || rewritten || wfWritten.length || rlWritten.length ? ext : null, tables, fitted, titleMeasures: tms.length ? Object.assign({ measures: tms.length, translated: written.length, written, notTranslated }, fixedTitles.length ? { fixed: fixedTitles } : {}) : null, waterfallMeasures: wfWritten.map((x) => safeName(x.t + '[' + x.m + ']')), textMeasures: [...textRename].map(([k, to]) => ({ measure: safeName(k.split('\u0000')[0] + '[' + k.split('\u0000')[1] + ']'), arabic: safeName(k.split('\u0000')[0] + '[' + to + ']') })) };
 }

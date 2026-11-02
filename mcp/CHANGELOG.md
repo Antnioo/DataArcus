@@ -5,6 +5,9 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **The last fixes from a test run in Power BI Desktop:** an Arabic twin with a heatmap by weekday opens again in Desktop
+  and keeps its grid as wide as in English; a legend keeps each item's colour; an agent card's contact line stays whole;
+  a table narrower than its box keeps its first column at the right edge, and one wider keeps the columns English shows.
 - **What a test run in Power BI Desktop found in the Arabic twin's tables:** a column's names keep their English width
   (no longer narrowed for a longer Arabic header), the first column stays the rightmost one in view, a matrix with row
   levels can be written flat when you choose it, and a heatmap by weekday shows its day names beside its grid.
