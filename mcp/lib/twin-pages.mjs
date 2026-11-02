@@ -50,14 +50,20 @@ function fitButtons(page, visuals, ctx, at) {
   // (MX6, the lab's M1-1: a group beside a button moved 28 and the plan only counted it) every visual the fitting moved
   // or narrowed, by name, for the plan's movedByRule
   const moved = (was, but) => [...was].filter(([x, o]) => x !== but && (posOf(x).x !== o.x || posOf(x).width !== o.width)).map(([x, o]) => ({ visual: String(x.name),
-    rule: posOf(x).width !== o.width ? (typeOf(x) === 'slicer' ? 'a slicer beside a button widened for its Arabic text: gave it width (as the writer lays out a strip)' : 'an underline of a button widened for its Arabic text: widened with it') : 'beside a button widened for its Arabic text: moved with it' }));
+    rule: posOf(x).width !== o.width && typeOf(x) === 'slicer' ? 'gave width to a button beside it' : 'moved with a button beside it' }));
   out.moves = [];
   visuals.forEach((v) => {
     const p = posOf(v); if (typeOf(v) !== 'actionButton' || !p) return;
     let b; try { b = Rules.buttonNeed({ json: v, type: 'actionButton', h: p.height, w: p.width }, ctx.text); } catch (e) { b = null; }
     if (!b || p.width + 0.5 >= b.needW) return;
     const start = snap();
-    try { fitOne(v, p, b); } finally { out.moves.push(...moved(start, v)); }
+    try { fitOne(v, p, b); } finally {
+      // (its underline, widened with it, is named in its own entry: withLine; the others in movedByRule)
+      const m = moved(start, v), own = new Set(attachedTo(v).map((s) => String(s.name))), e = out.buttons.concat(out.buttonsCut).filter((x) => x.visual === safeName(String(v.name)) && x.page === safeName(at));
+      const lines = e.length ? m.filter((x) => own.has(x.visual)) : [];
+      if (lines.length) e.forEach((x) => { x.withLine = lines.map((l) => safeName(l.visual)); });
+      out.moves.push(...m.filter((x) => !lines.includes(x)));
+    }
   });
   return out;
   function fitOne(v, p, b) {

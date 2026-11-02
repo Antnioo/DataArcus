@@ -10,9 +10,10 @@ import './test-env.mjs';
 //   B1  every written box (its parent groups added) inside its page; a visual in a group inside the group
 //   M1  every English visual's twin box is its exact mirror (x reflected in its page or group, y, width, height), unless
 //       the page is kept left to right or the plan names it by page/visual (fitted, movedByRule, keptTogether,
-//       keptInView, pictureChecks, cannot, the heatmap names in mirrors)
+//       keptInView, pictureChecks, cannot, the heatmap names in mirrors; a button's underline in its fitted entry, withLine)
 // And the three bugs by name: B1-1 (a chart pushed off the page when a button borrows a slicer's width), B1-3 (a bar
-// kept over a table past the page edge), M1-1 (a neighbour moved by the button fitting, the plan silent).
+// kept over a table past the page edge), M1-1 (a neighbour moved by the button fitting, the plan silent); and N5 (made
+// up here): a button's underline widened with it is named in the button's own fitted entry (withLine).
 // Not here (the lab's strict properties, not bugs, per the brief): B2 overlaps, B3's 60 px floor, D1 raw bytes, P1.
 // Metadata only: no model rows, measures are BLANK().   node test-0.3.1-twin-fuzz.mjs
 import fs from 'node:fs';
@@ -151,12 +152,16 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function named(plan, pg, v) {
   if ((plan.pages || []).some((p) => p && p.id === pg && p.leftToRight)) return true;
   const said = JSON.stringify({ mirrors: (plan.mirrors || []).filter((x) => x && x.kind === 'heatmapNames'), cannot: plan.cannot, movedByRule: plan.movedByRule, keptTogether: plan.keptTogether, keptInView: plan.keptInView, pictureChecks: plan.pictureChecks, fitted: plan.fitted });
-  return new RegExp(esc(pg + '/' + v) + '(?=[^A-Za-z0-9_]|$)').test(said) || Object.values(plan.fitted || {}).flat().some((x) => x && x.page === pg && x.visual === v);
+  return new RegExp(esc(pg + '/' + v) + '(?=[^A-Za-z0-9_]|$)').test(said) || Object.values(plan.fitted || {}).flat().some((x) => x && x.page === pg && (x.visual === v || (Array.isArray(x.withLine) && x.withLine.includes(v))));
 }
 
 const runs = [];
 for (const f of fs.readdirSync(path.join(HERE, 'fixtures/twin-fuzz')).filter((n) => n.endsWith('.json')).sort()) runs.push({ name: f.replace(/\.json$/, ''), spec: JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures/twin-fuzz', f), 'utf8')) });
 for (let i = 0; i < 25; i++) runs.push({ name: 'seed' + (20261102 + i), spec: generate(20261102 + i) });
+// (made up here) a narrow button with its underline just under it: the line widens with it, named in its entry (N5)
+{ const b = visual('actionButton', 1), u = visual('shape', 2);
+  b.position = { x: 600, y: 100, width: 60, height: 40, z: 1000, tabOrder: 1000 }; u.position = { x: 600, y: 142, width: 60, height: 3, z: 2000, tabOrder: 2000 };
+  runs.push({ name: 'line', spec: { pages: [{ id: 'p0', width: 1280, height: 720, visuals: [b, u] }] } }); }
 
 const t0 = Date.now(), at = {};
 try {
@@ -199,6 +204,8 @@ try {
   chk(() => { const b = box('B1-3', 'p0', 'v5'); return b && b.x >= 0 && b.x + b.width <= 1280; }, () => `N2. B1-3: the bar kept over the table stays on its page: ${JSON.stringify(box('B1-3', 'p0', 'v5'))}`);
   chk(() => said('B1-3', 'p0/v5'), () => `N3. B1-3: the plan names the bar (movedByRule): ${JSON.stringify(plan('B1-3').movedByRule)}`);
   chk(() => said('M1-1', 'p0/v15'), () => `N4. M1-1: the plan names the group the button's fitting moved (movedByRule): ${JSON.stringify(plan('M1-1').movedByRule)}`);
+  const lb = box('line', 'p0', 'v1'), lu = box('line', 'p0', 'v2'), le = ((plan('line').fitted || {}).buttons || []).find((x) => x.visual === 'v1');
+  chk(() => lb && lu && lb.width > 60 && lu.x === lb.x && lu.width === lb.width && le && JSON.stringify(le.withLine) === '["v2"]', () => `N5. a button's underline widens with it and is named in its fitted entry (withLine): ${JSON.stringify([lb, lu, le])}`);
 } catch (e) { problems.push('threw: ' + String(e && e.stack || e).slice(0, 600)); }
 
 const secs = ((Date.now() - t0) / 1000).toFixed(1);
