@@ -1,7 +1,0 @@
-relationship rel_orders_date
-	fromColumn: 'Work Orders'.Created
-	toColumn: 'Dim Date'.Date
-
-relationship rel_orders_age
-	fromColumn: 'Work Orders'.'Age Bucket'
-	toColumn: 'Dim Age Bucket'.'Age Bucket'

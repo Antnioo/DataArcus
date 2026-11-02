@@ -1,0 +1,63 @@
+{
+  "case": "B1-3",
+  "geometry": [
+    {
+      "page": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "visual": "v1",
+          "type": "pivotTable",
+          "before": {
+            "x": 825,
+            "y": 505,
+            "width": 455,
+            "height": 215,
+            "z": 1000
+          },
+          "after": {
+            "x": 0,
+            "y": 505,
+            "width": 455,
+            "height": 215,
+            "z": 1000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        },
+        {
+          "visual": "v5",
+          "type": "clusteredBarChart",
+          "before": {
+            "x": 768,
+            "y": 494,
+            "width": 512,
+            "height": 172,
+            "z": 5000
+          },
+          "after": {
+            "x": -57,
+            "y": 494,
+            "width": 512,
+            "height": 172,
+            "z": 5000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        }
+      ]
+    }
+  ],
+  "fitting": {},
+  "moved": [
+    {
+      "where": "p0/v5",
+      "rule": "a bar chart over a table or matrix that stays left to right: kept on it, its bars' direction kept"
+    }
+  ],
+  "keptSizes": [],
+  "planPathListCount": 9,
+  "artifactFiles": 9,
+  "answerHasPlatformPath": false
+}

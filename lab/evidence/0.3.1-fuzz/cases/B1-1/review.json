@@ -1,0 +1,88 @@
+{
+  "case": "B1-1",
+  "geometry": [
+    {
+      "page": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "visual": "v7",
+          "type": "clusteredColumnChart",
+          "before": {
+            "x": 672,
+            "y": 105,
+            "width": 608,
+            "height": 186,
+            "z": 7000
+          },
+          "after": {
+            "x": -59,
+            "y": 105,
+            "width": 608,
+            "height": 186,
+            "z": 7000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        },
+        {
+          "visual": "v8",
+          "type": "actionButton",
+          "before": {
+            "x": 113,
+            "y": 89,
+            "width": 326,
+            "height": 333,
+            "z": 8000
+          },
+          "after": {
+            "x": 782,
+            "y": 89,
+            "width": 498,
+            "height": 333,
+            "z": 8000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        },
+        {
+          "visual": "v9",
+          "type": "slicer",
+          "before": {
+            "x": 793,
+            "y": 344,
+            "width": 487,
+            "height": 100,
+            "z": 9000
+          },
+          "after": {
+            "x": 0,
+            "y": 344,
+            "width": 428,
+            "height": 100,
+            "z": 9000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        }
+      ]
+    }
+  ],
+  "fitting": {
+    "buttons": [
+      {
+        "page": "p0",
+        "visual": "v8",
+        "needs": 498,
+        "width": 498,
+        "slicersNarrowed": 1
+      }
+    ]
+  },
+  "moved": [],
+  "keptSizes": [],
+  "planPathListCount": 10,
+  "artifactFiles": 10,
+  "answerHasPlatformPath": false
+}

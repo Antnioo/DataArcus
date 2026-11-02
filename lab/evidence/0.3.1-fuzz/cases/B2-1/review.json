@@ -1,0 +1,63 @@
+{
+  "case": "B2-1",
+  "geometry": [
+    {
+      "page": "p0",
+      "width": 1280,
+      "height": 800,
+      "visuals": [
+        {
+          "visual": "v12",
+          "type": "pivotTable",
+          "before": {
+            "x": 244,
+            "y": 428,
+            "width": 465,
+            "height": 324,
+            "z": 12000
+          },
+          "after": {
+            "x": 571,
+            "y": 428,
+            "width": 465,
+            "height": 324,
+            "z": 12000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        },
+        {
+          "visual": "v13",
+          "type": "tableEx",
+          "before": {
+            "x": 672,
+            "y": 471,
+            "width": 156,
+            "height": 329,
+            "z": 13000
+          },
+          "after": {
+            "x": 452,
+            "y": 471,
+            "width": 119,
+            "height": 329,
+            "z": 13000
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        }
+      ]
+    }
+  ],
+  "fitting": {},
+  "moved": [
+    {
+      "where": "p0/v13",
+      "rule": "in a matrix's side margin: narrowed off its row headers"
+    }
+  ],
+  "keptSizes": [],
+  "planPathListCount": 9,
+  "artifactFiles": 9,
+  "answerHasPlatformPath": false
+}

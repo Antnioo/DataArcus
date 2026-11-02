@@ -1,4 +1,0 @@
-relationship r1
-	fromColumn: Sales.Date
-	toColumn: Calendar.Date
-

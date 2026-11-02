@@ -1,0 +1,38 @@
+{
+  "case": "B3-1",
+  "geometry": [
+    {
+      "page": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "visual": "v0",
+          "type": "actionButton",
+          "before": {
+            "x": 0,
+            "y": 512.7423350739413,
+            "z": 19000,
+            "height": 42.80936454849498,
+            "width": 45.66332218506131
+          },
+          "after": {
+            "x": 1874.34,
+            "y": 512.7423350739413,
+            "z": 19000,
+            "height": 42.80936454849498,
+            "width": 45.66332218506131
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        }
+      ]
+    }
+  ],
+  "fitting": {},
+  "moved": [],
+  "keptSizes": [],
+  "planPathListCount": 8,
+  "artifactFiles": 8,
+  "answerHasPlatformPath": false
+}

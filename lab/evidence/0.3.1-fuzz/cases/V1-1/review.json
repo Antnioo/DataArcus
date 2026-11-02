@@ -1,0 +1,38 @@
+{
+  "case": "V1-1",
+  "geometry": [
+    {
+      "page": "p0",
+      "width": 1280,
+      "height": 720,
+      "visuals": [
+        {
+          "visual": "v0",
+          "type": "pivotTable",
+          "before": {
+            "x": 20,
+            "y": 20,
+            "width": 320,
+            "height": 240,
+            "z": 0
+          },
+          "after": {
+            "x": 940,
+            "y": 20,
+            "width": 225,
+            "height": 240,
+            "z": 0
+          },
+          "parentBefore": null,
+          "parentAfter": null
+        }
+      ]
+    }
+  ],
+  "fitting": {},
+  "moved": [],
+  "keptSizes": [],
+  "planPathListCount": 9,
+  "artifactFiles": 9,
+  "answerHasPlatformPath": false
+}

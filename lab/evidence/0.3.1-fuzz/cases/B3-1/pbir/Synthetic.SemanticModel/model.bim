@@ -1,0 +1,54 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "tables": [
+      {
+        "name": "Synthetic",
+        "columns": [
+          {
+            "name": "Category",
+            "dataType": "string",
+            "sourceColumn": "Category"
+          },
+          {
+            "name": "Group",
+            "dataType": "string",
+            "sourceColumn": "Group"
+          },
+          {
+            "name": "Weekday",
+            "dataType": "string",
+            "sourceColumn": "Weekday"
+          },
+          {
+            "name": "Hour",
+            "dataType": "int64",
+            "sourceColumn": "Hour"
+          },
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Metric",
+            "expression": "BLANK()"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Synthetic",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source = #table({}, {}) in Source"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
