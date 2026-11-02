@@ -10,6 +10,7 @@ NEW FAILURE integration/0.3.1 a6000a27 B2new: B2new-12 (new overlap introduced),
 
 One line per head tested, newest first (counts: failed reports over 300 generated + 57 real shapes + 100 grid specs):
 
+- 2026-11-02T23:51:54Z integration/0.3.2 550cea1b (seeds 2026111800-2026112099): V1 0, V2 0, D1n 0, M1 0, B1 0, B2new 43, T1 0, S1 0, X1 50; cases 15 (0 new); lab errors 0. [REPORT](integration/0.3.2/550cea1b/REPORT.md)
 - 2026-11-02T23:35:42Z integration/0.3.1 1a5f6584 (seeds 2026111200-2026111499): V1 0, V2 0, D1n 0, M1 0, B1 0, B2new 26, T1 0, S1 0, X1 0; cases 8 (0 new); lab errors 0. [REPORT](integration/0.3.1/1a5f6584/REPORT.md)
 - 2026-11-02T23:25:03Z integration/0.3.2 771e279a (seeds 2026111500-2026111799): V1 0, V2 0, D1n 0, M1 0, B1 0, B2new 54, T1 0, S1 0, X1 49; cases 17 (0 new); lab errors 0. [REPORT](integration/0.3.2/771e279a/REPORT.md)
 - 2026-11-02T22:21:57Z integration/0.3.2 cf86bb21 (seeds 2026110900-2026111199): V1 0, V2 0, D1n 0, M1 0, B1 0, B2new 47, T1 0, S1 0, X1 52; cases 17 (0 new); lab errors 0. [REPORT](integration/0.3.2/cf86bb21/REPORT.md)

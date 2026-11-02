@@ -1,0 +1,110 @@
+{
+  "pages": [
+    {
+      "id": "p0",
+      "width": 1920,
+      "height": 1080,
+      "visuals": [
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v0",
+          "position": {
+            "x": 229,
+            "y": 457,
+            "width": 732,
+            "height": 477,
+            "z": 0
+          },
+          "visual": {
+            "visualType": "pivotTable",
+            "query": {
+              "queryState": {
+                "Rows": {
+                  "projections": [
+                    {
+                      "field": {},
+                      "queryRef": "Synthetic.Weekday",
+                      "nativeQueryRef": "Weekday"
+                    }
+                  ]
+                },
+                "Columns": {
+                  "projections": [
+                    {
+                      "field": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Entity": "Synthetic"
+                            }
+                          },
+                          "Property": "Hour"
+                        }
+                      },
+                      "queryRef": "Synthetic.Hour",
+                      "nativeQueryRef": "Hour"
+                    }
+                  ]
+                }
+              }
+            },
+            "objects": {
+              "columnWidth": [
+                {
+                  "properties": {
+                    "value": {
+                      "expr": {
+                        "Literal": {
+                          "Value": "108D"
+                        }
+                      }
+                    }
+                  },
+                  "selector": {
+                    "metadata": "Synthetic.Weekday"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+          "name": "v1",
+          "position": {
+            "x": 331,
+            "y": 261,
+            "width": 639,
+            "height": 196,
+            "z": 1000
+          },
+          "visual": {
+            "visualType": "lineChart",
+            "query": {
+              "queryState": {
+                "Category": {
+                  "projections": [
+                    {
+                      "field": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Entity": "Synthetic"
+                            }
+                          },
+                          "Property": "Hour"
+                        }
+                      },
+                      "queryRef": "Synthetic.Hour",
+                      "nativeQueryRef": "Hour"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

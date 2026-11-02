@@ -1,0 +1,63 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v20/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v20/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v20/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v5",
+          "p0/v20"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v5",
+          "p0/v20",
+          "English [{\"x\":1309,\"y\":862,\"width\":591,\"height\":218,\"z\":5000},{\"x\":336,\"y\":53,\"width\":114,\"height\":240,\"z\":20000}]",
+          "Arabic [{\"x\":20,\"y\":862,\"width\":591,\"height\":218,\"z\":5000},{\"x\":150,\"y\":53,\"width\":322,\"height\":240,\"z\":20000}]",
+          "plan on v5: none",
+          "plan on v20: fitted.buttons",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
