@@ -1,0 +1,139 @@
+table 'Energy Readings'
+
+	measure 'Energy Readings Total Discount' = SUM ( 'Energy Readings'[Discount] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Energy Readings Average Discount' = AVERAGE ( 'Energy Readings'[Discount] )
+		formatString: #,0.00
+
+	measure 'Energy Readings Count' = COUNTROWS ( 'Energy Readings' )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Energy Readings Total Discount LY' = CALCULATE ( [Energy Readings Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Energy Readings Total Discount YoY %' = DIVIDE ( [Energy Readings Total Discount] - [Energy Readings Total Discount LY], [Energy Readings Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Energy Readings Total Discount YTD' = TOTALYTD ( [Energy Readings Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Energy Readings Max Discount' = MAX ( 'Energy Readings'[Discount] )
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Energy Readings Discount Share %' = DIVIDE ( [Energy Readings Total Discount], CALCULATE ( [Energy Readings Total Discount], ALL ( 'Energy Readings' ) ) )
+		displayFolder: Production
+
+	measure 'Energy Readings Total Quantity' = SUM ( 'Energy Readings'[Quantity] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Energy Readings Average Quantity' = AVERAGE ( 'Energy Readings'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	measure 'Energy Readings Total Quantity LY' = CALCULATE ( [Energy Readings Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Energy Readings Total Quantity YoY %' = DIVIDE ( [Energy Readings Total Quantity] - [Energy Readings Total Quantity LY], [Energy Readings Total Quantity LY] )
+		formatString: 0.0%
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Energy Readings Total Quantity YTD' = TOTALYTD ( [Energy Readings Total Quantity], 'Calendar'[Date] )
+		displayFolder: Production
+
+	measure 'Energy Readings Max Quantity' = MAX ( 'Energy Readings'[Quantity] )
+		displayFolder: Production
+
+	measure 'Energy Readings Quantity Share %' = DIVIDE ( [Energy Readings Total Quantity], CALCULATE ( [Energy Readings Total Quantity], ALL ( 'Energy Readings' ) ) )
+		displayFolder: Production
+
+	column 'Energy Reading Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Energy Reading Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Downtime Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Downtime Reason Key
+
+	column 'Scrap Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Scrap Reason Key
+
+	column 'Line Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Line Key
+
+	column 'Defect Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Defect Type Key
+
+	column 'Projects Lookup 031 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 031 Key
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	partition 'Energy Readings' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Energy Reading Id", "Date", "Downtime Reason Key", "Scrap Reason Key", "Line Key", "Defect Type Key", "Projects Lookup 031 Key", "Discount", "Quantity", "Margin", "Cost", "Tax Amount", "Amount", "Count", "Hours", "Weight Kg"}, {})
+				in
+				    Source

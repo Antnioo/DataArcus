@@ -1,0 +1,54 @@
+table 'Product Category'
+
+	column 'Product Category Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Product Category Key
+
+	column 'Product Category'
+		dataType: string
+		sourceColumn: Product Category
+
+	column 'Product Category Owner'
+		dataType: string
+		sourceColumn: Product Category Owner
+
+	column 'Product Category Region'
+		dataType: string
+		sourceColumn: Product Category Region
+
+	column 'Product Category Is Active'
+		dataType: boolean
+		sourceColumn: Product Category Is Active
+
+	column 'Product Category External Id'
+		dataType: string
+		sourceColumn: Product Category External Id
+
+	column 'Product Category Code'
+		dataType: string
+		sourceColumn: Product Category Code
+
+	column 'Product Category Description'
+		dataType: string
+		sourceColumn: Product Category Description
+
+	column 'Product Category Group'
+		dataType: string
+		sourceColumn: Product Category Group
+
+	column 'Product Category Category'
+		dataType: string
+		sourceColumn: Product Category Category
+
+	column 'Product Category Type'
+		dataType: string
+		sourceColumn: Product Category Type
+
+	partition 'Product Category' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Product Category Key", "Product Category", "Product Category Owner", "Product Category Region", "Product Category Is Active", "Product Category External Id", "Product Category Code", "Product Category Description", "Product Category Group", "Product Category Category", "Product Category Type"}, {})
+				in
+				    Source

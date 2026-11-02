@@ -1,0 +1,46 @@
+table Product
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Product Key
+
+	column Product
+		dataType: string
+		sourceColumn: Product
+
+	column 'Product Long Name'
+		dataType: string
+		sourceColumn: Product Long Name
+
+	column 'Product Code'
+		dataType: string
+		sourceColumn: Product Code
+
+	column 'Product Created By'
+		dataType: string
+		sourceColumn: Product Created By
+
+	column 'Product Group'
+		dataType: string
+		sourceColumn: Product Group
+
+	column 'Product External Id'
+		dataType: string
+		sourceColumn: Product External Id
+
+	column 'Product Description'
+		dataType: string
+		sourceColumn: Product Description
+
+	column 'Product Category'
+		dataType: string
+		sourceColumn: Product Category
+
+	partition Product = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Product Key", "Product", "Product Long Name", "Product Code", "Product Created By", "Product Group", "Product External Id", "Product Description", "Product Category"}, {})
+				in
+				    Source

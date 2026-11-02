@@ -1,0 +1,168 @@
+{
+  "name": "fx4-financial",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "tables": [
+      {
+        "name": "Financials",
+        "columns": [
+          {
+            "name": "Segment",
+            "dataType": "string",
+            "sourceColumn": "Segment"
+          },
+          {
+            "name": "Country",
+            "dataType": "string",
+            "sourceColumn": "Country"
+          },
+          {
+            "name": "Product",
+            "dataType": "string",
+            "sourceColumn": "Product"
+          },
+          {
+            "name": "Discount Band",
+            "dataType": "string",
+            "sourceColumn": "Discount Band"
+          },
+          {
+            "name": "Units Sold",
+            "dataType": "double",
+            "sourceColumn": "Units Sold",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Gross Sales",
+            "dataType": "double",
+            "sourceColumn": "Gross Sales",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Discounts",
+            "dataType": "double",
+            "sourceColumn": "Discounts",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Sales",
+            "dataType": "double",
+            "sourceColumn": "Sales",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "COGS",
+            "dataType": "double",
+            "sourceColumn": "COGS",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Profit",
+            "dataType": "double",
+            "sourceColumn": "Profit",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Gross Sales",
+            "expression": "SUM ( 'Financials'[Gross Sales] )",
+            "formatString": "\\$#,0;(\\$#,0);\\$#,0"
+          },
+          {
+            "name": "Sales",
+            "expression": "SUM ( 'Financials'[Sales] )",
+            "formatString": "\\$#,0;(\\$#,0);\\$#,0"
+          },
+          {
+            "name": "Profit",
+            "expression": "SUM ( 'Financials'[Profit] )",
+            "formatString": "\\$#,0;(\\$#,0);\\$#,0"
+          },
+          {
+            "name": "Units Sold",
+            "expression": "SUM ( 'Financials'[Units Sold] )",
+            "formatString": "#,0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Financials",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source = #table({\"A\"}, {}) in Source"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Calendar",
+        "dataCategory": "Time",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "isKey": true
+          },
+          {
+            "name": "Month Name",
+            "dataType": "string",
+            "sourceColumn": "Month Name",
+            "sortByColumn": "Month Number"
+          },
+          {
+            "name": "Month Number",
+            "dataType": "int64",
+            "sourceColumn": "Month Number",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Year Month",
+            "dataType": "string",
+            "sourceColumn": "Year Month",
+            "sortByColumn": "Year Month Number"
+          },
+          {
+            "name": "Year Month Number",
+            "dataType": "int64",
+            "sourceColumn": "Year Month Number",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Calendar",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Source = #table({\"A\"}, {}) in Source"
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "r1",
+        "fromTable": "Financials",
+        "fromColumn": "Date",
+        "toTable": "Calendar",
+        "toColumn": "Date"
+      }
+    ]
+  }
+}

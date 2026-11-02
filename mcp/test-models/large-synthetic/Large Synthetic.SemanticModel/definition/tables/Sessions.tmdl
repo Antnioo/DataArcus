@@ -1,0 +1,109 @@
+table Sessions
+
+	measure 'Sessions Total Margin' = SUM ( Sessions[Margin] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Sessions Average Margin' = AVERAGE ( Sessions[Margin] )
+		displayFolder: Commerce
+
+	measure 'Sessions Count' = COUNTROWS ( Sessions )
+		formatString: #,0
+
+	measure 'Sessions Total Margin LY' = CALCULATE ( [Sessions Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Sessions Total Margin YoY %' = DIVIDE ( [Sessions Total Margin] - [Sessions Total Margin LY], [Sessions Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Sessions Total Margin YTD' = TOTALYTD ( [Sessions Total Margin], 'Calendar'[Date] )
+		displayFolder: Commerce
+
+	measure 'Sessions Max Margin' = MAX ( Sessions[Margin] )
+		displayFolder: Commerce
+
+	measure 'Sessions Margin Share %' = DIVIDE ( [Sessions Total Margin], CALCULATE ( [Sessions Total Margin], ALL ( Sessions ) ) )
+		displayFolder: Commerce
+
+	measure 'Sessions Total Quantity' = SUM ( Sessions[Quantity] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Sessions Average Quantity' = AVERAGE ( Sessions[Quantity] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Sessions Total Quantity LY' = CALCULATE ( [Sessions Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Sessions Total Quantity YoY %' = DIVIDE ( [Sessions Total Quantity] - [Sessions Total Quantity LY], [Sessions Total Quantity LY] )
+		formatString: 0.0%
+
+	measure 'Sessions Total Quantity YTD' = TOTALYTD ( [Sessions Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Sessions Max Quantity' = MAX ( Sessions[Quantity] )
+		displayFolder: Commerce
+
+	measure 'Sessions Quantity Share %' = DIVIDE ( [Sessions Total Quantity], CALCULATE ( [Sessions Total Quantity], ALL ( Sessions ) ) )
+
+	column 'Session Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Session Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Landing Page Key'
+		dataType: int64
+		sourceColumn: Landing Page Key
+
+	column 'Commerce Lookup 052 Key'
+		dataType: int64
+		sourceColumn: Commerce Lookup 052 Key
+
+	column 'Device Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Device Key
+
+	column 'Commerce Lookup 019 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 019 Key
+
+	column 'Churn Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Churn Reason Key
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	partition Sessions = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Session Id", "Date", "Landing Page Key", "Commerce Lookup 052 Key", "Device Key", "Commerce Lookup 019 Key", "Churn Reason Key", "Margin", "Quantity", "Score", "Duration Minutes"}, {})
+				in
+				    Source

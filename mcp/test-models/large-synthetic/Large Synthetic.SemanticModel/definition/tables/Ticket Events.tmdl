@@ -1,0 +1,132 @@
+table 'Ticket Events'
+
+	measure 'Ticket Events Total Amount' = SUM ( 'Ticket Events'[Amount] )
+		formatString: #,0
+
+	measure 'Ticket Events Average Amount' = AVERAGE ( 'Ticket Events'[Amount] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'Ticket Events Count' = COUNTROWS ( 'Ticket Events' )
+		displayFolder: Service
+
+	measure 'Ticket Events Total Amount LY' = CALCULATE ( [Ticket Events Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Ticket Events Total Amount YoY %' = DIVIDE ( [Ticket Events Total Amount] - [Ticket Events Total Amount LY], [Ticket Events Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Service
+
+	measure 'Ticket Events Total Amount YTD' = TOTALYTD ( [Ticket Events Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Ticket Events Max Amount' = MAX ( 'Ticket Events'[Amount] )
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Ticket Events Amount Share %' = DIVIDE ( [Ticket Events Total Amount], CALCULATE ( [Ticket Events Total Amount], ALL ( 'Ticket Events' ) ) )
+		displayFolder: Service
+
+	measure 'Ticket Events Total Margin' = SUM ( 'Ticket Events'[Margin] )
+		displayFolder: Service
+
+	measure 'Ticket Events Average Margin' = AVERAGE ( 'Ticket Events'[Margin] )
+		formatString: #,0.00
+
+	measure 'Ticket Events Total Margin LY' = CALCULATE ( [Ticket Events Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Ticket Events Total Margin YoY %' = DIVIDE ( [Ticket Events Total Margin] - [Ticket Events Total Margin LY], [Ticket Events Total Margin LY] )
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Ticket Events Total Margin YTD' = TOTALYTD ( [Ticket Events Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Ticket Events Max Margin' = MAX ( 'Ticket Events'[Margin] )
+
+	measure 'Ticket Events Margin Share %' = DIVIDE ( [Ticket Events Total Margin], CALCULATE ( [Ticket Events Total Margin], ALL ( 'Ticket Events' ) ) )
+
+	column 'Ticket Event Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Event Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Service Lookup 003 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 003 Key
+
+	column 'Customer Tier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Tier Key
+
+	column 'Language Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Language Key
+
+	column 'Service Lookup 039 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 039 Key
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	partition 'Ticket Events' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Ticket Event Id", "Date", "Service Lookup 003 Key", "Customer Tier Key", "Language Key", "Service Lookup 039 Key", "Amount", "Margin", "Quantity", "Score", "Weight Kg", "Net Amount", "Count", "Discount", "Tax Amount"}, {})
+				in
+				    Source

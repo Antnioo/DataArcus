@@ -1,0 +1,38 @@
+table 'Sourcing Event'
+
+	column 'Sourcing Event Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sourcing Event Key
+
+	column 'Sourcing Event'
+		dataType: string
+		sourceColumn: Sourcing Event
+
+	column 'Sourcing Event Code'
+		dataType: string
+		sourceColumn: Sourcing Event Code
+
+	column 'Sourcing Event Sort Order'
+		dataType: int64
+		sourceColumn: Sourcing Event Sort Order
+
+	column 'Sourcing Event Level'
+		dataType: int64
+		sourceColumn: Sourcing Event Level
+
+	column 'Sourcing Event Description'
+		dataType: string
+		sourceColumn: Sourcing Event Description
+
+	column 'Sourcing Event Group'
+		dataType: string
+		sourceColumn: Sourcing Event Group
+
+	partition 'Sourcing Event' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Sourcing Event Key", "Sourcing Event", "Sourcing Event Code", "Sourcing Event Sort Order", "Sourcing Event Level", "Sourcing Event Description", "Sourcing Event Group"}, {})
+				in
+				    Source

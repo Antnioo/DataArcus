@@ -1,0 +1,46 @@
+table Coupon
+
+	column 'Coupon Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Coupon Key
+
+	column Coupon
+		dataType: string
+		sourceColumn: Coupon
+
+	column 'Coupon Created By'
+		dataType: string
+		sourceColumn: Coupon Created By
+
+	column 'Coupon Code'
+		dataType: string
+		sourceColumn: Coupon Code
+
+	column 'Coupon Region'
+		dataType: string
+		sourceColumn: Coupon Region
+
+	column 'Coupon Status'
+		dataType: string
+		sourceColumn: Coupon Status
+
+	column 'Coupon Description'
+		dataType: string
+		sourceColumn: Coupon Description
+
+	column 'Coupon Group'
+		dataType: string
+		sourceColumn: Coupon Group
+
+	column 'Coupon Category'
+		dataType: string
+		sourceColumn: Coupon Category
+
+	partition Coupon = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Coupon Key", "Coupon", "Coupon Created By", "Coupon Code", "Coupon Region", "Coupon Status", "Coupon Description", "Coupon Group", "Coupon Category"}, {})
+				in
+				    Source

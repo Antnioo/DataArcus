@@ -1,0 +1,136 @@
+table Shipments
+
+	measure 'Shipments Total Discount' = SUM ( Shipments[Discount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Average Discount' = AVERAGE ( Shipments[Discount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Shipments Count' = COUNTROWS ( Shipments )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount LY' = CALCULATE ( [Shipments Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount YoY %' = DIVIDE ( [Shipments Total Discount] - [Shipments Total Discount LY], [Shipments Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount YTD' = TOTALYTD ( [Shipments Total Discount], 'Calendar'[Date] )
+
+	measure 'Shipments Max Discount' = MAX ( Shipments[Discount] )
+		displayFolder: Logistics
+
+	measure 'Shipments Discount Share %' = DIVIDE ( [Shipments Total Discount], CALCULATE ( [Shipments Total Discount], ALL ( Shipments ) ) )
+
+	measure 'Shipments Total Net Amount' = SUM ( Shipments[Net Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Average Net Amount' = AVERAGE ( Shipments[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount LY' = CALCULATE ( [Shipments Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount YoY %' = DIVIDE ( [Shipments Total Net Amount] - [Shipments Total Net Amount LY], [Shipments Total Net Amount LY] )
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount YTD' = TOTALYTD ( [Shipments Total Net Amount], 'Calendar'[Date] )
+		displayFolder: Logistics
+
+	measure 'Shipments Max Net Amount' = MAX ( Shipments[Net Amount] )
+		displayFolder: Logistics
+
+	measure 'Shipments Net Amount Share %' = DIVIDE ( [Shipments Total Net Amount], CALCULATE ( [Shipments Total Net Amount], ALL ( Shipments ) ) )
+		displayFolder: Logistics
+
+	column 'Shipment Id'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Shipment Id]
+
+	column Date
+		dataType: dateTime
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
+
+	column 'Logistics Lookup 024 Key'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Key]
+
+	column 'Customs Status Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Key]
+
+	column 'Hub Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Key]
+
+	column 'Lane Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Key]
+
+	column 'Logistics Lookup 010 Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 010 Key]
+
+	column Discount
+		dataType: decimal
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Discount]
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
+
+	column Quantity
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Quantity]
+
+	column Price
+		dataType: decimal
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Price]
+
+	column Margin
+		dataType: decimal
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Margin]
+
+	partition Shipments = calculated
+		mode: import
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 31193016, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Shipment Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Logistics Lookup 024 Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Customs Status Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Hub Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Lane Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Logistics Lookup 010 Key", 1 + MOD ( [S] + [Value] + 222, 8 ), "Discount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 10, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Net Amount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Quantity", 1 + MOD ( [S] * 11, 40 ), "Price", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 13, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Margin", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

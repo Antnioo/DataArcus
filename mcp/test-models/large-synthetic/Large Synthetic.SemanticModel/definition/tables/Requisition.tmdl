@@ -1,0 +1,34 @@
+table Requisition
+
+	column 'Requisition Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Requisition Key
+
+	column Requisition
+		dataType: string
+		sourceColumn: Requisition
+
+	column 'Requisition Status'
+		dataType: string
+		sourceColumn: Requisition Status
+
+	column 'Requisition Sort Order'
+		dataType: int64
+		sourceColumn: Requisition Sort Order
+
+	column 'Requisition Code'
+		dataType: string
+		sourceColumn: Requisition Code
+
+	column 'Requisition Description'
+		dataType: string
+		sourceColumn: Requisition Description
+
+	partition Requisition = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Requisition Key", "Requisition", "Requisition Status", "Requisition Sort Order", "Requisition Code", "Requisition Description"}, {})
+				in
+				    Source

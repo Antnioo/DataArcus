@@ -1,0 +1,50 @@
+table 'Unit Of Measure'
+
+	column 'Unit Of Measure Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Unit Of Measure Key
+
+	column 'Unit Of Measure'
+		dataType: string
+		sourceColumn: Unit Of Measure
+
+	column 'Unit Of Measure Code'
+		dataType: string
+		sourceColumn: Unit Of Measure Code
+
+	column 'Unit Of Measure Valid To'
+		dataType: dateTime
+		sourceColumn: Unit Of Measure Valid To
+
+	column 'Unit Of Measure Description'
+		dataType: string
+		sourceColumn: Unit Of Measure Description
+
+	column 'Unit Of Measure Owner'
+		dataType: string
+		sourceColumn: Unit Of Measure Owner
+
+	column 'Unit Of Measure Is Active'
+		dataType: boolean
+		sourceColumn: Unit Of Measure Is Active
+
+	column 'Unit Of Measure Status'
+		dataType: string
+		sourceColumn: Unit Of Measure Status
+
+	column 'Unit Of Measure Group'
+		dataType: string
+		sourceColumn: Unit Of Measure Group
+
+	column 'Unit Of Measure Category'
+		dataType: string
+		sourceColumn: Unit Of Measure Category
+
+	partition 'Unit Of Measure' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Unit Of Measure Key", "Unit Of Measure", "Unit Of Measure Code", "Unit Of Measure Valid To", "Unit Of Measure Description", "Unit Of Measure Owner", "Unit Of Measure Is Active", "Unit Of Measure Status", "Unit Of Measure Group", "Unit Of Measure Category"}, {})
+				in
+				    Source

@@ -1,0 +1,34 @@
+table 'Item Group'
+
+	column 'Item Group Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Group Key
+
+	column 'Item Group'
+		dataType: string
+		sourceColumn: Item Group
+
+	column 'Item Group Code'
+		dataType: string
+		sourceColumn: Item Group Code
+
+	column 'Item Group Category'
+		dataType: string
+		sourceColumn: Item Group Category
+
+	column 'Item Group Description'
+		dataType: string
+		sourceColumn: Item Group Description
+
+	column 'Item Group Group'
+		dataType: string
+		sourceColumn: Item Group Group
+
+	partition 'Item Group' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Item Group Key", "Item Group", "Item Group Code", "Item Group Category", "Item Group Description", "Item Group Group"}, {})
+				in
+				    Source

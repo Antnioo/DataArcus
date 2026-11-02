@@ -1,0 +1,50 @@
+table 'Payment Method'
+
+	column 'Payment Method Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Payment Method Key
+
+	column 'Payment Method'
+		dataType: string
+		sourceColumn: Payment Method
+
+	column 'Payment Method Status'
+		dataType: string
+		sourceColumn: Payment Method Status
+
+	column 'Payment Method Owner'
+		dataType: string
+		sourceColumn: Payment Method Owner
+
+	column 'Payment Method Created By'
+		dataType: string
+		sourceColumn: Payment Method Created By
+
+	column 'Payment Method Long Name'
+		dataType: string
+		sourceColumn: Payment Method Long Name
+
+	column 'Payment Method Code'
+		dataType: string
+		sourceColumn: Payment Method Code
+
+	column 'Payment Method Parent Code'
+		dataType: string
+		sourceColumn: Payment Method Parent Code
+
+	column 'Payment Method Description'
+		dataType: string
+		sourceColumn: Payment Method Description
+
+	column 'Payment Method Group'
+		dataType: string
+		sourceColumn: Payment Method Group
+
+	partition 'Payment Method' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Payment Method Key", "Payment Method", "Payment Method Status", "Payment Method Owner", "Payment Method Created By", "Payment Method Long Name", "Payment Method Code", "Payment Method Parent Code", "Payment Method Description", "Payment Method Group"}, {})
+				in
+				    Source

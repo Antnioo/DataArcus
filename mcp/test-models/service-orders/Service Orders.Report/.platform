@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Service Orders"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "7d1c2a40-5e3b-4f6a-9c21-3b8e0f4d6a57"
+  }
+}

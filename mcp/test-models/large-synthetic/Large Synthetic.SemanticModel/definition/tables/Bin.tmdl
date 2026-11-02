@@ -1,0 +1,58 @@
+table Bin
+
+	column 'Bin Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Bin Key
+
+	column Bin
+		dataType: string
+		sourceColumn: Bin
+
+	column 'Bin Type'
+		dataType: string
+		sourceColumn: Bin Type
+
+	column 'Bin Category'
+		dataType: string
+		sourceColumn: Bin Category
+
+	column 'Bin Group'
+		dataType: string
+		sourceColumn: Bin Group
+
+	column 'Bin Created By'
+		dataType: string
+		sourceColumn: Bin Created By
+
+	column 'Bin Long Name'
+		dataType: string
+		sourceColumn: Bin Long Name
+
+	column 'Bin Description'
+		dataType: string
+		sourceColumn: Bin Description
+
+	column 'Bin Code'
+		dataType: string
+		sourceColumn: Bin Code
+
+	column 'Bin Status'
+		dataType: string
+		sourceColumn: Bin Status
+
+	column 'Bin Owner'
+		dataType: string
+		sourceColumn: Bin Owner
+
+	column 'Bin Region'
+		dataType: string
+		sourceColumn: Bin Region
+
+	partition Bin = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Bin Key", "Bin", "Bin Type", "Bin Category", "Bin Group", "Bin Created By", "Bin Long Name", "Bin Description", "Bin Code", "Bin Status", "Bin Owner", "Bin Region"}, {})
+				in
+				    Source

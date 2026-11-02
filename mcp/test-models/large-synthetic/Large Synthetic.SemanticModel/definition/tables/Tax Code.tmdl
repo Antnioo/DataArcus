@@ -1,0 +1,54 @@
+table 'Tax Code'
+
+	column 'Tax Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Tax Code Key
+
+	column 'Tax Code'
+		dataType: string
+		sourceColumn: Tax Code
+
+	column 'Tax Code Group'
+		dataType: string
+		sourceColumn: Tax Code Group
+
+	column 'Tax Code Description'
+		dataType: string
+		sourceColumn: Tax Code Description
+
+	column 'Tax Code External Id'
+		dataType: string
+		sourceColumn: Tax Code External Id
+
+	column 'Tax Code Is Active'
+		dataType: boolean
+		sourceColumn: Tax Code Is Active
+
+	column 'Tax Code Long Name'
+		dataType: string
+		sourceColumn: Tax Code Long Name
+
+	column 'Tax Code Valid To'
+		dataType: dateTime
+		sourceColumn: Tax Code Valid To
+
+	column 'Tax Code Rank'
+		dataType: int64
+		sourceColumn: Tax Code Rank
+
+	column 'Tax Code Code'
+		dataType: string
+		sourceColumn: Tax Code Code
+
+	column 'Tax Code Category'
+		dataType: string
+		sourceColumn: Tax Code Category
+
+	partition 'Tax Code' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Tax Code Key", "Tax Code", "Tax Code Group", "Tax Code Description", "Tax Code External Id", "Tax Code Is Active", "Tax Code Long Name", "Tax Code Valid To", "Tax Code Rank", "Tax Code Code", "Tax Code Category"}, {})
+				in
+				    Source

@@ -1,0 +1,127 @@
+table 'Cycle Counts'
+
+	measure 'Cycle Counts Total Units' = SUM ( 'Cycle Counts'[Units] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Average Units' = AVERAGE ( 'Cycle Counts'[Units] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Count' = COUNTROWS ( 'Cycle Counts' )
+		formatString: #,0
+
+	measure 'Cycle Counts Total Units LY' = CALCULATE ( [Cycle Counts Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Cycle Counts Total Units YoY %' = DIVIDE ( [Cycle Counts Total Units] - [Cycle Counts Total Units LY], [Cycle Counts Total Units LY] )
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Cycle Counts Total Units YTD' = TOTALYTD ( [Cycle Counts Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Max Units' = MAX ( 'Cycle Counts'[Units] )
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Cycle Counts Units Share %' = DIVIDE ( [Cycle Counts Total Units], CALCULATE ( [Cycle Counts Total Units], ALL ( 'Cycle Counts' ) ) )
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Total Value' = SUM ( 'Cycle Counts'[Value] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Average Value' = AVERAGE ( 'Cycle Counts'[Value] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Total Value LY' = CALCULATE ( [Cycle Counts Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Total Value YoY %' = DIVIDE ( [Cycle Counts Total Value] - [Cycle Counts Total Value LY], [Cycle Counts Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Total Value YTD' = TOTALYTD ( [Cycle Counts Total Value], 'Calendar'[Date] )
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Max Value' = MAX ( 'Cycle Counts'[Value] )
+		displayFolder: Inventory
+
+	measure 'Cycle Counts Value Share %' = DIVIDE ( [Cycle Counts Total Value], CALCULATE ( [Cycle Counts Total Value], ALL ( 'Cycle Counts' ) ) )
+		displayFolder: Inventory
+
+	column 'Cycle Count Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Cycle Count Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Brand Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Brand Key
+
+	column 'Storage Condition Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Storage Condition Key
+
+	column 'Inventory Lookup 015 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 015 Key
+
+	column 'Item Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Class Key
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	partition 'Cycle Counts' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Cycle Count Id", "Date", "Brand Key", "Storage Condition Key", "Inventory Lookup 015 Key", "Item Class Key", "Units", "Value", "Cost", "Count", "Amount", "Net Amount", "Tax Amount"}, {})
+				in
+				    Source

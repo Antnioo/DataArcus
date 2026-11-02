@@ -1,0 +1,46 @@
+table 'Journal Type'
+
+	column 'Journal Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Journal Type Key
+
+	column 'Journal Type'
+		dataType: string
+		sourceColumn: Journal Type
+
+	column 'Journal Type Code'
+		dataType: string
+		sourceColumn: Journal Type Code
+
+	column 'Journal Type Long Name'
+		dataType: string
+		sourceColumn: Journal Type Long Name
+
+	column 'Journal Type Owner'
+		dataType: string
+		sourceColumn: Journal Type Owner
+
+	column 'Journal Type Status'
+		dataType: string
+		sourceColumn: Journal Type Status
+
+	column 'Journal Type Valid From'
+		dataType: dateTime
+		sourceColumn: Journal Type Valid From
+
+	column 'Journal Type Description'
+		dataType: string
+		sourceColumn: Journal Type Description
+
+	column 'Journal Type Group'
+		dataType: string
+		sourceColumn: Journal Type Group
+
+	partition 'Journal Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Journal Type Key", "Journal Type", "Journal Type Code", "Journal Type Long Name", "Journal Type Owner", "Journal Type Status", "Journal Type Valid From", "Journal Type Description", "Journal Type Group"}, {})
+				in
+				    Source

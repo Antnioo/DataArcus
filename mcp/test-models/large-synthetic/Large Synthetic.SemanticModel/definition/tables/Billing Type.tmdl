@@ -1,0 +1,58 @@
+table 'Billing Type'
+
+	column 'Billing Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Billing Type Key
+
+	column 'Billing Type'
+		dataType: string
+		sourceColumn: Billing Type
+
+	column 'Billing Type Sort Order'
+		dataType: int64
+		sourceColumn: Billing Type Sort Order
+
+	column 'Billing Type Code'
+		dataType: string
+		sourceColumn: Billing Type Code
+
+	column 'Billing Type Notes'
+		dataType: string
+		sourceColumn: Billing Type Notes
+
+	column 'Billing Type Created By'
+		dataType: string
+		sourceColumn: Billing Type Created By
+
+	column 'Billing Type Owner'
+		dataType: string
+		sourceColumn: Billing Type Owner
+
+	column 'Billing Type Parent Code'
+		dataType: string
+		sourceColumn: Billing Type Parent Code
+
+	column 'Billing Type Description'
+		dataType: string
+		sourceColumn: Billing Type Description
+
+	column 'Billing Type Level'
+		dataType: int64
+		sourceColumn: Billing Type Level
+
+	column 'Billing Type Group'
+		dataType: string
+		sourceColumn: Billing Type Group
+
+	column 'Billing Type Category'
+		dataType: string
+		sourceColumn: Billing Type Category
+
+	partition 'Billing Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Billing Type Key", "Billing Type", "Billing Type Sort Order", "Billing Type Code", "Billing Type Notes", "Billing Type Created By", "Billing Type Owner", "Billing Type Parent Code", "Billing Type Description", "Billing Type Level", "Billing Type Group", "Billing Type Category"}, {})
+				in
+				    Source

@@ -1,0 +1,14 @@
+{
+  "checked": "2026-10-19",
+  "currency": "USD",
+  "region": "US (eastus)",
+  "pro": 14,
+  "ppu": 24,
+  "ppuAddon": 14,
+  "cuPayg": 0.18,
+  "reservedSaving": 0.405,
+  "sources": {
+    "powerbi": "https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing",
+    "fabric": "https://prices.azure.com/api/retail/prices?$filter=serviceName eq 'Microsoft Fabric'"
+  }
+}

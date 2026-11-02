@@ -1,0 +1,58 @@
+table Commodity
+
+	column 'Commodity Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commodity Key
+
+	column Commodity
+		dataType: string
+		sourceColumn: Commodity
+
+	column 'Commodity Region'
+		dataType: string
+		sourceColumn: Commodity Region
+
+	column 'Commodity Level'
+		dataType: int64
+		sourceColumn: Commodity Level
+
+	column 'Commodity Created By'
+		dataType: string
+		sourceColumn: Commodity Created By
+
+	column 'Commodity Category'
+		dataType: string
+		sourceColumn: Commodity Category
+
+	column 'Commodity Group'
+		dataType: string
+		sourceColumn: Commodity Group
+
+	column 'Commodity Parent Code'
+		dataType: string
+		sourceColumn: Commodity Parent Code
+
+	column 'Commodity Is Active'
+		dataType: boolean
+		sourceColumn: Commodity Is Active
+
+	column 'Commodity Type'
+		dataType: string
+		sourceColumn: Commodity Type
+
+	column 'Commodity Code'
+		dataType: string
+		sourceColumn: Commodity Code
+
+	column 'Commodity Description'
+		dataType: string
+		sourceColumn: Commodity Description
+
+	partition Commodity = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Commodity Key", "Commodity", "Commodity Region", "Commodity Level", "Commodity Created By", "Commodity Category", "Commodity Group", "Commodity Parent Code", "Commodity Is Active", "Commodity Type", "Commodity Code", "Commodity Description"}, {})
+				in
+				    Source

@@ -1,0 +1,54 @@
+table 'Lead Source'
+
+	column 'Lead Source Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lead Source Key
+
+	column 'Lead Source'
+		dataType: string
+		sourceColumn: Lead Source
+
+	column 'Lead Source Short Name'
+		dataType: string
+		sourceColumn: Lead Source Short Name
+
+	column 'Lead Source Created By'
+		dataType: string
+		sourceColumn: Lead Source Created By
+
+	column 'Lead Source Owner'
+		dataType: string
+		sourceColumn: Lead Source Owner
+
+	column 'Lead Source Type'
+		dataType: string
+		sourceColumn: Lead Source Type
+
+	column 'Lead Source Sort Order'
+		dataType: int64
+		sourceColumn: Lead Source Sort Order
+
+	column 'Lead Source Parent Code'
+		dataType: string
+		sourceColumn: Lead Source Parent Code
+
+	column 'Lead Source Valid To'
+		dataType: dateTime
+		sourceColumn: Lead Source Valid To
+
+	column 'Lead Source Code'
+		dataType: string
+		sourceColumn: Lead Source Code
+
+	column 'Lead Source Description'
+		dataType: string
+		sourceColumn: Lead Source Description
+
+	partition 'Lead Source' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lead Source Key", "Lead Source", "Lead Source Short Name", "Lead Source Created By", "Lead Source Owner", "Lead Source Type", "Lead Source Sort Order", "Lead Source Parent Code", "Lead Source Valid To", "Lead Source Code", "Lead Source Description"}, {})
+				in
+				    Source

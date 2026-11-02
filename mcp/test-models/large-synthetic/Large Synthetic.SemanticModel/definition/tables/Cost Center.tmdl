@@ -1,0 +1,34 @@
+table 'Cost Center'
+
+	column 'Cost Center Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cost Center Key
+
+	column 'Cost Center'
+		dataType: string
+		sourceColumn: Cost Center
+
+	column 'Cost Center Valid To'
+		dataType: dateTime
+		sourceColumn: Cost Center Valid To
+
+	column 'Cost Center Long Name'
+		dataType: string
+		sourceColumn: Cost Center Long Name
+
+	column 'Cost Center Code'
+		dataType: string
+		sourceColumn: Cost Center Code
+
+	column 'Cost Center Description'
+		dataType: string
+		sourceColumn: Cost Center Description
+
+	partition 'Cost Center' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Cost Center Key", "Cost Center", "Cost Center Valid To", "Cost Center Long Name", "Cost Center Code", "Cost Center Description"}, {})
+				in
+				    Source

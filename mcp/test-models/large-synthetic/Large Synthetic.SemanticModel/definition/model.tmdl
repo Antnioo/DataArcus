@@ -1,0 +1,304 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+
+ref table Calendar
+ref table 'GL Entries'
+ref table 'Budget Lines'
+ref table 'Forecast Lines'
+ref table 'AP Invoices'
+ref table 'AR Invoices'
+ref table Payments
+ref table 'Fixed Asset Movements'
+ref table 'Payroll Lines'
+ref table Attendance
+ref table 'Leave Requests'
+ref table 'Recruiting Pipeline'
+ref table 'Training Sessions'
+ref table 'Headcount Snapshot'
+ref table 'Purchase Orders'
+ref table 'Purchase Receipts'
+ref table 'Supplier Invoices'
+ref table Contracts
+ref table 'Spend Lines'
+ref table 'Stock On Hand'
+ref table 'Stock Movements'
+ref table 'Cycle Counts'
+ref table 'Replenishment Orders'
+ref table 'Write Offs'
+ref table Shipments
+ref table 'Shipment Legs'
+ref table Deliveries
+ref table 'Freight Costs'
+ref table Returns
+ref table 'Web Orders'
+ref table 'Web Order Lines'
+ref table Sessions
+ref table 'Cart Events'
+ref table 'Promotions Applied'
+ref table Subscriptions
+ref table 'Subscription Events'
+ref table 'Campaign Spend'
+ref table Leads
+ref table 'Email Sends'
+ref table 'Social Posts'
+ref table 'Survey Responses'
+ref table Tickets
+ref table 'Ticket Events'
+ref table Calls
+ref table Chats
+ref table 'SLA Breaches'
+ref table 'CSAT Scores'
+ref table Timesheets
+ref table 'Project Costs'
+ref table Milestones
+ref table 'Resource Plans'
+ref table 'Change Requests'
+ref table 'Production Orders'
+ref table 'Machine Events'
+ref table 'Quality Inspections'
+ref table Scrap
+ref table 'Energy Readings'
+ref table 'Maintenance Orders'
+ref table Bookings
+ref table 'Room Nights'
+ref table 'Guest Reviews'
+ref table Events
+ref table 'Work Orders'
+ref table 'Space Usage'
+ref table 'Utility Bills'
+ref table Inspections
+ref table Account
+ref table 'Cost Center'
+ref table 'Legal Entity'
+ref table Currency
+ref table 'Exchange Rate Type'
+ref table 'Fiscal Period'
+ref table 'Payment Term'
+ref table 'Tax Code'
+ref table 'Budget Version'
+ref table 'Journal Type'
+ref table 'Asset Class'
+ref table 'Bank Account'
+ref table 'Intercompany Partner'
+ref table 'Profit Center'
+ref table 'Account Group'
+ref table Ledger
+ref table 'Dimension Set'
+ref table 'Allocation Rule'
+ref table Employee
+ref table Department
+ref table 'Job Title'
+ref table Grade
+ref table Nationality
+ref table 'Contract Type'
+ref table 'Leave Type'
+ref table 'Pay Element'
+ref table Recruiter
+ref table Requisition
+ref table Course
+ref table Trainer
+ref table Shift
+ref table 'Work Location'
+ref table 'Termination Reason'
+ref table 'Performance Rating'
+ref table Manager
+ref table 'Visa Status'
+ref table Supplier
+ref table 'Supplier Category'
+ref table Buyer
+ref table 'Purchase Category'
+ref table Incoterm
+ref table 'Contract Status'
+ref table 'Approval Level'
+ref table 'Sourcing Event'
+ref table 'Supplier Rating'
+ref table Commodity
+ref table Requester
+ref table 'PO Status'
+ref table 'Delivery Term'
+ref table 'Supplier Country'
+ref table Item
+ref table 'Item Group'
+ref table 'Item Class'
+ref table 'Unit Of Measure'
+ref table Warehouse
+ref table Bin
+ref table Zone
+ref table Lot
+ref table 'Movement Type'
+ref table 'ABC Class'
+ref table 'Storage Condition'
+ref table 'Count Reason'
+ref table 'Write Off Reason'
+ref table Brand
+ref table 'Item Status'
+ref table Carrier
+ref table Route
+ref table Port
+ref table 'Shipping Method'
+ref table 'Delivery Status'
+ref table 'Return Reason'
+ref table Driver
+ref table 'Fleet Unit'
+ref table Hub
+ref table Lane
+ref table 'Container Type'
+ref table 'Customs Status'
+ref table 'Delay Reason'
+ref table 'Service Level'
+ref table Customer
+ref table 'Customer Segment'
+ref table Channel
+ref table Device
+ref table Browser
+ref table 'Landing Page'
+ref table Product
+ref table 'Product Category'
+ref table Promotion
+ref table Coupon
+ref table Plan
+ref table 'Churn Reason'
+ref table Region
+ref table City
+ref table Country
+ref table Referrer
+ref table 'Payment Method'
+ref table 'Order Status'
+ref table Campaign
+ref table 'Campaign Type'
+ref table 'Lead Source'
+ref table 'Lead Status'
+ref table Audience
+ref table 'Email Template'
+ref table 'Social Network'
+ref table Agency
+ref table Survey
+ref table Question
+ref table 'Content Type'
+ref table Market
+ref table Persona
+ref table 'Funnel Stage'
+ref table Agent
+ref table Team
+ref table Queue
+ref table 'Ticket Category'
+ref table Priority
+ref table 'Ticket Status'
+ref table 'Resolution Code'
+ref table 'SLA Policy'
+ref table 'Call Outcome'
+ref table Language
+ref table 'Escalation Level'
+ref table 'Knowledge Article'
+ref table 'Contact Reason'
+ref table 'Customer Tier'
+ref table Project
+ref table 'Project Type'
+ref table Phase
+ref table Task
+ref table Resource
+ref table Role
+ref table 'Client Program'
+ref table Portfolio
+ref table 'Billing Type'
+ref table Risk
+ref table 'Change Type'
+ref table 'Milestone Status'
+ref table Sponsor
+ref table Practice
+ref table Plant
+ref table Line
+ref table Machine
+ref table Operator
+ref table 'Shift Pattern'
+ref table 'Defect Type'
+ref table 'Inspection Plan'
+ref table 'Scrap Reason'
+ref table Meter
+ref table 'Maintenance Type'
+ref table 'Spare Kit'
+ref table Recipe
+ref table Batch
+ref table 'Downtime Reason'
+ref table Property
+ref table 'Room Type'
+ref table 'Rate Plan'
+ref table 'Booking Channel'
+ref table Guest
+ref table 'Event Type'
+ref table Venue
+ref table 'Review Site'
+ref table 'Cancellation Reason'
+ref table 'Meal Plan'
+ref table 'Loyalty Tier'
+ref table 'Source Market'
+ref table Building
+ref table Floor
+ref table Space
+ref table Asset
+ref table Vendor
+ref table 'Work Order Type'
+ref table Utility
+ref table 'Inspection Type'
+ref table Contractor
+ref table Lease
+ref table 'Cost Code'
+ref table 'Occupancy Type'
+ref table 'Production Lookup 001'
+ref table 'Service Lookup 002'
+ref table 'Service Lookup 003'
+ref table 'Marketing Lookup 004'
+ref table 'Projects Lookup 005'
+ref table 'People Lookup 006'
+ref table 'Service Lookup 007'
+ref table 'Projects Lookup 008'
+ref table 'Procurement Lookup 009'
+ref table 'Logistics Lookup 010'
+ref table 'Facilities Lookup 011'
+ref table 'Facilities Lookup 012'
+ref table 'Service Lookup 013'
+ref table 'Marketing Lookup 014'
+ref table 'Inventory Lookup 015'
+ref table 'Finance Lookup 016'
+ref table 'Marketing Lookup 017'
+ref table 'Commerce Lookup 018'
+ref table 'Commerce Lookup 019'
+ref table 'People Lookup 020'
+ref table 'Inventory Lookup 021'
+ref table 'People Lookup 022'
+ref table 'Finance Lookup 023'
+ref table 'Logistics Lookup 024'
+ref table 'Procurement Lookup 025'
+ref table 'Facilities Lookup 026'
+ref table 'Hospitality Lookup 027'
+ref table 'Hospitality Lookup 028'
+ref table 'Logistics Lookup 029'
+ref table 'Finance Lookup 030'
+ref table 'Projects Lookup 031'
+ref table 'Procurement Lookup 032'
+ref table 'Service Lookup 033'
+ref table 'Procurement Lookup 034'
+ref table 'People Lookup 035'
+ref table 'Service Lookup 036'
+ref table 'Projects Lookup 037'
+ref table 'Facilities Lookup 038'
+ref table 'Service Lookup 039'
+ref table 'Marketing Lookup 040'
+ref table 'Procurement Lookup 041'
+ref table 'Commerce Lookup 042'
+ref table 'Production Lookup 043'
+ref table 'Commerce Lookup 044'
+ref table 'Finance Lookup 045'
+ref table 'Logistics Lookup 046'
+ref table 'Production Lookup 047'
+ref table 'Logistics Lookup 048'
+ref table 'Facilities Lookup 049'
+ref table 'Inventory Lookup 050'
+ref table 'Service Lookup 051'
+ref table 'Commerce Lookup 052'
+ref table 'Production Lookup 053'
+ref table 'Procurement Lookup 054'
+ref table 'Marketing Lookup 055'
+ref table 'People Lookup 056'
+ref table 'People Lookup 057'

@@ -1,0 +1,131 @@
+table Chats
+
+	measure 'Chats Total Amount' = SUM ( Chats[Amount] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Average Amount' = AVERAGE ( Chats[Amount] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'Chats Count' = COUNTROWS ( Chats )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Total Amount LY' = CALCULATE ( [Chats Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Total Amount YoY %' = DIVIDE ( [Chats Total Amount] - [Chats Total Amount LY], [Chats Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Service
+
+	measure 'Chats Total Amount YTD' = TOTALYTD ( [Chats Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Max Amount' = MAX ( Chats[Amount] )
+		displayFolder: Service
+
+	measure 'Chats Amount Share %' = DIVIDE ( [Chats Total Amount], CALCULATE ( [Chats Total Amount], ALL ( Chats ) ) )
+		displayFolder: Service
+
+	measure 'Chats Total Hours' = SUM ( Chats[Hours] )
+		displayFolder: Service
+
+	measure 'Chats Average Hours' = AVERAGE ( Chats[Hours] )
+		formatString: #,0.00
+
+	measure 'Chats Total Hours LY' = CALCULATE ( [Chats Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Total Hours YoY %' = DIVIDE ( [Chats Total Hours] - [Chats Total Hours LY], [Chats Total Hours LY] )
+		formatString: 0.0%
+
+	measure 'Chats Total Hours YTD' = TOTALYTD ( [Chats Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Chats Max Hours' = MAX ( Chats[Hours] )
+
+	measure 'Chats Hours Share %' = DIVIDE ( [Chats Total Hours], CALCULATE ( [Chats Total Hours], ALL ( Chats ) ) )
+		displayFolder: Service
+
+	column 'Chat Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Chat Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Team Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Team Key
+
+	column 'Service Lookup 013 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 013 Key
+
+	column 'Service Lookup 039 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 039 Key
+
+	column 'Knowledge Article Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Knowledge Article Key
+
+	column 'Service Lookup 036 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 036 Key
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Margin
+		dataType: decimal
+		isHidden
+		sourceColumn: Margin
+
+	partition Chats = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Chat Id", "Date", "Team Key", "Service Lookup 013 Key", "Service Lookup 039 Key", "Knowledge Article Key", "Service Lookup 036 Key", "Amount", "Hours", "Weight Kg", "Units", "Quantity", "Cost", "Net Amount", "Margin"}, {})
+				in
+				    Source

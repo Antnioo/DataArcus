@@ -1,0 +1,38 @@
+table 'Purchase Category'
+
+	column 'Purchase Category Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Purchase Category Key
+
+	column 'Purchase Category'
+		dataType: string
+		sourceColumn: Purchase Category
+
+	column 'Purchase Category Short Name'
+		dataType: string
+		sourceColumn: Purchase Category Short Name
+
+	column 'Purchase Category Type'
+		dataType: string
+		sourceColumn: Purchase Category Type
+
+	column 'Purchase Category Category'
+		dataType: string
+		sourceColumn: Purchase Category Category
+
+	column 'Purchase Category Code'
+		dataType: string
+		sourceColumn: Purchase Category Code
+
+	column 'Purchase Category Description'
+		dataType: string
+		sourceColumn: Purchase Category Description
+
+	partition 'Purchase Category' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Purchase Category Key", "Purchase Category", "Purchase Category Short Name", "Purchase Category Type", "Purchase Category Category", "Purchase Category Code", "Purchase Category Description"}, {})
+				in
+				    Source

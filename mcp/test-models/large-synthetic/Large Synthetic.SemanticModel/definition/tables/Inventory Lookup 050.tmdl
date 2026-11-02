@@ -1,0 +1,54 @@
+table 'Inventory Lookup 050'
+
+	column 'Inventory Lookup 050 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 050 Key
+
+	column 'Inventory Lookup 050'
+		dataType: string
+		sourceColumn: Inventory Lookup 050
+
+	column 'Inventory Lookup 050 Created By'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Created By
+
+	column 'Inventory Lookup 050 Status'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Status
+
+	column 'Inventory Lookup 050 Category'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Category
+
+	column 'Inventory Lookup 050 Group'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Group
+
+	column 'Inventory Lookup 050 Region'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Region
+
+	column 'Inventory Lookup 050 Type'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Type
+
+	column 'Inventory Lookup 050 Notes'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Notes
+
+	column 'Inventory Lookup 050 Code'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Code
+
+	column 'Inventory Lookup 050 Description'
+		dataType: string
+		sourceColumn: Inventory Lookup 050 Description
+
+	partition 'Inventory Lookup 050' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inventory Lookup 050 Key", "Inventory Lookup 050", "Inventory Lookup 050 Created By", "Inventory Lookup 050 Status", "Inventory Lookup 050 Category", "Inventory Lookup 050 Group", "Inventory Lookup 050 Region", "Inventory Lookup 050 Type", "Inventory Lookup 050 Notes", "Inventory Lookup 050 Code", "Inventory Lookup 050 Description"}, {})
+				in
+				    Source

@@ -1,0 +1,34 @@
+table 'Payment Term'
+
+	column 'Payment Term Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Payment Term Key
+
+	column 'Payment Term'
+		dataType: string
+		sourceColumn: Payment Term
+
+	column 'Payment Term Valid From'
+		dataType: dateTime
+		sourceColumn: Payment Term Valid From
+
+	column 'Payment Term Status'
+		dataType: string
+		sourceColumn: Payment Term Status
+
+	column 'Payment Term Code'
+		dataType: string
+		sourceColumn: Payment Term Code
+
+	column 'Payment Term Description'
+		dataType: string
+		sourceColumn: Payment Term Description
+
+	partition 'Payment Term' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Payment Term Key", "Payment Term", "Payment Term Valid From", "Payment Term Status", "Payment Term Code", "Payment Term Description"}, {})
+				in
+				    Source

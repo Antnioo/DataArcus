@@ -1,0 +1,109 @@
+table 'Spend Lines'
+
+	measure 'Spend Lines Total Margin' = SUM ( 'Spend Lines'[Margin] )
+		formatString: #,0
+
+	measure 'Spend Lines Average Margin' = AVERAGE ( 'Spend Lines'[Margin] )
+		formatString: #,0.00
+
+	measure 'Spend Lines Count' = COUNTROWS ( 'Spend Lines' )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Margin LY' = CALCULATE ( [Spend Lines Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Spend Lines Total Margin YoY %' = DIVIDE ( [Spend Lines Total Margin] - [Spend Lines Total Margin LY], [Spend Lines Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Margin YTD' = TOTALYTD ( [Spend Lines Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Spend Lines Max Margin' = MAX ( 'Spend Lines'[Margin] )
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Spend Lines Margin Share %' = DIVIDE ( [Spend Lines Total Margin], CALCULATE ( [Spend Lines Total Margin], ALL ( 'Spend Lines' ) ) )
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Quantity' = SUM ( 'Spend Lines'[Quantity] )
+		formatString: #,0
+
+	measure 'Spend Lines Average Quantity' = AVERAGE ( 'Spend Lines'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Quantity LY' = CALCULATE ( [Spend Lines Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Quantity YoY %' = DIVIDE ( [Spend Lines Total Quantity] - [Spend Lines Total Quantity LY], [Spend Lines Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Spend Lines Total Quantity YTD' = TOTALYTD ( [Spend Lines Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Spend Lines Max Quantity' = MAX ( 'Spend Lines'[Quantity] )
+		displayFolder: Procurement
+
+	measure 'Spend Lines Quantity Share %' = DIVIDE ( [Spend Lines Total Quantity], CALCULATE ( [Spend Lines Total Quantity], ALL ( 'Spend Lines' ) ) )
+		displayFolder: Procurement
+
+	column 'Spend Line Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Spend Line Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'PO Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: PO Status Key
+
+	column 'Procurement Lookup 054 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 054 Key
+
+	column 'Incoterm Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Incoterm Key
+
+	column 'Procurement Lookup 041 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 041 Key
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column Discount
+		dataType: decimal
+		isHidden
+		sourceColumn: Discount
+
+	partition 'Spend Lines' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Spend Line Id", "Date", "PO Status Key", "Procurement Lookup 054 Key", "Incoterm Key", "Procurement Lookup 041 Key", "Margin", "Quantity", "Price", "Discount"}, {})
+				in
+				    Source

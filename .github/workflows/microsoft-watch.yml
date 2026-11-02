@@ -1,0 +1,35 @@
+name: Microsoft Power BI update watch
+
+# G1 (owner, 19-20 Oct): every week, compare Microsoft's report schemas, report theme schema, validator and visual
+# catalog, and the Power BI blog's Feature Summary with what DataArcus is built on, and open ONE issue (label
+# microsoft-update) or comment on the open one when something is newer. It never changes code, opens no pull request
+# and merges nothing; a Microsoft source that can't be read is a warning, not a failure (mcp/research/MICROSOFT-WATCH.md).
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'  # every Monday 05:17 UTC (09:17 Dubai), after the price and exam outline checks
+  workflow_dispatch:       # "Run workflow" button for a manual check
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: microsoft-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Compare Microsoft's sources with what DataArcus is built on
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/microsoft-watch.mjs

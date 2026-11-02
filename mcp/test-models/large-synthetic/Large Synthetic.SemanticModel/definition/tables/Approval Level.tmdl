@@ -1,0 +1,58 @@
+table 'Approval Level'
+
+	column 'Approval Level Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Approval Level Key
+
+	column 'Approval Level'
+		dataType: string
+		sourceColumn: Approval Level
+
+	column 'Approval Level Created By'
+		dataType: string
+		sourceColumn: Approval Level Created By
+
+	column 'Approval Level Status'
+		dataType: string
+		sourceColumn: Approval Level Status
+
+	column 'Approval Level Valid To'
+		dataType: dateTime
+		sourceColumn: Approval Level Valid To
+
+	column 'Approval Level Short Name'
+		dataType: string
+		sourceColumn: Approval Level Short Name
+
+	column 'Approval Level Owner'
+		dataType: string
+		sourceColumn: Approval Level Owner
+
+	column 'Approval Level Valid From'
+		dataType: dateTime
+		sourceColumn: Approval Level Valid From
+
+	column 'Approval Level Long Name'
+		dataType: string
+		sourceColumn: Approval Level Long Name
+
+	column 'Approval Level Is Active'
+		dataType: boolean
+		sourceColumn: Approval Level Is Active
+
+	column 'Approval Level Code'
+		dataType: string
+		sourceColumn: Approval Level Code
+
+	column 'Approval Level Description'
+		dataType: string
+		sourceColumn: Approval Level Description
+
+	partition 'Approval Level' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Approval Level Key", "Approval Level", "Approval Level Created By", "Approval Level Status", "Approval Level Valid To", "Approval Level Short Name", "Approval Level Owner", "Approval Level Valid From", "Approval Level Long Name", "Approval Level Is Active", "Approval Level Code", "Approval Level Description"}, {})
+				in
+				    Source

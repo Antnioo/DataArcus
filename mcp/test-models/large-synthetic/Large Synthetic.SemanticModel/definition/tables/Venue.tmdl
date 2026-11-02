@@ -1,0 +1,46 @@
+table Venue
+
+	column 'Venue Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Venue Key
+
+	column Venue
+		dataType: string
+		sourceColumn: Venue
+
+	column 'Venue Is Active'
+		dataType: boolean
+		sourceColumn: Venue Is Active
+
+	column 'Venue Code'
+		dataType: string
+		sourceColumn: Venue Code
+
+	column 'Venue Parent Code'
+		dataType: string
+		sourceColumn: Venue Parent Code
+
+	column 'Venue Valid To'
+		dataType: dateTime
+		sourceColumn: Venue Valid To
+
+	column 'Venue Type'
+		dataType: string
+		sourceColumn: Venue Type
+
+	column 'Venue Description'
+		dataType: string
+		sourceColumn: Venue Description
+
+	column 'Venue Group'
+		dataType: string
+		sourceColumn: Venue Group
+
+	partition Venue = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Venue Key", "Venue", "Venue Is Active", "Venue Code", "Venue Parent Code", "Venue Valid To", "Venue Type", "Venue Description", "Venue Group"}, {})
+				in
+				    Source

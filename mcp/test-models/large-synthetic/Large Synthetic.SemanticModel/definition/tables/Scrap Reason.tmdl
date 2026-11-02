@@ -1,0 +1,54 @@
+table 'Scrap Reason'
+
+	column 'Scrap Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Scrap Reason Key
+
+	column 'Scrap Reason'
+		dataType: string
+		sourceColumn: Scrap Reason
+
+	column 'Scrap Reason Rank'
+		dataType: int64
+		sourceColumn: Scrap Reason Rank
+
+	column 'Scrap Reason Region'
+		dataType: string
+		sourceColumn: Scrap Reason Region
+
+	column 'Scrap Reason Code'
+		dataType: string
+		sourceColumn: Scrap Reason Code
+
+	column 'Scrap Reason Created By'
+		dataType: string
+		sourceColumn: Scrap Reason Created By
+
+	column 'Scrap Reason External Id'
+		dataType: string
+		sourceColumn: Scrap Reason External Id
+
+	column 'Scrap Reason Sort Order'
+		dataType: int64
+		sourceColumn: Scrap Reason Sort Order
+
+	column 'Scrap Reason Status'
+		dataType: string
+		sourceColumn: Scrap Reason Status
+
+	column 'Scrap Reason Description'
+		dataType: string
+		sourceColumn: Scrap Reason Description
+
+	column 'Scrap Reason Group'
+		dataType: string
+		sourceColumn: Scrap Reason Group
+
+	partition 'Scrap Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Scrap Reason Key", "Scrap Reason", "Scrap Reason Rank", "Scrap Reason Region", "Scrap Reason Code", "Scrap Reason Created By", "Scrap Reason External Id", "Scrap Reason Sort Order", "Scrap Reason Status", "Scrap Reason Description", "Scrap Reason Group"}, {})
+				in
+				    Source

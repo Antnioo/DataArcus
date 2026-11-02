@@ -1,0 +1,58 @@
+table 'Movement Type'
+
+	column 'Movement Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Movement Type Key
+
+	column 'Movement Type'
+		dataType: string
+		sourceColumn: Movement Type
+
+	column 'Movement Type Rank'
+		dataType: int64
+		sourceColumn: Movement Type Rank
+
+	column 'Movement Type Code'
+		dataType: string
+		sourceColumn: Movement Type Code
+
+	column 'Movement Type Sort Order'
+		dataType: int64
+		sourceColumn: Movement Type Sort Order
+
+	column 'Movement Type Status'
+		dataType: string
+		sourceColumn: Movement Type Status
+
+	column 'Movement Type Group'
+		dataType: string
+		sourceColumn: Movement Type Group
+
+	column 'Movement Type External Id'
+		dataType: string
+		sourceColumn: Movement Type External Id
+
+	column 'Movement Type Notes'
+		dataType: string
+		sourceColumn: Movement Type Notes
+
+	column 'Movement Type Owner'
+		dataType: string
+		sourceColumn: Movement Type Owner
+
+	column 'Movement Type Description'
+		dataType: string
+		sourceColumn: Movement Type Description
+
+	column 'Movement Type Category'
+		dataType: string
+		sourceColumn: Movement Type Category
+
+	partition 'Movement Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Movement Type Key", "Movement Type", "Movement Type Rank", "Movement Type Code", "Movement Type Sort Order", "Movement Type Status", "Movement Type Group", "Movement Type External Id", "Movement Type Notes", "Movement Type Owner", "Movement Type Description", "Movement Type Category"}, {})
+				in
+				    Source

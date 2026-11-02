@@ -1,0 +1,54 @@
+table Operator
+
+	column 'Operator Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Operator Key
+
+	column Operator
+		dataType: string
+		sourceColumn: Operator
+
+	column 'Operator Group'
+		dataType: string
+		sourceColumn: Operator Group
+
+	column 'Operator Category'
+		dataType: string
+		sourceColumn: Operator Category
+
+	column 'Operator External Id'
+		dataType: string
+		sourceColumn: Operator External Id
+
+	column 'Operator Sort Order'
+		dataType: int64
+		sourceColumn: Operator Sort Order
+
+	column 'Operator Level'
+		dataType: int64
+		sourceColumn: Operator Level
+
+	column 'Operator Parent Code'
+		dataType: string
+		sourceColumn: Operator Parent Code
+
+	column 'Operator Status'
+		dataType: string
+		sourceColumn: Operator Status
+
+	column 'Operator Code'
+		dataType: string
+		sourceColumn: Operator Code
+
+	column 'Operator Description'
+		dataType: string
+		sourceColumn: Operator Description
+
+	partition Operator = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Operator Key", "Operator", "Operator Group", "Operator Category", "Operator External Id", "Operator Sort Order", "Operator Level", "Operator Parent Code", "Operator Status", "Operator Code", "Operator Description"}, {})
+				in
+				    Source

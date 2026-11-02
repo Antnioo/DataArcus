@@ -1,0 +1,142 @@
+table 'Purchase Orders'
+
+	measure 'Purchase Orders Total Weight Kg' = SUM ( 'Purchase Orders'[Weight Kg] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Average Weight Kg' = AVERAGE ( 'Purchase Orders'[Weight Kg] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Count' = COUNTROWS ( 'Purchase Orders' )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Weight Kg LY' = CALCULATE ( [Purchase Orders Total Weight Kg], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Weight Kg YoY %' = DIVIDE ( [Purchase Orders Total Weight Kg] - [Purchase Orders Total Weight Kg LY], [Purchase Orders Total Weight Kg LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Weight Kg YTD' = TOTALYTD ( [Purchase Orders Total Weight Kg], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Purchase Orders Max Weight Kg' = MAX ( 'Purchase Orders'[Weight Kg] )
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Weight Kg Share %' = DIVIDE ( [Purchase Orders Total Weight Kg], CALCULATE ( [Purchase Orders Total Weight Kg], ALL ( 'Purchase Orders' ) ) )
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Amount' = SUM ( 'Purchase Orders'[Amount] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Average Amount' = AVERAGE ( 'Purchase Orders'[Amount] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Amount LY' = CALCULATE ( [Purchase Orders Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Total Amount YoY %' = DIVIDE ( [Purchase Orders Total Amount] - [Purchase Orders Total Amount LY], [Purchase Orders Total Amount LY] )
+		formatString: 0.0%
+
+	measure 'Purchase Orders Total Amount YTD' = TOTALYTD ( [Purchase Orders Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Max Amount' = MAX ( 'Purchase Orders'[Amount] )
+		displayFolder: Procurement
+
+	measure 'Purchase Orders Amount Share %' = DIVIDE ( [Purchase Orders Total Amount], CALCULATE ( [Purchase Orders Total Amount], ALL ( 'Purchase Orders' ) ) )
+
+	column 'Purchase Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Purchase Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Procurement Lookup 041 Key'
+		dataType: int64
+		sourceColumn: Procurement Lookup 041 Key
+
+	column 'Procurement Lookup 054 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 054 Key
+
+	column 'Procurement Lookup 025 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 025 Key
+
+	column 'Purchase Category Key'
+		dataType: int64
+		sourceColumn: Purchase Category Key
+
+	column 'Marketing Lookup 017 Key'
+		dataType: int64
+		sourceColumn: Marketing Lookup 017 Key
+
+	column 'Delivery Term Key'
+		dataType: int64
+		sourceColumn: Delivery Term Key
+
+	column 'Incoterm Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Incoterm Key
+
+	column 'Weight Kg'
+		dataType: double
+		sourceColumn: Weight Kg
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		sourceColumn: Duration Minutes
+
+	partition 'Purchase Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Purchase Order Id", "Date", "Procurement Lookup 041 Key", "Procurement Lookup 054 Key", "Procurement Lookup 025 Key", "Purchase Category Key", "Marketing Lookup 017 Key", "Delivery Term Key", "Incoterm Key", "Weight Kg", "Amount", "Net Amount", "Hours", "Units", "Discount", "Margin", "Price", "Duration Minutes"}, {})
+				in
+				    Source

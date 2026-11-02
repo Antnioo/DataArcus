@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-journey-attribution.html" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-journey-attribution.html" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-journey-attribution.html" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-journey-attribution.html" />
+
+  <title>Resolve Once, Hydrate Many: A DAX Attribution Pattern</title>
+  <meta name="description" content="Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="lead attribution, DAX pattern, Power BI data modeling, journey resolution, CRM analytics, DataArcus, data engineering" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Resolve Once, Hydrate Many: A DAX Attribution Pattern" />
+  <meta property="og:description" content="Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-journey-attribution.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/journey-attribution.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="A diagram of the Resolve Once, Hydrate Many pattern: lead forms, calls, statuses and invoices resolved to one journey key." />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-09-01T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Resolve Once, Hydrate Many: A DAX Attribution Pattern" />
+  <meta name="twitter:description" content="Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/journey-attribution.jpg" />
+  <meta name="twitter:image:alt" content="A diagram of the Resolve Once, Hydrate Many pattern: lead forms, calls, statuses and invoices resolved to one journey key." />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution",
+    "description": "Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere.",
+    "url": "https://dataarcus.com/articles/article-journey-attribution.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2026-09-01",
+    "image": "https://dataarcus.com/assets/img/og/journey-attribution.jpg"
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge">DATA ENGINEERING</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on September 1, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Ask three different reports "how many leads did Campaign X actually convert?" and you'll often get three different numbers. Nobody lied. Each report matched the same lead to a call, an outcome, and an invoice using slightly different logic.</p>
+              <p data-i18n-html="content.p2">This is the <strong>Attribution Gap</strong>: the same customer journey gets re-resolved independently every time a new measure needs to know "what happened to this lead." Small differences in matching logic (a different date window, a different tie-breaker) compound into KPIs that quietly disagree with each other.</p>
+              <p data-i18n-html="content.p3">This is a problem every sales CRM model meets sooner or later. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.</p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_sec1">The Problem: Five Reports, Five Different Answers</h2>
+              <p data-i18n-html="content.p_sec1_1">In a sales CRM, a single lead can touch dozens of records: multiple calls, several statuses, and maybe, eventually, an invoice. The natural instinct is to let every report answer its own question independently: the Sales report looks up the invoice, the Call report looks up the last call, the Qualification report looks up the latest status.</p>
+              <p data-i18n-html="content.p_sec1_2">The problem is that <strong>"independently" means inconsistently</strong>. If the Sales report resolves a lead to its journey using one join condition, and the Qualification report uses a slightly different one, the two reports can disagree on whether the same lead is even the same journey, especially once a lead has multiple call attempts spread across days.</p>
+              <p data-i18n-html="content.p_sec1_3">Multiply this across every measure and table in a model, and you get a dashboard where every page is individually correct but collectively untrustworthy. Executives stop asking "what's the number" and start asking "which report's number."</p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_sec2">Resolve Once: A Single Source of Truth for Every Lead</h2>
+              <p data-i18n-html="content.p_sec2_1">The fix isn't a smarter join. It's fewer joins. We built one column, a <strong>Matched Journey Key</strong>, whose only job is to resolve each lead to exactly one call journey, using one consistent set of tie-breaking rules.</p>
+              <p data-i18n-html="content.p_sec2_2">Before replacing the old, scattered logic, we validated the new key against every existing measure that depended on lead-to-journey matching: <strong>every lead</strong> resolved to an identical journey under both the old and new logic. Only after that exact match did the old logic get retired.</p>
+              <p data-i18n-html="content.p_sec2_3">That single validation pass is what makes the pattern trustworthy, for us and for anyone reading the model later. One resolved key, proven correct once, is worth more than a dozen independently "probably correct" joins.</p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_sec3">Hydrate Many: Reusing the Resolution Everywhere</h2>
+              <p data-i18n-html="content.p_sec3_1">Once a lead's journey is resolved, every other measure that needs to know something about that journey (status, terminal reason, invoice, agent, outcome) becomes a thin <strong>LOOKUPVALUE</strong> read off the Matched Journey Key, instead of its own independent matching logic.</p>
+              <p data-i18n-html="content.p_sec3_2">This has a second benefit beyond correctness: it turns 400+ measures into <strong>documentation</strong>. Reading a downstream measure's DAX tells you exactly which single source of truth it depends on, instead of hiding a re-derivation of matching logic inside every formula.</p>
+              <p data-i18n-html="content.p_sec3_3">The result: leads, calls and call journeys that agree with each other on every page of the report, because they all trace back to the same resolved key.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Explore Live Power BI Models</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Open the DataArcus showcases: interactive Power BI reports you can click through.</p>
+                <div class="cta-actions">
+                  <a href="../portfolio.html" class="btn btn-accent"><i class="bi bi-bar-chart-fill me-2"></i><span data-i18n="exploreMore.button">View the Showcases</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Struggling With Numbers That Don't Agree?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We can audit your model's matching logic and build a single, trustworthy resolution layer.</p>
+                <div class="cta-actions">
+                  <a href="/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Data Model Audit</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
+  <script src="../assets/js/translations/article-journey-attribution.min.js?v=20261017p" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="../assets/js/main.min.js?v=20261022d" defer></script>
+</body>
+</html>

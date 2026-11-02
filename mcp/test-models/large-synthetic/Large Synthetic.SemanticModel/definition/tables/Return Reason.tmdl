@@ -1,0 +1,60 @@
+table 'Return Reason'
+
+	column 'Return Reason Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Key]
+
+	column 'Return Reason'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason]
+
+	column 'Return Reason Category'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Category]
+
+	column 'Return Reason External Id'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason External Id]
+
+	column 'Return Reason Valid From'
+		dataType: dateTime
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Valid From]
+
+	column 'Return Reason Valid To'
+		dataType: dateTime
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Valid To]
+
+	column 'Return Reason Rank'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Rank]
+
+	column 'Return Reason Code'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Code]
+
+	column 'Return Reason Description'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Description]
+
+	partition 'Return Reason' = calculated
+		mode: import
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Return Reason Key", [Value], "Return Reason", "Return Reason " & [Value], "Return Reason Category", "Category " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Return Reason External Id", "External Id " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Return Reason Valid From", DATE ( 2024, [Value], 1 ), "Return Reason Valid To", DATE ( 2024, [Value], 1 ), "Return Reason Rank", [Value], "Return Reason Code", "Code " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Return Reason Description", "Description " & ( 1 + MOD ( [Value] + 8, 3 ) ) )

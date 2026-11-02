@@ -1,0 +1,123 @@
+table Subscriptions
+
+	measure 'Subscriptions Total Amount' = SUM ( Subscriptions[Amount] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Subscriptions Average Amount' = AVERAGE ( Subscriptions[Amount] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Subscriptions Count' = COUNTROWS ( Subscriptions )
+		formatString: #,0
+
+	measure 'Subscriptions Total Amount LY' = CALCULATE ( [Subscriptions Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Subscriptions Total Amount YoY %' = DIVIDE ( [Subscriptions Total Amount] - [Subscriptions Total Amount LY], [Subscriptions Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Subscriptions Total Amount YTD' = TOTALYTD ( [Subscriptions Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Subscriptions Max Amount' = MAX ( Subscriptions[Amount] )
+		displayFolder: Commerce
+
+	measure 'Subscriptions Amount Share %' = DIVIDE ( [Subscriptions Total Amount], CALCULATE ( [Subscriptions Total Amount], ALL ( Subscriptions ) ) )
+		displayFolder: Commerce
+
+	measure 'Subscriptions Total Units' = SUM ( Subscriptions[Units] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Subscriptions Average Units' = AVERAGE ( Subscriptions[Units] )
+		formatString: #,0.00
+
+	measure 'Subscriptions Total Units LY' = CALCULATE ( [Subscriptions Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Subscriptions Total Units YoY %' = DIVIDE ( [Subscriptions Total Units] - [Subscriptions Total Units LY], [Subscriptions Total Units LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Subscriptions Total Units YTD' = TOTALYTD ( [Subscriptions Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Subscriptions Max Units' = MAX ( Subscriptions[Units] )
+		displayFolder: Commerce
+
+	measure 'Subscriptions Units Share %' = DIVIDE ( [Subscriptions Total Units], CALCULATE ( [Subscriptions Total Units], ALL ( Subscriptions ) ) )
+		displayFolder: Commerce
+
+	column 'Subscription Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Subscription Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Commerce Lookup 019 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 019 Key
+
+	column 'Commerce Lookup 018 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 018 Key
+
+	column 'Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Plan Key
+
+	column 'Referrer Key'
+		dataType: int64
+		sourceColumn: Referrer Key
+
+	column 'Churn Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Churn Reason Key
+
+	column 'Email Template Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Email Template Key
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	partition Subscriptions = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Subscription Id", "Date", "Commerce Lookup 019 Key", "Commerce Lookup 018 Key", "Plan Key", "Referrer Key", "Churn Reason Key", "Email Template Key", "Amount", "Units", "Quantity", "Net Amount", "Tax Amount"}, {})
+				in
+				    Source

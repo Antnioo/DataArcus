@@ -1,0 +1,30 @@
+table 'Facilities Lookup 049'
+
+	column 'Facilities Lookup 049 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 049 Key
+
+	column 'Facilities Lookup 049'
+		dataType: string
+		sourceColumn: Facilities Lookup 049
+
+	column 'Facilities Lookup 049 Status'
+		dataType: string
+		sourceColumn: Facilities Lookup 049 Status
+
+	column 'Facilities Lookup 049 Type'
+		dataType: string
+		sourceColumn: Facilities Lookup 049 Type
+
+	column 'Facilities Lookup 049 Code'
+		dataType: string
+		sourceColumn: Facilities Lookup 049 Code
+
+	partition 'Facilities Lookup 049' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Facilities Lookup 049 Key", "Facilities Lookup 049", "Facilities Lookup 049 Status", "Facilities Lookup 049 Type", "Facilities Lookup 049 Code"}, {})
+				in
+				    Source

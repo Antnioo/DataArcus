@@ -1,0 +1,34 @@
+table Market
+
+	column 'Market Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Market Key
+
+	column Market
+		dataType: string
+		sourceColumn: Market
+
+	column 'Market Long Name'
+		dataType: string
+		sourceColumn: Market Long Name
+
+	column 'Market Created By'
+		dataType: string
+		sourceColumn: Market Created By
+
+	column 'Market Code'
+		dataType: string
+		sourceColumn: Market Code
+
+	column 'Market Description'
+		dataType: string
+		sourceColumn: Market Description
+
+	partition Market = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Market Key", "Market", "Market Long Name", "Market Created By", "Market Code", "Market Description"}, {})
+				in
+				    Source

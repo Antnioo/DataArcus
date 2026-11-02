@@ -1,0 +1,114 @@
+table Tickets
+
+	measure 'Tickets Total Duration Minutes' = SUM ( Tickets[Duration Minutes] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Tickets Average Duration Minutes' = AVERAGE ( Tickets[Duration Minutes] )
+		displayFolder: Service
+
+	measure 'Tickets Count' = COUNTROWS ( Tickets )
+		displayFolder: Service
+
+	measure 'Tickets Total Duration Minutes LY' = CALCULATE ( [Tickets Total Duration Minutes], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Service
+
+	measure 'Tickets Total Duration Minutes YoY %' = DIVIDE ( [Tickets Total Duration Minutes] - [Tickets Total Duration Minutes LY], [Tickets Total Duration Minutes LY] )
+		formatString: 0.0%
+		displayFolder: Service
+
+	measure 'Tickets Total Duration Minutes YTD' = TOTALYTD ( [Tickets Total Duration Minutes], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Tickets Max Duration Minutes' = MAX ( Tickets[Duration Minutes] )
+
+	measure 'Tickets Duration Minutes Share %' = DIVIDE ( [Tickets Total Duration Minutes], CALCULATE ( [Tickets Total Duration Minutes], ALL ( Tickets ) ) )
+		displayFolder: Service
+
+	measure 'Tickets Total Units' = SUM ( Tickets[Units] )
+		displayFolder: Service
+
+	measure 'Tickets Average Units' = AVERAGE ( Tickets[Units] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'Tickets Total Units LY' = CALCULATE ( [Tickets Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Tickets Total Units YoY %' = DIVIDE ( [Tickets Total Units] - [Tickets Total Units LY], [Tickets Total Units LY] )
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Tickets Total Units YTD' = TOTALYTD ( [Tickets Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Tickets Max Units' = MAX ( Tickets[Units] )
+		displayFolder: Service
+
+	measure 'Tickets Units Share %' = DIVIDE ( [Tickets Total Units], CALCULATE ( [Tickets Total Units], ALL ( Tickets ) ) )
+		displayFolder: Service
+
+	column 'Ticket Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Service Lookup 002 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 002 Key
+
+	column 'Call Outcome Key'
+		dataType: int64
+		sourceColumn: Call Outcome Key
+
+	column 'Service Lookup 039 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 039 Key
+
+	column 'Duration Minutes'
+		dataType: decimal
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column 'Weight Kg'
+		dataType: double
+		isHidden
+		sourceColumn: Weight Kg
+
+	partition Tickets = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Ticket Id", "Date", "Service Lookup 002 Key", "Call Outcome Key", "Service Lookup 039 Key", "Duration Minutes", "Units", "Cost", "Margin", "Hours", "Value", "Weight Kg"}, {})
+				in
+				    Source

@@ -1,0 +1,34 @@
+table Survey
+
+	column 'Survey Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Survey Key
+
+	column Survey
+		dataType: string
+		sourceColumn: Survey
+
+	column 'Survey Valid To'
+		dataType: dateTime
+		sourceColumn: Survey Valid To
+
+	column 'Survey Level'
+		dataType: int64
+		sourceColumn: Survey Level
+
+	column 'Survey Code'
+		dataType: string
+		sourceColumn: Survey Code
+
+	column 'Survey Description'
+		dataType: string
+		sourceColumn: Survey Description
+
+	partition Survey = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Survey Key", "Survey", "Survey Valid To", "Survey Level", "Survey Code", "Survey Description"}, {})
+				in
+				    Source

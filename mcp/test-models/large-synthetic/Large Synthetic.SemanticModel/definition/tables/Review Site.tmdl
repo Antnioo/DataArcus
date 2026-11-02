@@ -1,0 +1,58 @@
+table 'Review Site'
+
+	column 'Review Site Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Review Site Key
+
+	column 'Review Site'
+		dataType: string
+		sourceColumn: Review Site
+
+	column 'Review Site Region'
+		dataType: string
+		sourceColumn: Review Site Region
+
+	column 'Review Site Long Name'
+		dataType: string
+		sourceColumn: Review Site Long Name
+
+	column 'Review Site Notes'
+		dataType: string
+		sourceColumn: Review Site Notes
+
+	column 'Review Site Created By'
+		dataType: string
+		sourceColumn: Review Site Created By
+
+	column 'Review Site Owner'
+		dataType: string
+		sourceColumn: Review Site Owner
+
+	column 'Review Site External Id'
+		dataType: string
+		sourceColumn: Review Site External Id
+
+	column 'Review Site Valid To'
+		dataType: dateTime
+		sourceColumn: Review Site Valid To
+
+	column 'Review Site Short Name'
+		dataType: string
+		sourceColumn: Review Site Short Name
+
+	column 'Review Site Code'
+		dataType: string
+		sourceColumn: Review Site Code
+
+	column 'Review Site Description'
+		dataType: string
+		sourceColumn: Review Site Description
+
+	partition 'Review Site' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Review Site Key", "Review Site", "Review Site Region", "Review Site Long Name", "Review Site Notes", "Review Site Created By", "Review Site Owner", "Review Site External Id", "Review Site Valid To", "Review Site Short Name", "Review Site Code", "Review Site Description"}, {})
+				in
+				    Source

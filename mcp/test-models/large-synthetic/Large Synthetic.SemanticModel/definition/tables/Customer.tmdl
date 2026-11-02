@@ -1,0 +1,46 @@
+table Customer
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Key
+
+	column Customer
+		dataType: string
+		sourceColumn: Customer
+
+	column 'Customer Region'
+		dataType: string
+		sourceColumn: Customer Region
+
+	column 'Customer Valid To'
+		dataType: dateTime
+		sourceColumn: Customer Valid To
+
+	column 'Customer Category'
+		dataType: string
+		sourceColumn: Customer Category
+
+	column 'Customer Created By'
+		dataType: string
+		sourceColumn: Customer Created By
+
+	column 'Customer Sort Order'
+		dataType: int64
+		sourceColumn: Customer Sort Order
+
+	column 'Customer Code'
+		dataType: string
+		sourceColumn: Customer Code
+
+	column 'Customer Description'
+		dataType: string
+		sourceColumn: Customer Description
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Customer Key", "Customer", "Customer Region", "Customer Valid To", "Customer Category", "Customer Created By", "Customer Sort Order", "Customer Code", "Customer Description"}, {})
+				in
+				    Source

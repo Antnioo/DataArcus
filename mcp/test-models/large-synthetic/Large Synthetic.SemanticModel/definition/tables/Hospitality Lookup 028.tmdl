@@ -1,0 +1,30 @@
+table 'Hospitality Lookup 028'
+
+	column 'Hospitality Lookup 028 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Hospitality Lookup 028 Key
+
+	column 'Hospitality Lookup 028'
+		dataType: string
+		sourceColumn: Hospitality Lookup 028
+
+	column 'Hospitality Lookup 028 Rank'
+		dataType: int64
+		sourceColumn: Hospitality Lookup 028 Rank
+
+	column 'Hospitality Lookup 028 Group'
+		dataType: string
+		sourceColumn: Hospitality Lookup 028 Group
+
+	column 'Hospitality Lookup 028 Code'
+		dataType: string
+		sourceColumn: Hospitality Lookup 028 Code
+
+	partition 'Hospitality Lookup 028' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Hospitality Lookup 028 Key", "Hospitality Lookup 028", "Hospitality Lookup 028 Rank", "Hospitality Lookup 028 Group", "Hospitality Lookup 028 Code"}, {})
+				in
+				    Source

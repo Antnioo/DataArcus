@@ -1,0 +1,46 @@
+table 'Cancellation Reason'
+
+	column 'Cancellation Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cancellation Reason Key
+
+	column 'Cancellation Reason'
+		dataType: string
+		sourceColumn: Cancellation Reason
+
+	column 'Cancellation Reason Group'
+		dataType: string
+		sourceColumn: Cancellation Reason Group
+
+	column 'Cancellation Reason Short Name'
+		dataType: string
+		sourceColumn: Cancellation Reason Short Name
+
+	column 'Cancellation Reason Notes'
+		dataType: string
+		sourceColumn: Cancellation Reason Notes
+
+	column 'Cancellation Reason Status'
+		dataType: string
+		sourceColumn: Cancellation Reason Status
+
+	column 'Cancellation Reason Sort Order'
+		dataType: int64
+		sourceColumn: Cancellation Reason Sort Order
+
+	column 'Cancellation Reason Code'
+		dataType: string
+		sourceColumn: Cancellation Reason Code
+
+	column 'Cancellation Reason Description'
+		dataType: string
+		sourceColumn: Cancellation Reason Description
+
+	partition 'Cancellation Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Cancellation Reason Key", "Cancellation Reason", "Cancellation Reason Group", "Cancellation Reason Short Name", "Cancellation Reason Notes", "Cancellation Reason Status", "Cancellation Reason Sort Order", "Cancellation Reason Code", "Cancellation Reason Description"}, {})
+				in
+				    Source

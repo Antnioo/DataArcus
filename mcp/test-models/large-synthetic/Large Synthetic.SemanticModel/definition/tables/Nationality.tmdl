@@ -1,0 +1,46 @@
+table Nationality
+
+	column 'Nationality Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Nationality Key
+
+	column Nationality
+		dataType: string
+		sourceColumn: Nationality
+
+	column 'Nationality Short Name'
+		dataType: string
+		sourceColumn: Nationality Short Name
+
+	column 'Nationality Parent Code'
+		dataType: string
+		sourceColumn: Nationality Parent Code
+
+	column 'Nationality Type'
+		dataType: string
+		sourceColumn: Nationality Type
+
+	column 'Nationality Valid From'
+		dataType: dateTime
+		sourceColumn: Nationality Valid From
+
+	column 'Nationality Level'
+		dataType: int64
+		sourceColumn: Nationality Level
+
+	column 'Nationality Code'
+		dataType: string
+		sourceColumn: Nationality Code
+
+	column 'Nationality Description'
+		dataType: string
+		sourceColumn: Nationality Description
+
+	partition Nationality = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Nationality Key", "Nationality", "Nationality Short Name", "Nationality Parent Code", "Nationality Type", "Nationality Valid From", "Nationality Level", "Nationality Code", "Nationality Description"}, {})
+				in
+				    Source

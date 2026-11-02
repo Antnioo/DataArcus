@@ -1,0 +1,42 @@
+table Buyer
+
+	column 'Buyer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Buyer Key
+
+	column Buyer
+		dataType: string
+		sourceColumn: Buyer
+
+	column 'Buyer Category'
+		dataType: string
+		sourceColumn: Buyer Category
+
+	column 'Buyer Short Name'
+		dataType: string
+		sourceColumn: Buyer Short Name
+
+	column 'Buyer Level'
+		dataType: int64
+		sourceColumn: Buyer Level
+
+	column 'Buyer Created By'
+		dataType: string
+		sourceColumn: Buyer Created By
+
+	column 'Buyer Code'
+		dataType: string
+		sourceColumn: Buyer Code
+
+	column 'Buyer Description'
+		dataType: string
+		sourceColumn: Buyer Description
+
+	partition Buyer = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Buyer Key", "Buyer", "Buyer Category", "Buyer Short Name", "Buyer Level", "Buyer Created By", "Buyer Code", "Buyer Description"}, {})
+				in
+				    Source

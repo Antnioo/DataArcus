@@ -1,0 +1,124 @@
+table 'Promotions Applied'
+
+	measure 'Promotions Applied Total Amount' = SUM ( 'Promotions Applied'[Amount] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Average Amount' = AVERAGE ( 'Promotions Applied'[Amount] )
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Count' = COUNTROWS ( 'Promotions Applied' )
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Total Amount LY' = CALCULATE ( [Promotions Applied Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Total Amount YoY %' = DIVIDE ( [Promotions Applied Total Amount] - [Promotions Applied Total Amount LY], [Promotions Applied Total Amount LY] )
+		formatString: 0.0%
+
+	measure 'Promotions Applied Total Amount YTD' = TOTALYTD ( [Promotions Applied Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Max Amount' = MAX ( 'Promotions Applied'[Amount] )
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Amount Share %' = DIVIDE ( [Promotions Applied Total Amount], CALCULATE ( [Promotions Applied Total Amount], ALL ( 'Promotions Applied' ) ) )
+
+	measure 'Promotions Applied Total Score' = SUM ( 'Promotions Applied'[Score] )
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Promotions Applied Average Score' = AVERAGE ( 'Promotions Applied'[Score] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Promotions Applied Total Score LY' = CALCULATE ( [Promotions Applied Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Total Score YoY %' = DIVIDE ( [Promotions Applied Total Score] - [Promotions Applied Total Score LY], [Promotions Applied Total Score LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Total Score YTD' = TOTALYTD ( [Promotions Applied Total Score], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Max Score' = MAX ( 'Promotions Applied'[Score] )
+		displayFolder: Commerce
+
+	measure 'Promotions Applied Score Share %' = DIVIDE ( [Promotions Applied Total Score], CALCULATE ( [Promotions Applied Total Score], ALL ( 'Promotions Applied' ) ) )
+		displayFolder: Commerce
+
+	column 'Promotions Applied Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Promotions Applied Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Channel Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Channel Key
+
+	column 'Product Key'
+		dataType: int64
+		sourceColumn: Product Key
+
+	column 'Commerce Lookup 042 Key'
+		dataType: int64
+		sourceColumn: Commerce Lookup 042 Key
+
+	column 'Payment Method Key'
+		dataType: int64
+		sourceColumn: Payment Method Key
+
+	column 'Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Country Key
+
+	column 'Commerce Lookup 044 Key'
+		dataType: int64
+		sourceColumn: Commerce Lookup 044 Key
+
+	column 'Customer Segment Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Segment Key
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Price
+		dataType: decimal
+		isHidden
+		sourceColumn: Price
+
+	partition 'Promotions Applied' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Promotions Applied Id", "Date", "Channel Key", "Product Key", "Commerce Lookup 042 Key", "Payment Method Key", "Country Key", "Commerce Lookup 044 Key", "Customer Segment Key", "Amount", "Score", "Count", "Units", "Price"}, {})
+				in
+				    Source

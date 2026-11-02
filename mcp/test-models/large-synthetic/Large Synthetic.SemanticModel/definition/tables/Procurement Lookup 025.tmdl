@@ -1,0 +1,54 @@
+table 'Procurement Lookup 025'
+
+	column 'Procurement Lookup 025 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 025 Key
+
+	column 'Procurement Lookup 025'
+		dataType: string
+		sourceColumn: Procurement Lookup 025
+
+	column 'Procurement Lookup 025 Valid To'
+		dataType: dateTime
+		sourceColumn: Procurement Lookup 025 Valid To
+
+	column 'Procurement Lookup 025 External Id'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 External Id
+
+	column 'Procurement Lookup 025 Created By'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Created By
+
+	column 'Procurement Lookup 025 Notes'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Notes
+
+	column 'Procurement Lookup 025 Code'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Code
+
+	column 'Procurement Lookup 025 Long Name'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Long Name
+
+	column 'Procurement Lookup 025 Region'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Region
+
+	column 'Procurement Lookup 025 Description'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Description
+
+	column 'Procurement Lookup 025 Group'
+		dataType: string
+		sourceColumn: Procurement Lookup 025 Group
+
+	partition 'Procurement Lookup 025' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Procurement Lookup 025 Key", "Procurement Lookup 025", "Procurement Lookup 025 Valid To", "Procurement Lookup 025 External Id", "Procurement Lookup 025 Created By", "Procurement Lookup 025 Notes", "Procurement Lookup 025 Code", "Procurement Lookup 025 Long Name", "Procurement Lookup 025 Region", "Procurement Lookup 025 Description", "Procurement Lookup 025 Group"}, {})
+				in
+				    Source

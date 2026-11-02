@@ -1,0 +1,46 @@
+table 'Occupancy Type'
+
+	column 'Occupancy Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Occupancy Type Key
+
+	column 'Occupancy Type'
+		dataType: string
+		sourceColumn: Occupancy Type
+
+	column 'Occupancy Type Valid From'
+		dataType: dateTime
+		sourceColumn: Occupancy Type Valid From
+
+	column 'Occupancy Type Status'
+		dataType: string
+		sourceColumn: Occupancy Type Status
+
+	column 'Occupancy Type Category'
+		dataType: string
+		sourceColumn: Occupancy Type Category
+
+	column 'Occupancy Type Long Name'
+		dataType: string
+		sourceColumn: Occupancy Type Long Name
+
+	column 'Occupancy Type Level'
+		dataType: int64
+		sourceColumn: Occupancy Type Level
+
+	column 'Occupancy Type Code'
+		dataType: string
+		sourceColumn: Occupancy Type Code
+
+	column 'Occupancy Type Description'
+		dataType: string
+		sourceColumn: Occupancy Type Description
+
+	partition 'Occupancy Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Occupancy Type Key", "Occupancy Type", "Occupancy Type Valid From", "Occupancy Type Status", "Occupancy Type Category", "Occupancy Type Long Name", "Occupancy Type Level", "Occupancy Type Code", "Occupancy Type Description"}, {})
+				in
+				    Source

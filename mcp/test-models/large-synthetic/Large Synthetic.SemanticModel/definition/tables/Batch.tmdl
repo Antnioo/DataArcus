@@ -1,0 +1,58 @@
+table Batch
+
+	column 'Batch Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Batch Key
+
+	column Batch
+		dataType: string
+		sourceColumn: Batch
+
+	column 'Batch Owner'
+		dataType: string
+		sourceColumn: Batch Owner
+
+	column 'Batch Status'
+		dataType: string
+		sourceColumn: Batch Status
+
+	column 'Batch Group'
+		dataType: string
+		sourceColumn: Batch Group
+
+	column 'Batch Is Active'
+		dataType: boolean
+		sourceColumn: Batch Is Active
+
+	column 'Batch Long Name'
+		dataType: string
+		sourceColumn: Batch Long Name
+
+	column 'Batch Created By'
+		dataType: string
+		sourceColumn: Batch Created By
+
+	column 'Batch Level'
+		dataType: int64
+		sourceColumn: Batch Level
+
+	column 'Batch Code'
+		dataType: string
+		sourceColumn: Batch Code
+
+	column 'Batch Description'
+		dataType: string
+		sourceColumn: Batch Description
+
+	column 'Batch Category'
+		dataType: string
+		sourceColumn: Batch Category
+
+	partition Batch = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Batch Key", "Batch", "Batch Owner", "Batch Status", "Batch Group", "Batch Is Active", "Batch Long Name", "Batch Created By", "Batch Level", "Batch Code", "Batch Description", "Batch Category"}, {})
+				in
+				    Source

@@ -1,0 +1,5 @@
+table LocalDateTable_1f2e
+	isHidden
+
+	column Date
+		dataType: dateTime

@@ -1,0 +1,133 @@
+table 'Campaign Spend'
+
+	measure 'Campaign Spend Total Price' = SUM ( 'Campaign Spend'[Price] )
+		formatString: #,0
+
+	measure 'Campaign Spend Average Price' = AVERAGE ( 'Campaign Spend'[Price] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Count' = COUNTROWS ( 'Campaign Spend' )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Total Price LY' = CALCULATE ( [Campaign Spend Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Total Price YoY %' = DIVIDE ( [Campaign Spend Total Price] - [Campaign Spend Total Price LY], [Campaign Spend Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Total Price YTD' = TOTALYTD ( [Campaign Spend Total Price], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Campaign Spend Max Price' = MAX ( 'Campaign Spend'[Price] )
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Campaign Spend Price Share %' = DIVIDE ( [Campaign Spend Total Price], CALCULATE ( [Campaign Spend Total Price], ALL ( 'Campaign Spend' ) ) )
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Total Quantity' = SUM ( 'Campaign Spend'[Quantity] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Average Quantity' = AVERAGE ( 'Campaign Spend'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Campaign Spend Total Quantity LY' = CALCULATE ( [Campaign Spend Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Total Quantity YoY %' = DIVIDE ( [Campaign Spend Total Quantity] - [Campaign Spend Total Quantity LY], [Campaign Spend Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Campaign Spend Total Quantity YTD' = TOTALYTD ( [Campaign Spend Total Quantity], 'Calendar'[Date] )
+		displayFolder: Marketing
+
+	measure 'Campaign Spend Max Quantity' = MAX ( 'Campaign Spend'[Quantity] )
+
+	measure 'Campaign Spend Quantity Share %' = DIVIDE ( [Campaign Spend Total Quantity], CALCULATE ( [Campaign Spend Total Quantity], ALL ( 'Campaign Spend' ) ) )
+
+	column 'Campaign Spend Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Campaign Spend Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Email Template Key'
+		dataType: int64
+		sourceColumn: Email Template Key
+
+	column 'Social Network Key'
+		dataType: int64
+		sourceColumn: Social Network Key
+
+	column 'Persona Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Persona Key
+
+	column 'Funnel Stage Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Funnel Stage Key
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Margin
+		dataType: decimal
+		isHidden
+		sourceColumn: Margin
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	partition 'Campaign Spend' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Campaign Spend Id", "Date", "Email Template Key", "Social Network Key", "Persona Key", "Funnel Stage Key", "Price", "Quantity", "Margin", "Duration Minutes", "Cost", "Value", "Tax Amount", "Net Amount", "Amount"}, {})
+				in
+				    Source

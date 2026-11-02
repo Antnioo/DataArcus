@@ -1,0 +1,119 @@
+table 'Write Offs'
+
+	measure 'Write Offs Total Count' = SUM ( 'Write Offs'[Count] )
+		formatString: #,0
+
+	measure 'Write Offs Average Count' = AVERAGE ( 'Write Offs'[Count] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	measure 'Write Offs Count' = COUNTROWS ( 'Write Offs' )
+		formatString: #,0
+
+	measure 'Write Offs Total Count LY' = CALCULATE ( [Write Offs Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Write Offs Total Count YoY %' = DIVIDE ( [Write Offs Total Count] - [Write Offs Total Count LY], [Write Offs Total Count LY] )
+
+	measure 'Write Offs Total Count YTD' = TOTALYTD ( [Write Offs Total Count], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Write Offs Max Count' = MAX ( 'Write Offs'[Count] )
+
+	measure 'Write Offs Count Share %' = DIVIDE ( [Write Offs Total Count], CALCULATE ( [Write Offs Total Count], ALL ( 'Write Offs' ) ) )
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Write Offs Total Value' = SUM ( 'Write Offs'[Value] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Write Offs Average Value' = AVERAGE ( 'Write Offs'[Value] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	measure 'Write Offs Total Value LY' = CALCULATE ( [Write Offs Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Inventory
+
+	measure 'Write Offs Total Value YoY %' = DIVIDE ( [Write Offs Total Value] - [Write Offs Total Value LY], [Write Offs Total Value LY] )
+		formatString: 0.0%
+
+	measure 'Write Offs Total Value YTD' = TOTALYTD ( [Write Offs Total Value], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Write Offs Max Value' = MAX ( 'Write Offs'[Value] )
+		displayFolder: Inventory
+
+	measure 'Write Offs Value Share %' = DIVIDE ( [Write Offs Total Value], CALCULATE ( [Write Offs Total Value], ALL ( 'Write Offs' ) ) )
+		displayFolder: Inventory
+
+	column 'Write Off Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Write Off Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Resolution Code Key'
+		dataType: int64
+		sourceColumn: Resolution Code Key
+
+	column 'Inventory Lookup 050 Key'
+		dataType: int64
+		sourceColumn: Inventory Lookup 050 Key
+
+	column 'Trainer Key'
+		dataType: int64
+		sourceColumn: Trainer Key
+
+	column 'Brand Key'
+		dataType: int64
+		sourceColumn: Brand Key
+
+	column 'Inventory Lookup 021 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 021 Key
+
+	column 'Zone Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Zone Key
+
+	column 'Item Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Class Key
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	partition 'Write Offs' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Write Off Id", "Date", "Resolution Code Key", "Inventory Lookup 050 Key", "Trainer Key", "Brand Key", "Inventory Lookup 021 Key", "Zone Key", "Item Class Key", "Count", "Value", "Amount", "Net Amount"}, {})
+				in
+				    Source

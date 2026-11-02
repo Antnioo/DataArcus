@@ -1,0 +1,54 @@
+table 'Fleet Unit'
+
+	column 'Fleet Unit Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Key]
+
+	column 'Fleet Unit'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit]
+
+	column 'Fleet Unit Category'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Category]
+
+	column 'Fleet Unit Valid From'
+		dataType: dateTime
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Valid From]
+
+	column 'Fleet Unit Rank'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Rank]
+
+	column 'Fleet Unit Owner'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Owner]
+
+	column 'Fleet Unit Code'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Code]
+
+	column 'Fleet Unit Description'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Description]
+
+	partition 'Fleet Unit' = calculated
+		mode: import
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Fleet Unit Key", [Value], "Fleet Unit", "Fleet Unit " & [Value], "Fleet Unit Category", "Category " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Fleet Unit Valid From", DATE ( 2024, [Value], 1 ), "Fleet Unit Rank", [Value], "Fleet Unit Owner", "Owner " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Fleet Unit Code", "Code " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Fleet Unit Description", "Description " & ( 1 + MOD ( [Value] + 7, 3 ) ) )

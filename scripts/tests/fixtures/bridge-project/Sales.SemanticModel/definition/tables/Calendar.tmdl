@@ -1,0 +1,17 @@
+table Calendar
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+
+	column Year
+		dataType: int64
+
+	column 'Month Name'
+		dataType: string
+		sortByColumn: 'Month No'
+
+	column 'Month No'
+		dataType: int64
+		isHidden

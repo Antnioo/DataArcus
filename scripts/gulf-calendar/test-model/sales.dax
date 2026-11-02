@@ -1,0 +1,8 @@
+Sales =
+-- Made-up sales for the Gulf Calendar test model: two stores, every day from 2018 to 2030 (no real data)
+SELECTCOLUMNS (
+    GENERATE ( CALENDAR ( DATE ( 2018, 1, 1 ), DATE ( 2030, 12, 31 ) ), { 1, 2 } ),
+    "Date", [Date],
+    "Store", [Value],
+    "Amount", 100 + MOD ( YEAR ( [Date] ) * 7 + MONTH ( [Date] ) * 31 + DAY ( [Date] ) * 13 + [Value] * 17, 50 )
+)

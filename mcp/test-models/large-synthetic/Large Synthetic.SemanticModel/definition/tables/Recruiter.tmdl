@@ -1,0 +1,54 @@
+table Recruiter
+
+	column 'Recruiter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiter Key
+
+	column Recruiter
+		dataType: string
+		sourceColumn: Recruiter
+
+	column 'Recruiter Status'
+		dataType: string
+		sourceColumn: Recruiter Status
+
+	column 'Recruiter Long Name'
+		dataType: string
+		sourceColumn: Recruiter Long Name
+
+	column 'Recruiter Owner'
+		dataType: string
+		sourceColumn: Recruiter Owner
+
+	column 'Recruiter Valid To'
+		dataType: dateTime
+		sourceColumn: Recruiter Valid To
+
+	column 'Recruiter Sort Order'
+		dataType: int64
+		sourceColumn: Recruiter Sort Order
+
+	column 'Recruiter Short Name'
+		dataType: string
+		sourceColumn: Recruiter Short Name
+
+	column 'Recruiter Code'
+		dataType: string
+		sourceColumn: Recruiter Code
+
+	column 'Recruiter Description'
+		dataType: string
+		sourceColumn: Recruiter Description
+
+	column 'Recruiter Group'
+		dataType: string
+		sourceColumn: Recruiter Group
+
+	partition Recruiter = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Recruiter Key", "Recruiter", "Recruiter Status", "Recruiter Long Name", "Recruiter Owner", "Recruiter Valid To", "Recruiter Sort Order", "Recruiter Short Name", "Recruiter Code", "Recruiter Description", "Recruiter Group"}, {})
+				in
+				    Source

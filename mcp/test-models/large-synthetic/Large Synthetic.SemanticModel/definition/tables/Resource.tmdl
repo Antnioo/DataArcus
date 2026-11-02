@@ -1,0 +1,54 @@
+table Resource
+
+	column 'Resource Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Resource Key
+
+	column Resource
+		dataType: string
+		sourceColumn: Resource
+
+	column 'Resource Level'
+		dataType: int64
+		sourceColumn: Resource Level
+
+	column 'Resource Region'
+		dataType: string
+		sourceColumn: Resource Region
+
+	column 'Resource Group'
+		dataType: string
+		sourceColumn: Resource Group
+
+	column 'Resource Status'
+		dataType: string
+		sourceColumn: Resource Status
+
+	column 'Resource Created By'
+		dataType: string
+		sourceColumn: Resource Created By
+
+	column 'Resource Is Active'
+		dataType: boolean
+		sourceColumn: Resource Is Active
+
+	column 'Resource Notes'
+		dataType: string
+		sourceColumn: Resource Notes
+
+	column 'Resource Code'
+		dataType: string
+		sourceColumn: Resource Code
+
+	column 'Resource Description'
+		dataType: string
+		sourceColumn: Resource Description
+
+	partition Resource = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Resource Key", "Resource", "Resource Level", "Resource Region", "Resource Group", "Resource Status", "Resource Created By", "Resource Is Active", "Resource Notes", "Resource Code", "Resource Description"}, {})
+				in
+				    Source

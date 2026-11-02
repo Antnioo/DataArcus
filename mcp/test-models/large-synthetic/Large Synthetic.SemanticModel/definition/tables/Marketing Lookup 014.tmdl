@@ -1,0 +1,46 @@
+table 'Marketing Lookup 014'
+
+	column 'Marketing Lookup 014 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 014 Key
+
+	column 'Marketing Lookup 014'
+		dataType: string
+		sourceColumn: Marketing Lookup 014
+
+	column 'Marketing Lookup 014 Status'
+		dataType: string
+		sourceColumn: Marketing Lookup 014 Status
+
+	column 'Marketing Lookup 014 Category'
+		dataType: string
+		sourceColumn: Marketing Lookup 014 Category
+
+	column 'Marketing Lookup 014 Rank'
+		dataType: int64
+		sourceColumn: Marketing Lookup 014 Rank
+
+	column 'Marketing Lookup 014 Group'
+		dataType: string
+		sourceColumn: Marketing Lookup 014 Group
+
+	column 'Marketing Lookup 014 External Id'
+		dataType: string
+		sourceColumn: Marketing Lookup 014 External Id
+
+	column 'Marketing Lookup 014 Level'
+		dataType: int64
+		sourceColumn: Marketing Lookup 014 Level
+
+	column 'Marketing Lookup 014 Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 014 Code
+
+	partition 'Marketing Lookup 014' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Marketing Lookup 014 Key", "Marketing Lookup 014", "Marketing Lookup 014 Status", "Marketing Lookup 014 Category", "Marketing Lookup 014 Rank", "Marketing Lookup 014 Group", "Marketing Lookup 014 External Id", "Marketing Lookup 014 Level", "Marketing Lookup 014 Code"}, {})
+				in
+				    Source

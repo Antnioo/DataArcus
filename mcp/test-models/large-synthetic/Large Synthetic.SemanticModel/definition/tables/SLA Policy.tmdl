@@ -1,0 +1,42 @@
+table 'SLA Policy'
+
+	column 'SLA Policy Key'
+		dataType: int64
+		isHidden
+		sourceColumn: SLA Policy Key
+
+	column 'SLA Policy'
+		dataType: string
+		sourceColumn: SLA Policy
+
+	column 'SLA Policy Owner'
+		dataType: string
+		sourceColumn: SLA Policy Owner
+
+	column 'SLA Policy Region'
+		dataType: string
+		sourceColumn: SLA Policy Region
+
+	column 'SLA Policy Long Name'
+		dataType: string
+		sourceColumn: SLA Policy Long Name
+
+	column 'SLA Policy Valid From'
+		dataType: dateTime
+		sourceColumn: SLA Policy Valid From
+
+	column 'SLA Policy Code'
+		dataType: string
+		sourceColumn: SLA Policy Code
+
+	column 'SLA Policy Description'
+		dataType: string
+		sourceColumn: SLA Policy Description
+
+	partition 'SLA Policy' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"SLA Policy Key", "SLA Policy", "SLA Policy Owner", "SLA Policy Region", "SLA Policy Long Name", "SLA Policy Valid From", "SLA Policy Code", "SLA Policy Description"}, {})
+				in
+				    Source

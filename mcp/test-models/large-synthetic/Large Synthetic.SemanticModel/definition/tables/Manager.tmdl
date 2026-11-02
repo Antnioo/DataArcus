@@ -1,0 +1,54 @@
+table Manager
+
+	column 'Manager Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Manager Key
+
+	column Manager
+		dataType: string
+		sourceColumn: Manager
+
+	column 'Manager Created By'
+		dataType: string
+		sourceColumn: Manager Created By
+
+	column 'Manager Description'
+		dataType: string
+		sourceColumn: Manager Description
+
+	column 'Manager Sort Order'
+		dataType: int64
+		sourceColumn: Manager Sort Order
+
+	column 'Manager Level'
+		dataType: int64
+		sourceColumn: Manager Level
+
+	column 'Manager Code'
+		dataType: string
+		sourceColumn: Manager Code
+
+	column 'Manager Rank'
+		dataType: int64
+		sourceColumn: Manager Rank
+
+	column 'Manager Short Name'
+		dataType: string
+		sourceColumn: Manager Short Name
+
+	column 'Manager Group'
+		dataType: string
+		sourceColumn: Manager Group
+
+	column 'Manager Category'
+		dataType: string
+		sourceColumn: Manager Category
+
+	partition Manager = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Manager Key", "Manager", "Manager Created By", "Manager Description", "Manager Sort Order", "Manager Level", "Manager Code", "Manager Rank", "Manager Short Name", "Manager Group", "Manager Category"}, {})
+				in
+				    Source

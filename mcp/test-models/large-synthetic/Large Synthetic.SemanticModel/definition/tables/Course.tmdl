@@ -1,0 +1,50 @@
+table Course
+
+	column 'Course Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Course Key
+
+	column Course
+		dataType: string
+		sourceColumn: Course
+
+	column 'Course Notes'
+		dataType: string
+		sourceColumn: Course Notes
+
+	column 'Course Type'
+		dataType: string
+		sourceColumn: Course Type
+
+	column 'Course Is Active'
+		dataType: boolean
+		sourceColumn: Course Is Active
+
+	column 'Course Long Name'
+		dataType: string
+		sourceColumn: Course Long Name
+
+	column 'Course Rank'
+		dataType: int64
+		sourceColumn: Course Rank
+
+	column 'Course Region'
+		dataType: string
+		sourceColumn: Course Region
+
+	column 'Course Code'
+		dataType: string
+		sourceColumn: Course Code
+
+	column 'Course Description'
+		dataType: string
+		sourceColumn: Course Description
+
+	partition Course = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Course Key", "Course", "Course Notes", "Course Type", "Course Is Active", "Course Long Name", "Course Rank", "Course Region", "Course Code", "Course Description"}, {})
+				in
+				    Source

@@ -1,0 +1,58 @@
+table 'Job Title'
+
+	column 'Job Title Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Job Title Key
+
+	column 'Job Title'
+		dataType: string
+		sourceColumn: Job Title
+
+	column 'Job Title Created By'
+		dataType: string
+		sourceColumn: Job Title Created By
+
+	column 'Job Title Parent Code'
+		dataType: string
+		sourceColumn: Job Title Parent Code
+
+	column 'Job Title Code'
+		dataType: string
+		sourceColumn: Job Title Code
+
+	column 'Job Title Region'
+		dataType: string
+		sourceColumn: Job Title Region
+
+	column 'Job Title Notes'
+		dataType: string
+		sourceColumn: Job Title Notes
+
+	column 'Job Title Valid To'
+		dataType: dateTime
+		sourceColumn: Job Title Valid To
+
+	column 'Job Title Long Name'
+		dataType: string
+		sourceColumn: Job Title Long Name
+
+	column 'Job Title Valid From'
+		dataType: dateTime
+		sourceColumn: Job Title Valid From
+
+	column 'Job Title Description'
+		dataType: string
+		sourceColumn: Job Title Description
+
+	column 'Job Title Group'
+		dataType: string
+		sourceColumn: Job Title Group
+
+	partition 'Job Title' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Job Title Key", "Job Title", "Job Title Created By", "Job Title Parent Code", "Job Title Code", "Job Title Region", "Job Title Notes", "Job Title Valid To", "Job Title Long Name", "Job Title Valid From", "Job Title Description", "Job Title Group"}, {})
+				in
+				    Source

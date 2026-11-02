@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-model-health-check.html" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/articles/article-power-bi-model-health-check.html" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/articles/article-power-bi-model-health-check.html" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/articles/article-power-bi-model-health-check.html" />
+
+  <title>Health Check on a Microsoft Power BI Sample: It Scored 85</title>
+  <meta name="description" content="We ran our free Model Health Check on Microsoft's public COVID-19 sample: a quarter of its columns unused and two bookmarks pointing at a deleted column." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI model health check, Power BI best practices, unused columns Power BI, Power BI performance, DAX FILTER performance, Power BI model documentation, Best Practice Analyzer, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Health Check on a Microsoft Power BI Sample: It Scored 85" />
+  <meta property="og:description" content="We ran our free Model Health Check on Microsoft's public COVID-19 sample: a quarter of its columns unused and two bookmarks pointing at a deleted column." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-model-health-check.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/health-check-article.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="DataArcus logo" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-09-25T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Health Check on a Microsoft Power BI Sample: It Scored 85" />
+  <meta name="twitter:description" content="We ran our free Model Health Check on Microsoft's public COVID-19 sample: a quarter of its columns unused and two bookmarks pointing at a deleted column." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/health-check-article.jpg" />
+  <meta name="twitter:image:alt" content="DataArcus logo" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="icon" href="../assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="../assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.",
+    "description": "We ran our free Model Health Check on Microsoft's public COVID-19 sample: a quarter of its columns unused and two bookmarks pointing at a deleted column.",
+    "url": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
+    "author": { "@type": "Person", "name": "Abdelrahman M." },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
+    },
+    "datePublished": "2026-09-25",
+    "dateModified": "2026-10-16",
+    "image": "https://dataarcus.com/assets/img/og/health-check-article.jpg"
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="page-badge" data-i18n="header.badge">BEST PRACTICE</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">We Ran a Health Check on a Microsoft Power BI Sample. It Scored 85.</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on September 25, 2026 · Updated October 16, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Power BI models rarely break in one day. They grow. A measure is copied to test an idea, a column is imported just in case, a page is duplicated for a meeting. Nobody deletes anything, because nobody knows what is safe to delete. A year later the model is slow to refresh, hard to change and full of things no one can explain.</p>
+              <p data-i18n-html="content.p2">So we built a free <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Power BI Model Health Check</a>. To show what it finds on a model anyone can download and check for themselves, we ran it on one of Microsoft's own public samples: the <a href='https://github.com/microsoft/powerbi-desktop-samples/tree/main/powerbi-service-samples' class='text-accent' target='_blank' rel='noopener'>COVID-19 US Tracking Sample</a>, published under the MIT licence. It scored <strong>85 out of 100</strong> (a DataArcus score for this check, not a Microsoft grade). Here is what it found, and what each finding means for any model.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">The model we checked</h2>
+              <p data-i18n-html="content.p3"><strong>4 tables, 16 columns, 10 measures and 2 relationships</strong>, and a report with <strong>2 pages and 67 visuals</strong>. A small, published model, and it still has findings: every model collects them as it changes. The whole check took <strong>well under a second</strong>. <em>Updated 16 October 2026: the check now follows Microsoft's documented exceptions, so it no longer counts two calculated columns that need DAX or four text measures without a number format. The score went from 84 to 85.</em> <a href='article-power-bi-best-practice-exceptions.html' class='text-accent'>Why, rule by rule</a>.</p>
+              <ul>
+  <li data-i18n-html="content.list1_1"><strong>4 of 16 columns (25%) are not used anywhere</strong>: not in a visual, a filter, a measure, a relationship, a sort order or a security rule.</li>
+  <li data-i18n-html="content.list1_2"><strong>2 of 12 bookmarks still refer to a column that no longer exists</strong> in the model.</li>
+  <li data-i18n-html="content.list1_3"><strong>Auto date/time is on</strong>, so Power BI keeps a hidden date table for the date column.</li>
+  <li data-i18n-html="content.list1_4"><strong>2 calculated columns on imported tables</strong> that Power Query could build instead.</li>
+  <li data-i18n-html="content.list1_5">Plus smaller things: one unused measure, two visible key columns and a relationship on a text key.</li>
+</ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">1. A quarter of the columns are never used</h2>
+              <p data-i18n-html="content.p4">Every imported column costs memory and refresh time, whether anyone looks at it or not. Text columns with many unique values, like names, notes and IDs, cost the most. Here the unused ones are a county code (<code>FIPS</code>), a flag for US territories and two columns of a hidden helper table. In a small sample that costs little; in a model with millions of rows, one unused ID column can take a large share of its size.</p>
+              <p data-i18n-html="content.p5">The fix is to remove them in Power Query, not to hide them. A hidden column is still loaded and stored. The health check writes the <code>Table.RemoveColumns</code> step for each table for you. One caution: "unused" means unused in this report. If other reports connect to the same model, check those first.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">2. Two bookmarks point at a column that no longer exists</h2>
+              <p data-i18n-html="content.p6">This is the kind of finding nobody looks for. The model has a <code>County Name</code> column, but two bookmarks, "Blue States" and "Pink States", still refer to a <code>County Name - Copy</code> column that is no longer there. The pages look fine: the stale reference sits inside the bookmarks. When a column or measure is renamed or deleted, Power BI does not warn you about every visual, filter or bookmark that used it.</p>
+              <p data-i18n-html="content.p7">The check lists each broken field and where it is used, so the fix takes minutes: update the bookmark or the visual, or replace the field.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">3. Auto date/time is still on</h2>
+              <p data-i18n-html="content.p8">With <strong>Auto date/time</strong> on, Power BI Desktop creates a hidden date table for each date column of an imported table that isn't on the "many" side of a relationship. Here that is one table. In a real model with many date columns these hidden tables add up: Microsoft's own guidance says each one increases the model size and extends refresh time.</p>
+              <p data-i18n-html="content.p8b">The fix: add one date table and mark it (our free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>calendar generator</a> writes one), move your visuals to it, then turn the option off in <strong>File > Options and settings > Options > Current File > Data Load > Time intelligence</strong>. Turning it off removes the hidden tables, so check every visual that used them first.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">4. Small things that add up</h2>
+              <ul>
+  <li data-i18n-html="content.list2_1"><strong>Calculated columns on imported tables.</strong> Two of them: a county label built with RELATED, and a column that always says "USA". Microsoft's guidance prefers columns added in Power Query or at the source, which typically compress better and don't wait for every table to load. Daily cases and daily deaths are calculated columns too, but they are worked out from the day before, which needs DAX, so the check leaves them alone.</li>
+  <li data-i18n-html="content.list2_2"><strong>Visible keys and a text key.</strong> Two key columns on the "many" side are visible in the field list, where report authors drag them in by mistake, and one relationship joins on a text code instead of a number.</li>
+  <li data-i18n-html="content.list2_3"><strong>A measure nothing uses.</strong> One of the 10 measures feeds no visual, directly or through other measures. The check follows these chains, which is almost impossible to do by hand.</li>
+  <li data-i18n-html="content.list2_4"><strong>Text measures need no format string.</strong> Four measures here have none, but all four return text (notes and button labels), so the check does not count them. On a number, a missing format is what makes a card show 0.34 for a margin of 33.8% (0.3378): no percent sign, and two decimals that round the value.</li>
+</ul>
+              <p data-i18n-html="content.p12"><strong>What it did not find: FILTER over a whole table.</strong> This sample has none, but we see the pattern often, because it is the first way most of us learned to write a filtered measure:</p>
+              <pre><code>// Scans every row of the table
+Online Sales =
+CALCULATE ( [Sales], FILTER ( Sales, Sales[Channel] = &quot;Online&quot; ) )
+
+// Filters one column: much faster
+Online Sales =
+CALCULATE ( [Sales], KEEPFILTERS ( Sales[Channel] = &quot;Online&quot; ) )</code></pre>
+              <p data-i18n-html="content.p9"><code>FILTER(Table, ...)</code> as a CALCULATE filter builds a table of every column of every row that passes, and applies all of it. A filter on the one column you care about lets the engine work on that column alone. In almost every model the result is the same, and <code>KEEPFILTERS</code> keeps it that way when a slicer is already filtering that column. Without it, the column filter would replace the slicer.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">How the check works, and why your file stays with you</h2>
+              <p data-i18n-html="content.p10">The tool reads a <strong>Power BI template (.pbit)</strong>. A template has your model's definition and report layout, <strong>not the data Power BI loaded</strong>, so it stays small even for very large models. (The definition can still include small tables typed in with Enter data, values written in DAX with DATATABLE and values saved in the report's filters, slicers and formatting; the tool never unpacks the Enter data tables.) The file is opened inside your browser tab and never uploaded. The tool maps every measure to the columns and measures it depends on, then follows every visual, filter, relationship and security rule to see what is really used.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">Check your own model in three steps</h2>
+              <ul>
+  <li data-i18n-html="content.list3_1">In Power BI Desktop: <strong>File > Export > Power BI template</strong>.</li>
+  <li data-i18n-html="content.list3_2">Drop the .pbit on the <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>.</li>
+  <li data-i18n-html="content.list3_3">Start with the "Fix these first" list. Then copy the cleanup scripts and download the documentation for your team.</li>
+</ul>
+              <p data-i18n-html="content.p11">Microsoft's sample is a demo, so these findings cost it little. A production model has more tables, more history and more people editing it, and usually more to find. The first check takes one minute, and it will likely surprise you.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card cta" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Check your model now</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, runs in your browser, nothing is uploaded. Or try it first on a sample model.</p>
+                <div class="cta-actions">
+                  <a href="../tools/power-bi-model-health-check.html" class="btn btn-accent"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="exploreMore.button1">Open the Model Health Check</span></a>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <div class="glass-card cta">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Want a second pair of eyes on your model?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We review and tune Power BI models: faster refresh, smaller models and DAX your team can maintain.</p>
+                <div class="cta-actions">
+                  <a href="/#contact" class="btn btn-accent"><i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span></a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js?v=20261025f" defer></script>
+  <script src="../assets/js/translations/article-power-bi-model-health-check.min.js?v=20261019a040" defer></script>
+  <script src="../assets/js/lang-manager.min.js?v=20261025a" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="../assets/js/main.min.js?v=20261022d" defer></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+table Agent
+
+	column 'Agent Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Agent Key
+
+	column Agent
+		dataType: string
+		sourceColumn: Agent
+
+	column 'Agent Level'
+		dataType: int64
+		sourceColumn: Agent Level
+
+	column 'Agent Description'
+		dataType: string
+		sourceColumn: Agent Description
+
+	column 'Agent Valid To'
+		dataType: dateTime
+		sourceColumn: Agent Valid To
+
+	column 'Agent Category'
+		dataType: string
+		sourceColumn: Agent Category
+
+	column 'Agent Group'
+		dataType: string
+		sourceColumn: Agent Group
+
+	column 'Agent Region'
+		dataType: string
+		sourceColumn: Agent Region
+
+	column 'Agent Type'
+		dataType: string
+		sourceColumn: Agent Type
+
+	column 'Agent Owner'
+		dataType: string
+		sourceColumn: Agent Owner
+
+	column 'Agent Code'
+		dataType: string
+		sourceColumn: Agent Code
+
+	column 'Agent Status'
+		dataType: string
+		sourceColumn: Agent Status
+
+	partition Agent = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Agent Key", "Agent", "Agent Level", "Agent Description", "Agent Valid To", "Agent Category", "Agent Group", "Agent Region", "Agent Type", "Agent Owner", "Agent Code", "Agent Status"}, {})
+				in
+				    Source

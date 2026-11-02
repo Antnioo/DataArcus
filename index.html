@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UqlxWpioX3BjrlIRIpE94CO2pgikl7pLfFx6jJgMZxc=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'sha256-gq7PBg4LraTBGHBScOc1HJzdKPQ6MgjjFhHt+ejusfU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/ https://cdn.jsdelivr.net/npm/aos@2.3.4/ https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/ https://cdn.jsdelivr.net/npm/aos@2.3.4/; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/; img-src 'self' data: blob: https://learn.microsoft.com https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.ae https://www.google.com.sa https://www.google.com.qa https://www.google.com.kw https://www.google.com.om https://www.google.com.bh https://www.google.com.eg https://www.google.jo https://www.google.com.lb https://www.google.co.ma https://www.google.dz https://www.google.tn https://www.google.com.tr https://www.google.com.pk https://www.google.co.in https://www.google.com.bd https://www.google.co.uk https://www.google.ie https://www.google.de https://www.google.fr https://www.google.nl https://www.google.be https://www.google.es https://www.google.it https://www.google.pt https://www.google.ch https://www.google.at https://www.google.se https://www.google.no https://www.google.dk https://www.google.fi https://www.google.pl https://www.google.gr https://www.google.ca https://www.google.com.au https://www.google.co.nz https://www.google.com.sg https://www.google.com.my https://www.google.co.za https://www.google.com.ng https://www.google.com.br https://www.google.com.mx https://*.clarity.ms https://c.bing.com https://api.web3forms.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),a=/^\/ar\//.test(location.pathname),s=a?null:localStorage.getItem("dataarcus-lang"),l=a?"ar":(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/" />
+  <link rel="alternate" hreflang="en" href="https://dataarcus.com/" />
+  <link rel="alternate" hreflang="ar" href="https://dataarcus.com/ar/" />
+  <link rel="alternate" hreflang="x-default" href="https://dataarcus.com/" />
+  
+  <title>DataArcus - Power BI, Checked and Made for the Gulf</title>
+  <meta name="description" content="Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI consultant, data modeling, DAX, business intelligence dashboards, MENA, CRM analytics, Power BI specialist" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DataArcus - Power BI, Checked and Made for the Gulf" />
+  <meta property="og:description" content="Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai." />
+  <meta property="og:url" content="https://dataarcus.com/" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/home.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="The DataArcus logo showing animated data bars and the brand name." />
+  <meta property="og:locale" content="en_US" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DataArcus - Power BI, Checked and Made for the Gulf" />
+  <meta name="twitter:description" content="Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/home.jpg" />
+  <meta name="twitter:image:alt" content="The DataArcus logo showing animated data bars and the brand name." />
+  
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="assets/img/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0a0f1c" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
+  <link href="assets/css/style.min.css?v=20261018t" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" as="style" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-4dDVqFXqo6x4FK1oShAJhyqDCxAdfIi+HIlq/A7PaZFeN4LQEs1pnAocMtsPQceu" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+  
+  <script type="application/ld+json">
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "DataArcus",
+      "url": "https://dataarcus.com",
+      "logo": "https://dataarcus.com/assets/img/logo-square.png",
+      "sameAs": ["https://www.linkedin.com/in/abdelrahman-i-mohammed"]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "DataArcus",
+      "image": "https://dataarcus.com/assets/img/logo-square.png",
+      "telephone": "+971 50 658 3577",
+      "email": "hello@DataArcus.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dubai",
+        "addressCountry": "AE"
+      },
+      "serviceArea": [
+        { "@type": "Country", "name": "United Arab Emirates" },
+        { "@type": "Country", "name": "Egypt" },
+        { "@type": "Country", "name": "Saudi Arabia" },
+        { "@type": "Country", "name": "Qatar" }
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Power BI Dashboards & Data Modeling",
+      "description": "Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai.",
+      "provider": {
+        "@type": "Organization",
+        "name": "DataArcus"
+      },
+      "serviceType": "Business Intelligence & Data Analytics",
+      "areaServed": [
+          { "@type": "Country", "name": "United Arab Emirates" },
+          { "@type": "Country", "name": "Egypt" },
+          { "@type": "Country", "name": "Saudi Arabia" },
+          { "@type": "Country", "name": "Qatar" }
+      ]
+    }
+  ]
+  </script>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="80" tabindex="0">
+  
+  <!-- Interactive Background -->
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <!-- Floating Elements -->
+  <div class="floating-element floating-1">
+    <i class="bi bi-graph-up" style="font-size: 4rem; color: var(--accent);"></i>
+  </div>
+  <div class="floating-element floating-2">
+    <i class="bi bi-cpu" style="font-size: 3rem; color: var(--purple);"></i>
+  </div>
+  <div class="floating-element floating-3">
+    <i class="bi bi-bar-chart" style="font-size: 3.5rem; color: var(--accent-2);"></i>
+  </div>
+
+  <!-- Enhanced Header -->
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/#hero">
+        <img src="assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="/#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+  <!-- Enhanced Hero -->
+<header id="hero" class="hero">
+      <div class="container hero-content">
+        <div class="row align-items-center">
+          <div class="col-lg-7" data-aos="fade-up">
+            <h1 data-i18n="hero.title">Power BI reports checked in Power BI, not just generated</h1>
+            <p class="lead" data-i18n-html="hero.subtitle">AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>public beta</a>).</p>
+            <div class="d-flex flex-column flex-sm-row flex-sm-wrap gap-3 mt-4">
+              <a href="#contact" class="btn btn-accent btn-lg px-4 py-3">
+                <i class="bi bi-calendar3 me-2"></i><span data-i18n="hero.buttonDiscuss">Book a Free Data Clarity Call</span>
+              </a>
+              <a href="/power-bi-mcp/" class="btn btn-glass btn-lg px-4 py-3">
+                <i class="bi bi-robot me-2"></i><span data-i18n="hero.buttonAgent">Try the AI agent (beta)</span>
+              </a>
+            </div>
+          </div>
+          <div class="col-lg-5 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card p-4 proof-card">
+              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                  <div class="proof-live"><span class="proof-dot"></span><span data-i18n="hero.proof.live">Live showcase</span></div>
+                  <h2 class="h5 mb-1 mt-2" data-i18n="hero.proof.title">Fintech Portfolio Risk Engine</h2>
+                  <div class="small text-white-50" data-i18n="hero.proof.subtitle">72 projects, public challenge data</div>
+                </div>
+                <div class="icon-badge"><i class="bi bi-bar-chart-line"></i></div>
+              </div>
+              <div class="proof-bars" aria-hidden="true">
+                <span style="height:38%"></span><span style="height:52%"></span><span style="height:45%"></span><span style="height:63%"></span><span style="height:58%"></span><span style="height:71%"></span><span style="height:66%"></span><span style="height:80%"></span><span style="height:74%"></span><span style="height:92%"></span>
+              </div>
+              <p class="small text-white-50 mb-3" data-i18n="hero.proof.caption">Budget, schedule and delivery risk in one model: Earned Value Management forecasts each project's final cost and end date.</p>
+              <a href="dashboards/fintech-dashboard.html" class="proof-link"><span data-i18n="hero.proof.link">See the live dashboard</span> <i class="bi bi-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap flex-xl-nowrap gap-4 small text-white-50 hero-trust">
+          <div><i class="bi bi-patch-check-fill text-info me-2"></i><a href="https://learn.microsoft.com/api/credentials/share/en-us/AbdelrahmanMohammed-3249/60477FC59CA5626E?sharingId=2B92502DF1924EF3" target="_blank" rel="noopener" class="text-reset text-decoration-underline" title="Microsoft Certified: Power BI Data Analyst Associate" data-i18n-title="attrs.msCert"><span data-i18n="hero.proofBadges.0">Microsoft Certified Power BI Data Analyst</span></a></div>
+          <div><i class="bi bi-check2-circle text-success me-2"></i><span data-i18n="hero.proofBadges.1">Report files checked with Microsoft's format validator</span></div>
+          <div><i class="bi bi-translate text-warning me-2"></i><span data-i18n="hero.proofBadges.2">Arabic &amp; English</span></div>
+        </div>
+      </div>
+  </header>
+
+  <section class="py-4 border-bottom glowing-divider-bg tech-strip">
+    <div class="container">
+      <p class="small text-white-50 text-center mb-2 tech-strip-label" data-i18n="techStack.label">Tools I work with</p>
+      <div class="row justify-content-center align-items-center g-4">
+        <div class="col-6 col-md-2">
+          <div class="tech-stack-item">
+            <img src="assets/img/icons/power-bi-icon.svg" alt="Power BI Icon" data-i18n-alt="attrs.powerBi" class="tech-icon" style="height: 36px; width: 36px;">
+            <div class="small mt-2 text-white-50" data-i18n="techStack.powerbi">Power BI</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <div class="tech-stack-item">
+            <img src="assets/img/icons/excel-icon.svg" alt="Excel Icon" data-i18n-alt="attrs.excel" class="tech-icon" style="height: 36px; width: 36px;">
+            <div class="small mt-2 text-white-50" data-i18n="techStack.excel">Excel</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <div class="tech-stack-item">
+            <img src="assets/img/icons/azure-icon.svg" alt="Azure Icon" data-i18n-alt="attrs.azure" class="tech-icon" style="height: 36px; width: 36px;">
+            <div class="small mt-2 text-white-50" data-i18n="techStack.azure">Azure</div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <div class="tech-stack-item">
+            <img src="assets/img/icons/fabric.svg" alt="Fabric Icon" data-i18n-alt="attrs.fabric" class="tech-icon" style="height: 36px; width: 36px;">
+            <div class="small mt-2 text-white-50" data-i18n="techStack.fabric">Fabric</div>
+          </div>
+        </div>
+
+      </div> </div>
+  </section>
+
+  <section id="services" class="py-5">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="services.title">Solutions Built Around Your Data, Not a Template</h2>
+            <p class="lead text-white-50" data-i18n="services.subtitle">CRM, e-commerce, project tools or spreadsheets: whatever your business runs on, I turn it into a model your team can actually trust.</p>
+          </div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-speedometer2"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.0.title">Executive & Operational Dashboards</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.0.desc">A real-time, single view of your business, built the way every DataArcus model is: one validated source of truth instead of five reports that quietly disagree.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-funnel"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.1.title">Reliable Data Modeling & Pipelines</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.1.desc">Your dashboards are only as good as the model underneath them. I build clean, documented models validated against the source system before anything goes live.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-diagram-3"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.2.title">Predictive & Trend Analysis</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.2.desc">Beyond what happened: forecasting, cohort analysis, and pacing models that show you what's coming next, whether that's next month's sales pace or a lead about to go cold.</p>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-shield-lock"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.3.title">Governance & Security</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.3.desc">Row-level security and PII-safe anonymization built into the model from day one, not bolted on after the fact.</p>
+            </div>
+          </div>
+        </div>
+        <p class="text-center text-white-50 mt-4 mb-0" data-i18n-html="services.auditLink">Getting ready for Copilot? <a href="services/copilot-readiness-audit.html" class="text-accent">See the fixed-price Copilot readiness audit</a>.</p>
+      </div>
+  </section>
+
+<section id="process" class="py-5">
+    <div class="container">
+      <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+          <h2 class="display-6 fw-bold mb-4" data-i18n="process.title">How a Project Works</h2>
+          <p class="lead text-white-50" data-i18n="process.subtitle">Three steps, no surprises.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4" data-aos="fade-up">
+          <div class="glass-card p-4 h-100 step-card">
+            <div class="step-num">1</div>
+            <h3 class="h5 fw-bold" data-i18n="process.steps.0.title">Free Data Clarity Call</h3>
+            <p class="text-white-50 mb-0" data-i18n="process.steps.0.desc">20 minutes on your data and the decisions you need to make. You get a straight answer on what's fixable, even if we never work together.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-card p-4 h-100 step-card">
+            <div class="step-num">2</div>
+            <h3 class="h5 fw-bold" data-i18n="process.steps.1.title">Build and Validate</h3>
+            <p class="text-white-50 mb-0" data-i18n="process.steps.1.desc">I build the data model and dashboards, and check every number against your source system before you see a single chart.</p>
+          </div>
+        </div>
+        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="glass-card p-4 h-100 step-card">
+            <div class="step-num">3</div>
+            <h3 class="h5 fw-bold" data-i18n="process.steps.2.title">Handover and Support</h3>
+            <p class="text-white-50 mb-0" data-i18n="process.steps.2.desc">Your team gets the report, a walkthrough and documentation. Changes after launch are one message away, and you talk to the person who built it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="portfolio" class="py-5">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="portfolio.title">Solution Showcases</h2>
+            <p class="lead text-white-50" data-i18n="portfolio.subtitle">Explore my proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.</p>
+          </div>
+        </div>
+        <div class="row g-4">
+
+
+          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="portfolio-card h-100 d-flex flex-column">
+              <div class="portfolio-image">
+                <picture>
+                  <source type="image/webp" srcset="assets/img/portfolio/fintech-preview-opt.webp">
+                  <img src="assets/img/portfolio/fintech-preview-opt.jpg" alt="A preview of the Fintech Portfolio Risk dashboard" data-i18n-alt="attrs.fintech" width="720" height="407" loading="lazy" class="img-fluid">
+                </picture>
+              </div>
+              <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="badge bg-primary mb-2 align-self-start" data-i18n="portfolio.cardFintech.badge">FINTECH & RISK</span>
+                <h3 class="mb-3">
+                  <a href="dashboards/fintech-dashboard.html" class="stretched-link text-white text-decoration-none" data-i18n="portfolio.cardFintech.title">Fintech Portfolio Risk Engine</a>
+                </h3>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.cardFintech.desc">A live early-warning system for 72 projects, analyzing budget, schedule, and delivery risk using Earned Value Management (EVM).</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="portfolio-card h-100 d-flex flex-column">
+              <div class="portfolio-image">
+                <picture>
+                  <source type="image/webp" srcset="assets/img/portfolio/repeatiq-preview-opt.webp">
+                  <img src="assets/img/portfolio/repeatiq-preview-opt.jpg" alt="A preview of the RepeatIQ Commerce Analytics dashboard" data-i18n-alt="attrs.repeatiq" width="720" height="404" loading="lazy" class="img-fluid">
+                </picture>
+              </div>
+              <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="badge bg-warning text-dark mb-2 align-self-start" data-i18n="portfolio.cardRepeatiq.badge">E-COMMERCE & RETENTION</span>
+                <h3 class="mb-3">
+                  <a href="dashboards/repeatiq-dashboard.html" class="stretched-link text-white text-decoration-none" data-i18n="portfolio.cardRepeatiq.title">RepeatIQ Commerce Analytics</a>
+                </h3>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.cardRepeatiq.desc">A 5-page strategic suite maximizing Customer Lifetime Value (CLV) through cohort analysis, churn prediction, and risk modeling.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="row mt-5">
+          <div class="col-12 text-center">
+            <a href="portfolio.html" class="btn btn-accent btn-lg">
+              <i class="bi bi-grid-fill me-2"></i><span data-i18n="portfolio.button">View All Showcases</span>
+            </a>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <section id="free-tools" class="py-5">
+    <div class="container">
+      <div class="tools-strip glass-card p-4 p-lg-5">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-4">
+            <span class="page-badge" data-i18n="toolsStrip.badge">Free · No sign-up</span>
+            <h2 class="h3 fw-bold mb-3" data-i18n="toolsStrip.title">Free Power BI &amp; Fabric Tools</h2>
+            <p class="text-white-50 mb-4" data-i18n="toolsStrip.subtitle">Built from real client work. Use them on your own reports today.</p>
+            <a href="/tools/" class="btn btn-accent"><span data-i18n="toolsStrip.button">See all tools</span> <i class="bi bi-arrow-right ms-1"></i></a>
+          </div>
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-md-6"><a class="tool-mini" href="tools/power-bi-theme-generator.html" data-tool="power-bi-theme-generator">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.0.tag">Build</span>
+                <div class="tool-mini-sw"><i style="background:#00d4ff"></i><i style="background:#6c5ce7"></i><i style="background:#00cec9"></i><i style="background:#fd79a8"></i><i style="background:#fdcb6e"></i></div>
+                <b data-i18n="toolsStrip.cards.0.title">Theme &amp; Layout Generator</b><span data-i18n="toolsStrip.cards.0.desc">Brand colors to a theme JSON, plus a matching page layout.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/svg-kpi-designer.html" data-tool="svg-kpi-designer">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.7.tag">Build</span>
+                <div class="tool-mini-code">2.4K Leads ▼ 25.9%</div>
+                <b data-i18n="toolsStrip.cards.7.title">SVG KPI Designer</b><span data-i18n="toolsStrip.cards.7.desc">KPI cards and sparklines for Power BI, as one DAX measure.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/dax-calendar-table-generator.html" data-tool="dax-calendar-table-generator">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.1.tag">Build</span>
+                <div class="tool-mini-cal">1 Ramadan 1448</div>
+                <b data-i18n="toolsStrip.cards.1.title">DAX Calendar Generator</b><span data-i18n="toolsStrip.cards.1.desc">Date table with Hijri dates and Ramadan flags.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/dax-measure-builder.html" data-tool="dax-measure-builder">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.2.tag">Build</span>
+                <div class="tool-mini-code">[Sales YoY %]</div>
+                <b data-i18n="toolsStrip.cards.2.title">DAX Measure Builder</b><span data-i18n="toolsStrip.cards.2.desc">YTD, YoY, rolling and running totals in one click.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/power-bi-model-health-check.html" data-tool="power-bi-model-health-check">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.3.tag">Check</span>
+                <div class="tool-mini-code">Score · 87 / 100</div>
+                <b data-i18n="toolsStrip.cards.3.title">Model Health Check</b><span data-i18n="toolsStrip.cards.3.desc">Score your model: unused columns, slow DAX, broken visuals.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/power-bi-licensing-cost-calculator.html" data-tool="power-bi-licensing-cost-calculator">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.4.tag">Check</span>
+                <div class="tool-mini-code">F64 · $5,004 / mo</div>
+                <b data-i18n="toolsStrip.cards.4.title">Licensing Cost Calculator</b><span data-i18n="toolsStrip.cards.4.desc">Pro, PPU or Fabric for your team, in USD, AED or SAR.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/dp-600-practice-exam.html" data-tool="dp-600-practice-exam">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.5.tag">Learn</span>
+                <div class="tool-mini-code">DP-600 · 850 / 1000</div>
+                <b data-i18n="toolsStrip.cards.5.title">DP-600 Practice Exam</b><span data-i18n="toolsStrip.cards.5.desc">220 Fabric questions, mock exams and case studies.</span></a></div>
+              <div class="col-md-6"><a class="tool-mini" href="tools/pl-300-practice-exam.html" data-tool="pl-300-practice-exam">
+                <span class="tool-mini-tag cap-pill" data-i18n="toolsStrip.cards.6.tag">Learn</span>
+                <div class="tool-mini-code">PL-300 · 820 / 1000</div>
+                <b data-i18n="toolsStrip.cards.6.title">PL-300 Practice Exam</b><span data-i18n="toolsStrip.cards.6.desc">228 Power BI questions, mock exams and renewal prep.</span></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="about" class="py-5">
+      <div class="container">
+        <div class="row align-items-center g-5 mb-5 pb-5">
+          <div class="col-lg-5" data-aos="fade-right">
+            <picture>
+                  <source type="image/webp" srcset="assets/img/founder-photo-opt.webp">
+                  <img loading="lazy" src="assets/img/founder-photo-opt.jpg" width="720" height="899" class="img-fluid rounded-3" alt="A photo of Abdelrahman M., Founder of DataArcus" data-i18n-alt="attrs.founder" style="border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
+                </picture>
+          </div>
+          <div class="col-lg-7" data-aos="fade-left">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="about.title">Generating is easy. Checking is the work.</h2>
+            <p class="lead text-white-50" data-i18n="about.subtitle">Microsoft and others now offer AI tools that generate Power BI reports. What still takes care is knowing that the numbers hold, that the model behind them is sound, that the Arabic reads right, and that Ramadan, Eid and the Gulf weekend are handled. DataArcus is built around that.</p>
+            <p class="small text-white-50 mb-4" data-i18n-html="about.note">Microsoft's <a href='https://learn.microsoft.com/power-bi/developer/agentic/power-bi-agentic-overview' class='text-accent' target='_blank' rel='noopener'>report-authoring skills</a> are free, but they run in an AI coding agent such as GitHub Copilot, on its own plan; <a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Copilot inside Power BI</a> needs a paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher).</p>
+            <blockquote class="fs-5" style="border-left: 3px solid var(--accent); padding-left: 1.5rem; font-style: italic;" data-i18n="about.quote">
+              "My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations, and I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates."
+            </blockquote>
+            <p class="mt-4 text-white-50" data-i18n="about.p1">Behind DataArcus is one person, me, building every tool and checking every report myself. Alongside the free tools I take paid work: designing Power BI reports and auditing models, including a Copilot-readiness audit. You deal directly with the person doing the work, and what you see in the portfolio is what you get.</p>
+            <div class="mt-3 fw-bold" data-i18n="about.founder">Abdelrahman M., Founder & Lead Data Architect</div>
+            <div class="mt-4 d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
+              <div class="certification-container d-flex gap-2">
+                
+                <a href="https://www.credly.com/badges/52993d8a-67dc-4db8-998e-ba36b85ea9fe" target="_blank" rel="noopener" title="Google Data Analytics Professional Certificate" data-i18n-title="attrs.googleCert">
+                  <picture>
+                    <source type="image/webp" srcset="assets/img/credly-badge-opt.webp">
+                    <img src="assets/img/credly-badge-opt.png"
+                         alt="Google Data Analytics Certificate" data-i18n-alt="attrs.googleCert"
+                         width="80" height="80" loading="lazy"
+                         style="height: 80px; border-radius: 8px;">
+                  </picture>
+                </a>
+
+                <a href="https://learn.microsoft.com/api/credentials/share/en-us/AbdelrahmanMohammed-3249/60477FC59CA5626E?sharingId=2B92502DF1924EF3" target="_blank" rel="noopener" title="Microsoft Certified: Power BI Data Analyst Associate" data-i18n-title="attrs.msCert">
+                  <img src="https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-associate-badge.svg"
+                       alt="Microsoft Certified: Power BI Data Analyst Associate" data-i18n-alt="attrs.msCert"
+                       width="80" height="80" loading="lazy"
+                       style="height: 80px; border-radius: 8px;">
+                </a>
+
+              </div>
+              
+              <div class="small text-white-50">
+                <div class="fw-semibold text-white" data-i18n="about.certification.title">Industry Certified</div>
+                <div data-i18n="about.certification.subtitle">Data Analytics Professional</div>
+                <div class="mt-1 text-accent" data-i18n="about.certification.verified">Verified by Google & Microsoft</div>
+              </div>
+            </div>
+            </div>
+          </div>
+        <div class="row">
+          <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+            <h3 class="fw-bold mb-4" data-i18n="about.statsTitle">The Track Record So Far</h3>
+            <p class="text-white-50" data-i18n="about.statsSubtitle">Real numbers from real production models, not agency metrics.</p>
+          </div>
+        </div>
+        <div class="row g-4 mt-4">
+          <div class="col-6 col-lg">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="16" data-suffix="">16</div>
+              <div class="small text-white-50" data-i18n="about.stats.0.title">Articles Published on the Blog</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="2" data-suffix="">2</div>
+              <div class="small text-white-50" data-i18n="about.stats.1.title">Languages: English and Arabic</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="7" data-suffix="">7</div>
+              <div class="small text-white-50" data-i18n="about.stats.2.title">End-to-End Dashboard Builds</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="8" data-suffix="">8</div>
+              <div class="small text-white-50" data-i18n="about.stats.3.title">Free Power BI &amp; Fabric Tools Published</div>
+            </div>
+          </div>
+          <div class="col-12 col-lg">
+            <div class="glass-card p-4 text-center h-100 position-relative">
+              <div class="stat-number" data-count="1" data-suffix="">1</div>
+              <a href="/power-bi-mcp/" class="small text-white-50 text-decoration-none stretched-link" data-i18n="about.stats.4.title">AI agent in public beta (11 tools)</a>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-5 pt-4">
+          <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+            <h4 class="fw-bold" data-i18n="about.ctaTitle">Curious What This Could Look Like for Your Data?</h4>
+            <p class="text-white-50 mb-4" data-i18n="about.ctaSubtitle">No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.</p>
+            <a href="#contact" class="proof-link"><span data-i18n="about.ctaLink">Tell me about your data</span> <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <section id="latest" class="py-5">
+    <div class="container">
+      <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+          <h2 class="display-6 fw-bold mb-4" data-i18n="latest.title">Latest from the Blog</h2>
+          <p class="lead text-white-50" data-i18n="latest.subtitle">Playbooks from real models: the patterns, the mistakes, and the fixes.</p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="0">
+          <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-info mb-2 align-self-start cap-pill" data-i18n="latest.posts.readyForArabic.badge">ARABIC REPORTS</span>
+              <h3 class="h5 mb-2" data-i18n="latest.posts.readyForArabic.title">Is Your Power BI Report Ready for Arabic? 19 Things to Check</h3>
+              <div class="small text-white-50 mb-3"><time datetime="2026-10-25" data-i18n="latest.posts.readyForArabic.date">October 25, 2026</time></div>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="latest.posts.readyForArabic.excerpt">What goes wrong when a report built in English is read in Arabic, and the fix for each.</p>
+              <a class="btn btn-glass mt-auto" href="articles/article-power-bi-report-ready-for-arabic.html"><i class="bi bi-journal-text me-2"></i><span data-i18n="latest.posts.readyForArabic.button">Read Playbook</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-info mb-2 align-self-start cap-pill" data-i18n="latest.posts.customVisualChecks.badge">AI AGENTS</span>
+              <h3 class="h5 mb-2" data-i18n="latest.posts.customVisualChecks.title">Before an AI Builds Your Power BI Custom Visual: 4 Checks</h3>
+              <div class="small text-white-50 mb-3"><time datetime="2026-10-23" data-i18n="latest.posts.customVisualChecks.date">October 23, 2026</time></div>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="latest.posts.customVisualChecks.excerpt">AI agents now work with Power BI custom visuals, and some write new ones. Four checks before you rely on one at work, from Microsoft's own pages.</p>
+              <a class="btn btn-glass mt-auto" href="articles/article-power-bi-custom-visual-ai-checks.html"><i class="bi bi-journal-text me-2"></i><span data-i18n="latest.posts.customVisualChecks.button">Read Playbook</span></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="glass-card blog-card h-100 d-flex flex-column">
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-info mb-2 align-self-start cap-pill" data-i18n="latest.posts.bestPracticeExceptions.badge">BEST PRACTICE</span>
+              <h3 class="h5 mb-2" data-i18n="latest.posts.bestPracticeExceptions.title">We Checked 23 Power BI Models Against Microsoft's Rules. Our Own Tool Was Wrong 206 Times.</h3>
+              <div class="small text-white-50 mb-3"><time datetime="2026-10-17" data-i18n="latest.posts.bestPracticeExceptions.date">October 17, 2026</time></div>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="latest.posts.bestPracticeExceptions.excerpt">We checked 23 Power BI models against Microsoft's guidance, and our own tool was wrong 206 times. Five cases where a best-practice rule does not apply.</p>
+              <a class="btn btn-glass mt-auto" href="articles/article-power-bi-best-practice-exceptions.html"><i class="bi bi-journal-text me-2"></i><span data-i18n="latest.posts.bestPracticeExceptions.button">Read Playbook</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-5"><a href="blog.html" class="btn btn-glass btn-lg"><span data-i18n="latest.button">All articles</span> <i class="bi bi-arrow-right ms-1"></i></a></div>
+    </div>
+  </section>
+
+  <section id="faq" class="py-5">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="faq.title">Your Questions, Answered</h2>
+            <p class="lead text-white-50" data-i18n="faq.subtitle">Here are the answers to the questions I get asked most before a project starts.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            <div class="accordion accordion-flush" id="faqAccordion" data-aos="fade-up">
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                      <i class="bi bi-clock me-3 text-accent"></i><span data-i18n="faq.items.0.q">How does the free Data Clarity Call work?</span>
+                    </button>
+                  </h3>
+                  <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.0.a"><strong>It's a focused 20-minute call, not a sales pitch.</strong> Bring whatever you've got (a messy spreadsheet, a CRM export, your current dashboard) and I'll walk through what's actually fixable and what a real model would look like. No build, no obligation, just a straight answer on whether this is worth pursuing.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                      <i class="bi bi-currency-dollar me-3 text-accent"></i><span data-i18n="faq.items.1.q">What's the real ROI of a Power BI implementation?</span>
+                    </button>
+                  </h3>
+                  <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.1.a"><strong>Here's a simple way to estimate it, not a guarantee.</strong> If your team spends 10 hours a week on manual reporting, that's roughly 500+ hours a year, and that's before counting the cost of decisions made late because the numbers weren't ready.<div class="mt-3"><div class="row g-3"><div class="col-sm-6"><div class="p-3 rounded" style="background: rgba(253, 121, 168, 0.1);"><strong>Before:</strong><br>• 10h/week manual reports<br>• Delayed decisions<br>• Data inconsistencies</div></div><div class="col-sm-6"><div class="p-3 rounded" style="background: rgba(0, 206, 201, 0.1);"><strong>After:</strong><br>• 30min/week monitoring<br>• Real-time insights<br>• Confident decisions</div></div></div></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                      <i class="bi bi-shield-lock me-3 text-accent"></i><span data-i18n="faq.items.2.q">How do you handle our sensitive business data?</span>
+                    </button>
+                  </h3>
+                  <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.2.a"><strong>On the discovery call, we talk through your data without you needing to hand anything over.</strong> If we move forward, I work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.<div class="mt-3"><div class="d-flex align-items-start mb-2"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i><span>NDA signed before any data access</span></div><div class="d-flex align-items-start mb-2"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i><span>Data stays in your Microsoft tenant</span></div><div class="d-flex align-items-start mb-2"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i><span>Role-based access controls implemented</span></div><div class="d-flex align-items-start"><i class="bi bi-check-circle-fill text-success me-2 mt-1"></i><span>Full audit trail of all activities</span></div></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                      <i class="bi bi-gear me-3 text-accent"></i><span data-i18n="faq.items.3.q">What if our data is a mess? Excel exports, legacy systems, manual processes?</span>
+                    </button>
+                  </h3>
+                  <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.3.a"><strong>That's normal, and it's exactly the kind of problem I solve.</strong> I connect and clean data from CRMs, e-commerce platforms, ERPs, and spreadsheets into one reliable model.<div class="mt-3 p-3 rounded" style="background: rgba(0,132,255,0.1);"><strong>I connect to:</strong> CRM systems, Shopify, WooCommerce, SQL databases, APIs, Excel files, and most other common business data sources.</div><p class="mt-3 mb-0"><em>"The messier your data, the bigger the transformation impact."</em></p></div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                      <i class="bi bi-people me-3 text-accent"></i><span data-i18n="faq.items.4.q">Will our team be able to use the dashboards?</span>
+                    </button>
+                  </h3>
+                  <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.4.a"><strong>Absolutely. I build for your team's skill level and provide comprehensive training.</strong> Every project includes user training and documentation, plus ongoing support options.<div class="mt-3"><div class="row g-2 small"><div class="col-md-6"><strong class="text-accent">For End Users:</strong><br>• How to read dashboards<br>• Filtering and drilling down<br>• Export and sharing options</div><div class="col-md-6"><strong class="text-accent">For Admins:</strong><br>• Data refresh schedules<br>• User permissions<br>• Basic troubleshooting</div></div></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                      <i class="bi bi-star me-3 text-accent"></i><span data-i18n="faq.items.5.q">Why work with an independent specialist instead of a large agency?</span>
+                    </button>
+                  </h3>
+                  <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.5.a"><strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built every dashboard in my <a href='portfolio.html' class='text-accent'>showcases</a> entirely myself, and that's the level of hands-on ownership every project gets.<div class="mt-3 p-3 rounded" style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                      <i class="bi bi-question-circle me-3 text-accent"></i><span data-i18n="faq.items.6.q">What if we're not sure what we need?</span>
+                    </button>
+                  </h3>
+                  <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.6.a"><strong>That's exactly what the free Data Clarity Call is for.</strong> Bring what you've got, and I'll help you figure out where the real opportunity is, even if that's not a full dashboard build yet. No commitment required.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                      <i class="bi bi-robot me-3 text-accent"></i><span data-i18n="faq.items.7.q">Does the AI agent see my data?</span>
+                    </button>
+                  </h3>
+                  <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.7.a"><strong>Claude gets your model's structure, never the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop, and write a new report next to your model, only inside the one folder you choose. What they send to Claude: your model's and report's names and structure (tables, columns, measures, formats, pages, visuals), and the short texts typed on report pages (titles, text boxes), which can hold a figure or a name; never table rows, filter or slicer values, or bookmark states. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </section>
+
+<section id="contact" class="py-5">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="contact.title">Start a Conversation About Your Data</h2>
+            <p class="lead text-white-50" data-i18n="contact.subtitle">Tell me about your business and the decisions you need better data for, and I'll walk you through what's possible on a free call.</p>
+          </div>
+        </div>
+        <div class="row g-5">
+          
+          <div class="col-lg-7" data-aos="fade-up">
+            <div class="glass-card p-4 p-md-5">
+              <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="row g-4" data-bs-theme="dark"> <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
+
+                <div class="col-12">
+                  <div id="form-result" style="display: none;"></div>
+                </div>
+
+                <div class="col-sm-6">
+                  <label for="contact-name" class="form-label" data-i18n="contact.form.name">Full Name *</label>
+                  <input type="text" name="name" class="form-control" id="contact-name" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="contact-email" class="form-label" data-i18n="contact.form.email">Business Email *</label>
+                  <input type="email" name="email" class="form-control" id="contact-email" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="contact-company" class="form-label" data-i18n="contact.form.company">Company</label>
+                  <input type="text" name="company" class="form-control" id="contact-company">
+                </div>
+                <div class="col-sm-6">
+                  <label for="contact-platform" class="form-label" data-i18n="contact.form.platform">Data Source / Platform (Optional)</label>
+                  <input type="text" name="platform" class="form-control" id="contact-platform" placeholder="e.g., CRM system, Shopify, internal database..." data-i18n-placeholder="contact.form.platformPlaceholder">
+                </div>
+                <div class="col-12">
+                  <label for="contact-details" class="form-label" data-i18n="contact.form.details">Project Details *</label>
+                  <textarea id="contact-details" name="message" class="form-control" rows="5" placeholder="Describe your data sources, key metrics, and desired outcomes..." data-i18n="contact.form.placeholder" required></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="d-flex flex-column flex-sm-row align-items-start gap-3">
+                    <button type="submit" class="btn btn-accent btn-lg px-4">
+                      <i class="bi bi-send me-2"></i><span data-i18n="contact.form.button">Book My Free Call</span>
+                    </button>
+                    <div class="text-white-50 small">
+                      <div><i class="bi bi-envelope me-2"></i>hello@DataArcus.com</div>
+                      <div><i class="bi bi-clock me-2"></i><span data-i18n="contact.form.response">Response within 1 working day</span></div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <div class="col-lg-5" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card p-4 p-md-5 h-100">
+              <h3 class="mb-4"><i class="bi bi-clipboard-check me-2"></i><span data-i18n="contact.checklist.title">What to bring to your Data Clarity Call</span></h3>
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.0.title">One decision you want to make faster</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.0.desc">For example: "Which campaigns bring buyers, not just leads?"</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.1.title">Where your data lives today</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.1.desc">CRM export, Excel sheets, Shopify, Google Sheets...</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.2.title">Who reads the numbers</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.2.desc">You, a manager, the sales team?</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.3.title">What "better" looks like</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.3.desc">A report you stop building by hand, a number you can finally trust</p>
+                  </div>
+                </div>
+              </div>
+              
+              <hr class="my-4">
+              
+              <h3 class="mb-3"><i class="bi bi-calendar3 me-2"></i><span data-i18n="contact.timeline.title">How a typical project runs</span></h3>
+              <div class="d-flex flex-column gap-2 small">
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.0.label">Discovery and data access</span>
+                  <span data-i18n="contact.timeline.items.0.value">Week 1</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.1.label">Data model and measures</span>
+                  <span data-i18n="contact.timeline.items.1.value">Weeks 1-2</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.2.label">Dashboard build</span>
+                  <span data-i18n="contact.timeline.items.2.value">Weeks 2-3</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.3.label">Testing, training and handover</span>
+                  <span data-i18n="contact.timeline.items.3.value">Weeks 3-4</span>
+                </div>
+              </div>
+              <p class="text-white-50 small mt-3 mb-0" data-i18n="contact.timeline.note">Smaller jobs, like one report on clean data, can take a few days. You get a fixed timeline after the call.</p>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+  </section>
+
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="/#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="/#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="/tools/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+              <li class="mb-2"><a href="/power-bi-mcp/" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.mcp">DataArcus for Power BI</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="/#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="/#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="assets/js/translations/common.min.js?v=20261025f" defer></script>
+  <script src="assets/js/translations/homepage.min.js?v=20261025ds1" defer></script>
+  <script src="assets/js/lang-manager.min.js?v=20261025a" defer></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
+  <script src="assets/js/main.min.js?v=20261022d" defer></script>
+  <script>
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-tool]');
+      if (a && typeof window.dataArcusTrack === 'function') window.dataArcusTrack('tool_open', { tool: a.getAttribute('data-tool'), from: 'home' });
+    });
+  </script>
+</body>
+</html>

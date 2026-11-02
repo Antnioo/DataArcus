@@ -1,0 +1,38 @@
+table Plant
+
+	column 'Plant Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Plant Key
+
+	column Plant
+		dataType: string
+		sourceColumn: Plant
+
+	column 'Plant Code'
+		dataType: string
+		sourceColumn: Plant Code
+
+	column 'Plant Type'
+		dataType: string
+		sourceColumn: Plant Type
+
+	column 'Plant Parent Code'
+		dataType: string
+		sourceColumn: Plant Parent Code
+
+	column 'Plant Description'
+		dataType: string
+		sourceColumn: Plant Description
+
+	column 'Plant Group'
+		dataType: string
+		sourceColumn: Plant Group
+
+	partition Plant = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Plant Key", "Plant", "Plant Code", "Plant Type", "Plant Parent Code", "Plant Description", "Plant Group"}, {})
+				in
+				    Source

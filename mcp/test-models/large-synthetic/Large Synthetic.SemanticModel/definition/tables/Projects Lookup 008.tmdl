@@ -1,0 +1,50 @@
+table 'Projects Lookup 008'
+
+	column 'Projects Lookup 008 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 008 Key
+
+	column 'Projects Lookup 008'
+		dataType: string
+		sourceColumn: Projects Lookup 008
+
+	column 'Projects Lookup 008 Is Active'
+		dataType: boolean
+		sourceColumn: Projects Lookup 008 Is Active
+
+	column 'Projects Lookup 008 Rank'
+		dataType: int64
+		sourceColumn: Projects Lookup 008 Rank
+
+	column 'Projects Lookup 008 Category'
+		dataType: string
+		sourceColumn: Projects Lookup 008 Category
+
+	column 'Projects Lookup 008 Status'
+		dataType: string
+		sourceColumn: Projects Lookup 008 Status
+
+	column 'Projects Lookup 008 Long Name'
+		dataType: string
+		sourceColumn: Projects Lookup 008 Long Name
+
+	column 'Projects Lookup 008 Sort Order'
+		dataType: int64
+		sourceColumn: Projects Lookup 008 Sort Order
+
+	column 'Projects Lookup 008 Group'
+		dataType: string
+		sourceColumn: Projects Lookup 008 Group
+
+	column 'Projects Lookup 008 Code'
+		dataType: string
+		sourceColumn: Projects Lookup 008 Code
+
+	partition 'Projects Lookup 008' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Projects Lookup 008 Key", "Projects Lookup 008", "Projects Lookup 008 Is Active", "Projects Lookup 008 Rank", "Projects Lookup 008 Category", "Projects Lookup 008 Status", "Projects Lookup 008 Long Name", "Projects Lookup 008 Sort Order", "Projects Lookup 008 Group", "Projects Lookup 008 Code"}, {})
+				in
+				    Source

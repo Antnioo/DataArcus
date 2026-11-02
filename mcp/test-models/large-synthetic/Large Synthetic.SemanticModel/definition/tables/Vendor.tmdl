@@ -1,0 +1,38 @@
+table Vendor
+
+	column 'Vendor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Vendor Key
+
+	column Vendor
+		dataType: string
+		sourceColumn: Vendor
+
+	column 'Vendor Created By'
+		dataType: string
+		sourceColumn: Vendor Created By
+
+	column 'Vendor Valid From'
+		dataType: dateTime
+		sourceColumn: Vendor Valid From
+
+	column 'Vendor Notes'
+		dataType: string
+		sourceColumn: Vendor Notes
+
+	column 'Vendor Code'
+		dataType: string
+		sourceColumn: Vendor Code
+
+	column 'Vendor Description'
+		dataType: string
+		sourceColumn: Vendor Description
+
+	partition Vendor = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Vendor Key", "Vendor", "Vendor Created By", "Vendor Valid From", "Vendor Notes", "Vendor Code", "Vendor Description"}, {})
+				in
+				    Source

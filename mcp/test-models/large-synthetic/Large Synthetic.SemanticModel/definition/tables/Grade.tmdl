@@ -1,0 +1,38 @@
+table Grade
+
+	column 'Grade Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Grade Key
+
+	column Grade
+		dataType: string
+		sourceColumn: Grade
+
+	column 'Grade Status'
+		dataType: string
+		sourceColumn: Grade Status
+
+	column 'Grade Short Name'
+		dataType: string
+		sourceColumn: Grade Short Name
+
+	column 'Grade Level'
+		dataType: int64
+		sourceColumn: Grade Level
+
+	column 'Grade Code'
+		dataType: string
+		sourceColumn: Grade Code
+
+	column 'Grade Description'
+		dataType: string
+		sourceColumn: Grade Description
+
+	partition Grade = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Grade Key", "Grade", "Grade Status", "Grade Short Name", "Grade Level", "Grade Code", "Grade Description"}, {})
+				in
+				    Source

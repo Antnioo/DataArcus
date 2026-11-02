@@ -1,0 +1,42 @@
+table Audience
+
+	column 'Audience Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Audience Key
+
+	column Audience
+		dataType: string
+		sourceColumn: Audience
+
+	column 'Audience Is Active'
+		dataType: boolean
+		sourceColumn: Audience Is Active
+
+	column 'Audience Owner'
+		dataType: string
+		sourceColumn: Audience Owner
+
+	column 'Audience Level'
+		dataType: int64
+		sourceColumn: Audience Level
+
+	column 'Audience Valid To'
+		dataType: dateTime
+		sourceColumn: Audience Valid To
+
+	column 'Audience Code'
+		dataType: string
+		sourceColumn: Audience Code
+
+	column 'Audience Description'
+		dataType: string
+		sourceColumn: Audience Description
+
+	partition Audience = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Audience Key", "Audience", "Audience Is Active", "Audience Owner", "Audience Level", "Audience Valid To", "Audience Code", "Audience Description"}, {})
+				in
+				    Source

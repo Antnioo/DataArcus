@@ -1,0 +1,46 @@
+table 'Exchange Rate Type'
+
+	column 'Exchange Rate Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Exchange Rate Type Key
+
+	column 'Exchange Rate Type'
+		dataType: string
+		sourceColumn: Exchange Rate Type
+
+	column 'Exchange Rate Type Parent Code'
+		dataType: string
+		sourceColumn: Exchange Rate Type Parent Code
+
+	column 'Exchange Rate Type Created By'
+		dataType: string
+		sourceColumn: Exchange Rate Type Created By
+
+	column 'Exchange Rate Type Owner'
+		dataType: string
+		sourceColumn: Exchange Rate Type Owner
+
+	column 'Exchange Rate Type Notes'
+		dataType: string
+		sourceColumn: Exchange Rate Type Notes
+
+	column 'Exchange Rate Type Type'
+		dataType: string
+		sourceColumn: Exchange Rate Type Type
+
+	column 'Exchange Rate Type Code'
+		dataType: string
+		sourceColumn: Exchange Rate Type Code
+
+	column 'Exchange Rate Type Description'
+		dataType: string
+		sourceColumn: Exchange Rate Type Description
+
+	partition 'Exchange Rate Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Exchange Rate Type Key", "Exchange Rate Type", "Exchange Rate Type Parent Code", "Exchange Rate Type Created By", "Exchange Rate Type Owner", "Exchange Rate Type Notes", "Exchange Rate Type Type", "Exchange Rate Type Code", "Exchange Rate Type Description"}, {})
+				in
+				    Source

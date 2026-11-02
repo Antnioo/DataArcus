@@ -1,0 +1,54 @@
+table 'Maintenance Type'
+
+	column 'Maintenance Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Maintenance Type Key
+
+	column 'Maintenance Type'
+		dataType: string
+		sourceColumn: Maintenance Type
+
+	column 'Maintenance Type Short Name'
+		dataType: string
+		sourceColumn: Maintenance Type Short Name
+
+	column 'Maintenance Type Owner'
+		dataType: string
+		sourceColumn: Maintenance Type Owner
+
+	column 'Maintenance Type Region'
+		dataType: string
+		sourceColumn: Maintenance Type Region
+
+	column 'Maintenance Type Created By'
+		dataType: string
+		sourceColumn: Maintenance Type Created By
+
+	column 'Maintenance Type Rank'
+		dataType: int64
+		sourceColumn: Maintenance Type Rank
+
+	column 'Maintenance Type Valid To'
+		dataType: dateTime
+		sourceColumn: Maintenance Type Valid To
+
+	column 'Maintenance Type Code'
+		dataType: string
+		sourceColumn: Maintenance Type Code
+
+	column 'Maintenance Type Description'
+		dataType: string
+		sourceColumn: Maintenance Type Description
+
+	column 'Maintenance Type Group'
+		dataType: string
+		sourceColumn: Maintenance Type Group
+
+	partition 'Maintenance Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Maintenance Type Key", "Maintenance Type", "Maintenance Type Short Name", "Maintenance Type Owner", "Maintenance Type Region", "Maintenance Type Created By", "Maintenance Type Rank", "Maintenance Type Valid To", "Maintenance Type Code", "Maintenance Type Description", "Maintenance Type Group"}, {})
+				in
+				    Source

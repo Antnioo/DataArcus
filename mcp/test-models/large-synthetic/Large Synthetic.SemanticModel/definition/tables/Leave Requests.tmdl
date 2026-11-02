@@ -1,0 +1,126 @@
+table 'Leave Requests'
+
+	measure 'Leave Requests Total Price' = SUM ( 'Leave Requests'[Price] )
+		formatString: #,0
+
+	measure 'Leave Requests Average Price' = AVERAGE ( 'Leave Requests'[Price] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Leave Requests Count' = COUNTROWS ( 'Leave Requests' )
+		formatString: #,0
+		displayFolder: People
+
+	/// Made-up measure for the large test model (People).
+	measure 'Leave Requests Total Price LY' = CALCULATE ( [Leave Requests Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Leave Requests Total Price YoY %' = DIVIDE ( [Leave Requests Total Price] - [Leave Requests Total Price LY], [Leave Requests Total Price LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Leave Requests Total Price YTD' = TOTALYTD ( [Leave Requests Total Price], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Leave Requests Max Price' = MAX ( 'Leave Requests'[Price] )
+		displayFolder: People
+
+	measure 'Leave Requests Price Share %' = DIVIDE ( [Leave Requests Total Price], CALCULATE ( [Leave Requests Total Price], ALL ( 'Leave Requests' ) ) )
+		displayFolder: People
+
+	measure 'Leave Requests Total Net Amount' = SUM ( 'Leave Requests'[Net Amount] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Leave Requests Average Net Amount' = AVERAGE ( 'Leave Requests'[Net Amount] )
+
+	measure 'Leave Requests Total Net Amount LY' = CALCULATE ( [Leave Requests Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Leave Requests Total Net Amount YoY %' = DIVIDE ( [Leave Requests Total Net Amount] - [Leave Requests Total Net Amount LY], [Leave Requests Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Leave Requests Total Net Amount YTD' = TOTALYTD ( [Leave Requests Total Net Amount], 'Calendar'[Date] )
+		displayFolder: People
+
+	measure 'Leave Requests Max Net Amount' = MAX ( 'Leave Requests'[Net Amount] )
+		displayFolder: People
+
+	measure 'Leave Requests Net Amount Share %' = DIVIDE ( [Leave Requests Total Net Amount], CALCULATE ( [Leave Requests Total Net Amount], ALL ( 'Leave Requests' ) ) )
+		displayFolder: People
+
+	column 'Leave Request Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Leave Request Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Grade Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Grade Key
+
+	column 'People Lookup 057 Key'
+		dataType: int64
+		sourceColumn: People Lookup 057 Key
+
+	column 'Employee Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Employee Key
+
+	column 'Course Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Course Key
+
+	column 'Performance Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Performance Rating Key
+
+	column 'Termination Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Termination Reason Key
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	partition 'Leave Requests' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Leave Request Id", "Date", "Grade Key", "People Lookup 057 Key", "Employee Key", "Course Key", "Performance Rating Key", "Termination Reason Key", "Price", "Net Amount", "Value", "Amount", "Discount", "Score"}, {})
+				in
+				    Source

@@ -1,0 +1,54 @@
+table Line
+
+	column 'Line Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Line Key
+
+	column Line
+		dataType: string
+		sourceColumn: Line
+
+	column 'Line Short Name'
+		dataType: string
+		sourceColumn: Line Short Name
+
+	column 'Line Owner'
+		dataType: string
+		sourceColumn: Line Owner
+
+	column 'Line Region'
+		dataType: string
+		sourceColumn: Line Region
+
+	column 'Line Created By'
+		dataType: string
+		sourceColumn: Line Created By
+
+	column 'Line Code'
+		dataType: string
+		sourceColumn: Line Code
+
+	column 'Line Category'
+		dataType: string
+		sourceColumn: Line Category
+
+	column 'Line Level'
+		dataType: int64
+		sourceColumn: Line Level
+
+	column 'Line Description'
+		dataType: string
+		sourceColumn: Line Description
+
+	column 'Line Group'
+		dataType: string
+		sourceColumn: Line Group
+
+	partition Line = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Line Key", "Line", "Line Short Name", "Line Owner", "Line Region", "Line Created By", "Line Code", "Line Category", "Line Level", "Line Description", "Line Group"}, {})
+				in
+				    Source

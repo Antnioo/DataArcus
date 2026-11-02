@@ -1,0 +1,66 @@
+table 'Logistics Lookup 048'
+
+	column 'Logistics Lookup 048 Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Key]
+
+	column 'Logistics Lookup 048'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048]
+
+	column 'Logistics Lookup 048 Status'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Status]
+
+	column 'Logistics Lookup 048 External Id'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 External Id]
+
+	column 'Logistics Lookup 048 Level'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Level]
+
+	column 'Logistics Lookup 048 Is Active'
+		dataType: boolean
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Is Active]
+
+	column 'Logistics Lookup 048 Category'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Category]
+
+	column 'Logistics Lookup 048 Type'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Type]
+
+	column 'Logistics Lookup 048 Notes'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Notes]
+
+	column 'Logistics Lookup 048 Code'
+		dataType: string
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Code]
+
+	partition 'Logistics Lookup 048' = calculated
+		mode: import
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Logistics Lookup 048 Key", [Value], "Logistics Lookup 048", "Logistics Lookup 048 " & [Value], "Logistics Lookup 048 Status", "Status " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Logistics Lookup 048 External Id", "External Id " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Logistics Lookup 048 Level", [Value], "Logistics Lookup 048 Is Active", MOD ( [Value], 2 ) = 1, "Logistics Lookup 048 Category", "Category " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Logistics Lookup 048 Type", "Type " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Logistics Lookup 048 Notes", "Notes " & ( 1 + MOD ( [Value] + 8, 3 ) ), "Logistics Lookup 048 Code", "Code " & ( 1 + MOD ( [Value] + 9, 3 ) ) )

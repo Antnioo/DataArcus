@@ -1,0 +1,4 @@
+Contact: mailto:hello@dataarcus.com
+Expires: 2027-10-06T00:00:00.000Z
+Preferred-Languages: en, ar
+Canonical: https://dataarcus.com/.well-known/security.txt

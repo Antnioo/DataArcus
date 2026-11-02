@@ -1,0 +1,134 @@
+table 'Change Requests'
+
+	measure 'Change Requests Total Amount' = SUM ( 'Change Requests'[Amount] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Change Requests Average Amount' = AVERAGE ( 'Change Requests'[Amount] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Change Requests Count' = COUNTROWS ( 'Change Requests' )
+		displayFolder: Projects
+
+	measure 'Change Requests Total Amount LY' = CALCULATE ( [Change Requests Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Change Requests Total Amount YoY %' = DIVIDE ( [Change Requests Total Amount] - [Change Requests Total Amount LY], [Change Requests Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Change Requests Total Amount YTD' = TOTALYTD ( [Change Requests Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Change Requests Max Amount' = MAX ( 'Change Requests'[Amount] )
+
+	measure 'Change Requests Amount Share %' = DIVIDE ( [Change Requests Total Amount], CALCULATE ( [Change Requests Total Amount], ALL ( 'Change Requests' ) ) )
+		displayFolder: Projects
+
+	measure 'Change Requests Total Net Amount' = SUM ( 'Change Requests'[Net Amount] )
+		formatString: #,0
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Change Requests Average Net Amount' = AVERAGE ( 'Change Requests'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	measure 'Change Requests Total Net Amount LY' = CALCULATE ( [Change Requests Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Change Requests Total Net Amount YoY %' = DIVIDE ( [Change Requests Total Net Amount] - [Change Requests Total Net Amount LY], [Change Requests Total Net Amount LY] )
+		formatString: 0.0%
+
+	measure 'Change Requests Total Net Amount YTD' = TOTALYTD ( [Change Requests Total Net Amount], 'Calendar'[Date] )
+		displayFolder: Projects
+
+	measure 'Change Requests Max Net Amount' = MAX ( 'Change Requests'[Net Amount] )
+		displayFolder: Projects
+
+	measure 'Change Requests Net Amount Share %' = DIVIDE ( [Change Requests Total Net Amount], CALCULATE ( [Change Requests Total Net Amount], ALL ( 'Change Requests' ) ) )
+		displayFolder: Projects
+
+	column 'Change Request Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Change Request Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Client Program Key'
+		dataType: int64
+		sourceColumn: Client Program Key
+
+	column 'Sponsor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sponsor Key
+
+	column 'Projects Lookup 037 Key'
+		dataType: int64
+		sourceColumn: Projects Lookup 037 Key
+
+	column 'Task Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Task Key
+
+	column 'Practice Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Practice Key
+
+	column 'Milestone Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Milestone Status Key
+
+	column 'Role Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Role Key
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	partition 'Change Requests' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Change Request Id", "Date", "Client Program Key", "Sponsor Key", "Projects Lookup 037 Key", "Task Key", "Practice Key", "Milestone Status Key", "Role Key", "Amount", "Net Amount", "Units", "Score", "Value", "Count"}, {})
+				in
+				    Source

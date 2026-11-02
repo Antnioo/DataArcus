@@ -1,0 +1,46 @@
+table 'Booking Channel'
+
+	column 'Booking Channel Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Booking Channel Key
+
+	column 'Booking Channel'
+		dataType: string
+		sourceColumn: Booking Channel
+
+	column 'Booking Channel Valid To'
+		dataType: dateTime
+		sourceColumn: Booking Channel Valid To
+
+	column 'Booking Channel Parent Code'
+		dataType: string
+		sourceColumn: Booking Channel Parent Code
+
+	column 'Booking Channel Code'
+		dataType: string
+		sourceColumn: Booking Channel Code
+
+	column 'Booking Channel Owner'
+		dataType: string
+		sourceColumn: Booking Channel Owner
+
+	column 'Booking Channel Short Name'
+		dataType: string
+		sourceColumn: Booking Channel Short Name
+
+	column 'Booking Channel Description'
+		dataType: string
+		sourceColumn: Booking Channel Description
+
+	column 'Booking Channel Group'
+		dataType: string
+		sourceColumn: Booking Channel Group
+
+	partition 'Booking Channel' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Booking Channel Key", "Booking Channel", "Booking Channel Valid To", "Booking Channel Parent Code", "Booking Channel Code", "Booking Channel Owner", "Booking Channel Short Name", "Booking Channel Description", "Booking Channel Group"}, {})
+				in
+				    Source

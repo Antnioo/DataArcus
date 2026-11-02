@@ -1,0 +1,122 @@
+table 'Space Usage'
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Total Count' = SUM ( 'Space Usage'[Count] )
+		displayFolder: Facilities
+
+	measure 'Space Usage Average Count' = AVERAGE ( 'Space Usage'[Count] )
+		formatString: #,0.00
+		displayFolder: Facilities
+
+	measure 'Space Usage Count' = COUNTROWS ( 'Space Usage' )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Space Usage Total Count LY' = CALCULATE ( [Space Usage Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Total Count YoY %' = DIVIDE ( [Space Usage Total Count] - [Space Usage Total Count LY], [Space Usage Total Count LY] )
+		formatString: 0.0%
+
+	measure 'Space Usage Total Count YTD' = TOTALYTD ( [Space Usage Total Count], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Space Usage Max Count' = MAX ( 'Space Usage'[Count] )
+		displayFolder: Facilities
+
+	measure 'Space Usage Count Share %' = DIVIDE ( [Space Usage Total Count], CALCULATE ( [Space Usage Total Count], ALL ( 'Space Usage' ) ) )
+		displayFolder: Facilities
+
+	measure 'Space Usage Total Score' = SUM ( 'Space Usage'[Score] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Average Score' = AVERAGE ( 'Space Usage'[Score] )
+		formatString: #,0.00
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Total Score LY' = CALCULATE ( [Space Usage Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Total Score YoY %' = DIVIDE ( [Space Usage Total Score] - [Space Usage Total Score LY], [Space Usage Total Score LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Space Usage Total Score YTD' = TOTALYTD ( [Space Usage Total Score], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Space Usage Max Score' = MAX ( 'Space Usage'[Score] )
+		displayFolder: Facilities
+
+	measure 'Space Usage Score Share %' = DIVIDE ( [Space Usage Total Score], CALCULATE ( [Space Usage Total Score], ALL ( 'Space Usage' ) ) )
+		displayFolder: Facilities
+
+	column 'Space Usage Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Space Usage Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Asset Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Asset Key
+
+	column 'Facilities Lookup 011 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 011 Key
+
+	column 'Building Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Building Key
+
+	column 'Facilities Lookup 049 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 049 Key
+
+	column 'Cost Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cost Code Key
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	partition 'Space Usage' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Space Usage Id", "Date", "Asset Key", "Facilities Lookup 011 Key", "Building Key", "Facilities Lookup 049 Key", "Cost Code Key", "Count", "Score", "Cost", "Discount"}, {})
+				in
+				    Source

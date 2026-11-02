@@ -1,0 +1,34 @@
+table 'Facilities Lookup 026'
+
+	column 'Facilities Lookup 026 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 026 Key
+
+	column 'Facilities Lookup 026'
+		dataType: string
+		sourceColumn: Facilities Lookup 026
+
+	column 'Facilities Lookup 026 Valid To'
+		dataType: dateTime
+		sourceColumn: Facilities Lookup 026 Valid To
+
+	column 'Facilities Lookup 026 Is Active'
+		dataType: boolean
+		sourceColumn: Facilities Lookup 026 Is Active
+
+	column 'Facilities Lookup 026 Description'
+		dataType: string
+		sourceColumn: Facilities Lookup 026 Description
+
+	column 'Facilities Lookup 026 Code'
+		dataType: string
+		sourceColumn: Facilities Lookup 026 Code
+
+	partition 'Facilities Lookup 026' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Facilities Lookup 026 Key", "Facilities Lookup 026", "Facilities Lookup 026 Valid To", "Facilities Lookup 026 Is Active", "Facilities Lookup 026 Description", "Facilities Lookup 026 Code"}, {})
+				in
+				    Source

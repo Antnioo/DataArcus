@@ -1,0 +1,153 @@
+table Deliveries
+
+	measure 'Deliveries Total Tax Amount' = SUM ( Deliveries[Tax Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Average Tax Amount' = AVERAGE ( Deliveries[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Deliveries Count' = COUNTROWS ( Deliveries )
+		formatString: #,0
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Total Tax Amount LY' = CALCULATE ( [Deliveries Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Tax Amount YoY %' = DIVIDE ( [Deliveries Total Tax Amount] - [Deliveries Total Tax Amount LY], [Deliveries Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Total Tax Amount YTD' = TOTALYTD ( [Deliveries Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Max Tax Amount' = MAX ( Deliveries[Tax Amount] )
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Tax Amount Share %' = DIVIDE ( [Deliveries Total Tax Amount], CALCULATE ( [Deliveries Total Tax Amount], ALL ( Deliveries ) ) )
+
+	measure 'Deliveries Total Hours' = SUM ( Deliveries[Hours] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Average Hours' = AVERAGE ( Deliveries[Hours] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours LY' = CALCULATE ( [Deliveries Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours YoY %' = DIVIDE ( [Deliveries Total Hours] - [Deliveries Total Hours LY], [Deliveries Total Hours LY] )
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours YTD' = TOTALYTD ( [Deliveries Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Max Hours' = MAX ( Deliveries[Hours] )
+		displayFolder: Logistics
+
+	measure 'Deliveries Hours Share %' = DIVIDE ( [Deliveries Total Hours], CALCULATE ( [Deliveries Total Hours], ALL ( Deliveries ) ) )
+		displayFolder: Logistics
+
+	column 'Deliverie Id'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Deliverie Id]
+
+	column Date
+		dataType: dateTime
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
+
+	column 'Driver Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Key]
+
+	column 'Logistics Lookup 048 Key'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Key]
+
+	column 'Route Key'
+		dataType: int64
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Route Key]
+
+	column 'Carrier Key'
+		dataType: int64
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Key]
+
+	column 'Tax Amount'
+		dataType: decimal
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Tax Amount]
+
+	column Hours
+		dataType: double
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hours]
+
+	column Cost
+		dataType: decimal
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Cost]
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
+
+	column Score
+		dataType: double
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Score]
+
+	column Value
+		dataType: decimal
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Value]
+
+	column Amount
+		dataType: double
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Amount]
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Duration Minutes]
+
+	partition Deliveries = calculated
+		mode: import
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 33792434, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Deliverie Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Driver Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Logistics Lookup 048 Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Route Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Carrier Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Tax Amount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 9, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Hours",  ( ROUND ( ( 40 + MOD ( [S] * 10, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Cost", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Net Amount",  ( ROUND ( ( 40 + MOD ( [S] * 12, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Score",  ( ROUND ( ( 40 + MOD ( [S] * 13, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Value", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Amount",  ( ROUND ( ( 40 + MOD ( [S] * 15, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Duration Minutes",  ( ROUND ( ( 40 + MOD ( [S] * 16, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

@@ -1,0 +1,54 @@
+table 'Change Type'
+
+	column 'Change Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Change Type Key
+
+	column 'Change Type'
+		dataType: string
+		sourceColumn: Change Type
+
+	column 'Change Type Notes'
+		dataType: string
+		sourceColumn: Change Type Notes
+
+	column 'Change Type Code'
+		dataType: string
+		sourceColumn: Change Type Code
+
+	column 'Change Type Description'
+		dataType: string
+		sourceColumn: Change Type Description
+
+	column 'Change Type Rank'
+		dataType: int64
+		sourceColumn: Change Type Rank
+
+	column 'Change Type Status'
+		dataType: string
+		sourceColumn: Change Type Status
+
+	column 'Change Type Group'
+		dataType: string
+		sourceColumn: Change Type Group
+
+	column 'Change Type External Id'
+		dataType: string
+		sourceColumn: Change Type External Id
+
+	column 'Change Type Category'
+		dataType: string
+		sourceColumn: Change Type Category
+
+	column 'Change Type Type'
+		dataType: string
+		sourceColumn: Change Type Type
+
+	partition 'Change Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Change Type Key", "Change Type", "Change Type Notes", "Change Type Code", "Change Type Description", "Change Type Rank", "Change Type Status", "Change Type Group", "Change Type External Id", "Change Type Category", "Change Type Type"}, {})
+				in
+				    Source

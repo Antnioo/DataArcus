@@ -1,0 +1,38 @@
+table 'Commerce Lookup 044'
+
+	column 'Commerce Lookup 044 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 044 Key
+
+	column 'Commerce Lookup 044'
+		dataType: string
+		sourceColumn: Commerce Lookup 044
+
+	column 'Commerce Lookup 044 Rank'
+		dataType: int64
+		sourceColumn: Commerce Lookup 044 Rank
+
+	column 'Commerce Lookup 044 Status'
+		dataType: string
+		sourceColumn: Commerce Lookup 044 Status
+
+	column 'Commerce Lookup 044 Type'
+		dataType: string
+		sourceColumn: Commerce Lookup 044 Type
+
+	column 'Commerce Lookup 044 Region'
+		dataType: string
+		sourceColumn: Commerce Lookup 044 Region
+
+	column 'Commerce Lookup 044 Code'
+		dataType: string
+		sourceColumn: Commerce Lookup 044 Code
+
+	partition 'Commerce Lookup 044' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Commerce Lookup 044 Key", "Commerce Lookup 044", "Commerce Lookup 044 Rank", "Commerce Lookup 044 Status", "Commerce Lookup 044 Type", "Commerce Lookup 044 Region", "Commerce Lookup 044 Code"}, {})
+				in
+				    Source

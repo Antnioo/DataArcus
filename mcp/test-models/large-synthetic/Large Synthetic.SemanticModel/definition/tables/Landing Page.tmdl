@@ -1,0 +1,42 @@
+table 'Landing Page'
+
+	column 'Landing Page Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Landing Page Key
+
+	column 'Landing Page'
+		dataType: string
+		sourceColumn: Landing Page
+
+	column 'Landing Page Valid From'
+		dataType: dateTime
+		sourceColumn: Landing Page Valid From
+
+	column 'Landing Page Sort Order'
+		dataType: int64
+		sourceColumn: Landing Page Sort Order
+
+	column 'Landing Page Group'
+		dataType: string
+		sourceColumn: Landing Page Group
+
+	column 'Landing Page Is Active'
+		dataType: boolean
+		sourceColumn: Landing Page Is Active
+
+	column 'Landing Page Code'
+		dataType: string
+		sourceColumn: Landing Page Code
+
+	column 'Landing Page Description'
+		dataType: string
+		sourceColumn: Landing Page Description
+
+	partition 'Landing Page' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Landing Page Key", "Landing Page", "Landing Page Valid From", "Landing Page Sort Order", "Landing Page Group", "Landing Page Is Active", "Landing Page Code", "Landing Page Description"}, {})
+				in
+				    Source

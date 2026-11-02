@@ -1,0 +1,42 @@
+table 'Defect Type'
+
+	column 'Defect Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Defect Type Key
+
+	column 'Defect Type'
+		dataType: string
+		sourceColumn: Defect Type
+
+	column 'Defect Type Group'
+		dataType: string
+		sourceColumn: Defect Type Group
+
+	column 'Defect Type Status'
+		dataType: string
+		sourceColumn: Defect Type Status
+
+	column 'Defect Type Sort Order'
+		dataType: int64
+		sourceColumn: Defect Type Sort Order
+
+	column 'Defect Type Valid From'
+		dataType: dateTime
+		sourceColumn: Defect Type Valid From
+
+	column 'Defect Type Code'
+		dataType: string
+		sourceColumn: Defect Type Code
+
+	column 'Defect Type Description'
+		dataType: string
+		sourceColumn: Defect Type Description
+
+	partition 'Defect Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Defect Type Key", "Defect Type", "Defect Type Group", "Defect Type Status", "Defect Type Sort Order", "Defect Type Valid From", "Defect Type Code", "Defect Type Description"}, {})
+				in
+				    Source

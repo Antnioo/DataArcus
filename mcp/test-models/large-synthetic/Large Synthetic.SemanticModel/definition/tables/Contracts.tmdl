@@ -1,0 +1,116 @@
+table Contracts
+
+	measure 'Contracts Total Units' = SUM ( Contracts[Units] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Contracts Average Units' = AVERAGE ( Contracts[Units] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Contracts Count' = COUNTROWS ( Contracts )
+
+	measure 'Contracts Total Units LY' = CALCULATE ( [Contracts Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Contracts Total Units YoY %' = DIVIDE ( [Contracts Total Units] - [Contracts Total Units LY], [Contracts Total Units LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Contracts Total Units YTD' = TOTALYTD ( [Contracts Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Contracts Max Units' = MAX ( Contracts[Units] )
+		displayFolder: Procurement
+
+	measure 'Contracts Units Share %' = DIVIDE ( [Contracts Total Units], CALCULATE ( [Contracts Total Units], ALL ( Contracts ) ) )
+		displayFolder: Procurement
+
+	measure 'Contracts Total Amount' = SUM ( Contracts[Amount] )
+
+	measure 'Contracts Average Amount' = AVERAGE ( Contracts[Amount] )
+		displayFolder: Procurement
+
+	measure 'Contracts Total Amount LY' = CALCULATE ( [Contracts Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Contracts Total Amount YoY %' = DIVIDE ( [Contracts Total Amount] - [Contracts Total Amount LY], [Contracts Total Amount LY] )
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Contracts Total Amount YTD' = TOTALYTD ( [Contracts Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Contracts Max Amount' = MAX ( Contracts[Amount] )
+
+	measure 'Contracts Amount Share %' = DIVIDE ( [Contracts Total Amount], CALCULATE ( [Contracts Total Amount], ALL ( Contracts ) ) )
+		displayFolder: Procurement
+
+	column 'Contract Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Contract Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Supplier Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Country Key
+
+	column 'Procurement Lookup 032 Key'
+		dataType: int64
+		sourceColumn: Procurement Lookup 032 Key
+
+	column 'Approval Level Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Approval Level Key
+
+	column 'Procurement Lookup 041 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 041 Key
+
+	column 'Procurement Lookup 009 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 009 Key
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	partition Contracts = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Contract Id", "Date", "Supplier Country Key", "Procurement Lookup 032 Key", "Approval Level Key", "Procurement Lookup 041 Key", "Procurement Lookup 009 Key", "Units", "Amount", "Cost", "Quantity", "Net Amount"}, {})
+				in
+				    Source

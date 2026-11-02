@@ -1,0 +1,34 @@
+table 'Finance Lookup 023'
+
+	column 'Finance Lookup 023 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 023 Key
+
+	column 'Finance Lookup 023'
+		dataType: string
+		sourceColumn: Finance Lookup 023
+
+	column 'Finance Lookup 023 Group'
+		dataType: string
+		sourceColumn: Finance Lookup 023 Group
+
+	column 'Finance Lookup 023 Description'
+		dataType: string
+		sourceColumn: Finance Lookup 023 Description
+
+	column 'Finance Lookup 023 Valid From'
+		dataType: dateTime
+		sourceColumn: Finance Lookup 023 Valid From
+
+	column 'Finance Lookup 023 Code'
+		dataType: string
+		sourceColumn: Finance Lookup 023 Code
+
+	partition 'Finance Lookup 023' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Finance Lookup 023 Key", "Finance Lookup 023", "Finance Lookup 023 Group", "Finance Lookup 023 Description", "Finance Lookup 023 Valid From", "Finance Lookup 023 Code"}, {})
+				in
+				    Source

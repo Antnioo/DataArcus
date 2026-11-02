@@ -1,0 +1,55 @@
+name: Update Power BI prices
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # every Monday 05:00 UTC (09:00 Dubai)
+  workflow_dispatch:       # "Run workflow" button for a manual check
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Check Microsoft prices
+        id: check
+        run: node scripts/update-powerbi-prices.mjs
+        continue-on-error: true
+
+      # main is protected (pull requests with passing checks only), so the bot opens a pull request and starts the
+      # checks on it itself (a pull request opened by this token starts no workflows on its own); the owner merges it
+      - name: Propose updated prices (a pull request)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet assets/data/powerbi-prices.json; then
+            echo "No changes"
+          else
+            DAY=$(date -u +%Y-%m-%d)
+            BRANCH="bot/prices-$DAY-${{ github.run_id }}"
+            git config user.name "DataArcus price bot"
+            git config user.email "actions@users.noreply.github.com"
+            git switch -c "$BRANCH"
+            git add assets/data/powerbi-prices.json
+            git commit -m "Weekly Power BI price check $DAY"
+            git push -u origin "$BRANCH"
+            gh pr create --base main --head "$BRANCH" --title "Weekly Power BI price check $DAY" \
+              --body "The weekly price check found a change in Microsoft's prices. Check the numbers in the diff, then merge."
+            gh workflow run tests.yml --ref "$BRANCH"
+            gh workflow run privacy.yml --ref "$BRANCH"
+          fi
+
+      - name: Flag problems (GitHub emails you when this fails)
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::error::The price check could not verify every number. Open this run's log, step 'Check Microsoft prices', to see what needs a look."
+          exit 1

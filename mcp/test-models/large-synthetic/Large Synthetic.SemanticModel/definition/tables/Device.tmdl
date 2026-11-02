@@ -1,0 +1,38 @@
+table Device
+
+	column 'Device Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Device Key
+
+	column Device
+		dataType: string
+		sourceColumn: Device
+
+	column 'Device Valid To'
+		dataType: dateTime
+		sourceColumn: Device Valid To
+
+	column 'Device Rank'
+		dataType: int64
+		sourceColumn: Device Rank
+
+	column 'Device Description'
+		dataType: string
+		sourceColumn: Device Description
+
+	column 'Device Code'
+		dataType: string
+		sourceColumn: Device Code
+
+	column 'Device Group'
+		dataType: string
+		sourceColumn: Device Group
+
+	partition Device = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Device Key", "Device", "Device Valid To", "Device Rank", "Device Description", "Device Code", "Device Group"}, {})
+				in
+				    Source

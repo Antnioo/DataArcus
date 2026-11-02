@@ -1,0 +1,148 @@
+table 'Machine Events'
+
+	measure 'Machine Events Total Margin' = SUM ( 'Machine Events'[Margin] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Machine Events Average Margin' = AVERAGE ( 'Machine Events'[Margin] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	measure 'Machine Events Count' = COUNTROWS ( 'Machine Events' )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Machine Events Total Margin LY' = CALCULATE ( [Machine Events Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Machine Events Total Margin YoY %' = DIVIDE ( [Machine Events Total Margin] - [Machine Events Total Margin LY], [Machine Events Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Machine Events Total Margin YTD' = TOTALYTD ( [Machine Events Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Machine Events Max Margin' = MAX ( 'Machine Events'[Margin] )
+		displayFolder: Production
+
+	measure 'Machine Events Margin Share %' = DIVIDE ( [Machine Events Total Margin], CALCULATE ( [Machine Events Total Margin], ALL ( 'Machine Events' ) ) )
+		displayFolder: Production
+
+	measure 'Machine Events Total Discount' = SUM ( 'Machine Events'[Discount] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Machine Events Average Discount' = AVERAGE ( 'Machine Events'[Discount] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	measure 'Machine Events Total Discount LY' = CALCULATE ( [Machine Events Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Machine Events Total Discount YoY %' = DIVIDE ( [Machine Events Total Discount] - [Machine Events Total Discount LY], [Machine Events Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Machine Events Total Discount YTD' = TOTALYTD ( [Machine Events Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Machine Events Max Discount' = MAX ( 'Machine Events'[Discount] )
+		displayFolder: Production
+
+	measure 'Machine Events Discount Share %' = DIVIDE ( [Machine Events Total Discount], CALCULATE ( [Machine Events Total Discount], ALL ( 'Machine Events' ) ) )
+		displayFolder: Production
+
+	column 'Machine Event Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Machine Event Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Spare Kit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Spare Kit Key
+
+	column 'Defect Type Key'
+		dataType: int64
+		sourceColumn: Defect Type Key
+
+	column 'Operator Key'
+		dataType: int64
+		sourceColumn: Operator Key
+
+	column 'Batch Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Batch Key
+
+	column 'Production Lookup 047 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 047 Key
+
+	column 'Inspection Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inspection Plan Key
+
+	column 'Production Lookup 001 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 001 Key
+
+	column Margin
+		dataType: double
+		isHidden
+		sourceColumn: Margin
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column 'Duration Minutes'
+		dataType: decimal
+		sourceColumn: Duration Minutes
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	partition 'Machine Events' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Machine Event Id", "Date", "Spare Kit Key", "Defect Type Key", "Operator Key", "Batch Key", "Production Lookup 047 Key", "Inspection Plan Key", "Production Lookup 001 Key", "Margin", "Discount", "Amount", "Quantity", "Price", "Cost", "Duration Minutes", "Net Amount", "Hours"}, {})
+				in
+				    Source

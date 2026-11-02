@@ -1,0 +1,46 @@
+table 'Legal Entity'
+
+	column 'Legal Entity Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Legal Entity Key
+
+	column 'Legal Entity'
+		dataType: string
+		sourceColumn: Legal Entity
+
+	column 'Legal Entity Region'
+		dataType: string
+		sourceColumn: Legal Entity Region
+
+	column 'Legal Entity Group'
+		dataType: string
+		sourceColumn: Legal Entity Group
+
+	column 'Legal Entity Created By'
+		dataType: string
+		sourceColumn: Legal Entity Created By
+
+	column 'Legal Entity Level'
+		dataType: int64
+		sourceColumn: Legal Entity Level
+
+	column 'Legal Entity Category'
+		dataType: string
+		sourceColumn: Legal Entity Category
+
+	column 'Legal Entity Code'
+		dataType: string
+		sourceColumn: Legal Entity Code
+
+	column 'Legal Entity Description'
+		dataType: string
+		sourceColumn: Legal Entity Description
+
+	partition 'Legal Entity' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Legal Entity Key", "Legal Entity", "Legal Entity Region", "Legal Entity Group", "Legal Entity Created By", "Legal Entity Level", "Legal Entity Category", "Legal Entity Code", "Legal Entity Description"}, {})
+				in
+				    Source

@@ -1,0 +1,134 @@
+table 'Budget Lines'
+
+	measure 'Budget Lines Total Quantity' = SUM ( 'Budget Lines'[Quantity] )
+
+	measure 'Budget Lines Average Quantity' = AVERAGE ( 'Budget Lines'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Budget Lines Count' = COUNTROWS ( 'Budget Lines' )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Budget Lines Total Quantity LY' = CALCULATE ( [Budget Lines Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+
+	measure 'Budget Lines Total Quantity YoY %' = DIVIDE ( [Budget Lines Total Quantity] - [Budget Lines Total Quantity LY], [Budget Lines Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Budget Lines Total Quantity YTD' = TOTALYTD ( [Budget Lines Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Budget Lines Max Quantity' = MAX ( 'Budget Lines'[Quantity] )
+		displayFolder: Finance
+
+	measure 'Budget Lines Quantity Share %' = DIVIDE ( [Budget Lines Total Quantity], CALCULATE ( [Budget Lines Total Quantity], ALL ( 'Budget Lines' ) ) )
+		displayFolder: Finance
+
+	measure 'Budget Lines Total Price' = SUM ( 'Budget Lines'[Price] )
+		formatString: #,0
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Budget Lines Average Price' = AVERAGE ( 'Budget Lines'[Price] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Budget Lines Total Price LY' = CALCULATE ( [Budget Lines Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Budget Lines Total Price YoY %' = DIVIDE ( [Budget Lines Total Price] - [Budget Lines Total Price LY], [Budget Lines Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	measure 'Budget Lines Total Price YTD' = TOTALYTD ( [Budget Lines Total Price], 'Calendar'[Date] )
+		displayFolder: Finance
+
+	measure 'Budget Lines Max Price' = MAX ( 'Budget Lines'[Price] )
+		displayFolder: Finance
+
+	measure 'Budget Lines Price Share %' = DIVIDE ( [Budget Lines Total Price], CALCULATE ( [Budget Lines Total Price], ALL ( 'Budget Lines' ) ) )
+		displayFolder: Finance
+
+	column 'Budget Line Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Budget Line Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Allocation Rule Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Allocation Rule Key
+
+	column 'Finance Lookup 023 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 023 Key
+
+	column 'Finance Lookup 030 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 030 Key
+
+	column 'Bank Account Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Bank Account Key
+
+	column 'Trainer Key'
+		dataType: int64
+		sourceColumn: Trainer Key
+
+	column 'Journal Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Journal Type Key
+
+	column 'Payment Term Key'
+		dataType: int64
+		sourceColumn: Payment Term Key
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	partition 'Budget Lines' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Budget Line Id", "Date", "Allocation Rule Key", "Finance Lookup 023 Key", "Finance Lookup 030 Key", "Bank Account Key", "Trainer Key", "Journal Type Key", "Payment Term Key", "Quantity", "Price", "Units", "Cost", "Duration Minutes", "Tax Amount"}, {})
+				in
+				    Source

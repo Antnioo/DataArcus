@@ -1,0 +1,46 @@
+table 'Ticket Category'
+
+	column 'Ticket Category Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Category Key
+
+	column 'Ticket Category'
+		dataType: string
+		sourceColumn: Ticket Category
+
+	column 'Ticket Category Valid To'
+		dataType: dateTime
+		sourceColumn: Ticket Category Valid To
+
+	column 'Ticket Category Rank'
+		dataType: int64
+		sourceColumn: Ticket Category Rank
+
+	column 'Ticket Category Group'
+		dataType: string
+		sourceColumn: Ticket Category Group
+
+	column 'Ticket Category Status'
+		dataType: string
+		sourceColumn: Ticket Category Status
+
+	column 'Ticket Category Sort Order'
+		dataType: int64
+		sourceColumn: Ticket Category Sort Order
+
+	column 'Ticket Category Code'
+		dataType: string
+		sourceColumn: Ticket Category Code
+
+	column 'Ticket Category Description'
+		dataType: string
+		sourceColumn: Ticket Category Description
+
+	partition 'Ticket Category' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Ticket Category Key", "Ticket Category", "Ticket Category Valid To", "Ticket Category Rank", "Ticket Category Group", "Ticket Category Status", "Ticket Category Sort Order", "Ticket Category Code", "Ticket Category Description"}, {})
+				in
+				    Source

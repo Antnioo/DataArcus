@@ -1,0 +1,721 @@
+/*
+===================================================================
+* Premium DataArcus JavaScript
+*
+* TABLE OF CONTENTS
+* ===================================================================
+*
+* 1. Initialization & Core Setup
+* - Particle Background
+* - Animate on Scroll (AOS)
+* - Update Footer Year
+*
+* 2. Navigation & Scrolling
+* - Enhanced Navbar Scroll Effect
+* - On-Page Smooth Scrolling
+* - Cross-Page Anchor Link Correction
+*
+* 3. Dynamic Animations & Effects
+* - Counter Animation for Stats
+* - Intersection Observer for the counters
+* - Dynamic Gradient for CTA
+*
+* 4. Component-Specific Interactions
+* - Close the phone menu on an outside click
+* - Button Ripple
+*
+* 5. Forms
+* - Contact Form Handler (messages in English and Arabic)
+* - Enhanced Form Validation UX
+*
+* 6. Utility & Finalization
+* - Keyboard Navigation Enhancement
+* - Blog search and filters
+*
+* 7. Analytics Events (GA4 + Clarity)
+* - Leads, CTA clicks, contact & outbound links
+* - Dashboard engagement, article reads, language, blog search
+*
+* ===================================================================
+*/
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  /**
+   * 1. Initialization & Core Setup
+   * Handles the initial setup of the page, including the loading screen,
+   * background particles, AOS library, and dynamic footer year.
+   */
+
+  // Respect the OS-level "reduce motion" setting: skip purely decorative
+  // JS-driven animation (particles, AOS) for anyone who has it on.
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Read the viewport width once, up front, before any DOM writes below.
+  // Reading window.innerWidth after a DOM mutation forces the browser to
+  // run a synchronous layout recalculation just to answer the query, so
+  // caching it here (before the particle/AOS setup that
+  // follows) avoids that forced reflow.
+  const isDesktopViewport = window.innerWidth > 767;
+
+  // Generate interactive background particles (desktop only, motion allowed).
+  // CSS already hides these with display:none on mobile, but skip creating
+  // the 50 DOM nodes in the first place rather than just hiding them.
+  const interactiveBg = document.getElementById('interactiveBg');
+  if (interactiveBg && isDesktopViewport && !prefersReducedMotion) {
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 20}s`;
+      particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+      interactiveBg.appendChild(particle);
+    }
+  }
+
+  // Initialize Animate on Scroll (AOS) library only on desktop.
+  // If the library did not load (blocked or offline), show the content instead of
+  // leaving it hidden, and carry on with the rest of this file.
+  if (window.AOS) {
+    if (isDesktopViewport) {
+      AOS.init({
+        once: true,
+        duration: prefersReducedMotion ? 0 : 800,
+        easing: 'ease-out-cubic',
+        disable: prefersReducedMotion
+      });
+      // AOS measures where each element sits once. When the page changes height (a filter or the search hides
+      // cards, a section opens, a form shows its result), it measures again, so an element it has not revealed yet
+      // never stays invisible in view (the owner, 14 Oct 2026: the blog's filters showed an empty page).
+      if ('ResizeObserver' in window) {
+        let refresh;
+        new ResizeObserver(() => { clearTimeout(refresh); refresh = setTimeout(() => AOS.refresh(), 100); }).observe(document.body);
+      }
+    }
+  } else {
+    document.querySelectorAll('[data-aos]').forEach((el) => el.removeAttribute('data-aos'));
+  }
+
+  // Update year in footer
+  const yearElement = document.getElementById('year');
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
+
+
+/**
+   * 2. Navigation & Scrolling
+   * ==================================================================
+   * Scrolling is native (CSS scroll-padding-top); this section only measures
+   * the navbar and pinned bars into --nav-h and --pin-h
+   * ==================================================================
+   */
+
+  // Simple, reliable navbar scroll effect
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    };
+    
+    handleScroll(); // Check on initial load
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
+  // Remove focus from navbar-toggler (hamburger icon) after click
+  const navbarToggler = document.querySelector('.navbar-toggler');
+  if (navbarToggler) {
+    navbarToggler.addEventListener('click', () => {
+      // Use a brief timeout to ensure the blur happens after other click events
+      setTimeout(() => {
+        navbarToggler.blur();
+      }, 0);
+    });
+  }
+
+  // Top offset: measure what covers the top of the screen and publish it as CSS
+  // variables (see :root in style.css). In-page links then scroll natively:
+  // the browser's scroll-padding-top keeps targets below the navbar and pinned bars.
+  const root = document.documentElement;
+  const measureTop = () => {
+    if (navbar) {
+      let h = navbar.offsetHeight;
+      // on phones an open menu makes the navbar taller; only the bar itself counts
+      const menu = navbar.querySelector('.navbar-collapse');
+      if (menu && window.innerWidth < 992 && menu.offsetHeight) h -= menu.offsetHeight;
+      root.style.setProperty('--nav-h', h + 'px');
+    }
+    const pins = [...document.querySelectorAll('[data-pin]')].reduce((a, el) => a + el.offsetHeight, 0);
+    root.style.setProperty('--pin-h', pins + 'px');
+  };
+  measureTop();
+  window.addEventListener('resize', measureTop);
+  window.addEventListener('load', measureTop);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(measureTop);
+    document.querySelectorAll('[data-pin]').forEach((el) => ro.observe(el));
+  }
+
+  // Close the phone menu after tapping an in-page link
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('a[href^="#"]')) return;
+    const navmenu = document.querySelector('#navmenu');
+    if (navmenu && navmenu.classList.contains('show') && window.bootstrap) bootstrap.Collapse.getOrCreateInstance(navmenu, { toggle: false }).hide();
+  });
+
+  // Arriving with #section in the address: images and translations can still move the
+  // target after the browser's jump, so keep it in place until the page settles
+  // (at most 2.5 s, and never after the visitor scrolls themselves). Then smooth scrolling starts.
+  const target = window.location.hash && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+  if (target) {
+    let done = false;
+    const land = () => { if (!done) target.scrollIntoView({ behavior: 'instant', block: 'start' }); };
+    const stop = () => { if (done) return; done = true; ro && ro.disconnect(); root.classList.add('smooth-scroll'); };
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(land) : null;
+    if (ro) ro.observe(document.body);
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((ev) => window.addEventListener(ev, stop, { once: true, passive: true }));
+    window.addEventListener('load', () => { land(); setTimeout(() => { land(); stop(); }, 2500); });
+    land();
+  } else {
+    root.classList.add('smooth-scroll');
+  }
+
+
+  /**
+   * 3. Dynamic Animations & Effects
+   * Controls animations that respond to user interaction or visibility,
+   * such as counters and element fading.
+   */
+
+  // Animate numbers in the stats section when they become visible
+  // Falls back to any [data-stats] container on pages without an #about section (e.g. showcase pages).
+  const statsSection = document.querySelector('#about') || document.querySelector('[data-stats]');
+  if (statsSection) {
+    // Duration scales to the number's magnitude: big numbers (e.g. 113,000) get a short,
+    // rapid climb; small numbers (e.g. 15) get a longer, more deliberate one. Tuned on a
+    // log scale so the difference is visible across the 1-100,000+ range used on the site.
+    const MIN_DURATION = 700;   // big numbers: fast/rapid finish
+    const MAX_DURATION = 2200;  // small numbers: slow, deliberate finish
+    const durationFor = (target) => {
+      const magnitude = Math.max(Math.abs(target), 1);
+      const scale = Math.min(Math.log10(magnitude) / 4, 1); // 1 -> 0, ~10,000+ -> 1
+      return MAX_DURATION - (MAX_DURATION - MIN_DURATION) * scale;
+    };
+
+    const animateCounter = (counter) => {
+      {
+        const target = parseFloat(counter.getAttribute('data-count'));
+        const suffix = counter.getAttribute('data-suffix') || '';
+        const duration = durationFor(target);
+        const isDecimal = target.toString().includes('.');
+        let startTime = null;
+
+        // Timestamp-based (not frame-count-based): the animation takes the
+        // same real-world duration regardless of the display's refresh rate,
+        // instead of finishing early on 120Hz/144Hz screens.
+        const updateCounter = (timestamp) => {
+          if (startTime === null) startTime = timestamp;
+          const progress = Math.min((timestamp - startTime) / duration, 1);
+          const current = target * progress;
+
+          if (progress >= 1) {
+            counter.textContent = target + suffix;
+          } else {
+            counter.textContent = isDecimal ? current.toFixed(1) : Math.floor(current);
+            requestAnimationFrame(updateCounter);
+          }
+        };
+        requestAnimationFrame(updateCounter);
+      }
+    };
+
+    // Each number starts when it comes into view. Watching the whole section instead never fired on short
+    // screens (a phone held sideways), where a tall section can never be 20% visible at once. 0.9, not 1: layout
+    // heights are fractional (a 25.6px line), so a number scrolled to the screen edge can stay at 0.99 visible.
+    const statsObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.9 });
+
+    // The HTML holds the final numbers (what search engines, link previews and a browser without JavaScript show);
+    // with the script running, each starts at 0 and counts up when it comes into view.
+    statsSection.querySelectorAll('[data-count]').forEach((counter) => { counter.textContent = '0'; statsObserver.observe(counter); });
+  }
+  
+  // Scroll-in animations come from AOS only (data-aos attributes, section 1)
+
+
+
+  /**
+   * 4. Component-Specific Interactions
+   * Manages hover and interaction effects for various components like cards and buttons.
+   */
+  
+  // Close mobile menu when clicking outside of the navbar
+  document.addEventListener('click', (event) => {
+    const navmenu = document.querySelector('#navmenu');
+    if (!navmenu) return; // Exit if the menu element doesn't exist
+
+    const isMenuOpen = navmenu.classList.contains('show');
+    const isClickInsideNavbar = event.target.closest('.navbar');
+
+    // If the menu is open and the click was not inside the navbar, hide the menu
+    if (isMenuOpen && !isClickInsideNavbar) {
+      const bsCollapse = new bootstrap.Collapse(navmenu, { toggle: false });
+      bsCollapse.hide();
+    }
+  });
+
+  // Add a ripple effect to all buttons on click
+  document.querySelectorAll('.btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple');
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+      ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  });
+
+
+  /**
+   * 5. Forms
+   * Handles submission and validation for all forms on the site.
+   */
+
+  // Status messages follow the page language (keys in translations/common.js)
+  const formMsg = (key) => {
+    const all = window.commonTranslations || {};
+    const t = (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).formMsg || {};
+    return t[key] || ((all.en || {}).formMsg || {})[key] || '';
+  };
+
+  // Generic form submission handler for Web3Forms
+  const handleFormSubmit = (form, resultContainer) => {
+    if (!form || !resultContainer) return;
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const object = Object.fromEntries(formData);
+      const json = JSON.stringify(object);
+      const formButton = form.querySelector('button[type="submit"]');
+      const originalButtonHtml = formButton.innerHTML;
+
+      resultContainer.innerHTML = `<div class="alert alert-info mt-3">${formMsg('wait')}</div>`;
+      resultContainer.style.display = 'block';
+      formButton.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>${formMsg('sending')}`;
+      formButton.disabled = true;
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: json
+      })
+      .then((response) => {
+        const ok = response.status === 200;
+        if (ok) {
+          // Tell the analytics layer (section 7) that a lead came in
+          document.dispatchEvent(new CustomEvent('dataarcus:lead', { detail: { formId: form.id } }));
+          // Clear the form only after a successful send, so a failed send keeps what the visitor wrote
+          form.reset();
+        }
+        resultContainer.innerHTML = `<div class="alert ${ok ? 'alert-success' : 'alert-danger'} mt-3">${formMsg(ok ? 'success' : 'error')}</div>`;
+      })
+      .catch(error => {
+        console.error(error);
+        resultContainer.innerHTML = `<div class="alert alert-danger mt-3">${formMsg('error')}</div>`;
+      })
+      .finally(() => {
+        formButton.innerHTML = originalButtonHtml;
+        formButton.disabled = false;
+        setTimeout(() => resultContainer.style.display = 'none', 6000);
+      });
+    });
+
+    // NEW: Add event listeners to inputs to clear the result message on new input
+    const formInputs = form.querySelectorAll('input, textarea, select');
+    formInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        if (resultContainer.style.display !== 'none') {
+          resultContainer.style.display = 'none';
+          resultContainer.innerHTML = '';
+        }
+      });
+    });
+  };
+
+  // Initialize form handlers
+  handleFormSubmit(document.getElementById('contact-form'), document.getElementById('form-result'));
+  handleFormSubmit(document.getElementById('beta-form'), document.getElementById('beta-form-result'));
+  
+  // Add focus/blur and validation effects to form inputs
+  document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', () => input.parentElement.classList.add('focused'));
+    input.addEventListener('blur', () => {
+      if (!input.value) input.parentElement.classList.remove('focused');
+    });
+    input.addEventListener('input', () => {
+      const isValid = input.checkValidity();
+      input.classList.toggle('is-valid', isValid && input.value);
+      input.classList.toggle('is-invalid', !isValid && input.value);
+    });
+  });
+
+
+  /**
+   * 6. Utility & Finalization
+   * Keyboard shortcuts and the blog search.
+   */
+
+  // Enhance keyboard navigation (e.g., closing mobile menu with ESC)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const navmenu = document.querySelector('#navmenu.show');
+      if (navmenu) {
+        new bootstrap.Collapse(navmenu, { toggle: false }).hide();
+      }
+    }
+  });
+
+  // Blog page functionality
+  const blogSearch = document.getElementById('blogSearch');
+  const filterButtons = document.querySelectorAll('[data-filter]');
+  const blogCards = document.querySelectorAll('[data-category]');
+
+  if (blogSearch && filterButtons.length > 0) {
+    // Applies the search term AND the active category filter together, so
+    // neither control silently undoes the other (e.g. searching, then
+    // clicking a filter, no longer wipes out the search results).
+    const applyBlogFilters = () => {
+      const searchTerm = blogSearch.value.toLowerCase();
+      const activeButton = document.querySelector('[data-filter].active');
+      const activeFilter = activeButton ? activeButton.getAttribute('data-filter') : 'all';
+
+      blogCards.forEach(card => {
+        const categories = card.getAttribute('data-category');
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        // the excerpt paragraph, not the first .text-white-50 (that is the date line, so every month name matched)
+        const excerpt = (card.querySelector('p') || { textContent: '' }).textContent.toLowerCase();
+        // the card's topic label (searching "dax" or "ramadan" finds its cards)
+        const badge = (card.querySelector('.topic-badge') || { textContent: '' }).textContent.toLowerCase();
+
+        const matchesFilter = activeFilter === 'all' || categories.includes(activeFilter);
+        const matchesSearch = !searchTerm ||
+                            title.includes(searchTerm) ||
+                            excerpt.includes(searchTerm) ||
+                            badge.includes(searchTerm);
+
+        card.style.display = (matchesFilter && matchesSearch) ? 'block' : 'none';
+      });
+
+      const visibleCards = Array.from(blogCards).filter(card =>
+        card.style.display !== 'none');
+      document.getElementById('noResults').style.display =
+        visibleCards.length === 0 ? 'block' : 'none';
+    };
+
+    // Search functionality
+    let searchTimeout;
+    blogSearch.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        applyBlogFilters();
+      }, 300);
+    });
+
+    // Filter functionality
+    filterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Update active button
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+
+        applyBlogFilters();
+      });
+    });
+  }
+
+
+});
+
+
+/**
+ * 7. Analytics Events (GA4 + Clarity)
+ * ==================================================================
+ * Sends named events so GA4 shows what visitors DO, not just page views.
+ * Everything is guarded: if an ad blocker removes gtag or Clarity,
+ * nothing breaks. Event names follow GA4 conventions where one exists.
+ * Mark "generate_lead" as a Key Event in GA4 (Admin > Events).
+ * ==================================================================
+ */
+(() => {
+  // (an Arabic copy, /ar/..., is the same page type as its English page; page_location tells them apart)
+  const page = location.pathname.replace(/^\/ar(?=\/)/, '').replace(/\/index\.html$/, '/') || '/';
+  const pageType = page.includes('/articles/') ? 'article'
+    : page.includes('/dashboards/') ? 'dashboard'
+    : page.includes('/tools/') ? 'tool'
+    : page.replace(/^\//, '').replace('.html', '') || 'home';
+
+  // Never name a parameter source, medium, campaign, term or content: GA4 reads those as the visit's traffic source
+  // and overwrites where the visitor came from (R-003). scripts/test-analytics-events.mjs checks every call.
+  const track = (name, params = {}) => {
+    const payload = { page_type: pageType, ...params };
+    try { if (typeof window.gtag === 'function') window.gtag('event', name, payload); } catch (e) { /* ignore */ }
+    try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (e) { /* ignore */ }
+  };
+  window.dataArcusTrack = track; // lets tool pages send their own events
+  // Typed text that looks like an email address or a phone number never reaches GA4 (no personal data in analytics)
+  // AUD-031 (round 20): 7 or more digits in all is a phone or an ID (a Gulf mobile is 8 digits, "5512 3456"), unless
+  // every number in the term is a year ("2024 2025"); an "@" is an e-mail; anything else is cut to 50 characters.
+  // Round 22 (the code review's i): the years a search names (2015 to 2035) are set aside, then 7 or more digits are
+  // redacted: "2024 2025 top 10" is kept, "2012 1995" (as likely a phone number) is not.
+  // Round 22b (the review of round 22, item 1: "050 2024 2025" and "+971 50 2030 2015" got through, their groups read as
+  // years; the second review, items 1, 6, 7: no regex lookbehind, which Safari before 16.4 cannot parse and so drops the
+  // whole file; commas, underscores or one letter between numbers join them too; order does not matter). The numbers of
+  // a term are read in runs: numbers joined by anything but a word of two or more letters ("050,2024,2025", "050x2024").
+  // A run counts the digits of its numbers that are not years (2015 to 2035), or all its digits when those are 4 or more
+  // ("5520 2025") or the run starts with + or 0 ("050 2025"). 7 or more counted digits in a run, or in the whole term,
+  // are redacted. So "2024 2025 top 10", "dp-600 2025" and "fy2024 vs fy2025" are kept. The third review (items 5, 6): a
+  // number of 3 or more digits beside two or more years counts whole ("971 2030 2015"), and Arabic-Indic and Eastern
+  // Arabic digits are read as digits ("٠٥٠١٢٣٤٥٦٧"); a kept term is sent as typed.
+  // The reviewer's final items 1 to 3: the term is read in its NFKC form (fullwidth digits and at-signs as ASCII), and
+  // any other script's digit counts as a non-year digit; an exam or product code ("pl-300", "dp-600") is no part of a run;
+  // a number of 1 or 2 digits right after a word ("top 10") stands alone; a run of two or more years with 2 or more
+  // other digits counts whole ("50 2025 2030", "55 2024 2025 1").
+  const safeTerm = (q) => { const d = q.normalize('NFKC').replace(/[\u0660-\u0669]/g, (x) => x.charCodeAt(0) - 0x660).replace(/[\u06f0-\u06f9]/g, (x) => x.charCodeAt(0) - 0x6f0).replace(/\p{Nd}/gu, (x) => (/[0-9]/.test(x) ? x : '9')); if (d.includes('@')) return '(redacted)'; const Y = /^20(1[5-9]|2\d|3[0-5])$/, p = d.split(/(\d+)/), runs = []; let run = null, sum = 0; for (let i = 1; i < p.length; i += 2) { const gap = p[i - 1]; if (/\p{L}-$/u.test(gap)) { run = null; continue; } const lone = p[i].length <= 2 && /\p{L}\s+$/u.test(gap); if (!run || run.lone || lone || (gap.match(/\p{L}/gu) || []).length > 1) runs.push(run = { pre: /\+\s*$/.test(gap), g: [], lone }); run.g.push(p[i]); } for (const r of runs) { const all = r.g.join('').length, others = r.g.filter((x) => !Y.test(x)), other = others.join('').length, c = r.pre || r.g[0][0] === '0' || other >= 4 || (r.g.length - others.length >= 2 && other >= 2) ? all : other; if (c >= 7) return '(redacted)'; sum += c; } return sum >= 7 ? '(redacted)' : q.slice(0, 50); };
+
+  const once = new Set();
+  const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
+
+  // --- AI assistants (22 Oct 2026, the owner: "making sure AI refers us"): a visit an assistant sent, by its referrer or
+  //     the utm_source it adds, is named once, by the assistant only: a Clarity tag (each recording then says who sent
+  //     the visitor) and the GA4 event ai_referral with the landing page's path. Never the referrer's address: a chat
+  //     link can carry a conversation id. Consent works as for every other event (track and Clarity's own queue).
+  const aiSourceOf = (ref, search) => { const hosts = [['chatgpt', /(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/], ['perplexity', /(^|\.)perplexity\.ai$/], ['claude', /(^|\.)claude\.ai$/], ['gemini', /(^|\.)(gemini|bard)\.google\.com$/], ['copilot', /(^|\.)(copilot\.microsoft\.com|copilot\.cloud\.microsoft|edgeservices\.bing\.com)$/], ['you', /(^|\.)you\.com$/], ['phind', /(^|\.)phind\.com$/], ['poe', /(^|\.)poe\.com$/], ['meta', /(^|\.)meta\.ai$/], ['deepseek', /(^|\.)deepseek\.com$/], ['grok', /(^|\.)(grok\.com|x\.ai)$/], ['mistral', /(^|\.)mistral\.ai$/], ['kagi', /(^|\.)kagi\.com$/]]; const byHost = (h) => { const m = hosts.find(([, re]) => re.test(String(h || '').toLowerCase())); return m ? m[0] : null; }; let host = ''; try { host = ref ? new URL(ref).hostname : ''; } catch (e) { host = ''; } const utm = (new URLSearchParams(search || '').get('utm_source') || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0]; return byHost(host) || byHost(utm) || (hosts.some(([n]) => n === utm) ? utm : null); };
+  const aiSource = aiSourceOf(document.referrer, location.search);
+  if (aiSource && !(document.referrer && new URL(document.referrer, location.href).hostname === location.hostname)) {
+    try { if (typeof window.clarity === 'function') { window.clarity('set', 'ai_source', aiSource); window.clarity('set', 'ai_landing', location.pathname.slice(0, 100)); } } catch (e) { /* ignore */ }
+    trackOnce('ai_referral', 'ai_referral', { ai_source: aiSource, landing_path: location.pathname.slice(0, 100) });
+  }
+
+  // --- Leads: fired by the form handler in section 5 after a successful send
+  // (the beta page's request form is its own event, beta_request, so the home form's generate_lead keeps its meaning)
+  document.addEventListener('dataarcus:lead', (e) => {
+    const formId = (e.detail && e.detail.formId) || 'unknown';
+    if (formId === 'beta-form') track('beta_request', { form_id: formId });
+    else track('generate_lead', { form_id: formId });
+  });
+
+  // --- Form funnel: first interaction with a form (started but maybe not sent)
+  document.querySelectorAll('form').forEach((form) => {
+    form.addEventListener('focusin', () => trackOnce('form_start:' + form.id, 'form_start', { form_id: form.id || 'form' }), { once: true });
+  });
+
+  // --- Clicks: CTAs, email/phone/WhatsApp, outbound links
+  const RELEASE_LINK = /^https:\/\/github\.com\/Antnioo\/dataarcus-releases\/releases\b/i;
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href') || '';
+    const text = (a.textContent || a.getAttribute('aria-label') || '').trim().slice(0, 60);
+
+    if (/^mailto:/i.test(href)) return track('contact_click', { method: 'email', link_text: text });
+    if (/^tel:/i.test(href)) return track('contact_click', { method: 'phone', link_text: text });
+    if (/wa\.me|whatsapp\.com/i.test(href)) return track('contact_click', { method: 'whatsapp', link_text: text });
+
+    // a DataArcus release (the MCP page's "Download 0.3.0"): its own event, so downloads from the site are counted by
+    // name and can be a GA4 key event (22 Oct 2026); the tag only, never the file's address
+    if (RELEASE_LINK.test(href)) {
+      return track('mcp_download_click', { release_tag: (/\/tag\/(v[\w.-]+)/.exec(href) || [])[1] || 'latest', link_text: text });
+    }
+    if (/#contact\b/.test(href) || a.classList.contains('btn-accent')) {
+      return track('cta_click', { cta_text: text, cta_target: href });
+    }
+
+    // (Y-02, an outside review, the owner's yes, 8 Oct 2026: link_url was the whole address, its query string, fragment
+    // and any user:password part with it; now the host without www. and the path only)
+    const outboundUrl = (url) => (url.hostname.replace(/^www\./, '') + url.pathname).slice(0, 100);
+    try {
+      const url = new URL(href, location.href);
+      if (url.hostname && url.hostname !== location.hostname && /^https?:$/.test(url.protocol)) {
+        track('outbound_click', { link_domain: url.hostname.replace(/^www\./, ''), link_url: outboundUrl(url), link_text: text });
+      }
+    } catch (err) { /* ignore bad URLs */ }
+  }, { capture: true });
+
+  // --- Showcases: the live Power BI report (about 6 MB) loads when the visitor clicks its preview (audit AUD-020);
+  //     the iframe gets the preview's alt text as its title and takes the focus.
+  document.querySelectorAll('[data-pbi-src]').forEach((f) => {
+    const b = f.querySelector('button'); if (!b) return;
+    b.addEventListener('click', () => {
+      const img = f.querySelector('img'), frame = document.createElement('iframe');
+      frame.src = f.dataset.pbiSrc; frame.title = (img && img.alt) || 'Power BI report';
+      frame.setAttribute('allowfullscreen', 'true'); frame.setAttribute('frameborder', '0');
+      f.replaceChildren(frame); frame.focus();
+      trackOnce('dash_live', 'dashboard_live_load', { dashboard: document.title.replace(/\s*-\s*DataArcus\s*$/, '') });
+    });
+  });
+
+  // --- Dashboards: a click into the Power BI iframe blurs the window.
+  //     Page loads alone don't count; this means someone actually used it.
+  const pbiFrames = document.querySelectorAll('iframe[src*="powerbi.com"], [data-pbi-src]');
+  if (pbiFrames.length) {
+    const title = document.title.replace(/\s*-\s*DataArcus\s*$/, '');
+    trackOnce('dash_view', 'dashboard_view', { dashboard: title });
+    window.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+          trackOnce('dash_engage', 'dashboard_engage', { dashboard: title });
+        }
+      }, 0);
+    });
+  }
+
+  // --- Articles: "read" = 75% scrolled AND 30 seconds on the page
+  if (pageType === 'article') {
+    const article = document.title.replace(/\s*-\s*DataArcus\s*$/, '');
+    let deepScroll = false, longEnough = false;
+    const check = () => { if (deepScroll && longEnough) trackOnce('read', 'article_read', { article }); };
+    setTimeout(() => { longEnough = true; check(); }, 30000);
+    const onScroll = () => {
+      const h = document.documentElement;
+      const pct = (h.scrollTop + window.innerHeight) / h.scrollHeight;
+      if (pct >= 0.75) { deepScroll = true; check(); window.removeEventListener('scroll', onScroll); }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // --- Language switch: watch the <html lang> attribute the language manager sets
+  let lastLang = document.documentElement.lang;
+  new MutationObserver(() => {
+    const lang = document.documentElement.lang;
+    if (lang && lang !== lastLang) { lastLang = lang; track('language_switch', { language: lang }); }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+  // --- Blog: what people search for and which filters they use
+  const blogSearch = document.getElementById('blogSearch');
+  if (blogSearch) {
+    let t;
+    blogSearch.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => { const q = blogSearch.value.trim(); if (q.length >= 3) track('search', { search_term: safeTerm(q) }); }, 1500);
+    });
+  }
+  document.querySelectorAll('[data-filter]').forEach((btn) => {
+    btn.addEventListener('click', () => track('blog_filter', { filter: btn.getAttribute('data-filter') }));
+  });
+})();
+
+
+/**
+ * 8. WhatsApp Button
+ * ==================================================================
+ * A small floating chat button on every page. The pre-filled message
+ * follows the page language. Clicks are counted by section 7 as
+ * contact_click (method: whatsapp).
+ * ==================================================================
+ */
+(() => {
+  const NUMBER = '971506583577';
+  const a = document.createElement('a');
+  a.className = 'wa-float';
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.innerHTML = '<i class="bi bi-whatsapp" aria-hidden="true"></i>';
+  const texts = () => {
+    const all = window.commonTranslations || {};
+    const t = (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).wa || {};
+    a.href = 'https://wa.me/' + NUMBER + (t.message ? '?text=' + encodeURIComponent(t.message) : '');
+    a.setAttribute('aria-label', t.label || 'WhatsApp');
+    a.title = t.label || 'WhatsApp';
+  };
+  texts();
+  // inside a landmark (an aside), so screen-reader users find it with the page's regions
+  const box = document.createElement('aside'); box.setAttribute('aria-label', 'WhatsApp'); box.appendChild(a);
+  document.body.appendChild(box);
+  new MutationObserver(texts).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+})();
+
+
+/**
+ * 9. Cookie Banner
+ * ==================================================================
+ * Works with the consent loader in each page's <head> (window.daConsent).
+ * Shown automatically only to visitors in Europe (by time zone).
+ * Accept loads Google Analytics and Clarity; Reject stops them and clears
+ * their cookies. The choice is remembered; the privacy page can reopen it.
+ * ==================================================================
+ */
+(() => {
+  const C = window.daConsent;
+  if (!C) return;
+  const t = () => { const all = window.commonTranslations || {}; return (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).consent || {}; };
+  const privacyLink = document.querySelector('[data-i18n="footer.links.privacy"]');
+  const privacyHref = privacyLink ? privacyLink.getAttribute('href') : '/privacy.html';
+  let bar = null;
+  // An explicit Accept tells Clarity, which needs the signal for visitors in the EEA, UK and Switzerland to follow a visit
+  // across pages. Ads stay denied: the site runs no Microsoft ads. Visitors who never saw the banner send nothing (as before).
+  const clarityGranted = () => { try { if (typeof window.clarity === 'function') window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' }); } catch (e) { /* ignore */ } };
+
+  const save = (v) => { C.choice = v; try { localStorage.setItem(C.key, v); } catch (e) { /* private mode: asks again next visit */ } };
+  const clearCookies = () => {
+    const host = location.hostname, parts = host.split('.');
+    const domains = ['', host, '.' + host, parts.length > 1 ? '.' + parts.slice(-2).join('.') : ''];
+    document.cookie.split(';').forEach((c) => {
+      const name = c.split('=')[0].trim();
+      if (!/^(_ga|_gid|_gat|_clck|_clsk|CLID|ANONCHK|MR|MUID|SM)/.test(name)) return;
+      domains.forEach((d) => { document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : ''); });
+    });
+  };
+  const fill = () => {
+    if (!bar) return;
+    const x = t();
+    bar.setAttribute('aria-label', x.label || 'Cookie choice');
+    bar.querySelector('.cc-text').innerHTML = (x.text || 'We use analytics cookies to understand how the site is used and to improve it.') +
+      ' <a href="' + privacyHref + '">' + (x.more || 'Privacy policy') + '</a>';
+    bar.querySelector('[data-cc="accept"]').textContent = x.accept || 'Accept';
+    bar.querySelector('[data-cc="reject"]').textContent = x.reject || 'Reject';
+  };
+  const hide = () => { if (bar) bar.remove(); bar = null; document.body.style.removeProperty('--cc-h'); document.body.classList.remove('cc-open'); };
+  const show = () => {
+    if (bar) return;
+    bar = document.createElement('div');
+    bar.className = 'cc-bar';
+    bar.setAttribute('role', 'region');
+    bar.innerHTML = '<p class="cc-text"></p><div class="cc-btns"><button type="button" class="btn btn-glass" data-cc="reject"></button><button type="button" class="btn btn-accent" data-cc="accept"></button></div>';
+    fill();
+    document.body.appendChild(bar);
+    document.body.classList.add('cc-open');
+    document.body.style.setProperty('--cc-h', bar.offsetHeight + 'px');   // lifts the WhatsApp button above the bar
+    bar.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-cc]'); if (!b) return;
+      if (b.dataset.cc === 'accept') { save('granted'); C.load(); clarityGranted(); }
+      else {
+        save('denied');
+        try { if (typeof window.gtag === 'function') window.gtag('consent', 'update', { analytics_storage: 'denied' }); } catch (err) { /* ignore */ }
+        try { if (typeof window.clarity === 'function') window.clarity('consent', false); } catch (err) { /* ignore */ }
+        clearCookies();
+      }
+      hide();
+    });
+  };
+  C.open = show;   // "Cookie settings" on the privacy page
+  if (C.choice === 'granted') clarityGranted();   // a visitor who accepted on an earlier page
+  if (C.eu && C.choice !== 'granted' && C.choice !== 'denied') show();
+  document.querySelectorAll('[data-cc-open]').forEach((b) => b.addEventListener('click', show));
+  new MutationObserver(fill).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+})();

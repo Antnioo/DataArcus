@@ -1,0 +1,54 @@
+table 'Bank Account'
+
+	column 'Bank Account Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Bank Account Key
+
+	column 'Bank Account'
+		dataType: string
+		sourceColumn: Bank Account
+
+	column 'Bank Account Status'
+		dataType: string
+		sourceColumn: Bank Account Status
+
+	column 'Bank Account Region'
+		dataType: string
+		sourceColumn: Bank Account Region
+
+	column 'Bank Account Parent Code'
+		dataType: string
+		sourceColumn: Bank Account Parent Code
+
+	column 'Bank Account Code'
+		dataType: string
+		sourceColumn: Bank Account Code
+
+	column 'Bank Account Owner'
+		dataType: string
+		sourceColumn: Bank Account Owner
+
+	column 'Bank Account Sort Order'
+		dataType: int64
+		sourceColumn: Bank Account Sort Order
+
+	column 'Bank Account Valid From'
+		dataType: dateTime
+		sourceColumn: Bank Account Valid From
+
+	column 'Bank Account Description'
+		dataType: string
+		sourceColumn: Bank Account Description
+
+	column 'Bank Account Group'
+		dataType: string
+		sourceColumn: Bank Account Group
+
+	partition 'Bank Account' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Bank Account Key", "Bank Account", "Bank Account Status", "Bank Account Region", "Bank Account Parent Code", "Bank Account Code", "Bank Account Owner", "Bank Account Sort Order", "Bank Account Valid From", "Bank Account Description", "Bank Account Group"}, {})
+				in
+				    Source

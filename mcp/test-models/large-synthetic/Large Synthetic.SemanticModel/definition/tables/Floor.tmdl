@@ -1,0 +1,58 @@
+table Floor
+
+	column 'Floor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Floor Key
+
+	column Floor
+		dataType: string
+		sourceColumn: Floor
+
+	column 'Floor Sort Order'
+		dataType: int64
+		sourceColumn: Floor Sort Order
+
+	column 'Floor Owner'
+		dataType: string
+		sourceColumn: Floor Owner
+
+	column 'Floor Is Active'
+		dataType: boolean
+		sourceColumn: Floor Is Active
+
+	column 'Floor Parent Code'
+		dataType: string
+		sourceColumn: Floor Parent Code
+
+	column 'Floor Valid From'
+		dataType: dateTime
+		sourceColumn: Floor Valid From
+
+	column 'Floor Status'
+		dataType: string
+		sourceColumn: Floor Status
+
+	column 'Floor Type'
+		dataType: string
+		sourceColumn: Floor Type
+
+	column 'Floor Category'
+		dataType: string
+		sourceColumn: Floor Category
+
+	column 'Floor Code'
+		dataType: string
+		sourceColumn: Floor Code
+
+	column 'Floor Description'
+		dataType: string
+		sourceColumn: Floor Description
+
+	partition Floor = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Floor Key", "Floor", "Floor Sort Order", "Floor Owner", "Floor Is Active", "Floor Parent Code", "Floor Valid From", "Floor Status", "Floor Type", "Floor Category", "Floor Code", "Floor Description"}, {})
+				in
+				    Source

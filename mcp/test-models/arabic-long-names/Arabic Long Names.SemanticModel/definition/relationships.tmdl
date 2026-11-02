@@ -1,0 +1,7 @@
+relationship rel_date
+	fromColumn: 'المبيعات اليومية'.التاريخ
+	toColumn: التقويم.التاريخ
+
+relationship rel_branch
+	fromColumn: 'المبيعات اليومية'.'رمز الفرع'
+	toColumn: 'الفروع والمناطق الإدارية'.'رمز الفرع'

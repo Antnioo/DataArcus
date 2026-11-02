@@ -1,0 +1,38 @@
+table 'Production Lookup 043'
+
+	column 'Production Lookup 043 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 043 Key
+
+	column 'Production Lookup 043'
+		dataType: string
+		sourceColumn: Production Lookup 043
+
+	column 'Production Lookup 043 Valid To'
+		dataType: dateTime
+		sourceColumn: Production Lookup 043 Valid To
+
+	column 'Production Lookup 043 Category'
+		dataType: string
+		sourceColumn: Production Lookup 043 Category
+
+	column 'Production Lookup 043 Notes'
+		dataType: string
+		sourceColumn: Production Lookup 043 Notes
+
+	column 'Production Lookup 043 Long Name'
+		dataType: string
+		sourceColumn: Production Lookup 043 Long Name
+
+	column 'Production Lookup 043 Code'
+		dataType: string
+		sourceColumn: Production Lookup 043 Code
+
+	partition 'Production Lookup 043' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Production Lookup 043 Key", "Production Lookup 043", "Production Lookup 043 Valid To", "Production Lookup 043 Category", "Production Lookup 043 Notes", "Production Lookup 043 Long Name", "Production Lookup 043 Code"}, {})
+				in
+				    Source
