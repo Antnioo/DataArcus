@@ -7,6 +7,9 @@
  * Moved from theme-generator.js as it was, so both give the same result byte for byte (tests: design-engine).
  */
 (function (root) {
+  // text-measure.js: the font catalog, the measured heights and Power BI's 8-60 text sizes, one place (0.3.2 OP1; the
+  // generator pages load it before this file)
+  const TM = typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure;
   const PRESETS = {
     'DataArcus': { data: ['#00d4ff', '#6c5ce7', '#00cec9', '#fd79a8', '#0084ff', '#a29bfe', '#fdcb6e', '#40f3ff'], ui: { background: '#0a0f1c', card: '#1a1f2e', text: '#f8fafc', accent: '#00d4ff', good: '#00b894', neutral: '#fdcb6e', bad: '#e17055' } },
     'Corporate': { data: ['#1f4e79', '#2e75b6', '#f4b183', '#c55a11', '#548235', '#9dc3e6', '#a9d18e', '#7f7f7f'], ui: { background: '#f3f5f8', card: '#ffffff', text: '#1f2933', accent: '#1f4e79', good: '#2e7d32', neutral: '#f9a825', bad: '#c62828' } },
@@ -15,16 +18,17 @@
     'Midnight': { data: ['#4cc9f0', '#f72585', '#ffd166', '#4361ee', '#b5179e', '#90e0ef', '#7209b7', '#06d6a0'], ui: { background: '#0b0d17', card: '#15182a', text: '#e8eaf6', accent: '#4cc9f0', good: '#06d6a0', neutral: '#ffd166', bad: '#ef476f' } },
     'Earthy': { data: ['#6b705c', '#cb997e', '#3f4238', '#e9c46a', '#8a5a44', '#a5a58d', '#264653', '#ddbea9'], ui: { background: '#f7f4ef', card: '#ffffff', text: '#2d2a26', accent: '#6b705c', good: '#588157', neutral: '#e9c46a', bad: '#bc4749' } }
   };
-  // The fonts and chart choices the generator offers (its <select> lists; a test keeps both the same)
-  const FONTS = ['Segoe UI', 'Segoe UI Semibold', 'DIN', 'Arial', 'Calibri', 'Tahoma', 'Verdana', 'Georgia'];
+  // The fonts the generator offers (its font list is drawn from them, theme-generator.js) and its chart choices (a test
+  // keeps the page's lists the same): the fonts are text-measure.js's catalog
+  const FONTS = TM.FONTS;
   // (0.3.1 GL1) look: the cards' look, Power BI's own (auto) or glass (see GLASS below)
   const CHART_OPTIONS = { labels: ['auto', 'on', 'off'], grid: ['auto', 'dotted', 'off'], legend: ['auto', 'Top', 'TopCenter', 'Bottom', 'Right', 'off'], axis: ['auto', 'off'], table: ['auto', 'minimal', 'banded'], look: ['auto', 'glass'] };
   // The fonts text sizes were measured in, in Power BI Desktop (the header and rail heights of minOf, the table's need
   // of TABLE_NEED, the writer's text widths): Segoe UI and Tahoma only. The others are offered; a wider one (Verdana)
   // may need more room than measured until the laptop proof "A2-11" in DESKTOP-TESTS.md (0.2.9, the audit's A2-11)
-  const MEASURED_FONTS = ['Segoe UI', 'Tahoma'];
+  const MEASURED_FONTS = TM.MEASURED_FONTS;
   // Every font in the list is built into Power BI, but only these have Arabic letters
-  const AR_FONTS = ['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma'];
+  const AR_FONTS = TM.AR_FONTS;
   // The theme's name when none is given (the name box shows it to new visitors): the theme JSON and every file use it,
   // so an empty or blank name gives one name everywhere. A name with text is kept exactly as typed.
   const DEFAULT_NAME = 'My Brand Theme';
@@ -281,6 +285,9 @@
   // Page sizes: the layout is designed on a grid 720 units tall and converted to the page's own units,
   // so the table, CSV and sliders always show the numbers to type into Power BI for that page.
   const PAGES = { '1280x720': [1280, 720], '1920x1080': [1920, 1080], '960x720': [960, 720] };
+  // The page a new design gets (Power BI's own default), the one place it is set (0.3.2 OP1): the generator page, the
+  // MCP's inputs and the approval page read it. 1280 x 720 stays the page of a design saved before v3 (upgrade)
+  const DEFAULT_PAGE = '1920x1080';
   // Custom page: whole numbers, 640-3840 wide, 360-2160 tall, shaped between 4:3 and 2.4:1 so the layout grid still works
   const LIM = { w: [640, 3840], h: [360, 2160], r: [4 / 3, 2.4] };
   const within = (v, [lo, hi]) => Math.max(lo, Math.min(hi, v));
@@ -292,7 +299,7 @@
     return [w, h];
   }
   // c: the layout
-  const page = (c) => { const [w, h] = c.page === 'custom' ? fitCustom(c.pageW, c.pageH) : PAGES[c.page] || PAGES['1920x1080']; return { w, h, s: h / 720 }; };
+  const page = (c) => { const [w, h] = c.page === 'custom' ? fitCustom(c.pageW, c.pageH) : PAGES[c.page] || PAGES[DEFAULT_PAGE]; return { w, h, s: h / 720 }; };
   // the page's width on the 720-tall design grid (the page itself calls it PW)
   const pw = (c) => { const p = page(c); return Math.round(p.w / p.s); };
   const toPage = (v, c) => Math.round(v * page(c).s);
@@ -372,7 +379,7 @@
   const minOf = (k, c) => {
     if (!c || (k !== 'hh' && k !== 'fh')) return 0;
     const s = page(c).s;
-    return k === 'hh' ? Math.ceil(24 + 25 / s) : Math.ceil((16 + 4 * fs(10, c) + 20 * s / 1.5) / s);
+    return k === 'hh' ? Math.ceil(24 + 25 / s) : Math.ceil((TM.slicerH(fs(10, c)) + 20 * s / 1.5) / s);
   };
   const rangeOf = (k, PW, c) => {
     const r = k === 'fw' ? [160, Math.min(320, Math.round(PW / 4))] : RANGE[k];
@@ -552,7 +559,7 @@
   // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60 (Power BI takes half points)
   const FHD_TEXT = 1.25;
   const textScale = (h) => 1 + (h / 720 - 1) * (FHD_TEXT - 1) / (1080 / 720 - 1);
-  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * textScale(h) * 2) / 2));
+  const sizeAt = (n, h) => TM.sizeIn(Math.round(n * textScale(h) * 2) / 2);
   const fs = (n, l) => sizeAt(n, page(l).h);
   const textSizes = (d) => {
     const l = d.layout, f = (n) => fs(n, l), g = isGlass(d) ? glassLook(d) : null;
@@ -584,7 +591,7 @@
   };
   // A copy of a theme with every text size times r, in half points within 8-60 (the theme given is not changed)
   const scaleTheme = (theme, r) => {
-    const walk = (o) => (Array.isArray(o) ? o.map(walk) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, (k === 'fontSize' || k === 'textSize') && typeof v === 'number' ? Math.min(60, Math.max(8, Math.round(v * r * 2) / 2)) : walk(v)])) : o);
+    const walk = (o) => (Array.isArray(o) ? o.map(walk) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, (k === 'fontSize' || k === 'textSize') && typeof v === 'number' ? TM.sizeIn(Math.round(v * r * 2) / 2) : walk(v)])) : o);
     return walk(theme);
   };
   // Chart style: theme-wide defaults, written only to the visual types whose theme schema (2.157) has that
@@ -1256,7 +1263,7 @@
       if (typeof state.chart === 'object') Object.keys(state.chart).filter((k) => !(CHART_OPTIONS[k] || []).some((o) => o === state.chart[k])).forEach((k) => say('chart.' + k, state.chart[k], null, CHART_OPTIONS[k] ? `use one of ${CHART_OPTIONS[k].join(', ')}` : `not a chart setting; use ${Object.keys(CHART_OPTIONS).join(', ')}`));
       state.chart = Object.fromEntries(Object.keys(CHART_OPTIONS).filter((k) => CHART_OPTIONS[k].some((o) => o === state.chart[k])).map((k) => [k, state.chart[k]]));
     }
-    state.layout = Object.assign({ v: 3, page: '1920x1080', preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
+    state.layout = Object.assign({ v: 3, page: DEFAULT_PAGE, preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
     if (!LAYOUTS[state.layout.preset]) { say('layout.preset', state.layout.preset, 'exec', `use one of ${Object.keys(LAYOUTS).join(', ')}`); state.layout.preset = 'exec'; }
     // saved layout values outside the choices the page offers fall back to the defaults
     {
@@ -1266,7 +1273,7 @@
       one('kpis', [0, 1, 2, 3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
       if (!(+l.radius >= 0 && +l.radius <= 24)) { say('layout.radius', l.radius, 8, 'corners are 0 to 24'); l.radius = 8; }
       one('kpiBar', ['start', 'top', 'bottom', 'none'], 'start'); one('headLine', ['short', 'full', 'none'], 'short');
-      if (!PAGES[l.page] && l.page !== 'custom') { say('layout.page', l.page, '1920x1080', `use ${Object.keys(PAGES).join(', ')} or custom`); l.page = '1920x1080'; }
+      if (!PAGES[l.page] && l.page !== 'custom') { say('layout.page', l.page, DEFAULT_PAGE, `use ${Object.keys(PAGES).join(', ')} or custom`); l.page = DEFAULT_PAGE; }
       ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') { const d = k !== 'filters' && k !== 'transparent'; say('layout.' + k, l[k], d, 'true or false'); l[k] = d; } });
       ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) { say('layout.' + k, l[k], null, 'not a number; the default is used'); delete l[k]; } });
       // the optional choices (0.2.9, the audit's A2-7: every layout key is checked, not only the ones the page offers):
@@ -1287,7 +1294,7 @@
     .replace(/^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3])$/i, '$1_');
 
   const api = {
-    PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
+    PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, DEFAULT_PAGE, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette, CALM, rgbToLab, hexToLab, deltaE, simulateCvd, logoColours, logoTheme,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     GLASS, DEFAULT_LOOK, glassFit, GLASS_MARK, isGlassPng, withGlassPicture, isGlass, glassLook, glassTables, glassPixels, glassPng, encodePng, fs, sizeAt, FHD_TEXT, textScale, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, REFLOW_KEEP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, statusIcons, ICON_NAMES, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase

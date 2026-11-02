@@ -84,6 +84,36 @@
     for (const n of names || []) { if (!n || !t.includes(n)) continue; t = t.split(n).join(runs(n)); hit = true; }
     return hit ? wrap(ends(t)) : t;
   }
-  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames, isolateRuns, wrapped, isolateWhole };
+  // ---- (0.3.2 OP1, the owner's D-1016-01: one place for every fact) the measured heights, the text size range and the
+  // font catalog: the report writer (pbip-sizing.js, pbip-page.js), the measured rules (report-rules.js) and the design
+  // engine read them here; mcp/test-0.3.2-op1.mjs fails if one is written anywhere else ----
+  // Heights in page units (a point size takes the same page units on any page), measured in Power BI Desktop 2.157 and
+  // 2.158 (scripts/tests/DESKTOP-TESTS.md, 2026-10-01): a text box needs 10 + 1.8 x pt a line (points to pixels 4/3, a
+  // line about 1.35 of that, padding about 5 above and below); a button 6 + 1.6 x pt a line (Arabic text needs the 6: a
+  // Reset button whole from 19 at 8pt and 30 at 15pt, English from 14; the writer once used 2 + 1.6 for English page
+  // buttons, OP1 made the writer and the checker agree on the measured Arabic rule); a dropdown slicer (its title and
+  // its box) 16 + 4 x pt.
+  const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1));
+  const buttonH = (t, n) => Math.ceil(6 + 1.6 * t * (n || 1));
+  const slicerH = (t) => Math.ceil(16 + 4 * t);
+  // the other way round: the largest whole size whose one line fits a text box h high (8 at least)
+  const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
+  const TEXT_MIN = 8, TEXT_MAX = 60;
+  // Power BI rejects a whole theme when one font size is outside 8-60 (tested in Desktop): sizeIn keeps a size within it;
+  // ptIn: a whole point within it
+  const sizeIn = (t) => Math.min(TEXT_MAX, Math.max(TEXT_MIN, t));
+  const ptIn = (t) => sizeIn(Math.round(t));
+  // The fonts offered (the theme generator's list, generate_theme's choices), all built into Power BI; AR_FONTS: the
+  // ones with Arabic letters (in an Arabic report the others fall back to another font); MEASURED_FONTS: the fonts the
+  // text sizes were measured in (the widths above, the header and rail heights, the table's need): on another font a
+  // size is an estimate (a wider one, Verdana, may need more room: the laptop proof "A2-11" in DESKTOP-TESTS.md)
+  const FONTS = Object.freeze(['Segoe UI', 'Segoe UI Semibold', 'DIN', 'Arial', 'Calibri', 'Tahoma', 'Verdana', 'Georgia']);
+  const AR_FONTS = Object.freeze(['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma']);
+  const MEASURED_FONTS = Object.freeze(['Segoe UI', 'Tahoma']);
+  // a font name as a theme or a visual writes it (any case, in quotes, the first of a list); none is the theme's own
+  const MEASURED_LOWER = MEASURED_FONTS.map((m) => m.toLowerCase());
+  const measuredFont = (f) => !f || MEASURED_LOWER.includes(String(f).toLowerCase().replace(/^'|'$/g, '').split(',')[0].trim());
+  const api = { textWidth, LETTER, TAHOMA_LATIN, ARABIC, ISOLATED, isolateLatin, isolateNames, isolateRuns, wrapped, isolateWhole,
+    boxH, buttonH, slicerH, boxFit, TEXT_MIN, TEXT_MAX, sizeIn, ptIn, FONTS, AR_FONTS, MEASURED_FONTS, measuredFont };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DataArcusTextMeasure = api;
 })(typeof self !== 'undefined' ? self : this);

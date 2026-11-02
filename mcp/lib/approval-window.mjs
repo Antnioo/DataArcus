@@ -466,7 +466,7 @@ function summaryOf(kind, data) {
     const aq = (en, ar) => ({ en, ar });
     sections.push({ heading: 'Report', rows: [['Name', wName && p.name && wName !== p.name ? aq(`${wName} ("${p.name}" is already taken in that folder: the new report gets this free name)`, `«${wName}» (الاسم «${p.name}» مستخدم في هذا المجلد: يأخذ التقرير الجديد هذا الاسم المتاح)`) : nm0 == null ? nm0 : aq(String(nm0), `«${nm0}»`)],
       ['Title', p.title ? aq(String(p.title), `«${p.title}»`) : (p.name ? '(the report\'s name)' : '')], ['Language', p.lang === 'ar' ? 'Arabic (right to left)' : 'English'],
-      ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : '1920x1080')], p.customVisualsFrom != null ? ['Copy of the report', aq(String(p.customVisualsFrom), `«${p.customVisualsFrom}»`)] : null].filter((r) => r && r[1] !== undefined && r[1] !== '' && r[1] !== null).map(([k, v]) => [k, v && typeof v === 'object' ? v : val(v)]) });
+      ['Page size', p.page ? val(p.page) : L.page || (p.pages ? '' : E.DEFAULT_PAGE)], p.customVisualsFrom != null ? ['Copy of the report', aq(String(p.customVisualsFrom), `«${p.customVisualsFrom}»`)] : null].filter((r) => r && r[1] !== undefined && r[1] !== '' && r[1] !== null).map(([k, v]) => [k, v && typeof v === 'object' ? v : val(v)]) });
     // (rc.24, B-140: the page said "Column chart by" for the chart written as a bar chart) the kind each chart is written
     // as, with the reason when the writer changed it (the plan's data: kinds [{ role, from, to }], plan_layout's lint)
     const kinds = Array.isArray(d.kinds) ? d.kinds : [], changeOf = (from) => kinds.find((k) => k && k.from === from);

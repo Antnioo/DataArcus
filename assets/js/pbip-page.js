@@ -54,7 +54,7 @@
         const a0 = titleLeft ? (rtl ? title.x + title.w + gap : title.x + titleNeed + gap) : (rtl ? x0 : logo.x + logo.w + gap);
         const a1 = titleLeft ? (rtl ? logo.x - gap : x1) : (rtl ? title.x + title.w - titleNeed - gap : title.x - gap);
         const room = a1 - a0, padX = 8 * kk, gapB = Math.round(12 * kk), lineH = Math.max(2, Math.round(3 * kk));
-        const rowH = (t) => Math.ceil(6 + 1.6 * t) + (/^segoe ui/i.test(font) ? 0 : 4) + lineH;
+        const rowH = (t) => TM.buttonH(t) + (/^segoe ui/i.test(font) ? 0 : 4) + lineH;
         const lay = (t, maxRows) => {
           const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX));
           if (ws.some((w) => w > room)) return null;
@@ -660,7 +660,7 @@
         // 0.38-0.42), and needs 6 + 1.6 x pt in height: the same box
         // rule with one line; where the header is too low or too narrow for that even at 8pt, the navigator stays.
         if (rtl) {
-          const need1 = (t1) => Math.ceil(0.45 * 4 / 3 * t1 * longest + 16 * k), fits = (t1, w1) => need1(t1) <= (w1 - 40 * k) / n && Math.ceil(6 + 1.6 * t1) <= title.h;
+          const need1 = (t1) => Math.ceil(0.45 * 4 / 3 * t1 * longest + 16 * k), fits = (t1, w1) => need1(t1) <= (w1 - 40 * k) / n && buttonH(t1) <= title.h;
           let t1 = pt(title.h * 0.3);
           const w1 = Math.min(x1 - x0, n * Math.max(140 * k, need1(t1)) + 40 * k);
           while (t1 > 8 && !fits(t1, w1)) t1--;
@@ -1235,7 +1235,7 @@
       // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers the height a dropdown needs)
       const P = panel, gname = rnd(), kids = [], pad = 16 * k, gap = 10 * k, sw = P.w - 2 * pad;
       // Close is as high as a button's text needs (Arabic: 6 + 1.6 x pt), and the panel's header holds it above the slicers
-      const ch = Math.ceil(Math.max(32 * k, 6 + 1.6 * LABEL)), head = Math.max(44 * k, 12 * k + ch);
+      const ch = Math.ceil(Math.max(32 * k, buttonH(LABEL))), head = Math.max(44 * k, 12 * k + ch);
       const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
       const rw = resetW(resetText, k, Math.round(sw)), reset = resetFit(resetText, rw, k), bh = reset.h;
       // (round 12, round 9's seen-not-in-scope: on a user's own model a slicer the model has no column for is left out
