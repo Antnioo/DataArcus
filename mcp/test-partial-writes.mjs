@@ -135,12 +135,12 @@ const USED = /The plan plan-[0-9a-f]{12} is now used: part of this write is stil
   const pl = await s.call('plan_layout', { path: 'rp', layout: 'exec', name: 'B153 Report', noDataMessage: false }), id = pl.j && pl.j.plan && pl.j.plan.planId;
   await s.call('approve_plan', { planId: id });
   const before = tree(path.join(ROOT, 'rp'));
-  const x = await s.call('create_report', { path: 'rp', name: 'B153 Report', planId: id, design: pl.j && pl.j.design, noDataMessage: false });
+  const x = await s.call('create_report', { path: 'rp', planId: id });
   chk(() => x.err && /^Nothing was written: the files could not be written \(the disk is full \(ENOSPC\)\)/.test(x.t) && NOT_USED.test(x.t), () => `P2. create_report: a file cut off part-way: nothing written, the plan not used: ${short(x)}`);
   chk(() => JSON.stringify(tree(path.join(ROOT, 'rp'))) === JSON.stringify(before), () => `P2. the project folder is as it was: ${tree(path.join(ROOT, 'rp')).filter((f) => !before.includes(f))}`);
-  const y = await s.call('create_report', { path: 'rp', name: 'B153 Report', planId: id, design: pl.j && pl.j.design, noDataMessage: false });
+  const y = await s.call('create_report', { path: 'rp', planId: id });
   chk(() => !y.err && y.j.report === 'B153 Report.Report' && fs.existsSync(path.join(ROOT, 'rp/B153 Report.pbip')), () => `P2. the same plan writes the report on a retry: ${short(y)}`);
-  const z = await s.call('create_report', { path: 'rp', name: 'B153 Report', planId: id, design: pl.j && pl.j.design, noDataMessage: false });
+  const z = await s.call('create_report', { path: 'rp', planId: id });
   chk(() => z.err && /already used for create_report/.test(z.t), () => `P2. and is then used: ${short(z)}`);
   await s.close();
 }
@@ -151,11 +151,11 @@ const USED = /The plan plan-[0-9a-f]{12} is now used: part of this write is stil
   const pl = await s.call('plan_layout', { path: 'rs', layout: 'exec', name: 'B153 Stuck', noDataMessage: false }), id = pl.j && pl.j.plan && pl.j.plan.planId;
   await s.call('approve_plan', { planId: id });
   const before = tree(path.join(ROOT, 'rs'));
-  const x = await s.call('create_report', { path: 'rs', name: 'B153 Stuck', planId: id, design: pl.j && pl.j.design, noDataMessage: false });
+  const x = await s.call('create_report', { path: 'rs', planId: id });
   const added = tree(path.join(ROOT, 'rs')).filter((f) => !before.includes(f)).map((f) => 'rs/' + f.replace(/\/$/, ''));
   chk(() => x.err && /The write stopped part-way/.test(x.t) && !/Nothing was written/.test(x.t) && USED.test(x.t), () => `P3. an incomplete clean-up: said, and the plan is used: ${short(x)}`);
   chk(() => added.length > 0 && added.every((f) => x.t.includes('"' + f + '"')) && (x.t.match(/"rs\/[^"]+"/g) || []).length === added.length, () => `P3. exactly what is left on disk is named: on disk ${JSON.stringify(added)}; ${short(x)}`);
-  const y = await s.call('create_report', { path: 'rs', name: 'B153 Stuck', planId: id, design: pl.j && pl.j.design, noDataMessage: false });
+  const y = await s.call('create_report', { path: 'rs', planId: id });
   chk(() => y.err && /already used for create_report/.test(y.t), () => `P3. the same plan is refused on a retry: ${short(y)}`);
   await s.close();
 }

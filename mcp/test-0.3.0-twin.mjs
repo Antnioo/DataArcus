@@ -87,8 +87,7 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     const otherLabels = await ask('create_arabic_twin', { path: 'twin/Twin Sales.pbip', planId: pid, labels: { 'page:p1overview': 'شيء آخر' } });
     chk(() => otherLabels.err && /labels/.test(otherLabels.t) && /Nothing was written/.test(otherLabels.t) && !fs.existsSync(TWIN), () => `T2. labels other than the approved ones: refused: ${short(otherLabels)}`);
     // the twin plan allows only the twin
-    const design = (await ask('plan_layout', { layout: 'exec', lang: 'ar' })).j.design;
-    const rep = await ask('create_report', { path: 'twin', name: 'Not this', design, planId: pid, noDataMessage: false });
+    const rep = await ask('create_report', { path: 'twin', planId: pid });
     chk(() => rep.err && /twin plan/.test(rep.t), () => `T2. a twin plan allows no other writer: ${short(rep)}`);
   }
 

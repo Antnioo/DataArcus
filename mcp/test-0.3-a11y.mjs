@@ -44,7 +44,7 @@ const report = async (args, plan) => {
   const pl = await s.call('plan_layout', Object.assign({ layout: 'exec' }, plan || {}, { path: args.path, name: args.name }, args.lang ? { lang: args.lang } : {}, args.colors ? { colors: args.colors } : {}, args.focus ? { focus: args.focus } : {}));
   if (!pl.j || !pl.j.plan || !pl.j.plan.planId) return { pl, r: pl };
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  const r = await s.call('create_report', Object.assign({}, args, { planId: pl.j.plan.planId, design: pl.j.design }));
+  const r = await s.call('create_report', { path: args.path, planId: pl.j.plan.planId });
   return { pl, r };
 };
 const pagesOf = (rep) => { const dir = path.join(ROOT, rep, 'definition/pages'), order = rd(path.join(dir, 'pages.json')).pageOrder;

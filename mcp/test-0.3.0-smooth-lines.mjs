@@ -151,7 +151,7 @@ try {
   const no = await ask('create_report', Object.assign({}, base, { planId: A.id, design: A.pl.j && A.pl.j.design, smoothLines: false }));
   chk(() => no.err && /Nothing was written/.test(no.t) && /smoothLines/.test(no.t) && !fs.existsSync(path.join(ROOT, 'large', base.name + '.Report')), () => `S2: create_report with smoothLines false on a plan that pinned true is refused, nothing written: ${short(no)}`);
   // S3: the default write
-  const ok = await ask('create_report', Object.assign({}, base, { planId: A.id, design: A.pl.j && A.pl.j.design }));
+  const ok = await ask('create_report', { path: base.path, planId: A.id });
   const dir = path.join(ROOT, 'large', base.name + '.Report'), lines = writtenLines(dir);
   chk(() => !ok.err && lines.length >= 1 && lines.every((v) => same(L(v), SMOOTH)), () => `S3: the written report's line charts are smooth with markers: ${short(ok)} ${JSON.stringify(lines.map((v) => ls(v)))}`.slice(0, 900));
   if (!ok.err) await validate('default', dir, path.join('large', base.name + '.pbip'), 'en');
@@ -166,7 +166,7 @@ try {
   const b0 = Object.assign({}, base, { name: 'L1 Straight', smoothLines: false });
   const B = await planAndWrite(b0);
   chk(() => B.id && B.pl.j.plan.reportLook.smoothLines === false && /Smooth lines[\s\S]{0,200}straight[^<]*no dots/.test(B.html), () => `S4: the plan pins smoothLines false and the page says so: ${short(B.pl)}`);
-  const ok0 = await ask('create_report', Object.assign({}, b0, { planId: B.id, design: B.pl.j && B.pl.j.design }));
+  const ok0 = await ask('create_report', { path: b0.path, planId: B.id });
   const dir0 = path.join(ROOT, 'large', b0.name + '.Report'), l0 = writtenLines(dir0);
   chk(() => !ok0.err && l0.length >= 1 && l0.every((v) => same(L(v), STRAIGHT)), () => `S4b: straight lines without markers are written: ${short(ok0)} ${JSON.stringify(l0.map((v) => ls(v)))}`.slice(0, 900));
   if (!ok0.err) await validate('straight', dir0, path.join('large', b0.name + '.pbip'), 'en');

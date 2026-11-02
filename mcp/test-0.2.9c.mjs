@@ -215,7 +215,7 @@ export async function v029c({ call, check, ROOT, meta }) {
   chk(() => JSON.stringify(fs.readdirSync(path.join(ROOT, 'pl1'))) === JSON.stringify(before2), () => 'L2. the planned page is built in memory: plan_layout writes nothing');
   // the plan's lint is the lint of what create_report then writes (page 1), rule for rule
   const ap = pl.j && pl.j.plan && pl.j.plan.planId ? await ask('approve_plan', { planId: pl.j.plan.planId }) : null;
-  const cr = await ask('create_report', { path: 'pl1', name: 'Planned', design: pl.j && pl.j.design, fields: planFields, planId: pl.j && pl.j.plan && pl.j.plan.planId });
+  const cr = await ask('create_report', { path: 'pl1', planId: pl.j && pl.j.plan && pl.j.plan.planId });
   const cl = !cr.err ? await ask('check_report', { path: `pl1/${cr.j.report}`, checks: ['lint'] }) : cr;
   // (the cross-review's R3, 11 Oct: the plan's lint filters nothing out, so the "no data" cards' note is compared too)
   const rules = (fs2) => fs2.filter((f) => f.page.n === 1).map((f) => `${f.rule}|${f.visual}`).sort();

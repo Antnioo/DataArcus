@@ -40,7 +40,7 @@ const run = async (s, args) => {
   const pl = await s.call('plan_layout', Object.assign({ path: MODEL, redesignFrom: FROM }, args));
   if (pl.err || !pl.j.plan) return { pl, w: null };
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  return { pl, w: await s.call('create_report', Object.assign({ path: MODEL, redesignFrom: FROM, planId: pl.j.plan.planId }, args)) };
+  return { pl, w: await s.call('create_report', { path: MODEL, planId: pl.j.plan.planId }) };
 };
 let lib = null, T = null;
 try { lib = await import('./lib/redesign.mjs'); T = await import('./lib/text-format.mjs'); } catch (e) { lib = null; }

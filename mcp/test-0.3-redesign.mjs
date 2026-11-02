@@ -115,7 +115,7 @@ async function rest(pl, R, pages) {
 
   // ---------- C3-C5: the write ----------
   await call(s, 'approve_plan', { planId: pl.j.plan.planId });
-  const out = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: pl.j.plan.planId });
+  const out = await call(s, 'create_report', { path: MODEL, planId: pl.j.plan.planId });
   chk(() => !out.err && out.j.written === true && /Twin Sales redesigned\.Report$/.test(out.j.report), () => `C3. create_report writes the copy: ${short(out)}`);
   chk(() => print(ORIG) === before && fs.readFileSync(path.join(ROOT, FROM)).equals(pbipBefore), () => 'C3. the original is byte-identical after the write');
   const allow = (rel, p) => (/visual\.json$/.test(rel) && /^\/position\/(x|y|width|height)$/.test(p)) || (rel === '.platform' && /^\/(metadata\/displayName|config\/logicalId)$/.test(p));
@@ -174,15 +174,16 @@ async function rest(pl, R, pages) {
   for (const x of ['.Report', '.pbip']) fs.renameSync(path.join(ROOT, 'two/Twin Sales redesigned' + x), path.join(ROOT, 'two/old-redesign' + x));
   const listing = () => fs.readdirSync(path.join(ROOT, 'two')).sort().join('|');
   { const p3 = await call(s, 'plan_layout', { path: MODEL, redesignFrom: FROM }); await call(s, 'approve_plan', { planId: p3.j.plan.planId });
-    const noFrom = await call(s, 'create_report', { path: MODEL, planId: p3.j.plan.planId });
-    chk(() => noFrom.err && /Nothing was written/.test(noFrom.t), () => `C7. the redesign's plan with redesignFrom left out: refused: ${short(noFrom)}`);
+    // (0.3.2 TK1, B-272: the plan holds redesignFrom, so it can't be left out any more) another source than the plan's: refused
+    const noFrom = await call(s, 'create_report', { path: MODEL, planId: p3.j.plan.planId, redesignFrom: 'two/old-redesign.pbip' });
+    chk(() => noFrom.err && /Nothing was written/.test(noFrom.t) && /'redesignFrom'/.test(noFrom.t), () => `C7. the redesign's plan with another redesignFrom: refused: ${short(noFrom)}`);
     const f = path.join(ORIG, 'definition/pages/p2details/visuals/note2/visual.json'), keep = fs.readFileSync(f), j = JSON.parse(keep); j.position.y += 1; wr(f, j);
-    const l0 = listing(), changedSrc = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p3.j.plan.planId });
+    const l0 = listing(), changedSrc = await call(s, 'create_report', { path: MODEL, planId: p3.j.plan.planId });
     chk(() => changedSrc.err && /Nothing was written/.test(changedSrc.t) && /changed/.test(changedSrc.t) && listing() === l0, () => `C7. the source changed after approval: refused, zero writes: ${short(changedSrc)}`);
     fs.writeFileSync(f, keep); }
   { const p4 = await call(s, 'plan_layout', { path: MODEL, redesignFrom: FROM }); await call(s, 'approve_plan', { planId: p4.j.plan.planId });
     fs.writeFileSync(path.join(ROOT, 'two/Twin Sales redesigned.pbip'), '{}');
-    const l0 = listing(), coll = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p4.j.plan.planId });
+    const l0 = listing(), coll = await call(s, 'create_report', { path: MODEL, planId: p4.j.plan.planId });
     chk(() => coll.err && /Nothing was written/.test(coll.t) && /already there/.test(coll.t) && listing() === l0 && fs.readFileSync(path.join(ROOT, 'two/Twin Sales redesigned.pbip'), 'utf8') === '{}', () => `C7. a name taken after approval: refused, zero writes, the file there untouched: ${short(coll)}`);
     fs.rmSync(path.join(ROOT, 'two/Twin Sales redesigned.pbip')); }
 
@@ -191,7 +192,7 @@ async function rest(pl, R, pages) {
     const t = ((p5.j && p5.j.redesign && p5.j.redesign.pages) || []).flatMap((p) => p.changes).find((x) => x.visual === 'lineMonth');
     chk(() => p5.j.plan && t && t.title && t.title.from === undefined && !JSON.stringify(p5.j).includes('Sales by Month') && t.title.to === 'Monthly sales', () => `C8. an approved static title is a change of its own (R6, F08, changed on purpose: the old title text is no longer returned): ${short(p5)}`);
     await call(s, 'approve_plan', { planId: p5.j.plan.planId });
-    const o5 = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p5.j.plan.planId, titles: { 'p1overview/lineMonth': 'Monthly sales' } });
+    const o5 = await call(s, 'create_report', { path: MODEL, planId: p5.j.plan.planId });
     const r = 'definition/pages/p1overview/visuals/lineMonth/visual.json', ps = !o5.err ? diff(rd(path.join(ORIG, r)), rd(path.join(OUT, r))) : ['not written'];
     chk(() => !o5.err && ps.every((p) => /^\/position\/(x|y|width|height)$/.test(p) || p === '/visual/visualContainerObjects/title/0/properties/text/expr/Literal/Value') && ps.includes('/visual/visualContainerObjects/title/0/properties/text/expr/Literal/Value') && rd(path.join(OUT, r)).visual.visualContainerObjects.title[0].properties.text.expr.Literal.Value === "'Monthly sales'",
       () => `C8. the title written at its one pointer: ${JSON.stringify(ps)} ${short(o5)}`);
@@ -205,7 +206,7 @@ async function rest(pl, R, pages) {
   { const p8 = await call(s, 'plan_layout', { path: MODEL, redesignFrom: FROM, restyle: { brand: '#1D4ED8' } });
     chk(() => p8.j.plan && p8.j.redesign.theme && p8.j.redesign.theme.file === 'twin-theme.json' && p8.j.redesign.theme.tokens.dataColors, () => `C9. restyle: the theme's tokens are planned: ${short(p8)}`);
     await call(s, 'approve_plan', { planId: p8.j.plan.planId });
-    const o8 = await call(s, 'create_report', { path: MODEL, redesignFrom: FROM, planId: p8.j.plan.planId, restyle: { brand: '#1D4ED8' } });
+    const o8 = await call(s, 'create_report', { path: MODEL, planId: p8.j.plan.planId });
     const r = 'StaticResources/RegisteredResources/twin-theme.json', ps = !o8.err ? diff(rd(path.join(ORIG, r)), rd(path.join(OUT, r))) : ['not written'];
     chk(() => !o8.err && ps.length && ps.every((p) => /^\/(dataColors|foreground|background|tableAccent|good|neutral|bad)(\/|$)/.test(p)) && rd(path.join(OUT, r)).dataColors[0].toLowerCase() === '#1d4ed8', () => `C9. only the theme's allowlisted tokens change: ${JSON.stringify(ps)} ${short(o8)}`);
     const size = (d, id, v) => rd(path.join(d, 'definition/pages', id, 'visuals', v, 'visual.json')).position;
@@ -229,7 +230,7 @@ async function rest(pl, R, pages) {
   { fixture(path.join(ROOT, 'np')); fs.rmSync(path.join(ROOT, 'np/Twin Sales.Report/.platform'), { force: true });
     const pn = await call(s, 'plan_layout', { path: 'np/Twin Sales.SemanticModel', redesignFrom: 'np/Twin Sales.pbip' }), id = pn.j && pn.j.plan && pn.j.plan.planId;
     if (id) await call(s, 'approve_plan', { planId: id });
-    const on = id ? await call(s, 'create_report', { path: 'np/Twin Sales.SemanticModel', redesignFrom: 'np/Twin Sales.pbip', planId: id }) : pn;
+    const on = id ? await call(s, 'create_report', { path: 'np/Twin Sales.SemanticModel', planId: id }) : pn;
     let pj = null; try { pj = rd(path.join(ROOT, 'np/Twin Sales redesigned.Report/.platform')); } catch (e) { pj = null; }
     chk(() => !on.err && pj && pj.metadata.type === 'Report' && pj.metadata.displayName === 'Twin Sales redesigned' && /^[0-9a-f-]{36}$/.test(pj.config.logicalId) && pj.config.version === '2.0' && /platformProperties\/2\.0\.0/.test(pj.$schema)
       && !fs.existsSync(path.join(ROOT, 'np/Twin Sales.Report/.platform')) && /\.platform/.test(JSON.stringify(pn.j.redesign || {})),

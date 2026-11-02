@@ -66,9 +66,8 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
   }
   // G4. create_report refuses without a plan id, with an unknown one, with one not approved, with a theme plan and with
   //     a plan for another model; nothing is written each time
-  const design = (await ask('plan_layout', { layout: 'exec', lang: 'en' })).j;
   {
-    const run = async (label, planId, dir, re) => { const before = all(), x = await ask('create_report', Object.assign({ path: dir || 'g', name: 'Gate ' + label, design: design && design.design, noDataMessage: false }, planId === undefined ? {} : { planId })), after = all();
+    const run = async (label, planId, dir, re) => { const before = all(), x = await ask('create_report', Object.assign({ path: dir || 'g' }, planId === undefined ? {} : { planId })), after = all();   // (0.3.2 TK1: path and planId, so the gate's own refusal is what is checked)
       chk(() => x.err && re.test(x.t) && !added(before, after).length, () => `G4 ${label}. create_report must refuse and write nothing: added ${JSON.stringify(added(before, after).slice(0, 3))} ${short(x)}`); return x; };
     const none = await run('no id', undefined, 'g', /approved plan id[\s\S]*plan_layout[\s\S]*approve_plan/);
     chk(() => /Nothing was written/.test(none.t), () => `G4. the refusal must say nothing was written: ${short(none)}`);
@@ -80,7 +79,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     await run('theme plan', themePlan, 'g', /theme plan/);
     await ask('approve_plan', { planId: pid, });
     await run('other model', pid, 'g2', /another model/);
-    const before = all(), x = await ask('create_report', { path: 'g', name: 'Gate ok', design: pl.j.design, planId: pid, noDataMessage: false, secondPage: false }), after = all();
+    const before = all(), x = await ask('create_report', { path: 'g', planId: pid }), after = all();
     chk(() => !x.err && x.j.report && added(before, after).some((f) => /Gate ok\.Report\/definition\/report\.json$/.test(f)), () => `G4. create_report with the approved plan must write the report: ${short(x)}`);
     // (Z-01, the outside review of 11 Oct: a report plan pins only create_report's inputs, so it no longer allows a
     // separate theme file, which takes its own theme plan; before, any theme inputs were written with it)
@@ -145,7 +144,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     // the report: filters at the end (right in English) on both pages
     const pl = await ask('plan_layout', { path: 'g', layout: 'exec', filters: 'end', lang: 'en', name: 'Rail end', noDataMessage: false }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await ask('approve_plan', { planId: pid });
-    const x = await ask('create_report', { path: 'g', name: 'Rail end', design: pl.j && pl.j.design, planId: pid, noDataMessage: false });
+    const x = await ask('create_report', { path: 'g', planId: pid });
     const dir = x.err ? null : path.join(ROOT, 'g', x.j.report, 'definition', 'pages');
     const order = dir ? JSON.parse(fs.readFileSync(path.join(dir, 'pages.json'), 'utf8')).pageOrder : [];
     const rail = (pg) => { const vd = path.join(dir, pg, 'visuals'), W = JSON.parse(fs.readFileSync(path.join(dir, pg, 'page.json'), 'utf8')).width;
@@ -181,7 +180,7 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     const pl = await s.call('plan_layout', { path: 'g', layout: 'exec', lang: 'en' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await s.call('approve_plan', { planId: pid });
     await new Promise((r) => setTimeout(r, 2000));
-    const before = all(), x = await s.call('create_report', { path: 'g', name: 'Too late', design: pl.j && pl.j.design, planId: pid, noDataMessage: false }), after = all();
+    const before = all(), x = await s.call('create_report', { path: 'g', planId: pid }), after = all();
     chk(() => x.err && /expired/.test(x.t) && !added(before, after).length, () => `G9. an expired plan must be refused and nothing written: ${short(x)}`);
     const longer = await serverClient(ROOT, { DATAARCUS_PLAN_TTL_MS: String(10 * 60 * 60 * 1000) });
     const p2 = await longer.call('generate_theme', {});

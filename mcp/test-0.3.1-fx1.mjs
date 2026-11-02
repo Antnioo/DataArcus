@@ -95,10 +95,10 @@ async function twinPlan(a) {
 try {
   // ---------- the sample project and its report, as the laptop ran them ----------
   const sp = await call('plan_layout', { sample: true }), spid = sp.j && sp.j.plan && sp.j.plan.planId; if (spid) await pageOf(spid, true);
-  const sw = spid ? await call('create_report', { sample: true, path: sp.j.sample.folder, planId: spid }) : { err: true, t: 'no sample plan: ' + short(sp) };
+  const sw = spid ? await call('create_report', { path: sp.j.sample.folder, planId: spid }) : { err: true, t: 'no sample plan: ' + short(sp) };
   const step = ((sw.j && sw.j.tour) || []).find((x) => x.call && x.call.tool === 'plan_layout' && !x.call.args.languages) || { call: { args: {} } };
   const { pl, args } = await planReport(step.call.args), rid = pl.j && pl.j.plan && pl.j.plan.planId; if (rid) await pageOf(rid, true);
-  const send = Object.assign({}, args, { planId: rid, design: pl.j && pl.j.design, fields: args.planFields }); delete send.planFields;
+  const send = { path: args.path, planId: rid };   // (0.3.2 TK1: the plan holds the rest)
   const rep = rid ? await call('create_report', send) : { err: true, t: 'no plan: ' + short(pl) }, open = rep.j && String(rep.j.open || '').replace(/\\/g, '/');
   if (!open) problems.push('the sample report was not written: ' + short(rep));
   const enResets = visualsOf((open || 'x.pbip').replace(/\.pbip$/, '.Report')).filter(isReset);

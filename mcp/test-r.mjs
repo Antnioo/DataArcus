@@ -111,7 +111,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     chk(() => other.err && /Nothing was written/.test(other.t) && /title/.test(other.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. a title other than the approved one is refused: ${short(other)}`);
     const opt = await ask('create_report', { path: 'rg', planId: pid, design, secondPage: true });
     chk(() => opt.err && /secondPage/.test(opt.t), () => `A-02. an option other than the approved one is refused: ${short(opt)}`);
-    const ok = await ask('create_report', { path: 'rg', planId: pid, design, secondPage: false, smoothLines: true });
+    const ok = await ask('create_report', { path: 'rg', planId: pid });   // (0.3.2 TK1: path and planId; the plan holds the rest)
     chk(() => !ok.err && fs.existsSync(path.join(ROOT, 'rg', 'Look Test.Report')), () => `A-02. left out, the plan's name and title are written: ${short(ok)}`);
     const pl2 = await ask('plan_layout', { path: 'rg', layout: 'exec' }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
     await ask('approve_plan', { planId: pid2 });
@@ -124,7 +124,7 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const plan = async (args) => { const pl = await ask('plan_layout', Object.assign({ path: 'rg', layout: 'exec' }, args)), id = pl.j && pl.j.plan && pl.j.plan.planId; await ask('approve_plan', { planId: id }); return { id, design: pl.j && pl.j.design, pl }; };
     // B-03: secondPage false in the plan, left out of the write: one page written, not refused
     const p3 = await plan({ name: 'Defaults Test', secondPage: false });
-    const w3 = await ask('create_report', { path: 'rg', planId: p3.id, design: p3.design });
+    const w3 = await ask('create_report', { path: 'rg', planId: p3.id });
     const pages3 = !w3.err ? JSON.parse(fs.readFileSync(path.join(ROOT, 'rg', 'Defaults Test.Report', 'definition', 'pages', 'pages.json'), 'utf8')).pageOrder.length : -1;
     chk(() => !w3.err && pages3 >= 1 && (w3.j.pages || []).length === 1, () => `B-03. an option left out takes the plan's value (one page): ${short(w3)}`);
     // B-01: a font the plan did not show is refused, named
@@ -138,10 +138,10 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     fs.writeFileSync(tf, JSON.stringify({ name: 'Approved', dataColors: ['#0F766E', '#B91C1C'] }));
     const p2 = await plan({ name: 'Theme Print', theme: 'rg/approved-theme.json' });
     fs.writeFileSync(tf, JSON.stringify({ name: 'Swapped', dataColors: ['#FF00FF', '#00FF00'] }));
-    const w2 = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
+    const w2 = await ask('create_report', { path: 'rg', planId: p2.id });
     chk(() => w2.err && /Nothing was written/.test(w2.t) && /changed since the plan/.test(w2.t) && /theme/.test(w2.t) && !fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. a theme file changed after the go is refused: ${short(w2)}`);
     fs.writeFileSync(tf, JSON.stringify({ name: 'Approved', dataColors: ['#0F766E', '#B91C1C'] }));
-    const w2b = await ask('create_report', { path: 'rg', planId: p2.id, design: p2.design });
+    const w2b = await ask('create_report', { path: 'rg', planId: p2.id });
     chk(() => !w2b.err && fs.existsSync(path.join(ROOT, 'rg', 'Theme Print.Report')), () => `B-02. the same contents as approved are written: ${short(w2b)}`);
   }
   {

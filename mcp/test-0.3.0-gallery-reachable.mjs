@@ -86,7 +86,7 @@ const write = async (args) => {
   const html = await approve(id);
   const cr = Object.assign({ path: MP, planId: id }, args, args.pages ? {} : { design: pl.j.design });
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', cr);
+  const r = await w.call('create_report', { path: cr.path, planId: id });   // (0.3.2 TK1: the plan holds the rest)
   return { pl, html, r, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 
@@ -95,8 +95,8 @@ try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
     const kindsOf = (t) => { try { return t.inputSchema.properties.pages.items.properties.slots.items.properties.kind.enum || []; } catch (e) { return []; } };
-    chk(() => ['combo', 'waterfall', 'smallMultiples'].every((k) => kindsOf(pl).includes(k) && kindsOf(cr).includes(k)) && pl.inputSchema.properties.gallery && cr.inputSchema.properties.gallery,
-      () => `S1. plan_layout and create_report take the slot kinds combo, waterfall, smallMultiples and the gallery input: ${JSON.stringify(kindsOf(pl))} gallery ${!!(pl && pl.inputSchema.properties.gallery)}`);
+    chk(() => ['combo', 'waterfall', 'smallMultiples'].every((k) => kindsOf(pl).includes(k)) && pl.inputSchema.properties.gallery && !cr.inputSchema.properties.gallery && !cr.inputSchema.properties.pages,
+      () => `S1. plan_layout takes (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input) the slot kinds combo, waterfall, smallMultiples and the gallery input: ${JSON.stringify(kindsOf(pl))} gallery ${!!(pl && pl.inputSchema.properties.gallery)}`);
     const ins = w.c.getInstructions() || '', desc = String((pl.inputSchema.properties.gallery || {}).description || '') + ' ' + pl.description;
     chk(() => /waterfall/.test(ins) && /only when (the user|asked)/i.test(ins) && /only when (the user|asked)/i.test(desc), () => `S2. the instructions and plan_layout say the gallery is used only when the user asks: ${ins.slice(-700)}`);
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');

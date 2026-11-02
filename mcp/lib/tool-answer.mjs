@@ -5,7 +5,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { ROOT, rootProblem, Notice } from './model.mjs';
-import { AIM } from './scope.mjs';
 import { wordOf } from './read-words.mjs';
 import { writtenSince } from './files.mjs';
 import { nameOut as textOut, out, capAnswer, failText, ANSWER_MAX } from './answer.mjs';
@@ -32,10 +31,13 @@ const CUT_SAID = `\n\n(This answer was cut to stay under ${ANSWER_MAX.toLocaleSt
 const capText = (s) => { if (s.length <= ANSWER_MAX) return s; let n = ANSWER_MAX - CUT_SAID.length;
   const i = s.lastIndexOf('\\', n - 1), tok = i > n - 7 ? /^\\u[0-9a-f]{4,5}/.exec(s.slice(i, i + 7)) : null; if (tok && i + tok[0].length > n) n = i;
   if (/[\uD800-\uDBFF]/.test(s[n - 1])) n--; return s.slice(0, n) + CUT_SAID; };
-export const text = (o, opts) => { if (typeof o === 'string') return { content: [{ type: 'text', text: capText(scrub(textOut(o))) }] }; const x = out(o); return pretty(x).length > AIM ? compact(o, opts) : { content: [{ type: 'text', text: scrub(pretty(capAnswer(x, (y) => pretty(y).length, opts))) }] }; };
+// (0.3.2 TK1, B-273: an answer under the cap was pretty-printed, 20-36% of it spaces sent to the AI) every answer is flat
+// JSON, here only. The tools' own list cuts still measure as before (pretty, against AIM), so an answer keeps the same items
+export const text = (o, opts) => (typeof o === 'string' ? { content: [{ type: 'text', text: capText(scrub(textOut(o))) }] } : compact(o, opts));
 export const compact = (o, opts) => ({ content: [{ type: 'text', text: scrub(flat(capAnswer(out(o), (x) => flat(x).length, opts))) }] });
 // (A1-9: the reading block's coded errors are worded here, in the tool layer; A6: a name's invisible characters shown, nameOut)
-const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(textOut(wordOf(e))) }] });
+// (0.3.2 TK1, B-281: an error skipped the cap) an error answer is capped as a text answer is, the cut said
+const fail = (e) => ({ isError: true, content: [{ type: 'text', text: capText(scrub(textOut(wordOf(e)))) }] });
 // A working folder that is chosen but can't be used yet (it doesn't exist, or it is empty): a normal answer with what
 // to do, not an error (an AI app shows an error as "Failed" in red, though nothing went wrong). Nothing is read or written.
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });

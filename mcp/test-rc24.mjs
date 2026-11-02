@@ -73,7 +73,7 @@ try {
   // ---------- the golden report (large synthetic model, focus Web Orders), and its twin ----------
   const pl = await s.call('plan_layout', { path: 'large', focus: 'Web Orders', name: 'Golden', layout: 'exec' });
   await s.call('approve_plan', { planId: pl.j.plan.planId });
-  const made = await s.call('create_report', { path: 'large', focus: 'Web Orders', name: 'Golden', planId: pl.j.plan.planId, design: pl.j.design });
+  const made = await s.call('create_report', { path: 'large', planId: pl.j.plan.planId });
   chk(() => !made.err, () => `setup. the golden report is written: ${short(made)}`);
   const ORIG = path.join(ROOT, 'large/Golden.Report'), MODEL = path.join(ROOT, 'large/Large Synthetic.SemanticModel');
   // a copy of it with one title measure whose DAX builds its text from a value of the model (never guessed)

@@ -125,7 +125,8 @@ const approve = async (planId) => { const n = links().length; await call('approv
 const visualsOf = (dir) => { const P = path.join(dir, 'definition/pages'); if (!fs.existsSync(P)) return [];
   return rd(path.join(P, 'pages.json')).pageOrder.flatMap((id) => (fs.existsSync(path.join(P, id, 'visuals')) ? fs.readdirSync(path.join(P, id, 'visuals')).map((v) => rd(path.join(P, id, 'visuals', v, 'visual.json'))).filter((v) => v.visual) : [])); };
 const plan = (args) => call('plan_layout', Object.assign({ path: 'g', planFields: FIELDS }, args));
-const create = (args, id) => { const a = Object.assign({ path: 'g', planId: id, fields: FIELDS }, args); delete a.planFields; return call('create_report', a); };
+// (0.3.2 TK1, B-272) create_report takes path and planId: the plan holds the rest
+const create = (args, id) => call('create_report', { path: 'g', planId: id });
 const checked = async (pbip) => call('check_report', { path: pbip });
 const clean = (r) => r && !r.err && r.j.validator && r.j.validator.ran && r.j.validator.errors === 0 && r.j.impact && (r.j.impact.kinds.canBreak || { count: 0 }).count === 0;
 const wfOf = (dir) => visualsOf(dir).find((v) => v.visual.visualType === 'waterfallChart' || (v.visual.visualType === 'columnChart' && /^Waterfall /.test((((v.visual.query.queryState.Y || {}).projections || [])[0] || { field: {} }).field.Measure ? v.visual.query.queryState.Y.projections[0].field.Measure.Property : '')));
@@ -138,7 +139,7 @@ try {
   const htmlN = idn ? await approve(idn) : '';
   // (FX1, the laptop's part 3: an Arabic plan's page wholly Arabic, each Latin run isolated; changed on purpose)
   chk(() => /الشلال من اليمين إلى اليسار<\/td><td[^>]*>أصلي: شلال [^]*?يُقرأ من اليسار إلى اليمين كما يرسمه/.test(htmlN.replace(/<\/?bdi[^>]*>/g, '')), () => `P2: the approval page shows the switch: ${(htmlN.match(/<h2>Look and options[\s\S]*?<\/table>/) || [htmlN.slice(0, 300)])[0].slice(0, 700)}`);
-  const refused = idn ? await create(Object.assign({}, AR_ARGS, { waterfallRtl: 'mirror' }), idn) : null;
+  const refused = idn ? await call('create_report', { path: 'g', planId: idn, waterfallRtl: 'mirror' }) : null;   // another value than the plan's: refused at the inputs (the plan holds it)
   chk(() => refused && refused.err && !fs.existsSync(path.join(ROOT, 'g/Bridge AR.Report')), () => `P3: create_report with another waterfallRtl than the plan's is refused, nothing written: ${short(refused)}`);
   const rn = idn ? await create(AR_ARGS, idn) : null, wn = wfOf(path.join(ROOT, 'g/Bridge AR.Report'));
   chk(() => rn && !rn.err && wn && wn.visual.visualType === 'waterfallChart' && !lit(plainOf(wn, 'valueAxis').switchAxisPosition) && (rn.j.reportNotes || []).some((x) => x.includes(NATIVE_SAID)),
@@ -200,11 +201,11 @@ try {
     fs.rmSync(path.join(ROOT, 'g', outName + '.Report'), { recursive: true, force: true }); fs.rmSync(path.join(ROOT, 'g', outName + '.pbip'), { force: true });
   }
   const tools = (await w.c.listTools()).tools, en = (n) => { const t = tools.find((x) => x.name === n); return JSON.stringify((((t || {}).inputSchema || {}).properties || {}).waterfallRtl || {}); };
-  chk(() => ['plan_layout', 'create_report', 'create_arabic_twin'].every((n) => /"enum":\["mirror","native"\]/.test(en(n)) && /left to right, as Power BI draws it/.test(en(n))),
-    () => `S1: plan_layout, create_report and create_arabic_twin take waterfallRtl "mirror" | "native", described: ${en('create_report').slice(0, 400)}`);
+  chk(() => ['plan_layout', 'create_arabic_twin'].every((n) => /"enum":\["mirror","native"\]/.test(en(n)) && /left to right, as Power BI draws it/.test(en(n))) && en('create_report') === '{}',
+    () => `S1: plan_layout and create_arabic_twin take waterfallRtl (create_report: the plan holds it) "mirror" | "native", described: ${en('plan_layout').slice(0, 400)} (0.3.2 TK1: create_report's plan holds it: ${en('create_report')})`);
   // S2 (F1, the owner's decision of 20 Oct after the laptop proof: Desktop 2.159 draws no total label on the mirror)
-  chk(() => ['plan_layout', 'create_report', 'create_arabic_twin'].every((n) => /no Total column/.test(en(n)) && /no total label/.test(en(n)) && !/labelled with the total/.test(en(n))),
-    () => `S2: the description says "mirror" has no Total column and no total label: ${en('create_report').slice(0, 600)}`);
+  chk(() => ['plan_layout', 'create_arabic_twin'].every((n) => /no Total column/.test(en(n)) && /no total label/.test(en(n)) && !/labelled with the total/.test(en(n))),
+    () => `S2: the description says "mirror" has no Total column and no total label: ${en('plan_layout').slice(0, 600)}`);
   {
     const pm = await plan({ name: 'Bridge AR S2', lang: 'ar', pages: HAND, displayNames: AR_NAMES, waterfallRtl: 'mirror' }), W = pm.j && pm.j.waterfallRtl;
     const pn2 = await plan({ name: 'Bridge AR S2n', lang: 'ar', pages: HAND, displayNames: AR_NAMES }), Wn = pn2.j && pn2.j.waterfallRtl;

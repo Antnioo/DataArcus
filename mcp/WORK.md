@@ -18,11 +18,10 @@ first. Finished entries: [work/archive/](work/archive/README.md).
   (layout preview), [CX2](work/CX2.md) (Codex's wording findings), [CX1](work/CX1.md) (Codex's safety findings).
 - 28 Oct (laptop part 3): [SPD](work/SPD.md) (CI 32 -> 12 min), [P3A](work/P3A.md), [FX1](work/FX1.md), [FX2](work/FX2.md), [FX3](work/FX3.md), [FX4](work/FX4.md), [FX5](work/FX5.md), [FX6](work/FX6.md), [FX5b](work/FX5b.md), [FX3b](work/FX3b.md), [FX4b](work/FX4b.md).
 - 29 Oct-1 Nov (laptop parts 4-8): TB2, TB1, TB1b, TB1c, MP1, MP1b, MP1c, MR1, MP1d, MX1, MP1e, MX2, MP1f, MX3, MX4, MX5, MX6, MX7 (each in `work/<ID>.md`).
-- Next: rc.13, laptop part 13. 0.3.2 waiting on their branches: TK1, DP1, OP1 (merged after 0.3.1 ships).
+- 0.3.2 (this branch, from 0.3.1's a6000a27): TK1; next DP1, OP1, then the split (B-280).
 
 ## Next step
-1. rc.8 (two identical builds); laptop part 9.
-2. The PR integration -> main: the owner merges.
+1. 0.3.1: the laptop's yes, then the owner's merge to main. 2. 0.3.2 after it.
 
 ## Open decisions (the owner's; no work before his go)
 - L6 "Seen" 1: Arabic DA measures for the twin and the bilingual report's Arabic half.

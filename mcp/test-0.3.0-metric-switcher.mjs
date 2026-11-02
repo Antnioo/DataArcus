@@ -96,7 +96,7 @@ try {
   const base = { path: MP, focus: 'Web Orders', layout: 'exec', name: 'L3 Off', secondPage: false };
   // ---------- O: off by default ----------
   const O = await planAndWrite(base);
-  const okO = O.id ? await ask('create_report', Object.assign({}, base, { planId: O.id, design: O.pl.j.design })) : O.pl;
+  const okO = O.id ? await ask('create_report', { path: base.path, planId: O.id }) : O.pl;
   chk(() => !okO.err && !metricPage(path.join(ROOT, 'large', 'L3 Off.Report')) && !fs.existsSync(path.join(ROOT, 'large', 'L3 Off - metric switcher.tmdl')) && !pagesOf(path.join(ROOT, 'large', 'L3 Off.Report')).some((p) => /^(Metric|المؤشر)$/.test(p.json.displayName)),
     () => `O1: without metricSwitcher no Metric page and no script are written: ${short(okO)}`);
   chk(() => O.pl.j && O.pl.j.plan.reportLook && !("metricSwitcher" in O.pl.j.plan.reportLook) && !/metric switcher/i.test(O.html), () => `O2: the plan and its approval page say nothing of a switcher when it is off: ${JSON.stringify(O.pl.j && O.pl.j.plan.reportLook).slice(0, 300)}`);
@@ -121,7 +121,7 @@ try {
   chk(() => other.err && /Nothing was written/.test(other.t) && !fs.existsSync(path.join(ROOT, 'large', 'L3 Switch.Report')) && !fs.existsSync(path.join(ROOT, 'large', 'L3 Switch - metric switcher.tmdl')), () => `P7: another metricSwitcher than the plan's is refused, nothing written: ${short(other)}`);
 
   // ---------- W, T: the write ----------
-  const ok = await ask('create_report', Object.assign({}, en, { planId: A.id, design: A.pl.j && A.pl.j.design }));
+  const ok = await ask('create_report', { path: en.path, planId: A.id });
   const dir = path.join(ROOT, 'large', 'L3 Switch.Report'), sf = path.join(ROOT, 'large', 'L3 Switch - metric switcher.tmdl');
   chk(() => !ok.err && fs.existsSync(sf) && ok.j.metricSwitcher && ok.j.metricSwitcher.script === 'L3 Switch - metric switcher.tmdl', () => `W1: the report and its script file next to the project, said in the answer: ${short(ok)}`);
   chk(() => hashDir(path.join(ROOT, MP)) === modelHash0, () => 'W2: the model folder is untouched (hash before and after)');
@@ -165,7 +165,7 @@ try {
   // ---------- A: Arabic, and the twin ----------
   const ar = Object.assign({}, base, { name: 'L3 AR', lang: 'ar', metricSwitcher: W3, displayNames: AR_DN });
   const B = await planAndWrite(ar);
-  const okA = B.id ? await ask('create_report', Object.assign({}, ar, { planId: B.id, design: B.pl.j.design })) : B.pl;
+  const okA = B.id ? await ask('create_report', { path: ar.path, planId: B.id }) : B.pl;
   const dirA = path.join(ROOT, 'large', 'L3 AR.Report'), sA = path.join(ROOT, 'large', 'L3 AR - metric switcher.tmdl'), mA = metricPage(dirA);
   const scA = fs.existsSync(sA) ? fs.readFileSync(sA, 'utf8') : '';
   chk(() => !okA.err && Object.values(AR_NAMES).every((n) => scA.includes(`("${n}", NAMEOF(`)) && scA.includes('"اختر مؤشراً واحداً"'), () => `A1: the Arabic labels and the Arabic fallback title in the script: ${short(okA)} ${scA.slice(0, 200)}`);
@@ -194,7 +194,7 @@ try {
   const hm = HOSTILE.map((n) => `Odd Names[${n}]`);
   const hb = { path: HP, focus: 'Web Orders', layout: 'exec', name: 'L3 Odd', secondPage: false, metricSwitcher: hm };
   const Hh = await planAndWrite(hb);
-  const okH = Hh.id ? await ask('create_report', Object.assign({}, hb, { planId: Hh.id, design: Hh.pl.j.design })) : Hh.pl;
+  const okH = Hh.id ? await ask('create_report', { path: hb.path, planId: Hh.id }) : Hh.pl;
   const sH = path.join(ROOT, 'hostile', 'L3 Odd - metric switcher.tmdl'), scH = fs.existsSync(sH) ? fs.readFileSync(sH, 'utf8') : '', RH = scH ? readScript(scH) : null;
   const ph = RH && RH.model.tables[0].partitions[0].source.expression;
   chk(() => !okH.err && nameofs(ph).length === 4 && nameofs(ph).every((n) => measuresOf(path.join(ROOT, HP)).has(n)) && RH.model.tables.length === 1 && RH.model.tables[0].columns.length === 3 && RH.model.tables[0].measures.length === 1,
@@ -225,7 +225,7 @@ try {
     const fa = Object.assign({}, base, { name: 'L3 Filtered', metricSwitcher: W3, pageFilters: PF, gulfDates: { dateRole: 'Web Orders[Date]', grain: 'gregorian', scope: 'year', year: 1446, hijriYearColumn: 'Calendar[Hijri Year]' } });
     const F = await planAndWrite(fa);
     // (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
-    const okF = F.id ? await ask('create_report', Object.assign({}, fa, { planId: F.id, design: F.pl.j.design, gulfDates: undefined })) : F.pl;
+    const okF = F.id ? await ask('create_report', { path: fa.path, planId: F.id }) : F.pl;
     const fdir = path.join(ROOT, 'large', 'L3 Filtered.Report'), pgs = pagesOf(fdir).filter((p) => p.json.type !== 'Tooltip'), mpF = metricPage(fdir);
     const fields = (p) => ((p.json.filterConfig || {}).filters || []).map((x) => (x.field.Column || {}).Property + '=' + JSON.stringify(x.filter.Where[0].Condition.In.Values)).sort().join();
     const own = pgs.filter((p) => !mpF || p.id !== mpF.id);
@@ -238,7 +238,7 @@ try {
   // ---------- F3: the Metric page's background is the report's own (0.3.0 A1: it had none); English and Arabic ----------
   for (const lang of ['en', 'ar']) {
     const ba = Object.assign({}, base, { name: 'L3 Background ' + lang, lang, metricSwitcher: W3 }, lang === 'ar' ? { displayNames: AR_DN } : {});
-    const B = await planAndWrite(ba), okB = B.id ? await ask('create_report', Object.assign({}, ba, { planId: B.id, design: B.pl.j.design })) : B.pl;
+    const B = await planAndWrite(ba), okB = B.id ? await ask('create_report', { path: ba.path, planId: B.id }) : B.pl;
     const bdir = path.join(ROOT, 'large', `L3 Background ${lang}.Report`), mpB = metricPage(bdir), first = pagesOf(bdir).find((p) => p.json.type !== 'Tooltip' && (!mpB || p.id !== mpB.id) && p.json.objects);
     const bg = (p) => p && p.json.objects && p.json.objects.background && p.json.objects.background[0].properties, os = (p) => p && p.json.objects && JSON.stringify(p.json.objects.outspace);
     chk(() => !okB.err && mpB && first && bg(mpB) && os(mpB) === os(first) && (bg(mpB).image ? bg(mpB).image.image.name : bg(mpB).color) && lit(bg(mpB).transparency) === lit(bg(first).transparency),

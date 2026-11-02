@@ -155,7 +155,7 @@ try {
   // ---------- 4 and 5 on a report DataArcus writes (guards) ----------
   const pl = await w.call('plan_layout', { path: 'so/Service Orders.SemanticModel', lang: 'en', layout: 'exec', name: 'DA Orders' }), id0 = pl.j && pl.j.plan && pl.j.plan.planId;
   if (id0) await approve(id0);
-  const cr = id0 ? await w.call('create_report', { path: 'so/Service Orders.SemanticModel', lang: 'en', name: 'DA Orders', planId: id0, design: pl.j.design }) : { err: true, t: 'no plan: ' + short(pl) };
+  const cr = id0 ? await w.call('create_report', { path: 'so/Service Orders.SemanticModel', planId: id0 }) : { err: true, t: 'no plan: ' + short(pl) };
   const DA = path.join(ROOT, 'so/DA Orders.Report'), daV = pagesOf(DA).filter((p) => pageJ(DA, p).type !== 'Tooltip').flatMap((p) => visualsOf(DA, p));
   const titleBox = daV.find((v) => typeOf(v) === 'textbox' && /DA Orders/.test(textOfBox(v)));
   chk(() => !cr.err && titleBox && ['background', 'border', 'dropShadow'].every((k) => off(titleBox.visual.visualContainerObjects, k)), () => `X3. create_report's header title has the theme's panel off: ${short(cr)} ${JSON.stringify(titleBox && titleBox.visual.visualContainerObjects)}`);

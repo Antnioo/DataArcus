@@ -68,7 +68,7 @@ export async function writeDemo(out) {
     const id = pl.j && pl.j.plan && pl.j.plan.planId;
     if (!id) throw new Error('no plan: ' + JSON.stringify((pl.j || {}).planProblems || pl.t).slice(0, 600));
     await s.call('approve_plan', { planId: id });
-    const send = Object.assign({}, args, { planId: id, design: pl.j.design, fields: FIELDS }); delete send.planFields;
+    const send = { path: args.path, planId: id };   // (0.3.2 TK1: create_report takes path and planId; the plan holds the rest)
     const r = await s.call('create_report', send);
     if (r.err) throw new Error('not written: ' + r.t.slice(0, 400));
     // (the report gets a free name next to the model: its .pbip as create_report's answer gives it)

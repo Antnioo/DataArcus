@@ -218,7 +218,7 @@ try {
       const p = await s.call('plan_layout', Object.assign({}, args, { gulfDates: A })), id = idOf(p);
       if (id) await s.call('approve_plan', { planId: id });
       const { planFields, ...rest } = args;
-      const r = id ? await s.call('create_report', Object.assign({}, rest, { fields: planFields, planId: id, design: p.j.design })) : { err: true, t: 'no plan id: ' + short(p) };
+      const r = id ? await s.call('create_report', { path: rest.path, planId: id }) : { err: true, t: 'no plan id: ' + short(p) };
       return { p, r, before, after: fs.readFileSync(bim(dir)), files: walk(path.join(ROOT, dir, name + '.Report')), pbip: `${dir}/${name}.pbip` };
     };
     const EN = await write('gd', 'en', 'Ramadan EN'), AR = await write('ar', 'ar', 'رمضان');

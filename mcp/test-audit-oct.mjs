@@ -37,7 +37,7 @@ try {
       const pl = await w.call('plan_layout', { path: dir, layout: 'exec', name: 'Filter Test', pageFilters });
       const pid = pl.j && pl.j.plan && pl.j.plan.planId;
       if (pid) await w.call('approve_plan', { planId: pid });
-      const cr = pid ? await w.call('create_report', { path: dir, planId: pid, design: pl.j.design, pageFilters }) : pl;
+      const cr = pid ? await w.call('create_report', { path: dir, planId: pid }) : pl;
       const written = fs.readdirSync(path.join(ROOT, dir)).filter((f) => /\.Report$/.test(f));
       chk(() => cr.err && new RegExp(`has the type ${dt.replace(/_/g, '_')}`).test(cr.t) && !written.length,
         () => `AUD-036. dataType ${dt}, filter ${JSON.stringify(values)}: refused as an unsupported type, nothing written: ${short(cr)} (written: ${written.join(', ')})`);

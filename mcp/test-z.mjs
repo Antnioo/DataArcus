@@ -111,7 +111,7 @@ export async function zgate({ call, check, ROOT, fs = fs0 }) {
     try { fs.symlinkSync(path.join(ROOT, 'zg', 'real-theme.json'), path.join(ROOT, 'zg', 'link-theme.json')); } catch (e) { /* no links here */ }
     const pl = await call('plan_layout', { path: 'zg', name: 'Z link theme', theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
     await call('approve_plan', { planId: pid });
-    const x = await call('create_report', { path: 'zg', name: 'Z link theme', planId: pid, theme: 'zg/link-theme.json', noDataMessage: false, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 40 }] }] });
+    const x = await call('create_report', { path: 'zg', planId: pid });
     chk(() => x.err && /link/.test(x.t) && /Nothing was written/.test(x.t), () => `Z-03. a theme behind a link is refused: ${short(x)}`);
     const files = fs.readFileSync(path.join(HERE, 'lib/files.mjs'), 'utf8');
     chk(() => /readCapped/.test(files) && !/readFileSync\(full\)/.test(files), () => 'Z-03. readUserFile reads through readCapped (one descriptor), never by name after a check');

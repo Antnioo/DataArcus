@@ -16,7 +16,7 @@ report at the same time.
 
 | The user asks for | Use | Why |
 |---|---|---|
-| "Show me what DataArcus can do", or no model to try it on | DataArcus: `plan_layout` with `sample: true`, `approve_plan`, then `create_report` with `sample: true` | A made-up Gulf retail project written to a new folder after approval, then four next steps on it |
+| "Show me what DataArcus can do", or no model to try it on | DataArcus: `plan_layout` with `sample: true`, `approve_plan`, then `create_report` with the plan's `path` and `planId` | A made-up Gulf retail project written to a new folder after approval, then four next steps on it |
 | An Arabic or right-to-left report | DataArcus: `plan_layout` with `lang: "ar"`, `approve_plan`, then `create_report` | Mirrored positions measured in Power BI Desktop, Arabic fonts, Arabic display names the user approves |
 | One report in English and Arabic | DataArcus: `plan_layout` with `languages: "en+ar"` (planned in English), then `create_report`; `tabsShown: "ar"` opens it on the Arabic pages | Each English page and its mirrored Arabic page, a language button between them, slicers kept in sync |
 | An Arabic version of a report they already have | DataArcus: `create_arabic_twin` (a separate "<name> AR" report, or `into: "same"` for one copy holding both languages) | A new copy next to the original, mirrored; the original stays as it is |

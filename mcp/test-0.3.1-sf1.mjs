@@ -54,15 +54,15 @@ try {
     const pl = await s.call('plan_layout', { path: 'lab', customVisualsFrom: FROM, sharedAxes: SHARED_AXES });
     chk(() => !pl.err && pl.j.plan && pl.j.plan.planId, () => `R4-4. the native copy's plan: ${short(pl)}`);
     await s.call('approve_plan', { planId: pl.j.plan.planId });
-    const bad = await s.call('create_report', { path: 'lab', planId: pl.j.plan.planId, customVisualsFrom: FROM, sharedAxes: SHARED_AXES, consistentText: 'report' });
+    const bad = await s.call('create_report', { path: 'lab', planId: pl.j.plan.planId, consistentText: 'report' });   // (0.3.2 TK1: refused at the inputs, the plan holds the rest)
     chk(() => bad.err && /Nothing was written/.test(bad.t) && /consistentText/.test(bad.t) && !fs.existsSync(path.join(TMP, NATIVE)), () => `R4-5. create_report with a native copy's plan and consistentText writes nothing: ${short(bad)}`);
     // the route that works, end to end
-    const w = await s.call('create_report', { path: 'lab', planId: pl.j.plan.planId, customVisualsFrom: FROM, sharedAxes: SHARED_AXES });
+    const w = await s.call('create_report', { path: 'lab', planId: pl.j.plan.planId });
     const n0 = ownText(path.join(TMP, NATIVE));
     chk(() => !w.err && n0.own > 0, () => `R4-6. the native copy keeps the lab's own text settings (the redesign cleans them): ${JSON.stringify(n0)} ${short(w)}`);
     const rd = await s.call('plan_layout', { path: 'lab', redesignFrom: NATIVE, consistentText: 'report' });
     await s.call('approve_plan', { planId: rd.j.plan.planId });
-    const rw = await s.call('create_report', { path: 'lab', redesignFrom: NATIVE, planId: rd.j.plan.planId, consistentText: 'report' });
+    const rw = await s.call('create_report', { path: 'lab', planId: rd.j.plan.planId });
     const RED = rw.j ? path.join(TMP, 'lab', path.basename(String(rw.j.report))) : '', r0 = ownText(RED);
     chk(() => !rw.err && r0.all === n0.all && r0.own === 0, () => `R4-7. its redesign with consistentText: no visual of a known type keeps its own text: ${JSON.stringify(r0)} ${short(rw)}`);
     const tp = await s.call('create_arabic_twin', { path: path.relative(TMP, RED), into: 'same' });
@@ -110,7 +110,7 @@ try {
   try {
     const pl = await c.call('plan_layout', { path: 'Gulf Retail.SemanticModel', redesignFrom: 'Store Ops.pbip', consistentText: 'report' });
     chk(() => !pl.err && pl.j.plan && !CC.test(JSON.stringify((pl.j.redesign.text || {}).set || []).replace(/\\[tnr]/g, (m) => ({ '\\t': '\t', '\\n': '\n', '\\r': '\r' }[m]))), () => `C2. the plan's text set holds no control character: ${short(pl)}`);
-    if (pl.j && pl.j.plan) { await c.call('approve_plan', { planId: pl.j.plan.planId }); await c.call('create_report', { path: 'Gulf Retail.SemanticModel', redesignFrom: 'Store Ops.pbip', planId: pl.j.plan.planId, consistentText: 'report' }); }
+    if (pl.j && pl.j.plan) { await c.call('approve_plan', { planId: pl.j.plan.planId }); await c.call('create_report', { path: 'Gulf Retail.SemanticModel', planId: pl.j.plan.planId }); }
     const out = path.join(CL, 'Store Ops redesigned.Report'), themes = tree(out).filter((f) => /StaticResources[\\/]RegisteredResources[\\/][^\\/]+\.json$/.test(f));
     chk(() => themes.length === 1 && !strings(JSON.parse(fs.readFileSync(themes[0], 'utf8'))).some((x) => CC.test(x)), () => `C2. the written theme holds no font face with a control character: ${themes.map((f) => fs.readFileSync(f, 'utf8').match(/"fontFamily"[^\n]*/g)).join(' ')}`);
   } finally { await c.close(); }
@@ -167,16 +167,15 @@ try {
       else if (a.arabicTerms && !a.arabicTexts && (B.texts || []).length) { const at = {}; B.texts.filter((x) => x.text != null && x.arabic == null && !x.field).forEach((x) => { at[x.text] = x.draftArabic || (/\{1\}/.test(x.text) ? `أعلى {1} من {2}: ${ar()}` : ar()); }); more.arabicTexts = at; }
       if (!Object.keys(more).length) break; a = Object.assign(a, more); pl = await ask(srv, 'plan_layout', a); }
     return { pl, a }; };
-  const noDesign = (a) => { const x = Object.assign({}, a); delete x.planFields; return x; };
   const PATHS = [
-    ['the native copy', async (srv) => { const a = { path: 'lab', customVisualsFrom: FROM, sharedAxes: SHARED_AXES }; return { pl: await ask(srv, 'plan_layout', a), w: (id) => ask(srv, 'create_report', Object.assign({ planId: id }, a)) }; }],
-    ['the consistent redesign', async (srv) => { const a = { path: 'lab', redesignFrom: FROM, consistentText: 'report' }; return { pl: await ask(srv, 'plan_layout', a), w: (id) => ask(srv, 'create_report', Object.assign({ planId: id }, a)) }; }],
+    ['the native copy', async (srv) => { const a = { path: 'lab', customVisualsFrom: FROM, sharedAxes: SHARED_AXES }; return { pl: await ask(srv, 'plan_layout', a), w: (id) => ask(srv, 'create_report', { path: a.path, planId: id }) }; }],
+    ['the consistent redesign', async (srv) => { const a = { path: 'lab', redesignFrom: FROM, consistentText: 'report' }; return { pl: await ask(srv, 'plan_layout', a), w: (id) => ask(srv, 'create_report', { path: a.path, planId: id }) }; }],
     ['the EN-AR copy', async (srv) => { const a = { path: FROM, into: 'same' }; return { pl: await ask(srv, 'create_arabic_twin', a), w: (id) => ask(srv, 'create_arabic_twin', Object.assign({ planId: id }, a)) }; }],
     ['the twin', async (srv) => { const a = { path: FROM }; return { pl: await ask(srv, 'create_arabic_twin', a), w: (id) => ask(srv, 'create_arabic_twin', Object.assign({ planId: id }, a)) }; }],
-    ['the bilingual report', async (srv) => { const { pl, a } = await bilingual(srv); return { pl, w: (id) => ask(srv, 'create_report', Object.assign(noDesign(a), { planId: id, design: pl.j.design })) }; }],
+    ['the bilingual report', async (srv) => { const { pl, a } = await bilingual(srv); return { pl, w: (id) => ask(srv, 'create_report', { path: a.path, planId: id }) }; }],
     ['the glass theme', async (srv) => { const a = { path: 'lab/' + NAME + '.SemanticModel', name: 'Glass Lab' }; return { pl: await ask(srv, 'generate_theme', a), w: (id) => ask(srv, 'generate_theme', Object.assign({ planId: id }, a)) }; }],
     ['the Gulf calendar', async (srv) => { const a = { path: 'lab/' + NAME + '.SemanticModel', firstYear: 2025, lastYear: 2026, asOf: '2026-10-27' }; return { pl: await ask(srv, 'add_gulf_calendar', a), w: (id) => ask(srv, 'add_gulf_calendar', Object.assign({ planId: id }, a)) }; }],
-    ['the sample project', async (srv) => { const pl = await ask(srv, 'plan_layout', { sample: true }); return { pl, w: (id) => ask(srv, 'create_report', { sample: true, path: pl.j.sample.folder, planId: id }) }; }]
+    ['the sample project', async (srv) => { const pl = await ask(srv, 'plan_layout', { sample: true }); return { pl, w: (id) => ask(srv, 'create_report', { path: pl.j.sample.folder, planId: id }) }; }]
   ];
   const idOf = (pl) => pl && pl.j && pl.j.plan && pl.j.plan.planId;
   try {

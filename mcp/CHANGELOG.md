@@ -4,6 +4,10 @@ What changed in each version, newest first. Each version given to testers also h
 and SHA-256), sent with the download. The version is written once, by the build, into `mcp/package.json` and the
 package's manifest; this file says what is in it.
 
+## [Unreleased]: 0.3.2
+- **Shorter tool descriptions and answers:** fewer tokens in every conversation; every answer, errors too, within the
+  cap.
+
 ## [Unreleased]: 0.3.1
 - **A third test run in Power BI Desktop:** the day names beside a heatmap by weekday no longer wrap onto two lines, so
   they stay level with the grid's rows without a scrollbar of their own, and a chart lined up under a heatmap's grid

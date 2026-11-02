@@ -341,10 +341,10 @@ const byName = (list, n) => (list.find((x) => x.v.name === n) || {}).v;
       a = Object.assign({}, a, { arabicTerms: Object.assign({}, terms), arabicTexts: Object.assign({}, at) }); pl = await wb.call('plan_layout', a);
     }
     const idB = ok(pl) && pl.j.plan && pl.j.plan.planId;
-    if (idB) { await approveB(idB); const cr = await wb.call('create_report', Object.assign({}, a, { planId: idB, design: pl.j.design })); written.b = !cr.err; if (cr.err) why += ' B: ' + String(cr.t).slice(0, 300); } else why += ' B: no plan: ' + String(pl.t).slice(0, 300);
+    if (idB) { await approveB(idB); const cr = await wb.call('create_report', { path: a.path, planId: idB }); written.b = !cr.err; if (cr.err) why += ' B: ' + String(cr.t).slice(0, 300); } else why += ' B: no plan: ' + String(pl.t).slice(0, 300);
     // (Cb) the English report of the same plan, then its copy into "same" with the same Arabic
     const ac = Object.assign({ path: 'c/Service Orders.SemanticModel' }, BASE), pc = await wb.call('plan_layout', ac), idC = ok(pc) && pc.j.plan && pc.j.plan.planId;
-    if (idC) { await approveB(idC); await wb.call('create_report', Object.assign({}, ac, { planId: idC, design: pc.j.design })); }
+    if (idC) { await approveB(idC); await wb.call('create_report', { path: ac.path, planId: idC }); }
     const t0 = { path: 'c/Parity B.pbip', into: 'same', terms, arabicMonth: false }, labels = {};
     let p0 = await wb.call('create_arabic_twin', t0);
     for (let from = 0, n = 0; ok(p0) && n < 10; n++) { (p0.j.texts || []).forEach((t) => { if (t.text != null && at[t.text] != null) labels[t.id] = at[t.text]; }); if (!p0.j.moreTexts) break; from = p0.j.moreTexts.from; p0 = await wb.call('create_arabic_twin', Object.assign({ textsFrom: from }, t0)); }

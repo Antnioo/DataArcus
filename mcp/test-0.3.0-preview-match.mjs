@@ -121,7 +121,7 @@ try {
       for (let k = 0; k < 100 && links().length <= n0; k++) await sleep(50);
       const link = links()[n0], page = await httpReq(link), svgs = [...page.matchAll(/<svg\b[\s\S]*?<\/svg>/g)].map((m) => m[0]);
       await httpReq(link, 'decision=approve'); await ap;
-      const cr = await s.call('create_report', Object.assign({}, base, { planId: id, design: pl.j.design }));
+      const cr = await s.call('create_report', { path: base.path, planId: id });
       chk(() => !cr.err, () => `${c.id} setup: create_report writes the approved report: ${String(cr.t).slice(0, 300)}`);
       const dir = path.join(ROOT, 'large', base.name + '.Report');
       if (cr.err || !fs.existsSync(dir)) continue;

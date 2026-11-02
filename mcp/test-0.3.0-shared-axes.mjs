@@ -160,9 +160,7 @@ const write = async (args) => {
   const id = pl.j && pl.j.plan && pl.j.plan.planId;
   if (!id) return { pl, err: 'no plan id: ' + short(pl) };
   const html = await approve(id);
-  const cr = Object.assign({ path: 'g', planId: id }, args);
-  if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', cr);
+  const r = await w.call('create_report', { path: 'g', planId: id });   // (0.3.2 TK1: the plan holds the rest)
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 const written = [];   // every report this suite wrote, for X
@@ -170,8 +168,8 @@ const written = [];   // every report this suite wrote, for X
 try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
-    chk(() => pl.inputSchema.properties.sharedAxes && cr.inputSchema.properties.sharedAxes && /comparable/.test(JSON.stringify(cr.inputSchema.properties.sharedAxes)),
-      () => 'M1: plan_layout and create_report take sharedAxes (the person\'s own answer: comparable or separate)');
+    chk(() => pl.inputSchema.properties.sharedAxes && !cr.inputSchema.properties.sharedAxes && /comparable/.test(JSON.stringify(pl.inputSchema.properties.sharedAxes)),
+      () => 'M1: plan_layout takes sharedAxes (the person\'s own answer: comparable or separate); create_report does not (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input)');
   }
   // an amount and a rate: two panels, each with its unit
   const EN = await write({ name: 'Amount and Rate', lang: 'en', pages: HAND, planFields: RATE });
@@ -222,7 +220,7 @@ try {
   {
     const pl = await w.call('plan_layout', { path: 'g', name: 'Pinned Axes', lang: 'en', pages: HAND, planFields: SAME_UNIT, sharedAxes: CONFIRMED }), id = pl.j && pl.j.plan && pl.j.plan.planId;
     if (id) await approve(id);
-    const r = id ? await w.call('create_report', { path: 'g', planId: id, name: 'Pinned Axes', lang: 'en', pages: HAND, fields: SAME_UNIT, sharedAxes: [{ measures: CONFIRMED[0].measures, answer: 'separate' }] }) : null;
+    const r = id ? await w.call('create_report', { path: 'g', planId: id, sharedAxes: [{ measures: CONFIRMED[0].measures, answer: 'separate' }] }) : null;   // (0.3.2 TK1: another value than the plan's, refused at the inputs: the plan holds it)
     chk(() => r && r.err && /sharedAxes/.test(r.t) && !fs.existsSync(path.join(ROOT, 'g', 'Pinned Axes.Report')), () => `M10: another sharedAxes at create_report than the plan's is refused, nothing written: ${short(r || pl)}`);
   }
 
@@ -249,7 +247,7 @@ try {
       if (tweak) tweak(s);
       const pl = await w.call('plan_layout', Object.assign({ path: dir, customVisualsFrom: from }, extra || {})), id = pl.j && pl.j.plan && pl.j.plan.planId;
       if (id) await approve(id);
-      const made = id ? await w.call('create_report', Object.assign({ path: dir, planId: id, customVisualsFrom: from }, extra || {})) : null;
+      const made = id ? await w.call('create_report', { path: dir, planId: id }) : null;
       written.push(s.ND);
       const vis = fs.existsSync(s.NPG) ? fs.readdirSync(s.NPG).map((v) => ({ id: v, j: rd(path.join(s.NPG, v, 'visual.json')) })) : [];
       return Object.assign(s, { pl, made, vis, reps: (pl.j && pl.j.customVisuals && pl.j.customVisuals.replacements) || [] });

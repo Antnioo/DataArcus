@@ -86,7 +86,7 @@ try {
     const pl = await s.call('plan_layout', Object.assign({ path: MP, focus: 'Web Orders', lang, layout: 'exec', name, secondPage: true }, dn));
     const id = pl.j && pl.j.plan && pl.j.plan.planId; if (!id) return { err: 'no plan: ' + String(pl.t).slice(0, 300) };
     await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', Object.assign({ path: MP, focus: 'Web Orders', lang, name, planId: id, design: pl.j.design }, dn));
+    const r = await s.call('create_report', { path: MP, planId: id });
     return r.err ? { err: String(r.t).slice(0, 300) } : { r };
   };
   const en = await write('en', 'Orders EN');

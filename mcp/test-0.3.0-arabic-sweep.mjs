@@ -167,7 +167,7 @@ try {
       // (0.3.1 MR1, B-270: gulfDates is plan_layout's input only; create_report never had it and dropped it silently, now it refuses it)
       const send = Object.assign({}, args, { planId: id, design: pl.j.design }); delete send.__declined; delete send.displayNames; delete send.gulfDates;   // the plan pins the approved names (with the fixed list's)
       if (send.planFields) { send.fields = send.planFields; delete send.planFields; }
-      const r = await ask(tool, send);
+      const r = await ask(tool, tool === 'create_report' ? { path: send.path, planId: id } : send);   // (0.3.2 TK1: create_report takes path and planId; the plan holds the rest)
       return r.err ? { err: String(r.t).slice(0, 500), pl } : { r, pl, args };
     };
     const opt = Object.assign({}, OPT, fx.switcher ? { metricSwitcher: fx.switcher } : {}, fx.ramadan ? { pageFilters: fx.ramadan } : {}, fx.planFields ? { planFields: fx.planFields } : {}, fx.filters ? { filters: fx.filters } : {});

@@ -176,8 +176,8 @@ try {
   if (idOf(a1)) await pageOf(idOf(a1), true);
   const k = Object.keys(dn)[0];
   const bad = idOf(a1) ? await w.call('create_report', Object.assign({}, base, { planId: idOf(a1), design: a1.j.design, displayNames: Object.assign({}, dn, { [k]: 'اسم آخر' }) })) : { err: true, t: 'no plan' };
-  chk(() => Object.keys(dn).length && Object.keys(pinned).length && bad.err && /inputs differ from the approved plan .* in displayNames/.test(bad.t), () => `A3-S1a. another name than the approved one is refused by the gate: ${short(bad)}`);
-  const ok = idOf(a1) ? await w.call('create_report', Object.assign({}, base, { planId: idOf(a1), design: a1.j.design, displayNames: dn })) : { err: true, t: 'no plan' };
+  chk(() => Object.keys(dn).length && Object.keys(pinned).length && bad.err && /^(MCP error.*)?Nothing was written: .*'displayNames'.*the approved plan holds/.test(bad.t), () => `A3-S1a. another name than the approved one is refused (0.3.2 TK1: at create_report's inputs, the plan holds displayNames): ${short(bad)}`);
+  const ok = idOf(a1) ? await w.call('create_report', { path: base.path, planId: idOf(a1) }) : { err: true, t: 'no plan' };
   chk(() => !ok.err && ok.j && ok.j.written !== false, () => `A3-S1b. the same approved names passed again, with a fixed-list name pinned too, are written: ${short(ok)}`);
 } finally {
   await w.close();

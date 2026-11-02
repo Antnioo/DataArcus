@@ -116,7 +116,7 @@ try {
       const n0 = links().length, ap = s.call('approve_plan', { planId: id });
       for (let k = 0; k < 100 && links().length <= n0; k++) await sleep(50);
       await httpReq(links()[n0], 'decision=approve'); await ap;
-      const cr = await s.call('create_report', Object.assign({}, base, { planId: id, design: pl.j.design }));
+      const cr = await s.call('create_report', { path: base.path, planId: id });
       const dir = path.join(ROOT, 'large', base.name + '.Report');
       chk(() => !cr.err && fs.existsSync(dir), () => `${c.id} setup: create_report writes the approved report: ${String(cr.t).slice(0, 300)}`);
       if (cr.err || !fs.existsSync(dir)) continue;

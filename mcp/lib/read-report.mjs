@@ -10,6 +10,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { decode, inside, readCapped, readsLikeInstruction, real, ROOT, shownName, shownPath, visible, WITHHELD } from './model.mjs';
 import { meaningInReport, VT } from './visual-meaning.mjs';
+import { ANSWER_MAX } from './answer.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
 // (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
@@ -547,7 +548,7 @@ export function existingTheme(m, want) {
 // The text form is about a quarter of the JSON's size (measured on the laptop: a 4-page / 160-visual report is about
 // 18,000 characters as text). Capped at 40,000 characters, read_model's large-model line (lib/scope.mjs): pages past it
 // are listed with their counts only, and the answer says how to read them (the pages input).
-export const READ_CAP = 40000;
+export const READ_CAP = ANSWER_MAX;   // (0.3.2 TK1, B-283: the one answer limit, lib/answer.mjs)
 const fieldsText = (x) => Object.entries(x.fields || {}).map(([r, l]) => `${roleLabel(x.type, r)}: ${l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : '')).join(', ')}`).join(' | ');
 function visualLine(x) {
   let s = '  ' + (x.slicer ? 'SLICER ' : x.action ? 'ACTION ' : '') + typeName(x.type) + ` ${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.w)}x${Math.round(x.h)}` + (x.hidden ? ' hidden' : '') + (x.hiddenByGroup ? ' hidden-by-group' : '') + (x.group ? ` in "${x.groupName || safeName(x.group)}"` : '');

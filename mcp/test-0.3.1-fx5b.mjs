@@ -25,15 +25,15 @@ const ROOT = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'dataa
 process.env.DATAARCUS_ROOT = ROOT;
 const Plans = await import('./lib/plans.mjs');
 const { LIMITS } = await import('./lib/tool-limits.mjs');
-const H = {}, S = {};
+const H = {}, S = {}, SCH = {};
 for (const t of ['plan_layout', 'create_report', 'suggest_fields']) {
   const { register } = await import(`./tools/${t}.mjs`);
-  register({ registerTool: (name, def, h) => { H[name] = h; S[name] = def.inputSchema.shape; } }, { LIMITS });
+  register({ registerTool: (name, def, h) => { H[name] = h; S[name] = def.inputSchema.shape; SCH[name] = def.inputSchema; } }, { LIMITS });
 }
 const call = async (tool, a) => { try { const r = await H[tool](a), t = (r.content || []).map((c) => c.text).join(''); let j = null; try { j = JSON.parse(t); } catch (e) { /* words */ } return { err: !!r.isError, t, j }; } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
 const short = (x) => (x.err ? x.t.slice(0, 400) : J(x.j));
 // a plan, approved as the person's click does, then written
-const writeOf = async (a, w) => { const p = await call('plan_layout', a), id = p.j && p.j.plan && p.j.plan.planId; if (!id) return { p, w: { err: true, t: 'no plan id: ' + short(p), j: null } }; Plans.approve(id, 'user-in-browser'); return { p, w: await call('create_report', Object.assign({}, w || a, { planId: id })) }; };
+const writeOf = async (a, w) => { const p = await call('plan_layout', a), id = p.j && p.j.plan && p.j.plan.planId; if (!id) return { p, w: { err: true, t: 'no plan id: ' + short(p), j: null } }; Plans.approve(id, 'user-in-browser'); return { p, w: await call('create_report', { path: (w || a).path, planId: id }) }; };
 // every bar or column chart a written report holds: { page, type, title, pads: [inner, outer] }
 const chartsIn = (dir) => { const out = []; const walk = (d) => { if (!fs.existsSync(d)) return; fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') {
   const j = JSON.parse(fs.readFileSync(f, 'utf8')), v = j.visual || {}; if (!/^clustered(Bar|Column)Chart$/.test(v.visualType || '')) return;
@@ -45,17 +45,18 @@ try {
   {
     const tries = [{ distinct: { 'Branches[Country]': 3 } }, { rows: { Sales: 648 } }, {}, { distinct: { 'A[B]': -1 } }, { distinct: { 'A[B]': 1.5 } }, { distinct: { 'A[B]': 'Dubai' } }, { values: { 'A[B]': ['Dubai'] } }, { distinct: { 'A[B]': 3 }, min: 1 }];
     const ok = (sch) => tries.map((x) => sch.safeParse(x).success);
-    chk(() => S.create_report.columnStats && S.plan_layout.columnStats, () => `S1. create_report and plan_layout take columnStats: ${J([!!S.create_report.columnStats, !!S.plan_layout.columnStats])}`);
-    chk(() => J(ok(S.create_report.columnStats)) === J(ok(S.suggest_fields.columnStats)) && J(ok(S.plan_layout.columnStats)) === J(ok(S.suggest_fields.columnStats)) && J(ok(S.suggest_fields.columnStats)) === '[true,true,true,false,false,false,false,false]',
-      () => `S2. the same schema as suggest_fields': counts as whole numbers only, no value, nothing else (strict): ${J(get(() => [ok(S.create_report.columnStats), ok(S.suggest_fields.columnStats)]))}`);
-    const d = String((S.create_report.columnStats || {}).description || '');
+    // (0.3.2 TK1, B-272) plan_layout takes columnStats and the plan holds it; create_report takes path and planId only
+    chk(() => !S.create_report.columnStats && S.plan_layout.columnStats, () => `S1. plan_layout takes columnStats (create_report: the plan holds it): ${J([!!S.create_report.columnStats, !!S.plan_layout.columnStats])}`);
+    chk(() => J(ok(S.plan_layout.columnStats)) === J(ok(S.suggest_fields.columnStats)) && J(ok(S.suggest_fields.columnStats)) === '[true,true,true,false,false,false,false,false]',
+      () => `S2. the same schema as suggest_fields': counts as whole numbers only, no value, nothing else (strict): ${J(get(() => [ok(S.plan_layout.columnStats), ok(S.suggest_fields.columnStats)]))}`);
+    const d = String((S.plan_layout.columnStats || {}).description || '');
     chk(() => /Counts only, never values/.test(d) && /Cardinality from COLUMNSTATISTICS\(\); never pass its Min or Max/.test(d) && /"Table\[Column\]"/.test(d), () => `S3. its words are suggest_fields' (counts only, Cardinality, never Min or Max, "Table[Column]"): ${d.slice(0, 300)}`);
   }
 
   // ---------- the sample project, as a new user gets it ----------
   const sp = await call('plan_layout', { sample: true }), folder = sp.j && sp.j.sample && sp.j.sample.folder;
   Plans.approve(sp.j.plan.planId, 'user-in-browser');
-  const sw = await call('create_report', { sample: true, path: folder, planId: sp.j.plan.planId });
+  const sw = await call('create_report', { path: folder, planId: sp.j.plan.planId });
   chk(() => !sw.err && fs.existsSync(path.join(ROOT, folder)), () => `the sample project is written: ${short(sw)}`);
   const { countsOfSample, sampleCounts } = await import('./lib/sample-counts.mjs');
   const { sampleFiles } = await import('./lib/sample-project.mjs');
@@ -69,7 +70,7 @@ try {
     // the reviewer's measured report: exec layout, filters on top, the second page, 1920 x 1080
     const args = { path: folder, name: 'FX5b', layout: 'exec', filters: 'top', secondPage: true };
     const { p, w } = await writeOf(args, null);
-    const w2 = w.err && /pages or a design/.test(w.t) ? await call('create_report', Object.assign({ planId: p.j.plan.planId, design: p.j.design }, args)) : w;
+    const w2 = w.err && /pages or a design/.test(w.t) ? await call('create_report', { path: args.path, planId: p.j.plan.planId }) : w;
     const cs = chartsIn(path.join(ROOT, folder, 'FX5b.Report'));
     const of = (cat, type, minW) => cs.filter((x) => x.cat === cat && x.type === type && x.w >= (minW || 0));
     chk(() => !w2.err && of('Branches.Country', 'clusteredColumnChart', 1800).length === 1 && J(of('Branches.Country', 'clusteredColumnChart', 1800)[0].pads) === '["88L","88L"]',
@@ -99,14 +100,16 @@ try {
     const pages = [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'bar', title: 'Sales by product category', x: 20, y: 20, w: 600, h: 277 }] }];
     const fields = { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', timeAxis: 'Calendar[Year Month]', category: 'Products[Category]', category2: 'Branches[Country]', table: ['Products[Category]', 'Sales[Total Sales]'], slicers: [] };
     const base = { path: dir, pages }, stats = { distinct: { 'Products[Category]': 3 } };
-    const run = async (name, cs) => { const a = Object.assign({ name }, base, cs ? { columnStats: cs } : {}); return writeOf(Object.assign({ planFields: fields }, a), Object.assign({ fields }, a)); };
+    const run = async (name, cs) => { const a = Object.assign({ name }, base, cs ? { columnStats: cs } : {}); return writeOf(Object.assign({ planFields: fields }, a), null); };
     const r1 = await run('With', stats), c1 = chartsIn(path.join(ROOT, dir, 'With.Report')).filter((x) => x.type === 'clusteredBarChart' && x.h === 277);
     chk(() => !r1.w.err && c1.length === 1 && J(c1[0].pads) === '["36L","36L"]', () => `C1. a bar chart on a column of 3 values (columnStats), 277 high at 1280 x 720: padding 36, bars 35.4: ${r1.w.err ? short(r1.w) : J(c1)}`);
     const r0 = await run('Without', null), c0 = chartsIn(path.join(ROOT, dir, 'Without.Report')).filter((x) => x.type === 'clusteredBarChart' && x.h === 277);
     chk(() => !r0.w.err && c0.length === 1 && J(c0[0].pads) === '[null,null]' && !(r0.w.j || {}).barThickness, () => `C2. guard: without columnStats (and not the sample): unchanged, nothing said: ${r0.w.err ? short(r0.w) : J([c0, r0.w.j.barThickness])}`);
     // pinned with the plan: another count at the write is refused, nothing written
     const p3 = await call('plan_layout', Object.assign({ name: 'Pinned', planFields: fields, columnStats: stats }, base)); Plans.approve(p3.j.plan.planId, 'user-in-browser');
-    const w3 = await call('create_report', Object.assign({ name: 'Pinned', fields, columnStats: { distinct: { 'Products[Category]': 12 } }, planId: p3.j.plan.planId }, base));
+    // (0.3.2 TK1) through create_report's own inputs, as the server checks them before the tool runs: the plan holds columnStats
+    const a3 = Object.assign({ name: 'Pinned', fields, columnStats: { distinct: { 'Products[Category]': 12 } }, planId: p3.j.plan.planId }, base), v3 = SCH.create_report.safeParse(a3);
+    const w3 = v3.success ? await call('create_report', a3) : { err: true, t: v3.error.issues.map((x) => x.message).join('; '), j: null };
     chk(() => w3.err && /Nothing was written/.test(w3.t) && /columnStats/.test(w3.t) && !fs.existsSync(path.join(ROOT, dir, 'Pinned.Report')), () => `C3. columnStats is pinned with the plan: another count at the write is refused: ${short(w3)}`);
     // the plan shows the counts it was given with its look (plan_layout's own list of the options it pins)
     const rl = get(() => p3.j.plan.reportLook);
@@ -125,7 +128,7 @@ try {
     ((bi0.j && bi0.j.bilingual && bi0.j.bilingual.texts) || []).forEach((x) => { biTexts[x.text] = x.draftArabic || x.text; });
     const args = Object.assign({}, args0, { arabicTexts: biTexts });
     const { p, w } = await writeOf(args, null);
-    const w2 = w.err && /pages or a design/.test(w.t) ? await call('create_report', Object.assign({ planId: p.j && p.j.plan && p.j.plan.planId, design: p.j && p.j.design }, args)) : w;
+    const w2 = w.err && /pages or a design/.test(w.t) ? await call('create_report', { path: args.path, planId: p.j && p.j.plan && p.j.plan.planId }) : w;
     const cs = chartsIn(path.join(ROOT, folder, 'FX5bBi.Report')), col = cs.filter((x) => x.type === 'clusteredColumnChart' && x.w >= 1800);
     chk(() => !w2.err && col.length === 2 && col.every((x) => J(x.pads) === '["88L","88L"]'), () => `B1. the bilingual report: the column chart by Country padded 88 on its English and its Arabic page: ${w2.err ? short(w2) : J(col)}`);
   }

@@ -166,7 +166,7 @@ try {
     if (id) await s.call('approve_plan', { planId: id });
     const before = fs.readdirSync(path.join(ROOT, 'large')).sort().join('|');
     const other = Object.assign({}, DN, { 'Coupon[Coupon Region]': 'المنطقة' });
-    const wr = await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير', planId: id, design: pa.j && pa.j.design, displayNames: other });
+    const wr = await s.call('create_report', { path: MP, planId: id, displayNames: other });   // (0.3.2 TK1: refused at the inputs, the plan holds displayNames)
     chk(() => id && wr.err && /Nothing was written|differ|plan/i.test(wr.t) && fs.readdirSync(path.join(ROOT, 'large')).sort().join('|') === before,
       () => `TS-7a. another map at create_report is refused, nothing written: ${short(wr)}`);
   }
@@ -183,7 +183,7 @@ try {
     chk(() => Object.keys(DN).every((k) => rowOf(sheet1, k) && rowOf(sheet1, k).ar === DN[k] && rowOf(sheet1, k).where.length) && sheet1.every((r) => r.status !== 'approved' || r.consistent === true),
       () => `TS-1b. every approved term is in the sheet with its places, consistent: ${JSON.stringify(sheet1.map((r) => [r.field, r.status, r.consistent]))}`);
     if (id) await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير', planId: id, design: p.j && p.j.design });
+    const r = await s.call('create_report', { path: MP, planId: id });
     A = readReport(AR);
     chk(() => !r.err && Object.keys(A).length > 20, () => `TS-1 set-up: the Arabic report is written: ${short(r)}`);
     const pr = projections(A), wrong = pr.filter((x) => DN[x.key] && x.displayName !== isolated(DN[x.key]));
@@ -205,7 +205,7 @@ try {
   {
     const pe = await s.call('plan_layout', { path: MP, focus: 'Web Orders', lang: 'en', layout: 'exec', name: 'Orders EN', secondPage: true }), id = pe.j && pe.j.plan && pe.j.plan.planId;
     if (id) await s.call('approve_plan', { planId: id });
-    const re = await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'en', name: 'Orders EN', planId: id, design: pe.j && pe.j.design });
+    const re = await s.call('create_report', { path: MP, planId: id });
     chk(() => !re.err && fs.existsSync(ORIG), () => `TS-2 set-up: "Orders EN" written: ${short(re)}`);
   }
   const O = readReport(ORIG);
@@ -278,7 +278,7 @@ try {
     chk(() => rowOf(sh, 'Sales[Amount]') && rowOf(sh, 'Budget[Amount]') && rowOf(sh, 'Sales[Amount]').ar !== rowOf(sh, 'Budget[Amount]').ar && rowOf(sh, 'Sales[Amount]').en === rowOf(sh, 'Budget[Amount]').en,
       () => `TS-3b. two rows, one per key, one English name: ${p.err ? short(p) : JSON.stringify(sh.map((r) => [r.field, r.en, r.ar]))}`);
     const id = p.j && p.j.plan && p.j.plan.planId; if (id) await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', { path: 'two/M.SemanticModel', lang: 'ar', layout: 'analysis', name: 'مبالغ', planId: id, design: p.j && p.j.design, fields: pf });
+    const r = await s.call('create_report', { path: 'two/M.SemanticModel', planId: id });
     const pr = projections(readReport(path.join(ROOT, 'two/مبالغ.Report')));
     chk(() => !r.err && pr.some((x) => x.key === 'Sales[Amount]' && x.displayName === DN2['Sales[Amount]']) && pr.some((x) => x.key === 'Budget[Amount]' && x.displayName === DN2['Budget[Amount]']),
       () => `TS-3c. the table shows each Amount under its own alias: ${r.err ? short(r) : JSON.stringify(pr.filter((x) => /Amount/.test(x.key)).map((x) => [x.key, x.displayName]))}`);
@@ -325,7 +325,7 @@ try {
     const DNm = Object.assign({}, DN, { 'Calendar[Year Month]': 'Year Month' });   // (the person keeps it in English; FX4b, D-1028-07: Year Month, the axis now, was Month Short)
     const pm = await plan({ displayNames: DNm, name: 'تقرير مختلط' }), mid = pm.j && pm.j.plan && pm.j.plan.planId;
     if (mid) await s.call('approve_plan', { planId: mid });
-    const rm = mid ? await s.call('create_report', { path: MP, focus: 'Web Orders', lang: 'ar', name: 'تقرير مختلط', planId: mid, design: pm.j.design }) : pm;
+    const rm = mid ? await s.call('create_report', { path: MP, planId: mid }) : pm;
     const M = readReport(path.join(ROOT, 'large/تقرير مختلط.Report')), tips = shownTexts(M).filter((t) => t.what === 'page name' && (M[t.where] || {}).type === 'Tooltip'), mixM = notIsolated(shownTexts(M));
     // (0.3.1 BD2, measured in Desktop 2.159, 27 Oct: no mark helps the tab strip) the trend's tab is «تلميح · الشهر», no Latin run
     chk(() => !rm.err && tips.some((t) => t.s === 'تلميح · الشهر') && !tips.some((t) => /[A-Za-z]/.test(t.s)) && !mixM.length, () => `TS-10b. a field kept in English: the tooltip tab «تلميح · الشهر» (no Latin run in a tab, BD2) and every other mixed text isolated (tabs ${tips.map((t) => JSON.stringify(t.s)).join(', ')}): ${rm.err ? short(rm) : JSON.stringify(uniq(mixM.map((t) => `${t.what} "${t.s.slice(0, 60)}"`)).slice(0, 8))}`);

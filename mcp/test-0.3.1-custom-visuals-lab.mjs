@@ -165,7 +165,7 @@ try {
   // ---- CL-6 the native copy, approved and written ----
   const id = B.pl.j && B.pl.j.plan && B.pl.j.plan.planId;
   const ok = await call('approve_plan', { planId: id });
-  const made = await call('create_report', { path: 'lab', planId: id, customVisualsFrom: 'lab/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE });
+  const made = await call('create_report', { path: 'lab', planId: id });
   chk(() => !ok.err && !made.err && made.j.written && made.j.replaced === 11 && fs.existsSync(NAT) && fs.existsSync(path.join(LAB, Lab.NAME + ' native.pbip')), () => `CL-6a. approved and written: "${Lab.NAME} native", 11 replaced: ${short(ok)} / ${short(made)}`);
   const nrj = J(path.join(NAT, 'definition', 'report.json')), nvs = visualsOf(NAT), stillCustom = nvs.filter((v) => v.visual.visualType && !VT.isNative(v.visual.visualType));
   chk(() => nrj.publicCustomVisuals.length === 2 && nrj.publicCustomVisuals.every((t) => /^(sankeyDiagram|forceGraph)/.test(t)) && stillCustom.length === 2,
@@ -239,7 +239,7 @@ try {
       () => `NC3-2a. the text search: a dropdown slicer with its search on, said; the input slicer second: ${JSON.stringify(se).slice(0, 900)}`);
     const id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
     await call('approve_plan', { planId: id2 });
-    const made2 = await call('create_report', { path: 'lab2', planId: id2, customVisualsFrom: 'lab2/' + Lab.NAME + '.Report', sharedAxes: COMPARABLE });
+    const made2 = await call('create_report', { path: 'lab2', planId: id2 });
     const n2 = fs.existsSync(NAT2) ? visualsOf(NAT2) : [], sv = (n2.find((x) => x.name === 'cvSearch') || {}).visual || {}, ob = sv.objects || {}, P = (o) => ((ob[o] || [])[0] || {}).properties || {};
     chk(() => !made2.err && made2.j.replaced === 13 && SET1.test(made2.j.nextSteps) && SET2.test(made2.j.nextSteps), () => `NC3-1f. written: 13 replaced, and the next steps say what to turn on for the map: ${short(made2)}`);
     chk(() => sv.visualType === 'slicer' && P('data').mode.expr.Literal.Value === "'Dropdown'" && P('general').selfFilterEnabled.expr.Literal.Value === 'true' && P('header').show.expr.Literal.Value === 'false'
@@ -261,7 +261,7 @@ try {
   { const row = ['cvKpiTile', 'cardSales', 'cardOrders', 'cvDialGauge'].map(to), gaps = row.every(Boolean) ? row.slice(1).map((p, i) => p.x - (row[i].x + row[i].w)) : [];
     chk(() => gaps.length === 3 && new Set(gaps).size === 1, () => `CL-7c. page 1's top row with even gaps after the redesign: ${JSON.stringify(gaps)}`); }
   await call('approve_plan', { planId: rid });
-  const rmade = await call('create_report', { path: 'lab', planId: rid, redesignFrom: 'lab/' + Lab.NAME + ' native.Report' });
+  const rmade = await call('create_report', { path: 'lab', planId: rid });
   const RED = rmade.j && rmade.j.report ? path.join(LAB, path.basename(String(rmade.j.report))) : null;
   chk(() => !rmade.err && RED && fs.existsSync(RED) && errorsOf(Lab.validate(RED)) === 0, () => `CL-7d. the redesign approved and written, validator 0 errors: ${short(rmade)}`);
   // ---- CL-8 the laptop's driver ----

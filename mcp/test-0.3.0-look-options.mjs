@@ -93,7 +93,7 @@ const write = async (args, crOver) => {
   const cr = Object.assign({ path: MP, planId: id }, args, args.pages ? {} : { design: pl.j.design });
   delete cr.slicerStyle; delete cr.grid;
   if (args.planFields) { cr.fields = args.planFields; delete cr.planFields; }
-  const r = await w.call('create_report', Object.assign(cr, crOver || {}));
+  const r = await w.call('create_report', Object.assign({ path: MP, planId: id }, crOver || {}));   // (0.3.2 TK1, B-272: path and planId; the plan holds the rest; crOver: a deliberate other value, refused at the inputs)
   return { pl, html, r, id, dir: path.join(ROOT, 'g', args.name + '.Report'), pbip: 'g/' + args.name + '.pbip' };
 };
 
@@ -102,15 +102,14 @@ try {
   {
     const tools = (await w.c.listTools()).tools, pl = tools.find((t) => t.name === 'plan_layout'), cr = tools.find((t) => t.name === 'create_report');
     const en = (t, k) => (((t.inputSchema.properties || {})[k]) || {}).enum || [];
-    chk(() => [pl, cr].every((t) => JSON.stringify(en(t, 'slicerStyle')) === '["dropdown","pills"]' && JSON.stringify(en(t, 'grid')) === '["solid","dotted","none"]'),
-      () => `S1. plan_layout and create_report take slicerStyle dropdown|pills and grid solid|dotted|none: ${JSON.stringify([en(pl, 'slicerStyle'), en(pl, 'grid'), en(cr, 'slicerStyle'), en(cr, 'grid')])}`);
+    chk(() => [pl].every((t) => JSON.stringify(en(t, 'slicerStyle')) === '["dropdown","pills"]' && JSON.stringify(en(t, 'grid')) === '["solid","dotted","none"]') && !cr.inputSchema.properties.slicerStyle && !cr.inputSchema.properties.grid,
+      () => `S1. plan_layout takes (0.3.2 TK1, B-272: create_report takes path and planId; the plan holds this input) slicerStyle dropdown|pills and grid solid|dotted|none: ${JSON.stringify([en(pl, 'slicerStyle'), en(pl, 'grid'), en(cr, 'slicerStyle'), en(cr, 'grid')])}`);
     const d = String(pl.inputSchema.properties.slicerStyle?.description || '') + ' ' + String(pl.inputSchema.properties.grid?.description || '');
     chk(() => /2-6|two to six/i.test(d) && /dropdown/i.test(d) && /dotted/i.test(d) && /default/i.test(d), () => `S2. the descriptions say when each fits: ${d}`);
     const ins = w.c.getInstructions() || '', skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
     chk(() => /slicerStyle/.test(skill) && /pills/.test(skill) && /grid/.test(skill) && /dotted/.test(skill), () => 'S3. the skill says when pills and the dotted grid fit');
     // (the server's instructions are at their cap; the options are said where they are passed, in both tools' inputs)
-    const dc = String(cr.inputSchema.properties.slicerStyle?.description || '') + ' ' + String(cr.inputSchema.properties.grid?.description || '');
-    chk(() => dc === d && ins.length <= 2200, () => `S4. create_report says the same as plan_layout (one definition), the instructions within their cap: ${ins.length}`);
+    chk(() => ins.length <= 2200, () => `S4. the instructions within their cap (0.3.2 TK1: the options are plan_layout's alone): ${ins.length}`);
   }
 
   // ---------- D: defaults ----------

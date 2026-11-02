@@ -152,7 +152,7 @@ try {
     const p2 = await s.call('plan_layout', { path: 'od/M.SemanticModel', lang: 'ar', layout: 'exec', name, secondPage: true, displayNames });
     const id = p2.j && p2.j.plan && p2.j.plan.planId; if (!id) return { p2, files: [], err: p2.t };
     await s.call('approve_plan', { planId: id });
-    const r = await s.call('create_report', { path: 'od/M.SemanticModel', lang: 'ar', name, planId: id, design: p2.j.design, displayNames });
+    const r = await s.call('create_report', { path: 'od/M.SemanticModel', planId: id });
     return { p2, r, files: readAll(path.join(ROOT, 'od', name + '.Report')) };
   };
   const w1 = await write('TT drafted', drafts), t1 = titlesOf(w1.files);
