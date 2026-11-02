@@ -64,5 +64,19 @@ const gold = JSON.parse(fs.readFileSync(GOLD, 'utf8')).answers;
 for (const [name] of CASES) chk(() => gold[name] && now[name].sha256 === gold[name].sha256 && now[name].length === gold[name].length && now[name].err === gold[name].err,
   () => `${name.split(' ')[0]}. plan_layout's answer for "${name.replace(/^[SR]\d+ /, '')}" is the base's, byte for byte: now ${JSON.stringify(now[name])}, recorded ${JSON.stringify(gold[name] || null)} (SP2_DUMP=<file> writes the answers)`);
 
+// the cross-entry parity (after the move): the module's own samplePlan and redesignPlan, called here on the same inputs and
+// model, give the tool's blocks (the answer without its plan block, and the plan's writes). This process is not seeded:
+// the redesign copy's logical id is new, so its digest (redesign.exact.digest, the artifact's) is the one difference allowed
+const noDigest = (t) => t.replace(/"digest":"[0-9a-f]{64}"/g, '"digest":"<sha256>"');
+const V = await import('./lib/plan-variants.mjs'), { loadModel } = await import('./lib/model.mjs');
+const tool = (name) => JSON.parse(raw[name]), noPlan = (j) => { const c = Object.assign({}, j); delete c.plan; return JSON.stringify(c); };
+{ const t = tool('S1 the sample in Arabic'), v = V.samplePlan({ sample: true, lang: 'ar' });
+  chk(() => JSON.stringify(v.answer) === noPlan(t) && v.propose.kind === 'sample' && JSON.stringify(v.propose.writes) === JSON.stringify(t.plan.writesAfterGo),
+    () => `X1. lib/plan-variants.mjs's samplePlan gives plan_layout's sample block and writes: ${JSON.stringify(v.answer).slice(0, 200)} vs ${noPlan(t).slice(0, 200)}`); }
+{ const name = 'R3 a redesign listing one page', args = CASES.find((c) => c[0] === name)[1], t = tool(name);
+  const v = V.redesignProblems(args) || V.redesignPlan(args, loadModel(args.path));
+  chk(() => noDigest(JSON.stringify(v.answer)) === noDigest(noPlan(t)) && v.answer.redesign.exact.digest === v.propose.artifact.digest && v.propose.kind === 'redesign' && JSON.stringify(v.propose.writes) === JSON.stringify(t.plan.writesAfterGo) && v.propose.artifact && v.propose.artifact.copy === 'redesign',
+    () => { if (process.env.SP2_DIFF) { const a1 = noDigest(JSON.stringify(v.answer)), b1 = noDigest(noPlan(t)); let i = 0; while (a1[i] === b1[i]) i++; console.log("DIFF@", i, a1.slice(i - 80, i + 120), "\n", b1.slice(i - 80, i + 120)); } return `X2. lib/plan-variants.mjs's redesignPlan gives plan_layout's redesign block, writes and exact copy: ${JSON.stringify(v.answer).slice(0, 200)} vs ${noPlan(t).slice(0, 200)}`; }); }
+
 if (problems.length) { console.log(`FAIL script=test-0.3.2-sp2.mjs cause=${problems[0].slice(0, 300)}`); problems.forEach((p) => console.log('  - ' + p)); console.log(`FAIL  sp2  ${problems.length} of ${checks} checks`); process.exit(1); }
 console.log(`PASS  sp2  ${checks} checks`);
