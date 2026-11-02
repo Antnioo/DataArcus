@@ -22,7 +22,8 @@
   f9eb523; glass-tables needs cba24a5, absent from a shallow clone: 113 checks once fetched), release 5; lint 0.
 - **CI green: https://github.com/Antnioo/DataArcus/actions/runs/41533391430 on 819739c** (attempt 2: macOS shard 3 was
   cancelled with no FAIL line, rerun once). The first run (41530313701) was red: sp1 P7 on Windows (CRLF checkout), fixed.
-- **State: DONE.** **Resume:** none; the reviewer's merge.
+- **State: DONE.**
+- **Resume:** none; the reviewer's merge.
 
 ## The plans in sp1
 P1 the sample; P2 a layout alone, page 1280x720 asked (no plan id); P3 English on twin-project; P4 Arabic with approved
