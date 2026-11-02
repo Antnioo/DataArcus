@@ -677,6 +677,21 @@
     to.values[0].properties.wordWrap = mk('false');
     Object.assign(to.columnHeaders[0].properties, { wordWrap: mk('false'), autoSizeColumnWidth: mk('false') });
     const g = to.grid[0].properties; if (g.textSize === undefined) g.textSize = mk(h.textSize + 'D');
+    // (0.3.1 MX8, laptop part 13: the names table's 7 rows and its blank header drew a few px taller than the 188.3 the
+    // matrix's header and 7 rows fit in: a vertical scrollbar over «Mor», «Wec», then a horizontal one half over «Sun»)
+    // Microsoft's capabilities give a tableEx no header switch (columnHeaders has no show) and no row height (a row is
+    // grid.textSize and grid.rowPadding, both the matrix's above): its blank header takes the matrix's column header
+    // outline (a table draws a line under its header by default) and its values the row headers' outline (the names
+    // stand for them); its box one row of the matrix's text taller (same top, so its rows stay level with the grid's),
+    // kept inside its page or group (o.bottom: the room under the box's top there)
+    const mo = isObj(json.visual.objects) ? json.visual.objects : {}, OUT = ['outlineStyle', 'outlineWeight', 'outlineColor'];
+    const plainOf = (card) => ((Array.isArray(mo[card]) ? mo[card] : []).find((e) => isObj(e) && !e.selector && isObj(e.properties)) || {}).properties || {};
+    const ch = plainOf('columnHeaders'), rh = plainOf('rowHeaders');
+    OUT.forEach((k) => { if (ch[k] !== undefined) to.columnHeaders[0].properties[k] = clone(ch[k]); if (rh[k] !== undefined) to.values[0].properties[k] = clone(rh[k]); });
+    const rp = parseFloat(String(lit(plainOf('grid').rowPadding)).replace(/D$/, ''));
+    const oneRow = ROW_LINE * h.textSize + ROW_PAD + (Number.isFinite(rp) ? 2 * rp : 0), tp = r.table.position;
+    const room = o && Number.isFinite(o.bottom) ? o.bottom - tp.y : Infinity;
+    tp.height = round(Math.max(tp.height, Math.min(tp.height + oneRow, room)));
     return r;
   }
   // json: a visual.json; { ok: true } when the twin writes it as a table, else { ok: false, why }

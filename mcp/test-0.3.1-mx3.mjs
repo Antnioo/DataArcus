@@ -157,7 +157,7 @@ try {
   // ---------- H: the heatmap ----------
   const hm = at('p5heat', 'mxHeat') || { position: {}, visual: { objects: {} } }, dir = path.join(AR, 'p5heat', 'visuals'), all = get(() => fs.readdirSync(dir).map((n) => rd(path.join(dir, n, 'visual.json'))));
   const nm = Array.isArray(all) ? all.find((v) => v.visual && v.visual.visualType === 'tableEx' && /Weekday/.test(JSON.stringify(v.visual.query)) && v.position.y === hm.position.y) : null;
-  chk(() => hm && nm && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && nm.position.height === hm.position.height, () => `H1. Call Center p1's heatmap: a names table at its grid's right edge, its height: ${JSON.stringify([hm && hm.position, nm && nm.position])}`);
+  chk(() => hm && nm && Math.abs(nm.position.x - (hm.position.x + hm.position.width)) < 0.5 && nm.position.y === hm.position.y && nm.position.height >= hm.position.height, () => `H1. Call Center p1's heatmap: a names table at its grid's right edge, its top, at least its height (MX8: one row more room below): ${JSON.stringify([hm && hm.position, nm && nm.position])}`);
   const longest = Math.max(TM.textWidth('Wednesday', 10, false, 'Segoe UI'), TM.textWidth('الأربعاء', 10, false, 'Segoe UI'));
   chk(() => nm && nm.position.width >= longest && nm.position.width <= longest + 40 && Math.abs(hm.position.width + nm.position.width - 317.5) < 0.5, () => `H2. the names column as wide as the longest weekday name at 10 (${Math.ceil(longest)}), the pair in the heatmap's box: ${nm && nm.position.width}`);
   const ch = hm && ((hm.visual.objects.columnHeaders || []).find((e) => !e.selector) || { properties: {} }).properties;

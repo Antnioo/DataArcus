@@ -4,6 +4,7 @@
 import { safeName } from './read-report.mjs';
 import { isObj, pageOf } from './twin-read.mjs';
 import { num, posOf, typeOf, litStr, Ls, overlaps, holdsBox, absBox } from './twin-visuals.mjs';
+import { pageBoxes } from './page-picture.mjs';
 import { arabicDax, titleMeasuresOf, textMeasuresOf, autoTitlesOf, autoSentence, subtitleMeasuresOf } from './twin-texts.mjs';
 import { waterfallFacts } from './twin-model.mjs';
 import { langButton } from './twin-copy.mjs';
@@ -249,8 +250,44 @@ function keepView(page, visuals, at) {
 // writes its names beside, English's when set, else not counted on either side). Lined up: same parent, a chart with a
 // category axis, its span shared with the matrix's box by 0.8 of the narrower, under it (its top below the matrix's
 // middle, within 24 of its bottom) or over it (the mirror of that). Kept inside its page or group; named in movedByRule.
+// (0.3.1 MX8, laptop part 13: Call Center's hour chart 52c8e333 moved under its grid kept the general mirror inside it:
+// its padding swapped put every bar 16-23 px right of its hour; ER's c1e3e190, its Ascending sort turned Descending, put
+// hour 23's bar under «00») the grid beside it keeps English's left-to-right order, so the chart keeps English's inside
+// too: its container padding, its value and category axis cards (axis side, a time axis's inversion) and its sort, as
+// English has them (absent stays absent); only moved. Before the labels are written, so an axis title still takes its Arabic
+function keepInside(en, tw) {
+  const ev = en.visual, tv = tw.visual; if (!isObj(ev) || !isObj(tv)) return;
+  const put = (bag, k, from) => { if (isObj(from) && from[k] !== undefined) bag[k] = JSON.parse(JSON.stringify(from[k])); else delete bag[k]; };
+  if (isObj(tv.query)) put(tv.query, 'sortDefinition', ev.query);
+  if (!isObj(tv.objects)) tv.objects = {};
+  ['valueAxis', 'categoryAxis'].forEach((k) => put(tv.objects, k, ev.objects));
+  if (!isObj(tv.visualContainerObjects)) tv.visualContainerObjects = {};
+  put(tv.visualContainerObjects, 'padding', ev.visualContainerObjects);
+}
 const GRID_CHARTS = /^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|ribbonChart)$/;
-function underGrids(pg, r, pageW) {
+// the first visual (by name) the chart j would newly cover at x: one it does not overlap in English (boxes on the page,
+// groups added; a heatmap's names table, extra, as its matrix)
+function landsOn(pg, r, extra, j, x) {
+  const ct = r.visuals[j], was = posOf(ct).x; posOf(ct).x = x;
+  try {
+    // (B2new-8) a group's own box counts too (pageBoxes leaves groups out): its place on the page, its parents added
+    const boxes = (vs) => { const m = pageBoxes(vs), by = new Map(vs.filter((v) => isObj(v) && v.name != null).map((v) => [String(v.name), v]));
+      by.forEach((v, n) => { if (!isObj(v.visualGroup) || v.isHidden) return; const p = posOf(v); if (!p) return; const b = { x: p.x, y: p.y, w: p.width, h: p.height };
+        let g = v.parentGroupName, d = 0; while (g != null && by.has(String(g)) && d++ < 10) { const q = posOf(by.get(String(g))); if (!q) return; b.x += q.x; b.y += q.y; g = by.get(String(g)).parentGroupName; }
+        m.set(n, b); }); return m; };
+    const en = boxes(pg.visuals.map((v) => v.json)), ar = boxes(r.visuals.concat((extra || []).map((e) => e.json))), me = String(ct.name);
+    const fromOf = new Map((extra || []).map((e) => [String(e.json.name), e.from])), a = ar.get(me), e0 = en.get(me);
+    if (!a || !e0) return null;
+    const meet = (p, q) => Math.max(0, Math.min(p.x + p.w, q.x + q.w) - Math.max(p.x, q.x)) * Math.max(0, Math.min(p.y + p.h, q.y + q.h) - Math.max(p.y, q.y));
+    for (const [n, b] of [...ar].sort((u, v) => (u[0] < v[0] ? -1 : 1))) {
+      if (n === me || meet(a, b) <= 4) continue;
+      const eb = en.get(fromOf.has(n) ? String(fromOf.get(n)) : n);
+      if (!eb || meet(e0, eb) <= 0) return safeName(String(n));
+    }
+    return null;
+  } finally { posOf(ct).x = was; }
+}
+function underGrids(pg, r, pageW, extra) {
   const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
   const qs = (v) => (isObj(v) && isObj(v.visual) && isObj(v.visual.query) && isObj(v.visual.query.queryState) ? v.visual.query.queryState : {});
   const has = (v, k) => isObj(qs(v)[k]) && Array.isArray(qs(v)[k].projections) && qs(v)[k].projections.length > 0;
@@ -272,9 +309,14 @@ function underGrids(pg, r, pageW) {
       const under = cb.y >= hb.y + hb.height / 2 && cb.y <= hb.y + hb.height + 24, over = cb.y + cb.height <= hb.y + hb.height / 2 && cb.y + cb.height >= hb.y - 24;
       if (!under && !over) return;
       const W = widthIn(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
-      if (Math.abs(x - q.x) < 0.01) return;
+      // (0.3.1 MX8, the night lab's B2new-1..12 on a6000a27: the chart moved with its grid landed on a visual it did not
+      // overlap in English) moved there it must cover nothing it did not cover in English (a heatmap's names table
+      // counts as its matrix); else it keeps its plain mirror, said
+      const hit = landsOn(pg, r, extra, j, x);
+      if (hit) { (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept at its mirror, not lined up with its heatmap\'s grid: there it would cover ' + hit + ', which it does not in English' }); return; }
       q.x = x;
-      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid (English\'s offset from its left edge)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
+      keepInside(ce, ct);
+      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid, as English: its offset, padding, axis side and sort (the grid reads left to right)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
     });
   });
 }
@@ -618,9 +660,11 @@ export function buildTwin(P, labels) {
     // (0.3.1 MX3) a heatmap by weekday whose rows all fit: its names beside its grid, a table of their own (extra)
     const extra = [];
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o).ok) return;
-      let hn = null; try { hn = Mirror.heatmapNames(vj); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
+      // (MX8) the room the names table may take below the matrix's top: its page's height, or its group's
+      const gp = vj.parentGroupName != null ? r.visuals.find((x) => isObj(x) && String(x.name) === String(vj.parentGroupName)) : null, bottom = gp ? (posOf(gp) || {}).height : pageOf(pg).height;
+      let hn = null; try { hn = Mirror.heatmapNames(vj, Number.isFinite(bottom) ? { bottom } : {}); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
     // (0.3.1 MX7) a chart lined up under or over a heatmap's grid keeps English's offset from the grid's left edge
-    if (!P.keepLtr(pg)) { try { underGrids(pg, r, pageOf(pg).width); } catch (e) { /* a shape not expected: left as it is */ } }
+    if (!P.keepLtr(pg)) { try { underGrids(pg, r, pageOf(pg).width, extra); } catch (e) { /* a shape not expected: left as it is */ } }
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
     r.visuals.forEach((vj) => {
       const autos = autoTitlesOf(pg.id, vj);
