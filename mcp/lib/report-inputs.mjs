@@ -2,7 +2,7 @@
 // (0.3.1 S9: moved out of server.mjs as it was, no change of behaviour)
 import crypto from 'node:crypto';
 import { z } from 'zod';
-import { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, planLayout, E } from './design.mjs';
+import { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, planLayout, DEFAULT_PAGE_W, DEFAULT_PAGE_H } from './design.mjs';
 import { SWITCH_MIN, SWITCH_MAX } from './metric-switcher.mjs';
 import { reportPrint } from './read-report.mjs';
 import { LIST_MAX as ICONS_MAX } from './status-icons.mjs';
@@ -32,7 +32,7 @@ export const CREATE_REPORT_INPUTS = {
     planId: planIdInput.describe('The approved plan id from plan_layout (made with this model\'s path), after approve_plan with the user\'s go. Required: without it nothing is written'),
     name: z.string().min(1).max(60).optional().describe('Report name (needed for a new report; customVisualsFrom names its copy after the original)'),
     title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
-    pages: z.array(z.object({ name: z.string(), width: z.number().int().default(E.PAGES[E.DEFAULT_PAGE][0]), height: z.number().int().default(E.PAGES[E.DEFAULT_PAGE][1]), slots: z.array(slot).min(1),
+    pages: z.array(z.object({ name: z.string(), width: z.number().int().default(DEFAULT_PAGE_W), height: z.number().int().default(DEFAULT_PAGE_H), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
       .describe('Hand-placed pages; or give a design instead'),
     design: z.record(z.any()).optional().describe('The design from generate_theme or plan_layout; the layout inputs below change it, as in plan_layout'),
