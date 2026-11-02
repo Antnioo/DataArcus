@@ -13,7 +13,8 @@ import { createRequire } from 'node:module';
 import { ROOT, visitor, WAIT } from './lib.mjs';
 const { PNG } = createRequire(import.meta.url)('pngjs');
 
-const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.3.2 OP1) the engine reads text-measure.js (the font catalog, the measured heights): its require gets the .min.js too
+const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', 'require', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined, (dep) => load(path.basename(dep).replace(/(\.min)?\.js$/, '.min.js'))); return m.exports; };
 
 // ---- tiny synthetic logos, as RGBA pixels ----
 // a w x h canvas; shapes painted with a 1-pixel blended edge (what a canvas gives when it scales a logo down)

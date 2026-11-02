@@ -25,8 +25,9 @@ const list = (dir, re) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => re.
 // The engine code the guard reads: the website's engines (not their .min.js, built from them) and the MCP's code
 const CODE = [...list('assets/js', /^(?!.*\.min\.js$).*\.js$/), ...list('mcp/lib', /\.mjs$/), ...list('mcp/tools', /\.mjs$/), 'mcp/server.mjs'];
 const OWNER = 'assets/js/text-measure.js', PAGE_OWNER = 'assets/js/design-engine.js';
-// code only: block comments and line comments out (a // inside a string after a quote or a colon, a URL, is kept)
-const codeOf = (s) => s.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' ')).split('\n').map((l) => l.replace(/(^|[^:'"`\\])\/\/.*$/, '$1'));
+// code only: block comments and line comments out (a // inside a string after a quote or a colon, a URL, is kept);
+// lines split on CRLF too (a Windows checkout: "." does not match the "\r" before a line's end)
+const codeOf = (s) => s.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\r\n]/g, ' ')).split(/\r?\n/).map((l) => l.replace(/(^|[^:'"`\\])\/\/.*$/, '$1'));
 const hits = (re, files, skip) => files.filter((f) => !skip.includes(f)).flatMap((f) => codeOf(read(f)).map((l, i) => (re.test(l) ? `${f}:${i + 1}` : null)).filter(Boolean));
 
 // ---------- S1: the owner exports every fact (and its .min.js the same) ----------
@@ -88,8 +89,8 @@ const hits = (re, files, skip) => files.filter((f) => !skip.includes(f)).flatMap
   chk(() => !page.length, () => `G4. the default page written outside ${PAGE_OWNER}: ${page.join(', ')}`);
   // the guard sees what it guards (its own patterns on a sample, so a broken pattern cannot pass silently)
   chk(() => FORMULA.test('Math.ceil(2 + 1.6 * t)') && FORMULA.test('Math.ceil(16 + 4 * t)') && FORMULA.test('10+1.8*t') && !FORMULA.test('// 10 + 1.8 x pt') && RANGE.test('Math.min(60, Math.max(8, v))')
-    && codeOf("const a = 1; // ['Segoe UI', 'Tahoma']")[0].match(quoted) === null && (codeOf("const F = ['Segoe UI', 'Tahoma'];")[0].match(quoted) || []).length === 2,
-  () => 'G5. the guard\'s own patterns catch a formula, the range and a font list in code, not in a comment');
+    && codeOf("const a = 1; // ['Segoe UI', 'Tahoma']")[0].match(quoted) === null && codeOf("x();\r\n// 'Segoe UI' or 'Arial'\r\n")[1].match(quoted) === null && (codeOf("const F = ['Segoe UI', 'Tahoma'];")[0].match(quoted) || []).length === 2,
+  () => 'G5. the guard\'s own patterns catch a formula, the range and a font list in code, not in a comment (CRLF lines too)');
 }
 
 // ---------- P: the pages: the font choices come from the catalog; text-measure.js loads before design-engine.js ----------
