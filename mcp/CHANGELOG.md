@@ -5,6 +5,10 @@ and SHA-256), sent with the download. The version is written once, by the build,
 package's manifest; this file says what is in it.
 
 ## [Unreleased]: 0.3.1
+- **A second test run in Power BI Desktop:** a table in the Arabic twin leaves room for Power BI's vertical scrollbar,
+  so its first column stays whole at the right edge when there are more rows than fit; a heatmap by weekday shows its
+  day names beside a grid exactly as wide as the English one when the English report sets the day column's width
+  (otherwise it is kept as it is, and the plan says why); a heatmap whose seven rows fit is no longer called too short.
 - **The last fixes from a test run in Power BI Desktop:** an Arabic twin with a heatmap by weekday opens again in Desktop
   and keeps its grid as wide as in English; a legend keeps each item's colour; an agent card's contact line stays whole;
   a table narrower than its box keeps its first column at the right edge, and one wider keeps the columns English shows.

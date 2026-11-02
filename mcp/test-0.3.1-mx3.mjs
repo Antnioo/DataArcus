@@ -89,9 +89,10 @@ try {
   // Call Center p1's heatmap 9d8cf758 (weekdays down, hours across, 317 x 188, text 10) with its weekday bars at its
   // right (125e0cc5); a heatmap too short for its 7 rows; one by region
   page('p5heat', 800);
+  // (MX5, moved on purpose: names beside only when English sets its row header strip: set here at 82, the longest weekday + 12)
   const heat = (name, box, rows) => ({ name, position: Object.assign({ z: 26000 }, box), visual: { visualType: 'pivotTable', query: { queryState: { Rows: { projections: rows }, Columns: { projections: [col('Call Hour')] }, Values: { projections: [mea('Calls')] } } },
     objects: { subTotals: [{ properties: { rowSubtotals: L('false'), columnSubtotals: L('false') } }], columnHeaders: [{ properties: { outlineStyle: L('0D') } }], rowHeaders: [{ properties: { outlineStyle: L('0D'), steppedLayoutIndentation: L('10D'), outlineWeight: L('1D') } }],
-      grid: [{ properties: { gridHorizontal: L('true'), gridVertical: L('true'), gridHorizontalWeight: L('5D'), gridVerticalWeight: L('2D'), textSize: L('10D') } }] },
+      grid: [{ properties: { gridHorizontal: L('true'), gridVertical: L('true'), gridHorizontalWeight: L('5D'), gridVerticalWeight: L('2D'), textSize: L('10D') } }], columnWidth: [{ properties: { value: L('82D') }, selector: { metadata: rows[0].queryRef } }] },
     visualContainerObjects: { stylePreset: [{ properties: { name: S('None') } }], padding: [{ properties: { right: L('6D') } }] } } });
   put('p5heat', heat('mxHeat', { x: 543.33, y: 434.17, width: 317.5, height: 188.33 }, [col('Weekday')]));
   put('p5heat', { name: 'barDays', position: { x: 852.73, y: 451.82, z: 27000, width: 61.82, height: 166.36 }, visual: { visualType: 'clusteredBarChart', query: { queryState: { Category: { projections: [col('Weekday')] }, Y: { projections: [mea('Calls')] } } }, objects: { categoryAxis: [{ properties: { show: L('false') } }] } } });
@@ -129,7 +130,7 @@ try {
   const names = (v, field) => { const ps = v.visual.query.queryState.Values.projections; return ps.find((x) => x.field.Measure && x.field.Measure.Property === 'Row label: ' + field) || ps.find((x) => x.queryRef === T + '.' + field && (cw(v)(x.queryRef) || 0) >= 10); };
   const tk = at('p1fin', 'mxTasks'), tn = tk && tk.visual ? names(tk, 'Task Name') : null;
   chk(() => tn && cw(tk)(tn.queryRef) === 327, () => `R1. Fintech p3 tasks: its names (the row label) keep the row field's English width 327: ${tn && cw(tk)(tn.queryRef)}`);
-  const room = (v) => v.position.width - 20 * 720 / 1080,   // (the box less 20 at 1080 high, as the twin scales it: these pages are 720)
+  const room = (v) => v.position.width - (20 + 12) * 720 / 1080,   // (the box less 20 at 1080 high, as the twin scales it: these pages are 720; MX5, moved on purpose: less the vertical scrollbar's 12)
    sum = (v) => v.visual.query.queryState.Values.projections.reduce((n, x) => n + (cw(v)(x.queryRef) || 0), 0);
   chk(() => tk && TASK_V.every((x) => cw(tk)(x.queryRef) >= TASK_W[x.queryRef]) && sum(tk) <= room(tk) + 0.5, () => `R2. Fintech p3 tasks: no value column narrower than in English, the table within its box (a header grows into spare room only): ${tk && JSON.stringify(tk.visual.query.queryState.Values.projections.map((x) => [x.queryRef, cw(tk)(x.queryRef)]))}`);
   const ml = at('p1fin', 'mxMiles'), mn = ml && ml.visual ? names(ml, 'Milestone') : null;
