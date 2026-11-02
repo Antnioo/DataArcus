@@ -1,23 +1,23 @@
 # Night fuzz: integration/0.3.1 at a6000a27
 
 - Head: a6000a279374788cf6f0a76246b08d41eff23f86 (previous head for replays: eb09d194d04d5eb296a440891a326a5110aef094)
-- Run: 2026-11-02T21:05:59Z to 2026-11-02T21:07:41Z UTC (2 min wall, 4 processes)
+- Run: 2026-11-02T21:09:05Z to 2026-11-02T21:12:19Z UTC (3 min wall, 4 processes)
 - Generated seeds: 2026110300 to 2026110599 (300); real shapes: 57 (evidence c9a151d9); reduced cases: 6 (lab's cases/); grid generator (X1): seeds 2026110300 to 2026110399 (100)
 - New failures (pass on eb09d194, fail on a6000a27): **B2new-1, B2new-6, B2new-8, B2new-9, B2new-10, B2new-11, B2new-12**
 
 ## Properties that count (failed reports / reports run)
 
-| Property | generated | real shapes | grid | kinds |
-|---|---|---|---|---|
-| V1 | 0/300 | 0/57 | 0/100 | - |
-| V2 | 0/300 | 0/57 | 0/100 | - |
-| D1n | 0/300 | 0/57 | 0/100 | - |
-| M1 | 0/300 | 0/57 | 0/100 | - |
-| B1 | 0/300 | 0/57 | 0/100 | - |
-| B2new | 53/300 | 0/57 | 7/100 | new overlap introduced 60 |
-| T1 | 0/300 | 0/57 | 0/100 | - |
-| S1 | 0/300 | 0/57 | 0/100 | - |
-| X1 | 0/300 | 0/57 | 65/100 | category order changes against the grid 65; offset from the grid left edge differs 2 |
+| Property | generated | real shapes | grid | same seeds on eb09d194 (gen / shapes / grid) | kinds |
+|---|---|---|---|---|---|
+| V1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| V2 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| D1n | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| M1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| B1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| B2new | 53/300 | 0/57 | 7/100 | 33/300 / 0/57 / 0/100 | new overlap introduced 60 |
+| T1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| S1 | 0/300 | 0/57 | 0/100 | 0/300 / 0/57 / 0/100 | - |
+| X1 | 0/300 | 0/57 | 65/100 | 0/300 / 0/57 / 80/100 | category order changes against the grid 65; offset from the grid left edge differs 2 |
 
 D1n: D1 after normalising the twin's logical id (and renamed page ids). B2new: B2 for new overlaps only (visuals that did not overlap in English). X1: the night lab's own check (a chart lined up with a matrix grid keeps its category order and its offset from the grid).
 

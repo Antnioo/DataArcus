@@ -1,0 +1,90 @@
+{
+  "failures": {
+    "P1": [
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v5/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/p0/visuals/v8/visual.json"
+        ]
+      },
+      {
+        "why": "exact digest binds files but answer does not enumerate their paths",
+        "files": [
+          "Synthetic AR.Report/.platform",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v5/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v7/visual.json",
+          "Synthetic AR.Report/definition/pages/renamed1/visuals/v8/visual.json"
+        ]
+      }
+    ],
+    "D1": [
+      {
+        "why": "byte difference between independent plans",
+        "files": [
+          "Synthetic AR.Report/.platform"
+        ]
+      }
+    ],
+    "B2": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v2",
+          "p0/v5"
+        ]
+      },
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v5",
+          "p0/v7"
+        ]
+      }
+    ],
+    "B2new": [
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v2",
+          "p0/v5",
+          "English [{\"x\":195,\"y\":157,\"width\":579,\"height\":258,\"z\":2000},{\"x\":819,\"y\":394,\"width\":74,\"height\":299,\"z\":5000}]",
+          "Arabic [{\"x\":506,\"y\":157,\"width\":579,\"height\":258,\"z\":2000},{\"x\":387,\"y\":394,\"width\":381,\"height\":299,\"z\":5000}]",
+          "plan on v2: movedByRule: gave width to a button beside it",
+          "plan on v5: fitted.buttons",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      },
+      {
+        "why": "new overlap introduced",
+        "files": [
+          "p0/v5",
+          "p0/v7",
+          "English [{\"x\":819,\"y\":394,\"width\":74,\"height\":299,\"z\":5000},{\"x\":27,\"y\":627,\"width\":515,\"height\":173,\"z\":7000}]",
+          "Arabic [{\"x\":387,\"y\":394,\"width\":381,\"height\":299,\"z\":5000},{\"x\":765,\"y\":627,\"width\":515,\"height\":173,\"z\":7000}]",
+          "plan on v5: fitted.buttons",
+          "plan on v7: movedByRule: moved with a button beside it",
+          "in pictureChecks.newOverlaps: false"
+        ]
+      }
+    ]
+  },
+  "extra": {
+    "validatorOriginal": [
+      "PBIR_QUERY_STATE_MISSING"
+    ],
+    "normalizedRepeat": true,
+    "normalizedRenamed": true
+  }
+}
