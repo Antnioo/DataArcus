@@ -249,6 +249,20 @@ function keepView(page, visuals, at) {
 // writes its names beside, English's when set, else not counted on either side). Lined up: same parent, a chart with a
 // category axis, its span shared with the matrix's box by 0.8 of the narrower, under it (its top below the matrix's
 // middle, within 24 of its bottom) or over it (the mirror of that). Kept inside its page or group; named in movedByRule.
+// (0.3.1 MX8, laptop part 13: Call Center's hour chart 52c8e333 moved under its grid kept the general mirror inside it:
+// its padding swapped put every bar 16-23 px right of its hour; ER's c1e3e190, its Ascending sort turned Descending, put
+// hour 23's bar under «00») the grid beside it keeps English's left-to-right order, so the chart keeps English's inside
+// too: its container padding, its value and category axis cards (axis side, a time axis's inversion) and its sort, as
+// English has them (absent stays absent); only moved. Before the labels are written, so an axis title still takes its Arabic
+function keepInside(en, tw) {
+  const ev = en.visual, tv = tw.visual; if (!isObj(ev) || !isObj(tv)) return;
+  const put = (bag, k, from) => { if (isObj(from) && from[k] !== undefined) bag[k] = JSON.parse(JSON.stringify(from[k])); else delete bag[k]; };
+  if (isObj(tv.query)) put(tv.query, 'sortDefinition', ev.query);
+  if (!isObj(tv.objects)) tv.objects = {};
+  ['valueAxis', 'categoryAxis'].forEach((k) => put(tv.objects, k, ev.objects));
+  if (!isObj(tv.visualContainerObjects)) tv.visualContainerObjects = {};
+  put(tv.visualContainerObjects, 'padding', ev.visualContainerObjects);
+}
 const GRID_CHARTS = /^(columnChart|clusteredColumnChart|stackedColumnChart|hundredPercentStackedColumnChart|lineChart|areaChart|stackedAreaChart|hundredPercentStackedAreaChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|ribbonChart)$/;
 function underGrids(pg, r, pageW) {
   const lit0 = (p) => (p && p.expr && p.expr.Literal ? parseFloat(String(p.expr.Literal.Value).replace(/D$/, '')) : NaN);
@@ -272,9 +286,9 @@ function underGrids(pg, r, pageW) {
       const under = cb.y >= hb.y + hb.height / 2 && cb.y <= hb.y + hb.height + 24, over = cb.y + cb.height <= hb.y + hb.height / 2 && cb.y + cb.height >= hb.y - 24;
       if (!under && !over) return;
       const W = widthIn(ct), want = leftTw + (cb.x - leftEn), x = Mirror.round(Number.isFinite(W) ? Math.max(0, Math.min(W - q.width, want)) : want);
-      if (Math.abs(x - q.x) < 0.01) return;
       q.x = x;
-      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid (English\'s offset from its left edge)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
+      keepInside(ce, ct);
+      (r.moved = r.moved || []).push({ visual: String(ct.name), rule: 'kept lined up with its heatmap\'s grid, as English: its offset, padding, axis side and sort (the grid reads left to right)' + (Math.abs(x - want) > 0.01 ? ', moved to stay inside its page' : '') });
     });
   });
 }
@@ -618,7 +632,9 @@ export function buildTwin(P, labels) {
     // (0.3.1 MX3) a heatmap by weekday whose rows all fit: its names beside its grid, a table of their own (extra)
     const extra = [];
     if (!P.keepLtr(pg)) r.visuals.forEach((vj, i) => { const o = pg.visuals[i] && pg.visuals[i].json; if (!o || !Mirror.heatmapBeside(o).ok) return;
-      let hn = null; try { hn = Mirror.heatmapNames(vj); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
+      // (MX8) the room the names table may take below the matrix's top: its page's height, or its group's
+      const gp = vj.parentGroupName != null ? r.visuals.find((x) => isObj(x) && String(x.name) === String(vj.parentGroupName)) : null, bottom = gp ? (posOf(gp) || {}).height : pageOf(pg).height;
+      let hn = null; try { hn = Mirror.heatmapNames(vj, Number.isFinite(bottom) ? { bottom } : {}); } catch (e) { hn = null; } if (!hn) return; r.visuals[i] = hn.matrix; extra.push({ from: String(o.name), json: hn.table }); });
     // (0.3.1 MX7) a chart lined up under or over a heatmap's grid keeps English's offset from the grid's left edge
     if (!P.keepLtr(pg)) { try { underGrids(pg, r, pageOf(pg).width); } catch (e) { /* a shape not expected: left as it is */ } }
     const autoTitled = new Map();   // (FX3b) visual name -> the title text written for Power BI's automatic title
