@@ -23,9 +23,15 @@
   mx1, mx2, twin-fuzz (M1 green: the charts were already named) unchanged. Areas, fx1, lint, CI: see State.
 - **Areas on 9cce148:** twin 31, arabic 15, report 42 (glass-tables rerun after unshallowing the clone: its N0 reads
   cba24a5; 113 PASS), checker 7, core 8 suites passed; fx1 5 of 5 (22); lint 0; site config PASS.
-- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41530448902 on 8613eebe (Linux,
-  Windows, macOS). After 8613eebe only this note changed.
-- **Resume:** the reviewer's merge; laptop part 14 (below).
+- **Item 3 (the reviewer's follow-up, 2 Nov 21:34, the night lab's B2new on a6000a27):** the chart moved with its grid
+  never lands on a visual or group it did not overlap in English (kept at its mirror, said); every mirrored page's new
+  overlaps reach pictureChecks.newOverlaps. twin-fuzz 165 -> 185 (B2new-1, B2new-8, B2new-2 + N6-N10), red on a6000a27
+  first: N6-N10 (5 of 185). The lab's replays (evidence/0.3.1-fuzz/fuzz.mjs; the night copy is not on a branch, its B2
+  "new overlap introduced" is B2new): B2new-1, 6, 8, 9, 10, 11, 12 each 1 new overlap on this branch before the fix,
+  0 after (left: P1, D1, lab-only, as on eb09d194).
+- **Areas on fa20395b (item 3):** twin 31, arabic 15, report 42, checker 7, core 8 suites passed; fx1 5 of 5 (22); lint 0.
+- **State:** item 3 in fa20395b; CI again next (CI 41530448902 was green on 8613eebe, before it).
+- **Resume:** CI's result.
 
 ## Plan, per item
 1. The pinned capabilities (powerbi-core-visual-schema through the validator's provider, 0.5.0): a column chart's inside
@@ -58,6 +64,11 @@
    188.33 = the matrix's -> header and values outlineStyle 0 (the matrix's column and row headers'), height 209.21
    (188.33 + one row 20.88), same top (N1, N3, N4); ER at 11pt +22.76 (N6); at a page's bottom kept inside (N7).
 
+3. Night lab B2new-1: v8 (English x 149 w 577) moved to x 851 onto v15 (x 598 w 444) -> v8 at its mirror (x 1194 on the 1920 page; v15 at 598..1042),
+   movedByRule "kept at its mirror, not lined up with its heatmap's grid: there it would cover v15, which it does not in
+   English". B2new-8: v17 moved onto the group v5 (pageBoxes leaves groups out, so the guard adds group boxes) -> kept at
+   its mirror, said. B2new-2 (an older overlap from the button fitting): pictureChecks absent -> newOverlaps "p0: v5, v6".
+
 ## Tests changed on purpose
 - mx3 H1 and mx7 H4: the names table's height was checked equal to the matrix's; now the same top and at least the
   matrix's height (MX8 gives it one row more room below; its rows still start where the grid's do).
@@ -78,6 +89,15 @@
   one row of the matrix's text more room below (20.88 at 10pt), which covers "a few px" with a margin. A box that grows
   downward keeps every row level with the grid's (same top); the extra room is white below the grid's last row. Kept
   inside its page or group (clamped, not B1: a clamped box still has the room it had before).
+- Item 3: a chart that would land on something new is kept at its plain mirror (padding, axis and sort the general rule's
+  too: it is not lined up, so its inside need not match the grid), said in movedByRule (the field the plan already reads
+  for this rule; no new plan field, the answer stays within its cap). A heatmap's names table counts as its matrix (the
+  chart overlapped the matrix's box in English). Groups count as boxes, as the lab counts them.
+- pictureChecks.newOverlaps now covers every mirrored page, not only pages drawn on a picture; only the plain "new" kind
+  there (the rowHeaders and barsTurned kinds stay picture pages' own, as MP1c set them). twin-fuzz takes a third case,
+  B2new-2 (an older overlap, on both heads), as the only fixture that shows a new overlap reaching the plan.
+- The night lab's own fuzz.mjs (with B2new, D1n, X1) is not on either branch; I replayed with evidence/0.3.1-fuzz's,
+  whose B2 "new overlap introduced" is the same test.
 - CI: run 41524209043 passed everything but two macOS shards, cancelled while queued (no runner, no steps, no FAIL
   line); its one rerun ran shard 2 green, and shard 1 again sat queued until it was cancelled. No code change, so I started
   one fresh run on the same commit (41530448902): green on all three systems.
@@ -100,6 +120,10 @@ none
 - ER p1: hour chart c1e3e190's hour 0 under «00», hour 23 under «23»; the names beside f2c68e52 with no scrollbar.
 
 ## Seen, not in scope
+- The night lab's OLD B2new cases (2, 3, 4, 5, 7: the button fitting, twin-pages:36 and :463) still overlap; they now reach
+  pictureChecks.newOverlaps (said), not fixed. X1-1..6 (a chart's category order against the grid) are what item 1 fixes
+  for charts that move; not replayed (the night copy's X1 property is not on a branch).
+- pictureChecks.newOverlaps (pageBoxes) leaves groups out, so a new overlap with a group is not said there.
 - The names table's room below is white: over a visual drawn under the heatmap's bottom edge with a lower z it would
   cover its top 21 px (none on the six dashboards: Call Center's hour chart is drawn above it).
 - Named limits from the brief stand (donut centre, AdventureWorks' 10th row, RepeatIQ p6's strip, agent cards, legend).
