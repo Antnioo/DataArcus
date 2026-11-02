@@ -14,9 +14,11 @@
   short guard; the guards R3, R4, S2, H5 were red there too: R3, H5 by the old name-width rule, R4 by the old number
   218, S2 by the old room). Moved on purpose, per check below: mx1 P2; mx3 H1-H7, K1, K3; mx4 H1-H4, B1, B2, T1, T2,
   K1-K3 (my plan named only mx4's: mx1 and mx3 read the same two rules). mx2 26, rc24 28: unchanged. mx4 V1-V3 (the
-  validator on written twins): green. Areas, lint, fx1 x5, CI: "State" below.
-- **State:** work committed (fd3aa86); the gates next.
-- **Resume:** the area runs, fx1 x5, then CI on the branch.
+  validator on written twins): green. Areas on fd3aa86: twin 28, arabic 15, report 42, checker 7, core 8 suites
+  passed (report rerun after unshallowing the clone: its N0 reads cba24a5); fx1 5 of 5 (22); lint 0; site config PASS.
+- **State: DONE.** CI green: https://github.com/Antnioo/DataArcus/actions/runs/41398644801 on 7e3dad3a (Linux,
+  Windows, macOS). After 7e3dad3a only this note changed.
+- **Resume:** the reviewer's merge; the laptop's part 12 (below).
 
 ## Before -> after, per item
 1. A table that fits filled to the box less 20 less 1 (Fintech p3 tasks 1076.7 in 1097.7; 10 rows: Desktop's vertical
